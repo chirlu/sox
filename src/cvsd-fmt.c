@@ -28,7 +28,7 @@ SOX_FORMAT_HANDLER(cvsd)
     names, SOX_FILE_MONO,
     sox_cvsdstartread, sox_cvsdread, sox_cvsdstopread,
     sox_cvsdstartwrite, sox_cvsdwrite, sox_cvsdstopwrite,
-    sox_rawseek, write_encodings, NULL
+    lsx_rawseek, write_encodings, NULL
   };
   return &handler;
 }

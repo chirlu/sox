@@ -27,6 +27,22 @@
 #include <stdlib.h>
 #include <errno.h>
 
+/* FIXME: eliminate these 2 functions */
+
+static void put32_be(unsigned char **p, int32_t val)
+{
+  *(*p)++ = (val >> 24) & 0xff;
+  *(*p)++ = (val >> 16) & 0xff;
+  *(*p)++ = (val >> 8) & 0xff;
+  *(*p)++ = val & 0xff;
+}
+
+static void put16_be(unsigned char **p, int val)
+{
+  *(*p)++ = (val >> 8) & 0xff;
+  *(*p)++ = val & 0xff;
+}
+
 /* Dictionary entry for Huffman (de)compression */
 typedef struct {
         long frequ;
@@ -66,54 +82,54 @@ static int startread(sox_format_t * ft)
 
 
         /* Skip first 65 bytes of header */
-        rc = sox_skipbytes(ft, 65);
+        rc = lsx_skipbytes(ft, 65);
         if (rc)
             return rc;
 
         /* Check the file type (bytes 65-68) */
-        if (sox_reads(ft, buf, 4) == SOX_EOF || strncmp(buf, "FSSD", 4) != 0)
+        if (lsx_reads(ft, buf, 4) == SOX_EOF || strncmp(buf, "FSSD", 4) != 0)
         {
-                sox_fail_errno(ft,SOX_EHDR,"Mac header type is not FSSD");
+                lsx_fail_errno(ft,SOX_EHDR,"Mac header type is not FSSD");
                 return (SOX_EOF);
         }
 
         /* Skip to byte 83 */
-        rc = sox_skipbytes(ft, 83-69);
+        rc = lsx_skipbytes(ft, 83-69);
         if (rc)
             return rc;
 
         /* Get essential numbers from the header */
-        sox_readdw(ft, &datasize); /* bytes 83-86 */
-        sox_readdw(ft, &rsrcsize); /* bytes 87-90 */
+        lsx_readdw(ft, &datasize); /* bytes 83-86 */
+        lsx_readdw(ft, &rsrcsize); /* bytes 87-90 */
 
         /* Skip the rest of the header (total 128 bytes) */
-        rc = sox_skipbytes(ft, 128-91);
+        rc = lsx_skipbytes(ft, 128-91);
         if (rc != 0)
             return rc;
 
         /* The data fork must contain a "HCOM" header */
-        if (sox_reads(ft, buf, 4) == SOX_EOF || strncmp(buf, "HCOM", 4) != 0)
+        if (lsx_reads(ft, buf, 4) == SOX_EOF || strncmp(buf, "HCOM", 4) != 0)
         {
-                sox_fail_errno(ft,SOX_EHDR,"Mac data fork is not HCOM");
+                lsx_fail_errno(ft,SOX_EHDR,"Mac data fork is not HCOM");
                 return (SOX_EOF);
         }
 
         /* Then follow various parameters */
-        sox_readdw(ft, &huffcount);
-        sox_readdw(ft, &checksum);
-        sox_readdw(ft, &compresstype);
+        lsx_readdw(ft, &huffcount);
+        lsx_readdw(ft, &checksum);
+        lsx_readdw(ft, &compresstype);
         if (compresstype > 1)
         {
-                sox_fail_errno(ft,SOX_EHDR,"Bad compression type in HCOM header");
+                lsx_fail_errno(ft,SOX_EHDR,"Bad compression type in HCOM header");
                 return (SOX_EOF);
         }
-        sox_readdw(ft, &divisor);
+        lsx_readdw(ft, &divisor);
         if (divisor == 0 || divisor > 4)
         {
-                sox_fail_errno(ft,SOX_EHDR,"Bad sampling rate divisor in HCOM header");
+                lsx_fail_errno(ft,SOX_EHDR,"Bad sampling rate divisor in HCOM header");
                 return (SOX_EOF);
         }
-        sox_readw(ft, &dictsize);
+        lsx_readw(ft, &dictsize);
 
         /* Translate to sox parameters */
         ft->encoding.encoding = SOX_ENCODING_HCOM;
@@ -126,13 +142,13 @@ static int startread(sox_format_t * ft)
 
         /* Read dictionary */
         for(i = 0; i < dictsize; i++) {
-                sox_readw(ft, (unsigned short *)&(p->dictionary[i].dict_leftson));
-                sox_readw(ft, (unsigned short *)&(p->dictionary[i].dict_rightson));
+                lsx_readw(ft, (unsigned short *)&(p->dictionary[i].dict_leftson));
+                lsx_readw(ft, (unsigned short *)&(p->dictionary[i].dict_rightson));
                 sox_debug("%d %d",
                        p->dictionary[i].dict_leftson,
                        p->dictionary[i].dict_rightson);
         }
-        rc = sox_skipbytes(ft, 1); /* skip pad byte */
+        rc = lsx_skipbytes(ft, 1); /* skip pad byte */
         if (rc)
             return rc;
 
@@ -159,7 +175,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
                 /* The first byte is special */
                 if (p->huffcount == 0)
                         return 0; /* Don't know if this can happen... */
-                if (sox_readb(ft, &sample_rate) == SOX_EOF)
+                if (lsx_readb(ft, &sample_rate) == SOX_EOF)
                 {
                         return (0);
                 }
@@ -175,10 +191,10 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
 
         while (p->huffcount > 0) {
                 if(p->nrbits == 0) {
-                        sox_readdw(ft, &(p->current));
-                        if (sox_eof(ft))
+                        lsx_readdw(ft, &(p->current));
+                        if (lsx_eof(ft))
                         {
-                                sox_fail_errno(ft,SOX_EOF,"unexpected EOF in HCOM data");
+                                lsx_fail_errno(ft,SOX_EOF,"unexpected EOF in HCOM data");
                                 return (0);
                         }
                         p->cksum += p->current;
@@ -218,12 +234,12 @@ static int stopread(sox_format_t * ft)
 
         if (p->huffcount != 0)
         {
-                sox_fail_errno(ft,SOX_EFMT,"not all HCOM data read");
+                lsx_fail_errno(ft,SOX_EFMT,"not all HCOM data read");
                 return (SOX_EOF);
         }
         if(p->cksum != p->checksum)
         {
-                sox_fail_errno(ft,SOX_EFMT,"checksum error in HCOM data");
+                lsx_fail_errno(ft,SOX_EFMT,"checksum error in HCOM data");
                 return (SOX_EOF);
         }
         free((char *)p->dictionary);
@@ -423,26 +439,26 @@ static int stopwrite(sox_format_t * ft)
   free((char *)p->data);
 
   /* Write the header */
-  sox_writebuf(ft, (void *)"\000\001A", 3); /* Dummy file name "A" */
-  sox_padbytes(ft, 65-3);
-  sox_writes(ft, "FSSD");
-  sox_padbytes(ft, 83-69);
-  sox_writedw(ft, compressed_len); /* compressed_data size */
-  sox_writedw(ft, 0); /* rsrc size */
-  sox_padbytes(ft, 128 - 91);
-  if (sox_error(ft)) {
-    sox_fail_errno(ft, errno, "write error in HCOM header");
+  lsx_writebuf(ft, (void *)"\000\001A", 3); /* Dummy file name "A" */
+  lsx_padbytes(ft, 65-3);
+  lsx_writes(ft, "FSSD");
+  lsx_padbytes(ft, 83-69);
+  lsx_writedw(ft, compressed_len); /* compressed_data size */
+  lsx_writedw(ft, 0); /* rsrc size */
+  lsx_padbytes(ft, 128 - 91);
+  if (lsx_error(ft)) {
+    lsx_fail_errno(ft, errno, "write error in HCOM header");
     rc = SOX_EOF;
-  } else if (sox_writebuf(ft, compressed_data, compressed_len) != compressed_len) {
+  } else if (lsx_writebuf(ft, compressed_data, compressed_len) != compressed_len) {
     /* Write the compressed_data fork */
-    sox_fail_errno(ft, errno, "can't write compressed HCOM data");
+    lsx_fail_errno(ft, errno, "can't write compressed HCOM data");
     rc = SOX_EOF;
   }
   free((char *)compressed_data);
 
   if (rc == SOX_SUCCESS)
     /* Pad the compressed_data fork to a multiple of 128 bytes */
-    sox_padbytes(ft, 128u - (compressed_len % 128));
+    lsx_padbytes(ft, 128u - (compressed_len % 128));
 
   return rc;
 }

@@ -48,7 +48,7 @@ static int ossinit(sox_format_t * ft)
     sox_fileinfo_t *file = (sox_fileinfo_t *)ft->priv;
     sox_signalinfo_t client_signal = ft->signal;
 
-    set_signal_defaults(&ft->signal);
+    lsx_set_signal_defaults(&ft->signal);
     if (ft->encoding.bits_per_sample == 8) {
         sampletype = AFMT_U8;
         samplesize = 8;
@@ -63,9 +63,9 @@ static int ossinit(sox_format_t * ft)
     else if (ft->encoding.bits_per_sample == 16) {
         /* Attempt to use endian that user specified */
         if (ft->encoding.reverse_bytes)
-            sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
+            sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
         else
-            sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
+            sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
         if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
             ft->encoding.encoding = SOX_ENCODING_SIGN2;
@@ -78,9 +78,9 @@ static int ossinit(sox_format_t * ft)
     else {
         /* Attempt to use endian that user specified */
         if (ft->encoding.reverse_bytes)
-            sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
+            sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
         else
-            sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
+            sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
         ft->encoding.bits_per_sample = 16;
         ft->encoding.encoding = SOX_ENCODING_SIGN2;
@@ -92,7 +92,7 @@ static int ossinit(sox_format_t * ft)
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_RESET, 0) < 0)
     {
-        sox_fail_errno(ft,SOX_EOF,"Unable to reset OSS driver.  Possibly accessing an invalid file/device");
+        lsx_fail_errno(ft,SOX_EOF,"Unable to reset OSS driver.  Possibly accessing an invalid file/device");
         return(SOX_EOF);
     }
 
@@ -120,7 +120,7 @@ static int ossinit(sox_format_t * ft)
                 ft->encoding.encoding = SOX_ENCODING_SIGN2;
                 sox_report("OSS driver doesn't like unsigned bytes");
                 sox_report("Forcing to signed words");
-                sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
+                sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
                 samplesize = 16;
             }
             /* determine which 16-bit format to use */
@@ -142,7 +142,7 @@ static int ossinit(sox_format_t * ft)
     /* Give up and exit */
     if (rc < 0 || tmp != sampletype)
     {
-        sox_fail_errno(ft,SOX_EOF,"Unable to set the sample size to %d", samplesize);
+        lsx_fail_errno(ft,SOX_EOF,"Unable to set the sample size to %d", samplesize);
         return (SOX_EOF);
     }
 
@@ -189,7 +189,7 @@ static int ossinit(sox_format_t * ft)
     file->size = 0;
     ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &file->size);
     if (file->size < 4 || file->size > 65536) {
-            sox_fail_errno(ft,SOX_EOF,"Invalid audio buffer size %d", file->size);
+            lsx_fail_errno(ft,SOX_EOF,"Invalid audio buffer size %d", file->size);
             return (SOX_EOF);
     }
     file->count = 0;
@@ -197,7 +197,7 @@ static int ossinit(sox_format_t * ft)
     file->buf = (char *)xmalloc(file->size);
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_SYNC, NULL) < 0) {
-        sox_fail_errno(ft,SOX_EOF,"Unable to sync dsp");
+        lsx_fail_errno(ft,SOX_EOF,"Unable to sync dsp");
         return (SOX_EOF);
     }
 
@@ -217,8 +217,8 @@ SOX_FORMAT_HANDLER(oss)
     SOX_LIB_VERSION_CODE,
     "Open Sound Sytem device driver for unix-like systems",
     names, SOX_FILE_DEVICE,
-    ossinit, sox_rawread, sox_rawstopread,
-    ossinit, sox_rawwrite, sox_rawstopwrite,
+    ossinit, lsx_rawread, lsx_rawstopread,
+    ossinit, lsx_rawwrite, lsx_rawstopwrite,
     NULL, write_encodings, NULL
   };
   return &handler;

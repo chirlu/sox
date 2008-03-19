@@ -72,7 +72,7 @@ typedef struct flanger {
   double     feedback_gain;
   double     delay_gain;
   double     speed;
-  sox_wave_t  wave_shape;
+  lsx_wave_t  wave_shape;
   double     channel_phase;
   interp_t   interpolation;
             
@@ -119,13 +119,13 @@ static int sox_flanger_getopts(sox_effect_t * effp, int argc, char *argv[])
     NUMERIC_PARAMETER(feedback_gain,-95 , 95 )
     NUMERIC_PARAMETER(delay_gain   , 0  , 100)
     NUMERIC_PARAMETER(speed        , 0.1, 10 )
-    TEXTUAL_PARAMETER(wave_shape, sox_wave_enum)
+    TEXTUAL_PARAMETER(wave_shape, lsx_wave_enum)
     NUMERIC_PARAMETER(channel_phase, 0  , 100)
     TEXTUAL_PARAMETER(interpolation, interp_enum)
   } while (0);
 
   if (argc != 0)
-    return sox_usage(effp);
+    return lsx_usage(effp);
 
   sox_report("parameters:\n"
       "delay = %gms\n"
@@ -141,7 +141,7 @@ static int sox_flanger_getopts(sox_effect_t * effp, int argc, char *argv[])
       p->feedback_gain,
       p->delay_gain,
       p->speed,
-      sox_wave_enum[p->wave_shape].text,
+      lsx_wave_enum[p->wave_shape].text,
       p->channel_phase,
       interp_enum[p->interpolation].text);
 
@@ -186,7 +186,7 @@ static int sox_flanger_start(sox_effect_t * effp)
   /* Create the LFO lookup table: */
   f->lfo_length = effp->in_signal.rate / f->speed;
   f->lfo = xcalloc(f->lfo_length, sizeof(*f->lfo));
-  sox_generate_wave_table(
+  lsx_generate_wave_table(
       f->wave_shape,
       SOX_FLOAT,
       f->lfo,

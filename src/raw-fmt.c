@@ -19,7 +19,7 @@
 #include "sox_i.h"
  
 static int raw_start(sox_format_t * ft) {
-  return sox_rawstart(ft, sox_false, sox_false, sox_true, SOX_ENCODING_UNKNOWN, 0);
+  return lsx_rawstart(ft, sox_false, sox_false, sox_true, SOX_ENCODING_UNKNOWN, 0);
 }
 
 SOX_FORMAT_HANDLER(raw)
@@ -36,9 +36,9 @@ SOX_FORMAT_HANDLER(raw)
     SOX_LIB_VERSION_CODE,
     "Raw PCM, mu-law, or A-law",
     names, 0,
-    raw_start, sox_rawread , NULL,
-    raw_start, sox_rawwrite, NULL,
-    sox_rawseek, encodings, NULL
+    raw_start, lsx_rawread , NULL,
+    raw_start, lsx_rawwrite, NULL,
+    lsx_rawseek, encodings, NULL
   };
   return &handler;
 }

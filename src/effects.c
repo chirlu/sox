@@ -36,15 +36,6 @@
 sox_effects_globals_t sox_effects_globals =
     {sox_plot_off, 1, &sox_globals};
 
-int sox_usage(sox_effect_t * effp)
-{
-  if (effp->handler.usage)
-    sox_fail("usage: %s", effp->handler.usage);
-  else
-    sox_fail("this effect takes no parameters");
-  return SOX_EOF;
-}
-
 /* Default effect handler functions for do-nothing situations: */
 
 static int default_function(sox_effect_t * effp UNUSED)
@@ -70,7 +61,7 @@ static int default_drain(sox_effect_t * effp UNUSED, sox_sample_t *obuf UNUSED, 
 /* Check that no parameters have been given */
 static int default_getopts(sox_effect_t * effp, int argc, char **argv UNUSED)
 {
-  return argc? sox_usage(effp) : SOX_SUCCESS;
+  return argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 /* Partially initialise the effect structure; signal info will come later */

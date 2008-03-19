@@ -44,7 +44,7 @@ static int sox_noiseprof_getopts(sox_effect_t * effp, int n, char **argv)
     if (n == 1) {
         data->output_filename = argv[0];
     } else if (n > 1)
-      return sox_usage(effp);
+      return lsx_usage(effp);
 
     return (SOX_SUCCESS);
 }

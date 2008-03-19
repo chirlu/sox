@@ -81,12 +81,12 @@ static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
 
   if (n > 0 && !sscanf(argv[0], "%lf", &stretch->factor)) {
     sox_fail("error while parsing factor");
-    return sox_usage(effp);
+    return lsx_usage(effp);
   }
 
   if (n > 1 && !sscanf(argv[1], "%lf", &stretch->window)) {
     sox_fail("error while parsing window size");
-    return sox_usage(effp);
+    return lsx_usage(effp);
   }
 
   if (n > 2) {
@@ -97,7 +97,7 @@ static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
       break;
     default:
       sox_fail("error while parsing fade type");
-      return sox_usage(effp);
+      return lsx_usage(effp);
     }
   }
 
@@ -107,12 +107,12 @@ static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
  
   if (n > 3 && !sscanf(argv[3], "%lf", &stretch->shift)) {
     sox_fail("error while parsing shift ratio");
-    return sox_usage(effp);
+    return lsx_usage(effp);
   }
 
   if (stretch->shift > 1.0 || stretch->shift <= 0.0) {
     sox_fail("error with shift ratio value");
-    return sox_usage(effp);
+    return lsx_usage(effp);
   }
 
   /* default fading stuff... 
@@ -126,12 +126,12 @@ static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
   
   if (n > 4 && !sscanf(argv[4], "%lf", &stretch->fading)) {
     sox_fail("error while parsing fading ratio");
-    return sox_usage(effp);
+    return lsx_usage(effp);
   }
 
   if (stretch->fading > 0.5 || stretch->fading < 0.0) {
     sox_fail("error with fading ratio value");
-    return sox_usage(effp);
+    return lsx_usage(effp);
   }
   
   return SOX_SUCCESS;

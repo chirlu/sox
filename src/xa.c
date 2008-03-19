@@ -91,23 +91,23 @@ static int startread(sox_format_t * ft)
     char *magic = xa->header.magic;
 
     /* Check for the magic value */
-    if (sox_readbuf(ft, xa->header.magic, 4) != 4 ||
+    if (lsx_readbuf(ft, xa->header.magic, 4) != 4 ||
         (memcmp("XA\0\0", xa->header.magic, 4) != 0 &&
          memcmp("XAI\0", xa->header.magic, 4) != 0 &&
          memcmp("XAJ\0", xa->header.magic, 4) != 0))
     {
-        sox_fail_errno(ft, SOX_EHDR, "XA: Header not found");
+        lsx_fail_errno(ft, SOX_EHDR, "XA: Header not found");
         return SOX_EOF;
     }
     
     /* Read the rest of the header */
-    if (sox_readdw(ft, &xa->header.outSize) != SOX_SUCCESS) return SOX_EOF;
-    if (sox_readw(ft, &xa->header.tag) != SOX_SUCCESS) return SOX_EOF;
-    if (sox_readw(ft, &xa->header.channels) != SOX_SUCCESS) return SOX_EOF;
-    if (sox_readdw(ft, &xa->header.sampleRate) != SOX_SUCCESS) return SOX_EOF;
-    if (sox_readdw(ft, &xa->header.avgByteRate) != SOX_SUCCESS) return SOX_EOF;
-    if (sox_readw(ft, &xa->header.align) != SOX_SUCCESS) return SOX_EOF;
-    if (sox_readw(ft, &xa->header.bits) != SOX_SUCCESS) return SOX_EOF;
+    if (lsx_readdw(ft, &xa->header.outSize) != SOX_SUCCESS) return SOX_EOF;
+    if (lsx_readw(ft, &xa->header.tag) != SOX_SUCCESS) return SOX_EOF;
+    if (lsx_readw(ft, &xa->header.channels) != SOX_SUCCESS) return SOX_EOF;
+    if (lsx_readdw(ft, &xa->header.sampleRate) != SOX_SUCCESS) return SOX_EOF;
+    if (lsx_readdw(ft, &xa->header.avgByteRate) != SOX_SUCCESS) return SOX_EOF;
+    if (lsx_readw(ft, &xa->header.align) != SOX_SUCCESS) return SOX_EOF;
+    if (lsx_readw(ft, &xa->header.bits) != SOX_SUCCESS) return SOX_EOF;
 
     /* Output the data from the header */
     sox_debug("XA Header:");
@@ -148,7 +148,7 @@ static int startread(sox_format_t * ft)
     
     /* Check for supported formats */
     if (ft->encoding.bits_per_sample != 16) {
-        sox_fail_errno(ft, SOX_EFMT, "%d-bit sample resolution not supported.",
+        lsx_fail_errno(ft, SOX_EFMT, "%d-bit sample resolution not supported.",
             ft->encoding.bits_per_sample);
         return SOX_EOF;
     }
@@ -202,17 +202,17 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
     while (done < len) {
         if (xa->bufPos >= xa->blockSize) {
             /* Read the next block */
-            bytes = sox_readbuf(ft, xa->buf, xa->blockSize);
+            bytes = lsx_readbuf(ft, xa->buf, xa->blockSize);
             if (bytes < xa->blockSize) {
-                if (sox_eof(ft)) {
+                if (lsx_eof(ft)) {
                     if (done > 0) {
                         return done;
                     }
-                    sox_fail_errno(ft,SOX_EOF,"Premature EOF on .xa input file");
+                    lsx_fail_errno(ft,SOX_EOF,"Premature EOF on .xa input file");
                     return 0;
                 } else {
                     /* error */
-                    sox_fail_errno(ft,SOX_EOF,"read error on input stream");
+                    lsx_fail_errno(ft,SOX_EOF,"read error on input stream");
                     return 0;
                 }
             }

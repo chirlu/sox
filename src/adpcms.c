@@ -156,7 +156,7 @@ static int adpcm_start(sox_format_t * ft, adpcm_io_t state, sox_encoding_t type)
 
   sox_adpcm_reset(state, type);
   
-  return sox_rawstart(ft, sox_true, sox_false, sox_true, type, 4);
+  return lsx_rawstart(ft, sox_true, sox_false, sox_true, type, 4);
 }
 
 int sox_adpcm_oki_start(sox_format_t * ft, adpcm_io_t state)
@@ -194,7 +194,7 @@ sox_size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t state, sox_sample_t * bu
     state->store.flag = 0;
     ++n;
   }
-  while (n < len && sox_read_b_buf(ft, &byte, 1) == 1) {
+  while (n < len && lsx_read_b_buf(ft, &byte, 1) == 1) {
     word = adpcm_decode(byte >> 4, &state->encoder);
     *buffer++ = SOX_SIGNED_16BIT_TO_SAMPLE(word, ft->clips);
 
@@ -263,7 +263,7 @@ sox_size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t state, const sox_sample
       state->file.buf[state->file.count++] = byte;
 
       if (state->file.count >= state->file.size) {
-        sox_writebuf(ft, state->file.buf, state->file.count);
+        lsx_writebuf(ft, state->file.buf, state->file.count);
 
         state->file.count = 0;
       }
@@ -300,7 +300,7 @@ void sox_adpcm_flush(sox_format_t * ft, adpcm_io_t state)
     state->file.buf[state->file.count++] = byte;
   }
   if (state->file.count > 0)
-    sox_writebuf(ft, state->file.buf, state->file.count);
+    lsx_writebuf(ft, state->file.buf, state->file.count);
 }
 
 /******************************************************************************

@@ -48,7 +48,7 @@ static int startread(sox_format_t * ft)
 
   /* If you need to seek around the input file. */
   if (!ft->seekable) {
-    sox_fail_errno(ft, SOX_EOF, "skel inputfile must be a file");
+    lsx_fail_errno(ft, SOX_EOF, "skel inputfile must be a file");
     return SOX_EOF;
   }
 
@@ -62,12 +62,12 @@ static int startread(sox_format_t * ft)
   ft->signal.channels = 1; /* or 2 or 3 ... */
   ft->encoding.bits_per_sample = 8; /* or 16 ... */
   ft->encoding.encoding = SOX_ENCODING_UNSIGNED; /* or SIGN2 ... */
-  append_comment(&ft->comments, "any comment in file header.");
+  sox_append_comment(&ft->comments, "any comment in file header.");
 
   /* If your format doesn't have a header then samples_in_file
    * can be determined by the file size.
    */
-  samples_in_file = sox_filelength(ft) / (ft->encoding.bits_per_sample >> 3);
+  samples_in_file = lsx_filelength(ft) / (ft->encoding.bits_per_sample >> 3);
 
   /* If you can detect the length of your file, record it here. */
   ft->length = samples_in_file;
@@ -165,7 +165,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
   case 8:
     switch (ft->encoding.encoding) {
     case SOX_ENCODING_UNSIGNED:
-      while (done < len && sox_writeb(ft, SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++, ft->clips)) == SOX_SUCCESS)
+      while (done < len && lsx_writeb(ft, SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++, ft->clips)) == SOX_SUCCESS)
         ++done;
       break;
     default:

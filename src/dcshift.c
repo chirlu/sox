@@ -35,15 +35,15 @@ static int sox_dcshift_getopts(sox_effect_t * effp, int n, char **argv)
     dcs->uselimiter = 0; /* default is no limiter */
 
     if (n < 1)
-      return sox_usage(effp);
+      return lsx_usage(effp);
 
     if (n && (!sscanf(argv[0], "%lf", &dcs->dcshift)))
-      return sox_usage(effp);
+      return lsx_usage(effp);
 
     if (n>1)
     {
         if (!sscanf(argv[1], "%lf", &dcs->limitergain))
-          return sox_usage(effp);
+          return lsx_usage(effp);
 
         dcs->uselimiter = 1; /* ok, we'll use it */
         /* The following equation is derived so that there is no 

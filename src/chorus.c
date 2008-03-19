@@ -100,7 +100,7 @@ static int sox_chorus_getopts(sox_effect_t * effp, int n, char **argv)
         i = 0;
 
         if ( ( n < 7 ) || (( n - 2 ) % 5 ) )
-          return sox_usage(effp);
+          return lsx_usage(effp);
 
         sscanf(argv[i++], "%f", &chorus->in_gain);
         sscanf(argv[i++], "%f", &chorus->out_gain);
@@ -119,7 +119,7 @@ static int sox_chorus_getopts(sox_effect_t * effp, int n, char **argv)
                 else if ( ! strcmp(argv[i], "-t"))
                         chorus->modulation[chorus->num_chorus] = MOD_TRIANGLE;
                 else
-                  return sox_usage(effp);
+                  return lsx_usage(effp);
                 i++;
                 chorus->num_chorus++;
         }
@@ -202,10 +202,10 @@ static int sox_chorus_start(sox_effect_t * effp)
                 chorus->lookup_tab[i] = (int *) xmalloc(sizeof (int) * chorus->length[i]);
 
                 if (chorus->modulation[i] == MOD_SINE)
-                  sox_generate_wave_table(SOX_WAVE_SINE, SOX_INT, chorus->lookup_tab[i],
+                  lsx_generate_wave_table(SOX_WAVE_SINE, SOX_INT, chorus->lookup_tab[i],
                                          (unsigned)chorus->length[i], 0., (double)chorus->depth_samples[i], 0.);
                 else
-                  sox_generate_wave_table(SOX_WAVE_TRIANGLE, SOX_INT, chorus->lookup_tab[i], 
+                  lsx_generate_wave_table(SOX_WAVE_TRIANGLE, SOX_INT, chorus->lookup_tab[i], 
                                          (unsigned)chorus->length[i],
                                          (double)(chorus->samples[i] - 1 - 2 * chorus->depth_samples[i]),
                                          (double)(chorus->samples[i] - 1), 3 * M_PI_2);

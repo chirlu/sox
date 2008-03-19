@@ -252,12 +252,12 @@ static int sox_pitch_getopts(sox_effect_t * effp, int n, char **argv)
     pitch->shift = 0.0; /* default is no change */
 
     if (n && !sscanf(argv[0], "%lf", &pitch->shift))
-      return sox_usage(effp);
+      return lsx_usage(effp);
 
     /* sweep size in ms */
     pitch->width = PITCH_DEFAULT_WIDTH;
     if (n>1 && !sscanf(argv[1], "%lf", &pitch->width))
-      return sox_usage(effp);
+      return lsx_usage(effp);
 
     /* interpole option */
     pitch->interopt = PITCH_INTERPOLE_DEFAULT;
@@ -274,7 +274,7 @@ static int sox_pitch_getopts(sox_effect_t * effp, int n, char **argv)
             pitch->interopt = PITCH_INTERPOLE_CUB;
             break;
         default:
-            return sox_usage(effp);
+            return lsx_usage(effp);
         }
     }
 
@@ -301,14 +301,14 @@ static int sox_pitch_getopts(sox_effect_t * effp, int n, char **argv)
             pitch->fadeopt = PITCH_FADE_COS;
             break;
         default:
-            return sox_usage(effp);
+            return lsx_usage(effp);
         }
     }
     
     pitch->coef = 0.25;
     if (n>4 && (!sscanf(argv[4], "%lf", &pitch->coef) ||
                 pitch->coef<0.0 || pitch->coef>0.5))
-      return sox_usage(effp);
+      return lsx_usage(effp);
 
     return SOX_SUCCESS;
 }

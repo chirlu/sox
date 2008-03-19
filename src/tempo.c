@@ -227,7 +227,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   } while (0);
 
   return argc || !p->factor || p->overlap_ms + p->search_ms >= p->segment_ms ?
-    sox_usage(effp) : SOX_SUCCESS;
+    lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static int start(sox_effect_t * effp)

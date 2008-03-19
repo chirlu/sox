@@ -169,7 +169,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
         }
 
         if ((n >= 1) && (sscanf(argv[0], "%lf", &r->rolloff) != 1)) {
-          return sox_usage(effp);
+          return lsx_usage(effp);
         } else if ((r->rolloff <= 0.01) || (r->rolloff >= 1.0)) {
           sox_fail("rolloff factor (%f) no good, should be 0.01<x<1.0", r->rolloff);
           return(SOX_EOF);
@@ -177,7 +177,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
 
 
         if ((n >= 2) && !sscanf(argv[1], "%lf", &r->beta)) {
-          return sox_usage(effp);
+          return lsx_usage(effp);
         } else if (r->beta <= 2.0) {
         	r->beta = 0;
                 sox_debug("opts: Nuttall window, cutoff %f", r->rolloff);
@@ -202,7 +202,7 @@ static int start(sox_effect_t * effp)
 
   r->Factor = effp->out_signal.rate / effp->in_signal.rate;
 
-  gcdrate = sox_gcd((long) effp->in_signal.rate, (long) effp->out_signal.rate);
+  gcdrate = lsx_gcd((long) effp->in_signal.rate, (long) effp->out_signal.rate);
   r->a = effp->in_signal.rate / gcdrate;
   r->b = effp->out_signal.rate / gcdrate;
 

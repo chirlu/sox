@@ -39,17 +39,17 @@ static int sox_trim_getopts(sox_effect_t * effp, int n, char **argv)
             trim->length_str = (char *)xmalloc(strlen(argv[1])+1);
             strcpy(trim->length_str,argv[1]);
             /* Do a dummy parse to see if it will fail */
-            if (sox_parsesamples(0., trim->length_str, &trim->length, 't') == NULL)
-              return sox_usage(effp);
+            if (lsx_parsesamples(0., trim->length_str, &trim->length, 't') == NULL)
+              return lsx_usage(effp);
         case 1:
             trim->start_str = (char *)xmalloc(strlen(argv[0])+1);
             strcpy(trim->start_str,argv[0]);
             /* Do a dummy parse to see if it will fail */
-            if (sox_parsesamples(0., trim->start_str, &trim->start, 't') == NULL)
-              return sox_usage(effp);
+            if (lsx_parsesamples(0., trim->start_str, &trim->start, 't') == NULL)
+              return lsx_usage(effp);
             break;
         default:
-            return sox_usage(effp);
+            return lsx_usage(effp);
 
     }
     return (SOX_SUCCESS);
@@ -62,17 +62,17 @@ static int sox_trim_start(sox_effect_t * effp)
 {
     trim_t trim = (trim_t) effp->priv;
 
-    if (sox_parsesamples(effp->in_signal.rate, trim->start_str,
+    if (lsx_parsesamples(effp->in_signal.rate, trim->start_str,
                         &trim->start, 't') == NULL)
-      return sox_usage(effp);
+      return lsx_usage(effp);
     /* Account for # of channels */
     trim->start *= effp->in_signal.channels;
 
     if (trim->length_str)
     {
-        if (sox_parsesamples(effp->in_signal.rate, trim->length_str,
+        if (lsx_parsesamples(effp->in_signal.rate, trim->length_str,
                     &trim->length, 't') == NULL)
-          return sox_usage(effp);
+          return lsx_usage(effp);
     }
     else
         trim->length = 0;

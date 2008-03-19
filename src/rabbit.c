@@ -68,11 +68,11 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   r->out_rate = HUGE_VAL;
   if (argc) {
     if (sscanf(*argv, "%lf %c", &r->out_rate, &dummy) != 1 || r->out_rate <= 0) 
-      return sox_usage(effp);
+      return lsx_usage(effp);
     argc--; argv++;
   }
 
-  return argc? sox_usage(effp) : SOX_SUCCESS;
+  return argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 /*

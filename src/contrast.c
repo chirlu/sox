@@ -29,7 +29,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   p->contrast = 75;
   do {NUMERIC_PARAMETER(contrast, 0, 100)} while (0);
   p->contrast /= 750;
-  return argc?  sox_usage(effp) : SOX_SUCCESS;
+  return argc?  lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,

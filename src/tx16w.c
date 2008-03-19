@@ -85,35 +85,35 @@ static int startread(sox_format_t * ft)
     /* If you need to seek around the input file. */
     if (! ft->seekable)
     {
-        sox_fail_errno(ft,SOX_EOF,"txw input file must be a file, not a pipe");
+        lsx_fail_errno(ft,SOX_EOF,"txw input file must be a file, not a pipe");
         return(SOX_EOF);
     }
 
     /* This is dumb but portable, just count the bytes til EOF */
-    while (sox_read_b_buf(ft, (unsigned char *)&trash, 1) == 1)
+    while (lsx_read_b_buf(ft, (unsigned char *)&trash, 1) == 1)
         num_samp_bytes++; 
     num_samp_bytes -= 32;         /* calculate num samples by sub header size */
-    sox_seeki(ft, 0, 0);           /* rewind file */
+    lsx_seeki(ft, 0, 0);           /* rewind file */
     sk->rest = num_samp_bytes;    /* set how many sample bytes to read */
 
     /* first 6 bytes are file type ID LM8953 */
-    sox_readb(ft, (unsigned char *)&filetype[0]);
-    sox_readb(ft, (unsigned char *)&filetype[1]);
-    sox_readb(ft, (unsigned char *)&filetype[2]);
-    sox_readb(ft, (unsigned char *)&filetype[3]);
-    sox_readb(ft, (unsigned char *)&filetype[4]);
-    sox_readb(ft, (unsigned char *)&filetype[5]);
+    lsx_readb(ft, (unsigned char *)&filetype[0]);
+    lsx_readb(ft, (unsigned char *)&filetype[1]);
+    lsx_readb(ft, (unsigned char *)&filetype[2]);
+    lsx_readb(ft, (unsigned char *)&filetype[3]);
+    lsx_readb(ft, (unsigned char *)&filetype[4]);
+    lsx_readb(ft, (unsigned char *)&filetype[5]);
     filetype[6] = '\0';
     for( c = 16; c > 0 ; c-- )    /* Discard next 16 bytes */
-        sox_readb(ft, (unsigned char *)&trash);
-    sox_readb(ft, (unsigned char *)&format);
-    sox_readb(ft, (unsigned char *)&sample_rate);
+        lsx_readb(ft, (unsigned char *)&trash);
+    lsx_readb(ft, (unsigned char *)&format);
+    lsx_readb(ft, (unsigned char *)&sample_rate);
     /*
      * save next 8 bytes - if sample rate is 0, then we need
      *  to look at gunk[2] and gunk[5] to get real rate
      */
     for( c = 0; c < 8; c++ )
-        sox_readb(ft, (unsigned char *)&(gunk[c]));
+        lsx_readb(ft, (unsigned char *)&(gunk[c]));
     /*
      * We should now be pointing at start of raw sample data in file 
      */
@@ -122,7 +122,7 @@ static int startread(sox_format_t * ft)
     sox_debug("Found header filetype %s",filetype);
     if(strcmp(filetype,"LM8953"))
     {
-        sox_fail_errno(ft,SOX_EHDR,"Invalid filetype ID in input file header, != LM8953");
+        lsx_fail_errno(ft,SOX_EHDR,"Invalid filetype ID in input file header, != LM8953");
         return(SOX_EOF);
     }
     /*
@@ -215,9 +215,9 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
      */
     for(done = 0; done < len; ) {
         if(sk->rest < 3) break; /* Finished reading from file? */
-        sox_readb(ft, &uc1);
-        sox_readb(ft, &uc2);
-        sox_readb(ft, &uc3);
+        lsx_readb(ft, &uc1);
+        lsx_readb(ft, &uc2);
+        lsx_readb(ft, &uc3);
         sk->rest -= 3; /* adjust remaining for bytes we just read */
         s1 = (unsigned short) (uc1 << 4) | (((uc2 >> 4) & 017));
         s2 = (unsigned short) (uc3 << 4) | (( uc2 & 017 ));
@@ -244,14 +244,14 @@ static int startwrite(sox_format_t * ft)
     /* If you have to seek around the output file */
     if (! ft->seekable)
     {
-        sox_fail_errno(ft,SOX_EOF,"Output .txw file must be a file, not a pipe");
+        lsx_fail_errno(ft,SOX_EOF,"Output .txw file must be a file, not a pipe");
         return(SOX_EOF);
     }
 
     /* dummy numbers, just for place holder, real header is written
        at end of processing, since byte count is needed */
 
-    sox_writebuf(ft, &WH, 32);
+    lsx_writebuf(ft, &WH, 32);
     sk->bytes_out = 32;
     return(SOX_SUCCESS);
 }
@@ -272,9 +272,9 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
 
     if (i < len) {
       w2 = *buf++ >> 20, ++i;
-      if (sox_writesb(ft, (w1 >> 4) & 0xFF) ||
-          sox_writesb(ft, (((w1 & 0x0F) << 4) | (w2 & 0x0F)) & 0xFF) ||
-          sox_writesb(ft, (w2 >> 4) & 0xFF)) {
+      if (lsx_writesb(ft, (w1 >> 4) & 0xFF) ||
+          lsx_writesb(ft, (((w1 & 0x0F) << 4) | (w2 & 0x0F)) & 0xFF) ||
+          lsx_writesb(ft, (w2 >> 4) & 0xFF)) {
         i = last_i;
         break;
       }
@@ -342,9 +342,9 @@ static int stopwrite(sox_format_t * ft)
         AttackLength                       = 0x40;
         LoopLength                         = 0x40;
         for(i=sk->samples_out;i<0x80;i++) {
-            sox_writeb(ft, 0);
-            sox_writeb(ft, 0);
-            sox_writeb(ft, 0);
+            lsx_writeb(ft, 0);
+            lsx_writeb(ft, 0);
+            lsx_writeb(ft, 0);
             sk->bytes_out += 3;
         }
     }
@@ -352,7 +352,7 @@ static int stopwrite(sox_format_t * ft)
     /* Fill up to 256 byte blocks; the TX16W seems to like that */
 
     while ((sk->bytes_out % 0x100) != 0) {
-        sox_writeb(ft, 0);
+        lsx_writeb(ft, 0);
         sk->bytes_out++;
     }
 
@@ -366,8 +366,8 @@ static int stopwrite(sox_format_t * ft)
     WH.rpt_length[2] = (0x01 & (LoopLength >> 16)) +
         magic2[WH.sample_rate];
 
-    sox_rewind(ft);
-    sox_writebuf(ft, &WH, 32);
+    lsx_rewind(ft);
+    lsx_writebuf(ft, &WH, 32);
 
     return(SOX_SUCCESS);
 }

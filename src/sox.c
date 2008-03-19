@@ -22,7 +22,9 @@
  * USA.
  */
 
-#include "sox_i.h"
+#include "soxconfig.h"
+#include "sox.h"
+#include "util.h"
 #include "getopt.h"
 
 #include <errno.h>
@@ -97,7 +99,7 @@ typedef struct file_info
   double volume;
   double replay_gain;
   rg_mode replay_gain_mode;
-  comments_t comments;
+  sox_comments_t comments;
 
   sox_format_t * ft;  /* libSoX file descriptor */
   sox_size_t volume_clips;
@@ -204,21 +206,21 @@ static void play_file_info(sox_format_t * ft, file_t f, sox_bool full)
   }
 
   fprintf(output, "  Encoding: %-14s", sox_encodings_short_str[ft->encoding.encoding]);
-  text = find_comment(f->ft->comments, "Comment");
+  text = sox_find_comment(f->ft->comments, "Comment");
   if (!text)
-    text = find_comment(f->ft->comments, "Description");
+    text = sox_find_comment(f->ft->comments, "Description");
   if (!text)
-    text = find_comment(f->ft->comments, "Year");
+    text = sox_find_comment(f->ft->comments, "Year");
   if (text)
     fprintf(output, "Info: %s", text);
   fprintf(output, "\n");
 
   sprintf(buffer, "  Channels: %u @ %u-bit", ft->signal.channels, ft->signal.precision);
   fprintf(output, "%-25s", buffer);
-  text = find_comment(f->ft->comments, "Tracknumber");
+  text = sox_find_comment(f->ft->comments, "Tracknumber");
   if (text) {
     fprintf(output, "Track: %s", text);
-    text = find_comment(f->ft->comments, "Tracktotal");
+    text = sox_find_comment(f->ft->comments, "Tracktotal");
     if (text)
       fprintf(output, " of %s", text);
   }
@@ -226,7 +228,7 @@ static void play_file_info(sox_format_t * ft, file_t f, sox_bool full)
 
   sprintf(buffer, "Samplerate: %gHz", ft->signal.rate);
   fprintf(output, "%-25s", buffer);
-  text = find_comment(f->ft->comments, "Album");
+  text = sox_find_comment(f->ft->comments, "Album");
   if (text)
     fprintf(output, "Album: %s", text);
   fprintf(output, "\n");
@@ -237,13 +239,13 @@ static void play_file_info(sox_format_t * ft, file_t f, sox_bool full)
     fprintf(output, "%-24s", buffer);
   } else
     fprintf(output, "%-24s", "Replaygain: off");
-  text = find_comment(f->ft->comments, "Artist");
+  text = sox_find_comment(f->ft->comments, "Artist");
   if (text)
     fprintf(output, "Artist: %s", text);
   fprintf(output, "\n");
 
   fprintf(output, "  Duration: %-13s", ft->length? str_time((double)ws / ft->signal.rate) : "unknown");
-  text = find_comment(f->ft->comments, "Title");
+  text = sox_find_comment(f->ft->comments, "Title");
   if (text)
     fprintf(output, "Title: %s", text);
   fprintf(output, "\n\n");
@@ -293,7 +295,7 @@ static void display_file_info(sox_format_t * ft, file_t f, sox_bool full)
   if (full) {
     if (ft->encoding.bits_per_sample > 8 || (ft->handler.flags & SOX_FILE_ENDIAN))
       fprintf(output, "Endian Type    : %s\n",
-          ft->encoding.reverse_bytes != SOX_IS_BIGENDIAN ? "big" : "little");
+          ft->encoding.reverse_bytes != MACHINE_IS_BIGENDIAN ? "big" : "little");
     if (ft->encoding.bits_per_sample)
       fprintf(output,
         "Reverse Nibbles: %s\n"
@@ -309,8 +311,8 @@ static void display_file_info(sox_format_t * ft, file_t f, sox_bool full)
     fprintf(output, "Level adjust   : %g (linear gain)\n" , f->volume);
 
   if (!(ft->handler.flags & SOX_FILE_DEVICE) && ft->comments) {
-    if (num_comments(ft->comments) > 1) {
-      comments_t p = ft->comments;
+    if (sox_num_comments(ft->comments) > 1) {
+      sox_comments_t p = ft->comments;
       fprintf(output, "Comments       : \n");
       do fprintf(output, "%s\n", *p);
       while (*++p);
@@ -768,18 +770,18 @@ static void open_output_file(sox_size_t olen)
   sox_loopinfo_t loops[SOX_MAX_NLOOPS];
   double factor;
   int i;
-  comments_t comments = copy_comments(files[0]->ft->comments);
-  comments_t p = ofile->comments;
+  sox_comments_t comments = sox_copy_comments(files[0]->ft->comments);
+  sox_comments_t p = ofile->comments;
 
   if (!comments && !p)
-    append_comment(&comments, "Processed by SoX");
+    sox_append_comment(&comments, "Processed by SoX");
   else if (p) {
     if (!(*p)[0]) {
-      delete_comments(&comments);
+      sox_delete_comments(&comments);
       ++p;
     }
     while (*p)
-      append_comment(&comments, *p++);
+      sox_append_comment(&comments, *p++);
   }
 
   /*
@@ -805,7 +807,7 @@ static void open_output_file(sox_size_t olen)
                         olen,
                         &files[0]->ft->instr,
                         loops);
-  delete_comments(&comments);
+  sox_delete_comments(&comments);
 
   if (!ofile->ft)
     /* sox_open_write() will call sox_warn for most errors.
@@ -947,7 +949,7 @@ static void display_supported_formats(void)
   char const * * format_list;
   char const * const * names;
 
-  for (i = 0, formats = 0; i < sox_formats; i++) {
+  for (i = formats = 0; sox_format_fns[i].fn; ++i) {
     char const * const *names = sox_format_fns[i].fn()->names;
     while (*names++)
       formats++;
@@ -955,7 +957,7 @@ static void display_supported_formats(void)
   format_list = (const char **)xmalloc(formats * sizeof(char *));
 
   printf("AUDIO FILE FORMATS:");
-  for (i = 0, formats = 0; i < sox_formats; i++) {
+  for (i = formats = 0; sox_format_fns[i].fn; ++i) {
     sox_format_handler_t const * handler = sox_format_fns[i].fn();
     if (!(handler->flags & SOX_FILE_DEVICE))
       for (names = handler->names; *names; ++names)
@@ -967,7 +969,7 @@ static void display_supported_formats(void)
   putchar('\n');
 
   printf("PLAYLIST FORMATS: m3u pls\nAUDIO DEVICES:");
-  for (i = 0, formats = 0; i < sox_formats; i++) {
+  for (i = formats = 0; sox_format_fns[i].fn; ++i) {
     sox_format_handler_t const * handler = sox_format_fns[i].fn();
     if ((handler->flags & SOX_FILE_DEVICE) && !(handler->flags & SOX_FILE_PHONY))
       for (names = handler->names; *names; ++names)
@@ -1152,7 +1154,7 @@ static void usage_format(char const * name)
     else usage_format1(f);
   }
   else {
-    for (i = 0; i < sox_formats; ++i) {
+    for (i = 0; sox_format_fns[i].fn; ++i) {
       sox_format_handler_t const * f = sox_format_fns[i].fn();
       if (!(f->flags & SOX_FILE_PHONY))
         usage_format1(f);
@@ -1161,7 +1163,7 @@ static void usage_format(char const * name)
   exit(1);
 }
 
-static void read_comment_file(comments_t * comments, char const * const filename)
+static void read_comment_file(sox_comments_t * comments, char const * const filename)
 {
   int c;
   size_t text_length = 100;
@@ -1186,7 +1188,7 @@ static void read_comment_file(comments_t * comments, char const * const filename
     }
     if (i) {
       text[i] = '\0';
-      append_comment(comments, text);
+      sox_append_comment(comments, text);
     }
   } while (c != EOF);
 
@@ -1280,7 +1282,7 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
       switch (option_index) {
       case 0:
         if (optarg)
-          append_comment(&f->comments, optarg);
+          sox_append_comment(&f->comments, optarg);
         break;
 
       case 1:
@@ -1297,22 +1299,22 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
         break;
 
       case 3:
-        append_comment(&f->comments, "");
+        sox_append_comment(&f->comments, "");
         read_comment_file(&f->comments, optarg);
         break;
 
       case 4:
-        append_comment(&f->comments, "");
+        sox_append_comment(&f->comments, "");
         if (optarg)
-          append_comment(&f->comments, optarg);
+          sox_append_comment(&f->comments, optarg);
         break;
 
       case 5:
         if (f->encoding.reverse_bytes != SOX_OPTION_DEFAULT || f->encoding.opposite_endian)
           usage("only one endian option per file is allowed");
         switch (enum_option(option_index, endian_options)) {
-          case ENDIAN_little: f->encoding.reverse_bytes = SOX_IS_BIGENDIAN; break;
-          case ENDIAN_big: f->encoding.reverse_bytes = SOX_IS_LITTLEENDIAN; break;
+          case ENDIAN_little: f->encoding.reverse_bytes = MACHINE_IS_BIGENDIAN; break;
+          case ENDIAN_big: f->encoding.reverse_bytes = MACHINE_IS_LITTLEENDIAN; break;
           case ENDIAN_swap: f->encoding.opposite_endian = sox_true; break;
         }
         break;
@@ -1431,8 +1433,8 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
       if (f->encoding.reverse_bytes != SOX_OPTION_DEFAULT || f->encoding.opposite_endian)
         usage("only one endian option per file is allowed");
       switch (c) {
-        case 'L': f->encoding.reverse_bytes   = SOX_IS_BIGENDIAN;    break;
-        case 'B': f->encoding.reverse_bytes   = SOX_IS_LITTLEENDIAN; break;
+        case 'L': f->encoding.reverse_bytes   = MACHINE_IS_BIGENDIAN;    break;
+        case 'B': f->encoding.reverse_bytes   = MACHINE_IS_LITTLEENDIAN; break;
         case 'x': f->encoding.opposite_endian = sox_true;            break;
       }
       break;
@@ -1583,7 +1585,7 @@ static int soxi1(soxi_t * type, char * filename)
     case bits: printf("%u\n", ft->encoding.bits_per_sample); break;
     case encoding: printf("%s\n", sox_encodings_str[ft->encoding.encoding]); break;
     case annotation: if (ft->comments) {
-      comments_t p = ft->comments;
+      sox_comments_t p = ft->comments;
       do printf("%s\n", *p); while (*++p);
     }
     break;
@@ -1623,11 +1625,11 @@ static int soxi(int argc, char * const * argv)
   return num_errors;
 }
 
-static void set_replay_gain(comments_t comments, file_t f)
+static void set_replay_gain(sox_comments_t comments, file_t f)
 {
   rg_mode rg = replay_gain_mode;
   int try = 2; /* Will try to find the other GAIN if preferred one not found */
-  size_t i, n = num_comments(comments);
+  size_t i, n = sox_num_comments(comments);
 
   if (rg != RG_off) while (try--) {
     char const * target =
@@ -1731,11 +1733,11 @@ int main(int argc, char **argv)
   /* Simple heuristic to determine if replay-gain should be in album mode */
   if (sox_mode == sox_play && replay_gain_mode == RG_track && input_count > 1 &&
       cmp_comment_text(
-        find_comment(files[0]->ft->comments, "artist"),
-        find_comment(files[1]->ft->comments, "artist")) &&
+        sox_find_comment(files[0]->ft->comments, "artist"),
+        sox_find_comment(files[1]->ft->comments, "artist")) &&
       cmp_comment_text(
-        find_comment(files[0]->ft->comments, "album"),
-        find_comment(files[1]->ft->comments, "album")))
+        sox_find_comment(files[0]->ft->comments, "album"),
+        sox_find_comment(files[1]->ft->comments, "album")))
     replay_gain_mode = RG_album;
 
   for (i = 0; i < input_count; i++)

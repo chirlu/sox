@@ -35,10 +35,10 @@ static sox_size_t decode_1_frame(sox_format_t * ft)
   size_t n_1;
   UWord8 coded[AMR_CODED_MAX];
 
-  if (sox_readbuf(ft, &coded[0], 1) != 1)
+  if (lsx_readbuf(ft, &coded[0], 1) != 1)
     return AMR_FRAME;
   n_1 = block_size[(coded[0] >> 3) & 0x0F] - 1;
-  if (sox_readbuf(ft, &coded[1], n_1) != n_1)
+  if (lsx_readbuf(ft, &coded[1], n_1) != n_1)
     return AMR_FRAME;
   D_IF_decode(amr->state, coded, amr->pcm, 0);
   return 0;
@@ -49,9 +49,9 @@ static sox_bool encode_1_frame(sox_format_t * ft)
   amr_t amr = (amr_t) ft->priv;
   UWord8 coded[AMR_CODED_MAX];
 #include "amr1.h"
-  sox_bool result = sox_writebuf(ft, coded, (unsigned)n) == (unsigned)n;
+  sox_bool result = lsx_writebuf(ft, coded, (unsigned)n) == (unsigned)n;
   if (!result)
-    sox_fail_errno(ft, errno, "write error");
+    lsx_fail_errno(ft, errno, "write error");
   return result;
 }
 
@@ -63,10 +63,10 @@ static int startread(sox_format_t * ft)
   amr->pcm_index = AMR_FRAME;
   amr->state = D_IF_init();
 
-  if (sox_readchars(ft, buffer, sizeof(buffer)))
+  if (lsx_readchars(ft, buffer, sizeof(buffer)))
     return SOX_EOF;
   if (memcmp(buffer, magic, sizeof(buffer))) {
-    sox_fail_errno(ft, SOX_EHDR, "invalid magic number");
+    lsx_fail_errno(ft, SOX_EHDR, "invalid magic number");
     return SOX_EOF;
   }
   ft->signal.rate = AMR_RATE;
@@ -104,14 +104,14 @@ static int startwrite(sox_format_t * ft)
   if (ft->encoding.compression != HUGE_VAL) {
     amr->mode = ft->encoding.compression;
     if (amr->mode != ft->encoding.compression || amr->mode > AMR_MODE_MAX) {
-      sox_fail_errno(ft, SOX_EINVAL, "compression level must be a whole number from 0 to %i", AMR_MODE_MAX);
+      lsx_fail_errno(ft, SOX_EINVAL, "compression level must be a whole number from 0 to %i", AMR_MODE_MAX);
       return SOX_EOF;
     }
   }
   else amr->mode = 0;
 
 #include "amr2.h"
-  sox_writes(ft, magic);
+  lsx_writes(ft, magic);
   amr->pcm_index = 0;
   return SOX_SUCCESS;
 }

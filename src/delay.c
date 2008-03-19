@@ -48,10 +48,10 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
 
   p->argv = xcalloc(p->argc = argc, sizeof(*p->argv));
   for (i = 0; i < p->argc; ++i) {
-    char const * next = sox_parsesamples(96000., p->argv[i] = xstrdup(argv[i]), &delay, 't');
+    char const * next = lsx_parsesamples(96000., p->argv[i] = xstrdup(argv[i]), &delay, 't');
     if (!next || *next) {
       kill(effp);
-      return sox_usage(effp);
+      return lsx_usage(effp);
     }
     if (delay > max_samples) {
       max_samples = delay;
@@ -76,8 +76,8 @@ static int start(sox_effect_t * effp)
   if (!p->max_arg)
     return SOX_EFF_NULL;
   if (effp->flow < p->argc)
-    sox_parsesamples(effp->in_signal.rate, p->argv[effp->flow], &p->buffer_size, 't');
-  sox_parsesamples(effp->in_signal.rate, p->max_arg, &max_delay, 't');
+    lsx_parsesamples(effp->in_signal.rate, p->argv[effp->flow], &p->buffer_size, 't');
+  lsx_parsesamples(effp->in_signal.rate, p->max_arg, &max_delay, 't');
   p->buffer_index = p->delay = 0;
   p->pad = max_delay - p->buffer_size;
   p->buffer = xmalloc(p->buffer_size * sizeof(*p->buffer));

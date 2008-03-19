@@ -68,7 +68,7 @@ static int gsmstart_rw(sox_format_t * ft, int w)
         p->channels = ft->signal.channels;
         if (p->channels > MAXCHANS || p->channels <= 0)
         {
-                sox_fail_errno(ft,SOX_EFMT,"gsm: channels(%d) must be in 1-16", ft->signal.channels);
+                lsx_fail_errno(ft,SOX_EFMT,"gsm: channels(%d) must be in 1-16", ft->signal.channels);
                 return(SOX_EOF);
         }
 
@@ -76,7 +76,7 @@ static int gsmstart_rw(sox_format_t * ft, int w)
                 p->handle[ch] = gsm_create();
                 if (!p->handle[ch])
                 {
-                        sox_fail_errno(ft,errno,"unable to create GSM stream");
+                        lsx_fail_errno(ft,errno,"unable to create GSM stream");
                         return (SOX_EOF);
                 }
         }
@@ -121,7 +121,7 @@ static sox_size_t sox_gsmread(sox_format_t * ft, sox_sample_t *buf, sox_size_t s
 
                 if (done>=samp) break;
 
-                r = sox_readbuf(ft, p->frames, p->channels * FRAMESIZE);
+                r = lsx_readbuf(ft, p->frames, p->channels * FRAMESIZE);
                 if (r != p->channels * FRAMESIZE)
                   break;
 
@@ -133,7 +133,7 @@ static sox_size_t sox_gsmread(sox_format_t * ft, sox_sample_t *buf, sox_size_t s
                         gbuff = p->sampleTop;
                         if (gsm_decode(p->handle[ch], p->frames + ch*FRAMESIZE, gbuff) < 0)
                         {
-                                sox_fail_errno(ft,errno,"error during GSM decode");
+                                lsx_fail_errno(ft,errno,"error during GSM decode");
                                 return (0);
                         }
                         
@@ -171,10 +171,10 @@ static int gsmflush(sox_format_t * ft)
                         gsp += chans;
                 }
                 gsm_encode(p->handle[ch], gbuff, p->frames);
-                r = sox_writebuf(ft, p->frames, FRAMESIZE);
+                r = lsx_writebuf(ft, p->frames, FRAMESIZE);
                 if (r != FRAMESIZE)
                 {
-                        sox_fail_errno(ft,errno,"write error");
+                        lsx_fail_errno(ft,errno,"write error");
                         return(SOX_EOF);
                 }
         }

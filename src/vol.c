@@ -50,7 +50,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   
   /* Get the vol, and the type if it's in the same arg. */
   if (!argc || (have_type = sscanf(argv[0], "%lf %10s %c", &vol->gain, type_string, &dummy) - 1) > 1)
-    return sox_usage(effp);
+    return lsx_usage(effp);
   ++argv, --argc;
 
   /* No type yet? Get it from the next arg: */
@@ -63,7 +63,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   if (have_type) {
     enum_item const * p = find_enum_text(type_ptr, vol_types);
     if (!p)
-      return sox_usage(effp);
+      return lsx_usage(effp);
     switch (p->value) {
       case vol_dB: vol->gain = dB_to_linear(vol->gain); break;
       case vol_power: /* power to amplitude, keep phase change */
@@ -74,7 +74,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
   if (argc) {
     if (fabs(vol->gain) < 1 || sscanf(*argv, "%lf %c", &vol->limitergain, &dummy) != 1 || vol->limitergain <= 0 || vol->limitergain >= 1)
-      return sox_usage(effp);
+      return lsx_usage(effp);
     
     vol->uselimiter = sox_true;
     /* The following equation is derived so that there is no 
@@ -189,7 +189,7 @@ static int gain_getopts(sox_effect_t * effp, int argc, char * * argv)
   char * args[] = {0, "dB"};
 
   if (argc != 1)
-    return sox_usage(effp);
+    return lsx_usage(effp);
   args[0] = argv[0];
   return sox_vol_effect_fn()->getopts(effp, array_length(args), args);
 }

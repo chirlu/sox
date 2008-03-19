@@ -85,7 +85,7 @@ static int sox_phaser_getopts(sox_effect_t * effp, int n, char **argv)
         phaser_t phaser = (phaser_t) effp->priv;
 
         if (!((n == 5) || (n == 6)))
-          return sox_usage(effp);
+          return lsx_usage(effp);
 
         sscanf(argv[0], "%f", &phaser->in_gain);
         sscanf(argv[1], "%f", &phaser->out_gain);
@@ -99,7 +99,7 @@ static int sox_phaser_getopts(sox_effect_t * effp, int n, char **argv)
                 else if ( ! strcmp(argv[5], "-t"))
                         phaser->modulation = MOD_TRIANGLE;
                 else
-                  return sox_usage(effp);
+                  return lsx_usage(effp);
         }
         return (SOX_SUCCESS);
 }
@@ -157,10 +157,10 @@ static int sox_phaser_start(sox_effect_t * effp)
         phaser->lookup_tab = (int *) xmalloc(sizeof (int) * phaser->length);
 
         if (phaser->modulation == MOD_SINE)
-          sox_generate_wave_table(SOX_WAVE_SINE, SOX_INT, phaser->lookup_tab,
+          lsx_generate_wave_table(SOX_WAVE_SINE, SOX_INT, phaser->lookup_tab,
               phaser->length, 0., (double)(phaser->maxsamples - 1), 0.);
         else
-          sox_generate_wave_table(SOX_WAVE_TRIANGLE, SOX_INT, phaser->lookup_tab,
+          lsx_generate_wave_table(SOX_WAVE_TRIANGLE, SOX_INT, phaser->lookup_tab,
               phaser->length, 0., (double)(2 * (phaser->maxsamples - 1)), 3 * M_PI_2);
         phaser->counter = 0;
         phaser->phase = 0;

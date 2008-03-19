@@ -69,7 +69,7 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
   unsigned pairs, i, j, commas;
 
   if (n < 2 || n > 5)
-    return sox_usage(effp);
+    return lsx_usage(effp);
 
   /* Start by checking the attack and decay rates */
   for (s = argv[0], commas = 0; *s; ++s) if (*s == ',') ++commas;

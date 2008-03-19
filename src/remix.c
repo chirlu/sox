@@ -46,7 +46,7 @@ assert_static(sizeof(struct remix) <= SOX_MAX_EFFECT_PRIVSIZE,
     SEP = (SEPARATORS)[strlen(SEPARATORS) - 1]; \
     n = sscanf(text, SCAN"%c", &VAR, &SEP); \
     if (VAR < MIN || (n == 2 && !strchr(SEPARATORS, SEP))) \
-      return sox_usage(effp); \
+      return lsx_usage(effp); \
     text = end? end + 1 : text + strlen(text); \
   } \
 } while (0)
@@ -71,7 +71,7 @@ static int parse(sox_effect_t * effp, char * * argv, unsigned channels)
       PARSE(sep1, "%i", chan1, 0, separators);
       if (!chan1) {
        if (j || *text)
-         return sox_usage(effp);
+         return lsx_usage(effp);
        continue;
       }
       if (sep1 == '-')

@@ -29,7 +29,7 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
       sscanf(argv[0], "%lf %c", &speed, &dummy) != 1 || speed < 0 ||
       (n > 1 && sscanf(argv[1], "%lf %c", &depth, &dummy) != 1) ||
       depth <= 0 || depth > 100)
-    return sox_usage(effp);
+    return lsx_usage(effp);
   args[2] = argv[0];
   sprintf(offset, "%g", 100 - depth / 2);
   args[3] = offset;

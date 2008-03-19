@@ -354,7 +354,7 @@ static int sox_poly_start(sox_effect_t * effp)
 
     effp->out_signal.channels = effp->in_signal.channels;
 
-    rate->lcmrate = sox_lcm((sox_sample_t)effp->in_signal.rate,
+    rate->lcmrate = lsx_lcm((sox_sample_t)effp->in_signal.rate,
                            (sox_sample_t)effp->out_signal.rate);
 
     /* Cursory check for LCM overflow.

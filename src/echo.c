@@ -89,7 +89,7 @@ static int sox_echo_getopts(sox_effect_t * effp, int n, char **argv)
         echo->num_delays = 0;
 
         if ((n < 4) || (n % 2))
-          return sox_usage(effp);
+          return lsx_usage(effp);
 
         i = 0;
         sscanf(argv[i++], "%f", &echo->in_gain);

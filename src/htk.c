@@ -35,16 +35,16 @@ static int start_read(sox_format_t * ft)
   uint32_t period_100ns, num_samples;
   uint16_t bytes_per_sample, parmKind;
 
-  if (sox_readdw(ft, &num_samples     ) ||
-      sox_readdw(ft, &period_100ns    ) ||
-      sox_readw (ft, &bytes_per_sample) ||
-      sox_readw (ft, &parmKind        )) return SOX_EOF;
+  if (lsx_readdw(ft, &num_samples     ) ||
+      lsx_readdw(ft, &period_100ns    ) ||
+      lsx_readw (ft, &bytes_per_sample) ||
+      lsx_readw (ft, &parmKind        )) return SOX_EOF;
   if (parmKind != Waveform) {
     int n = min(parmKind & 077, Unknown);
-    sox_fail_errno(ft, SOX_EFMT, "unsupported HTK type `%s' (0%o)", str[n], parmKind);
+    lsx_fail_errno(ft, SOX_EFMT, "unsupported HTK type `%s' (0%o)", str[n], parmKind);
     return SOX_EOF;
   }
-  return sox_check_read_params(ft, 1, 1e7 / period_100ns,
+  return lsx_check_read_params(ft, 1, 1e7 / period_100ns,
       SOX_ENCODING_SIGN2, (unsigned)bytes_per_sample << 3, (off_t)num_samples);
 }
 
@@ -54,10 +54,10 @@ static int write_header(sox_format_t * ft)
 
   if (!ft->olength && floor(period_100ns) != period_100ns)
     sox_warn("rounding sample period %f (x 100ns) to nearest integer", period_100ns);
-  return sox_writedw(ft, ft->olength? ft->olength:ft->length)
-      || sox_writedw(ft, (uint32_t)(period_100ns + .5))
-      || sox_writew(ft, ft->encoding.bits_per_sample >> 3)
-      || sox_writew(ft, Waveform) ? SOX_EOF : SOX_SUCCESS;
+  return lsx_writedw(ft, ft->olength? ft->olength:ft->length)
+      || lsx_writedw(ft, (uint32_t)(period_100ns + .5))
+      || lsx_writew(ft, ft->encoding.bits_per_sample >> 3)
+      || lsx_writew(ft, Waveform) ? SOX_EOF : SOX_SUCCESS;
 }
 
 SOX_FORMAT_HANDLER(htk)
@@ -68,9 +68,9 @@ SOX_FORMAT_HANDLER(htk)
     SOX_LIB_VERSION_CODE,
     "PCM format used for Hidden Markov Model speech processing",
     names, SOX_FILE_BIG_END | SOX_FILE_MONO | SOX_FILE_REWIND,
-    start_read, sox_rawread, NULL,
-    write_header, sox_rawwrite, NULL,
-    sox_rawseek, write_encodings, NULL
+    start_read, lsx_rawread, NULL,
+    write_header, lsx_rawwrite, NULL,
+    lsx_rawseek, write_encodings, NULL
   };
   return &handler;
 }

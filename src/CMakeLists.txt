@@ -19,34 +19,35 @@ add_custom_command(
 
 # Format with: !xargs echo|tr ' ' '\n'|sort|column|expand|sed 's/^/  /'
 set(effects_srcs
-  biquad          earwax          mcompand        polyphas        splice
-  biquads         echo            mixer           remix           stat
-  chorus          echos           noiseprof       repeat          stretch
-  compand         effects         noisered        resample        swap
-  compandt        fade            normalise       reverb          synth
-  contrast        FFT             pad             reverse         tempo
-  dcshift         filter          pan             silence         tremolo
-  delay           flanger         phaser          skeleff         trim
-  dither          key             pitch           speed           vol
+  biquad          earwax          mixer           remix           stat
+  biquads         echo            noiseprof       repeat          stretch
+  chorus          echos           noisered        resample        swap
+  compand         fade            normalise       reverb          synth
+  compandt        FFT             pad             reverse         tempo
+  contrast        filter          pan             silence         tremolo
+  dcshift         flanger         phaser          skeleff         trim
+  delay           key             pitch           speed           vol
+  dither          mcompand        polyphas        splice
 )
 set(formats_srcs
-  8svx            cvsd-fmt        htk             s1-fmt          u1-fmt
-  adpcm           dat             ima-fmt         s2-fmt          u2-fmt
-  adpcms          dvms-fmt        ima_rw          s3-fmt          u3-fmt
-  aifc-fmt        formats         la-fmt          s4-fmt          u4-fmt
-  aiff            g711            lpc10.c         sf              ul-fmt
-  aiff-fmt        g721            lu-fmt          skelform        voc
-  al-fmt          g723_24         maud            smp             vox
-  au              g723_40         nulfile         sounder         vox-fmt
-  avr             g72x            prc             soundtool       wav
-  cdr             gsm.c           raw             sphere          wve
-  cvsd            hcom            raw-fmt         tx16w           xa
+  8svx            cvsd-fmt        ima-fmt         s2-fmt          u2-fmt
+  adpcm           dat             ima_rw          s3-fmt          u3-fmt
+  adpcms          dvms-fmt        la-fmt          s4-fmt          u4-fmt
+  aifc-fmt        g711            lpc10.c         sf              ul-fmt
+  aiff            g721            lu-fmt          skelform        voc
+  aiff-fmt        g723_24         maud            smp             vox
+  al-fmt          g723_40         nulfile         sounder         vox-fmt
+  au              g72x            prc             soundtool       wav
+  avr             gsm.c           raw             sphere          wve
+  cdr             hcom            raw-fmt         tx16w           xa
+  cvsd            htk             s1-fmt          u1-fmt
 )
 add_library(lib${PROJECT_NAME}
-  ${effects_srcs}         misc                    util
-  ${formats_srcs}         ${optional_srcs}        xmalloc
-  getopt                  soxio
-  getopt1                 soxstdint
+  effects                 ${formats_srcs}         ${optional_srcs}
+  effects_i               getopt                  util
+  ${effects_srcs}         getopt1                 xmalloc
+  formats                 libsox soxstdint
+  formats_i               libsox_i
 )
 add_executable(${PROJECT_NAME} ${PROJECT_NAME}.c)
 target_link_libraries(${PROJECT_NAME} lib${PROJECT_NAME} lpc10 ${optional_libs})

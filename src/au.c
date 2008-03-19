@@ -22,10 +22,10 @@
 
 /* Magic numbers used in Sun and NeXT audio files */
 static struct {char str[4]; sox_bool reverse_bytes; char const * desc;} id[] = {
-  {"\x2e\x73\x6e\x64", SOX_IS_LITTLEENDIAN, "big-endian `.snd'"},
-  {"\x64\x6e\x73\x2e", SOX_IS_BIGENDIAN   , "little-endian `.snd'"},
-  {"\x00\x64\x73\x2e", SOX_IS_BIGENDIAN   , "little-endian `\\0ds.' (for DEC)"},
-  {"\x2e\x73\x64\x00", SOX_IS_LITTLEENDIAN, "big-endian `\\0ds.'"},
+  {"\x2e\x73\x6e\x64", MACHINE_IS_LITTLEENDIAN, "big-endian `.snd'"},
+  {"\x64\x6e\x73\x2e", MACHINE_IS_BIGENDIAN   , "little-endian `.snd'"},
+  {"\x00\x64\x73\x2e", MACHINE_IS_BIGENDIAN   , "little-endian `\\0ds.' (for DEC)"},
+  {"\x2e\x73\x64\x00", MACHINE_IS_LITTLEENDIAN, "big-endian `\\0ds.'"},
   {"    ", 0, NULL}
 };
 #define FIXED_HDR     24
@@ -97,7 +97,7 @@ static int unpack_input(sox_format_t * ft, unsigned char *code)
   unsigned char           in_byte;
 
   if (p->in_bits < (int)ft->encoding.bits_per_sample) {
-    if (sox_read_b_buf(ft, &in_byte, 1) != 1) {
+    if (lsx_read_b_buf(ft, &in_byte, 1) != 1) {
       *code = 0;
       return -1;
     }
@@ -134,26 +134,26 @@ static int startread(sox_format_t * ft)
   unsigned i, bits_per_sample;
   sox_encoding_t encoding;
 
-  if (sox_readchars(ft, magic, sizeof(magic)))
+  if (lsx_readchars(ft, magic, sizeof(magic)))
     return SOX_EOF;
  
   for (i = 0; id[i].desc && memcmp(magic, id[i].str, sizeof(magic)); ++i);
   if (!id[i].desc) {
-    sox_fail_errno(ft, SOX_EHDR, "au: can't find Sun/NeXT/DEC identifier");
+    lsx_fail_errno(ft, SOX_EHDR, "au: can't find Sun/NeXT/DEC identifier");
     return SOX_EOF;
   }
   sox_report("found %s identifier", id[i].desc);
   ft->encoding.reverse_bytes = id[i].reverse_bytes;
 
-  if (sox_readdw(ft, &hdr_size) ||
-      sox_readdw(ft, &data_size) ||   /* Can be SUN_UNSPEC */
-      sox_readdw(ft, &ft_encoding) ||
-      sox_readdw(ft, &rate) ||
-      sox_readdw(ft, &channels))
+  if (lsx_readdw(ft, &hdr_size) ||
+      lsx_readdw(ft, &data_size) ||   /* Can be SUN_UNSPEC */
+      lsx_readdw(ft, &ft_encoding) ||
+      lsx_readdw(ft, &rate) ||
+      lsx_readdw(ft, &channels))
     return SOX_EOF;
 
   if (hdr_size < FIXED_HDR) {
-    sox_fail_errno(ft, SOX_EHDR, "header size %u is too small", hdr_size);
+    lsx_fail_errno(ft, SOX_EHDR, "header size %u is too small", hdr_size);
     return SOX_EOF;
   }
   if (hdr_size < FIXED_HDR + 4)
@@ -161,7 +161,7 @@ static int startread(sox_format_t * ft)
 
   if (!(encoding = sox_enc(ft_encoding, &bits_per_sample))) {
     int n = min(ft_encoding, Unknown_other);
-    sox_fail_errno(ft, SOX_EFMT, "unsupported encoding `%s' (%#x)", str[n], ft_encoding);
+    lsx_fail_errno(ft, SOX_EFMT, "unsupported encoding `%s' (%#x)", str[n], ft_encoding);
     return SOX_EOF;
   }
 
@@ -179,35 +179,35 @@ static int startread(sox_format_t * ft)
   if (hdr_size > FIXED_HDR) {
     size_t info_size = hdr_size - FIXED_HDR;
     char * buf = xcalloc(1, info_size + 1); /* +1 ensures null-terminated */
-    if (sox_readchars(ft, buf, info_size) != SOX_SUCCESS) {
+    if (lsx_readchars(ft, buf, info_size) != SOX_SUCCESS) {
       free(buf);
       return SOX_EOF;
     }
-    append_comments(&ft->comments, buf);
+    sox_append_comments(&ft->comments, buf);
     free(buf);
   }
   if (data_size == SUN_UNSPEC)
     data_size = 0;  /* libSoX uses 0 for unspecified */
-  return sox_check_read_params(ft, channels, (sox_rate_t)rate,
+  return lsx_check_read_params(ft, channels, (sox_rate_t)rate,
       encoding, bits_per_sample, div_bits(data_size, bits_per_sample));
 }
 
 static int write_header(sox_format_t * ft)
 {
-  char * comment  = cat_comments(ft->comments);
+  char * comment  = sox_cat_comments(ft->comments);
   size_t len      = strlen(comment) + 1;     /* Write out null-terminated */
   size_t info_len = max(4, (len + 3) & ~3u); /* Minimum & multiple of 4 bytes */
   size_t size     = ft->olength? ft->olength : ft->length;
-  int i = ft->encoding.reverse_bytes == SOX_IS_BIGENDIAN? 2 : 0;
+  int i = ft->encoding.reverse_bytes == MACHINE_IS_BIGENDIAN? 2 : 0;
   sox_bool error  = sox_false
-  ||sox_writechars(ft, id[i].str, sizeof(id[i].str))
-  ||sox_writedw(ft, FIXED_HDR + info_len)
-  ||sox_writedw(ft, size? size*(ft->encoding.bits_per_sample >> 3) : SUN_UNSPEC)
-  ||sox_writedw(ft, ft_enc(ft->encoding.bits_per_sample, ft->encoding.encoding))
-  ||sox_writedw(ft, (unsigned)(ft->signal.rate + .5))
-  ||sox_writedw(ft, ft->signal.channels)
-  ||sox_writechars(ft, comment, len)
-  ||sox_padbytes(ft, info_len - len);
+  ||lsx_writechars(ft, id[i].str, sizeof(id[i].str))
+  ||lsx_writedw(ft, FIXED_HDR + info_len)
+  ||lsx_writedw(ft, size? size*(ft->encoding.bits_per_sample >> 3) : SUN_UNSPEC)
+  ||lsx_writedw(ft, ft_enc(ft->encoding.bits_per_sample, ft->encoding.encoding))
+  ||lsx_writedw(ft, (unsigned)(ft->signal.rate + .5))
+  ||lsx_writedw(ft, ft->signal.channels)
+  ||lsx_writechars(ft, comment, len)
+  ||lsx_padbytes(ft, info_len - len);
   free(comment);
   return error? SOX_EOF: SOX_SUCCESS;
 }
@@ -224,9 +224,9 @@ SOX_FORMAT_HANDLER(au)
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "PCM file format used widely on Sun systems",
     names, SOX_FILE_BIG_END | SOX_FILE_REWIND,
-    startread, sox_rawread, NULL,
-    write_header, sox_rawwrite, NULL,
-    sox_rawseek, write_encodings, NULL
+    startread, lsx_rawread, NULL,
+    write_header, lsx_rawwrite, NULL,
+    lsx_rawseek, write_encodings, NULL
   };
   return &handler;
 }

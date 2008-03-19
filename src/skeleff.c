@@ -38,7 +38,7 @@ static int getopts(sox_effect_t * effp, int n, char UNUSED **argv)
   skeleff_t UNUSED skeleff = (skeleff_t)effp->priv;
 
   if (n && n != 1)
-    return sox_usage(effp);
+    return lsx_usage(effp);
 
   return SOX_SUCCESS;
 }

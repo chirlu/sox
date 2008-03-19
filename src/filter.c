@@ -74,17 +74,17 @@ static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
         }
         sox_debug("freq: %d-%d", f->freq0, f->freq1);
         if (f->freq0 == 0 && f->freq1 == 0)
-          return sox_usage(effp);
+          return lsx_usage(effp);
 
         if ((n >= 2) && !sscanf(argv[1], "%ld", &f->Nwin))
-          return sox_usage(effp);
+          return lsx_usage(effp);
         else if (f->Nwin < 4) {
                 sox_fail("filter: window length (%ld) <4 is too short", f->Nwin);
                 return (SOX_EOF);
         }
 
         if ((n >= 3) && !sscanf(argv[2], "%lf", &f->beta))
-          return sox_usage(effp);
+          return lsx_usage(effp);
 
         sox_debug("filter opts: %d-%d, window-len %ld, beta %f", f->freq0, f->freq1, f->Nwin, f->beta);
         return (SOX_SUCCESS);

@@ -31,7 +31,7 @@ static int sox_datstartread(sox_format_t * ft)
     char sc;
 
     /* Read lines until EOF or first non-comment line */
-    while ((status = sox_reads(ft, inpstr, LINEWIDTH-1)) != SOX_EOF) {
+    while ((status = lsx_reads(ft, inpstr, LINEWIDTH-1)) != SOX_EOF) {
       inpstr[LINEWIDTH-1] = 0;
       if ((sscanf(inpstr," %c", &sc) != 0) && (sc != ';')) break;
       if (sscanf(inpstr," ; Sample Rate %ld", &rate)) {
@@ -66,9 +66,9 @@ static int sox_datstartwrite(sox_format_t * ft)
     dat->deltat = 1.0 / (double)ft->signal.rate;
     /* Write format comments to start of file */
     sprintf(s,"; Sample Rate %ld\015\n", (long)ft->signal.rate);
-    sox_writes(ft, s);
+    lsx_writes(ft, s);
     sprintf(s,"; Channels %d\015\n", (int)ft->signal.channels);
-    sox_writes(ft, s);
+    lsx_writes(ft, s);
 
     return (SOX_SUCCESS);
 }
@@ -94,9 +94,9 @@ static sox_size_t sox_datread(sox_format_t * ft, sox_sample_t *buf, sox_size_t n
         strncpy(inpstr, ((dat_t)ft->priv)->prevline, LINEWIDTH);
         ((dat_t)ft->priv)->buffered=0;
       } else {
-        sox_reads(ft, inpstr, LINEWIDTH-1);
+        lsx_reads(ft, inpstr, LINEWIDTH-1);
         inpstr[LINEWIDTH-1] = 0;
-        if (sox_eof(ft)) return (done);
+        if (lsx_eof(ft)) return (done);
       }
 
       /* Skip over comments - ie. 0 or more whitespace, then ';' */
@@ -108,7 +108,7 @@ static sox_size_t sox_datread(sox_format_t * ft, sox_sample_t *buf, sox_size_t n
         retc = sscanf(&inpstr[inpPtr]," %lg%n", &sampval, &inpPtrInc);
         inpPtr += inpPtrInc;
         if (retc != 1) {
-          sox_fail_errno(ft,SOX_EOF,"Unable to read sample.");
+          lsx_fail_errno(ft,SOX_EOF,"Unable to read sample.");
           return 0;
         }
         sampval *= SOX_SAMPLE_MAX;
@@ -134,15 +134,15 @@ static sox_size_t sox_datwrite(sox_format_t * ft, const sox_sample_t *buf, sox_s
     /* Write time, then sample values, then CRLF newline */
     while(done < nsamp) {
       sprintf(s," %15.8g ",dat->timevalue);
-      sox_writes(ft, s);
+      lsx_writes(ft, s);
       for (i=0; i<ft->signal.channels; i++) {
         sampval = SOX_SAMPLE_TO_FLOAT_64BIT(*buf++, ft->clips);
         sprintf(s," %15.8g", sampval);
-        sox_writes(ft, s);
+        lsx_writes(ft, s);
         done++;
       }
       sprintf(s," \r\n");
-      sox_writes(ft, s);
+      lsx_writes(ft, s);
       dat->timevalue += dat->deltat;
     }
     return done;

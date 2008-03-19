@@ -29,7 +29,7 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
   dither_t dither = (dither_t) effp->priv;
 
   if (n > 1)
-    return sox_usage(effp);
+    return lsx_usage(effp);
   
   dither->amount = sqrt(2.); /* M_SQRT2 missing in some places */   /* Default to half a bit. */
   if (n == 1) {
@@ -39,7 +39,7 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
     if (scanned == 1 && amount > 0)
       dither->amount *= amount;
     else
-      return sox_usage(effp);
+      return lsx_usage(effp);
   }
 
   return SOX_SUCCESS;

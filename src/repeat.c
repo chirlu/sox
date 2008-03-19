@@ -37,7 +37,7 @@ static int sox_repeat_getopts(sox_effect_t * effp, int n, char **argv)
         repeat_t repeat = (repeat_t)effp->priv;
 
         if (n != 1)
-          return sox_usage(effp);
+          return lsx_usage(effp);
 
         if (!(sscanf(argv[0], "%i", &repeat->repeats))) {
                 sox_fail("could not parse repeat parameter");

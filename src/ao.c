@@ -37,14 +37,14 @@ static int startwrite(sox_format_t * ft)
 {
   ao_priv_t ao = (ao_priv_t)ft->priv;
 
-  set_signal_defaults(&ft->signal);
+  lsx_set_signal_defaults(&ft->signal);
   ao->buf_size = sox_globals.bufsiz - (sox_globals.bufsiz % (ft->encoding.bits_per_sample >> 3));
   ao->buf_size *= (ft->encoding.bits_per_sample >> 3);
   ao->buf = xmalloc(ao->buf_size);
 
   if (!ao->buf)
   {
-      sox_fail_errno(ft, SOX_ENOMEM, "Can not allocate memory for ao driver");
+      lsx_fail_errno(ft, SOX_ENOMEM, "Can not allocate memory for ao driver");
       return SOX_EOF;
   }
 
@@ -83,7 +83,7 @@ static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t l
     {
         uint16_t datum = SOX_SAMPLE_TO_SIGNED_16BIT(*buf2++, *clips);
         if (swap)
-            datum = sox_swapw(datum);
+            datum = lsx_swapw(datum);
         *(uint16_t *)buf1 = datum;
         buf1++; buf1++;
     }

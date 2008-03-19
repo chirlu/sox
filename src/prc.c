@@ -74,7 +74,7 @@ static int seek(sox_format_t * ft, sox_size_t offset)
 {
   prc_t p = (prc_t)ft->priv;
   if (ft->encoding.encoding == SOX_ENCODING_ALAW)
-    return sox_offset_seek(ft, p->data_start, offset);
+    return lsx_offset_seek(ft, p->data_start, offset);
   return SOX_EOF;
 }
 
@@ -117,7 +117,7 @@ static const char prc_header[41] = {
 
 static int prc_checkheader(sox_format_t * ft, char *head)
 {
-  sox_readbuf(ft, head, sizeof(prc_header));
+  lsx_readbuf(ft, head, sizeof(prc_header));
   return memcmp(head, prc_header, sizeof(prc_header)) == 0;
 }
 
@@ -135,53 +135,53 @@ static int startread(sox_format_t * ft)
   if (prc_checkheader(ft, head))
     sox_debug("Found Psion Record header");
   else {
-      sox_fail_errno(ft,SOX_EHDR,"Not a Psion Record file");
+      lsx_fail_errno(ft,SOX_EHDR,"Not a Psion Record file");
       return (SOX_EOF);
   }
 
-  sox_readb(ft, &byte);
+  lsx_readb(ft, &byte);
   if ((byte & 0x3) != 0x2) {
-    sox_fail_errno(ft, SOX_EHDR, "Invalid length byte for application name string %d", (int)(byte));
+    lsx_fail_errno(ft, SOX_EHDR, "Invalid length byte for application name string %d", (int)(byte));
     return SOX_EOF;
   }
 
   byte >>= 2;
   assert(byte < 64);
-  sox_reads(ft, appname, byte);
+  lsx_reads(ft, appname, byte);
   if (strncasecmp(appname, "record.app", byte) != 0) {
-    sox_fail_errno(ft, SOX_EHDR, "Invalid application name string %.63s", appname);
+    lsx_fail_errno(ft, SOX_EHDR, "Invalid application name string %.63s", appname);
     return SOX_EOF;
   }
         
-  sox_readdw(ft, &len);
+  lsx_readdw(ft, &len);
   p->nsamp = len;
   sox_debug("Number of samples: %d", len);
 
-  sox_readdw(ft, &encoding);
+  lsx_readdw(ft, &encoding);
   sox_debug("Encoding of samples: %x", encoding);
   if (encoding == 0)
     ft->encoding.encoding = SOX_ENCODING_ALAW;
   else if (encoding == 0x100001a1)
     ft->encoding.encoding = SOX_ENCODING_IMA_ADPCM;
   else {
-    sox_fail_errno(ft, SOX_EHDR, "Unrecognised encoding");
+    lsx_fail_errno(ft, SOX_EHDR, "Unrecognised encoding");
     return SOX_EOF;
   }
 
-  sox_readw(ft, &reps);    /* Number of repeats */
+  lsx_readw(ft, &reps);    /* Number of repeats */
   sox_debug("Repeats: %d", reps);
         
-  sox_readb(ft, &volume);
+  lsx_readb(ft, &volume);
   sox_debug("Volume: %d", (unsigned)volume);
   if (volume < 1 || volume > 5)
     sox_warn("Volume %d outside range 1..5", volume);
 
-  sox_readb(ft, &byte);   /* Unused and seems always zero */
+  lsx_readb(ft, &byte);   /* Unused and seems always zero */
 
-  sox_readdw(ft, &repgap); /* Time between repeats in usec */
+  lsx_readdw(ft, &repgap); /* Time between repeats in usec */
   sox_debug("Time between repeats (usec): %u", repgap);
 
-  sox_readdw(ft, &listlen); /* Length of samples list */
+  lsx_readdw(ft, &listlen); /* Length of samples list */
   sox_debug("Number of bytes in samples list: %u", listlen);
 
   if (ft->signal.rate != 0 && ft->signal.rate != 8000)
@@ -192,12 +192,12 @@ static int startread(sox_format_t * ft)
     sox_report("PRC only supports 1 channel; overriding.");
   ft->signal.channels = 1;
 
-  p->data_start = sox_tell(ft);
+  p->data_start = lsx_tell(ft);
   ft->length = p->nsamp / ft->signal.channels;
 
   if (ft->encoding.encoding == SOX_ENCODING_ALAW) {
     ft->encoding.bits_per_sample = 8;
-    if (sox_rawstartread(ft))
+    if (lsx_rawstartread(ft))
       return SOX_EOF;
   } else if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) {
     p->frame_samp = 0;
@@ -209,32 +209,32 @@ static int startread(sox_format_t * ft)
 }
 
 /* Read a variable-length encoded count */
-/* Ignore return code of sox_readb, as it doesn't really matter if EOF
+/* Ignore return code of lsx_readb, as it doesn't really matter if EOF
    is delayed until the caller. */
 static unsigned read_cardinal(sox_format_t * ft)
 {
   unsigned a;
   uint8_t byte;
 
-  if (sox_readb(ft, &byte) == SOX_EOF)
+  if (lsx_readb(ft, &byte) == SOX_EOF)
     return (unsigned)SOX_EOF;
   sox_debug_more("Cardinal byte 1: %x", byte);
   a = byte;
   if (!(a & 1))
     a >>= 1;
   else {
-    if (sox_readb(ft, &byte) == SOX_EOF)
+    if (lsx_readb(ft, &byte) == SOX_EOF)
       return (unsigned)SOX_EOF;
     sox_debug_more("Cardinal byte 2: %x", byte);
     a |= byte << 8;
     if (!(a & 2))
       a >>= 2;
     else if (!(a & 4)) {
-      if (sox_readb(ft, &byte) == SOX_EOF)
+      if (lsx_readb(ft, &byte) == SOX_EOF)
         return (unsigned)SOX_EOF;
       sox_debug_more("Cardinal byte 3: %x", byte);
       a |= byte << 16;
-      if (sox_readb(ft, &byte) == SOX_EOF)
+      if (lsx_readb(ft, &byte) == SOX_EOF)
         return (unsigned)SOX_EOF;
       sox_debug_more("Cardinal byte 4: %x", byte);
       a |= byte << 24;
@@ -267,7 +267,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
       /* Discard length of compressed data */
       sox_debug_more("compressed length %d", read_cardinal(ft));
       /* Discard length of BListL */
-      sox_readdw(ft, &trash);
+      lsx_readdw(ft, &trash);
       sox_debug_more("list length %d", trash);
 
       /* Reset CODEC for start of frame */
@@ -281,7 +281,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
     return read;
   } else {
     p->nsamp += samp;
-    return sox_rawread(ft, buf, samp);
+    return lsx_rawread(ft, buf, samp);
   }
 }
 
@@ -309,7 +309,7 @@ static int startwrite(sox_format_t * ft)
   prc_t p = (prc_t)ft->priv;
 
   if (ft->encoding.encoding == SOX_ENCODING_ALAW) {
-    if (sox_rawstartwrite(ft))
+    if (lsx_rawstartwrite(ft))
       return SOX_EOF;
   } else if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) {
     if (sox_adpcm_ima_start(ft, &p->adpcm))
@@ -323,7 +323,7 @@ static int startwrite(sox_format_t * ft)
 
   prcwriteheader(ft);
 
-  p->data_start = sox_tell(ft);
+  p->data_start = lsx_tell(ft);
 
   return SOX_SUCCESS;
 }
@@ -335,27 +335,27 @@ static void write_cardinal(sox_format_t * ft, unsigned a)
   if (a < 0x80) {
     byte = a << 1;
     sox_debug_more("Cardinal byte 1: %x", byte);
-    sox_writeb(ft, byte);
+    lsx_writeb(ft, byte);
   } else if (a < 0x8000) {
     byte = (a << 2) | 1;
     sox_debug_more("Cardinal byte 1: %x", byte);
-    sox_writeb(ft, byte);
+    lsx_writeb(ft, byte);
     byte = a >> 6;
     sox_debug_more("Cardinal byte 2: %x", byte);
-    sox_writeb(ft, byte);
+    lsx_writeb(ft, byte);
   } else {
     byte = (a << 3) | 3;
     sox_debug_more("Cardinal byte 1: %x", byte);
-    sox_writeb(ft, byte);
+    lsx_writeb(ft, byte);
     byte = a >> 5;
     sox_debug_more("Cardinal byte 2: %x", byte);
-    sox_writeb(ft, byte);
+    lsx_writeb(ft, byte);
     byte = a >> 13;
     sox_debug_more("Cardinal byte 3: %x", byte);
-    sox_writeb(ft, byte);
+    lsx_writeb(ft, byte);
     byte = a >> 21;
     sox_debug_more("Cardinal byte 4: %x", byte);
-    sox_writeb(ft, byte);
+    lsx_writeb(ft, byte);
   }
 }
 
@@ -373,7 +373,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
     write_cardinal(ft, (samp / 2) + (samp % 2) + 4);
     /* Write length again (seems to be a BListL) */
     sox_debug_more("list length %d", samp);
-    sox_writedw(ft, samp);
+    lsx_writedw(ft, samp);
     sox_adpcm_reset(&p->adpcm, ft->encoding.encoding);
     written1 = sox_adpcm_write(ft, &p->adpcm, buf, samp);
     if (written1 != samp)
@@ -381,7 +381,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
     sox_adpcm_flush(ft, &p->adpcm);
     written += written1;
   } else
-    written = sox_rawwrite(ft, buf, nsamp);
+    written = lsx_rawwrite(ft, buf, nsamp);
   p->nsamp += written;
   return written;
 }
@@ -390,15 +390,15 @@ static int stopwrite(sox_format_t * ft)
 {
   prc_t p = (prc_t)ft->priv;
 
-  p->nbytes = sox_tell(ft) - p->data_start;
+  p->nbytes = lsx_tell(ft) - p->data_start;
 
   if (!ft->seekable) {
       sox_warn("Header will have invalid file length since file is not seekable");
       return SOX_SUCCESS;
   }
 
-  if (sox_seeki(ft, 0, 0) != 0) {
-      sox_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
+  if (lsx_seeki(ft, 0, 0) != 0) {
+      lsx_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
       return(SOX_EOF);
   }
   prcwriteheader(ft);
@@ -409,24 +409,24 @@ static void prcwriteheader(sox_format_t * ft)
 {
   prc_t p = (prc_t)ft->priv;
 
-  sox_writebuf(ft, prc_header, sizeof(prc_header));
-  sox_writes(ft, "\x2arecord.app");
+  lsx_writebuf(ft, prc_header, sizeof(prc_header));
+  lsx_writes(ft, "\x2arecord.app");
 
   sox_debug("Number of samples: %d",p->nsamp);
-  sox_writedw(ft, p->nsamp);
+  lsx_writedw(ft, p->nsamp);
 
   if (ft->encoding.encoding == SOX_ENCODING_ALAW)
-    sox_writedw(ft, 0);
+    lsx_writedw(ft, 0);
   else
-    sox_writedw(ft, 0x100001a1); /* ADPCM */
+    lsx_writedw(ft, 0x100001a1); /* ADPCM */
   
-  sox_writew(ft, 0);             /* Number of repeats */
-  sox_writeb(ft, 3);             /* Volume: use default value of Record.app */
-  sox_writeb(ft, 0);             /* Unused and seems always zero */
-  sox_writedw(ft, 0);            /* Time between repeats in usec */
+  lsx_writew(ft, 0);             /* Number of repeats */
+  lsx_writeb(ft, 3);             /* Volume: use default value of Record.app */
+  lsx_writeb(ft, 0);             /* Unused and seems always zero */
+  lsx_writedw(ft, 0);            /* Time between repeats in usec */
 
   sox_debug("Number of bytes: %d", p->nbytes);
-  sox_writedw(ft, p->nbytes);    /* Number of bytes of data */
+  lsx_writedw(ft, p->nbytes);    /* Number of bytes of data */
 }
 
 SOX_FORMAT_HANDLER(prc)

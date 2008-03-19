@@ -20,14 +20,14 @@
 #define SOX_SAMPLE_TO_ULAW_BYTE(d,c) sox_14linear2ulaw(SOX_SAMPLE_TO_SIGNED_16BIT(d,c) >> 2)
 #define SOX_SAMPLE_TO_ALAW_BYTE(d,c) sox_13linear2alaw(SOX_SAMPLE_TO_SIGNED_16BIT(d,c) >> 3)
 
-int sox_rawseek(sox_format_t * ft, sox_size_t offset)
+int lsx_rawseek(sox_format_t * ft, sox_size_t offset)
 {
-  return sox_offset_seek(ft, ft->data_start, offset);
+  return lsx_offset_seek(ft, ft->data_start, offset);
 }
 
-/* Works nicely for starting read and write; sox_rawstart{read,write}
+/* Works nicely for starting read and write; lsx_rawstart{read,write}
    are #defined in sox_i.h */
-int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_bool default_length, sox_encoding_t encoding, unsigned size)
+int lsx_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_bool default_length, sox_encoding_t encoding, unsigned size)
 {
   if (default_rate && ft->signal.rate == 0) {
     sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
@@ -54,62 +54,62 @@ int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_chan
   }
 
   if (!ft->length && ft->mode == 'r' && default_length && ft->encoding.bits_per_sample)
-    ft->length = div_bits(sox_filelength(ft), ft->encoding.bits_per_sample);
+    ft->length = div_bits(lsx_filelength(ft), ft->encoding.bits_per_sample);
 
   return SOX_SUCCESS;
 }
 
 #define READ_SAMPLES_FUNC(type, size, sign, ctype, uctype, cast) \
-  sox_size_t sox_read_ ## sign ## type ## _samples( \
+  static sox_size_t sox_read_ ## sign ## type ## _samples( \
       sox_format_t * ft, sox_sample_t *buf, sox_size_t len) \
   { \
     sox_size_t n, nread; \
     ctype *data = xmalloc(sizeof(ctype) * len); \
-    nread = sox_read_ ## type ## _buf(ft, (uctype *)data, len); \
+    nread = lsx_read_ ## type ## _buf(ft, (uctype *)data, len); \
     for (n = 0; n < nread; n++) \
       *buf++ = cast(data[n], ft->clips); \
     free(data); \
     return nread; \
   }
 
-static READ_SAMPLES_FUNC(b, 1, u, uint8_t, uint8_t, SOX_UNSIGNED_8BIT_TO_SAMPLE)
-static READ_SAMPLES_FUNC(b, 1, s, int8_t, uint8_t, SOX_SIGNED_8BIT_TO_SAMPLE)
-static READ_SAMPLES_FUNC(b, 1, ulaw, uint8_t, uint8_t, SOX_ULAW_BYTE_TO_SAMPLE)
-static READ_SAMPLES_FUNC(b, 1, alaw, uint8_t, uint8_t, SOX_ALAW_BYTE_TO_SAMPLE)
-static READ_SAMPLES_FUNC(w, 2, u, uint16_t, uint16_t, SOX_UNSIGNED_16BIT_TO_SAMPLE)
-static READ_SAMPLES_FUNC(w, 2, s, int16_t, uint16_t, SOX_SIGNED_16BIT_TO_SAMPLE)
-static READ_SAMPLES_FUNC(3, 3, u, uint24_t, uint24_t, SOX_UNSIGNED_24BIT_TO_SAMPLE)
-static READ_SAMPLES_FUNC(3, 3, s, int24_t, uint24_t, SOX_SIGNED_24BIT_TO_SAMPLE)
-static READ_SAMPLES_FUNC(dw, 4, u, uint32_t, uint32_t, SOX_UNSIGNED_32BIT_TO_SAMPLE)
-static READ_SAMPLES_FUNC(dw, 4, s, int32_t, uint32_t, SOX_SIGNED_32BIT_TO_SAMPLE)
-static READ_SAMPLES_FUNC(f, sizeof(float), su, float, float, SOX_FLOAT_32BIT_TO_SAMPLE)
-static READ_SAMPLES_FUNC(df, sizeof(double), su, double, double, SOX_FLOAT_64BIT_TO_SAMPLE)
+READ_SAMPLES_FUNC(b, 1, u, uint8_t, uint8_t, SOX_UNSIGNED_8BIT_TO_SAMPLE)
+READ_SAMPLES_FUNC(b, 1, s, int8_t, uint8_t, SOX_SIGNED_8BIT_TO_SAMPLE)
+READ_SAMPLES_FUNC(b, 1, ulaw, uint8_t, uint8_t, SOX_ULAW_BYTE_TO_SAMPLE)
+READ_SAMPLES_FUNC(b, 1, alaw, uint8_t, uint8_t, SOX_ALAW_BYTE_TO_SAMPLE)
+READ_SAMPLES_FUNC(w, 2, u, uint16_t, uint16_t, SOX_UNSIGNED_16BIT_TO_SAMPLE)
+READ_SAMPLES_FUNC(w, 2, s, int16_t, uint16_t, SOX_SIGNED_16BIT_TO_SAMPLE)
+READ_SAMPLES_FUNC(3, 3, u, uint24_t, uint24_t, SOX_UNSIGNED_24BIT_TO_SAMPLE)
+READ_SAMPLES_FUNC(3, 3, s, int24_t, uint24_t, SOX_SIGNED_24BIT_TO_SAMPLE)
+READ_SAMPLES_FUNC(dw, 4, u, uint32_t, uint32_t, SOX_UNSIGNED_32BIT_TO_SAMPLE)
+READ_SAMPLES_FUNC(dw, 4, s, int32_t, uint32_t, SOX_SIGNED_32BIT_TO_SAMPLE)
+READ_SAMPLES_FUNC(f, sizeof(float), su, float, float, SOX_FLOAT_32BIT_TO_SAMPLE)
+READ_SAMPLES_FUNC(df, sizeof(double), su, double, double, SOX_FLOAT_64BIT_TO_SAMPLE)
 
 #define WRITE_SAMPLES_FUNC(type, size, sign, ctype, uctype, cast) \
-  sox_size_t sox_write_ ## sign ## type ## _samples( \
+  static sox_size_t sox_write_ ## sign ## type ## _samples( \
       sox_format_t * ft, sox_sample_t *buf, sox_size_t len) \
   { \
     sox_size_t n, nwritten; \
     ctype *data = xmalloc(sizeof(ctype) * len); \
     for (n = 0; n < len; n++) \
       data[n] = cast(buf[n], ft->clips); \
-    nwritten = sox_write_ ## type ## _buf(ft, (uctype *)data, len); \
+    nwritten = lsx_write_ ## type ## _buf(ft, (uctype *)data, len); \
     free(data); \
     return nwritten; \
   }
 
-static WRITE_SAMPLES_FUNC(b, 1, u, uint8_t, uint8_t, SOX_SAMPLE_TO_UNSIGNED_8BIT)
-static WRITE_SAMPLES_FUNC(b, 1, s, int8_t, uint8_t, SOX_SAMPLE_TO_SIGNED_8BIT)
-static WRITE_SAMPLES_FUNC(b, 1, ulaw, uint8_t, uint8_t, SOX_SAMPLE_TO_ULAW_BYTE)
-static WRITE_SAMPLES_FUNC(b, 1, alaw, uint8_t, uint8_t, SOX_SAMPLE_TO_ALAW_BYTE)
-static WRITE_SAMPLES_FUNC(w, 2, u, uint16_t, uint16_t, SOX_SAMPLE_TO_UNSIGNED_16BIT)
-static WRITE_SAMPLES_FUNC(w, 2, s, int16_t, uint16_t, SOX_SAMPLE_TO_SIGNED_16BIT)
-static WRITE_SAMPLES_FUNC(3, 3, u, uint24_t, uint24_t, SOX_SAMPLE_TO_UNSIGNED_24BIT)
-static WRITE_SAMPLES_FUNC(3, 3, s, int24_t, uint24_t, SOX_SAMPLE_TO_SIGNED_24BIT)
-static WRITE_SAMPLES_FUNC(dw, 4, u, uint32_t, uint32_t, SOX_SAMPLE_TO_UNSIGNED_32BIT)
-static WRITE_SAMPLES_FUNC(dw, 4, s, int32_t, uint32_t, SOX_SAMPLE_TO_SIGNED_32BIT)
-static WRITE_SAMPLES_FUNC(f, sizeof(float), su, float, float, SOX_SAMPLE_TO_FLOAT_32BIT)
-static WRITE_SAMPLES_FUNC(df, sizeof(double), su, double, double, SOX_SAMPLE_TO_FLOAT_64BIT)
+WRITE_SAMPLES_FUNC(b, 1, u, uint8_t, uint8_t, SOX_SAMPLE_TO_UNSIGNED_8BIT)
+WRITE_SAMPLES_FUNC(b, 1, s, int8_t, uint8_t, SOX_SAMPLE_TO_SIGNED_8BIT)
+WRITE_SAMPLES_FUNC(b, 1, ulaw, uint8_t, uint8_t, SOX_SAMPLE_TO_ULAW_BYTE)
+WRITE_SAMPLES_FUNC(b, 1, alaw, uint8_t, uint8_t, SOX_SAMPLE_TO_ALAW_BYTE)
+WRITE_SAMPLES_FUNC(w, 2, u, uint16_t, uint16_t, SOX_SAMPLE_TO_UNSIGNED_16BIT)
+WRITE_SAMPLES_FUNC(w, 2, s, int16_t, uint16_t, SOX_SAMPLE_TO_SIGNED_16BIT)
+WRITE_SAMPLES_FUNC(3, 3, u, uint24_t, uint24_t, SOX_SAMPLE_TO_UNSIGNED_24BIT)
+WRITE_SAMPLES_FUNC(3, 3, s, int24_t, uint24_t, SOX_SAMPLE_TO_SIGNED_24BIT)
+WRITE_SAMPLES_FUNC(dw, 4, u, uint32_t, uint32_t, SOX_SAMPLE_TO_UNSIGNED_32BIT)
+WRITE_SAMPLES_FUNC(dw, 4, s, int32_t, uint32_t, SOX_SAMPLE_TO_SIGNED_32BIT)
+WRITE_SAMPLES_FUNC(f, sizeof(float), su, float, float, SOX_SAMPLE_TO_FLOAT_32BIT)
+WRITE_SAMPLES_FUNC(df, sizeof(double), su, double, double, SOX_SAMPLE_TO_FLOAT_64BIT)
 
 typedef sox_size_t (ft_io_fun)(sox_format_t * ft, sox_sample_t *buf, sox_size_t len);
 
@@ -176,16 +176,16 @@ static ft_io_fun *check_format(sox_format_t * ft, sox_bool write)
       break;
 
     default:
-      sox_fail_errno(ft,SOX_EFMT,"this handler does not support this data size");
+      lsx_fail_errno(ft,SOX_EFMT,"this handler does not support this data size");
       return NULL;
     }
 
-    sox_fail_errno(ft,SOX_EFMT,"this encoding is not supported for this data size");
+    lsx_fail_errno(ft,SOX_EFMT,"this encoding is not supported for this data size");
     return NULL;
 }
 
 /* Read a stream of some type into SoX's internal buffer format. */
-sox_size_t sox_rawread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
+sox_size_t lsx_rawread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
 {
     ft_io_fun * read_buf = check_format(ft, sox_false);
 
@@ -196,7 +196,7 @@ sox_size_t sox_rawread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
 }
 
 /* Writes SoX's internal buffer format to buffer of various data types. */
-sox_size_t sox_rawwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
+sox_size_t lsx_rawwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
 {
     ft_io_fun *write_buf = check_format(ft, sox_true);
 

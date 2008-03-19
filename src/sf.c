@@ -23,13 +23,13 @@
 
 /* Magic numbers used in IRCAM audio files */
 static struct {char str[4]; sox_bool reverse_bytes; char const * desc;} id[] = {
-  {"\144\243\001\0", SOX_IS_BIGENDIAN   , "little-endian VAX (native)"},
-  {"\0\001\243\144", SOX_IS_LITTLEENDIAN, "big-endian VAX"},
-  {"\144\243\002\0", SOX_IS_LITTLEENDIAN, "big-endian Sun (native)"},
-  {"\0\002\243\144", SOX_IS_BIGENDIAN   , "little-endian Sun"},
-  {"\144\243\003\0", SOX_IS_BIGENDIAN   , "little-endian MIPS (DEC)"},
-  {"\0\003\243\144", SOX_IS_LITTLEENDIAN, "big-endian MIPS (SGI)"},
-  {"\144\243\004\0", SOX_IS_LITTLEENDIAN, "big-endian NeXT"},
+  {"\144\243\001\0", MACHINE_IS_BIGENDIAN   , "little-endian VAX (native)"},
+  {"\0\001\243\144", MACHINE_IS_LITTLEENDIAN, "big-endian VAX"},
+  {"\144\243\002\0", MACHINE_IS_LITTLEENDIAN, "big-endian Sun (native)"},
+  {"\0\002\243\144", MACHINE_IS_BIGENDIAN   , "little-endian Sun"},
+  {"\144\243\003\0", MACHINE_IS_BIGENDIAN   , "little-endian MIPS (DEC)"},
+  {"\0\003\243\144", MACHINE_IS_LITTLEENDIAN, "big-endian MIPS (SGI)"},
+  {"\144\243\004\0", MACHINE_IS_LITTLEENDIAN, "big-endian NeXT"},
   {"    ", 0, NULL}
 };
 #define FIXED_HDR     1024
@@ -77,60 +77,60 @@ static int startread(sox_format_t * ft)
   sox_encoding_t encoding;
   uint16_t code, size;
 
-  if (sox_readchars(ft, magic, sizeof(magic)))
+  if (lsx_readchars(ft, magic, sizeof(magic)))
     return SOX_EOF;
  
   for (i = 0; id[i].desc && memcmp(magic, id[i].str, sizeof(magic)); ++i);
   if (!id[i].desc) {
-    sox_fail_errno(ft, SOX_EHDR, "sf: can't find IRCAM identifier");
+    lsx_fail_errno(ft, SOX_EHDR, "sf: can't find IRCAM identifier");
     return SOX_EOF;
   }
   sox_report("found %s identifier", id[i].desc);
   ft->encoding.reverse_bytes = id[i].reverse_bytes;
 
-  if (sox_readf(ft, &rate) || sox_readdw(ft, &channels) || sox_readdw(ft, &ft_encoding))
+  if (lsx_readf(ft, &rate) || lsx_readdw(ft, &channels) || lsx_readdw(ft, &ft_encoding))
     return SOX_EOF;
   
   if (!(encoding = sox_enc(ft_encoding, &bits_per_sample))) {
-    sox_fail_errno(ft, SOX_EFMT, "sf: unsupported encoding %#x)", ft_encoding);
+    lsx_fail_errno(ft, SOX_EFMT, "sf: unsupported encoding %#x)", ft_encoding);
     return SOX_EOF;
   }
   do {
-    if (sox_readw(ft, &code) || sox_readw(ft, &size))
+    if (lsx_readw(ft, &code) || lsx_readw(ft, &size))
       return SOX_EOF;
     if (code == SF_COMMENT) {
       char * buf = xcalloc(1, (size_t)size + 1); /* +1 ensures null-terminated */
-      if (sox_readchars(ft, buf, size) != SOX_SUCCESS) {
+      if (lsx_readchars(ft, buf, size) != SOX_SUCCESS) {
         free(buf);
         return SOX_EOF;
       }
-      append_comments(&ft->comments, buf);
+      sox_append_comments(&ft->comments, buf);
       free(buf);
     }
-    else if (sox_skipbytes(ft, size))
+    else if (lsx_skipbytes(ft, size))
       return SOX_EOF;
   } while (code);
-  if (sox_skipbytes(ft, FIXED_HDR - (sox_size_t)sox_tell(ft)))
+  if (lsx_skipbytes(ft, FIXED_HDR - (sox_size_t)lsx_tell(ft)))
     return SOX_EOF;
   
-  return sox_check_read_params(ft, channels, rate, encoding, bits_per_sample, (off_t)0);
+  return lsx_check_read_params(ft, channels, rate, encoding, bits_per_sample, (off_t)0);
 }
 
 static int write_header(sox_format_t * ft)
 {
-  char * comment  = cat_comments(ft->comments);
+  char * comment  = sox_cat_comments(ft->comments);
   size_t len      = min(FIXED_HDR - 26, strlen(comment)) + 1; /* null-terminated */
   size_t info_len = max(4, (len + 3) & ~3u); /* Minimum & multiple of 4 bytes */
-  int i = ft->encoding.reverse_bytes == SOX_IS_BIGENDIAN? 0 : 2;
+  int i = ft->encoding.reverse_bytes == MACHINE_IS_BIGENDIAN? 0 : 2;
   sox_bool error  = sox_false
-  ||sox_writechars(ft, id[i].str, sizeof(id[i].str))
-  ||sox_writef(ft, ft->signal.rate)
-  ||sox_writedw(ft, ft->signal.channels)
-  ||sox_writedw(ft, ft_enc(ft->encoding.bits_per_sample, ft->encoding.encoding))
-  ||sox_writew(ft, SF_COMMENT)
-  ||sox_writew(ft, info_len)
-  ||sox_writechars(ft, comment, len)
-  ||sox_padbytes(ft, FIXED_HDR - 20 - len);
+  ||lsx_writechars(ft, id[i].str, sizeof(id[i].str))
+  ||lsx_writef(ft, ft->signal.rate)
+  ||lsx_writedw(ft, ft->signal.channels)
+  ||lsx_writedw(ft, ft_enc(ft->encoding.bits_per_sample, ft->encoding.encoding))
+  ||lsx_writew(ft, SF_COMMENT)
+  ||lsx_writew(ft, info_len)
+  ||lsx_writechars(ft, comment, len)
+  ||lsx_padbytes(ft, FIXED_HDR - 20 - len);
   free(comment);
   return error? SOX_EOF: SOX_SUCCESS;
 }
@@ -147,9 +147,9 @@ SOX_FORMAT_HANDLER(sf)
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "Institut de Recherche et Coordination Acoustique/Musique",
     names, SOX_FILE_LIT_END,
-    startread, sox_rawread, NULL,
-    write_header, sox_rawwrite, NULL,
-    sox_rawseek, write_encodings, NULL
+    startread, lsx_rawread, NULL,
+    write_header, lsx_rawwrite, NULL,
+    lsx_rawseek, write_encodings, NULL
   };
   return &handler;
 }

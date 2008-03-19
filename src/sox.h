@@ -12,26 +12,28 @@
 #ifndef SOX_H
 #define SOX_H
 
+#include <limits.h>
+#include <stdarg.h>
 #include <stddef.h> /* Ensure NULL etc. are available throughout SoX */
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
 #include "soxstdint.h"
 
 /* Avoid warnings about unused parameters. */
 #ifdef __GNUC__
 #define UNUSED __attribute__ ((unused))
+#define PRINTF __attribute__ ((format (printf, 1, 2)))
 #else
 #define UNUSED
+#define PRINTF
 #endif
 
 /* The following is the API version of libSoX.  It is not meant
  * to follow the version number of SoX but it has historically.
  * Please do not count on these numbers being in sync.
- * The following is at 14.1.0
  */
-#define SOX_LIB_VERSION_CODE 0x0e0100
 #define SOX_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
+#define SOX_LIB_VERSION_CODE SOX_LIB_VERSION(14, 1, 0)
 
 const char *sox_version(void);   /* Returns version number */
 
@@ -169,6 +171,27 @@ typedef size_t sox_size_t;
 #define SOX_SIZE_MAX (sox_size_t)(-1)
 typedef ptrdiff_t sox_ssize_t;
 
+typedef void (*sox_output_message_handler_t)(unsigned level, const char *filename, const char *fmt, va_list ap);
+
+typedef struct /* Global parameters (for effects & formats) */
+{
+/* public: */
+  unsigned     verbosity;
+  sox_output_message_handler_t output_message_handler;
+  sox_bool     repeatable;
+/* The following is used at times in libSoX when alloc()ing buffers
+ * to perform file I/O.  It can be useful to pass in similar sized
+ * data to get max performance.
+ */
+  sox_size_t   bufsiz;
+
+/* private: */
+  char const * stdin_in_use_by;
+  char const * stdout_in_use_by;
+  char const * subsystem;
+} sox_globals_t;
+extern sox_globals_t sox_globals;
+
 typedef double sox_rate_t;
 
 typedef struct { /* Signal parameters; 0 if unknown */
@@ -218,51 +241,43 @@ typedef struct { /* Encoding parameters */
   unsigned bits_per_sample;  /* 0 if unknown or variable; uncompressed value if lossless; compressed value if lossy */
   double compression;      /* compression factor (where applicable) */
 
-  /* There is a delineation between these vars being tri-state and
-   * effectively boolean.  Logically the line falls between setting
-   * them up (could be done in libSoX, or by the libSoX client) and
-   * using them (in libSoX).  libSoX's logic to set them up includes
-   * knowledge of the machine default and the format default.  (The
-   * sox client logic adds to this a layer of overridability via user
-   * options.)  The physical delineation is in the somewhat
-   * snappily-named libSoX function `set_endianness_if_not_already_set'
-   * which is called at the right times (as files are openned) by the
-   * libSoX core, not by the file handlers themselves.  The file handlers
-   * indicate to the libSoX core if they have a preference using
-   * SOX_FILE_xxx flags.
-   */
-  sox_bool opposite_endian;
+  /* If these 3 variables are set to DEFAULT, then, during
+   * sox_open_read or sox_open_write, libSoX will set them to either
+   * NO or YES according to the machine or format default. */
   sox_option_t reverse_bytes;    /* endiannesses... */
   sox_option_t reverse_nibbles;
   sox_option_t reverse_bits;
+
+  sox_bool opposite_endian;
 } sox_encodinginfo_t;
+
+void sox_init_encodinginfo(sox_encodinginfo_t * e);
+unsigned sox_precision(sox_encoding_t encoding, unsigned pcm_size);
 
 /* Defaults for common hardware */
 #define SOX_DEFAULT_CHANNELS  2
 #define SOX_DEFAULT_RATE      48000
-#define SOX_DEFAULT_PRECISION      16
+#define SOX_DEFAULT_PRECISION 16
 #define SOX_DEFAULT_ENCODING  SOX_ENCODING_SIGN2
 
 /* Loop parameters */
 
-typedef struct  sox_loopinfo
-{
-    sox_size_t    start;          /* first sample */
-    sox_size_t    length;         /* length */
-    unsigned int  count;          /* number of repeats, 0=forever */
-    unsigned char type;           /* 0=no, 1=forward, 2=forward/back */
+typedef struct {
+  sox_size_t    start;          /* first sample */
+  sox_size_t    length;         /* length */
+  unsigned int  count;          /* number of repeats, 0=forever */
+  unsigned char type;           /* 0=no, 1=forward, 2=forward/back */
 } sox_loopinfo_t;
 
 /* Instrument parameters */
 
 /* vague attempt at generic information for sampler-specific info */
 
-typedef struct  sox_instrinfo
-{
-    char MIDInote;       /* for unity pitch playback */
-    char MIDIlow, MIDIhi;/* MIDI pitch-bend range */
-    char loopmode;       /* semantics of loop data */
-    unsigned nloops;     /* number of active loops (max SOX_MAX_NLOOPS) */
+typedef struct {
+  char MIDInote;       /* for unity pitch playback */
+  char MIDIlow, MIDIhi;/* MIDI pitch-bend range */
+  char loopmode;       /* semantics of loop data */
+  unsigned nloops;     /* number of active loops (max SOX_MAX_NLOOPS) */
 } sox_instrinfo_t;
 
 /* Loop modes, upper 4 bits mask the loop blass, lower 4 bits describe */
@@ -275,12 +290,11 @@ typedef struct  sox_instrinfo
  * File buffer info.  Holds info so that data can be read in blocks.
  */
 
-typedef struct sox_fileinfo
-{
-    char          *buf;                 /* Pointer to data buffer */
-    size_t        size;                 /* Size of buffer */
-    size_t        count;                /* Count read in to buffer */
-    size_t        pos;                  /* Position in buffer */
+typedef struct {
+  char          *buf;                 /* Pointer to data buffer */
+  size_t        size;                 /* Size of buffer */
+  size_t        count;                /* Count read in to buffer */
+  size_t        pos;                  /* Position in buffer */
 } sox_fileinfo_t;
 
 
@@ -313,7 +327,15 @@ typedef struct {
 #define SOX_MAX_FILE_PRIVSIZE    1000
 #define SOX_MAX_NLOOPS           8
 
-typedef char * * comments_t;
+typedef char * * sox_comments_t;
+
+size_t sox_num_comments(sox_comments_t comments);
+void sox_append_comment(sox_comments_t * comments, char const * comment);
+void sox_append_comments(sox_comments_t * comments, char const * comment);
+sox_comments_t sox_copy_comments(sox_comments_t comments);
+void sox_delete_comments(sox_comments_t * comments);
+char * sox_cat_comments(sox_comments_t comments);
+char const * sox_find_comment(sox_comments_t comments, char const * id);
 
 struct sox_format {
   /* Placing priv at the start of this structure ensures that it gets aligned
@@ -331,7 +353,7 @@ struct sox_format {
   sox_size_t       clips;           /* increment if clipping occurs */
   char             *filename;       /* file name */
   char             *filetype;       /* type of file */
-  comments_t       comments;        /* comment strings */
+  sox_comments_t       comments;        /* comment strings */
   FILE             *fp;             /* File stream pointer */
   int              sox_errno;       /* Failure error codes */
   char             sox_errstr[256]; /* Extend Failure text */
@@ -373,7 +395,7 @@ sox_format_t * sox_open_write(
     sox_signalinfo_t   const * signal,
     sox_encodinginfo_t const * encoding,
     char               const * filetype,
-    comments_t                 comments,
+    sox_comments_t                 comments,
     sox_size_t                 length,
     sox_instrinfo_t    const * instr,
     sox_loopinfo_t     const * loops);
@@ -392,6 +414,7 @@ void sox_format_quit(void);
  * Structures for effects.
  */
 
+#define SOX_MAX_EFFECTS 20
 #define SOX_MAX_EFFECT_PRIVSIZE (2 * SOX_MAX_FILE_PRIVSIZE)
 
 #define SOX_EFF_CHAN     1           /* Effect can alter # of channels */
@@ -402,9 +425,15 @@ void sox_format_quit(void);
 #define SOX_EFF_NULL     32          /* Effect does nothing */
 #define SOX_EFF_DEPRECATED 64        /* Effect is living on borrowed time */
 
-typedef struct sox_effect sox_effect_t;
-typedef struct sox_effects_globals sox_effects_globals_t;
 typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot} sox_plot_t;
+typedef struct sox_effect sox_effect_t;
+struct sox_effects_globals { /* Global parameters (for effects) */
+  sox_plot_t plot;         /* To help the user choose effect & options */
+  double speed;            /* Gather up all speed changes here, then resample */
+  sox_globals_t * global_info;
+};
+typedef struct sox_effects_globals sox_effects_globals_t;
+extern sox_effects_globals_t sox_effects_globals;
 
 typedef struct {
   char const * name;
@@ -444,9 +473,18 @@ void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const *e);
 
 /* Effects chain */
 
+typedef const sox_effect_handler_t *(*sox_effect_fn_t)(void);
+extern sox_effect_fn_t sox_effect_fns[];
 int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin);
 
-struct sox_effects_chain;
+struct sox_effects_chain {
+  sox_effect_t * effects[SOX_MAX_EFFECTS];
+  unsigned length;
+  sox_sample_t **ibufc, **obufc; /* Channel interleave buffers */
+  sox_effects_globals_t global_info;
+  sox_encodinginfo_t const * in_enc;
+  sox_encodinginfo_t const * out_enc;
+};
 typedef struct sox_effects_chain sox_effects_chain_t;
 sox_effects_chain_t * sox_create_effects_chain(
     sox_encodinginfo_t const * in_enc,
@@ -456,8 +494,6 @@ int sox_flow_effects(sox_effects_chain_t *, int (* callback)(sox_bool all_done))
 sox_size_t sox_effects_clips(sox_effects_chain_t *);
 sox_size_t sox_stop_effect(sox_effects_chain_t *, sox_size_t e);
 void sox_delete_effects(sox_effects_chain_t *);
-
-char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samples, int def);
 
 /* The following routines are unique to the trim effect.
  * sox_trim_get_start can be used to find what is the start
@@ -474,5 +510,30 @@ void sox_trim_clear_start(sox_effect_t * effp);
 typedef int (* sox_playlist_callback_t)(void *, char *);
 sox_bool sox_is_playlist(char const * filename);
 int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * const listname);
+
+void sox_fail(const char *, ...) PRINTF;
+void sox_warn(const char *, ...) PRINTF;
+void sox_report(const char *, ...) PRINTF;
+void sox_debug(const char *, ...) PRINTF;
+void sox_debug_more(char const * fmt, ...) PRINTF;
+void sox_debug_most(char const * fmt, ...) PRINTF;
+
+#define sox_fail       sox_globals.subsystem=__FILE__,sox_fail
+#define sox_warn       sox_globals.subsystem=__FILE__,sox_warn
+#define sox_report     sox_globals.subsystem=__FILE__,sox_report
+#define sox_debug      sox_globals.subsystem=__FILE__,sox_debug
+#define sox_debug_more sox_globals.subsystem=__FILE__,sox_debug_more
+#define sox_debug_most sox_globals.subsystem=__FILE__,sox_debug_most
+
+void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap);
+
+typedef const sox_format_handler_t *(*sox_format_fn_t)(void);
+
+typedef struct {
+  char *name;
+  sox_format_fn_t fn;
+} sox_format_tab_t;
+
+extern sox_format_tab_t sox_format_fns[];
 
 #endif

@@ -102,15 +102,15 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
 
     p->splices[i].overlap = p->splices[i].search = rate * 0.01 + .5;
 
-    next = sox_parsesamples(rate, p->splices[i].str, &p->splices[i].start, 't');
+    next = lsx_parsesamples(rate, p->splices[i].str, &p->splices[i].start, 't');
     if (next == NULL) break;
 
     if (*next == ',') {
-      next = sox_parsesamples(rate, next + 1, &p->splices[i].overlap, 't');
+      next = lsx_parsesamples(rate, next + 1, &p->splices[i].overlap, 't');
       if (next == NULL) break;
       p->splices[i].overlap *= 2;
       if (*next == ',') {
-        next = sox_parsesamples(rate, next + 1, &p->splices[i].search, 't');
+        next = lsx_parsesamples(rate, next + 1, &p->splices[i].search, 't');
         if (next == NULL) break;
         p->splices[i].search *= 2;
       }
@@ -126,7 +126,7 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
     p->max_buffer_size = max(p->max_buffer_size, buffer_size);
   }
   if (i < p->nsplices)
-    return sox_usage(effp);
+    return lsx_usage(effp);
   return SOX_SUCCESS;
 }
 

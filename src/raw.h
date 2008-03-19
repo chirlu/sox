@@ -18,7 +18,7 @@
 
 #define RAW_FORMAT0(id, size, flags, encoding) \
 static int id ## _start(sox_format_t * ft) { \
-  return sox_rawstart(ft, sox_true, sox_true, sox_true, SOX_ENCODING_ ## encoding, size); \
+  return lsx_rawstart(ft, sox_true, sox_true, sox_true, SOX_ENCODING_ ## encoding, size); \
 } \
 const sox_format_handler_t *sox_ ## id ## _format_fn(void); \
 const sox_format_handler_t *sox_ ## id ## _format_fn(void) { \
@@ -27,8 +27,8 @@ const sox_format_handler_t *sox_ ## id ## _format_fn(void) { \
   static sox_format_handler_t handler = { \
     SOX_LIB_VERSION_CODE, "Raw audio", \
     names, flags, \
-    id ## _start, sox_rawread , NULL, \
-    id ## _start, sox_rawwrite, NULL, \
+    id ## _start, lsx_rawread , NULL, \
+    id ## _start, lsx_rawwrite, NULL, \
     NULL, write_encodings, NULL \
   }; \
   return &handler; \

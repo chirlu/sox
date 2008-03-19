@@ -36,7 +36,7 @@ static int sox_pan_getopts(sox_effect_t * effp, int n, char **argv)
     
     if (n && (!sscanf(argv[0], "%lf", &pan->dir) || 
               pan->dir < -1.0 || pan->dir > 1.0))
-      return sox_usage(effp);
+      return lsx_usage(effp);
 
     return SOX_SUCCESS;
 }

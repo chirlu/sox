@@ -52,7 +52,7 @@ static int sox_sunstartread(sox_format_t * ft)
 #endif
     char simple_hw=0;
 
-    set_signal_defaults(&ft->signal);
+    lsx_set_signal_defaults(&ft->signal);
 
     /* Hard-code for now. */
     file->count = 0;
@@ -65,7 +65,7 @@ static int sox_sunstartread(sox_format_t * ft)
 #ifdef __SVR4
     /* Read in old values, change to what we need and then send back */
     if (ioctl(fileno(ft->fp), AUDIO_GETDEV, &audio_dev) < 0) {
-        sox_fail_errno(ft,errno,"Unable to get device information.");
+        lsx_fail_errno(ft,errno,"Unable to get device information.");
         return(SOX_EOF);
     }
     sox_report("Hardware detected:  %s",audio_dev.name);
@@ -100,7 +100,7 @@ static int sox_sunstartread(sox_format_t * ft)
         if (ft->encoding.encoding != SOX_ENCODING_ULAW &&
             ft->encoding.encoding != SOX_ENCODING_ALAW &&
             ft->encoding.encoding != SOX_ENCODING_SIGN2) {
-            sox_fail_errno(ft,SOX_EFMT,"Sun audio driver only supports ULAW, ALAW, and signed linear for bytes.");
+            lsx_fail_errno(ft,SOX_EFMT,"Sun audio driver only supports ULAW, ALAW, and signed linear for bytes.");
                 return (SOX_EOF);
         }
         if ((ft->encoding.encoding == SOX_ENCODING_ULAW ||
@@ -114,12 +114,12 @@ static int sox_sunstartread(sox_format_t * ft)
     else if (ft->encoding.bits_per_sample == 16) {
         samplesize = 16;
         if (ft->encoding.encoding != SOX_ENCODING_SIGN2) {
-            sox_fail_errno(ft,SOX_EFMT,"Sun audio driver only supports signed linear for words.");
+            lsx_fail_errno(ft,SOX_EFMT,"Sun audio driver only supports signed linear for words.");
             return(SOX_EOF);
         }
     }
     else {
-        sox_fail_errno(ft,SOX_EFMT,"Sun audio driver only supports bytes and words");
+        lsx_fail_errno(ft,SOX_EFMT,"Sun audio driver only supports bytes and words");
         return(SOX_EOF);
     }
 
@@ -135,7 +135,7 @@ static int sox_sunstartread(sox_format_t * ft)
 
     /* Read in old values, change to what we need and then send back */
     if (ioctl(fileno(ft->fp), AUDIO_GETINFO, &audio_if) < 0) {
-        sox_fail_errno(ft,errno,"Unable to initialize /dev/audio");
+        lsx_fail_errno(ft,errno,"Unable to initialize /dev/audio");
         return(SOX_EOF);
     }
     audio_if.record.precision = samplesize;
@@ -151,19 +151,19 @@ static int sox_sunstartread(sox_format_t * ft)
 
     ioctl(fileno(ft->fp), AUDIO_SETINFO, &audio_if);
     if (audio_if.record.precision != samplesize) {
-        sox_fail_errno(ft,errno,"Unable to initialize sample size for /dev/audio");
+        lsx_fail_errno(ft,errno,"Unable to initialize sample size for /dev/audio");
         return(SOX_EOF);
     }
     if (audio_if.record.channels != ft->signal.channels) {
-        sox_fail_errno(ft,errno,"Unable to initialize number of channels for /dev/audio");
+        lsx_fail_errno(ft,errno,"Unable to initialize number of channels for /dev/audio");
         return(SOX_EOF);
     }
     if (audio_if.record.sample_rate != ft->signal.rate) {
-        sox_fail_errno(ft,errno,"Unable to initialize rate for /dev/audio");
+        lsx_fail_errno(ft,errno,"Unable to initialize rate for /dev/audio");
         return(SOX_EOF);
     }
     if (audio_if.record.encoding != encoding) {
-        sox_fail_errno(ft,errno,"Unable to initialize encoding for /dev/audio");
+        lsx_fail_errno(ft,errno,"Unable to initialize encoding for /dev/audio");
         return(SOX_EOF);
     }
     /* Flush any data in the buffers - its probably in the wrong format */
@@ -188,7 +188,7 @@ static int sox_sunstartwrite(sox_format_t * ft)
 #endif
     char simple_hw=0;
 
-    set_signal_defaults(&ft->signal);
+    lsx_set_signal_defaults(&ft->signal);
 
     /* Hard-code for now. */
     file->count = 0;
@@ -199,7 +199,7 @@ static int sox_sunstartwrite(sox_format_t * ft)
 #ifdef __SVR4
     /* Read in old values, change to what we need and then send back */
     if (ioctl(fileno(ft->fp), AUDIO_GETDEV, &audio_dev) < 0) {
-        sox_fail_errno(ft,errno,"Unable to get device information.");
+        lsx_fail_errno(ft,errno,"Unable to get device information.");
         return(SOX_EOF);
     }
     sox_report("Hardware detected:  %s",audio_dev.name);
@@ -270,7 +270,7 @@ static int sox_sunstartwrite(sox_format_t * ft)
 
     /* Read in old values, change to what we need and then send back */
     if (ioctl(fileno(ft->fp), AUDIO_GETINFO, &audio_if) < 0) {
-        sox_fail_errno(ft,errno,"Unable to initialize /dev/audio");
+        lsx_fail_errno(ft,errno,"Unable to initialize /dev/audio");
         return(SOX_EOF);
     }
     audio_if.play.precision = samplesize;
@@ -286,19 +286,19 @@ static int sox_sunstartwrite(sox_format_t * ft)
 
     ioctl(fileno(ft->fp), AUDIO_SETINFO, &audio_if);
     if (audio_if.play.precision != samplesize) {
-        sox_fail_errno(ft,errno,"Unable to initialize sample size for /dev/audio");
+        lsx_fail_errno(ft,errno,"Unable to initialize sample size for /dev/audio");
         return(SOX_EOF);
     }
     if (audio_if.play.channels != ft->signal.channels) {
-        sox_fail_errno(ft,errno,"Unable to initialize number of channels for /dev/audio");
+        lsx_fail_errno(ft,errno,"Unable to initialize number of channels for /dev/audio");
         return(SOX_EOF);
     }
     if (audio_if.play.sample_rate != ft->signal.rate) {
-        sox_fail_errno(ft,errno,"Unable to initialize rate for /dev/audio");
+        lsx_fail_errno(ft,errno,"Unable to initialize rate for /dev/audio");
         return(SOX_EOF);
     }
     if (audio_if.play.encoding != encoding) {
-        sox_fail_errno(ft,errno,"Unable to initialize encoding for /dev/audio");
+        lsx_fail_errno(ft,errno,"Unable to initialize encoding for /dev/audio");
         return(SOX_EOF);
     }
     /* Change to non-buffered I/O */
@@ -319,8 +319,8 @@ SOX_FORMAT_HANDLER(sunau)
     SOX_LIB_VERSION_CODE,
     "Sun audio device driver",
     names, SOX_FILE_DEVICE,
-    sox_sunstartread, sox_rawread, sox_rawstopread,
-    sox_sunstartwrite, sox_rawwrite, sox_rawstopwrite,
+    sox_sunstartread, lsx_rawread, lsx_rawstopread,
+    sox_sunstartwrite, lsx_rawwrite, lsx_rawstopwrite,
     NULL, write_encodings, NULL
   };
   return &handler;

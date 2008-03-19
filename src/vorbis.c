@@ -107,7 +107,7 @@ static int startread(sox_format_t * ft)
 
   /* Init the decoder */
   if (ov_open_callbacks((void *) ft->fp, vb->vf, NULL, 0, callbacks) < 0) {
-    sox_fail_errno(ft, SOX_EHDR, "Input not an Ogg Vorbis audio stream");
+    lsx_fail_errno(ft, SOX_EHDR, "Input not an Ogg Vorbis audio stream");
     return (SOX_EOF);
   }
 
@@ -129,7 +129,7 @@ static int startread(sox_format_t * ft)
 
   /* Record comments */
   for (i = 0; i < vc->comments; i++)
-    append_comment(&ft->comments, vc->user_comments[i]);
+    sox_append_comment(&ft->comments, vc->user_comments[i]);
 
   /* Setup buffer */
   vb->buf_len = DEF_BUF_LEN;
@@ -225,8 +225,8 @@ static int oe_write_page(ogg_page * page, sox_format_t * ft)
 {
   int written;
 
-  written = sox_writebuf(ft, page->header, (sox_size_t) page->header_len);
-  written += sox_writebuf(ft, page->body, (sox_size_t) page->body_len);
+  written = lsx_writebuf(ft, page->header, (sox_size_t) page->header_len);
+  written += lsx_writebuf(ft, page->body, (sox_size_t) page->body_len);
 
   return written;
 }
@@ -242,7 +242,7 @@ static int write_vorbis_header(sox_format_t * ft, vorbis_enc_t * ve)
   int i, ret = HEADER_OK;
 
   memset(&vc, 0, sizeof(vc));
-  vc.comments = num_comments(ft->comments);
+  vc.comments = sox_num_comments(ft->comments);
   if (vc.comments) {     /* Make the comment structure */
     vc.comment_lengths = xcalloc((size_t)vc.comments, sizeof(*vc.comment_lengths));
     vc.user_comments = xcalloc((size_t)vc.comments, sizeof(*vc.user_comments));
@@ -290,13 +290,13 @@ static int startwrite(sox_format_t * ft)
   /* TODO */
   rate = ft->signal.rate;
   if (rate)
-    sox_fail_errno(ft, SOX_EHDR,
+    lsx_fail_errno(ft, SOX_EHDR,
       "Error setting-up Ogg Vorbis encoder; check sample-rate & # of channels");
 
   /* Use encoding to average bit rate of VBR as specified by the -C option */
   if (ft->encoding.compression != HUGE_VAL) {
     if (ft->encoding.compression < -1 || ft->encoding.compression > 10) {
-      sox_fail_errno(ft, SOX_EINVAL,
+      lsx_fail_errno(ft, SOX_EINVAL,
                      "Vorbis compression quality nust be between -1 and 10");
       return SOX_EOF;
     }
@@ -310,7 +310,7 @@ static int startwrite(sox_format_t * ft)
   ogg_stream_init(&ve->os, rand());     /* Random serial number */
 
   if (write_vorbis_header(ft, ve) == HEADER_ERROR) {
-    sox_fail_errno(ft, SOX_EHDR,
+    lsx_fail_errno(ft, SOX_EHDR,
                    "Error writing header for Ogg Vorbis audio stream");
     return (SOX_EOF);
   }

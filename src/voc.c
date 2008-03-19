@@ -223,23 +223,23 @@ static int startread(sox_format_t * ft)
   int ii;                       /* for getting rid of lseek */
   unsigned char uc;
 
-  if (sox_readbuf(ft, header, 20) != 20) {
-    sox_fail_errno(ft, SOX_EHDR, "unexpected EOF in VOC header");
+  if (lsx_readbuf(ft, header, 20) != 20) {
+    lsx_fail_errno(ft, SOX_EHDR, "unexpected EOF in VOC header");
     return (SOX_EOF);
   }
   if (strncmp(header, "Creative Voice File\032", 19)) {
-    sox_fail_errno(ft, SOX_EHDR, "VOC file header incorrect");
+    lsx_fail_errno(ft, SOX_EHDR, "VOC file header incorrect");
     return (SOX_EOF);
   }
 
   /* read the offset to data, from start of file */
   /* after this read we have read 20 bytes of header + 2 */
-  sox_readw(ft, &sbseek);
+  lsx_readw(ft, &sbseek);
 
   /* ANN:  read to skip the header, instead of lseek */
   /* this should allow use with pipes.... */
   for (ii = 22; ii < sbseek; ii++)
-    sox_readb(ft, &uc);
+    lsx_readb(ft, &uc);
 
   v->rate = -1;
   v->block_remaining = 0;
@@ -253,7 +253,7 @@ static int startread(sox_format_t * ft)
 
   /* get rate of data */
   if (v->rate == -1) {
-    sox_fail_errno(ft, SOX_EOF, "Input .voc file had no sound!");
+    lsx_fail_errno(ft, SOX_EOF, "Input .voc file had no sound!");
     return (SOX_EOF);
   }
 
@@ -350,7 +350,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
       /* Read the data in the file */
       if (v->size <= 4) {
         if (!v->adpcm.setup.sign) {
-          if (sox_readb(ft, &uc) == SOX_EOF) {
+          if (lsx_readb(ft, &uc) == SOX_EOF) {
             sox_warn("VOC input: short file");
             v->block_remaining = 0;
             return done;
@@ -361,7 +361,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
           --v->block_remaining;
           ++done;
         }
-        if (sox_readb(ft, &uc) == SOX_EOF) {
+        if (lsx_readb(ft, &uc) == SOX_EOF) {
           sox_warn("VOC input: short file");
           v->block_remaining = 0;
           return done;
@@ -407,7 +407,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
       } else
         switch (v->size) {
           case 8:
-            if (sox_readb(ft, &uc) == SOX_EOF) {
+            if (lsx_readb(ft, &uc) == SOX_EOF) {
               sox_warn("VOC input: short file");
               v->block_remaining = 0;
               return done;
@@ -421,8 +421,8 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
             }
             break;
           case 16:
-            sox_readw(ft, (unsigned short *) &sw);
-            if (sox_eof(ft)) {
+            lsx_readw(ft, (unsigned short *) &sw);
+            if (lsx_eof(ft)) {
               sox_warn("VOC input: short file");
               v->block_remaining = 0;
               return done;
@@ -458,7 +458,7 @@ static int startwrite(sox_format_t * ft)
   vs_t v = (vs_t) ft->priv;
 
   if (!ft->seekable) {
-    sox_fail_errno(ft, SOX_EOF,
+    lsx_fail_errno(ft, SOX_EOF,
                    "Output .voc file must be a file, not a pipe");
     return (SOX_EOF);
   }
@@ -466,10 +466,10 @@ static int startwrite(sox_format_t * ft)
   v->samples = 0;
 
   /* File format name and a ^Z (aborts printing under DOS) */
-  sox_writes(ft, "Creative Voice File\032");
-  sox_writew(ft, 26);   /* size of header */
-  sox_writew(ft, 0x10a);        /* major/minor version number */
-  sox_writew(ft, 0x1129);       /* checksum of version number */
+  lsx_writes(ft, "Creative Voice File\032");
+  lsx_writew(ft, 26);   /* size of header */
+  lsx_writew(ft, 0x10a);        /* major/minor version number */
+  lsx_writew(ft, 0x1129);       /* checksum of version number */
 
   return (SOX_SUCCESS);
 }
@@ -494,10 +494,10 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t * buf,
   while (done < len) {
     if (ft->encoding.bits_per_sample == 8) {
       uc = SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++, ft->clips);
-      sox_writeb(ft, uc);
+      lsx_writeb(ft, uc);
     } else {
       sw = (int) SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips);
-      sox_writesw(ft, sw);
+      lsx_writesw(ft, sw);
     }
     done++;
   }
@@ -513,24 +513,24 @@ static void blockstop(sox_format_t * ft)
   vs_t v = (vs_t) ft->priv;
   sox_sample_t datum;
 
-  sox_writeb(ft, 0);    /* End of file block code */
-  sox_seeki(ft, (sox_ssize_t) v->blockseek, 0); /* seek back to block length */
-  sox_seeki(ft, 1, 1);  /* seek forward one */
+  lsx_writeb(ft, 0);    /* End of file block code */
+  lsx_seeki(ft, (sox_ssize_t) v->blockseek, 0); /* seek back to block length */
+  lsx_seeki(ft, 1, 1);  /* seek forward one */
   if (v->silent) {
-    sox_writesw(ft, v->samples);
+    lsx_writesw(ft, v->samples);
   } else {
     if (ft->encoding.bits_per_sample == 8) {
       if (ft->signal.channels > 1) {
-        sox_seeki(ft, 8, 1);    /* forward 7 + 1 for new block header */
+        lsx_seeki(ft, 8, 1);    /* forward 7 + 1 for new block header */
       }
     }
     v->samples += 2;    /* adjustment: SBDK pp. 3-5 */
     datum = (v->samples * (ft->encoding.bits_per_sample >> 3)) & 0xff;
-    sox_writesb(ft, datum);     /* low byte of length */
+    lsx_writesb(ft, datum);     /* low byte of length */
     datum = ((v->samples * (ft->encoding.bits_per_sample >> 3)) >> 8) & 0xff;
-    sox_writesb(ft, datum);     /* middle byte of length */
+    lsx_writesb(ft, datum);     /* middle byte of length */
     datum = ((v->samples * (ft->encoding.bits_per_sample >> 3)) >> 16) & 0xff;
-    sox_writesb(ft, datum);     /* high byte of length */
+    lsx_writesb(ft, datum);     /* high byte of length */
   }
 }
 
@@ -564,34 +564,34 @@ static int getblock(sox_format_t * ft)
   v->silent = 0;
   /* DO while we have no audio to read */
   while (v->block_remaining == 0) {
-    if (sox_eof(ft))
+    if (lsx_eof(ft))
       return SOX_EOF;
 
-    if (sox_readb(ft, &block) == SOX_EOF)
+    if (lsx_readb(ft, &block) == SOX_EOF)
       return SOX_EOF;
 
     if (block == VOC_TERM)
       return SOX_EOF;
 
-    if (sox_eof(ft))
+    if (lsx_eof(ft))
       return SOX_EOF;
 
-    sox_read3(ft, &sblen);
+    lsx_read3(ft, &sblen);
 
     /* Based on VOC block type, process the block */
     /* audio may be in one or multiple blocks */
     switch (block) {
       case VOC_DATA:
-        sox_readb(ft, &uc);
+        lsx_readb(ft, &uc);
         /* When DATA block preceeded by an EXTENDED     */
         /* block, the DATA blocks rate value is invalid */
         if (!v->extended) {
           if (uc == 0) {
-            sox_fail_errno(ft, SOX_EFMT, "Sample rate is zero?");
+            lsx_fail_errno(ft, SOX_EFMT, "Sample rate is zero?");
             return (SOX_EOF);
           }
           if ((v->rate != -1) && (uc != v->rate)) {
-            sox_fail_errno(ft, SOX_EFMT,
+            lsx_fail_errno(ft, SOX_EFMT,
                            "sample rate codes differ: %ld != %d", v->rate,
                            uc);
             return (SOX_EOF);
@@ -600,32 +600,32 @@ static int getblock(sox_format_t * ft)
           ft->signal.rate = 1000000.0 / (256 - v->rate);
           v->channels = 1;
         }
-        sox_readb(ft, &uc);
+        lsx_readb(ft, &uc);
         v->format = uc;
         v->extended = 0;
         v->block_remaining = sblen - 2;
         return (SOX_SUCCESS);
       case VOC_DATA_16:
-        sox_readdw(ft, &new_rate_32);
+        lsx_readdw(ft, &new_rate_32);
         if (new_rate_32 == 0) {
-          sox_fail_errno(ft, SOX_EFMT, "Sample rate is zero?");
+          lsx_fail_errno(ft, SOX_EFMT, "Sample rate is zero?");
           return (SOX_EOF);
         }
         if ((v->rate != -1) && ((long) new_rate_32 != v->rate)) {
-          sox_fail_errno(ft, SOX_EFMT, "sample rate codes differ: %ld != %d",
+          lsx_fail_errno(ft, SOX_EFMT, "sample rate codes differ: %ld != %d",
                          v->rate, new_rate_32);
           return (SOX_EOF);
         }
         v->rate = new_rate_32;
         ft->signal.rate = new_rate_32;
-        sox_readb(ft, &uc);
+        lsx_readb(ft, &uc);
         v->size = uc;
-        sox_readb(ft, &(v->channels));
-        sox_readw(ft, &(v->format));    /* ANN: added format */
-        sox_readb(ft, (unsigned char *) &trash);        /* notused */
-        sox_readb(ft, (unsigned char *) &trash);        /* notused */
-        sox_readb(ft, (unsigned char *) &trash);        /* notused */
-        sox_readb(ft, (unsigned char *) &trash);        /* notused */
+        lsx_readb(ft, &(v->channels));
+        lsx_readw(ft, &(v->format));    /* ANN: added format */
+        lsx_readb(ft, (unsigned char *) &trash);        /* notused */
+        lsx_readb(ft, (unsigned char *) &trash);        /* notused */
+        lsx_readb(ft, (unsigned char *) &trash);        /* notused */
+        lsx_readb(ft, (unsigned char *) &trash);        /* notused */
         v->block_remaining = sblen - 12;
         return (SOX_SUCCESS);
       case VOC_CONT:
@@ -635,10 +635,10 @@ static int getblock(sox_format_t * ft)
         {
           unsigned short period;
 
-          sox_readw(ft, &period);
-          sox_readb(ft, &uc);
+          lsx_readw(ft, &period);
+          lsx_readb(ft, &uc);
           if (uc == 0) {
-            sox_fail_errno(ft, SOX_EFMT, "Silence sample rate is zero");
+            lsx_fail_errno(ft, SOX_EFMT, "Silence sample rate is zero");
             return (SOX_EOF);
           }
           /*
@@ -655,8 +655,8 @@ static int getblock(sox_format_t * ft)
           return (SOX_SUCCESS);
         }
       case VOC_MARKER:
-        sox_readb(ft, &uc);
-        sox_readb(ft, &uc);
+        lsx_readb(ft, &uc);
+        lsx_readb(ft, &uc);
         /* Falling! Falling! */
       case VOC_TEXT:
         {
@@ -666,7 +666,7 @@ static int getblock(sox_format_t * ft)
 
           sox_warn("VOC TEXT");
           while (i--) {
-            sox_readb(ft, (unsigned char *) &c);
+            lsx_readb(ft, (unsigned char *) &c);
             /* FIXME: this needs to be tested but I couldn't
              * find a voc file with a VOC_TEXT chunk :(
              if (c != '\0' && c != '\r')
@@ -686,7 +686,7 @@ static int getblock(sox_format_t * ft)
       case VOC_LOOPEND:
         sox_debug("skipping repeat loop");
         for (i = 0; i < sblen; i++)
-          sox_readb(ft, (unsigned char *) &trash);
+          lsx_readb(ft, (unsigned char *) &trash);
         break;
       case VOC_EXTENDED:
         /* An Extended block is followed by a data block */
@@ -694,19 +694,19 @@ static int getblock(sox_format_t * ft)
         /* value from the extended block and not the     */
         /* data block.                                   */
         v->extended = 1;
-        sox_readw(ft, &new_rate_16);
+        lsx_readw(ft, &new_rate_16);
         if (new_rate_16 == 0) {
-          sox_fail_errno(ft, SOX_EFMT, "Sample rate is zero?");
+          lsx_fail_errno(ft, SOX_EFMT, "Sample rate is zero?");
           return (SOX_EOF);
         }
         if ((v->rate != -1) && (new_rate_16 != v->rate)) {
-          sox_fail_errno(ft, SOX_EFMT, "sample rate codes differ: %ld != %d",
+          lsx_fail_errno(ft, SOX_EFMT, "sample rate codes differ: %ld != %d",
                          v->rate, new_rate_16);
           return (SOX_EOF);
         }
         v->rate = new_rate_16;
-        sox_readb(ft, &uc); /* bits_per_sample */
-        sox_readb(ft, &uc);
+        lsx_readb(ft, &uc); /* bits_per_sample */
+        lsx_readb(ft, &uc);
         ft->signal.channels = uc? 2 : 1;      /* Stereo */
         /* Needed number of channels before finishing
          * compute for rate */
@@ -718,7 +718,7 @@ static int getblock(sox_format_t * ft)
       default:
         sox_debug("skipping unknown block code %d", block);
         for (i = 0; i < sblen; i++)
-          sox_readb(ft, (unsigned char *) &trash);
+          lsx_readb(ft, (unsigned char *) &trash);
     }
   }
   return SOX_SUCCESS;
@@ -731,12 +731,12 @@ static void blockstart(sox_format_t * ft)
 {
   vs_t v = (vs_t) ft->priv;
 
-  v->blockseek = sox_tell(ft);
+  v->blockseek = lsx_tell(ft);
   if (v->silent) {
-    sox_writeb(ft, VOC_SILENCE);        /* Silence block code */
-    sox_writeb(ft, 0);  /* Period length */
-    sox_writeb(ft, 0);  /* Period length */
-    sox_writesb(ft, v->rate);   /* Rate code */
+    lsx_writeb(ft, VOC_SILENCE);        /* Silence block code */
+    lsx_writeb(ft, 0);  /* Period length */
+    lsx_writeb(ft, 0);  /* Period length */
+    lsx_writesb(ft, v->rate);   /* Rate code */
   } else {
     if (ft->encoding.bits_per_sample == 8) {
       /* 8-bit sample section.  By always setting the correct     */
@@ -746,36 +746,36 @@ static void blockstart(sox_format_t * ft)
       /* Prehaps the rate should be doubled though to make up for */
       /* double amount of samples for a given time????            */
       if (ft->signal.channels > 1) {
-        sox_writeb(ft, VOC_EXTENDED);   /* Voice Extended block code */
-        sox_writeb(ft, 4);      /* block length = 4 */
-        sox_writeb(ft, 0);      /* block length = 4 */
-        sox_writeb(ft, 0);      /* block length = 4 */
+        lsx_writeb(ft, VOC_EXTENDED);   /* Voice Extended block code */
+        lsx_writeb(ft, 4);      /* block length = 4 */
+        lsx_writeb(ft, 0);      /* block length = 4 */
+        lsx_writeb(ft, 0);      /* block length = 4 */
         v->rate = 65536 - (256000000.0 / (2 * ft->signal.rate)) + .5;
-        sox_writesw(ft, v->rate);       /* Rate code */
-        sox_writeb(ft, 0);      /* File is not packed */
-        sox_writeb(ft, 1);      /* samples are in stereo */
+        lsx_writesw(ft, v->rate);       /* Rate code */
+        lsx_writeb(ft, 0);      /* File is not packed */
+        lsx_writeb(ft, 1);      /* samples are in stereo */
       }
-      sox_writeb(ft, VOC_DATA); /* Voice Data block code */
-      sox_writeb(ft, 0);        /* block length (for now) */
-      sox_writeb(ft, 0);        /* block length (for now) */
-      sox_writeb(ft, 0);        /* block length (for now) */
+      lsx_writeb(ft, VOC_DATA); /* Voice Data block code */
+      lsx_writeb(ft, 0);        /* block length (for now) */
+      lsx_writeb(ft, 0);        /* block length (for now) */
+      lsx_writeb(ft, 0);        /* block length (for now) */
       v->rate = 256 - (1000000.0 / ft->signal.rate) + .5;
-      sox_writesb(ft, v->rate); /* Rate code */
-      sox_writeb(ft, 0);        /* 8-bit raw data */
+      lsx_writesb(ft, v->rate); /* Rate code */
+      lsx_writeb(ft, 0);        /* 8-bit raw data */
     } else {
-      sox_writeb(ft, VOC_DATA_16);      /* Voice Data block code */
-      sox_writeb(ft, 0);        /* block length (for now) */
-      sox_writeb(ft, 0);        /* block length (for now) */
-      sox_writeb(ft, 0);        /* block length (for now) */
+      lsx_writeb(ft, VOC_DATA_16);      /* Voice Data block code */
+      lsx_writeb(ft, 0);        /* block length (for now) */
+      lsx_writeb(ft, 0);        /* block length (for now) */
+      lsx_writeb(ft, 0);        /* block length (for now) */
       v->rate = ft->signal.rate + .5;
-      sox_writedw(ft, (unsigned) v->rate);      /* Rate code */
-      sox_writeb(ft, 16);       /* Sample Size */
-      sox_writeb(ft, ft->signal.channels);      /* Sample Size */
-      sox_writew(ft, 0x0004);   /* Encoding */
-      sox_writeb(ft, 0);        /* Unused */
-      sox_writeb(ft, 0);        /* Unused */
-      sox_writeb(ft, 0);        /* Unused */
-      sox_writeb(ft, 0);        /* Unused */
+      lsx_writedw(ft, (unsigned) v->rate);      /* Rate code */
+      lsx_writeb(ft, 16);       /* Sample Size */
+      lsx_writeb(ft, ft->signal.channels);      /* Sample Size */
+      lsx_writew(ft, 0x0004);   /* Encoding */
+      lsx_writeb(ft, 0);        /* Unused */
+      lsx_writeb(ft, 0);        /* Unused */
+      lsx_writeb(ft, 0);        /* Unused */
+      lsx_writeb(ft, 0);        /* Unused */
     }
   }
 }

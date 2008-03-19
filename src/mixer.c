@@ -64,7 +64,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
         else if (!strcmp(argv[0], "-4")) mixer->mix = '4';
         else if (argv[0][0] == '-' && !isdigit((int)argv[0][1])
                 && argv[0][1] != '.')
-          return sox_usage(effp);
+          return lsx_usage(effp);
         else {
             int commas;
             char *s;
@@ -87,7 +87,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
         mixer->mix = MIX_CENTER;
     }
     else
-      return sox_usage(effp);
+      return lsx_usage(effp);
 
     return (SOX_SUCCESS);
 }
@@ -542,7 +542,7 @@ sox_effect_handler_t const * sox_mixer_effect_fn(void)
 static int oops_getopts(sox_effect_t * effp, int argc, char * * argv UNUSED) 
 {
   char * args[] = {"1,1,-1,-1"};
-  return argc? sox_usage(effp) : sox_mixer_effect_fn()->getopts(effp, array_length(args), args);
+  return argc? lsx_usage(effp) : sox_mixer_effect_fn()->getopts(effp, array_length(args), args);
 }
 
 sox_effect_handler_t const * sox_oops_effect_fn(void)

@@ -29,7 +29,7 @@ SOX_FORMAT_HANDLER(ima)
     names, SOX_FILE_MONO,
     sox_ima_start, sox_vox_read, sox_vox_stopread,
     sox_ima_start, sox_vox_write, sox_vox_stopwrite,
-    sox_rawseek, write_encodings, NULL
+    lsx_rawseek, write_encodings, NULL
   };
   return &handler;
 }

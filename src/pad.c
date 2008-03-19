@@ -44,19 +44,19 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
   for (i = 0; i < p->npads; ++i) {
     if (argv) /* 1st parse only */
       p->pads[i].str = xstrdup(argv[i]);
-    next = sox_parsesamples(rate, p->pads[i].str, &p->pads[i].pad, 't');
+    next = lsx_parsesamples(rate, p->pads[i].str, &p->pads[i].pad, 't');
     if (next == NULL) break;
     if (*next == '\0')
       p->pads[i].start = i? SOX_SIZE_MAX : 0;
     else {
       if (*next != '@') break;
-      next = sox_parsesamples(rate, next+1, &p->pads[i].start, 't');
+      next = lsx_parsesamples(rate, next+1, &p->pads[i].start, 't');
       if (next == NULL || *next != '\0') break;
     }
     if (i > 0 && p->pads[i].start <= p->pads[i-1].start) break;
   }
   if (i < p->npads)
-    return sox_usage(effp);
+    return lsx_usage(effp);
   return SOX_SUCCESS;
 }
 

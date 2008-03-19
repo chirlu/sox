@@ -68,16 +68,16 @@ static int startread(sox_format_t * ft)
   avr_t avr = (avr_t)ft->priv;
   int rc;
 
-  sox_reads(ft, avr->magic, 4);
+  lsx_reads(ft, avr->magic, 4);
 
   if (strncmp (avr->magic, AVR_MAGIC, 4)) {
-    sox_fail_errno(ft,SOX_EHDR,"AVR: unknown header");
+    lsx_fail_errno(ft,SOX_EHDR,"AVR: unknown header");
     return(SOX_EOF);
   }
 
-  sox_readbuf(ft, avr->name, sizeof(avr->name));
+  lsx_readbuf(ft, avr->name, sizeof(avr->name));
 
-  sox_readw (ft, &(avr->mono));
+  lsx_readw (ft, &(avr->mono));
   if (avr->mono) {
     ft->signal.channels = 2;
   }
@@ -85,7 +85,7 @@ static int startread(sox_format_t * ft)
     ft->signal.channels = 1;
   }
 
-  sox_readw (ft, &(avr->rez));
+  lsx_readw (ft, &(avr->rez));
   if (avr->rez == 8) {
     ft->encoding.bits_per_sample = 8;
   }
@@ -93,11 +93,11 @@ static int startread(sox_format_t * ft)
     ft->encoding.bits_per_sample = 16;
   }
   else {
-    sox_fail_errno(ft,SOX_EFMT,"AVR: unsupported sample resolution");
+    lsx_fail_errno(ft,SOX_EFMT,"AVR: unsupported sample resolution");
     return(SOX_EOF);
   }
 
-  sox_readw (ft, &(avr->sign));
+  lsx_readw (ft, &(avr->sign));
   if (avr->sign) {
     ft->encoding.encoding = SOX_ENCODING_SIGN2;
   }
@@ -105,11 +105,11 @@ static int startread(sox_format_t * ft)
     ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
   }
 
-  sox_readw (ft, &(avr->loop));
+  lsx_readw (ft, &(avr->loop));
 
-  sox_readw (ft, &(avr->midi));
+  lsx_readw (ft, &(avr->midi));
 
-  sox_readdw (ft, &(avr->rate));
+  lsx_readdw (ft, &(avr->rate));
   /*
    * No support for AVRs created by ST-Replay,
    * Replay Proffesional and PRO-Series 12.
@@ -118,23 +118,23 @@ static int startread(sox_format_t * ft)
    */
   ft->signal.rate = (avr->rate & 0x00ffffff);
 
-  sox_readdw (ft, &(avr->size));
+  lsx_readdw (ft, &(avr->size));
 
-  sox_readdw (ft, &(avr->lbeg));
+  lsx_readdw (ft, &(avr->lbeg));
 
-  sox_readdw (ft, &(avr->lend));
+  lsx_readdw (ft, &(avr->lend));
 
-  sox_readw (ft, &(avr->res1));
+  lsx_readw (ft, &(avr->res1));
 
-  sox_readw (ft, &(avr->res2));
+  lsx_readw (ft, &(avr->res2));
 
-  sox_readw (ft, &(avr->res3));
+  lsx_readw (ft, &(avr->res3));
 
-  sox_readbuf(ft, avr->ext, sizeof(avr->ext));
+  lsx_readbuf(ft, avr->ext, sizeof(avr->ext));
 
-  sox_readbuf(ft, avr->user, sizeof(avr->user));
+  lsx_readbuf(ft, avr->user, sizeof(avr->user));
 
-  rc = sox_rawstartread (ft);
+  rc = lsx_rawstartread (ft);
   if (rc)
       return rc;
 
@@ -147,97 +147,97 @@ static int startwrite(sox_format_t * ft)
   int rc;
 
   if (!ft->seekable) {
-    sox_fail_errno(ft,SOX_EOF,"AVR: file is not seekable");
+    lsx_fail_errno(ft,SOX_EOF,"AVR: file is not seekable");
     return(SOX_EOF);
   }
 
-  rc = sox_rawstartwrite (ft);
+  rc = lsx_rawstartwrite (ft);
   if (rc)
       return rc;
 
   /* magic */
-  sox_writes(ft, AVR_MAGIC);
+  lsx_writes(ft, AVR_MAGIC);
 
   /* name */
-  sox_writeb(ft, 0);
-  sox_writeb(ft, 0);
-  sox_writeb(ft, 0);
-  sox_writeb(ft, 0);
-  sox_writeb(ft, 0);
-  sox_writeb(ft, 0);
-  sox_writeb(ft, 0);
-  sox_writeb(ft, 0);
+  lsx_writeb(ft, 0);
+  lsx_writeb(ft, 0);
+  lsx_writeb(ft, 0);
+  lsx_writeb(ft, 0);
+  lsx_writeb(ft, 0);
+  lsx_writeb(ft, 0);
+  lsx_writeb(ft, 0);
+  lsx_writeb(ft, 0);
 
   /* mono */
   if (ft->signal.channels == 1) {
-    sox_writew (ft, 0);
+    lsx_writew (ft, 0);
   }
   else if (ft->signal.channels == 2) {
-    sox_writew (ft, 0xffff);
+    lsx_writew (ft, 0xffff);
   }
   else {
-    sox_fail_errno(ft,SOX_EFMT,"AVR: number of channels not supported");
+    lsx_fail_errno(ft,SOX_EFMT,"AVR: number of channels not supported");
     return(0);
   }
 
   /* rez */
   if (ft->encoding.bits_per_sample == 8) {
-    sox_writew (ft, 8);
+    lsx_writew (ft, 8);
   }
   else if (ft->encoding.bits_per_sample == 16) {
-    sox_writew (ft, 16);
+    lsx_writew (ft, 16);
   }
   else {
-    sox_fail_errno(ft,SOX_EFMT,"AVR: unsupported sample resolution");
+    lsx_fail_errno(ft,SOX_EFMT,"AVR: unsupported sample resolution");
     return(SOX_EOF);
   }
 
   /* sign */
   if (ft->encoding.encoding == SOX_ENCODING_SIGN2) {
-    sox_writew (ft, 0xffff);
+    lsx_writew (ft, 0xffff);
   }
   else if (ft->encoding.encoding == SOX_ENCODING_UNSIGNED) {
-    sox_writew (ft, 0);
+    lsx_writew (ft, 0);
   }
   else {
-    sox_fail_errno(ft,SOX_EFMT,"AVR: unsupported encoding");
+    lsx_fail_errno(ft,SOX_EFMT,"AVR: unsupported encoding");
     return(SOX_EOF);
   }
 
   /* loop */
-  sox_writew (ft, 0xffff);
+  lsx_writew (ft, 0xffff);
 
   /* midi */
-  sox_writew (ft, 0xffff);
+  lsx_writew (ft, 0xffff);
 
   /* rate */
-  sox_writedw(ft, (unsigned)(ft->signal.rate + .5));
+  lsx_writedw(ft, (unsigned)(ft->signal.rate + .5));
 
   /* size */
   /* Don't know the size yet. */
-  sox_writedw (ft, 0);
+  lsx_writedw (ft, 0);
 
   /* lbeg */
-  sox_writedw (ft, 0);
+  lsx_writedw (ft, 0);
 
   /* lend */
   /* Don't know the size yet, so we can't set lend, either. */
-  sox_writedw (ft, 0);
+  lsx_writedw (ft, 0);
 
   /* res1 */
-  sox_writew (ft, 0);
+  lsx_writew (ft, 0);
 
   /* res2 */
-  sox_writew (ft, 0);
+  lsx_writew (ft, 0);
 
   /* res3 */
-  sox_writew (ft, 0);
+  lsx_writew (ft, 0);
 
   /* ext */
-  sox_writebuf(ft, (void *)"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", sizeof(avr->ext));
+  lsx_writebuf(ft, (void *)"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", sizeof(avr->ext));
 
   /* user */
-  sox_writebuf(ft, 
+  lsx_writebuf(ft, 
            (void *)"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
            "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
            "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
@@ -252,7 +252,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
 
   avr->size += nsamp;
 
-  return (sox_rawwrite (ft, buf, nsamp));
+  return (lsx_rawwrite (ft, buf, nsamp));
 }
 
 static int stopwrite(sox_format_t * ft) 
@@ -262,12 +262,12 @@ static int stopwrite(sox_format_t * ft)
   unsigned size = avr->size / ft->signal.channels;
 
   /* Fix size */
-  sox_seeki(ft, 26, SEEK_SET);
-  sox_writedw (ft, size);
+  lsx_seeki(ft, 26, SEEK_SET);
+  lsx_writedw (ft, size);
 
   /* Fix lend */
-  sox_seeki(ft, 34, SEEK_SET);
-  sox_writedw (ft, size);
+  lsx_seeki(ft, 34, SEEK_SET);
+  lsx_writedw (ft, size);
 
   return(SOX_SUCCESS);
 }
@@ -284,7 +284,7 @@ SOX_FORMAT_HANDLER(avr)
     "Audio Visual Research format; used on the Mac",
     names,
     SOX_FILE_BIG_END|SOX_FILE_MONO|SOX_FILE_STEREO,
-    startread, sox_rawread, NULL,
+    startread, lsx_rawread, NULL,
     startwrite, write_samples, stopwrite,
     NULL, write_encodings, NULL
   };

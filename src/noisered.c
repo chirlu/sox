@@ -51,7 +51,7 @@ static int sox_noisered_getopts(sox_effect_t * effp, int argc, char **argv)
     NUMERIC_PARAMETER(threshold, 0, 1);
   } while (0);
 
-  return argc? sox_usage(effp) : SOX_SUCCESS;
+  return argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 /*

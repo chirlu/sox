@@ -47,7 +47,7 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
       }
     }
   }
-  return sox_usage(effp);
+  return lsx_usage(effp);
 }
 
 sox_effect_handler_t const *sox_speed_effect_fn(void)

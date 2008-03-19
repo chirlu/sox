@@ -33,7 +33,7 @@ static int sox_swap_getopts(sox_effect_t * effp, int n, char **argv)
     {
         swap->def_opts = 0;
         if (n != 2 && n != 4)
-          return sox_usage(effp);
+          return lsx_usage(effp);
         else if (n == 2)
         {
             sscanf(argv[0],"%d",&swap->order[0]);

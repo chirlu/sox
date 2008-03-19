@@ -29,21 +29,21 @@ static int start_read(sox_format_t * ft)
   char buf[sizeof(ID1)];
   uint32_t num_samples;
 
-  if (sox_readchars(ft, buf, sizeof(buf)) || sox_readdw(ft, &num_samples) ||
-      sox_skipbytes(ft, sizeof(ID2)))
+  if (lsx_readchars(ft, buf, sizeof(buf)) || lsx_readdw(ft, &num_samples) ||
+      lsx_skipbytes(ft, sizeof(ID2)))
     return SOX_EOF;
   if (memcmp(ID1, buf, sizeof(buf))) {
-    sox_fail_errno(ft, SOX_EHDR, "wve: can't find Psion identifier");
+    lsx_fail_errno(ft, SOX_EHDR, "wve: can't find Psion identifier");
     return SOX_EOF;
   }
-  return sox_check_read_params(ft, 1, 8000., SOX_ENCODING_ALAW, 8, (off_t)num_samples);
+  return lsx_check_read_params(ft, 1, 8000., SOX_ENCODING_ALAW, 8, (off_t)num_samples);
 }
 
 static int write_header(sox_format_t * ft)
 {
-  return sox_writechars(ft, ID1, sizeof(ID1))
-      || sox_writedw(ft, ft->olength? ft->olength:ft->length)
-      || sox_writechars(ft, ID2, sizeof(ID2))? SOX_EOF:SOX_SUCCESS;
+  return lsx_writechars(ft, ID1, sizeof(ID1))
+      || lsx_writedw(ft, ft->olength? ft->olength:ft->length)
+      || lsx_writechars(ft, ID2, sizeof(ID2))? SOX_EOF:SOX_SUCCESS;
 }
 
 SOX_FORMAT_HANDLER(wve)
@@ -55,9 +55,9 @@ SOX_FORMAT_HANDLER(wve)
     SOX_LIB_VERSION_CODE,
     "Psion 3 audio format",
     names, SOX_FILE_BIG_END | SOX_FILE_MONO | SOX_FILE_REWIND,
-    start_read, sox_rawread, NULL,
-    write_header, sox_rawwrite, NULL,
-    sox_rawseek, write_encodings, write_rates
+    start_read, lsx_rawread, NULL,
+    write_header, lsx_rawwrite, NULL,
+    lsx_rawseek, write_encodings, write_rates
   };
   return &handler;
 }

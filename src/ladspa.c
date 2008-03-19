@@ -177,7 +177,7 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
         sox_debug("default argument for port %lu is %f", i, l_st->control[i]);
       } else {
         if (!sscanf(argv[0], "%lf", &arg))
-          return sox_usage(effp);
+          return lsx_usage(effp);
         l_st->control[i] = (LADSPA_Data)arg;
         sox_debug("argument for port %lu is %f", i, l_st->control[i]);
         n--; argv++;
@@ -186,7 +186,7 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
   }
 
   /* Stop if we have any unused arguments */
-  return n? sox_usage(effp) : SOX_SUCCESS;
+  return n? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 /*

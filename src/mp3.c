@@ -106,7 +106,7 @@ static int sox_mp3_input(sox_format_t * ft)
      */
     memmove(p->InputBuffer, p->Stream->next_frame, remaining);
 
-    bytes_read = sox_readbuf(ft, p->InputBuffer+remaining,
+    bytes_read = lsx_readbuf(ft, p->InputBuffer+remaining,
                             INPUT_BUFFER_SIZE-remaining);
     if (bytes_read == 0)
     {
@@ -194,10 +194,10 @@ static int startread(sox_format_t * ft)
      * format.  The decoded frame will be saved off so that it
      * can be processed later.
      */
-    ReadSize = sox_readbuf(ft, p->InputBuffer, INPUT_BUFFER_SIZE);
+    ReadSize = lsx_readbuf(ft, p->InputBuffer, INPUT_BUFFER_SIZE);
     if (ReadSize < INPUT_BUFFER_SIZE) {
-      if (sox_eof(ft))
-        sox_fail_errno(ft, SOX_EOF, "input file too short");
+      if (lsx_eof(ft))
+        lsx_fail_errno(ft, SOX_EOF, "input file too short");
       return SOX_EOF;
     }
 
@@ -232,7 +232,7 @@ static int startread(sox_format_t * ft)
 
     if (p->Stream->error)
     {
-        sox_fail_errno(ft,SOX_EOF,"No valid MP3 frame found");
+        lsx_fail_errno(ft,SOX_EOF,"No valid MP3 frame found");
         return SOX_EOF;
     }
 
@@ -245,7 +245,7 @@ static int startread(sox_format_t * ft)
             ft->signal.channels = MAD_NCHANNELS(&p->Frame->header);
             break;
         default:
-            sox_fail_errno(ft, SOX_EFMT, "Cannot determine number of channels");
+            lsx_fail_errno(ft, SOX_EFMT, "Cannot determine number of channels");
             return SOX_EOF;
     }
 
@@ -350,7 +350,7 @@ static int stopread(sox_format_t * ft)
 #else /*HAVE_MAD_H*/
 static int startread(sox_format_t * ft)
 {
-  sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
+  lsx_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
   return SOX_EOF;
 }
 #define sox_mp3read NULL
@@ -375,13 +375,13 @@ static int startwrite(sox_format_t * ft)
 
   p->gfp = lame_init();
   if (p->gfp == NULL){
-    sox_fail_errno(ft,SOX_EOF,"Initialization of LAME library failed");
+    lsx_fail_errno(ft,SOX_EOF,"Initialization of LAME library failed");
     return(SOX_EOF);
   }
 
   if (ft->signal.channels != SOX_ENCODING_UNKNOWN) {
     if ( (lame_set_num_channels(p->gfp,(int)ft->signal.channels)) < 0) {
-        sox_fail_errno(ft,SOX_EOF,"Unsupported number of channels");
+        lsx_fail_errno(ft,SOX_EOF,"Unsupported number of channels");
         return(SOX_EOF);
     }
   }
@@ -401,7 +401,7 @@ static int startwrite(sox_format_t * ft)
   if (ft->encoding.compression != HUGE_VAL)
       sox_warn("-C option not supported for mp3; using default compression rate");
   if (lame_init_params(p->gfp) < 0){
-        sox_fail_errno(ft,SOX_EOF,"LAME initialization failed");
+        lsx_fail_errno(ft,SOX_EOF,"LAME initialization failed");
         return(SOX_EOF);
   }
   lame_set_errorf(p->gfp,null_error_func);
@@ -449,7 +449,7 @@ static sox_size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, sox_s
              (short signed int *)xmalloc(nsamples*
                                           sizeof(short signed int))) == NULL)
         {
-            sox_fail_errno(ft,SOX_ENOMEM,"Memory allocation failed");
+            lsx_fail_errno(ft,SOX_ENOMEM,"Memory allocation failed");
             goto end3;
         }
 
@@ -472,20 +472,20 @@ static sox_size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, sox_s
     mp3buffer_size = 1.25 * nsamples + 7200;
     if ((mp3buffer=(char *)xmalloc(mp3buffer_size)) == NULL)
     {
-        sox_fail_errno(ft,SOX_ENOMEM,"Memory allocation failed");
+        lsx_fail_errno(ft,SOX_ENOMEM,"Memory allocation failed");
         goto end2;
     }
 
     if ((written = lame_encode_buffer(p->gfp,buffer_l, buffer_r,
                                       nsamples, (unsigned char *)mp3buffer,
                                       (int)mp3buffer_size)) > mp3buffer_size){
-        sox_fail_errno(ft,SOX_EOF,"Encoding failed");
+        lsx_fail_errno(ft,SOX_EOF,"Encoding failed");
         goto end;
     }
 
-    if (sox_writebuf(ft, mp3buffer, written) < written)
+    if (lsx_writebuf(ft, mp3buffer, written) < written)
     {
-        sox_fail_errno(ft,SOX_EOF,"File write failed");
+        lsx_fail_errno(ft,SOX_EOF,"File write failed");
         goto end;
     }
 
@@ -510,10 +510,10 @@ static int stopwrite(sox_format_t * ft)
   size_t written2;
   
   if ((written=lame_encode_flush(p->gfp, (unsigned char *)mp3buffer, 7200)) <0){
-    sox_fail_errno(ft,SOX_EOF,"Encoding failed");
+    lsx_fail_errno(ft,SOX_EOF,"Encoding failed");
   }
-  else if (sox_writebuf(ft, mp3buffer, written2 = written) < written2){
-    sox_fail_errno(ft,SOX_EOF,"File write failed");
+  else if (lsx_writebuf(ft, mp3buffer, written2 = written) < written2){
+    lsx_fail_errno(ft,SOX_EOF,"File write failed");
   }
 
   lame_close(p->gfp);
@@ -523,7 +523,7 @@ static int stopwrite(sox_format_t * ft)
 #else /* HAVE_LAME_LAME_H */
 static int startwrite(sox_format_t * ft UNUSED)
 {
-  sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
+  lsx_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
   return SOX_EOF;
 }
 #define sox_mp3write NULL

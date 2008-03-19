@@ -71,7 +71,7 @@ static void write_bits(sox_format_t * ft, INT32 *bits, int len)
      * then mask won't yet be 0.  */
     mask >>= 1;
     if ((mask == 0) || (i == len-1)) {
-      sox_writeb(ft, data);
+      lsx_writeb(ft, data);
       data = 0;
       mask = 0x80;
     }
@@ -104,8 +104,8 @@ static int read_bits(sox_format_t * ft, INT32 *bits, int len)
   /* Unpack the array bits into coded_frame. */
   for (i = 0; i < len; i++) {
     if (i % 8 == 0) {
-      sox_read_b_buf(ft, &c, 1);
-      if (sox_eof(ft)) {
+      lsx_read_b_buf(ft, &c, 1);
+      if (lsx_eof(ft)) {
         return (i);
       }
     }
@@ -127,7 +127,7 @@ static int startread(sox_format_t * ft)
     return SOX_EOF;
   }
   lpc->samples = LPC10_SAMPLES_PER_FRAME;
-  return sox_check_read_params(ft, 1, 8000., SOX_ENCODING_LPC10, 0, (off_t)0);
+  return lsx_check_read_params(ft, 1, 8000., SOX_ENCODING_LPC10, 0, (off_t)0);
 }
 
 static int startwrite(sox_format_t * ft) 

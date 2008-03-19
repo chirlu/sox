@@ -118,7 +118,7 @@ static void cvsdstartcommon(sox_format_t * ft)
         p->cvsd_rate = (ft->signal.rate <= 24000) ? 16000 : 32000;
         ft->signal.rate = 8000;
         ft->signal.channels = 1;
-        sox_rawstart(ft, sox_true, sox_false, sox_true, SOX_ENCODING_CVSD, 1);
+        lsx_rawstart(ft, sox_true, sox_false, sox_true, SOX_ENCODING_CVSD, 1);
         /*
          * initialize the decoder
          */
@@ -203,7 +203,7 @@ int sox_cvsdstopwrite(sox_format_t * ft)
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 
         if (p->bit.cnt) {
-                sox_writeb(ft, p->bit.shreg);
+                lsx_writeb(ft, p->bit.shreg);
                 p->bytes_written++;
         }
         sox_debug("cvsd: min slope %f, max slope %f", 
@@ -234,7 +234,7 @@ sox_size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
         
         while (done < nsamp) {
                 if (!p->bit.cnt) {
-                        if (sox_read_b_buf(ft, &(p->bit.shreg), 1) != 1)
+                        if (lsx_read_b_buf(ft, &(p->bit.shreg), 1) != 1)
                                 return done;
                         p->bit.cnt = 8;
                         p->bit.mask = 1;
@@ -326,7 +326,7 @@ sox_size_t sox_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t 
                 } else
                         p->c.enc.recon_int -= p->com.mla_int;
                 if ((++(p->bit.cnt)) >= 8) {
-                        sox_writeb(ft, p->bit.shreg);
+                        lsx_writeb(ft, p->bit.shreg);
                         p->bytes_written++;
                         p->bit.shreg = p->bit.cnt = 0;
                         p->bit.mask = 1;
@@ -343,6 +343,38 @@ sox_size_t sox_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t 
 /*
  * DVMS file header
  */
+
+/* FIXME: eliminate these 4 functions */
+
+static uint32_t get32_le(unsigned char **p)
+{
+  uint32_t val = (((*p)[3]) << 24) | (((*p)[2]) << 16) | 
+          (((*p)[1]) << 8) | (**p);
+  (*p) += 4;
+  return val;
+}
+
+static uint16_t get16_le(unsigned char **p)
+{
+  unsigned val = (((*p)[1]) << 8) | (**p);
+  (*p) += 2;
+  return val;
+}
+
+static void put32_le(unsigned char **p, uint32_t val)
+{
+  *(*p)++ = val & 0xff;
+  *(*p)++ = (val >> 8) & 0xff;
+  *(*p)++ = (val >> 16) & 0xff;
+  *(*p)++ = (val >> 24) & 0xff;
+}
+
+static void put16_le(unsigned char **p, unsigned val)
+{
+  *(*p)++ = val & 0xff;
+  *(*p)++ = (val >> 8) & 0xff;
+}
+
 struct dvms_header {
         char          Filename[14];
         unsigned      Id;
@@ -371,7 +403,7 @@ static int dvms_read_header(sox_format_t * ft, struct dvms_header *hdr)
         int i;
         unsigned sum;
 
-        if (sox_readbuf(ft, hdrbuf, sizeof(hdrbuf)) != sizeof(hdrbuf))
+        if (lsx_readbuf(ft, hdrbuf, sizeof(hdrbuf)) != sizeof(hdrbuf))
         {
                 return (SOX_EOF);
         }
@@ -437,12 +469,12 @@ static int dvms_write_header(sox_format_t * ft, struct dvms_header *hdr)
                 sum += *pchs++;
         hdr->Crc = sum;
         put16_le(&pch, hdr->Crc);
-        if (sox_seeki(ft, 0, SEEK_SET) < 0)
+        if (lsx_seeki(ft, 0, SEEK_SET) < 0)
         {
                 sox_report("seek failed\n: %s",strerror(errno));
                 return (SOX_EOF);
         }
-        if (sox_writebuf(ft, hdrbuf, sizeof(hdrbuf)) != sizeof(hdrbuf))
+        if (lsx_writebuf(ft, hdrbuf, sizeof(hdrbuf)) != sizeof(hdrbuf))
         {
                 sox_report("%s",strerror(errno));
                 return (SOX_EOF);
@@ -456,7 +488,7 @@ static void make_dvms_hdr(sox_format_t * ft, struct dvms_header *hdr)
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         size_t len;
-        char * comment = cat_comments(ft->comments);
+        char * comment = sox_cat_comments(ft->comments);
 
         memset(hdr->Filename, 0, sizeof(hdr->Filename));
         len = strlen(ft->filename);
@@ -487,7 +519,7 @@ int sox_dvmsstartread(sox_format_t * ft)
 
         rc = dvms_read_header(ft, &hdr);
         if (rc){
-            sox_fail_errno(ft,SOX_EHDR,"unable to read DVMS header");
+            lsx_fail_errno(ft,SOX_EHDR,"unable to read DVMS header");
             return rc;
         }
 
@@ -529,7 +561,7 @@ int sox_dvmsstartwrite(sox_format_t * ft)
         make_dvms_hdr(ft, &hdr);
         rc = dvms_write_header(ft, &hdr);
         if (rc){
-                sox_fail_errno(ft,rc,"cannot write DVMS header");
+                lsx_fail_errno(ft,rc,"cannot write DVMS header");
             return rc;
         }
 
@@ -552,15 +584,15 @@ int sox_dvmsstopwrite(sox_format_t * ft)
             sox_warn("File not seekable");
             return (SOX_EOF);
         }
-        if (sox_seeki(ft, 0, 0) != 0)
+        if (lsx_seeki(ft, 0, 0) != 0)
         {
-                sox_fail_errno(ft,errno,"Can't rewind output file to rewrite DVMS header.");
+                lsx_fail_errno(ft,errno,"Can't rewind output file to rewrite DVMS header.");
                 return(SOX_EOF);
         }
         make_dvms_hdr(ft, &hdr);
         rc = dvms_write_header(ft, &hdr);
         if(rc){
-            sox_fail_errno(ft,rc,"cannot write DVMS header");
+            lsx_fail_errno(ft,rc,"cannot write DVMS header");
             return rc;
         }       
         return rc;

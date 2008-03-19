@@ -21,7 +21,7 @@
 
 static int start(sox_format_t * ft) 
 {
-  return sox_check_read_params(ft, 2, 44100., SOX_ENCODING_SIGN2, 16, (off_t)0);
+  return lsx_check_read_params(ft, 2, 44100., SOX_ENCODING_SIGN2, 16, (off_t)0);
 }
 
 static int stopwrite(sox_format_t * ft) 
@@ -30,7 +30,7 @@ static int stopwrite(sox_format_t * ft)
   sox_size_t i = ft->olength % sector_num_samples;
 
   if (i) while (i++ < sector_num_samples)    /* Pad with silence to multiple */
-    sox_writew(ft, 0);                       /* of 1/75th of a second. */
+    lsx_writew(ft, 0);                       /* of 1/75th of a second. */
   return SOX_SUCCESS;
 }
 
@@ -43,9 +43,9 @@ SOX_FORMAT_HANDLER(cdr)
     SOX_LIB_VERSION_CODE,
     "Red Book Compact Disc Digital Audio",
     names, SOX_FILE_BIG_END|SOX_FILE_STEREO,
-    start, sox_rawread, NULL,
-    NULL, sox_rawwrite, stopwrite,
-    sox_rawseek, write_encodings, write_rates
+    start, lsx_rawread, NULL,
+    NULL, lsx_rawwrite, stopwrite,
+    lsx_rawseek, write_encodings, write_rates
   };
   return &handler;
 }

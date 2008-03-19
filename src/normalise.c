@@ -39,7 +39,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   if (argc && !strcmp(*argv, "-i")) p->individual = sox_true, ++argv, --argc;
   if (argc > 1 || (argc == 1 &&
         (sscanf(*argv, "%lf%c", &p->level, &dummy) != 1 || p->level > 0)))
-    return sox_usage(effp);
+    return lsx_usage(effp);
   p->level = dB_to_linear(p->level);
   return SOX_SUCCESS;
 }
@@ -84,7 +84,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
   int result = SOX_SUCCESS;
 
   if (!p->norm0) {
-    double max = sox_sample_max(effp->out_encoding);
+    double max = lsx_sample_max(effp->out_encoding);
     p->norm0 = p->level * min(max / p->max, (double)SOX_SAMPLE_MIN / p->min);
     rewind(p->tmp_file);
   }

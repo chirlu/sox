@@ -78,31 +78,31 @@ static int readtrailer(sox_format_t * ft, struct smptrailer *trailer)
         int i;
         int16_t trash16;
 
-        sox_readw(ft, (unsigned short *)&trash16); /* read reserved word */
+        lsx_readw(ft, (unsigned short *)&trash16); /* read reserved word */
         for(i = 0; i < 8; i++) {        /* read the 8 loops */
-                sox_readdw(ft, &(trailer->loops[i].start));
+                lsx_readdw(ft, &(trailer->loops[i].start));
                 ft->loops[i].start = trailer->loops[i].start;
-                sox_readdw(ft, &(trailer->loops[i].end));
+                lsx_readdw(ft, &(trailer->loops[i].end));
                 ft->loops[i].length = 
                         trailer->loops[i].end - trailer->loops[i].start;
-                sox_readb(ft, (unsigned char *)&(trailer->loops[i].type));
+                lsx_readb(ft, (unsigned char *)&(trailer->loops[i].type));
                 ft->loops[i].type = trailer->loops[i].type;
-                sox_readw(ft, (unsigned short *)&(trailer->loops[i].count));
+                lsx_readw(ft, (unsigned short *)&(trailer->loops[i].count));
                 ft->loops[i].count = trailer->loops[i].count;
         }
         for(i = 0; i < 8; i++) {        /* read the 8 markers */
-                if (sox_readbuf(ft, trailer->markers[i].name, MARKERLEN) != MARKERLEN)
+                if (lsx_readbuf(ft, trailer->markers[i].name, MARKERLEN) != MARKERLEN)
                 {
-                    sox_fail_errno(ft,SOX_EHDR,"EOF in SMP");
+                    lsx_fail_errno(ft,SOX_EHDR,"EOF in SMP");
                     return(SOX_EOF);
                 }
                 trailer->markers[i].name[MARKERLEN] = 0;
-                sox_readdw(ft, &(trailer->markers[i].position));
+                lsx_readdw(ft, &(trailer->markers[i].position));
         }
-        sox_readb(ft, (unsigned char *)&(trailer->MIDInote));
-        sox_readdw(ft, &(trailer->rate));
-        sox_readdw(ft, &(trailer->SMPTEoffset));
-        sox_readdw(ft, &(trailer->CycleSize));
+        lsx_readb(ft, (unsigned char *)&(trailer->MIDInote));
+        lsx_readdw(ft, &(trailer->rate));
+        lsx_readdw(ft, &(trailer->SMPTEoffset));
+        lsx_readdw(ft, &(trailer->CycleSize));
         return(SOX_SUCCESS);
 }
 
@@ -147,25 +147,25 @@ static int writetrailer(sox_format_t * ft, struct smptrailer *trailer)
 {
         int i;
 
-        sox_writew(ft, 0);                       /* write the reserved word */
+        lsx_writew(ft, 0);                       /* write the reserved word */
         for(i = 0; i < 8; i++) {        /* write the 8 loops */
-                sox_writedw(ft, trailer->loops[i].start);
-                sox_writedw(ft, trailer->loops[i].end);
-                sox_writeb(ft, trailer->loops[i].type);
-                sox_writew(ft, trailer->loops[i].count);
+                lsx_writedw(ft, trailer->loops[i].start);
+                lsx_writedw(ft, trailer->loops[i].end);
+                lsx_writeb(ft, trailer->loops[i].type);
+                lsx_writew(ft, trailer->loops[i].count);
         }
         for(i = 0; i < 8; i++) {        /* write the 8 markers */
-                if (sox_writes(ft, trailer->markers[i].name) == SOX_EOF)
+                if (lsx_writes(ft, trailer->markers[i].name) == SOX_EOF)
                 {
-                    sox_fail_errno(ft,SOX_EHDR,"EOF in SMP");
+                    lsx_fail_errno(ft,SOX_EHDR,"EOF in SMP");
                     return(SOX_EOF);
                 }
-                sox_writedw(ft, trailer->markers[i].position);
+                lsx_writedw(ft, trailer->markers[i].position);
         }
-        sox_writeb(ft, (uint8_t)(trailer->MIDInote));
-        sox_writedw(ft, trailer->rate);
-        sox_writedw(ft, trailer->SMPTEoffset);
-        sox_writedw(ft, trailer->CycleSize);
+        lsx_writeb(ft, (uint8_t)(trailer->MIDInote));
+        lsx_writedw(ft, trailer->rate);
+        lsx_writedw(ft, trailer->SMPTEoffset);
+        lsx_writedw(ft, trailer->CycleSize);
         return(SOX_SUCCESS);
 }
 
@@ -186,7 +186,7 @@ static int sox_smpseek(sox_format_t * ft, sox_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += smp->dataStart;
 
-    ft->sox_errno = sox_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
+    ft->sox_errno = lsx_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
 
     if( ft->sox_errno == SOX_SUCCESS )
         smp->NoOfSamps = ft->length - (new_offset / (ft->encoding.bits_per_sample >> 3));
@@ -211,24 +211,24 @@ static int sox_smpstartread(sox_format_t * ft)
         /* If you need to seek around the input file. */
         if (! ft->seekable)
         {
-                sox_fail_errno(ft,SOX_EOF,"SMP input file must be a file, not a pipe");
+                lsx_fail_errno(ft,SOX_EOF,"SMP input file must be a file, not a pipe");
                 return(SOX_EOF);
         }
 
         /* Read SampleVision header */
-        if (sox_readbuf(ft, (char *)&header, HEADERSIZE) != HEADERSIZE)
+        if (lsx_readbuf(ft, (char *)&header, HEADERSIZE) != HEADERSIZE)
         {
-                sox_fail_errno(ft,SOX_EHDR,"unexpected EOF in SMP header");
+                lsx_fail_errno(ft,SOX_EHDR,"unexpected EOF in SMP header");
                 return(SOX_EOF);
         }
         if (strncmp(header.Id, SVmagic, 17) != 0)
         {
-                sox_fail_errno(ft,SOX_EHDR,"SMP header does not begin with magic word %s", SVmagic);
+                lsx_fail_errno(ft,SOX_EHDR,"SMP header does not begin with magic word %s", SVmagic);
                 return(SOX_EOF);
         }
         if (strncmp(header.version, SVvers, 4) != 0)
         {
-                sox_fail_errno(ft,SOX_EHDR,"SMP header is not version %s", SVvers);
+                lsx_fail_errno(ft,SOX_EHDR,"SMP header is not version %s", SVvers);
                 return(SOX_EOF);
         }
 
@@ -243,30 +243,30 @@ static int sox_smpstartread(sox_format_t * ft)
           ;
         sprintf(smp->comment, "%.*s: %.*s", namelen+1, header.name,
                 commentlen+1, header.comments);
-        append_comments(&ft->comments, smp->comment);
+        sox_append_comments(&ft->comments, smp->comment);
 
         /* Extract out the sample size (always intel format) */
-        sox_readdw(ft, &(smp->NoOfSamps));
+        lsx_readdw(ft, &(smp->NoOfSamps));
         /* mark the start of the sample data */
-        samplestart = sox_tell(ft);
+        samplestart = lsx_tell(ft);
 
         /* seek from the current position (the start of sample data) by */
         /* NoOfSamps * sizeof(int16_t) */
-        if (sox_seeki(ft, (sox_ssize_t)(smp->NoOfSamps * 2), 1) == -1)
+        if (lsx_seeki(ft, (sox_ssize_t)(smp->NoOfSamps * 2), 1) == -1)
         {
-                sox_fail_errno(ft,errno,"SMP unable to seek to trailer");
+                lsx_fail_errno(ft,errno,"SMP unable to seek to trailer");
                 return(SOX_EOF);
         }
         if (readtrailer(ft, &trailer))
         {
-                sox_fail_errno(ft,SOX_EHDR,"unexpected EOF in SMP trailer");
+                lsx_fail_errno(ft,SOX_EHDR,"unexpected EOF in SMP trailer");
                 return(SOX_EOF);
         }
 
         /* seek back to the beginning of the data */
-        if (sox_seeki(ft, (sox_ssize_t)samplestart, 0) == -1) 
+        if (lsx_seeki(ft, (sox_ssize_t)samplestart, 0) == -1) 
         {
-                sox_fail_errno(ft,errno,"SMP unable to seek back to start of sample data");
+                lsx_fail_errno(ft,errno,"SMP unable to seek back to start of sample data");
                 return(SOX_EOF);
         }
 
@@ -324,7 +324,7 @@ static sox_size_t sox_smpread(sox_format_t * ft, sox_sample_t *buf, sox_size_t l
         sox_size_t done = 0;
         
         for(; done < len && smp->NoOfSamps; done++, smp->NoOfSamps--) {
-                sox_readw(ft, &datum);
+                lsx_readw(ft, &datum);
                 /* scale signed up to long's range */
                 *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE(datum,);
         }
@@ -335,12 +335,12 @@ static int sox_smpstartwrite(sox_format_t * ft)
 {
         smp_t smp = (smp_t) ft->priv;
         struct smpheader header;
-        char * comment = cat_comments(ft->comments);
+        char * comment = sox_cat_comments(ft->comments);
 
         /* If you have to seek around the output file */
         if (! ft->seekable)
         {
-                sox_fail_errno(ft,SOX_EOF,"Output .smp file must be a file, not a pipe");
+                lsx_fail_errno(ft,SOX_EOF,"Output .smp file must be a file, not a pipe");
                 return(SOX_EOF);
         }
 
@@ -351,12 +351,12 @@ static int sox_smpstartwrite(sox_format_t * ft)
         free(comment);
 
         /* Write file header */
-        if(sox_writebuf(ft, &header, HEADERSIZE) != HEADERSIZE)
+        if(lsx_writebuf(ft, &header, HEADERSIZE) != HEADERSIZE)
         {
-            sox_fail_errno(ft,errno,"SMP: Can't write header completely");
+            lsx_fail_errno(ft,errno,"SMP: Can't write header completely");
             return(SOX_EOF);
         }
-        sox_writedw(ft, 0);      /* write as zero length for now, update later */
+        lsx_writedw(ft, 0);      /* write as zero length for now, update later */
         smp->NoOfSamps = 0;
 
         return(SOX_SUCCESS);
@@ -370,7 +370,7 @@ static sox_size_t sox_smpwrite(sox_format_t * ft, const sox_sample_t *buf, sox_s
 
         while(done < len) {
                 datum = (int) SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips);
-                sox_writew(ft, (uint16_t)datum);
+                lsx_writew(ft, (uint16_t)datum);
                 smp->NoOfSamps++;
                 done++;
         }
@@ -386,12 +386,12 @@ static int sox_smpstopwrite(sox_format_t * ft)
         /* Assign the trailer data */
         settrailer(ft, &trailer, ft->signal.rate);
         writetrailer(ft, &trailer);
-        if (sox_seeki(ft, 112, 0) == -1)
+        if (lsx_seeki(ft, 112, 0) == -1)
         {
-                sox_fail_errno(ft,errno,"SMP unable to seek back to save size");
+                lsx_fail_errno(ft,errno,"SMP unable to seek back to save size");
                 return(SOX_EOF);
         }
-        sox_writedw(ft, smp->NoOfSamps);
+        lsx_writedw(ft, smp->NoOfSamps);
 
         return(SOX_SUCCESS);
 }

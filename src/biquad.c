@@ -45,7 +45,7 @@ int sox_biquad_getopts(sox_effect_t * effp, int n, char **argv,
       (n > width_pos && ((unsigned)(sscanf(argv[width_pos], "%lf%c %c", &p->width, &width_type, &dummy)-1) > 1 || p->width <= 0)) ||
       (n > gain_pos  && sscanf(argv[gain_pos], "%lf %c", &p->gain, &dummy) != 1) ||
       !strchr(allowed_width_types, width_type) || (width_type == 's' && p->width > 1))
-    return sox_usage(effp);
+    return lsx_usage(effp);
   p->width_type = strchr(all_width_types, width_type) - all_width_types;
   if (p->width_type >= strlen(all_width_types))
     p->width_type = 0;

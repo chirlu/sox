@@ -193,7 +193,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     NUMERIC_PARAMETER(wet_gain_dB, -10, 10)
   } while (0);
 
-  return argc ? sox_usage(effp) : SOX_SUCCESS;
+  return argc ? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static int start(sox_effect_t * effp)

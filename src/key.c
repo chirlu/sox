@@ -34,7 +34,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   int pos = (argc && !strcmp(*argv, "-q"))? 1 : 0;
 
   if (argc <= pos || sscanf(argv[pos], "%lf %c", &d, &dummy) != 1)
-    return sox_usage(effp);
+    return lsx_usage(effp);
 
   effp->global_info->speed *= d = pow(2., d / 1200);  /* cents --> factor */
   sprintf(arg, "%g", 1 / d);
