@@ -105,7 +105,7 @@ convertToAndFrom () {
             echo "*FAIL* channels=$channels \"$format1Text\" ---> \"$format2Text\"."
             exit 1    # This allows failure inspection.
           fi
-	  vectors=$(expr $vectors + 1)
+	  vectors=`expr $vectors + 1`
         fi
 
         if execute cmp -s input.$format1Ext output.$format1Ext
