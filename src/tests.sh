@@ -100,7 +100,8 @@ convertToAndFrom () {
 
         if test -f $intermediateReference
         then
-          if ! execute cmp -s $intermediateReference intermediate.$format2Ext
+          cmp -s $intermediateReference intermediate.$format2Ext
+          if [ "$?" != "0" ]
           then
             echo "*FAIL* channels=$channels \"$format1Text\" ---> \"$format2Text\"."
             exit 1    # This allows failure inspection.
