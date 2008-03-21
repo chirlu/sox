@@ -43,9 +43,9 @@ typedef struct filterstuff {
         double *X, *Y;/* I/O buffers */
 } *filter_t;
 
-/* makeFilter() declared in resample.c */
+/* lsx_makeFilter() declared in resample.c */
 extern int 
-makeFilter(double Fp[], long Nwing, double Froll, double Beta, long Num, int Normalize);
+lsx_makeFilter(double Fp[], long Nwing, double Froll, double Beta, long Num, int Normalize);
 
 static void FiltWin(filter_t f, long Nx);
 
@@ -114,9 +114,9 @@ static int sox_filter_start(sox_effect_t * effp)
         }
         
         Xh = f->Nwin/2;
-        Fp0 = (double *) xmalloc(sizeof(double) * (Xh + 2)) + 1;
+        Fp0 = (double *) lsx_malloc(sizeof(double) * (Xh + 2)) + 1;
         if (f->freq0 > (sox_sample_t)f->rate/200) {
-                Xh0 = makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, 1, 0);
+                Xh0 = lsx_makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, 1, 0);
                 if (Xh0 <= 1)
                 {
                         sox_fail("filter: Unable to make low filter");
@@ -125,10 +125,10 @@ static int sox_filter_start(sox_effect_t * effp)
         } else {
                 Xh0 = 0;
         }
-        Fp1 = (double *) xmalloc(sizeof(double) * (Xh + 2)) + 1;
-        /* need Fp[-1] and Fp[Xh] for makeFilter */
+        Fp1 = (double *) lsx_malloc(sizeof(double) * (Xh + 2)) + 1;
+        /* need Fp[-1] and Fp[Xh] for lsx_makeFilter */
         if (f->freq1 < (sox_sample_t)f->rate/2) {
-                Xh1 = makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, 1, 0);
+                Xh1 = lsx_makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, 1, 0);
                 if (Xh1 <= 1)
                 {
                         sox_fail("filter: Unable to make high filter");
@@ -158,7 +158,7 @@ static int sox_filter_start(sox_effect_t * effp)
         f->Xh = Xh;
         f->Xt = Xh;
 
-        f->X = (double *) xmalloc(sizeof(double) * (2*BUFFSIZE + 2*Xh));
+        f->X = (double *) lsx_malloc(sizeof(double) * (2*BUFFSIZE + 2*Xh));
         f->Y = f->X + BUFFSIZE + 2*Xh;
 
         /* Need Xh zeros at beginning of X */

@@ -103,7 +103,7 @@ static int startread(sox_format_t * ft)
   };
 
   /* Allocate space for decoding structure */
-  vb->vf = (OggVorbis_File *) xmalloc(sizeof(OggVorbis_File));
+  vb->vf = (OggVorbis_File *) lsx_malloc(sizeof(OggVorbis_File));
 
   /* Init the decoder */
   if (ov_open_callbacks((void *) ft->fp, vb->vf, NULL, 0, callbacks) < 0) {
@@ -133,7 +133,7 @@ static int startread(sox_format_t * ft)
 
   /* Setup buffer */
   vb->buf_len = DEF_BUF_LEN;
-  vb->buf = xcalloc(vb->buf_len, sizeof(char));
+  vb->buf = lsx_calloc(vb->buf_len, sizeof(char));
   vb->start = vb->end = 0;
 
   /* Fill in other info */
@@ -244,11 +244,11 @@ static int write_vorbis_header(sox_format_t * ft, vorbis_enc_t * ve)
   memset(&vc, 0, sizeof(vc));
   vc.comments = sox_num_comments(ft->comments);
   if (vc.comments) {     /* Make the comment structure */
-    vc.comment_lengths = xcalloc((size_t)vc.comments, sizeof(*vc.comment_lengths));
-    vc.user_comments = xcalloc((size_t)vc.comments, sizeof(*vc.user_comments));
+    vc.comment_lengths = lsx_calloc((size_t)vc.comments, sizeof(*vc.comment_lengths));
+    vc.user_comments = lsx_calloc((size_t)vc.comments, sizeof(*vc.user_comments));
     for (i = 0; i < vc.comments; ++i) {
       static const char prepend[] = "Comment=";
-      char * text = xcalloc(strlen(prepend) + strlen(ft->comments[i]) + 1, sizeof(*text));
+      char * text = lsx_calloc(strlen(prepend) + strlen(ft->comments[i]) + 1, sizeof(*text));
       /* Prepend `Comment=' if no field-name already in the comment */
       if (!strchr(ft->comments[i], '='))
         strcpy(text, prepend);
@@ -283,7 +283,7 @@ static int startwrite(sox_format_t * ft)
   ft->encoding.encoding = SOX_ENCODING_VORBIS;
 
   /* Allocate memory for all of the structures */
-  ve = vb->vorbis_enc_data = (vorbis_enc_t *) xmalloc(sizeof(vorbis_enc_t));
+  ve = vb->vorbis_enc_data = (vorbis_enc_t *) lsx_malloc(sizeof(vorbis_enc_t));
 
   vorbis_info_init(&ve->vi);
 

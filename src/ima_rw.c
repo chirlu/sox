@@ -52,7 +52,7 @@ static const int imaStepSizeTable[ISSTMAX + 1] = {
 
 static unsigned char imaStateAdjustTable[ISSTMAX+1][8];
 
-void initImaTable(void)
+void lsx_ima_init_table(void)
 {
         int i,j,k;
         for (i=0; i<=ISSTMAX; i++) {
@@ -132,8 +132,8 @@ static void ImaExpandS(
         return;
 }
 
-/* ImaBlockExpandI() outputs interleaved samples into one output buffer */
-void ImaBlockExpandI(
+/* lsx_ima_block_expand_i() outputs interleaved samples into one output buffer */
+void lsx_ima_block_expand_i(
         unsigned chans,          /* total channels             */
         const unsigned char *ibuff,/* input buffer[blockAlign]   */
         SAMPL *obuff,       /* output samples, n*chans    */
@@ -145,8 +145,8 @@ void ImaBlockExpandI(
                 ImaExpandS(ch, chans, ibuff, obuff+ch, n, chans);
 }
 
-/* ImaBlockExpandM() outputs non-interleaved samples into chan separate output buffers */
-void ImaBlockExpandM(
+/* lsx_ima_block_expand_m() outputs non-interleaved samples into chan separate output buffers */
+void lsx_ima_block_expand_m(
         unsigned chans,          /* total channels             */
         const unsigned char *ibuff,/* input buffer[blockAlign]   */
         SAMPL **obuffs,     /* chan output sample buffers, each takes n samples */
@@ -299,7 +299,7 @@ inline static void ImaMashChannel(
 }
 
 /* mash one block.  if you want to use opt>0, 9 is a reasonable value */
-void ImaBlockMashI(
+void lsx_ima_block_mash_i(
         unsigned chans,          /* total channels */
         const SAMPL *ip,    /* ip[] is interleaved input samples */
         int n,              /* samples to encode PER channel, REQUIRE n % 8 == 1 */
@@ -314,14 +314,14 @@ void ImaBlockMashI(
 }
 
 /*
- * ImaSamplesIn(dataLen, chans, blockAlign, samplesPerBlock)
+ * lsx_ima_samples_in(dataLen, chans, blockAlign, samplesPerBlock)
  *  returns the number of samples/channel which would go
  *  in the dataLen, given the other parameters ...
  *  if input samplesPerBlock is 0, then returns the max
  *  samplesPerBlock which would go into a block of size blockAlign
  *  Yes, it is confusing.
  */
-sox_size_t ImaSamplesIn(
+sox_size_t lsx_ima_samples_in(
   sox_size_t dataLen,
   sox_size_t chans,
   sox_size_t blockAlign,
@@ -349,11 +349,11 @@ sox_size_t ImaSamplesIn(
 }
 
 /*
- * sox_size_t ImaBytesPerBlock(chans, samplesPerBlock)
+ * sox_size_t lsx_ima_bytes_per_block(chans, samplesPerBlock)
  *   return minimum blocksize which would be required
  *   to encode number of chans with given samplesPerBlock
  */
-sox_size_t ImaBytesPerBlock(
+sox_size_t lsx_ima_bytes_per_block(
   sox_size_t chans,
   sox_size_t samplesPerBlock
 )

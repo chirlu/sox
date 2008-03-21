@@ -69,7 +69,7 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sampl
     char ich, och;
     double left, right, dir, hdir;
     
-    ibuf_copy = (sox_sample_t *)xmalloc(*isamp * sizeof(sox_sample_t));
+    ibuf_copy = (sox_sample_t *)lsx_malloc(*isamp * sizeof(sox_sample_t));
     memcpy(ibuf_copy, ibuf, *isamp * sizeof(sox_sample_t));
 
     dir   = pan->dir;    /* -1   <=  dir  <= 1   */

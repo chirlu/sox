@@ -87,7 +87,7 @@ sox_effects_chain_t * sox_create_effects_chain(
     sox_encodinginfo_t const * in_enc,
     sox_encodinginfo_t const * out_enc)
 {
-  sox_effects_chain_t * result = xcalloc(1, sizeof(sox_effects_chain_t));
+  sox_effects_chain_t * result = lsx_calloc(1, sizeof(sox_effects_chain_t));
   result->global_info = sox_effects_globals;
   result->in_enc = in_enc;
   result->out_enc = out_enc;
@@ -154,7 +154,7 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
     return SOX_EOF;
   }
   chain->effects[chain->length] =
-    xcalloc(effp->flows, sizeof(chain->effects[chain->length][0]));
+    lsx_calloc(effp->flows, sizeof(chain->effects[chain->length][0]));
   chain->effects[chain->length][0] = *effp;
 
   for (f = 1; f < effp->flows; ++f) {
@@ -289,16 +289,16 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
   sox_bool draining = sox_true;
 
   for (e = 0; e < chain->length; ++e) {
-    chain->effects[e][0].obuf = xmalloc(sox_globals.bufsiz * sizeof(chain->effects[e][0].obuf[0]));
+    chain->effects[e][0].obuf = lsx_malloc(sox_globals.bufsiz * sizeof(chain->effects[e][0].obuf[0]));
     chain->effects[e][0].obeg = chain->effects[e][0].oend = 0;
     max_flows = max(max_flows, chain->effects[e][0].flows);
   }
 
-  chain->ibufc = xcalloc(max_flows, sizeof(*chain->ibufc));
-  chain->obufc = xcalloc(max_flows, sizeof(*chain->obufc));
+  chain->ibufc = lsx_calloc(max_flows, sizeof(*chain->ibufc));
+  chain->obufc = lsx_calloc(max_flows, sizeof(*chain->obufc));
   for (f = 0; f < max_flows; ++f) {
-    chain->ibufc[f] = xcalloc(sox_globals.bufsiz / 2, sizeof(chain->ibufc[f][0]));
-    chain->obufc[f] = xcalloc(sox_globals.bufsiz / 2, sizeof(chain->obufc[f][0]));
+    chain->ibufc[f] = lsx_calloc(sox_globals.bufsiz / 2, sizeof(chain->ibufc[f][0]));
+    chain->obufc[f] = lsx_calloc(sox_globals.bufsiz / 2, sizeof(chain->obufc[f][0]));
   }
 
   e = chain->length - 1;

@@ -4,10 +4,12 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/*$Header: /cvsroot/sox/sox/libgsm/gsm.h,v 1.1 2007/09/06 16:50:55 cbagwell Exp $*/
+/*$Header: /cvsroot/sox/sox/libgsm/gsm.h,v 1.2 2008/03/21 13:34:21 robs Exp $*/
 
 #ifndef	GSM_H
 #define	GSM_H
+
+#include "aliases.h"
 
 #ifdef __cplusplus
 #	define	NeedFunctionPrototypes	1

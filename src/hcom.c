@@ -138,7 +138,7 @@ static int startread(sox_format_t * ft)
         ft->signal.channels = 1;
 
         /* Allocate memory for the dictionary */
-        p->dictionary = (dictent *)xmalloc(511 * sizeof(dictent));
+        p->dictionary = (dictent *)lsx_malloc(511 * sizeof(dictent));
 
         /* Read dictionary */
         for(i = 0; i < dictsize; i++) {
@@ -248,7 +248,7 @@ static int stopread(sox_format_t * ft)
 }
 
 struct writepriv {
-  unsigned char *data;          /* Buffer allocated with xmalloc */
+  unsigned char *data;          /* Buffer allocated with lsx_malloc */
   sox_size_t size;               /* Size of allocated buffer */
   sox_size_t pos;                /* Where next byte goes */
 };
@@ -261,7 +261,7 @@ static int startwrite(sox_format_t * ft)
 
   p->size = BUFINCR;
   p->pos = 0;
-  p->data = xmalloc(p->size);
+  p->data = lsx_malloc(p->size);
   return SOX_SUCCESS;
 }
 
@@ -276,7 +276,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
 
   if (p->pos + len > p->size) {
     p->size = ((p->pos + len) / BUFINCR + 1) * BUFINCR;
-    p->data = (unsigned char *)xrealloc(p->data, p->size);
+    p->data = (unsigned char *)lsx_realloc(p->data, p->size);
   }
 
   for (i = 0; i < len; i++) {
@@ -394,7 +394,7 @@ static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl)
   l = (((l + 31) >> 5) << 2) + 24 + dictsize * 4;
   sox_debug("  Original size: %6d bytes", *dl);
   sox_debug("Compressed size: %6d bytes", l);
-  datafork = (unsigned char *)xmalloc((unsigned)l);
+  datafork = (unsigned char *)lsx_malloc((unsigned)l);
   ddf = datafork + 22;
   for(i = 0; i < dictsize; i++) {
     put16_be(&ddf, newdict[i].dict_leftson);

@@ -90,7 +90,7 @@ static int start(sox_effect_t * effp)
   effp->out_signal.channels = effp->in_signal.channels;
   effp->out_signal.rate = out_rate;
 
-  r->data = (SRC_DATA *)xcalloc(1, sizeof(SRC_DATA));
+  r->data = (SRC_DATA *)lsx_calloc(1, sizeof(SRC_DATA));
   r->data->src_ratio = out_rate / effp->in_signal.rate;
   r->i_alloc = r->o_alloc = 0;
   r->state = src_new(r->converter_type, (int)effp->in_signal.channels, &err);
@@ -123,11 +123,11 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
   }
 
   if (r->i_alloc < isamples) {
-    d->data_in = xrealloc(d->data_in, isamples * sizeof(float));
+    d->data_in = lsx_realloc(d->data_in, isamples * sizeof(float));
     r->i_alloc = isamples;
   }
   if (r->o_alloc < osamples) {
-    d->data_out = xrealloc(d->data_out, osamples * sizeof(float));
+    d->data_out = lsx_realloc(d->data_out, osamples * sizeof(float));
     r->o_alloc = osamples;
     d->output_frames = osamples / channels;
   }

@@ -853,12 +853,12 @@ processing on individual audio channels).  Where more than a few
 channels are involved, a script such as the following is useful:
 .EX
 #!/bin/sh                        # This is a Bourne shell script
-chans=$(soxi -c "$1")
+chans=\`soxi -c "$1"\`
 while [ $chans -ge 1 ]; do
-  chans0=$(printf %02i $chans)   # 2 digits hence up to 99 chans
-  out=$(echo "$1"|sed "s/\\(.*\\)\\.\\(.*\\)/\\1-$chans0.\\2/")
+  chans0=\`printf %02i $chans\`   # 2 digits hence up to 99 chans
+  out=\`echo "$1"|sed "s/\\(.*\\)\\.\\(.*\\)/\\1-$chans0.\\2/"\`
   sox "$1" "$out" remix $chans
-  chans=$(expr $chans - 1)
+  chans=\`expr $chans - 1\`
 done
 .EE
 If a file

@@ -259,8 +259,8 @@ static void start(sox_format_t * ft)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
   int subtype = sndfile_format(ft->encoding.encoding, ft->encoding.bits_per_sample? ft->encoding.bits_per_sample : ft->signal.precision);
-  sf->log_buffer_ptr = sf->log_buffer = xmalloc(LOG_MAX);
-  sf->sf_info = (SF_INFO *)xcalloc(1, sizeof(SF_INFO));
+  sf->log_buffer_ptr = sf->log_buffer = lsx_malloc(LOG_MAX);
+  sf->sf_info = (SF_INFO *)lsx_calloc(1, sizeof(SF_INFO));
 
   /* Copy format info */
   if (subtype) {

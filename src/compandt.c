@@ -170,7 +170,7 @@ sox_bool sox_compandt_parse(sox_compandt_t * t, char * points, char * gain)
   ++pairs;    /* allow room for extra pair at the beginning */
   pairs *= 2; /* allow room for the auto-curves */
   ++pairs;    /* allow room for 0,0 at end */
-  t->segments = xcalloc(pairs, sizeof(*t->segments));
+  t->segments = lsx_calloc(pairs, sizeof(*t->segments));
 
 #define s(n) t->segments[2*((n)+1)]
   for (i = 0, text = strtok(points, ","); text != NULL; ++i) {

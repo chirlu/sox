@@ -30,12 +30,12 @@ typedef struct {
 
 #define FIFO_MIN 0x4000
 
-static void fifo_clear(fifo_t * f)
+UNUSED static void fifo_clear(fifo_t * f)
 {
   f->end = f->begin = 0;
 }
 
-static void * fifo_reserve(fifo_t * f, size_t n)
+UNUSED static void * fifo_reserve(fifo_t * f, size_t n)
 {
   n *= f->item_size;
 
@@ -56,11 +56,11 @@ static void * fifo_reserve(fifo_t * f, size_t n)
       continue;
     }
     f->allocation += n;
-    f->data = xrealloc(f->data, f->allocation);
+    f->data = lsx_realloc(f->data, f->allocation);
   }
 }
 
-static void * fifo_write(fifo_t * f, size_t n, void const * data)
+UNUSED static void * fifo_write(fifo_t * f, size_t n, void const * data)
 {
   void * s = fifo_reserve(f, n);
   if (data)
@@ -68,18 +68,18 @@ static void * fifo_write(fifo_t * f, size_t n, void const * data)
   return s;
 }
 
-static void UNUSED fifo_trim(fifo_t * f, size_t n)
+UNUSED static void fifo_trim(fifo_t * f, size_t n)
 {
   n *= f->item_size;
   f->end = f->begin + n;
 }
 
-static size_t UNUSED fifo_occupancy(fifo_t * f)
+UNUSED static size_t fifo_occupancy(fifo_t * f)
 {
   return (f->end - f->begin) / f->item_size;
 }
 
-static void * fifo_read(fifo_t * f, size_t n, void * data)
+UNUSED static void * fifo_read(fifo_t * f, size_t n, void * data)
 {
   char * ret = f->data + f->begin;
   n *= f->item_size;
@@ -93,16 +93,16 @@ static void * fifo_read(fifo_t * f, size_t n, void * data)
 
 #define fifo_read_ptr(f) fifo_read(f, 0, NULL)
 
-static void fifo_delete(fifo_t * f)
+UNUSED static void fifo_delete(fifo_t * f)
 {
   free(f->data);
 }
 
-static void fifo_create(fifo_t * f, size_t item_size)
+UNUSED static void fifo_create(fifo_t * f, size_t item_size)
 {
   f->item_size = item_size;
   f->allocation = FIFO_MIN;
-  f->data = xmalloc(f->allocation);
+  f->data = lsx_malloc(f->allocation);
   fifo_clear(f);
 }
 

@@ -99,7 +99,7 @@ static int startread(sox_format_t * ft)
     if (lsx_readw(ft, &code) || lsx_readw(ft, &size))
       return SOX_EOF;
     if (code == SF_COMMENT) {
-      char * buf = xcalloc(1, (size_t)size + 1); /* +1 ensures null-terminated */
+      char * buf = lsx_calloc(1, (size_t)size + 1); /* +1 ensures null-terminated */
       if (lsx_readchars(ft, buf, size) != SOX_SUCCESS) {
         free(buf);
         return SOX_EOF;

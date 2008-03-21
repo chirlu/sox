@@ -205,9 +205,9 @@ size_t sox_num_comments(sox_comments_t comments)
 void sox_append_comment(sox_comments_t * comments, char const * comment)
 {
   size_t n = sox_num_comments(*comments);
-  *comments = xrealloc(*comments, (n + 2) * sizeof(**comments));
+  *comments = lsx_realloc(*comments, (n + 2) * sizeof(**comments));
   assert(comment);
-  (*comments)[n++] = xstrdup(comment);
+  (*comments)[n++] = lsx_strdup(comment);
   (*comments)[n] = 0;
 }
 
@@ -217,7 +217,7 @@ void sox_append_comments(sox_comments_t * comments, char const * comment)
   if (comment) {
     while ((end = strchr(comment, '\n'))) {
       size_t len = end - comment;
-      char * c = xmalloc((len + 1) * sizeof(*c));
+      char * c = lsx_malloc((len + 1) * sizeof(*c));
       strncpy(c, comment, len);
       c[len] = '\0';
       sox_append_comment(comments, c);
@@ -257,7 +257,7 @@ char * sox_cat_comments(sox_comments_t comments)
   if (p) while (*p)
     len += strlen(*p++) + 1;
 
-  result = xcalloc(len? len : 1, sizeof(*result));
+  result = lsx_calloc(len? len : 1, sizeof(*result));
 
   if ((p = comments) && *p) {
     strcpy(result, *p);
@@ -366,7 +366,7 @@ static FILE * xfopen(char const * identifier, char const * mode)
     FILE * f = NULL;
 #ifdef HAVE_POPEN
     char const * const command_format = "wget --no-check-certificate -q -O- \"%s\"";
-    char * command = xmalloc(strlen(command_format) + strlen(identifier)); 
+    char * command = lsx_malloc(strlen(command_format) + strlen(identifier)); 
     sprintf(command, command_format, identifier); 
     f = popen(command, "r"); 
     free(command);
@@ -384,7 +384,7 @@ sox_format_t * sox_open_read(
     sox_encodinginfo_t const * encoding,
     char               const * filetype)
 {
-  sox_format_t * ft = xcalloc(1, sizeof(*ft));
+  sox_format_t * ft = lsx_calloc(1, sizeof(*ft));
   sox_format_handler_t const * handler;
 
   if (filetype) {
@@ -453,8 +453,8 @@ sox_format_t * sox_open_read(
   else sox_init_encodinginfo(&ft->encoding);
   set_endiannesses(ft);
 
-  ft->filetype = xstrdup(filetype);
-  ft->filename = xstrdup(path);
+  ft->filetype = lsx_strdup(filetype);
+  ft->filename = lsx_strdup(path);
 
   /* Read and write starters can change their formats. */
   if (ft->handler.startread && (*ft->handler.startread)(ft) != SOX_SUCCESS) {
@@ -675,7 +675,7 @@ sox_format_t * sox_open_write(
     sox_instrinfo_t    const * instr,
     sox_loopinfo_t     const * loops)
 {
-  sox_format_t * ft = xcalloc(sizeof(*ft), 1);
+  sox_format_t * ft = lsx_calloc(sizeof(*ft), 1);
   sox_format_handler_t const * handler;
   int i;
 
@@ -748,8 +748,8 @@ sox_format_t * sox_open_write(
   else sox_init_encodinginfo(&ft->encoding);
   set_endiannesses(ft);
 
-  ft->filetype = xstrdup(filetype);
-  ft->filename = xstrdup(path);
+  ft->filetype = lsx_strdup(filetype);
+  ft->filename = lsx_strdup(path);
 
   ft->comments = sox_copy_comments(comments);
 
@@ -847,6 +847,12 @@ int sox_seek(sox_format_t * ft, sox_size_t offset, int whence)
     return SOX_EOF; /* FIXME: return SOX_EBADF */
 }
 
+static int strcaseends(char const * str, char const * end)
+{
+  size_t str_len = strlen(str), end_len = strlen(end);
+  return str_len >= end_len && !strcasecmp(str + str_len - end_len, end);
+}
+
 sox_bool sox_is_playlist(char const * filename)
 {
   return strcaseends(filename, ".m3u") || strcaseends(filename, ".pls");
@@ -857,8 +863,8 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
   sox_bool const is_pls = strcaseends(listname, ".pls");
   int const comment_char = "#;"[is_pls];
   size_t text_length = 100;
-  char * text = xmalloc(text_length + 1);
-  char * dirname = xstrdup(listname);
+  char * text = lsx_malloc(text_length + 1);
+  char * dirname = lsx_strdup(listname);
   char * slash_pos = LAST_SLASH(dirname);
   FILE * file = xfopen(listname, "r");
   char * filename;
@@ -882,7 +888,7 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
       break;
     while (c != EOF && !strchr("\r\n", c) && c != comment_char) {
       if (i == text_length)
-        text = xrealloc(text, (text_length <<= 1) + 1);
+        text = lsx_realloc(text, (text_length <<= 1) + 1);
       text[i++] = c;
       if (!strchr(" \t\f", c))
         end = i;
@@ -907,9 +913,9 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
       char const * id = text + begin;
 
       if (!dirname[0] || is_uri(id) || IS_ABSOLUTE(id))
-        filename = xstrdup(id);
+        filename = lsx_strdup(id);
       else {
-        filename = xmalloc(strlen(dirname) + strlen(id) + 2); 
+        filename = lsx_malloc(strlen(dirname) + strlen(id) + 2); 
         sprintf(filename, "%s/%s", dirname, id); 
       }
       if (sox_is_playlist(filename))

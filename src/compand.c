@@ -78,7 +78,7 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
     return SOX_EOF;
   }
   pairs = 1 + commas/2;
-  l->channels = xcalloc(pairs, sizeof(*l->channels));
+  l->channels = lsx_calloc(pairs, sizeof(*l->channels));
   l->expectedChannels = pairs;
 
   /* Now tokenise the rates string and set up these arrays.  Keep
@@ -151,7 +151,7 @@ static int start(sox_effect_t * effp)
   /* Allocate the delay buffer */
   l->delay_buf_size = l->delay * effp->out_signal.rate * effp->out_signal.channels;
   if (l->delay_buf_size > 0)
-    l->delay_buf = xcalloc((sox_size_t)l->delay_buf_size, sizeof(*l->delay_buf));
+    l->delay_buf = lsx_calloc((sox_size_t)l->delay_buf_size, sizeof(*l->delay_buf));
   l->delay_buf_index = 0;
   l->delay_buf_cnt = 0;
   l->delay_buf_full= 0;

@@ -181,11 +181,11 @@ static int sox_flanger_start(sox_effect_t * effp)
   ++f->delay_buf_length;  /* Need 0 to n, i.e. n + 1. */
   ++f->delay_buf_length;  /* Quadratic interpolator needs one more. */
   for (c = 0; c < channels; ++c)
-    f->delay_bufs[c] = xcalloc(f->delay_buf_length, sizeof(*f->delay_bufs[0]));
+    f->delay_bufs[c] = lsx_calloc(f->delay_buf_length, sizeof(*f->delay_bufs[0]));
 
   /* Create the LFO lookup table: */
   f->lfo_length = effp->in_signal.rate / f->speed;
-  f->lfo = xcalloc(f->lfo_length, sizeof(*f->lfo));
+  f->lfo = lsx_calloc(f->lfo_length, sizeof(*f->lfo));
   lsx_generate_wave_table(
       f->wave_shape,
       SOX_FLOAT,

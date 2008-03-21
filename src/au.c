@@ -178,7 +178,7 @@ static int startread(sox_format_t * ft)
 
   if (hdr_size > FIXED_HDR) {
     size_t info_size = hdr_size - FIXED_HDR;
-    char * buf = xcalloc(1, info_size + 1); /* +1 ensures null-terminated */
+    char * buf = lsx_calloc(1, info_size + 1); /* +1 ensures null-terminated */
     if (lsx_readchars(ft, buf, info_size) != SOX_SUCCESS) {
       free(buf);
       return SOX_EOF;

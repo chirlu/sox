@@ -52,7 +52,6 @@ check_function_exists("fseeko"           HAVE_FSEEKO)
 check_function_exists("gettimeofday"     HAVE_GETTIMEOFDAY)
 check_function_exists("popen"            HAVE_POPEN)
 check_function_exists("strcasecmp"       HAVE_STRCASECMP)
-check_function_exists("strdup"           HAVE_STRDUP)
 check_function_exists("strrstr"          HAVE_STRRSTR)
 check_function_exists("vsnprintf"        HAVE_VSNPRINTF)
 

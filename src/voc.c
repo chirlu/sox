@@ -356,7 +356,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
             return done;
           }
           *buf = SOX_UNSIGNED_8BIT_TO_SAMPLE(uc,);
-          adpcm_init(&v->adpcm, 6 - v->size, SOX_SAMPLE_TO_SIGNED_16BIT(*buf, ft->clips));
+          lsx_adpcm_init(&v->adpcm, 6 - v->size, SOX_SAMPLE_TO_SIGNED_16BIT(*buf, ft->clips));
           ++buf;
           --v->block_remaining;
           ++done;
@@ -372,13 +372,13 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
               int u = uc;
 
               *buf++ =
-                  SOX_SIGNED_16BIT_TO_SAMPLE(adpcm_decode (u >> 6, &v->adpcm),);
+                  SOX_SIGNED_16BIT_TO_SAMPLE(lsx_adpcm_decode (u >> 6, &v->adpcm),);
               *buf++ =
-                  SOX_SIGNED_16BIT_TO_SAMPLE(adpcm_decode (u >> 4, &v->adpcm),);
+                  SOX_SIGNED_16BIT_TO_SAMPLE(lsx_adpcm_decode (u >> 4, &v->adpcm),);
               *buf++ =
-                  SOX_SIGNED_16BIT_TO_SAMPLE(adpcm_decode (u >> 2, &v->adpcm),);
+                  SOX_SIGNED_16BIT_TO_SAMPLE(lsx_adpcm_decode (u >> 2, &v->adpcm),);
               *buf++ =
-                  SOX_SIGNED_16BIT_TO_SAMPLE(adpcm_decode (u     , &v->adpcm),);
+                  SOX_SIGNED_16BIT_TO_SAMPLE(lsx_adpcm_decode (u     , &v->adpcm),);
             }
             break;
           case 3:
@@ -386,11 +386,11 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
               int u = uc;
 
               *buf++ =
-                  SOX_SIGNED_16BIT_TO_SAMPLE(adpcm_decode (u >> 5, &v->adpcm),);
+                  SOX_SIGNED_16BIT_TO_SAMPLE(lsx_adpcm_decode (u >> 5, &v->adpcm),);
               *buf++ =
-                  SOX_SIGNED_16BIT_TO_SAMPLE(adpcm_decode (u >> 2, &v->adpcm),);
+                  SOX_SIGNED_16BIT_TO_SAMPLE(lsx_adpcm_decode (u >> 2, &v->adpcm),);
               *buf++ =                              /* A bit from nowhere! */
-                  SOX_SIGNED_16BIT_TO_SAMPLE(adpcm_decode (u << 1, &v->adpcm),);
+                  SOX_SIGNED_16BIT_TO_SAMPLE(lsx_adpcm_decode (u << 1, &v->adpcm),);
             }
             break;
           case 4:
@@ -398,9 +398,9 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
               int u = uc;
 
               *buf++ =
-                  SOX_SIGNED_16BIT_TO_SAMPLE(adpcm_decode (u >> 4, &v->adpcm),);
+                  SOX_SIGNED_16BIT_TO_SAMPLE(lsx_adpcm_decode (u >> 4, &v->adpcm),);
               *buf++ =
-                  SOX_SIGNED_16BIT_TO_SAMPLE(adpcm_decode (u     , &v->adpcm),);
+                  SOX_SIGNED_16BIT_TO_SAMPLE(lsx_adpcm_decode (u     , &v->adpcm),);
             }
             break;
         }

@@ -58,7 +58,7 @@ static int sox_sunstartread(sox_format_t * ft)
     file->count = 0;
     file->pos = 0;
     file->size = 1024;
-    file->buf = xmalloc (file->size);
+    file->buf = lsx_malloc (file->size);
 
     if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN) ft->encoding.encoding = SOX_ENCODING_ULAW;
 
@@ -194,7 +194,7 @@ static int sox_sunstartwrite(sox_format_t * ft)
     file->count = 0;
     file->pos = 0;
     file->size = 1024;
-    file->buf = xmalloc (file->size);
+    file->buf = lsx_malloc (file->size);
 
 #ifdef __SVR4
     /* Read in old values, change to what we need and then send back */

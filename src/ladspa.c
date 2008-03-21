@@ -139,7 +139,7 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
   }
 
   /* Scan the ports to check there's one input and one output */
-  l_st->control = xcalloc(l_st->desc->PortCount, sizeof(LADSPA_Data));
+  l_st->control = lsx_calloc(l_st->desc->PortCount, sizeof(LADSPA_Data));
   for (i = 0; i < l_st->desc->PortCount; i++) {
     const LADSPA_PortDescriptor port = l_st->desc->PortDescriptors[i];
 
@@ -231,7 +231,7 @@ static int sox_ladspa_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
   *osamp = *isamp = len;
 
   if (len) {
-    LADSPA_Data *buf = xmalloc(sizeof(LADSPA_Data) * len);
+    LADSPA_Data *buf = lsx_malloc(sizeof(LADSPA_Data) * len);
     
     /* Insert input if effect takes it */
     if (l_st->input_port != ULONG_MAX) {

@@ -24,7 +24,6 @@
 #cmakedefine HAVE_SNDFILE_H           1
 #cmakedefine HAVE_STDINT_H            1
 #cmakedefine HAVE_STRCASECMP          1
-#cmakedefine HAVE_STRDUP              1
 #cmakedefine HAVE_STRINGS_H           1
 #cmakedefine HAVE_STRING_H            1
 #cmakedefine HAVE_STRRSTR             1

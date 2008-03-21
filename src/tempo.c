@@ -20,7 +20,6 @@
 
 #include "sox_i.h"
 #include "fifo.h"
-#include "xmalloc.h"
 #include <math.h>
 
 typedef struct {
@@ -153,7 +152,7 @@ static void tempo_flush(tempo_t * t)
 {
   size_t samples_out = t->samples_in / t->factor + .5;
   size_t remaining = samples_out - t->samples_out;
-  float * buff = xcalloc(128 * t->channels, sizeof(*buff));
+  float * buff = lsx_calloc(128 * t->channels, sizeof(*buff));
 
   if ((int)remaining > 0) {
     while (fifo_occupancy(&t->output_fifo) < remaining) {
@@ -177,7 +176,7 @@ static void tempo_setup(tempo_t * t,
   t->search  = sample_rate * search_ms / 1000 + .5;
   t->overlap = max(sample_rate * overlap_ms / 1000 + 4.5, 16);
   t->overlap &= ~7; /* Make divisible by 8 for loop optimisation */
-  t->overlap_buf = xmalloc(t->overlap * t->channels * sizeof(*t->overlap_buf));
+  t->overlap_buf = lsx_malloc(t->overlap * t->channels * sizeof(*t->overlap_buf));
   max_skip = ceil(factor * (t->segment - t->overlap));
   t->process_size = max(max_skip + t->overlap, t->segment) + t->search;
 }
@@ -192,7 +191,7 @@ static void tempo_delete(tempo_t * t)
 
 static tempo_t * tempo_create(size_t channels)
 {
-  tempo_t * t = xcalloc(1, sizeof(*t));
+  tempo_t * t = lsx_calloc(1, sizeof(*t));
   t->channels = channels;
   fifo_create(&t->input_fifo, t->channels * sizeof(float));
   fifo_create(&t->output_fifo, t->channels * sizeof(float));

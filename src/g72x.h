@@ -33,6 +33,23 @@
 #ifndef _G72X_H
 #define	_G72X_H
 
+/* aliases */
+#define g721_decoder lsx_g721_decoder
+#define g721_encoder lsx_g721_encoder
+#define g723_24_decoder lsx_g723_24_decoder
+#define g723_24_encoder lsx_g723_24_encoder
+#define g723_40_decoder lsx_g723_40_decoder
+#define g723_40_encoder lsx_g723_40_encoder
+#define g72x_init_state lsx_g72x_init_state
+#define predictor_pole lsx_g72x_predictor_pole
+#define predictor_zero lsx_g72x_predictor_zero
+#define quantize lsx_g72x_quantize
+#define reconstruct lsx_g72x_reconstruct
+#define step_size lsx_g72x_step_size
+#define tandem_adjust_alaw lsx_g72x_tandem_adjust_alaw
+#define tandem_adjust_ulaw lsx_g72x_tandem_adjust_ulaw
+#define update lsx_g72x_update
+
 #define	AUDIO_ENCODING_ULAW	(1)	/* ISDN u-law */
 #define	AUDIO_ENCODING_ALAW	(2)	/* ISDN A-law */
 #define	AUDIO_ENCODING_LINEAR	(3)	/* PCM 2's-complement (0-center) */

@@ -20,21 +20,21 @@
    02111-1301, USA.  */
 
 #include "sox_i.h"
-
 #include <stdlib.h>
-#include <string.h>
 
-#include "xmalloc.h"
-
-
-/*
- * Resize an allocated memory area; abort if not possible.
+/* Resize an allocated memory area; abort if not possible.
+ *
+ * For malloc, `If the size of the space requested is zero, the behavior is
+ * implementation defined: either a null pointer is returned, or the
+ * behavior is as if the size were some nonzero value, except that the
+ * returned pointer shall not be used to access an object'
  */
-void *xrealloc(void *ptr, size_t newsize)
+void *lsx_realloc(void *ptr, size_t newsize)
 {
-  /* Behaviour in this case is unspecified for malloc */
-  if (ptr && newsize == 0)
+  if (ptr && newsize == 0) {
+    free(ptr);
     return NULL;
+  }
 
   if ((ptr = realloc(ptr, newsize)) == NULL) {
     sox_fail("out of memory");
@@ -42,38 +42,4 @@ void *xrealloc(void *ptr, size_t newsize)
   }
 
   return ptr;
-}
-
-/*
- * Perform a calloc; abort if not possible.
- */
-void *xcalloc(size_t nmemb, size_t size)
-{
-  void *ptr = calloc(nmemb, size);
-
-  if (ptr == NULL) {
-    sox_fail("out of memory");
-    exit(2);
-  }
-
-  return ptr;
-}
-
-/*
- * Perform a strdup; abort if not possible.
- */
-char *xstrdup(const char *s)
-{
-  char * t;
-
-  if (s == NULL)
-    return NULL;
-
-  t = strdup(s);
-  if (t == NULL) {
-    sox_fail("out of memory");
-    exit(2);
-  }
-
-  return t;
 }

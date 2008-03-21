@@ -352,7 +352,7 @@ static uint8_t const cswap[256] = {
       sox_format_t * ft, ctype *buf, sox_size_t len) \
   { \
     sox_size_t n, nread; \
-    uint8_t *data = xmalloc(size * len); \
+    uint8_t *data = lsx_malloc(size * len); \
     nread = lsx_readbuf(ft, data, len * size) / size; \
     for (n = 0; n < nread; n++) \
       buf[n] = sox_unpack ## size(data + n * size); \
@@ -421,7 +421,7 @@ int lsx_readchars(sox_format_t * ft, char * chars, sox_size_t len)
       sox_format_t * ft, ctype *buf, sox_size_t len) \
   { \
     sox_size_t n, nwritten; \
-    uint8_t *data = xmalloc(size * len); \
+    uint8_t *data = lsx_malloc(size * len); \
     for (n = 0; n < len; n++) \
       sox_pack ## size(data + n * size, buf[n]); \
     nwritten = lsx_writebuf(ft, data, len * size); \

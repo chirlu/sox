@@ -194,7 +194,7 @@ static int ossinit(sox_format_t * ft)
     }
     file->count = 0;
     file->pos = 0;
-    file->buf = (char *)xmalloc(file->size);
+    file->buf = (char *)lsx_malloc(file->size);
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_SYNC, NULL) < 0) {
         lsx_fail_errno(ft,SOX_EOF,"Unable to sync dsp");

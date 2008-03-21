@@ -34,7 +34,7 @@ static int start_read(sox_format_t * ft)
 
   /* Determine header size, and allocate a buffer large enough to hold it. */
   sscanf(fldsval, "%u", &header_size);
-  buf = xmalloc(header_size);
+  buf = lsx_malloc(header_size);
 
   /* Skip what we have read so far */
   header_size -= 16;

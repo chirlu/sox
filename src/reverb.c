@@ -20,10 +20,10 @@
 
 #include "sox_i.h"
 #include "fifo.h"
-#include "xmalloc.h"
 #include <math.h>
 
-#define filter_create(p, n) (p)->ptr=Xcalloc((p)->buffer, (p)->size=(size_t)(n))
+#define lsx_zalloc(var, n) var = lsx_calloc(n, sizeof(*var))
+#define filter_create(p, n) (p)->ptr=lsx_zalloc((p)->buffer, (p)->size=(size_t)(n))
 #define filter_advance(p) if (--(p)->ptr < (p)->buffer) (p)->ptr += (p)->size
 #define filter_delete(p) free((p)->buffer)
 
@@ -136,7 +136,7 @@ static void reverb_create(reverb_t * p, double sample_rate_Hz,
   memset(fifo_write(&p->input_fifo, delay, 0), 0, delay * sizeof(float));
   for (i = 0; i <= ceil(depth); ++i) {
     filter_array_create(p->chan + i, sample_rate_Hz, scale, i * depth);
-    out[i] = Xcalloc(p->out[i], buffer_size);
+    out[i] = lsx_zalloc(p->out[i], buffer_size);
   }
 }
 

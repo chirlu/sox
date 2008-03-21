@@ -98,7 +98,7 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
   p->max_buffer_size = 0;
   for (i = 0; i < p->nsplices; ++i) {
     if (argv) /* 1st parse only */
-      p->splices[i].str = xstrdup(argv[i]);
+      p->splices[i].str = lsx_strdup(argv[i]);
 
     p->splices[i].overlap = p->splices[i].search = rate * 0.01 + .5;
 
@@ -133,7 +133,7 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
 static int create(sox_effect_t * effp, int n, char * * argv)
 {
   splice_t p = (splice_t) effp->priv;
-  p->splices = xcalloc(p->nsplices = n, sizeof(*p->splices));
+  p->splices = lsx_calloc(p->nsplices = n, sizeof(*p->splices));
   return parse(effp, argv, 96000.); /* No rate yet; parse with dummy */
 }
 
@@ -143,7 +143,7 @@ static int start(sox_effect_t * effp)
   unsigned i;
 
   parse(effp, 0, effp->in_signal.rate); /* Re-parse now rate is known */
-  p->buffer = xcalloc(p->max_buffer_size * effp->in_signal.channels, sizeof(*p->buffer));
+  p->buffer = lsx_calloc(p->max_buffer_size * effp->in_signal.channels, sizeof(*p->buffer));
   p->in_pos = p->buffer_pos = p->splices_pos = 0;
   p->state = p->splices_pos != p->nsplices && p->in_pos == p->splices[p->splices_pos].start;
   for (i = 0; i < p->nsplices; ++i)

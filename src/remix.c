@@ -61,7 +61,7 @@ static int parse(sox_effect_t * effp, char * * argv, unsigned channels)
     sox_bool mul_spec = sox_false;
     char * text, * end;
     if (argv) /* 1st parse only */
-      p->out_specs[i].str = xstrdup(argv[i]);
+      p->out_specs[i].str = lsx_strdup(argv[i]);
     for (j = 0, text = p->out_specs[i].str; *text;) {
       static char const separators[] = "-vpi,";
       char sep1, sep2;
@@ -85,7 +85,7 @@ static int parse(sox_effect_t * effp, char * * argv, unsigned channels)
         mul_spec = sox_true;
       }
       if (chan2 < chan1) {int t = chan1; chan1 = chan2; chan2 = t;}
-      p->out_specs[i].in_specs = xrealloc(p->out_specs[i].in_specs,
+      p->out_specs[i].in_specs = lsx_realloc(p->out_specs[i].in_specs,
           (j + chan2 - chan1 + 1) * sizeof(*p->out_specs[i].in_specs));
       while (chan1 <= chan2) {
         p->out_specs[i].in_specs[j].channel_num = chan1++ - 1;
@@ -107,7 +107,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   remix_t p = (remix_t) effp->priv;
   if (argc && !strcmp(*argv, "-m")) p->mode = manual   , ++argv, --argc;
   if (argc && !strcmp(*argv, "-a")) p->mode = automatic, ++argv, --argc;
-  p->out_specs = xcalloc(p->num_out_channels = argc, sizeof(*p->out_specs));
+  p->out_specs = lsx_calloc(p->num_out_channels = argc, sizeof(*p->out_specs));
   return parse(effp, argv, 1); /* No channels yet; parse with dummy */
 }
 

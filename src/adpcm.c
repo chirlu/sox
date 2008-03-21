@@ -41,7 +41,7 @@
 
 typedef struct MsState {
         sox_sample_t  step;      /* step size */
-        short iCoef[2];
+        short lsx_ms_adpcm_i_coef[2];
 } MsState_t;
 
 #define lsbshortldi(x,p) { (x)=((short)((int)(p)[0] + ((int)(p)[1]<<8))); (p) += 2; }
@@ -59,11 +59,11 @@ sox_sample_t stepAdjustTable[] = {
         768, 614, 512, 409, 307, 230, 230, 230
 };
 
-/* TODO : The first 7 iCoef sets are always hardcoded and must
+/* TODO : The first 7 lsx_ms_adpcm_i_coef sets are always hardcoded and must
    appear in the actual WAVE file.  They should be read in
    in case a sound program added extras to the list. */
 
-const short iCoef[7][2] = {
+const short lsx_ms_adpcm_i_coef[7][2] = {
                         { 256,   0},
                         { 512,-256},
                         {   0,   0},
@@ -90,8 +90,8 @@ static inline sox_sample_t AdpcmDecode(sox_sample_t c, MsState_t *state,
 
         /** make linear prediction for next sample **/
         vlin =
-                        ((sample1 * state->iCoef[0]) +
-                         (sample2 * state->iCoef[1])) >> 8;
+                        ((sample1 * state->lsx_ms_adpcm_i_coef[0]) +
+                         (sample2 * state->lsx_ms_adpcm_i_coef[1])) >> 8;
         /** then add the code*step adjustment **/
         c -= (c & 0x08) << 1;
         sample = (c * step) + vlin;
@@ -102,11 +102,11 @@ static inline sox_sample_t AdpcmDecode(sox_sample_t c, MsState_t *state,
         return (sample);
 }
 
-/* AdpcmBlockExpandI() outputs interleaved samples into one output buffer */
-const char *AdpcmBlockExpandI(
+/* lsx_ms_adpcm_block_expand_i() outputs interleaved samples into one output buffer */
+const char *lsx_ms_adpcm_block_expand_i(
         unsigned chans,          /* total channels             */
         int nCoef,
-        const short *iCoef,
+        const short *lsx_ms_adpcm_i_coef,
         const unsigned char *ibuff,/* input buffer[blockAlign]   */
         SAMPL *obuff,       /* output samples, n*chans    */
         int n               /* samples to decode PER channel */
@@ -125,8 +125,8 @@ const char *AdpcmBlockExpandI(
                         errmsg = "MSADPCM bpred >= nCoef, arbitrarily using 0\n";
                         bpred = 0;
                 }
-                state[ch].iCoef[0] = iCoef[(int)bpred*2+0];
-                state[ch].iCoef[1] = iCoef[(int)bpred*2+1];
+                state[ch].lsx_ms_adpcm_i_coef[0] = lsx_ms_adpcm_i_coef[(int)bpred*2+0];
+                state[ch].lsx_ms_adpcm_i_coef[1] = lsx_ms_adpcm_i_coef[(int)bpred*2+1];
 
         }
 
@@ -170,7 +170,7 @@ static int AdpcmMashS(
         unsigned ch,              /* channel number to encode, REQUIRE 0 <= ch < chans  */
         unsigned chans,           /* total channels */
         SAMPL v[2],          /* values to use as starting 2 */
-        const short iCoef[2],/* lin predictor coeffs */
+        const short lsx_ms_adpcm_i_coef[2],/* lin predictor coeffs */
         const SAMPL *ibuff,  /* ibuff[] is interleaved input samples */
         int n,               /* samples to encode PER channel */
         int *iostep,         /* input/output step, REQUIRE 16 <= *st <= 0x7fff */
@@ -210,7 +210,7 @@ static int AdpcmMashS(
                 int vlin,d,dp,c;
 
           /* make linear prediction for next sample */
-                vlin = (v0 * iCoef[0] + v1 * iCoef[1]) >> 8;
+                vlin = (v0 * lsx_ms_adpcm_i_coef[0] + v1 * lsx_ms_adpcm_i_coef[1]) >> 8;
                 d = *ip - vlin;  /* difference between linear prediction and current sample */
                 dp = d + (step<<3) + (step>>1);
                 c = 0;
@@ -275,13 +275,13 @@ static inline void AdpcmMashChannel(
         for (k=0; k<7; k++) {
                 int d0,d1;
                 ss = s0 = *st;
-                d0=AdpcmMashS(ch, chans, v, iCoef[k], ip, n, &ss, NULL); /* with step s0 */
+                d0=AdpcmMashS(ch, chans, v, lsx_ms_adpcm_i_coef[k], ip, n, &ss, NULL); /* with step s0 */
 
                 s1 = s0;
-                AdpcmMashS(ch, chans, v, iCoef[k], ip, n0, &s1, NULL);
+                AdpcmMashS(ch, chans, v, lsx_ms_adpcm_i_coef[k], ip, n0, &s1, NULL);
                 sox_debug_more(" s32 %d\n",s1);
                 ss = s1 = (3*s0+s1)/4;
-                d1=AdpcmMashS(ch, chans, v, iCoef[k], ip, n, &ss, NULL); /* with step s1 */
+                d1=AdpcmMashS(ch, chans, v, lsx_ms_adpcm_i_coef[k], ip, n, &ss, NULL); /* with step s1 */
                 if (!k || d0<dmin || d1<dmin) {
                         kmin = k;
                         if (d0<=d1) {
@@ -295,11 +295,11 @@ static inline void AdpcmMashChannel(
         }
         *st = smin;
         sox_debug_more("kmin %d, smin %5d, ",kmin,smin);
-        d=AdpcmMashS(ch, chans, v, iCoef[kmin], ip, n, st, obuff);
+        d=AdpcmMashS(ch, chans, v, lsx_ms_adpcm_i_coef[kmin], ip, n, st, obuff);
         obuff[ch] = kmin;
 }
 
-void AdpcmBlockMashI(
+void lsx_ms_adpcm_block_mash_i(
         unsigned chans,          /* total channels */
         const SAMPL *ip,    /* ip[n*chans] is interleaved input samples */
         int n,              /* samples to encode PER channel */
@@ -321,14 +321,14 @@ void AdpcmBlockMashI(
 }
 
 /*
- * AdpcmSamplesIn(dataLen, chans, blockAlign, samplesPerBlock)
+ * lsx_ms_adpcm_samples_in(dataLen, chans, blockAlign, samplesPerBlock)
  *  returns the number of samples/channel which would be
  *  in the dataLen, given the other parameters ...
  *  if input samplesPerBlock is 0, then returns the max
  *  samplesPerBlock which would go into a block of size blockAlign
  *  Yes, it is confusing usage.
  */
-sox_size_t AdpcmSamplesIn(
+sox_size_t lsx_ms_adpcm_samples_in(
         sox_size_t dataLen,
         sox_size_t chans,
         sox_size_t blockAlign,
@@ -352,7 +352,7 @@ sox_size_t AdpcmSamplesIn(
         return n;
 }
 
-sox_size_t AdpcmBytesPerBlock(
+sox_size_t lsx_ms_adpcm_bytes_per_block(
         sox_size_t chans,
         sox_size_t samplesPerBlock
 )

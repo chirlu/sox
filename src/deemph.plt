@@ -2,7 +2,8 @@
 #
 # 09/02/98 (c) Heiko Eissfeldt
 #
-# 18/03/07 robs@users.sourceforge.net: changed to biquad for better accuracy.
+# 18/03/07 robs@users.sourceforge.net: changed to biquad for slightly
+# better accuracy.
 #
 # License: LGPL (Lesser Gnu Public License)
 #

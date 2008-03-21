@@ -30,7 +30,7 @@ typedef enum {
   synth_brownnoise
 } type_t;
 
-enum_item const synth_type[] = {
+static enum_item const synth_type[] = {
   ENUM_ITEM(synth_, sine)
   ENUM_ITEM(synth_, square)
   ENUM_ITEM(synth_, sawtooth)
@@ -47,7 +47,7 @@ enum_item const synth_type[] = {
 
 typedef enum {synth_create, synth_mix, synth_amod, synth_fmod} combine_t;
 
-enum_item const combine_type[] = {
+static enum_item const combine_type[] = {
   ENUM_ITEM(synth_, create)
   ENUM_ITEM(synth_, mix)
   ENUM_ITEM(synth_, amod)
@@ -288,7 +288,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
   /* Get duration if given (if first arg starts with digit) */
   if (argc && (isdigit((int)argv[argn][0]) || argv[argn][0] == '.')) {
-    synth->length_str = xmalloc(strlen(argv[argn]) + 1);
+    synth->length_str = lsx_malloc(strlen(argv[argn]) + 1);
     strcpy(synth->length_str, argv[argn]);
     /* Do a dummy parse of to see if it will fail */
     if (lsx_parsesamples(0., synth->length_str, &synth->samples_to_do, 't') == NULL)
@@ -305,7 +305,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
       sox_fail("no type given");
       return SOX_EOF;
     }
-    synth->getopts_channels = xrealloc(synth->getopts_channels, sizeof(*synth->getopts_channels) * (synth->getopts_nchannels + 1));
+    synth->getopts_channels = lsx_realloc(synth->getopts_channels, sizeof(*synth->getopts_channels) * (synth->getopts_nchannels + 1));
     chan = &synth->getopts_channels[synth->getopts_nchannels++];
     create_channel(chan);
     chan->type = p->value;
@@ -370,7 +370,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
   /* If no channel parameters were given, create one default channel: */
   if (!synth->getopts_nchannels) {
-    synth->getopts_channels = xmalloc(sizeof(*synth->getopts_channels));
+    synth->getopts_channels = lsx_malloc(sizeof(*synth->getopts_channels));
     create_channel(&synth->getopts_channels[synth->getopts_nchannels++]);
   }
 
@@ -395,7 +395,7 @@ static int start(sox_effect_t * effp)
       return lsx_usage(effp);
 
   synth->number_of_channels = effp->in_signal.channels;
-  synth->channels = xcalloc(synth->number_of_channels, sizeof(*synth->channels));
+  synth->channels = lsx_calloc(synth->number_of_channels, sizeof(*synth->channels));
   for (i = 0; i < synth->number_of_channels; ++i) {
     channel_t chan = &synth->channels[i];
     *chan = synth->getopts_channels[i % synth->getopts_nchannels];

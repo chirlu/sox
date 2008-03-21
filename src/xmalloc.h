@@ -22,13 +22,11 @@
 #ifndef XMALLOC_H
 
 #include <stddef.h>
+#include <string.h>
 
-#define xmalloc(size) xrealloc(NULL, (size))
-
-void *xcalloc(size_t nmemb, size_t size);
-void *xrealloc(void *ptr, size_t newsize);
-char *xstrdup(const char *s);
-
-#define Xcalloc(var, n) var = xcalloc(n, sizeof(*var))
+void *lsx_realloc(void *ptr, size_t newsize);
+#define lsx_malloc(size) lsx_realloc(NULL, (size))
+#define lsx_calloc(n,s) ((n)*(s)? memset(lsx_malloc((n)*(s)),0,(n)*(s)) : NULL)
+#define lsx_strdup(s) ((s)? strcpy((char *)lsx_malloc(strlen(s) + 1), s) : NULL)
 
 #endif

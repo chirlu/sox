@@ -260,7 +260,7 @@ static int last_nonopt;
 #ifdef _LIBC
 /* Stored original parameters.
    XXX This is no good solution.  We should rather copy the args so
-   that we can compare them later.  But we must not use xmalloc(3).  */
+   that we can compare them later.  But we must not use malloc(3).  */
 extern int __libc_argc;
 extern char **__libc_argv;
 
@@ -325,7 +325,7 @@ exchange (argv)
     {
       /* We must extend the array.  The user plays games with us and
          presents new arguments.  */
-      char *new_str = xmalloc (top + 1);
+      char *new_str = lsx_malloc (top + 1);
       if (new_str == NULL)
         nonoption_flags_len = nonoption_flags_max_len = 0;
       else
@@ -437,7 +437,7 @@ _getopt_initialize (argc, argv, optstring)
               if (nonoption_flags_max_len < argc)
                 nonoption_flags_max_len = argc;
               __getopt_nonoption_flags =
-                (char *) xmalloc (nonoption_flags_max_len);
+                (char *) lsx_malloc (nonoption_flags_max_len);
               if (__getopt_nonoption_flags == NULL)
                 nonoption_flags_max_len = -1;
               else

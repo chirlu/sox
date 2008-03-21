@@ -52,10 +52,8 @@ sox_sample_t lsx_lcm(sox_sample_t a, sox_sample_t b);
 #ifndef HAVE_STRCASECMP
 int strcasecmp(const char *s1, const char *s2);
 int strncasecmp(char const * s1, char const * s2, size_t n);
-#endif
-
-#ifndef HAVE_STRDUP
-char *strdup(const char *s);
+#define strcasecmp lsx_strcasecmp
+#define strncasecmp lsx_strncasecmp
 #endif
 
 #ifdef HAVE_BYTESWAP_H

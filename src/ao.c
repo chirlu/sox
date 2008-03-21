@@ -40,7 +40,7 @@ static int startwrite(sox_format_t * ft)
   lsx_set_signal_defaults(&ft->signal);
   ao->buf_size = sox_globals.bufsiz - (sox_globals.bufsiz % (ft->encoding.bits_per_sample >> 3));
   ao->buf_size *= (ft->encoding.bits_per_sample >> 3);
-  ao->buf = xmalloc(ao->buf_size);
+  ao->buf = lsx_malloc(ao->buf_size);
 
   if (!ao->buf)
   {

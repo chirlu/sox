@@ -1,3 +1,11 @@
+/* aliases */
+#define gFFTBitTable lsx_gFFTBitTable
+#define MaxFastBits lsx_MaxFastBits
+#define FFT lsx_FFT
+#define RealFFT lsx_RealFFT
+#define PowerSpectrum lsx_PowerSpectrum
+#define WindowFunc lsx_WindowFunc
+
 /*
  * FFT.h
  *

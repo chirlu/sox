@@ -322,7 +322,7 @@ static int start_write(sox_format_t * const ft)
     lsx_fail_errno(ft, SOX_ENOMEM, "FLAC ERROR creating the encoder instance");
     return SOX_EOF;
   }
-  encoder->decoded_samples = xmalloc(sox_globals.bufsiz * sizeof(FLAC__int32));
+  encoder->decoded_samples = lsx_malloc(sox_globals.bufsiz * sizeof(FLAC__int32));
 
   encoder->bits_per_sample = ft->encoding.bits_per_sample;
 
@@ -416,7 +416,7 @@ static int start_write(sox_format_t * const ft)
     encoder->metadata[encoder->num_metadata] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT);
     for (i = 0; ft->comments[i]; ++i) {
       static const char prepend[] = "Comment=";
-      char * text = xcalloc(strlen(prepend) + strlen(ft->comments[i]) + 1, sizeof(*text));
+      char * text = lsx_calloc(strlen(prepend) + strlen(ft->comments[i]) + 1, sizeof(*text));
       /* Prepend `Comment=' if no field-name already in the comment */
       if (!strchr(ft->comments[i], '='))
         strcpy(text, prepend);

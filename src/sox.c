@@ -401,7 +401,7 @@ static int combiner_start(sox_effect_t *effp)
   else {
     ws = 0;
     for (i = 0; i < input_count; i++) {
-      z->ibuf[i] = (sox_sample_t *)xmalloc(sox_globals.bufsiz * sizeof(sox_sample_t));
+      z->ibuf[i] = (sox_sample_t *)lsx_malloc(sox_globals.bufsiz * sizeof(sox_sample_t));
       progress_to_file(files[i]);
       ws = max(ws, input_wide_samples);
     }
@@ -954,7 +954,7 @@ static void display_supported_formats(void)
     while (*names++)
       formats++;
   }
-  format_list = (const char **)xmalloc(formats * sizeof(char *));
+  format_list = (const char **)lsx_malloc(formats * sizeof(char *));
 
   printf("AUDIO FILE FORMATS:");
   for (i = formats = 0; sox_format_fns[i].fn; ++i) {
@@ -1167,7 +1167,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
 {
   int c;
   size_t text_length = 100;
-  char * text = xmalloc(text_length + 1);
+  char * text = lsx_malloc(text_length + 1);
   FILE * file = fopen(filename, "rt");
 
   if (file == NULL) {
@@ -1179,7 +1179,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
 
     while ((c = getc(file)) != EOF && !strchr("\r\n", c)) {
       if (i == text_length)
-        text = xrealloc(text, (text_length <<= 1) + 1);
+        text = lsx_realloc(text, (text_length <<= 1) + 1);
       text[i++] = c;
     }
     if (ferror(file)) {
@@ -1253,10 +1253,10 @@ static int enum_option(int option_index, enum_item const * items)
   enum_item const * p = find_enum_text(optarg, items);
   if (p == NULL) {
     unsigned len = 1;
-    char * set = xmalloc(len);
+    char * set = lsx_malloc(len);
     *set = 0;
     for (p = items; p->text; ++p) {
-      set = xrealloc(set, len += 2 + strlen(p->text));
+      set = lsx_realloc(set, len += 2 + strlen(p->text));
       strcat(set, ", "); strcat(set, p->text);
     }
     sox_fail("--%s: '%s' is not one of: %s.",
@@ -1491,7 +1491,7 @@ static char const * set_default_device(file_t f)
 
 static int add_file(struct file_info const * const opts, char const * const filename)
 {
-  file_t f = xmalloc(sizeof(*f));
+  file_t f = lsx_malloc(sizeof(*f));
 
   if (file_count >= MAX_FILES) {
     sox_fail("too many files; maximum is %d input files (and 1 output file)", MAX_INPUT_FILES);
@@ -1500,7 +1500,7 @@ static int add_file(struct file_info const * const opts, char const * const file
   *f = *opts;
   if (!filename)
     usage("missing filename"); /* No return */
-  f->filename = xstrdup(filename);
+  f->filename = lsx_strdup(filename);
   files[file_count++] = f;
   return 0;
 }
@@ -1657,6 +1657,12 @@ static void output_message(unsigned level, const char *filename, const char *fmt
 static sox_bool cmp_comment_text(char const * c1, char const * c2)
 {
   return c1 && c2 && !strcasecmp(c1, c2);
+}
+
+static int strends(char const * str, char const * end)
+{
+  size_t str_len = strlen(str), end_len = strlen(end);
+  return str_len >= end_len && !strcmp(str + str_len - end_len, end);
 }
 
 int main(int argc, char **argv)

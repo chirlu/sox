@@ -152,7 +152,7 @@ static int sox_echos_start(sox_effect_t * effp)
                 echos->pointer[i] = echos->sumsamples;
                 echos->sumsamples += echos->samples[i];
         }
-        echos->delay_buf = (double *) xmalloc(sizeof (double) * echos->sumsamples);
+        echos->delay_buf = (double *) lsx_malloc(sizeof (double) * echos->sumsamples);
         for ( j = 0; j < echos->sumsamples; ++j )
                 echos->delay_buf[j] = 0.0;
         /* Be nice and check the hint with warning, if... */

@@ -67,7 +67,7 @@ typedef struct smpstuff {
   char comment[COMMENTLEN + NAMELEN + 3];
 } *smp_t;
 
-char *SVmagic = "SOUND SAMPLE DATA ", *SVvers = "2.1 ";
+static char *SVmagic = "SOUND SAMPLE DATA ", *SVvers = "2.1 ";
 
 /*
  * Read the SampleVision trailer structure.

@@ -43,7 +43,7 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
 
   for (i = 0; i < p->npads; ++i) {
     if (argv) /* 1st parse only */
-      p->pads[i].str = xstrdup(argv[i]);
+      p->pads[i].str = lsx_strdup(argv[i]);
     next = lsx_parsesamples(rate, p->pads[i].str, &p->pads[i].pad, 't');
     if (next == NULL) break;
     if (*next == '\0')
@@ -63,7 +63,7 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
 static int create(sox_effect_t * effp, int n, char * * argv)
 {
   pad_t p = (pad_t) effp->priv;
-  p->pads = xcalloc(p->npads = n, sizeof(*p->pads));
+  p->pads = lsx_calloc(p->npads = n, sizeof(*p->pads));
   return parse(effp, argv, 96000.); /* No rate yet; parse with dummy */
 }
 

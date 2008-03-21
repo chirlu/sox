@@ -158,7 +158,7 @@ static int sox_echo_start(sox_effect_t * effp)
                 if ( echo->samples[i] > echo->maxsamples )
                         echo->maxsamples = echo->samples[i];
         }
-        echo->delay_buf = (double *) xmalloc(sizeof (double) * echo->maxsamples);
+        echo->delay_buf = (double *) lsx_malloc(sizeof (double) * echo->maxsamples);
         for ( j = 0; j < echo->maxsamples; ++j )
                 echo->delay_buf[j] = 0.0;
         /* Be nice and check the hint with warning, if... */

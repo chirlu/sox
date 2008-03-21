@@ -97,12 +97,12 @@ static void InitFFT(void)
 {
    unsigned len, b;
    
-   gFFTBitTable = xcalloc(MaxFastBits, sizeof(*gFFTBitTable));
+   gFFTBitTable = lsx_calloc(MaxFastBits, sizeof(*gFFTBitTable));
    
    for (b = 1, len = 2; b <= MaxFastBits; b++) {
       unsigned i;
 
-      gFFTBitTable[b - 1] = xcalloc(len, sizeof(**gFFTBitTable));
+      gFFTBitTable[b - 1] = lsx_calloc(len, sizeof(**gFFTBitTable));
       for (i = 0; i < len; i++)
         gFFTBitTable[b - 1][i] = ReverseBits(i, b);
 
@@ -238,7 +238,7 @@ void RealFFT(unsigned NumSamples, const float *RealIn, float *RealOut, float *Im
    float h1r, h1i, h2r, h2i;
    float *tmpReal, *tmpImag;
 
-   tmpReal = (float*)xcalloc(NumSamples, sizeof(float));
+   tmpReal = (float*)lsx_calloc(NumSamples, sizeof(float));
    tmpImag = tmpReal + Half;
 
    for (i = 0; i < Half; i++) {
@@ -299,7 +299,7 @@ void PowerSpectrum(unsigned NumSamples, const float *In, float *Out)
 
   theta = M_PI / Half;
 
-  tmpReal = (float*)xcalloc(Half * 4, sizeof(float));
+  tmpReal = (float*)lsx_calloc(Half * 4, sizeof(float));
   tmpImag = tmpReal + Half;
   RealOut = tmpImag + Half;
   ImagOut = RealOut + Half;

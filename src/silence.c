@@ -118,7 +118,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
          * parse the duration info yet.  So save argument off
          * for future processing.
          */
-        silence->start_duration_str = (char *)xmalloc(strlen(argv[0])+1);
+        silence->start_duration_str = (char *)lsx_malloc(strlen(argv[0])+1);
         strcpy(silence->start_duration_str,argv[0]);
         /* Perform a fake parse to do error checking */
         if (lsx_parsesamples(0.,silence->start_duration_str,
@@ -159,7 +159,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
          * parse the duration info yet.  So save argument off
          * for future processing.
          */
-        silence->stop_duration_str = (char *)xmalloc(strlen(argv[0])+1);
+        silence->stop_duration_str = (char *)lsx_malloc(strlen(argv[0])+1);
         strcpy(silence->stop_duration_str,argv[0]);
         /* Perform a fake parse to do error checking */
         if (lsx_parsesamples(0.,silence->stop_duration_str,
@@ -230,7 +230,7 @@ static int sox_silence_start(sox_effect_t * effp)
          */
         silence->window_size = (effp->in_signal.rate / 50) * 
                                effp->in_signal.channels;
-        silence->window = (double *)xmalloc(silence->window_size *
+        silence->window = (double *)lsx_malloc(silence->window_size *
                                            sizeof(double));
 
         clear_rms(effp);
@@ -254,12 +254,12 @@ static int sox_silence_start(sox_effect_t * effp)
         else
             silence->mode = SILENCE_COPY;
 
-        silence->start_holdoff = (sox_sample_t *)xmalloc(sizeof(sox_sample_t)*silence->start_duration);
+        silence->start_holdoff = (sox_sample_t *)lsx_malloc(sizeof(sox_sample_t)*silence->start_duration);
         silence->start_holdoff_offset = 0;
         silence->start_holdoff_end = 0;
         silence->start_found_periods = 0;
 
-        silence->stop_holdoff = (sox_sample_t *)xmalloc(sizeof(sox_sample_t)*silence->stop_duration);
+        silence->stop_holdoff = (sox_sample_t *)lsx_malloc(sizeof(sox_sample_t)*silence->stop_duration);
         silence->stop_holdoff_offset = 0;
         silence->stop_holdoff_end = 0;
         silence->stop_found_periods = 0;

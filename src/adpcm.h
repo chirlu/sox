@@ -8,19 +8,19 @@
 #endif
 
 /* default coef sets */
-extern const short iCoef[7][2];
+extern const short lsx_ms_adpcm_i_coef[7][2];
 
-/* AdpcmBlockExpandI() outputs interleaved samples into one output buffer */
-extern const char *AdpcmBlockExpandI(
+/* lsx_ms_adpcm_block_expand_i() outputs interleaved samples into one output buffer */
+extern const char *lsx_ms_adpcm_block_expand_i(
 	unsigned chans,          /* total channels             */
 	int nCoef,
-	const short *iCoef,
+	const short *lsx_ms_adpcm_i_coef,
 	const unsigned char *ibuff,/* input buffer[blockAlign]   */
 	SAMPL *obuff,       /* output samples, n*chans    */
 	int n               /* samples to decode PER channel, REQUIRE n % 8 == 1  */
 );
 
-extern void AdpcmBlockMashI(
+extern void lsx_ms_adpcm_block_mash_i(
 	unsigned chans,          /* total channels */
 	const SAMPL *ip,    /* ip[n*chans] is interleaved input samples */
 	int n,              /* samples to encode PER channel, REQUIRE */
@@ -32,14 +32,14 @@ extern void AdpcmBlockMashI(
 /* Some helper functions for computing samples/block and blockalign */
 
 /*
- * AdpcmSamplesIn(dataLen, chans, blockAlign, samplesPerBlock)
+ * lsx_ms_adpcm_samples_in(dataLen, chans, blockAlign, samplesPerBlock)
  *  returns the number of samples/channel which would be
  *  in the dataLen, given the other parameters ...
  *  if input samplesPerBlock is 0, then returns the max
  *  samplesPerBlock which would go into a block of size blockAlign
  *  Yes, it is confusing usage.
  */
-extern sox_size_t AdpcmSamplesIn(
+extern sox_size_t lsx_ms_adpcm_samples_in(
 	sox_size_t dataLen,
 	sox_size_t chans,
 	sox_size_t blockAlign,
@@ -47,11 +47,11 @@ extern sox_size_t AdpcmSamplesIn(
 );
 
 /*
- * sox_size_t AdpcmBytesPerBlock(chans, samplesPerBlock)
+ * sox_size_t lsx_ms_adpcm_bytes_per_block(chans, samplesPerBlock)
  *   return minimum blocksize which would be required
  *   to encode number of chans with given samplesPerBlock
  */
-extern sox_size_t AdpcmBytesPerBlock(
+extern sox_size_t lsx_ms_adpcm_bytes_per_block(
 	sox_size_t chans,
 	sox_size_t samplesPerBlock
 );

@@ -372,7 +372,7 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
     alsa->buf_size = buffer_size * (ft->encoding.bits_per_sample >> 3) * ft->signal.channels;
     alsa->period_size = period_size;
     alsa->frames_this_period = 0;
-    alsa->buf = xmalloc(alsa->buf_size);
+    alsa->buf = lsx_malloc(alsa->buf_size);
 
     return (SOX_SUCCESS);
 
@@ -648,7 +648,7 @@ static int stopwrite(sox_format_t * ft)
 
   /* Pad to hardware period: */
   sox_size_t npad = (alsa->period_size - alsa->frames_this_period) * ft->signal.channels;
-  sox_sample_t * buf = xcalloc(npad, sizeof(*buf)); /* silent samples */
+  sox_sample_t * buf = lsx_calloc(npad, sizeof(*buf)); /* silent samples */
   write_samples(ft, buf, npad);
   free(buf);
 

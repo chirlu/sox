@@ -2,9 +2,9 @@
  * Microsoft's WAVE sound format handler
  *
  * Copyright 1998-2006 Chris Bagwell and SoX Contributors
- * Copyright 1991 Lance Norskog And Sundry Contributors
- * Copyright 1992 Rick Richardson
  * Copyright 1997 Graeme W. Gill, 93/5/17
+ * Copyright 1992 Rick Richardson
+ * Copyright 1991 Lance Norskog And Sundry Contributors
  *
  * Info for format tags can be found at:
  *   http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
@@ -50,7 +50,7 @@ typedef struct wavstuff {
 
     /* following used by *ADPCM wav files */
     unsigned short nCoefs;          /* ADPCM: number of coef sets */
-    short         *iCoefs;          /* ADPCM: coef sets           */
+    short         *lsx_ms_adpcm_i_coefs;          /* ADPCM: coef sets           */
     unsigned char *packet;          /* Temporary buffer for packets */
     short         *samples;         /* interleaved samples buffer */
     short         *samplePtr;       /* Pointer to current sample  */
@@ -93,7 +93,7 @@ static unsigned short  ImaAdpcmReadBlock(sox_format_t * ft)
         /* If it looks like a valid header is around then try and */
         /* work with partial blocks.  Specs say it should be null */
         /* padded but I guess this is better than trailing quiet. */
-        samplesThisBlock = ImaSamplesIn(0, ft->signal.channels, bytesRead, 0);
+        samplesThisBlock = lsx_ima_samples_in(0, ft->signal.channels, bytesRead, 0);
         if (samplesThisBlock == 0) 
         {
             sox_warn("Premature EOF on .wav input file");
@@ -105,7 +105,7 @@ static unsigned short  ImaAdpcmReadBlock(sox_format_t * ft)
     
     /* For a full block, the following should be true: */
     /* wav->samplesPerBlock = blockAlign - 8byte header + 1 sample in header */
-    ImaBlockExpandI(ft->signal.channels, wav->packet, wav->samples, samplesThisBlock);
+    lsx_ima_block_expand_i(ft->signal.channels, wav->packet, wav->samples, samplesThisBlock);
     return samplesThisBlock;
 
 }
@@ -134,7 +134,7 @@ static unsigned short  AdpcmReadBlock(sox_format_t * ft)
         /* If it looks like a valid header is around then try and */
         /* work with partial blocks.  Specs say it should be null */
         /* padded but I guess this is better than trailing quiet. */
-        samplesThisBlock = AdpcmSamplesIn(0, ft->signal.channels, bytesRead, 0);
+        samplesThisBlock = lsx_ms_adpcm_samples_in(0, ft->signal.channels, bytesRead, 0);
         if (samplesThisBlock == 0) 
         {
             sox_warn("Premature EOF on .wav input file");
@@ -142,7 +142,7 @@ static unsigned short  AdpcmReadBlock(sox_format_t * ft)
         }
     }
     
-    errmsg = AdpcmBlockExpandI(ft->signal.channels, wav->nCoefs, wav->iCoefs, wav->packet, wav->samples, samplesThisBlock);
+    errmsg = lsx_ms_adpcm_block_expand_i(ft->signal.channels, wav->nCoefs, wav->lsx_ms_adpcm_i_coefs, wav->packet, wav->samples, samplesThisBlock);
 
     if (errmsg)
         sox_warn((char*)errmsg);
@@ -168,9 +168,9 @@ static int xxxAdpcmWriteBlock(sox_format_t * ft)
         for (p = wav->samplePtr; p < wav->sampleTop; p++) *p=0;
         /* compress the samples to wav->packet */
         if (wav->formatTag == WAVE_FORMAT_ADPCM) {
-            AdpcmBlockMashI(chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, wav->blockAlign);
+            lsx_ms_adpcm_block_mash_i(chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, wav->blockAlign);
         }else{ /* WAVE_FORMAT_IMA_ADPCM */
-            ImaBlockMashI(chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, 9);
+            lsx_ima_block_mash_i(chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, 9);
         }
         /* write the compressed packet */
         if (lsx_writebuf(ft, wav->packet, wav->blockAlign) != wav->blockAlign)
@@ -210,7 +210,7 @@ static int wavgsminit(sox_format_t * ft)
         return (SOX_EOF);
     }
 
-    wav->gsmsample=(gsm_signal*)xmalloc(sizeof(gsm_signal)*160*2);
+    wav->gsmsample=(gsm_signal*)lsx_malloc(sizeof(gsm_signal)*160*2);
     wav->gsmindex=0;
     return (SOX_SUCCESS);
 }
@@ -583,7 +583,7 @@ static int startread(sox_format_t * ft)
         sox_report("User options overriding rate read in .wav header");
     
 
-    wav->iCoefs = NULL;
+    wav->lsx_ms_adpcm_i_coefs = NULL;
     wav->packet = NULL;
     wav->samples = NULL;
 
@@ -624,7 +624,7 @@ static int startread(sox_format_t * ft)
         }
 
         lsx_readw(ft, &(wav->samplesPerBlock));
-        bytesPerBlock = AdpcmBytesPerBlock(ft->signal.channels, wav->samplesPerBlock);
+        bytesPerBlock = lsx_ms_adpcm_bytes_per_block(ft->signal.channels, wav->samplesPerBlock);
         if (bytesPerBlock > wav->blockAlign)
         {
             lsx_fail_errno(ft,SOX_EOF,"format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
@@ -637,7 +637,7 @@ static int startread(sox_format_t * ft)
             lsx_fail_errno(ft,SOX_EOF,"ADPCM file nCoefs (%.4hx) makes no sense", wav->nCoefs);
             return SOX_EOF;
         }
-        wav->packet = (unsigned char *)xmalloc(wav->blockAlign);
+        wav->packet = (unsigned char *)lsx_malloc(wav->blockAlign);
 
         len -= 4;
 
@@ -647,19 +647,19 @@ static int startread(sox_format_t * ft)
             return SOX_EOF;
         }
 
-        wav->samples = (short *)xmalloc(wChannels*wav->samplesPerBlock*sizeof(short));
+        wav->samples = (short *)lsx_malloc(wChannels*wav->samplesPerBlock*sizeof(short));
 
-        /* nCoefs, iCoefs used by adpcm.c */
-        wav->iCoefs = (short *)xmalloc(wav->nCoefs * 2 * sizeof(short));
+        /* nCoefs, lsx_ms_adpcm_i_coefs used by adpcm.c */
+        wav->lsx_ms_adpcm_i_coefs = (short *)lsx_malloc(wav->nCoefs * 2 * sizeof(short));
         {
             int i, errct=0;
             for (i=0; len>=2 && i < 2*wav->nCoefs; i++) {
-                lsx_readw(ft, (unsigned short *)&(wav->iCoefs[i]));
+                lsx_readw(ft, (unsigned short *)&(wav->lsx_ms_adpcm_i_coefs[i]));
                 len -= 2;
-                if (i<14) errct += (wav->iCoefs[i] != iCoef[i/2][i%2]);
-                /* sox_debug("iCoefs[%2d] %4d",i,wav->iCoefs[i]); */
+                if (i<14) errct += (wav->lsx_ms_adpcm_i_coefs[i] != lsx_ms_adpcm_i_coef[i/2][i%2]);
+                /* sox_debug("lsx_ms_adpcm_i_coefs[%2d] %4d",i,wav->lsx_ms_adpcm_i_coefs[i]); */
             }
-            if (errct) sox_warn("base iCoefs differ in %d/14 positions",errct);
+            if (errct) sox_warn("base lsx_ms_adpcm_i_coefs differ in %d/14 positions",errct);
         }
 
         bytespersample = 2;  /* AFTER de-compression */
@@ -680,7 +680,7 @@ static int startread(sox_format_t * ft)
         }
 
         lsx_readw(ft, &(wav->samplesPerBlock));
-        bytesPerBlock = ImaBytesPerBlock(ft->signal.channels, wav->samplesPerBlock);
+        bytesPerBlock = lsx_ima_bytes_per_block(ft->signal.channels, wav->samplesPerBlock);
         if (bytesPerBlock > wav->blockAlign || wav->samplesPerBlock%8 != 1)
         {
             lsx_fail_errno(ft,SOX_EOF,"format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
@@ -688,10 +688,10 @@ static int startread(sox_format_t * ft)
             return SOX_EOF;
         }
 
-        wav->packet = (unsigned char *)xmalloc(wav->blockAlign);
+        wav->packet = (unsigned char *)lsx_malloc(wav->blockAlign);
         len -= 2;
 
-        wav->samples = (short *)xmalloc(wChannels*wav->samplesPerBlock*sizeof(short));
+        wav->samples = (short *)lsx_malloc(wChannels*wav->samplesPerBlock*sizeof(short));
 
         bytespersample = 2;  /* AFTER de-compression */
         break;
@@ -773,7 +773,7 @@ static int startread(sox_format_t * ft)
 
     case WAVE_FORMAT_ADPCM:
         wav->numSamples = 
-            AdpcmSamplesIn(dwDataLength, ft->signal.channels, 
+            lsx_ms_adpcm_samples_in(dwDataLength, ft->signal.channels, 
                            wav->blockAlign, wav->samplesPerBlock);
         sox_debug_more("datalen %d, numSamples %d",dwDataLength, wav->numSamples);
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
@@ -784,11 +784,11 @@ static int startread(sox_format_t * ft)
         /* Compute easiest part of number of samples.  For every block, there
            are samplesPerBlock samples to read. */
         wav->numSamples = 
-            ImaSamplesIn(dwDataLength, ft->signal.channels, 
+            lsx_ima_samples_in(dwDataLength, ft->signal.channels, 
                          wav->blockAlign, wav->samplesPerBlock);
         sox_debug_more("datalen %d, numSamples %d",dwDataLength, wav->numSamples);
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
-        initImaTable();
+        lsx_ima_init_table();
         ft->length = wav->numSamples*ft->signal.channels;
         break;
 
@@ -843,7 +843,7 @@ static int startread(sox_format_t * ft)
         if (lsx_seeki(ft, (sox_ssize_t)len, SEEK_CUR) == SOX_SUCCESS &&
             findChunk(ft, "LIST", &len) != SOX_EOF)
         {
-            wav->comment = (char*)xmalloc(256);
+            wav->comment = (char*)lsx_malloc(256);
             /* Initialize comment to a NULL string */
             wav->comment[0] = 0;
             while(!lsx_eof(ft))
@@ -1050,7 +1050,7 @@ static int stopread(sox_format_t * ft)
 
     free(wav->packet);
     free(wav->samples);
-    free(wav->iCoefs);
+    free(wav->lsx_ms_adpcm_i_coefs);
     free(wav->comment);
     wav->comment = NULL;
 
@@ -1095,21 +1095,21 @@ static int startwrite(sox_format_t * ft)
 
     wav->packet = NULL;
     wav->samples = NULL;
-    wav->iCoefs = NULL;
+    wav->lsx_ms_adpcm_i_coefs = NULL;
     switch (wav->formatTag)
     {
         size_t ch, sbsize;
 
         case WAVE_FORMAT_IMA_ADPCM:
-            initImaTable();
+            lsx_ima_init_table();
         /* intentional case fallthru! */
         case WAVE_FORMAT_ADPCM:
             /* #channels already range-checked for overflow in wavwritehdr() */
             for (ch=0; ch<ft->signal.channels; ch++)
                 wav->state[ch] = 0;
             sbsize = ft->signal.channels * wav->samplesPerBlock;
-            wav->packet = (unsigned char *)xmalloc(wav->blockAlign);
-            wav->samples = (short *)xmalloc(sbsize*sizeof(short));
+            wav->packet = (unsigned char *)lsx_malloc(wav->blockAlign);
+            wav->samples = (short *)lsx_malloc(sbsize*sizeof(short));
             wav->sampleTop = wav->samples + sbsize;
             wav->samplePtr = wav->samples;
             break;
@@ -1251,7 +1251,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
             wBlockAlign = wChannels * 256; /* reasonable default */
             wBitsPerSample = 4;
             wExtSize = 2;
-            wSamplesPerBlock = ImaSamplesIn(0, wChannels, wBlockAlign, 0);
+            wSamplesPerBlock = lsx_ima_samples_in(0, wChannels, wBlockAlign, 0);
             break;
         case SOX_ENCODING_MS_ADPCM:
             if (wChannels>16)
@@ -1264,7 +1264,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
             wBlockAlign = max(wBlockAlign, 1) * wChannels * 256;
             wBitsPerSample = 4;
             wExtSize = 4+4*7;      /* Ext fmt data length */
-            wSamplesPerBlock = AdpcmSamplesIn(0, wChannels, wBlockAlign, 0);
+            wSamplesPerBlock = lsx_ms_adpcm_samples_in(0, wChannels, wBlockAlign, 0);
             break;
         case SOX_ENCODING_GSM:
             if (wChannels!=1)
@@ -1365,8 +1365,8 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
         lsx_writew(ft, wSamplesPerBlock);
         lsx_writew(ft, 7); /* nCoefs */
         for (i=0; i<7; i++) {
-            lsx_writew(ft, (uint16_t)(iCoef[i][0]));
-            lsx_writew(ft, (uint16_t)(iCoef[i][1]));
+            lsx_writew(ft, (uint16_t)(lsx_ms_adpcm_i_coef[i][0]));
+            lsx_writew(ft, (uint16_t)(lsx_ms_adpcm_i_coef[i][1]));
         }
         break;
         case WAVE_FORMAT_GSM610:
@@ -1468,7 +1468,7 @@ static int stopwrite(sox_format_t * ft)
         }
         free(wav->packet);
         free(wav->samples);
-        free(wav->iCoefs);
+        free(wav->lsx_ms_adpcm_i_coefs);
 
         /* All samples are already written out. */
         /* If file header needs fixing up, for example it needs the */

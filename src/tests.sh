@@ -103,13 +103,13 @@ convertToAndFrom () {
           cmp -s $intermediateReference intermediate.$format2Ext
           if [ "$?" != "0" ]
           then
-            echo "*FAIL* channels=$channels \"$format1Text\" ---> \"$format2Text\"."
+            echo "*FAIL vector* channels=$channels \"$format1Text\" ---> \"$format2Text\"."
             exit 1    # This allows failure inspection.
           fi
 	  vectors=`expr $vectors + 1`
         fi
 
-        if execute cmp -s input.$format1Ext output.$format1Ext
+        if cmp -s input.$format1Ext output.$format1Ext
         then
           echo "ok     channels=$channels \"$format1Text\" <--> \"$format2Text\"."
         else

@@ -124,8 +124,8 @@ static void LpFilter(double c[],
                      double Beta,
                      long Num);
 
-/* makeFilter is used by filter.c */
-int makeFilter(double Imp[],
+/* lsx_makeFilter is used by filter.c */
+int lsx_makeFilter(double Imp[],
                long Nwing,
                double Froll,
                double Beta,
@@ -215,10 +215,10 @@ static int start(sox_effect_t * effp)
   /* Nwing: # of filter coeffs in right wing */
   r->Nwing = r->Nq * (r->Nmult / 2 + 1) + 1;
 
-  r->Imp = (double *) xmalloc(sizeof(double) * (r->Nwing + 2)) + 1;
+  r->Imp = (double *) lsx_malloc(sizeof(double) * (r->Nwing + 2)) + 1;
   /* need Imp[-1] and Imp[Nwing] for quadratic interpolation */
   /* returns error # <=0, or adjusted wing-len > 0 */
-  i = makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq, 1);
+  i = lsx_makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq, 1);
   if (i <= 0) {
     sox_fail("Unable to make filter");
     return (SOX_EOF);
@@ -260,7 +260,7 @@ static int start(sox_effect_t * effp)
   r->Ysize = BUFFSIZE - r->Xsize;
   sox_debug("Xsize %li, Ysize %li, Xoff %li", r->Xsize, r->Ysize, r->Xoff);
 
-  r->X = (double *) xmalloc(sizeof(double) * (BUFFSIZE));
+  r->X = (double *) lsx_malloc(sizeof(double) * (BUFFSIZE));
   r->Y = r->X + r->Xsize;
 
   /* Need Xoff zeros at beginning of sample */
@@ -586,7 +586,7 @@ static long SrcEX(resample_t r, long Nx)
    return (Y - Ystart);        /* Return the number of output samples */
 }
 
-int makeFilter(double Imp[], long Nwing, double Froll, double Beta, 
+int lsx_makeFilter(double Imp[], long Nwing, double Froll, double Beta, 
                long Num, int Normalize)
 {
    double *ImpR;
@@ -603,7 +603,7 @@ int makeFilter(double Imp[], long Nwing, double Froll, double Beta,
    if (Mwing==0)
       return(-4);
 
-   ImpR = (double *) xmalloc(sizeof(double) * Mwing);
+   ImpR = (double *) lsx_malloc(sizeof(double) * Mwing);
 
    /* Design a Nuttall or Kaiser windowed Sinc low-pass filter */
    LpFilter(ImpR, Mwing, Froll, Beta, Num);

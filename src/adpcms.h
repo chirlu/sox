@@ -32,9 +32,9 @@ typedef struct {
   int errors;
 } adpcm_t;
 
-void adpcm_init(adpcm_t * p, int type, int first_sample);
-int adpcm_decode(int code, adpcm_t * p);
-int adpcm_encode(int sample, adpcm_t * p);
+void lsx_adpcm_init(adpcm_t * p, int type, int first_sample);
+int lsx_adpcm_decode(int code, adpcm_t * p);
+int lsx_adpcm_encode(int sample, adpcm_t * p);
 
 typedef struct adpcm_io {
   adpcm_t encoder;

@@ -60,7 +60,7 @@ static void read_comments(sox_format_t * ft)
     if ((tag = id3_file_tag(id3struct)) && tag->frames)
       for (i = 0; list[i][0]; ++i) 
         if ((utf8 = utf8_id3tag_findframe(tag, list[i][0], 0))) {
-          char * comment = xmalloc(strlen(list[i][1]) + 1 + strlen((char *)utf8) + 1);
+          char * comment = lsx_malloc(strlen(list[i][1]) + 1 + strlen((char *)utf8) + 1);
           sprintf(comment, "%s=%s", list[i][1], utf8);
           sox_append_comment(&ft->comments, comment);
           free(comment);

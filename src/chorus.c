@@ -199,7 +199,7 @@ static int sox_chorus_start(sox_effect_t * effp)
                         return (SOX_EOF);
                 }
                 chorus->length[i] = effp->in_signal.rate / chorus->speed[i];
-                chorus->lookup_tab[i] = (int *) xmalloc(sizeof (int) * chorus->length[i]);
+                chorus->lookup_tab[i] = (int *) lsx_malloc(sizeof (int) * chorus->length[i]);
 
                 if (chorus->modulation[i] == MOD_SINE)
                   lsx_generate_wave_table(SOX_WAVE_SINE, SOX_INT, chorus->lookup_tab[i],
@@ -223,7 +223,7 @@ static int sox_chorus_start(sox_effect_t * effp)
         sox_warn("chorus: warning >>> gain-out can cause saturation or clipping of output <<<");
 
 
-        chorus->chorusbuf = (float *) xmalloc(sizeof (float) * chorus->maxsamples);
+        chorus->chorusbuf = (float *) lsx_malloc(sizeof (float) * chorus->maxsamples);
         for ( i = 0; i < chorus->maxsamples; i++ )
                 chorus->chorusbuf[i] = 0.0;
 

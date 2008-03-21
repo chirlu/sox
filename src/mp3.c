@@ -169,11 +169,11 @@ static int startread(sox_format_t * ft)
     p->Timer = NULL;
     p->InputBuffer = NULL;
 
-    p->Stream=(struct mad_stream *)xmalloc(sizeof(struct mad_stream));
-    p->Frame=(struct mad_frame *)xmalloc(sizeof(struct mad_frame));
-    p->Synth=(struct mad_synth *)xmalloc(sizeof(struct mad_synth));
-    p->Timer=(mad_timer_t *)xmalloc(sizeof(mad_timer_t));
-    p->InputBuffer=(unsigned char *)xmalloc(INPUT_BUFFER_SIZE);
+    p->Stream=(struct mad_stream *)lsx_malloc(sizeof(struct mad_stream));
+    p->Frame=(struct mad_frame *)lsx_malloc(sizeof(struct mad_frame));
+    p->Synth=(struct mad_synth *)lsx_malloc(sizeof(struct mad_synth));
+    p->Timer=(mad_timer_t *)lsx_malloc(sizeof(mad_timer_t));
+    p->InputBuffer=(unsigned char *)lsx_malloc(INPUT_BUFFER_SIZE);
 
     if (ft->seekable) {
 #if HAVE_ID3TAG && HAVE_UNISTD_H
@@ -435,10 +435,10 @@ static sox_size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, sox_s
      * different scalling between 32-bit and 64-bit CPU's.
      *
      * We might as well scale it ourselfs to 16-bit to allow
-     * xmalloc()'ing a smaller buffer and call a consistent
+     * lsx_malloc()'ing a smaller buffer and call a consistent
      * interface.
      */
-    buffer_l = (short signed int *)xmalloc(nsamples * sizeof(short signed int));
+    buffer_l = (short signed int *)lsx_malloc(nsamples * sizeof(short signed int));
 
     if (ft->signal.channels == 2)
     {
@@ -446,7 +446,7 @@ static sox_size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, sox_s
          * them out into seperate buffers.
          */
         if ((buffer_r = 
-             (short signed int *)xmalloc(nsamples*
+             (short signed int *)lsx_malloc(nsamples*
                                           sizeof(short signed int))) == NULL)
         {
             lsx_fail_errno(ft,SOX_ENOMEM,"Memory allocation failed");
@@ -470,7 +470,7 @@ static sox_size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, sox_s
     }
 
     mp3buffer_size = 1.25 * nsamples + 7200;
-    if ((mp3buffer=(char *)xmalloc(mp3buffer_size)) == NULL)
+    if ((mp3buffer=(char *)lsx_malloc(mp3buffer_size)) == NULL)
     {
         lsx_fail_errno(ft,SOX_ENOMEM,"Memory allocation failed");
         goto end2;

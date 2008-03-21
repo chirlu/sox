@@ -95,8 +95,8 @@ typedef struct butterworth_crossover {
 static int lowpass_setup (butterworth_crossover_t butterworth, double frequency, sox_rate_t rate, sox_size_t nchan) {
   double c;
 
-  butterworth->xy_low = (struct xy *)xcalloc(nchan, sizeof(struct xy));
-  butterworth->xy_high = (struct xy *)xcalloc(nchan, sizeof(struct xy));
+  butterworth->xy_low = (struct xy *)lsx_calloc(nchan, sizeof(struct xy));
+  butterworth->xy_high = (struct xy *)lsx_calloc(nchan, sizeof(struct xy));
 
   /* lowpass setup */
   butterworth->frequency_low = frequency/1.3;
@@ -240,9 +240,9 @@ static int sox_mcompand_getopts_1(comp_band_t l, sox_size_t n, char **argv)
       }
 
       rates = 1 + commas/2;
-      l->attackRate = (double *)xmalloc(sizeof(double) * rates);
-      l->decayRate  = (double *)xmalloc(sizeof(double) * rates);
-      l->volume = (double *)xmalloc(sizeof(double) * rates);
+      l->attackRate = (double *)lsx_malloc(sizeof(double) * rates);
+      l->decayRate  = (double *)lsx_malloc(sizeof(double) * rates);
+      l->volume = (double *)lsx_malloc(sizeof(double) * rates);
       l->expectedChannels = rates;
       l->delay_buf = NULL;
 
@@ -320,7 +320,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
   }
   c->nBands = (n+1)>>1;
 
-  c->bands = (struct comp_band *)xcalloc(c->nBands, sizeof(struct comp_band));
+  c->bands = (struct comp_band *)lsx_calloc(c->nBands, sizeof(struct comp_band));
 
   for (i=0;i<c->nBands;++i) {
     len = strlen(argv[i<<1]);
@@ -383,7 +383,7 @@ static int start(sox_effect_t * effp)
 
     /* Allocate the delay buffer */
     if (c->delay_buf_size > 0)
-      l->delay_buf = (sox_sample_t *)xcalloc(sizeof(long), c->delay_buf_size);
+      l->delay_buf = (sox_sample_t *)lsx_calloc(sizeof(long), c->delay_buf_size);
     l->delay_buf_ptr = 0;
     l->delay_buf_cnt = 0;
 
@@ -489,13 +489,13 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
   double out;
 
   if (c->band_buf_len < len) {
-    c->band_buf1 = (sox_sample_t *)xrealloc(c->band_buf1,len*sizeof(sox_sample_t));
-    c->band_buf2 = (sox_sample_t *)xrealloc(c->band_buf2,len*sizeof(sox_sample_t));
-    c->band_buf3 = (sox_sample_t *)xrealloc(c->band_buf3,len*sizeof(sox_sample_t));
+    c->band_buf1 = (sox_sample_t *)lsx_realloc(c->band_buf1,len*sizeof(sox_sample_t));
+    c->band_buf2 = (sox_sample_t *)lsx_realloc(c->band_buf2,len*sizeof(sox_sample_t));
+    c->band_buf3 = (sox_sample_t *)lsx_realloc(c->band_buf3,len*sizeof(sox_sample_t));
     c->band_buf_len = len;
   }
 
-  ibuf_copy = (sox_sample_t *)xmalloc(*isamp * sizeof(sox_sample_t));
+  ibuf_copy = (sox_sample_t *)lsx_malloc(*isamp * sizeof(sox_sample_t));
   memcpy(ibuf_copy, ibuf, *isamp * sizeof(sox_sample_t));
 
   /* split ibuf into bands using butterworths, pipe each band through sox_mcompand_flow_1, then add back together and write to obuf */

@@ -155,7 +155,7 @@ static int startread(sox_format_t * ft)
   int ret;
   int i;
 
-  ffmpeg->audio_buf = xcalloc(1, AVCODEC_MAX_AUDIO_FRAME_SIZE);
+  ffmpeg->audio_buf = lsx_calloc(1, AVCODEC_MAX_AUDIO_FRAME_SIZE);
 
   /* Signal audio stream not found */
   ffmpeg->audio_index = -1;
@@ -302,7 +302,7 @@ static int open_audio(ffmpeg_t ffmpeg, AVStream *st)
     return SOX_EOF;
   }
 
-  ffmpeg->audio_buf = xmalloc(AVCODEC_MAX_AUDIO_FRAME_SIZE);
+  ffmpeg->audio_buf = lsx_malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE);
 
   /* ugly hack for PCM codecs (will be removed ASAP with new PCM
      support to compute the input frame size in samples */
@@ -321,7 +321,7 @@ static int open_audio(ffmpeg_t ffmpeg, AVStream *st)
   } else
     ffmpeg->audio_input_frame_size = c->frame_size;
 
-  ffmpeg->samples = xmalloc((size_t)(ffmpeg->audio_input_frame_size * 2 * c->channels));
+  ffmpeg->samples = lsx_malloc((size_t)(ffmpeg->audio_input_frame_size * 2 * c->channels));
 
   return SOX_SUCCESS;
 }

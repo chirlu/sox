@@ -1,10 +1,11 @@
+#include "aliases.h"
 /*
  * Copyright 1992 by Jutta Degener and Carsten Bormann, Technische
  * Universitaet Berlin.  See the accompanying file "COPYRIGHT" for
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/*$Header: /cvsroot/sox/sox/libgsm/private.h,v 1.2 2007/11/04 16:32:36 robs Exp $*/
+/*$Header: /cvsroot/sox/sox/libgsm/private.h,v 1.3 2008/03/21 13:34:21 robs Exp $*/
 
 #ifndef	PRIVATE_H
 #define	PRIVATE_H

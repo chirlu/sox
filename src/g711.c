@@ -14,7 +14,7 @@
 #include "sox_i.h"
 #include "g711.h"
 
-int16_t _sox_alaw2linear16[256] = {
+int16_t lsx_alaw2linear16[256] = {
      -5504,   -5248,   -6016,   -5760,   -4480,   -4224,   -4992,
      -4736,   -7552,   -7296,   -8064,   -7808,   -6528,   -6272,
      -7040,   -6784,   -2752,   -2624,   -3008,   -2880,   -2240,
@@ -54,7 +54,7 @@ int16_t _sox_alaw2linear16[256] = {
        816,     784,     880,     848
 };
 
-uint8_t _sox_13linear2alaw[0x2000] = {
+uint8_t lsx_13linear2alaw[0x2000] = {
    0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a,
    0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a,
    0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a,
@@ -740,7 +740,7 @@ uint8_t _sox_13linear2alaw[0x2000] = {
    0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa
 };
 
-int16_t _sox_ulaw2linear16[256] = {
+int16_t lsx_ulaw2linear16[256] = {
     -32124,  -31100,  -30076,  -29052,  -28028,  -27004,  -25980,
     -24956,  -23932,  -22908,  -21884,  -20860,  -19836,  -18812,
     -17788,  -16764,  -15996,  -15484,  -14972,  -14460,  -13948,
@@ -780,7 +780,7 @@ int16_t _sox_ulaw2linear16[256] = {
         24,      16,       8,       0
 };
 
-uint8_t _sox_14linear2ulaw[0x4000] = {
+uint8_t lsx_14linear2ulaw[0x4000] = {
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -2366,7 +2366,7 @@ int main(void)
     int x, y, find2a = 0;
 
     y = 0;
-    printf("int16_t _sox_alaw2linear16[256] = {\n  ");
+    printf("int16_t lsx_alaw2linear16[256] = {\n  ");
     for (x = 0; x < 256; x++)
     {
 	printf("%8d,", sox_alaw2linear16(x));
@@ -2378,7 +2378,7 @@ int main(void)
 	}
     }
 
-    printf("\n};\n\nuint8_t _sox_13linear2alaw[0x2000] = {\n  ");
+    printf("\n};\n\nuint8_t lsx_13linear2alaw[0x2000] = {\n  ");
     y = 0;
     for (x = 0; x < 0x2000; x++)
     {
@@ -2391,7 +2391,7 @@ int main(void)
 	}
     }
 
-    printf("\n};\n\nint16_t _sox_ulaw2linear16[256] = {\n  ");
+    printf("\n};\n\nint16_t lsx_ulaw2linear16[256] = {\n  ");
     y = 0;
     for (x = 0; x < 256; x++)
     {
@@ -2404,7 +2404,7 @@ int main(void)
 	}
     }
 
-    printf("\n};\n\nuint8_t _sox_14linear2ulaw[0x4000] = {\n  ");
+    printf("\n};\n\nuint8_t lsx_14linear2ulaw[0x4000] = {\n  ");
     y = 0;
     for (x = 0; x < 0x4000; x++)
     {

@@ -44,9 +44,9 @@ set(formats_srcs
 )
 add_library(lib${PROJECT_NAME}
   effects                 ${formats_srcs}         ${optional_srcs}
-  effects_i               getopt                  util
+  effects_i               getopt                  soxstdint
   ${effects_srcs}         getopt1                 xmalloc
-  formats                 libsox soxstdint
+  formats                 libsox
   formats_i               libsox_i
 )
 add_executable(${PROJECT_NAME} ${PROJECT_NAME}.c)

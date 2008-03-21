@@ -54,7 +54,7 @@ static adpcm_setup_t const setup_table[] = {
   { 5, 2, 0, cl2_steps, cl2_changes , ~255},
 };
 
-void adpcm_init(adpcm_t * p, int type, int first_sample)
+void lsx_adpcm_init(adpcm_t * p, int type, int first_sample)
 {
   p->setup = setup_table[type];
   p->last_output = first_sample;
@@ -65,7 +65,7 @@ void adpcm_init(adpcm_t * p, int type, int first_sample)
 #define min_sample -0x8000
 #define max_sample 0x7fff
 
-int adpcm_decode(int code, adpcm_t * p)
+int lsx_adpcm_decode(int code, adpcm_t * p)
 {
   int s = ((code & (p->setup.sign - 1)) << 1) | 1;
   s = ((p->setup.steps[p->step_index] * s) >> (p->setup.shift + 1)) & p->setup.mask;
@@ -86,7 +86,7 @@ int adpcm_decode(int code, adpcm_t * p)
   return p->last_output = s;
 }
 
-int adpcm_encode(int sample, adpcm_t * p)
+int lsx_adpcm_encode(int sample, adpcm_t * p)
 {
   int delta = sample - p->last_output;
   int sign = 0;
@@ -97,7 +97,7 @@ int adpcm_encode(int sample, adpcm_t * p)
   }
   code = (delta << p->setup.shift) / p->setup.steps[p->step_index];
   code = sign | min(code, p->setup.sign - 1);
-  adpcm_decode(code, p); /* Update encoder state */
+  lsx_adpcm_decode(code, p); /* Update encoder state */
   return code;
 }
 
@@ -127,7 +127,7 @@ void sox_adpcm_reset(adpcm_io_t state, sox_encoding_t type)
   state->store.byte = 0;
   state->store.flag = 0;
 
-  adpcm_init(&state->encoder, (type == SOX_ENCODING_OKI_ADPCM) ? 1 : 0, 0);
+  lsx_adpcm_init(&state->encoder, (type == SOX_ENCODING_OKI_ADPCM) ? 1 : 0, 0);
 }
 
 /******************************************************************************
@@ -150,7 +150,7 @@ void sox_adpcm_reset(adpcm_io_t state, sox_encoding_t type)
 static int adpcm_start(sox_format_t * ft, adpcm_io_t state, sox_encoding_t type)
 {
   /* setup file info */
-  state->file.buf = (char *) xmalloc(sox_globals.bufsiz);
+  state->file.buf = (char *) lsx_malloc(sox_globals.bufsiz);
   state->file.size = sox_globals.bufsiz;
   ft->signal.channels = 1;
 
@@ -189,17 +189,17 @@ sox_size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t state, sox_sample_t * bu
   int16_t word;
 
   if (len && state->store.flag) {
-    word = adpcm_decode(state->store.byte, &state->encoder);
+    word = lsx_adpcm_decode(state->store.byte, &state->encoder);
     *buffer++ = SOX_SIGNED_16BIT_TO_SAMPLE(word, ft->clips);
     state->store.flag = 0;
     ++n;
   }
   while (n < len && lsx_read_b_buf(ft, &byte, 1) == 1) {
-    word = adpcm_decode(byte >> 4, &state->encoder);
+    word = lsx_adpcm_decode(byte >> 4, &state->encoder);
     *buffer++ = SOX_SIGNED_16BIT_TO_SAMPLE(word, ft->clips);
 
     if (++n < len) {
-      word = adpcm_decode(byte, &state->encoder);
+      word = lsx_adpcm_decode(byte, &state->encoder);
       *buffer++ = SOX_SIGNED_16BIT_TO_SAMPLE(word, ft->clips);
       ++n;
     } else {
@@ -255,7 +255,7 @@ sox_size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t state, const sox_sample
     word = SOX_SAMPLE_TO_SIGNED_16BIT(*buffer++, ft->clips);
 
     byte <<= 4;
-    byte |= adpcm_encode(word, &state->encoder) & 0x0F;
+    byte |= lsx_adpcm_encode(word, &state->encoder) & 0x0F;
 
     flag = !flag;
 

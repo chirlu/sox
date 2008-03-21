@@ -517,7 +517,7 @@ static int textChunk(char **text, char *chunkDescription, sox_format_t * ft)
   uint32_t chunksize;
   lsx_readdw(ft, &chunksize);
   /* allocate enough memory to hold the text including a terminating \0 */
-  *text = (char *) xmalloc((size_t) chunksize + 1);
+  *text = (char *) lsx_malloc((size_t) chunksize + 1);
   if (lsx_readbuf(ft, *text, chunksize) != chunksize)
   {
     lsx_fail_errno(ft,SOX_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
@@ -567,10 +567,10 @@ static int commentChunk(char **text, char *chunkDescription, sox_format_t * ft)
     totalCommentLength += commentLength;
     /* allocate enough memory to hold the text including a terminating \0 */
     if(commentIndex == 0) {
-      *text = (char *) xmalloc((size_t) totalCommentLength + 1);
+      *text = (char *) lsx_malloc((size_t) totalCommentLength + 1);
     }
     else {
-      *text = xrealloc(*text, (size_t) totalCommentLength + 1);
+      *text = lsx_realloc(*text, (size_t) totalCommentLength + 1);
     }
 
     if (lsx_readbuf(ft, *text + totalCommentLength - commentLength, commentLength) != commentLength) {
