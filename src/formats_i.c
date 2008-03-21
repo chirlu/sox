@@ -179,6 +179,11 @@ void lsx_clearerr(sox_format_t * ft)
   clearerr(ft->fp);
 }
 
+int lsx_unreadb(sox_format_t * ft, unsigned b)
+{
+  return ungetc((int)b, ft->fp);
+}
+
 /* Implements traditional fseek() behavior.  Meant to abstract out
  * file operations so that they could one day also work on memory
  * buffers.

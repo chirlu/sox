@@ -153,6 +153,11 @@ libsox_fmt_amr_nb_la_SOURCES = amr-nb.c amr.h amr1.h amr2.h
 libsox_fmt_amr_nb_la_LIBADD = libsox.la @AMR_NB_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_amr_nb.la
 endif
+if HAVE_WAVPACK
+libsox_fmt_wavpack_la_SOURCES = wavpack.c
+libsox_fmt_wavpack_la_LIBADD = libsox.la @WAVPACK_LIBS@
+pkglib_LTLIBRARIES += libsox_fmt_wavpack.la
+endif
 if HAVE_MP3
 libsox_fmt_mp3_la_SOURCES = mp3.c mp3-duration.h
 libsox_fmt_mp3_la_LIBADD = libsox.la @MP3_LIBS@
@@ -254,6 +259,11 @@ if HAVE_AMRNB
     libsox_la_SOURCES += amr-nb.c amr.h amr1.h amr2.h
     libsox_la_LIBADD += @AMR_NB_LIBS@
     sox_LDADD += @AMR_NB_LIBS@
+endif
+if HAVE_WAVPACK
+    libsox_la_SOURCES += wavpack.c
+    libsox_la_LIBADD += @WAVPACK_LIBS@
+    sox_LDADD += @WAVPACK_LIBS@
 endif
 if HAVE_MP3
     libsox_la_SOURCES += mp3.c mp3-duration.h

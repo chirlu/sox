@@ -43,6 +43,8 @@ const char * const sox_encodings_str[] = {
   "Floating Point (text) PCM",
   "FLAC",
   "HCOM",
+  "WavPack",
+  "Floating Point WavPack",
   "", /* Lossless above, lossy below */
   "u-law",
   "A-law",
@@ -73,6 +75,8 @@ const char * const sox_encodings_short_str[] = {
   "F.P. PCM",
   "FLAC",
   "HCOM",
+  "WavPack",
+  "F.P. WavPack",
   "", /* Lossless above, lossy below */
   "u-law",
   "A-law",
@@ -129,6 +133,7 @@ static char const * detect_magic(sox_format_t * ft, char const * ext)
   MAGIC(flac  , 0, 0, ""     , 0,  4, "fLaC")
   MAGIC(avr   , 0, 0, ""     , 0,  4, "2BIT")
   MAGIC(caf   , 0, 0, ""     , 0,  4, "caff")
+  MAGIC(wv    , 0, 0, ""     , 0,  4, "wvpk")
   MAGIC(paf   , 0, 0, ""     , 0,  4, " paf")
   MAGIC(sf    , 0, 0, ""     , 0,  4, "\144\243\001\0")
   MAGIC(sf    , 0, 0, ""     , 0,  4, "\0\001\243\144")
@@ -148,7 +153,8 @@ unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample)
 {
   switch (encoding) {
     case SOX_ENCODING_HCOM:       return !(bits_per_sample & 7) && (bits_per_sample >> 3) - 1 < 1? bits_per_sample: 0;
-    case SOX_ENCODING_FLAC:       return !(bits_per_sample & 7) && (bits_per_sample >> 3) - 1 < 3? bits_per_sample: 0;
+    case SOX_ENCODING_WAVPACK:
+    case SOX_ENCODING_FLAC:       return !(bits_per_sample & 7) && (bits_per_sample >> 3) - 1 < 4? bits_per_sample: 0;
     case SOX_ENCODING_SIGN2:      return bits_per_sample <= 32? bits_per_sample : 0;
     case SOX_ENCODING_UNSIGNED:   return !(bits_per_sample & 7) && (bits_per_sample >> 3) - 1 < 4? bits_per_sample: 0;
 
@@ -172,6 +178,7 @@ unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample)
     case SOX_ENCODING_AMR_NB:
     case SOX_ENCODING_LPC10:      return !bits_per_sample? 16: 0;
 
+    case SOX_ENCODING_WAVPACKF:
     case SOX_ENCODING_FLOAT:      return bits_per_sample == 32 ? 24: bits_per_sample == 64 ? 53: 0;
     case SOX_ENCODING_FLOAT_TEXT: return !bits_per_sample? 53: 0;
 
@@ -435,8 +442,10 @@ sox_format_t * sox_open_read(
       }
     }
     ft->handler = *handler;
-    if (ft->handler.flags & SOX_FILE_NOSTDIO)
+    if (ft->handler.flags & SOX_FILE_NOSTDIO) {
       fclose(ft->fp);
+      ft->fp = NULL;
+    }
   }
   if (!ft->handler.startread && !ft->handler.read) {
     sox_fail("file type `%s' isn't readable", filetype);

@@ -75,3 +75,6 @@
 #if defined HAVE_OGG_VORBIS
   FORMAT(vorbis)
 #endif
+#if defined HAVE_WAVPACK
+  FORMAT(wavpack)
+#endif

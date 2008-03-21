@@ -394,6 +394,26 @@ fi
 AM_CONDITIONAL(HAVE_AMRNB, test x$using_amr_nb = xyes)
 AC_SUBST(AMR_NB_LIBS)
 
+dnl Check for wavpack libraries
+AC_ARG_WITH(wavpack,
+    AC_HELP_STRING([--without-wavpack],
+        [Don't try to use wavpack]))
+using_wavpack=no
+if test "$with_wavpack" != "no"; then
+    using_wavpack=yes
+    AC_CHECK_HEADER(wavpack/wavpack.h,
+        [AC_CHECK_LIB(wavpack, WavpackGetSampleRate, WAVPACK_LIBS="$WAVPACK_LIBS -lwavpack" ,using_wavpack=no)],
+        using_wavpack=no)
+    if test "$with_wavpack" = "yes" -a "$using_wavpack" = "no"; then
+        AC_MSG_FAILURE([cannot find wavpack])
+    fi
+fi
+if test "$using_wavpack" = yes; then
+   AC_DEFINE(HAVE_WAVPACK, 1, [Define to 1 if you have WavPack.])
+fi
+AM_CONDITIONAL(HAVE_WAVPACK, test x$using_wavpack = xyes)
+AC_SUBST(WAVPACK_LIBS)
+
 dnl Test for libsamplerate.
 AC_ARG_WITH(samplerate,
     AC_HELP_STRING([--without-samplerate],
@@ -461,6 +481,7 @@ echo "id3tag library.................... $using_id3tag"
 echo "LAME MP3 writer................... $using_lame"
 echo "AMR-WB format..................... $using_amr_wb"
 echo "AMR-NB format..................... $using_amr_nb"
+echo "WavPack format.................... $using_wavpack"
 echo "LADSPA effects.................... $using_ladspa"
 echo "Secret Rabbit Code resampling..... $using_samplerate"
 echo "pkg-config location............... $pkgconfig_option"

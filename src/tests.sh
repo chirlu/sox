@@ -124,16 +124,16 @@ convertToAndFrom () {
 
 do_multichannel_formats () {
   format1=u1
-  convertToAndFrom s1 u1 s2 u2 s3 u3 s4 u4 raw Raw dat au wav aiff aifc flac caf sph
+  convertToAndFrom s1 u1 s2 u2 s3 u3 s4 u4 raw Raw dat au wav aiff aifc flac caf sph wv
 
   format1=s2
-  convertToAndFrom s2 u2 s3 u3 s4 u4 raw Raw dat au wav aiff aifc flac caf sph
+  convertToAndFrom s2 u2 s3 u3 s4 u4 raw Raw dat au wav aiff aifc flac caf sph wv
 
   format1=u3
-  convertToAndFrom s3 u3 s4 u4 raw Raw wav aiff aifc flac sph
+  convertToAndFrom s3 u3 s4 u4 raw Raw wav aiff aifc flac sph wv
 
   format1=s4
-  convertToAndFrom s4 u4 Raw wav aiff aifc caf sph
+  convertToAndFrom s4 u4 Raw wav aiff aifc caf sph wv
 
   format1=al
   convertToAndFrom al s2 u2 s4 raw Raw dat aiff aifc flac caf
@@ -196,6 +196,7 @@ timeIO () {
 ${builddir}/sox_sample_test || exit 1
 
 # Don't try to test unsupported stuff
+${bindir}/sox --help|grep "^AUDIO FILE.*\<wv\>">/dev/null || skip="wv $skip"
 ${bindir}/sox --help|grep "^AUDIO FILE.*\<flac\>">/dev/null || skip="flac $skip"
 ${bindir}/sox --help|grep "^AUDIO FILE.*\<caf\>" >/dev/null || skip="caf $skip"
 

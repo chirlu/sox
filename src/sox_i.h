@@ -79,47 +79,48 @@ int lsx_writes(sox_format_t * ft, char const * c);
 void lsx_set_signal_defaults(sox_signalinfo_t * signal);
 #define lsx_writechars(ft, chars, len) (lsx_writebuf(ft, chars, len) == len? SOX_SUCCESS : SOX_EOF)
 
-sox_size_t lsx_read_b_buf(sox_format_t * ft, uint8_t *buf, sox_size_t len);
-sox_size_t lsx_read_w_buf(sox_format_t * ft, uint16_t *buf, sox_size_t len);
 sox_size_t lsx_read_3_buf(sox_format_t * ft, uint24_t *buf, sox_size_t len);
+sox_size_t lsx_read_b_buf(sox_format_t * ft, uint8_t *buf, sox_size_t len);
+sox_size_t lsx_read_df_buf(sox_format_t * ft, double *buf, sox_size_t len);
 sox_size_t lsx_read_dw_buf(sox_format_t * ft, uint32_t *buf, sox_size_t len);
 sox_size_t lsx_read_f_buf(sox_format_t * ft, float *buf, sox_size_t len);
-sox_size_t lsx_read_df_buf(sox_format_t * ft, double *buf, sox_size_t len);
+sox_size_t lsx_read_w_buf(sox_format_t * ft, uint16_t *buf, sox_size_t len);
 
-sox_size_t lsx_write_b_buf(sox_format_t * ft, uint8_t *buf, sox_size_t len);
-sox_size_t lsx_write_w_buf(sox_format_t * ft, uint16_t *buf, sox_size_t len);
 sox_size_t lsx_write_3_buf(sox_format_t * ft, uint24_t *buf, sox_size_t len);
+sox_size_t lsx_write_b_buf(sox_format_t * ft, uint8_t *buf, sox_size_t len);
+sox_size_t lsx_write_df_buf(sox_format_t * ft, double *buf, sox_size_t len);
 sox_size_t lsx_write_dw_buf(sox_format_t * ft, uint32_t *buf, sox_size_t len);
 sox_size_t lsx_write_f_buf(sox_format_t * ft, float *buf, sox_size_t len);
-sox_size_t lsx_write_df_buf(sox_format_t * ft, double *buf, sox_size_t len);
+sox_size_t lsx_write_w_buf(sox_format_t * ft, uint16_t *buf, sox_size_t len);
 
 int lsx_read3(sox_format_t * ft, uint24_t * u3);
 int lsx_readb(sox_format_t * ft, uint8_t * ub);
+int lsx_readchars(sox_format_t * ft, char * chars, sox_size_t len);
 int lsx_readdf(sox_format_t * ft, double * d);
 int lsx_readdw(sox_format_t * ft, uint32_t * udw);
 int lsx_readf(sox_format_t * ft, float * f);
 int lsx_readw(sox_format_t * ft, uint16_t * uw);
-int lsx_readchars(sox_format_t * ft, char * chars, sox_size_t len);
 
 int lsx_write3(sox_format_t * ft, unsigned u3);
 int lsx_writeb(sox_format_t * ft, unsigned ub);
+int lsx_writedf(sox_format_t * ft, double d);
 int lsx_writedw(sox_format_t * ft, unsigned udw);
 int lsx_writef(sox_format_t * ft, double f);
 int lsx_writesb(sox_format_t * ft, signed);
 int lsx_writesw(sox_format_t * ft, signed);
 int lsx_writew(sox_format_t * ft, unsigned uw);
-int lsx_writedf(sox_format_t * ft, double d);
 
-int lsx_seeki(sox_format_t * ft, sox_ssize_t to_sample, int whence);
-int lsx_offset_seek(sox_format_t * ft, off_t byte_offset, sox_size_t to_sample);
-sox_size_t lsx_filelength(sox_format_t * ft);
-int lsx_flush(sox_format_t * ft);
-sox_ssize_t lsx_tell(sox_format_t * ft);
 int lsx_eof(sox_format_t * ft);
 int lsx_error(sox_format_t * ft);
-void lsx_rewind(sox_format_t * ft);
+int lsx_flush(sox_format_t * ft);
+int lsx_seeki(sox_format_t * ft, sox_ssize_t offset, int whence);
+int lsx_unreadb(sox_format_t * ft, unsigned ub);
+sox_size_t lsx_filelength(sox_format_t * ft);
+sox_ssize_t lsx_tell(sox_format_t * ft);
 void lsx_clearerr(sox_format_t * ft);
+void lsx_rewind(sox_format_t * ft);
 
+int lsx_offset_seek(sox_format_t * ft, off_t byte_offset, sox_size_t to_sample);
 
 void lsx_fail_errno(sox_format_t *, int, const char *, ...)
 #ifdef __GNUC__
@@ -132,8 +133,6 @@ typedef struct sox_formats_globals /* Global parameters (for formats) */
 {
   sox_globals_t * global_info;
 } sox_formats_globals;
-
-
 
 
 

@@ -34,4 +34,5 @@
 #cmakedefine HAVE_SYS_TIME_H          1
 #cmakedefine HAVE_UNISTD_H            1
 #cmakedefine HAVE_VSNPRINTF           1
+#cmakedefine HAVE_WAVPACK             1
 #cmakedefine WORDS_BIGENDIAN          1

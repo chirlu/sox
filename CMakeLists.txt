@@ -86,6 +86,7 @@ if (NOT HAVE_SYS_SOUNDCARD_H)
 endif (NOT HAVE_SYS_SOUNDCARD_H)
 optional3(HAVE_OGG_VORBIS vorbis/codec.h vorbis vorbis_analysis_headerout vorbisfile ov_clear vorbisenc vorbis_encode_init_vbr vorbis)
 optional3(HAVE_FFMPEG ffmpeg/avformat.h avformat av_open_input_file avutil av_rescale_q avcodec avcodec_decode_audio2 ffmpeg)
+optional(HAVE_WAVPACK wavpack/wavpack.h wavpack WavpackGetSampleRate wavpack)
 
 subdirs(src lpc10)
 

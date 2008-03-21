@@ -209,6 +209,8 @@ typedef enum {
   SOX_ENCODING_FLOAT_TEXT, /* floating point (text format) */
   SOX_ENCODING_FLAC      , /* FLAC compression */
   SOX_ENCODING_HCOM      , /*  */
+  SOX_ENCODING_WAVPACK   , /*  */
+  SOX_ENCODING_WAVPACKF  , /*  */
 
   SOX_ENCODING_LOSSLESS  , /* Lossless above, lossy below */
 
