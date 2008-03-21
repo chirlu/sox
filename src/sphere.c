@@ -93,9 +93,6 @@ static int start_read(sox_format_t * ft)
   if (!bytes_per_sample)
     bytes_per_sample = encoding == SOX_ENCODING_ULAW? 1 : 2;
 
-  if (encoding == SOX_ENCODING_SIGN2 && bytes_per_sample == 1)
-    encoding = SOX_ENCODING_UNSIGNED;
-
   while (header_size) {
     bytes_read = lsx_readbuf(ft, buf, header_size);
     if (bytes_read == 0) {
@@ -167,10 +164,9 @@ static int write_header(sox_format_t * ft)
 
 SOX_FORMAT_HANDLER(sphere)
 {
-  static char const *const names[] = { "sph", "nist", NULL };
+  static char const *const names[] = {"sph", "nist", NULL};
   static unsigned const write_encodings[] = {
-    SOX_ENCODING_SIGN2, 16, 24, 32, 0,
-    SOX_ENCODING_UNSIGNED, 8, 0,
+    SOX_ENCODING_SIGN2, 8, 16, 24, 32, 0,
     SOX_ENCODING_ULAW, 8, 0,
     0
   };
