@@ -297,7 +297,7 @@ static void set_endiannesses(sox_format_t * ft)
    * to override something that can't be overridden. */
 
   if (ft->handler.flags & SOX_FILE_ENDIAN) {
-    if (ft->encoding.reverse_bytes ==
+    if (ft->encoding.reverse_bytes == (sox_option_t)
         (!(ft->handler.flags & SOX_FILE_ENDBIG) != MACHINE_IS_BIGENDIAN))
       sox_report("`%s': overriding file-type byte-order", ft->filename);
   } else if (ft->encoding.reverse_bytes == sox_true)
