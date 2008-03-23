@@ -518,7 +518,7 @@ static int output_flow(sox_effect_t *effp, sox_sample_t const * ibuf,
     }
   }
   *osamp = 0;
-  len = sox_write(ofile->ft, ibuf, *isamp);
+  len = *isamp? sox_write(ofile->ft, ibuf, *isamp) : 0;
   output_samples += len / ofile->ft->signal.channels;
   if (len != *isamp) {
     if (ofile->ft->sox_errno)
