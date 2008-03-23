@@ -43,17 +43,18 @@ set(formats_srcs
   cvsd            htk             s1-fmt          u1-fmt
 )
 add_library(lib${PROJECT_NAME}
-  effects                 ${formats_srcs}         ${optional_srcs}
-  effects_i               getopt                  soxstdint
-  ${effects_srcs}         getopt1                 xmalloc
-  formats                 libsox
-  formats_i               libsox_i
+  effects                 formats_i               ${optional_srcs}
+  effects_i               ${formats_srcs}         soxstdint
+  ${effects_srcs}         libsox                  xmalloc
+  formats                 libsox_i
 )
-add_executable(${PROJECT_NAME} ${PROJECT_NAME}.c)
+add_executable(${PROJECT_NAME} ${PROJECT_NAME}.c getopt getopt1)
 target_link_libraries(${PROJECT_NAME} lib${PROJECT_NAME} lpc10 ${optional_libs})
 add_executable(sox_sample_test sox_sample_test.c)
 add_executable(example1 example1.c)
 target_link_libraries(example1 lib${PROJECT_NAME} lpc10 ${optional_libs})
+add_executable(example2 example2.c)
+target_link_libraries(example2 lib${PROJECT_NAME} lpc10 ${optional_libs})
 find_program(LN ln)
 if (LN)
   add_custom_target(rec ALL ${LN} -sf sox rec DEPENDS sox)

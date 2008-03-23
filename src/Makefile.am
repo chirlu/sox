@@ -13,13 +13,15 @@ LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
 #########################
 
 bin_PROGRAMS = sox
-EXTRA_PROGRAMS = example1 sox_sample_test
+EXTRA_PROGRAMS = example1 example2 sox_sample_test
 lib_LTLIBRARIES = libsox.la libsfx.la
 include_HEADERS = sox.h soxstdint.h
 sox_SOURCES = sox.c
 sox_LDADD = libsox.la libsfx.la
 example1_SOURCES = example1.c
 example1_LDADD = libsox.la libsfx.la
+example2_SOURCES = example2.c
+example2_LDADD = libsox.la
 sox_sample_test_SOURCES = sox_sample_test.c sox_sample_test.h
 
 #############################################
@@ -301,7 +303,7 @@ EXTRA_DIST = monkey.au monkey.wav \
 	     CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake \
 	     tests.sh testall.sh tests.bat testall.bat test-comments
 
-all: sox$(EXEEXT) play rec soxi sox_sample_test$(EXEEXT) example1$(EXEEXT)
+all: sox$(EXEEXT) play rec soxi sox_sample_test$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT)
 
 play rec soxi: sox$(EXEEXT)
 	./sox --help > /dev/null
@@ -320,7 +322,7 @@ uninstall-hook:
 clean-local:
 	$(RM) play rec soxi
 	$(RM) sox_sample_test
-	$(RM) example1
+	$(RM) example1 example2
 
 distclean-local:
 	$(RM) soxstdint.h
