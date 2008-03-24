@@ -274,7 +274,7 @@ static void lsx_swapf(float * f)
 }
 
 /* generic swap routine. Swap l and place in to f (datatype length = n) */
-static void swap(char *l, char *f, int n)
+static void swap(char const * l, char * f, int n)
 {
     register int i;
 
