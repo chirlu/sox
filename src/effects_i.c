@@ -23,6 +23,9 @@
 #include <math.h>
 #include <string.h>
 
+#undef sox_fail
+#define sox_fail sox_globals.subsystem=effp->handler.name,sox_fail
+
 int lsx_usage(sox_effect_t * effp)
 {
   if (effp->handler.usage)
