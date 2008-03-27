@@ -25,6 +25,8 @@ Deprecated features removed in this release:
 File formats:
 
   o New option --help-format shows info about supported format(s).  (robs)
+  o New WavPack format (includes lossless audio compression, but not
+    guaranteed lossless file compression).  (robs)
   o New htk format.  (robs)
   o Writing aiff, aifc & dvms now repeatable with -R.  (robs)
   o Writing hcom no longer fails with unsupported rate--chooses
@@ -73,7 +75,8 @@ Other new features:
     be used to override the default audio device driver (rec/play)
     and default audio device (all).  (robs)
   o Simpler file info display for `play'.  (robs)
-  o New `multiply' method for the input file combiner.  (robs)
+  o Added example2: simple example of how to use libSoX to read an
+    audio file.  (robs)
   o For some file-types, warn if file size seems too short.  (robs)
   o Added auto-detect for caf, sndr, txw & sf files.  (robs)
 
@@ -146,6 +149,8 @@ sox-14.0.1	2008-01-29
   o Fix AMR detection with --disable-shared.  (robs)
   o Updated configure to support linking to static libraries
     on mingw for flac, ogg, and libsamplerate libraries.
+  o Added example1: simple example of how to use the libSoX effects
+    chain.  (robs)
 
 
 sox-14.0.0	2007-09-11

@@ -15,18 +15,18 @@ Mantainers:
 		format support, libao playback, Secret Rabbit Code
 		resampling; many fixes and much cleanup.
 	Rob Sykes		robs@users.sourceforge.net
-                Formats: M3U, PLS, FLAC, AMR, HTK, VOX/IMA/VOC ADPCM support,
-                24bit support for popular formats, MP3 tags & duration support.
-		Effects: key, tempo, pad, bass, treble, delay, new reverb, new
+                FORMATS: M3U, PLS, FLAC, AMR, HTK, WavPack, VOX/IMA/VOC ADPCM
+                support, 24bit support for popular formats, MP3 tags & duration
+                support.
+		EFFECTS: key, tempo, pad, bass, treble, delay, new reverb, new
 		flanger, soft-knee companding, speed via resampling, filters
 		makeover inc. gnuplot & octave plotting, splice, remix, norm,
-		contrast;
-		new effects chain with buffering and any # channels.
-                Others: open input files via URL, file multiply/merge, play
+		contrast; new effects chain with buffering and any # channels.
+                OTHERS: open input files via URL, file multiply/merge, play
                 multiple files with mixed format types, play with replay-gain,
                 building with cmake, much manual improvement and expansion,
 		soxi, improved displays with -S & -V including VU and clips,
-                various fixes, enhancements and clean-ups.
+                libSoX examples, various fixes, enhancements and clean-ups.
 
 Contributors:
 	Juergen Mueller		jmueller@uia.ua.ac.be

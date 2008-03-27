@@ -33,17 +33,28 @@
 .SH NAME
 SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH DESCRIPTION
-File types that can be determined by a filename
+SoX supported file formats and audio devices.
+.SP
+File format types that can be determined by a filename
 extension are listed with their names preceded by a dot.
 .SP
-File types
-that require an external library, such as ffmpeg or libsndfile, are
-marked e.g. `\fB(ffmpeg)\fR'. File types that can be handled by an
-external library via its pseudo file type (currently libsndfile or
-ffmpeg) are marked e.g. `(also with \fB\-t sndfile\fR)'. This might be
+File types that are optionally built into SoX
+are marked `(optional)'.
+.SP
+File types that can be handled by an
+external library via an optional pseudo file type (currently
+.B sndfile
+or
+.BR ffmpeg )
+are marked e.g. `(also with \fB\-t sndfile\fR)'. This might be
 useful if you have a file that doesn't work with SoX's default format
 readers and writers, and there's an external reader or writer for that
 format.
+.SP
+To see if SoX has support for an optional format or device, enter
+.B sox -h
+and look for its name under the list:
+`AUDIO FILE FORMATS' or `AUDIO DEVICES'.
 .SP
 .TP
 \&\fB.raw\fR (also with \fB\-t sndfile\fR), \fB.s1\fR, \fB.s2\fR, \fB.s3\fR, \fB.s4\fR, \fB.u1\fR, \fB.u2\fR, \fB.u3\fR, \fB.u4\fR, \fB.ul\fR, \fB.al\fR, \fB.lu\fR, \fB.la\fR
@@ -87,13 +98,9 @@ Japanese data broadcasting.  Any private chunks are not supported.
 .SP
 Note: The input file is currently processed as .aiff.
 .TP
-.B alsa
+\fBalsa\fR (optional)
 ALSA device driver.
-This is a pseudo-file type and can be optionally compiled into SoX.  Run
-.EX
-	sox -h
-.EE
-to see if you have support for this file type.  When this driver is used
+When this driver is used
 it allows you to open up a ALSA device and configure it to
 use the same data format as passed in to SoX.
 It works for both playing and recording audio files.  When playing audio
@@ -115,7 +122,7 @@ See http://www.ambisonia.com/Members/mleese/file-format-for-b-format for
 details.  It is up to the user to get the channels together in the right
 order and at the correct amplitude.
 .TP
-\&\fB.amr\-nb\fR
+\&\fB.amr\-nb\fR (optional)
 Adaptive Multi Rate\*mNarrow Band speech codec; a lossy format used in 3rd
 generation mobile telephony and defined in 3GPP TS 26.071 et al.
 .SP
@@ -125,16 +132,8 @@ to the following bit-rates (as selected by the
 option): 0 = 4\*d75 kbit/s, 1 = 5\*d15 kbit/s, 2 = 5\*d9 kbit/s, 3 =
 6\*d7 kbit/s, 4 = 7\*d4 kbit/s 5 = 7\*d95 kbit/s, 6 = 10\*d2
 kbit/s, 7 = 12\*d2 kbit/s.
-.SP
-This format in SoX is optional and requires access to external libraries.
-To see if there is support for this format, enter
-.EX
-	sox -h
-.EE
-and look for it under the list:
-.IR "SUPPORTED FILE FORMATS" .
 .TP
-\&\fB.amr\-wb\fR
+\&\fB.amr\-wb\fR (optional)
 Adaptive Multi Rate\*mWide Band speech codec; a lossy format used in 3rd
 generation mobile telephony and defined in 3GPP TS 26.171 et al.
 .SP
@@ -144,22 +143,9 @@ to the following bit-rates (as selected by the
 option): 0 = 6\*d6 kbit/s, 1 = 8\*d85 kbit/s, 2 = 12\*d65 kbit/s, 3 =
 14\*d25 kbit/s, 4 = 15\*d85 kbit/s 5 = 18\*d25 kbit/s, 6 = 19\*d85
 kbit/s, 7 = 23\*d05 kbit/s, 8 = 23\*d85 kbit/s.
-.SP
-This format in SoX is optional and requires access to external libraries.
-To see if there is support for this format on your system, enter
-.EX
-	sox -h
-.EE
-and look for it under the list:
-.IR "SUPPORTED FILE FORMATS" .
-.TP
-.B ao
-libao device driver.
-This is a pseudo-file type and can be optionally compiled into SoX.  Run
-.EX
-	sox -h
-.EE
-to see if you have support for this file type. It works only for
+\fBao\fR (optional)
+Xiph's Audio Output device driver.
+It works only for
 playing audio files. It can play to a wide range of devices and sound
 systems. See its documentation for the full range. For the most part, SoX's
 use of libao cannot be configured directly; you must use libao
@@ -174,8 +160,10 @@ for a given plugin (such as \fBpulse\fR for pulse audio plugin).
 Sun Microsystems AU files.
 There are many types of AU file;
 DEC has invented its own with a different magic number
-and byte order.
-SoX can read these files but will not write them.
+and byte order.  To write a DEC file, use the
+.B \-L
+option with the output file options.
+.SP
 Some .au files are known to have invalid AU headers; these
 are probably original Sun \(*m-law 8000\ Hz files and
 can be dealt with using the
@@ -194,7 +182,7 @@ Audio Visual Research.
 The AVR format is produced by a number of commercial packages
 on the Mac.
 .TP
-\&\fB.caf\fR (libsndfile)
+\&\fB.caf\fR (optional)
 Core Audio File format.
 .TP
 \&\fB.cdda\fR, \fB.cdr\fR
@@ -230,20 +218,19 @@ Used in Germany to compress speech audio for voice mail.
 A self-describing variant of
 .BR cvsd .
 .TP
-\&\fB.fap\fR (libsndfile)
+\&\fB.fap\fR (optional)
 See
 .BR .paf .
 .TP
-.B ffmpeg
+\fBffmpeg\fR (optional)
 This is a pseudo-type that forces ffmpeg to be used. The actual file
-type is deduced from the file name (it cannot be used on stdio). This
-pseudo-type depends on SoX having been built with optional ffmpeg
-support. It can read a wide range of audio files, not all of which are
+type is deduced from the file name (it cannot be used on stdio).
+It can read a wide range of audio files, not all of which are
 documented here, and also the audio track of many video files
 (including AVI, WMV and MPEG). At present only the first audio track
 of a file can be read.
 .TP
-\&\fB.flac\fR (also with \fB\-t sndfile\fR)
+\&\fB.flac\fR (optional; also with \fB\-t sndfile\fR)
 Free Lossless Audio CODEC compressed audio.
 FLAC is an open, patent-free CODEC designed for compressing
 music.  It is similar to MP3 and Ogg Vorbis, but lossless,
@@ -264,22 +251,13 @@ compression.  The compression level is selected using the
 option [see 
 .BR sox (1)]
 with a whole number from 0 to 8.
-.SP
-FLAC support in
-SoX is optional and requires optional FLAC libraries.  To
-see if there is support for FLAC run
-.EX
-	sox -h
-.EE
-and look for
-it under the list of supported file formats as `flac'.
 .TP
 .B .fssd
 An alias for the
 .B .ub
 format.
 .TP
-\&\fB.gsm\fR (also with \fB\-t sndfile\fR)
+\&\fB.gsm\fR (optional; also with \fB\-t sndfile\fR)
 GSM 06.10 Lossy Speech Compression.
 A lossy format for compressing speech which is used in the
 Global Standard for Mobile telecommunications (GSM).  It's good
@@ -287,23 +265,9 @@ for its purpose, shrinking audio data size, but it will introduce
 lots of noise when a given audio signal is encoded and decoded
 multiple times.  This format is used by some voice mail applications.
 It is rather CPU intensive.
-.SP
-GSM in
-SoX is optional and requires access to an external GSM library.  To see
-if there is support for GSM run
-.EX
-	sox -h
-.EE
-and look for it under the list of supported file formats.
-.TP
 .B .hcom
 Macintosh HCOM files.
-These are (apparently) Mac FSSD files with some variant
-of Huffman compression.
-The Macintosh has wacky file formats and this format
-handler apparently doesn't handle all the ones it should.
-Mac users will need their usual arsenal of file converters
-to deal with an HCOM file on other systems.
+These are Mac FSSD files with Huffman compression.
 .TP
 .B .htk
 Single channel 16-bit PCM format used by HTK,
@@ -323,7 +287,7 @@ LPC-10 is a compression scheme for speech developed in the United
 States. See http://www.arl.wustl.edu/~jaf/lpc/ for details. There is
 no associated file format, so SoX's implementation is headerless.
 .TP
-\&\fB.mat\fR, \fB.mat4\fR, \fB.mat5\fR \fB(libsndfile)\fR
+\&\fB.mat\fR, \fB.mat4\fR, \fB.mat5\fR (optional)
 Matlab 4.2/5.0 (respectively GNU Octave 2.0/2.1) format (.mat is the same as .mat4).
 .TP
 .B .m3u
@@ -339,36 +303,24 @@ with the `Toccata' sound-card on the Amiga.
 Allows 8bit linear, 16bit linear, A-Law, \(*m-law
 in mono and stereo.
 .TP
-\&\fB.mp3\fR, \fB.mp2\fR
+\&\fB.mp3\fR, \fB.mp2\fR (optional read, optional write)
 MP3 compressed audio.  MP3 (MPEG Layer 3) is part of the
 MPEG standards for audio and video compression.  It is a lossy
 compression format that achieves good compression rates with little
 quality loss.  See also
 .B Ogg Vorbis
 for a similar format.
-.SP
-MP3 support in
-SoX is optional and requires access to either or both the external
-libmad and libmp3lame libraries. To see if there is support for MP3 run
-.EX
-	sox -h
-.EE
-and look for it under the list of supported file formats as `mp3'.
-.SP
 .TP
-\&\fB.mp4\fR, \fB.m4a\fR (ffmpeg)
+\&\fB.mp4\fR, \fB.m4a\fR (optional)
 MP4 compressed audio.  MP3 (MPEG 4) is part of the
 MPEG standards for audio and video compression.  See
 .B mp3
 for more information.
-.SP
-MP4 support in SoX is optional and requires access to the external
-ffmpeg libraries.
 .TP
 \&\fB.nist\fR (also with \fB\-t sndfile\fR)
 See \fB.sph\fR.
 .TP
-\&\fB.ogg\fR, \fB.vorbis\fR
+\&\fB.ogg\fR, \fB.vorbis\fR (optional)
 Ogg Vorbis compressed audio.
 Ogg Vorbis is a open, patent-free CODEC designed for compressing music
 and streaming audio.  It is a lossy compression format (similar to MP3,
@@ -387,22 +339,10 @@ option (see above) with a number from \-1 to 10; fractional numbers (e.g.
 3\*d6) are also allowed.
 .SP
 Decoding is somewhat CPU intensive and encoding is very CPU intensive.
-.SP
-Ogg Vorbis in
-SoX is optional and requires access to external Ogg Vorbis libraries.  To
-see if there is support for Ogg Vorbis run
-.EX
-	sox -h
-.EE
-and look for it under the list of supported file formats as `vorbis'.
 .TP
-.B oss
+\fBoss\fR (optional)
 OSS /dev/dsp device driver.
-This is a pseudo-file that can be optionally compiled into SoX.  Run
-.EX
-	sox -h
-.EE
-to see if it is supported. When this driver is used it allows you to
+When this driver is used it allows you to
 play and record sounds on supported systems. When playing audio
 files it attempts to set up the OSS driver to use the same format as
 the input file. It is suggested to always override the output values
@@ -411,7 +351,7 @@ to use the highest quality format your OSS system can handle. Example:
 	sox infile -t oss -2 -s /dev/dsp
 .EE
 .TP
-\&\fB.paf\fR, \fB.fap\fR (libsndfile)
+\&\fB.paf\fR, \fB.fap\fR (optional)
 Ensoniq PARIS file format (big and little-endian respectively).
 .TP
 .B .pls
@@ -439,13 +379,13 @@ because Psion Record seems to insist on frames of 800 samples or
 fewer, so that the ADPCM CODEC has to be reset at every 800 frames,
 which causes the sound to glitch every tenth of a second.
 .TP
-\&\fB.pvf\fR (libsndfile)
+\&\fB.pvf\fR (optional)
 Portable Voice Format.
 .TP
-\&\fB.sd2\fR (libsndfile)
+\&\fB.sd2\fR (optional)
 Sound Designer 2 format.
 .TP
-\&\fB.sds\fR (libsndfile)
+\&\fB.sds\fR (optional)
 MIDI Sample Dump Standard.
 .TP
 \&\fB.sf\fR (also with \fB\-t sndfile\fR)
@@ -472,32 +412,35 @@ the samplers themselves.  Currently loop points are ignored.
 .TP
 .B .snd
 See
-.BR .au .
+.BR .au ,
+.BR .sndr and
+.BR .sndt .
 .TP
-.B sndfile
+\fBsndfile\fR (optional)
 This is a pseudo-type that forces libsndfile to be used. For writing files, the
 actual file type is then taken from the output file name; for reading
 them, it is deduced from the file.
-This pseudo-type depends on SoX having been built with optional
-libsndfile support.
+.TP
+.B .sndr
+Sounder files.
+An MS-DOS/Windows format from the early '90s.
+Sounder files usually have the extension
+.BR .SND .
 .TP
 .B .sndt
-Sndtool files.
-This format dates from the MS-DOS era.
-Bizarrely, this file type can also be used to read Sounder files.
+SoundTool files.
+An MS-DOS/Windows format from the early '90s.
+SoundTool files usually have the extension
+.BR .SND .
 .TP
 .B .sou
 An alias for the
 .B .ub
 format.
 .TP
-.B sunau
+\fBsunau\fR (optional)
 Sun /dev/audio device driver.
-This is a pseudo-file type and can be optionally compiled into SoX.  Run
-.EX
-	sox -h
-.EE
-to see if you have support for this file type.  When this driver is used
+When this driver is used
 it allows you to open up a Sun /dev/audio file and configure it to
 use the same data type as passed in to SoX.
 It works for both playing and recording audio files.  When playing audio
@@ -553,7 +496,7 @@ passing the decoded audio through a high-pass filter, e.g.:
 	sox input.vox output.au highpass 10
 .EE
 .TP
-\&\fB.w64\fR (libsndfile)
+\&\fB.w64\fR (optional)
 Sonic Foundry's 64-bit RIFF/WAV format.
 .TP
 \&\fB.wav\fR (also with \fB\-t sndfile\fR)
@@ -587,6 +530,10 @@ format can be used to create files with the non-standard header that
 should work with these applications.  (Note that SoX will automatically
 detect and read WAV files with the non-standard header.)
 .TP
+.B .wv
+WavPack lossless audio compression.  Note that, when used with this format,
+\&.wav headers are not necessarily preserved losslessly (though the audio is).
+.TP
 \&\fB.wve\fR (also with \fB\-t sndfile\fR)
 Psion 8-bit A-law.  Used on Psion SIBO PDAs (Series 3 and similar).
 This format is deprecated in SoX, but will continue to be used in
@@ -598,7 +545,7 @@ These are 16-bit ADPCM audio files used by Maxis games.  Writing .xa files is
 currently not supported, although adding write support should not be very
 difficult.
 .TP
-\&\fB.xi\fR (libsndfile)
+\&\fB.xi\fR (optional)
 Fasttracker 2 Extended Instrument format.
 .SH SEE ALSO
 .BR sox (1),
