@@ -35,18 +35,17 @@ SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH DESCRIPTION
 SoX supported file formats and audio devices.
 .SP
-File format types that can be determined by a filename
+Format types that can be determined by a filename
 extension are listed with their names preceded by a dot.
-.SP
-File types that are optionally built into SoX
+Format types that are optionally built into SoX
 are marked `(optional)'.
 .SP
-File types that can be handled by an
+Format types that can be handled by an
 external library via an optional pseudo file type (currently
 .B sndfile
 or
 .BR ffmpeg )
-are marked e.g. `(also with \fB\-t sndfile\fR)'. This might be
+are marked e.g. `(also with \fB\-t sndfile\fR)'.  This might be
 useful if you have a file that doesn't work with SoX's default format
 readers and writers, and there's an external reader or writer for that
 format.
@@ -55,9 +54,16 @@ To see if SoX has support for an optional format or device, enter
 .B sox -h
 and look for its name under the list:
 `AUDIO FILE FORMATS' or `AUDIO DEVICES'.
-.SP
+.PP
+\&\fB.raw\fR (also with \fB\-t sndfile\fR),
+.br
+\&\fB.s1\fR, \fB.s2\fR, \fB.s3\fR, \fB.s4\fR, \fB.u1\fR, \fB.u2\fR, \fB.u3\fR, \fB.u4\fR,
+.br
+\&\fB.ul\fR, \fB.al\fR, \fB.lu\fR, \fB.la\fR, \fB.sb\fR, \fB.sw\fR, \fB.ub\fR, \fB.uw\fR
+.if t .sp -.5
+.if n .sp -1
 .TP
-\&\fB.raw\fR (also with \fB\-t sndfile\fR), \fB.s1\fR, \fB.s2\fR, \fB.s3\fR, \fB.s4\fR, \fB.u1\fR, \fB.u2\fR, \fB.u3\fR, \fB.u4\fR, \fB.ul\fR, \fB.al\fR, \fB.lu\fR, \fB.la\fR
+\ 
 Raw (headerless) audio files.  For
 .BR raw ,
 the sample rate and the data encoding must be given using command-line
@@ -68,7 +74,7 @@ as 1, 2, 3, and 4-byte signed integer PCM respectively; \fBu1\fR,
 \fBu2\fR, \fBu3\fR, and \fBu4\fR indicate files encoded as 1, 2, 3, and
 4-byte unsigned integer PCM respectively; \fBul\fR indicates `\(*m-law'
 (byte), \fBal\fR indicates `A-law' (byte), and \fBlu\fR and \fBla\fR are
-inverse bit order `\(*m-law' and inverse bit order `A-law'i respectively.
+inverse bit order `\(*m-law' and inverse bit order `A-law' respectively.
 \fBsb\fR, \fBsw\fR, \fBub\fR, \fBuw\fR, and \fBsl\fR are
 aliases for
 \fBs1\fR, \fBs2\fR, \fBu1\fR, \fBu2\fR, and \fBs4\fR respectively.
@@ -76,16 +82,21 @@ For all raw formats, the number of channels defaults to 1 (but
 may be overridden).
 .SP
 Headerless audio files on a SPARC computer are likely to be of format
-\fBul\fR;  on a Mac, they're likely to be \fBub\fR but with a
+\fBul\fR;  on a Mac, they're likely to be \fBu1\fR but with a
 sample rate of 11025 or 22050\ Hz.
+.SP
+See
+.B .ima
+and
+.B .vox
+for raw ADPCM formats.
 .TP
 \&\fB.8svx\fR (also with \fB\-t sndfile\fR)
 Amiga 8SVX musical instrument description format.
 .TP
 \&\fB.aiff\fR, \fB.aif\fR (also with \fB\-t sndfile\fR)
 AIFF files used on Apple IIc/IIgs and SGI.
-Note: the AIFF format supports only one SSND chunk.
-It does not support multiple audio chunks,
+Currently, SoX's AIFF support does not include multiple audio chunks,
 or the 8SVX musical instrument description format.
 AIFF files are multimedia archives and
 can have multiple audio and picture chunks.
@@ -99,7 +110,7 @@ Japanese data broadcasting.  Any private chunks are not supported.
 Note: The input file is currently processed as .aiff.
 .TP
 \fBalsa\fR (optional)
-ALSA device driver.
+Advanced Linux Sound Architecture device driver.
 When this driver is used
 it allows you to open up a ALSA device and configure it to
 use the same data format as passed in to SoX.
@@ -113,6 +124,10 @@ the highest quality format your ALSA system can handle.  Examples:
 	sox infile -t alsa hw:0
 	sox -t alsa hw:1 outfile
 .EE
+See also
+.BR play (1)
+and
+.BR rec (1).
 .TP
 .B .amb
 Ambisonic B-Format: a specialisation of
@@ -143,18 +158,24 @@ to the following bit-rates (as selected by the
 option): 0 = 6\*d6 kbit/s, 1 = 8\*d85 kbit/s, 2 = 12\*d65 kbit/s, 3 =
 14\*d25 kbit/s, 4 = 15\*d85 kbit/s 5 = 18\*d25 kbit/s, 6 = 19\*d85
 kbit/s, 7 = 23\*d05 kbit/s, 8 = 23\*d85 kbit/s.
+.TP
 \fBao\fR (optional)
 Xiph's Audio Output device driver.
 It works only for
-playing audio files. It can play to a wide range of devices and sound
-systems. See its documentation for the full range. For the most part, SoX's
+playing audio files.  It can play to a wide range of devices and sound
+systems. See its documentation for the full range.  For the most part, SoX's
 use of libao cannot be configured directly; you must use libao
 configuration files.
 .SP
 The filename specified is used to determine which libao plugin to
-us.  Normally, you should specify "default" as the filename.  If that
+us.  Normally, you should specify `default' as the filename.  If that
 doesn't give the desired behavior then you can specify the short name
 for a given plugin (such as \fBpulse\fR for pulse audio plugin).
+.SP
+See also
+.BR play (1)
+and
+.BR rec (1).
 .TP
 \&\fB.au\fR, \fB.snd\fR (also with \fB\-t sndfile\fR)
 Sun Microsystems AU files.
@@ -178,12 +199,12 @@ and
 options, in which case SoX will issue a warning to that effect.
 .TP
 .B .avr
-Audio Visual Research.
-The AVR format is produced by a number of commercial packages
+Audio Visual Research format;
+used by a number of commercial packages
 on the Mac.
 .TP
 \&\fB.caf\fR (optional)
-Core Audio File format.
+Apples's Core Audio File format.
 .TP
 \&\fB.cdda\fR, \fB.cdr\fR
 `Red Book' Compact Disc Digital Audio.
@@ -254,7 +275,7 @@ with a whole number from 0 to 8.
 .TP
 .B .fssd
 An alias for the
-.B .ub
+.B .u1
 format.
 .TP
 \&\fB.gsm\fR (optional; also with \fB\-t sndfile\fR)
@@ -265,6 +286,7 @@ for its purpose, shrinking audio data size, but it will introduce
 lots of noise when a given audio signal is encoded and decoded
 multiple times.  This format is used by some voice mail applications.
 It is rather CPU intensive.
+.TP
 .B .hcom
 Macintosh HCOM files.
 These are Mac FSSD files with Huffman compression.
@@ -294,6 +316,7 @@ Matlab 4.2/5.0 (respectively GNU Octave 2.0/2.1) format (.mat is the same as .ma
 A
 .I playlist
 format; contains a list of audio files.
+SoX can read, but not write this file format.
 See [1] for details of this format.
 .TP
 .B .maud
@@ -325,9 +348,7 @@ Ogg Vorbis compressed audio.
 Ogg Vorbis is a open, patent-free CODEC designed for compressing music
 and streaming audio.  It is a lossy compression format (similar to MP3,
 VQF & AAC) that achieves good compression rates with a minimum amount of
-quality loss.  See also
-.B MP3
-for a similar format.
+quality loss.
 .SP
 SoX can decode all types of Ogg Vorbis files, and can encode at different
 compression levels/qualities given as a number from \-1 (highest
@@ -337,11 +358,14 @@ of approx. 112kbps), but this can be changed using the
 .B \-C
 option (see above) with a number from \-1 to 10; fractional numbers (e.g.
 3\*d6) are also allowed.
-.SP
 Decoding is somewhat CPU intensive and encoding is very CPU intensive.
+.SP
+See also
+.B MP3
+for a similar format.
 .TP
 \fBoss\fR (optional)
-OSS /dev/dsp device driver.
+Open Sound System /dev/dsp device driver.
 When this driver is used it allows you to
 play and record sounds on supported systems. When playing audio
 files it attempts to set up the OSS driver to use the same format as
@@ -350,6 +374,10 @@ to use the highest quality format your OSS system can handle. Example:
 .EX
 	sox infile -t oss -2 -s /dev/dsp
 .EE
+See also
+.BR play (1)
+and
+.BR rec (1).
 .TP
 \&\fB.paf\fR, \fB.fap\fR (optional)
 Ensoniq PARIS file format (big and little-endian respectively).
@@ -358,9 +386,10 @@ Ensoniq PARIS file format (big and little-endian respectively).
 A
 .I playlist
 format; contains a list of audio files.
+SoX can read, but not write this file format.
 See [2] for details of this format.
 .SP
-Note: SHOUTcast PLS relies on
+Note: SoX support for SHOUTcast PLS relies on
 .BR wget (1)
 and is only partially supported: it's necessary to
 specify the audio type manually, e.g.
@@ -413,7 +442,8 @@ the samplers themselves.  Currently loop points are ignored.
 .B .snd
 See
 .BR .au ,
-.BR .sndr and
+.B .sndr
+and
 .BR .sndt .
 .TP
 \fBsndfile\fR (optional)
@@ -424,19 +454,17 @@ them, it is deduced from the file.
 .B .sndr
 Sounder files.
 An MS-DOS/Windows format from the early '90s.
-Sounder files usually have the extension
-.BR .SND .
+Sounder files usually have the extension `.SND'.
 .TP
 .B .sndt
 SoundTool files.
 An MS-DOS/Windows format from the early '90s.
-SoundTool files usually have the extension
-.BR .SND .
+SoundTool files usually have the extension `.SND'.
 .TP
 .B .sou
 An alias for the
-.B .ub
-format.
+.B .u1
+raw format.
 .TP
 \fBsunau\fR (optional)
 Sun /dev/audio device driver.
@@ -455,6 +483,11 @@ or
 	sox infile -t sunau -U -c 1 /dev/audio
 .EE
 for older sun equipment.
+.SP
+See also
+.BR play (1)
+and
+.BR rec (1).
 .TP
 .B .txw
 Yamaha TX-16W sampler.
@@ -511,10 +544,9 @@ You had better know what you are doing! Output format
 options will cause a format conversion, and the \fB.wav\fR
 will written appropriately.
 .SP
-SoX currently can read PCM, \(*m-law, A-law, MS ADPCM, and IMA (or DVI) ADPCM.
-It can write all of these formats including the ADPCM encoding.
-Big endian versions of RIFF files, called RIFX, can also be read
-and written.  To write a RIFX file, use the
+SoX can read and write PCM, \(*m-law, A-law, MS ADPCM, and IMA (or DVI) ADPCM.
+Big endian versions of RIFF files, called RIFX, are also supported.
+To write a RIFX file, use the
 .B \-B
 option with the output file options.
 .TP
@@ -531,8 +563,10 @@ should work with these applications.  (Note that SoX will automatically
 detect and read WAV files with the non-standard header.)
 .TP
 .B .wv
-WavPack lossless audio compression.  Note that, when used with this format,
-\&.wav headers are not necessarily preserved losslessly (though the audio is).
+WavPack lossless audio compression.  Note that, when converting
+.B .wav
+to this format and back again,
+the RIFF header is not necessarily preserved losslessly (though the audio is).
 .TP
 \&\fB.wve\fR (also with \fB\-t sndfile\fR)
 Psion 8-bit A-law.  Used on Psion SIBO PDAs (Series 3 and similar).
@@ -551,9 +585,9 @@ Fasttracker 2 Extended Instrument format.
 .BR sox (1),
 .BR soxi (1),
 .BR soxeffect (7),
+.BR soxexam (7),
 .BR libsox (3),
 .BR octave (1),
-.BR soxexam (7),
 .BR wget (1)
 .SP
 The SoX web page at http://sox.sourceforge.net
