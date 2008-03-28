@@ -1,7 +1,6 @@
-/*
- * g711.c
+/* g711.c - G711 u-law, A-law and linear PCM conversions.
  *
- * u-law, A-law and linear PCM conversions.
+ * Copyright (C) 2001 Chris Bagwell
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose and without fee is hereby granted, provided
