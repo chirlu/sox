@@ -1,5 +1,4 @@
-/*
- * File format: HTK   (c) 2008 robs@users.sourceforge.net
+/* libSoX file format: HTK   (c) 2008 robs@users.sourceforge.net
  *
  * See http://labrosa.ee.columbia.edu/doc/HTKBook21/HTKBook.html
  *
@@ -19,7 +18,6 @@
  */
 
 #include "sox_i.h"
-#include <math.h>
 
 typedef enum {
   Waveform, Lpc, Lprefc, Lpcepstra, Lpdelcep, Irefc,
@@ -54,7 +52,7 @@ static int write_header(sox_format_t * ft)
 
   if (!ft->olength && floor(period_100ns) != period_100ns)
     sox_warn("rounding sample period %f (x 100ns) to nearest integer", period_100ns);
-  return lsx_writedw(ft, ft->olength? ft->olength:ft->length)
+  return lsx_writedw(ft, ft->olength? ft->olength:ft->signal.length)
       || lsx_writedw(ft, (uint32_t)(period_100ns + .5))
       || lsx_writew(ft, ft->encoding.bits_per_sample >> 3)
       || lsx_writew(ft, Waveform) ? SOX_EOF : SOX_SUCCESS;
@@ -70,7 +68,7 @@ SOX_FORMAT_HANDLER(htk)
     names, SOX_FILE_BIG_END | SOX_FILE_MONO | SOX_FILE_REWIND,
     start_read, lsx_rawread, NULL,
     write_header, lsx_rawwrite, NULL,
-    lsx_rawseek, write_encodings, NULL
+    lsx_rawseek, write_encodings, NULL, 0
   };
   return &handler;
 }

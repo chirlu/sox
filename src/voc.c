@@ -1,5 +1,6 @@
-/*
+/* libSoX Sound Blaster VOC handler sources.
  * Copyright 1991 Lance Norskog And Sundry Contributors
+ *
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained.
  * Lance Norskog And Sundry Contributors are not responsible for
@@ -30,10 +31,6 @@
  * For sox-12-17-3 by Annonymous (see notes ANN)
  * Patch for sox-12-17 merged with sox-12-17-3-pre3 code.
  *
- */
-
-/*
- * libSoX Sound Blaster VOC handler sources.
  */
 
 /*------------------------------------------------------------------------
@@ -164,7 +161,7 @@ BLOCK 9 - data block that supersedes blocks 1 and 8.
 #include <string.h>
 
 /* Private data for VOC file */
-typedef struct vocstuff {
+typedef struct {
   long block_remaining;         /* bytes remaining in current block */
   long rate;                    /* rate code (byte) of this chunk */
   int silent;                   /* sound or silence? */
@@ -177,7 +174,7 @@ typedef struct vocstuff {
   long total_size;              /* total size of all audio in file */
   int extended;                 /* Has an extended block been read? */
   adpcm_t adpcm;
-} *vs_t;
+} priv_t;
 
 #define VOC_TERM        0
 #define VOC_DATA        1
@@ -217,7 +214,7 @@ static int startread(sox_format_t * ft)
 {
   int rtn = SOX_SUCCESS;
   char header[20];
-  vs_t v = (vs_t) ft->priv;
+  priv_t * v = (priv_t *) ft->priv;
   unsigned short sbseek;
   int rc;
   int ii;                       /* for getting rid of lseek */
@@ -315,7 +312,7 @@ static int startread(sox_format_t * ft)
 static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
                                sox_size_t len)
 {
-  vs_t v = (vs_t) ft->priv;
+  priv_t * v = (priv_t *) ft->priv;
   sox_size_t done = 0;
   int rc = 0;
   int16_t sw;
@@ -455,7 +452,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
  */
 static int startwrite(sox_format_t * ft)
 {
-  vs_t v = (vs_t) ft->priv;
+  priv_t * v = (priv_t *) ft->priv;
 
   if (!ft->seekable) {
     lsx_fail_errno(ft, SOX_EOF,
@@ -480,7 +477,7 @@ static int startwrite(sox_format_t * ft)
 static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t * buf,
                                 sox_size_t len)
 {
-  vs_t v = (vs_t) ft->priv;
+  priv_t * v = (priv_t *) ft->priv;
   unsigned char uc;
   int16_t sw;
   sox_size_t done = 0;
@@ -510,7 +507,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t * buf,
  *-----------------------------------------------------------------*/
 static void blockstop(sox_format_t * ft)
 {
-  vs_t v = (vs_t) ft->priv;
+  priv_t * v = (priv_t *) ft->priv;
   sox_sample_t datum;
 
   lsx_writeb(ft, 0);    /* End of file block code */
@@ -553,7 +550,7 @@ static int stopwrite(sox_format_t * ft)
  *-----------------------------------------------------------------*/
 static int getblock(sox_format_t * ft)
 {
-  vs_t v = (vs_t) ft->priv;
+  priv_t * v = (priv_t *) ft->priv;
   unsigned char uc, block;
   uint24_t sblen;
   uint16_t new_rate_16;
@@ -729,7 +726,7 @@ static int getblock(sox_format_t * ft)
  *-----------------------------------------------------------------*/
 static void blockstart(sox_format_t * ft)
 {
-  vs_t v = (vs_t) ft->priv;
+  priv_t * v = (priv_t *) ft->priv;
 
   v->blockseek = lsx_tell(ft);
   if (v->silent) {
@@ -788,13 +785,12 @@ SOX_FORMAT_HANDLER(voc)
     SOX_ENCODING_UNSIGNED, 8, 0,
     0
   };
-  static sox_format_handler_t const handler = {
-    SOX_LIB_VERSION_CODE,
+  static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "Creative Technology Sound Blaster format",
     names, SOX_FILE_LIT_END | SOX_FILE_MONO | SOX_FILE_STEREO,
     startread, read_samples, NULL,
     startwrite, write_samples, stopwrite,
-    NULL, write_encodings, NULL
+    NULL, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
 }

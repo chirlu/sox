@@ -1,7 +1,6 @@
-/*
+/* libSoX Basic time stretcher.
  * (c) march/april 2000 Fabien COELHO <fabien@coelho.net> for sox.
  *
- * Basic time stretcher.
  * cross fade samples so as to go slower or faster.
  *
  * The filter is based on 6 parameters:
@@ -15,7 +14,7 @@
  * I decided of the default values of these parameters based
  * on some small non extensive tests. maybe better defaults
  * can be suggested.
- * 
+ *
  * It cannot handle different number of channels.
  * It cannot handle rate change.
  */
@@ -30,7 +29,7 @@
 
 #define DEFAULT_STRETCH_WINDOW          20.0  /* ms */
 
-/* I'm planing to put some common fading stuff outside. 
+/* I'm planing to put some common fading stuff outside.
    It's also used in pitch.c
  */
 typedef enum { sox_linear_fading } sox_fading_t;
@@ -39,8 +38,7 @@ typedef enum { sox_linear_fading } sox_fading_t;
 
 typedef enum { input_state, output_state } stretch_status_t;
 
-typedef struct 
-{
+typedef struct {
   /* options
    * FIXME: maybe shift could be allowed > 1.0 with factor < 1.0 ???
    */
@@ -57,23 +55,23 @@ typedef struct
   sox_size_t index;        /* next available element */
   sox_sample_t *ibuf;      /* input buffer */
   sox_size_t ishift;       /* input shift */
-  
+
   sox_size_t oindex;       /* next evailable element */
   double * obuf;   /* output buffer */
   sox_size_t oshift;       /* output shift */
-  
+
   sox_size_t fsize;        /* fading size */
   double * fbuf;   /* fading, 1.0 -> 0.0 */
-  
-} *stretch_t;
+
+} priv_t;
 
 /*
  * Process options
  */
-static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv) 
+static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
 {
-  stretch_t stretch = (stretch_t) effp->priv; 
-    
+  priv_t * stretch = (priv_t *) effp->priv;
+
   /* default options */
   stretch->factor = 1.0; /* default is no change */
   stretch->window = DEFAULT_STRETCH_WINDOW;
@@ -104,7 +102,7 @@ static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
   /* default shift depends whether we go slower or faster */
   stretch->shift = (stretch->factor <= 1.0) ?
     DEFAULT_FAST_SHIFT_RATIO: DEFAULT_SLOW_SHIFT_RATIO;
- 
+
   if (n > 3 && !sscanf(argv[3], "%lf", &stretch->shift)) {
     sox_fail("error while parsing shift ratio");
     return lsx_usage(effp);
@@ -115,7 +113,7 @@ static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
     return lsx_usage(effp);
   }
 
-  /* default fading stuff... 
+  /* default fading stuff...
      it makes sense for factor >= 0.5 */
   if (stretch->factor < 1.0)
     stretch->fading = 1.0 - (stretch->factor * stretch->shift);
@@ -123,7 +121,7 @@ static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
     stretch->fading = 1.0 - stretch->shift;
   if (stretch->fading > 0.5)
     stretch->fading = 0.5;
-  
+
   if (n > 4 && !sscanf(argv[4], "%lf", &stretch->fading)) {
     sox_fail("error while parsing fading ratio");
     return lsx_usage(effp);
@@ -133,7 +131,7 @@ static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
     sox_fail("error with fading ratio value");
     return lsx_usage(effp);
   }
-  
+
   return SOX_SUCCESS;
 }
 
@@ -142,7 +140,7 @@ static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int sox_stretch_start(sox_effect_t * effp)
 {
-  stretch_t stretch = (stretch_t)effp->priv;
+  priv_t * stretch = (priv_t *)effp->priv;
   sox_size_t i;
 
   if (stretch->factor == 1)
@@ -171,7 +169,7 @@ static int sox_stretch_start(sox_effect_t * effp)
   stretch->obuf = (double *)lsx_malloc(stretch->size * sizeof(double));
   stretch->fsize = (int)(stretch->fading * stretch->size);
   stretch->fbuf = (double *)lsx_malloc(stretch->fsize * sizeof(double));
-        
+
   /* initialize buffers */
   for (i = 0; i<stretch->size; i++)
     stretch->ibuf[i] = 0;
@@ -198,7 +196,7 @@ static int sox_stretch_start(sox_effect_t * effp)
 }
 
 /* accumulates input ibuf to output obuf with fading fbuf */
-static void combine(stretch_t stretch)
+static void combine(priv_t * stretch)
 {
   int i, size, fsize;
 
@@ -221,20 +219,20 @@ static void combine(stretch_t stretch)
 /*
  * Processes flow.
  */
-static int sox_stretch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_stretch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                     sox_size_t *isamp, sox_size_t *osamp)
 {
-  stretch_t stretch = (stretch_t) effp->priv;
+  priv_t * stretch = (priv_t *) effp->priv;
   sox_size_t iindex = 0, oindex = 0;
   sox_size_t i;
 
   while (iindex<*isamp && oindex<*osamp) {
     if (stretch->state == input_state) {
-      sox_size_t tocopy = min(*isamp-iindex, 
+      sox_size_t tocopy = min(*isamp-iindex,
                              stretch->size-stretch->index);
 
       memcpy(stretch->ibuf + stretch->index, ibuf + iindex, tocopy * sizeof(sox_sample_t));
-      
+
       iindex += tocopy;
       stretch->index += tocopy;
 
@@ -247,7 +245,7 @@ static int sox_stretch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_s
           stretch->ibuf[i] = stretch->ibuf[i+stretch->ishift];
 
         stretch->index -= stretch->ishift;
-        
+
         /* switch to output state */
         stretch->state = output_state;
       }
@@ -271,7 +269,7 @@ static int sox_stretch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_s
         /* pad with 0 */
         for (; i < stretch->size; i++)
           stretch->obuf[i] = 0.0;
-                    
+
         stretch->state = input_state;
       }
     }
@@ -290,25 +288,25 @@ static int sox_stretch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_s
  */
 static int sox_stretch_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-  stretch_t stretch = (stretch_t) effp->priv;
+  priv_t * stretch = (priv_t *) effp->priv;
   sox_size_t i;
   sox_size_t oindex = 0;
-  
+
   if (stretch->state == input_state) {
     for (i=stretch->index; i<stretch->size; i++)
       stretch->ibuf[i] = 0;
-    
+
     combine(stretch);
-    
+
     stretch->state = output_state;
   }
-  
+
   while (oindex<*osamp && stretch->oindex<stretch->index) {
     float f = stretch->obuf[stretch->oindex++];
     SOX_SAMPLE_CLIP_COUNT(f, effp->clips);
     obuf[oindex++] = f;
   }
-    
+
   *osamp = oindex;
 
   if (stretch->oindex == stretch->index)
@@ -319,12 +317,12 @@ static int sox_stretch_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t
 
 
 /*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
+ * Do anything required when you stop reading samples.
+ * Don't close input file!
  */
 static int sox_stretch_stop(sox_effect_t * effp)
 {
-  stretch_t stretch = (stretch_t) effp->priv;
+  priv_t * stretch = (priv_t *) effp->priv;
 
   free(stretch->ibuf);
   free(stretch->obuf);
@@ -344,7 +342,7 @@ static sox_effect_handler_t sox_stretch_effect = {
   sox_stretch_flow,
   sox_stretch_drain,
   sox_stretch_stop,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_stretch_effect_fn(void)

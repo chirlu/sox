@@ -1,5 +1,4 @@
-/*
- * File format: cdda   (c) 2006-8 SoX contributors
+/* libSoX file format: cdda   (c) 2006-8 SoX contributors
  * Based on an original idea by David Elliott
  *
  * This library is free software; you can redistribute it and/or modify it
@@ -19,12 +18,12 @@
 
 #include "sox_i.h"
 
-static int start(sox_format_t * ft) 
+static int start(sox_format_t * ft)
 {
   return lsx_check_read_params(ft, 2, 44100., SOX_ENCODING_SIGN2, 16, (off_t)0);
 }
 
-static int stopwrite(sox_format_t * ft) 
+static int stopwrite(sox_format_t * ft)
 {
   sox_size_t const sector_num_samples = 588 * ft->signal.channels;
   sox_size_t i = ft->olength % sector_num_samples;
@@ -39,13 +38,12 @@ SOX_FORMAT_HANDLER(cdr)
   static char const * const names[] = {"cdda", "cdr", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
   static sox_rate_t const write_rates[] = {44100, 0};
-  static sox_format_handler_t handler = {
-    SOX_LIB_VERSION_CODE,
+  static sox_format_handler_t handler = {SOX_LIB_VERSION_CODE,
     "Red Book Compact Disc Digital Audio",
     names, SOX_FILE_BIG_END|SOX_FILE_STEREO,
     start, lsx_rawread, NULL,
     NULL, lsx_rawwrite, stopwrite,
-    lsx_rawseek, write_encodings, write_rates
+    lsx_rawseek, write_encodings, write_rates, 0
   };
   return &handler;
 }

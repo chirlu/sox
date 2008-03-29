@@ -1,5 +1,4 @@
-/*
- * Copyright (c) 20/03/2000 Fabien COELHO <fabien@coelho.net>
+/* Copyright (c) 20/03/2000 Fabien COELHO <fabien@coelho.net>
  * Copyright (c) 2000-2007 SoX contributors
  *
  * SoX vol effect; change volume with basic linear amplitude formula.
@@ -15,7 +14,6 @@
   "\tis only used on peaks (to prevent clipping); default is no limiter."
 
 #include "sox_i.h"
-#include <math.h>
 
 typedef struct {
   double    gain; /* amplitude gain. */
@@ -24,7 +22,7 @@ typedef struct {
   double    limitergain;
   int       limited; /* number of limited values to report. */
   int       totalprocessed;
-} * vol_t;
+} priv_t;
 
 enum {vol_amplitude, vol_dB, vol_power};
 
@@ -37,9 +35,9 @@ static enum_item const vol_types[] = {
 /*
  * Process options: gain (float) type (amplitude, power, dB)
  */
-static int getopts(sox_effect_t * effp, int argc, char **argv) 
+static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
-  vol_t     vol = (vol_t) effp->priv; 
+  priv_t *     vol = (priv_t *) effp->priv;
   char      type_string[11];
   char *    type_ptr = type_string;
   char      dummy;             /* To check for extraneous chars. */
@@ -47,7 +45,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
   vol->gain = 1;               /* Default is no change. */
   vol->uselimiter = sox_false; /* Default is no limiter. */
-  
+
   /* Get the vol, and the type if it's in the same arg. */
   if (!argc || (have_type = sscanf(argv[0], "%lf %10s %c", &vol->gain, type_string, &dummy) - 1) > 1)
     return lsx_usage(effp);
@@ -75,13 +73,13 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   if (argc) {
     if (fabs(vol->gain) < 1 || sscanf(*argv, "%lf %c", &vol->limitergain, &dummy) != 1 || vol->limitergain <= 0 || vol->limitergain >= 1)
       return lsx_usage(effp);
-    
+
     vol->uselimiter = sox_true;
-    /* The following equation is derived so that there is no 
+    /* The following equation is derived so that there is no
      * discontinuity in output amplitudes */
-    /* and a SOX_SAMPLE_MAX input always maps to a SOX_SAMPLE_MAX output 
+    /* and a SOX_SAMPLE_MAX input always maps to a SOX_SAMPLE_MAX output
      * when the limiter is activated. */
-    /* (NOTE: There **WILL** be a discontinuity in the slope 
+    /* (NOTE: There **WILL** be a discontinuity in the slope
      * of the output amplitudes when using the limiter.) */
     vol->limiterthreshhold = SOX_SAMPLE_MAX * (1.0 - vol->limitergain) / (fabs(vol->gain) - vol->limitergain);
   }
@@ -94,8 +92,8 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
  */
 static int start(sox_effect_t * effp)
 {
-    vol_t vol = (vol_t) effp->priv;
-    
+    priv_t * vol = (priv_t *) effp->priv;
+
     if (vol->gain == 1)
       return SOX_EFF_NULL;
 
@@ -108,28 +106,28 @@ static int start(sox_effect_t * effp)
 /*
  * Process data.
  */
-static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                 sox_size_t *isamp, sox_size_t *osamp)
 {
-    vol_t vol = (vol_t) effp->priv;
+    priv_t * vol = (priv_t *) effp->priv;
     register double gain = vol->gain;
     register double limiterthreshhold = vol->limiterthreshhold;
     register double sample;
     register sox_size_t len;
-    
+
     len = min(*osamp, *isamp);
 
     /* report back dealt with amount. */
     *isamp = len; *osamp = len;
-    
+
     if (vol->uselimiter)
     {
         vol->totalprocessed += len;
-        
+
         for (;len>0; len--)
             {
                 sample = *ibuf++;
-                
+
                 if (sample > limiterthreshhold)
                 {
                         sample =  (SOX_SAMPLE_MAX - vol->limitergain * (SOX_SAMPLE_MAX - sample));
@@ -168,9 +166,9 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
 
 static int stop(sox_effect_t * effp)
 {
-  vol_t vol = (vol_t) effp->priv;
+  priv_t * vol = (priv_t *) effp->priv;
   if (vol->limited) {
-    sox_warn("limited %d values (%d percent).", 
+    sox_warn("limited %d values (%d percent).",
          vol->limited, (int) (vol->limited * 100.0 / vol->totalprocessed));
   }
   return SOX_SUCCESS;
@@ -179,12 +177,12 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_vol_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "vol", vol_usage, SOX_EFF_MCHAN, getopts, start, flow, 0, stop, 0
+    "vol", vol_usage, SOX_EFF_MCHAN, getopts, start, flow, 0, stop, 0, sizeof(priv_t)
   };
   return &handler;
 }
 
-static int gain_getopts(sox_effect_t * effp, int argc, char * * argv) 
+static int gain_getopts(sox_effect_t * effp, int argc, char * * argv)
 {
   char * args[] = {0, "dB"};
 

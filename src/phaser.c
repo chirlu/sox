@@ -1,15 +1,14 @@
-/*
- * August 24, 1998
+/* August 24, 1998
  * Copyright (C) 1998 Juergen Mueller And Sundry Contributors
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Juergen Mueller And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Juergen Mueller And Sundry Contributors are not responsible for
  * the consequences of using this software.
  */
 
 /*
  *      Phaser effect.
- * 
+ *
  * Flow diagram scheme:
  *
  *        * gain-in  +---+                     * gain-out
@@ -29,7 +28,7 @@
  *
  * The delay is controled by a sine or triangle modulation.
  *
- * Usage: 
+ * Usage:
  *   phaser gain-in gain-out delay decay speed [ -s | -t ]
  *
  * Where:
@@ -42,7 +41,7 @@
  *
  * Note:
  *   when decay is close to 1.0, the samples may begin clipping or the output
- *   can saturate! 
+ *   can saturate!
  *
  * Hint:
  *   in-gain < ( 1 - decay * decay )
@@ -57,16 +56,15 @@
 #include "sox_i.h"
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
-#include <math.h>
 #include <string.h>
 
 #define MOD_SINE        0
 #define MOD_TRIANGLE    1
 
 /* Private data for SKEL file */
-typedef struct phaserstuff {
+typedef struct {
         int     modulation;
-        int     counter;                        
+        int     counter;
         int     phase;
         double  *phaserbuf;
         float   in_gain, out_gain;
@@ -75,14 +73,14 @@ typedef struct phaserstuff {
         sox_size_t length;
         int     *lookup_tab;
         sox_size_t maxsamples, fade_out;
-} *phaser_t;
+} priv_t;
 
 /*
  * Process options
  */
-static int sox_phaser_getopts(sox_effect_t * effp, int n, char **argv) 
+static int sox_phaser_getopts(sox_effect_t * effp, int n, char **argv)
 {
-        phaser_t phaser = (phaser_t) effp->priv;
+        priv_t * phaser = (priv_t *) effp->priv;
 
         if (!((n == 5) || (n == 6)))
           return lsx_usage(effp);
@@ -109,7 +107,7 @@ static int sox_phaser_getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int sox_phaser_start(sox_effect_t * effp)
 {
-        phaser_t phaser = (phaser_t) effp->priv;
+        priv_t * phaser = (priv_t *) effp->priv;
         unsigned int i;
 
         phaser->maxsamples = phaser->delay * effp->in_signal.rate / 1000.0;
@@ -172,10 +170,10 @@ static int sox_phaser_start(sox_effect_t * effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_phaser_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_phaser_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                    sox_size_t *isamp, sox_size_t *osamp)
 {
-        phaser_t phaser = (phaser_t) effp->priv;
+        priv_t * phaser = (priv_t *) effp->priv;
         double d_in, d_out;
         sox_sample_t out;
         sox_size_t len = min(*isamp, *osamp);
@@ -186,8 +184,8 @@ static int sox_phaser_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
                 d_in = (double) *ibuf++ / 256;
                 /* Compute output first */
                 d_in = d_in * phaser->in_gain;
-                d_in += phaser->phaserbuf[(phaser->maxsamples + 
-        phaser->counter - phaser->lookup_tab[phaser->phase]) % 
+                d_in += phaser->phaserbuf[(phaser->maxsamples +
+        phaser->counter - phaser->lookup_tab[phaser->phase]) %
         phaser->maxsamples] * phaser->decay * -1.0;
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_in * phaser->out_gain;
@@ -195,7 +193,7 @@ static int sox_phaser_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 phaser->phaserbuf[phaser->counter] = d_in;
-                phaser->counter = 
+                phaser->counter =
                         ( phaser->counter + 1 ) % phaser->maxsamples;
                 phaser->phase  = ( phaser->phase + 1 ) % phaser->length;
         }
@@ -204,13 +202,13 @@ static int sox_phaser_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
 }
 
 /*
- * Drain out reverb lines. 
+ * Drain out reverb lines.
  */
 static int sox_phaser_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-        phaser_t phaser = (phaser_t) effp->priv;
+        priv_t * phaser = (priv_t *) effp->priv;
         sox_size_t done;
-        
+
         double d_in, d_out;
         sox_sample_t out;
 
@@ -219,8 +217,8 @@ static int sox_phaser_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t 
                 d_in = 0;
                 d_out = 0;
                 /* Compute output first */
-                d_in += phaser->phaserbuf[(phaser->maxsamples + 
-        phaser->counter - phaser->lookup_tab[phaser->phase]) % 
+                d_in += phaser->phaserbuf[(phaser->maxsamples +
+        phaser->counter - phaser->lookup_tab[phaser->phase]) %
         phaser->maxsamples] * phaser->decay * -1.0;
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_in * phaser->out_gain;
@@ -228,7 +226,7 @@ static int sox_phaser_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t 
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 phaser->phaserbuf[phaser->counter] = d_in;
-                phaser->counter = 
+                phaser->counter =
                         ( phaser->counter + 1 ) % phaser->maxsamples;
                 phaser->phase  = ( phaser->phase + 1 ) % phaser->length;
                 done++;
@@ -247,7 +245,7 @@ static int sox_phaser_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t 
  */
 static int sox_phaser_stop(sox_effect_t * effp)
 {
-        phaser_t phaser = (phaser_t) effp->priv;
+        priv_t * phaser = (priv_t *) effp->priv;
 
         free(phaser->phaserbuf);
         free(phaser->lookup_tab);
@@ -263,7 +261,7 @@ static sox_effect_handler_t sox_phaser_effect = {
   sox_phaser_flow,
   sox_phaser_drain,
   sox_phaser_stop,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_phaser_effect_fn(void)

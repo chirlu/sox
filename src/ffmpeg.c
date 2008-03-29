@@ -1,5 +1,4 @@
-/*
- * libSoX ffmpeg formats.
+/* libSoX ffmpeg formats.
  *
  * Copyright 2007 Reuben Thomas <rrt@sc3d.org>
  *
@@ -50,8 +49,7 @@
 #include <ffmpeg/avformat.h>
 
 /* Private data for ffmpeg files */
-typedef struct ffmpeg
-{
+typedef struct {
   int audio_index;
   int audio_stream;
   AVStream *audio_st;
@@ -65,13 +63,10 @@ typedef struct ffmpeg
   AVPacket audio_pkt;
   uint8_t *audio_pkt_data;
   int audio_pkt_size;
-} *ffmpeg_t;
-
-assert_static(sizeof(struct ffmpeg) <= SOX_MAX_FILE_PRIVSIZE, 
-              /* else */ ffmpeg_PRIVSIZE_too_big);
+} priv_t;
 
 /* open a given stream. Return 0 if OK */
-static int stream_component_open(ffmpeg_t ffmpeg, int stream_index)
+static int stream_component_open(priv_t * ffmpeg, int stream_index)
 {
   AVFormatContext *ic = ffmpeg->ctxt;
   AVCodecContext *enc;
@@ -105,7 +100,7 @@ static int stream_component_open(ffmpeg_t ffmpeg, int stream_index)
   return 0;
 }
 
-static void stream_component_close(ffmpeg_t ffmpeg, int stream_index)
+static void stream_component_close(priv_t * ffmpeg, int stream_index)
 {
   AVFormatContext *ic = ffmpeg->ctxt;
   AVCodecContext *enc;
@@ -118,7 +113,7 @@ static void stream_component_close(ffmpeg_t ffmpeg, int stream_index)
 }
 
 /* Decode one audio frame and returns its uncompressed size */
-static int audio_decode_frame(ffmpeg_t ffmpeg, uint8_t *audio_buf, int buf_size)
+static int audio_decode_frame(priv_t * ffmpeg, uint8_t *audio_buf, int buf_size)
 {
   AVPacket *pkt = &ffmpeg->audio_pkt;
   int len1, data_size;
@@ -150,7 +145,7 @@ static int audio_decode_frame(ffmpeg_t ffmpeg, uint8_t *audio_buf, int buf_size)
 
 static int startread(sox_format_t * ft)
 {
-  ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
+  priv_t * ffmpeg = (priv_t *)ft->priv;
   AVFormatParameters params;
   int ret;
   int i;
@@ -159,7 +154,7 @@ static int startread(sox_format_t * ft)
 
   /* Signal audio stream not found */
   ffmpeg->audio_index = -1;
-  
+
   /* register all CODECs, demux and protocols */
   av_register_all();
 
@@ -201,7 +196,7 @@ static int startread(sox_format_t * ft)
   ft->encoding.bits_per_sample = 16;
   ft->encoding.encoding = SOX_ENCODING_SIGN2;
   ft->signal.channels = ffmpeg->audio_st->codec->channels;
-  ft->length = 0; /* Currently we can't seek; no idea how to get this
+  ft->signal.length = 0; /* Currently we can't seek; no idea how to get this
                      info from ffmpeg anyway (in time, yes, but not in
                      samples); but ffmpeg *can* seek */
 
@@ -214,7 +209,7 @@ static int startread(sox_format_t * ft)
  */
 static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
-  ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
+  priv_t * ffmpeg = (priv_t *)ft->priv;
   AVPacket *pkt = &ffmpeg->audio_pkt;
   int ret;
   sox_size_t nsamp = 0, nextra;
@@ -243,7 +238,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
  */
 static int stopread(sox_format_t * ft)
 {
-  ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
+  priv_t * ffmpeg = (priv_t *)ft->priv;
 
   if (ffmpeg->audio_stream >= 0)
     stream_component_close(ffmpeg, ffmpeg->audio_stream);
@@ -251,7 +246,7 @@ static int stopread(sox_format_t * ft)
     av_close_input_file(ffmpeg->ctxt);
     ffmpeg->ctxt = NULL; /* safety */
   }
-  
+
   return SOX_SUCCESS;
 }
 
@@ -282,7 +277,7 @@ static AVStream *add_audio_stream(sox_format_t * ft, AVFormatContext *oc, enum C
   return st;
 }
 
-static int open_audio(ffmpeg_t ffmpeg, AVStream *st)
+static int open_audio(priv_t * ffmpeg, AVStream *st)
 {
   AVCodecContext *c;
   AVCodec *codec;
@@ -328,7 +323,7 @@ static int open_audio(ffmpeg_t ffmpeg, AVStream *st)
 
 static int startwrite(sox_format_t * ft)
 {
-  ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
+  priv_t * ffmpeg = (priv_t *)ft->priv;
 
   /* initialize libavcodec, and register all codecs and formats */
   av_register_all();
@@ -353,7 +348,7 @@ static int startwrite(sox_format_t * ft)
   }
   ffmpeg->ctxt->oformat = ffmpeg->fmt;
   snprintf(ffmpeg->ctxt->filename, sizeof(ffmpeg->ctxt->filename), "%s", ft->filename);
-  
+
   /* add the audio stream using the default format codecs
      and initialize the codecs */
   ffmpeg->audio_st = NULL;
@@ -362,7 +357,7 @@ static int startwrite(sox_format_t * ft)
     if (ffmpeg->audio_st == NULL)
       return SOX_EOF;
   }
-  
+
   /* set the output parameters (must be done even if no
      parameters). */
   if (av_set_parameters(ffmpeg->ctxt, NULL) < 0) {
@@ -372,13 +367,13 @@ static int startwrite(sox_format_t * ft)
 
   /* Next line for debugging */
   /* dump_format(ffmpeg->ctxt, 0, ft->filename, 1); */
-  
+
   /* now that all the parameters are set, we can open the audio and
      codec and allocate the necessary encode buffers */
   if (ffmpeg->audio_st)
     if (open_audio(ffmpeg, ffmpeg->audio_st) == SOX_EOF)
       return SOX_EOF;
-  
+
   /* open the output file, if needed */
   if (!(ffmpeg->fmt->flags & AVFMT_NOFILE)) {
     if (url_fopen(&ffmpeg->ctxt->pb, ft->filename, URL_WRONLY) < 0) {
@@ -386,10 +381,10 @@ static int startwrite(sox_format_t * ft)
       return SOX_EOF;
     }
   }
-  
+
   /* write the stream header, if any */
   av_write_header(ffmpeg->ctxt);
-  
+
   return SOX_SUCCESS;
 }
 
@@ -399,7 +394,7 @@ static int startwrite(sox_format_t * ft)
  */
 static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
-  ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
+  priv_t * ffmpeg = (priv_t *)ft->priv;
   sox_size_t nread = 0, nwritten = 0;
 
   /* Write data repeatedly until buf is empty */
@@ -422,7 +417,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
       pkt.flags |= PKT_FLAG_KEY;
       pkt.stream_index = ffmpeg->audio_st->index;
       pkt.data = ffmpeg->audio_buf;
-      
+
       /* write the compressed frame to the media file */
       if (av_write_frame(ffmpeg->ctxt, &pkt) != 0)
         sox_fail("ffmpeg had error while writing audio frame");
@@ -442,7 +437,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
  */
 static int stopwrite(sox_format_t * ft)
 {
-  ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
+  priv_t * ffmpeg = (priv_t *)ft->priv;
   int i;
 
   /* Close CODEC */
@@ -451,16 +446,16 @@ static int stopwrite(sox_format_t * ft)
     free(ffmpeg->samples);
     free(ffmpeg->audio_buf);
   }
-  
+
   /* Write the trailer, if any */
   av_write_trailer(ffmpeg->ctxt);
-  
+
   /* Free the streams */
   for (i = 0; i < ffmpeg->ctxt->nb_streams; i++) {
     av_freep(&ffmpeg->ctxt->streams[i]->codec);
     av_freep(&ffmpeg->ctxt->streams[i]);
   }
-  
+
   if (!(ffmpeg->fmt->flags & AVFMT_NOFILE)) {
     /* close the output file */
     url_fclose(&ffmpeg->ctxt->pb);
@@ -488,14 +483,11 @@ SOX_FORMAT_HANDLER(ffmpeg)
 
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
 
-  static sox_format_handler_t handler = {
-    SOX_LIB_VERSION_CODE,
-    "Pseudo format to use libffmpeg",
-    names,
-    SOX_FILE_NOSTDIO,
+  static sox_format_handler_t handler = {SOX_LIB_VERSION_CODE,
+    "Pseudo format to use libffmpeg", names, SOX_FILE_NOSTDIO,
     startread, read_samples, stopread,
     startwrite, write_samples, stopwrite,
-    NULL, write_encodings, NULL
+    NULL, write_encodings, NULL, sizeof(priv_t)
   };
 
   return &handler;

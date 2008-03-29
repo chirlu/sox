@@ -1,5 +1,4 @@
-/*
- * Determine MP3 duration
+/* libSoX determine MP3 duration
  * Copyright (c) 2007 robs@users.sourceforge.net
  * Based on original ideas by Regis Boudin, Thibaut Varene & Pascal Giard
  *
@@ -58,17 +57,17 @@ static void read_comments(sox_format_t * ft)
 
   if ((id3struct = id3_file_fdopen(fd, ID3_FILE_MODE_READONLY))) {
     if ((tag = id3_file_tag(id3struct)) && tag->frames)
-      for (i = 0; list[i][0]; ++i) 
+      for (i = 0; list[i][0]; ++i)
         if ((utf8 = utf8_id3tag_findframe(tag, list[i][0], 0))) {
           char * comment = lsx_malloc(strlen(list[i][1]) + 1 + strlen((char *)utf8) + 1);
           sprintf(comment, "%s=%s", list[i][1], utf8);
-          sox_append_comment(&ft->comments, comment);
+          sox_append_comment(&ft->oob.comments, comment);
           free(comment);
           free(utf8);
         }
       if ((utf8 = utf8_id3tag_findframe(tag, "TLEN", 0))) {
         if (atoi((char *)utf8) > 0) {
-          ft->length = atoi((char *)utf8); /* In ms; convert to samples later */
+          ft->signal.length = atoi((char *)utf8); /* In ms; convert to samples later */
           sox_debug("got exact duration from ID3 TLEN");
         }
         free(utf8);

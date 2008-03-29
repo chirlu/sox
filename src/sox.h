@@ -1,5 +1,4 @@
-/*
- * libSoX Library Public Interface
+/* libSoX Library Public Interface
  *
  * Copyright 1999-2007 Chris Bagwell and SoX Contributors.
  *
@@ -77,21 +76,21 @@ typedef int32_t sox_sample_t;
 
 /*                Conversions: Linear PCM <--> sox_sample_t
  *
- *   I/O       I/O     sox_sample_t Clips?    I/O     sox_sample_t Clips? 
- *  Format   Minimum     Minimum     I O    Maximum     Maximum     I O      
- *  ------  ---------  ------------ -- --   --------  ------------ -- --  
- *  Float      -1     -1.00000000047 y y       1           1        y n         
- *  Int8      -128        -128       n n      127     127.9999999   n y   
- *  Int16    -32768      -32768      n n     32767    32767.99998   n y   
- *  Int24   -8388608    -8388608     n n    8388607   8388607.996   n y   
- *  Int32  -2147483648 -2147483648   n n   2147483647 2147483647    n n   
+ *   I/O       I/O     sox_sample_t Clips?    I/O     sox_sample_t Clips?
+ *  Format   Minimum     Minimum     I O    Maximum     Maximum     I O
+ *  ------  ---------  ------------ -- --   --------  ------------ -- --
+ *  Float      -1     -1.00000000047 y y       1           1        y n
+ *  Int8      -128        -128       n n      127     127.9999999   n y
+ *  Int16    -32768      -32768      n n     32767    32767.99998   n y
+ *  Int24   -8388608    -8388608     n n    8388607   8388607.996   n y
+ *  Int32  -2147483648 -2147483648   n n   2147483647 2147483647    n n
  *
  * Conversions are as accurate as possible (with rounding).
  *
  * Rounding: halves toward +inf, all others to nearest integer.
  *
  * Clips? shows whether on not there is the possibility of a conversion
- * clipping to the minimum or maximum value when inputing from or outputing 
+ * clipping to the minimum or maximum value when inputing from or outputing
  * to a given type.
  *
  * Unsigned integers are converted to and from signed integers by flipping
@@ -173,8 +172,7 @@ typedef ptrdiff_t sox_ssize_t;
 
 typedef void (*sox_output_message_handler_t)(unsigned level, const char *filename, const char *fmt, va_list ap);
 
-typedef struct /* Global parameters (for effects & formats) */
-{
+typedef struct { /* Global parameters (for effects & formats) */
 /* public: */
   unsigned     verbosity;
   sox_output_message_handler_t output_message_handler;
@@ -195,14 +193,15 @@ extern sox_globals_t sox_globals;
 typedef double sox_rate_t;
 
 typedef struct { /* Signal parameters; 0 if unknown */
-  sox_rate_t rate;         /* sampling rate */
-  unsigned channels;       /* number of sound channels */
-  unsigned precision;      /* in bits */
+  sox_rate_t       rate;         /* sampling rate */
+  unsigned         channels;     /* number of sound channels */
+  unsigned         precision;    /* in bits */
+  sox_size_t       length;       /* samples * chans in file; 0 if unknown */
 } sox_signalinfo_t;
 
 typedef enum {
   SOX_ENCODING_UNKNOWN   ,
-  
+
   SOX_ENCODING_SIGN2     , /* signed linear 2's comp: Mac */
   SOX_ENCODING_UNSIGNED  , /* unsigned linear: Sound Blaster */
   SOX_ENCODING_FLOAT     , /* floating point (binary format) */
@@ -320,14 +319,12 @@ typedef struct {
   int          (*seek)(sox_format_t * ft, sox_size_t offset);
   unsigned     const * write_formats;
   sox_rate_t   const * write_rates;
+  size_t       priv_size;
 } sox_format_handler_t;
 
 /*
  *  Format information for input and output files.
  */
-
-#define SOX_MAX_FILE_PRIVSIZE    1000
-#define SOX_MAX_NLOOPS           8
 
 typedef char * * sox_comments_t;
 
@@ -339,29 +336,34 @@ void sox_delete_comments(sox_comments_t * comments);
 char * sox_cat_comments(sox_comments_t comments);
 char const * sox_find_comment(sox_comments_t comments, char const * id);
 
-struct sox_format {
-  /* Placing priv at the start of this structure ensures that it gets aligned
-   * in memory in the optimal way for any structure to be cast over it. */
-  char   priv[SOX_MAX_FILE_PRIVSIZE];    /* format's private data area */
+#define SOX_MAX_NLOOPS           8
 
-  sox_signalinfo_t signal;          /* signal specifications */
-  sox_encodinginfo_t encoding;      /* encoding specifications */
-  sox_instrinfo_t  instr;           /* instrument specification */
-  sox_loopinfo_t   loops[SOX_MAX_NLOOPS];/* Looping specification */
-  sox_bool         seekable;        /* can seek on this file */
-  char             mode;            /* read or write mode */
-  sox_size_t       length;          /* samples * chans in file; 0 if unknown */
-  sox_size_t       olength;         /* samples * chans in file; 0 if unknown */
-  sox_size_t       clips;           /* increment if clipping occurs */
-  char             *filename;       /* file name */
-  char             *filetype;       /* type of file */
-  sox_comments_t       comments;        /* comment strings */
-  FILE             *fp;             /* File stream pointer */
-  int              sox_errno;       /* Failure error codes */
-  char             sox_errstr[256]; /* Extend Failure text */
+typedef struct {
+  /* Decoded: */
+  sox_comments_t   comments;              /* Comment strings */
+  sox_instrinfo_t  instr;                 /* Instrument specification */
+  sox_loopinfo_t   loops[SOX_MAX_NLOOPS]; /* Looping specification */
+
+  /* TBD: Non-decoded chunks, etc: */
+} sox_oob_t;                              /* Out Of Band data */
+
+struct sox_format {
+  char             * filename;      /* File name */
+  sox_signalinfo_t signal;          /* Signal specifications */
+  sox_encodinginfo_t encoding;      /* Encoding specifications */
+  char             * filetype;      /* Type of file */
+  sox_oob_t        oob;             /* Out Of Band data */
+  sox_bool         seekable;        /* Can seek on this file */
+  char             mode;            /* Read or write mode ('r' or 'w') */
+  sox_size_t       olength;         /* Samples * chans written to file */
+  sox_size_t       clips;           /* Incremented if clipping occurs */
+  int              sox_errno;       /* Failure error code */
+  char             sox_errstr[256]; /* Failure error text */
+  FILE             * fp;            /* File stream pointer */
   long             tell;
   long             data_start;
-  sox_format_handler_t handler;  /* format struct for this file */
+  sox_format_handler_t handler;     /* Format handler for this file */
+  void             * priv;          /* Format handler's private data area */
 };
 
 /* File flags field */
@@ -392,15 +394,12 @@ sox_bool sox_format_supports_encoding(
     char               const * filetype,
     sox_encodinginfo_t const * encoding);
 sox_format_t * sox_open_write(
-    sox_bool (*overwrite_permitted)(const char *filename),
     char               const * path,
     sox_signalinfo_t   const * signal,
     sox_encodinginfo_t const * encoding,
     char               const * filetype,
-    sox_comments_t                 comments,
-    sox_size_t                 length,
-    sox_instrinfo_t    const * instr,
-    sox_loopinfo_t     const * loops);
+    sox_oob_t          const * oob,
+    sox_bool           (*overwrite_permitted)(const char *filename));
 sox_size_t sox_read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len);
 sox_size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len);
 int sox_close(sox_format_t * ft);
@@ -417,7 +416,6 @@ void sox_format_quit(void);
  */
 
 #define SOX_MAX_EFFECTS 20
-#define SOX_MAX_EFFECT_PRIVSIZE (2 * SOX_MAX_FILE_PRIVSIZE)
 
 #define SOX_EFF_CHAN     1           /* Effect can alter # of channels */
 #define SOX_EFF_RATE     2           /* Effect can alter sample rate */
@@ -449,13 +447,10 @@ typedef struct {
   int (*drain)(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp);
   int (*stop)(sox_effect_t * effp);
   int (*kill)(sox_effect_t * effp);
+  size_t       priv_size;
 } sox_effect_handler_t;
 
 struct sox_effect {
-  /* Placing priv at the start of this structure ensures that it gets aligned
-   * in memory in the optimal way for any structure to be cast over it. */
-  char priv[SOX_MAX_EFFECT_PRIVSIZE];    /* private area for effect */
-
   sox_effects_globals_t    * global_info; /* global parameters */
   sox_signalinfo_t         in_signal;
   sox_signalinfo_t         out_signal;
@@ -468,10 +463,11 @@ struct sox_effect {
   sox_size_t               clips;         /* increment if clipping occurs */
   sox_size_t               flows;         /* 1 if MCHAN, # chans otherwise */
   sox_size_t               flow;          /* flow # */
+  void                     * priv;        /* Effect's private data area */
 };
 
-sox_effect_handler_t const *sox_find_effect(char const * name);
-void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const *e);
+sox_effect_handler_t const * sox_find_effect(char const * name);
+sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh);
 
 /* Effects chain */
 

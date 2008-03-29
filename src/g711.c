@@ -1,4 +1,4 @@
-/* g711.c - G711 u-law, A-law and linear PCM conversions.
+/* libSoX G711.c - G711 u-law, A-law and linear PCM conversions.
  *
  * Copyright (C) 2001 Chris Bagwell
  *

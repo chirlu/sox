@@ -1,13 +1,19 @@
-/* aliases */
-#define gFFTBitTable lsx_gFFTBitTable
-#define MaxFastBits lsx_MaxFastBits
-#define FFT lsx_FFT
-#define RealFFT lsx_RealFFT
-#define PowerSpectrum lsx_PowerSpectrum
-#define WindowFunc lsx_WindowFunc
-
-/*
- * FFT.h
+/* libSoX FFT funtions    copyright Ian Turner and others.
+ *
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or (at
+ * your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
  *
  * Based on FFT.h from Audacity, with the following permission from
  * its author, Dominic Mazzoni (in particular, relicensing the code
@@ -34,23 +40,15 @@
  *
  * The basic algorithm for his code was based on Numerical Recipes
  * in Fortran.
- *
- * This file is now part of SoX, and is copyright Ian Turner and others.
- * 
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
+/* aliases */
+#define gFFTBitTable lsx_gFFTBitTable
+#define MaxFastBits lsx_MaxFastBits
+#define FFT lsx_FFT
+#define RealFFT lsx_RealFFT
+#define PowerSpectrum lsx_PowerSpectrum
+#define WindowFunc lsx_WindowFunc
 
 /*
  * This is the function you will use the most often.

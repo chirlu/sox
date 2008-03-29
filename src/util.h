@@ -1,5 +1,4 @@
-/*
- * General purpose, i.e. non SoX specific, utility functions and macros
+/* General purpose, i.e. non SoX specific, utility functions and macros
  *
  * (c) 2006-8 Chris Bagwell and SoX contributors
  *
@@ -72,6 +71,11 @@
 #define array_length(a) (sizeof(a)/sizeof(a[0]))
 #define sqr(a) ((a) * (a))
 
+#define dB_to_linear(x) exp((x) * M_LN10 * 0.05)
+#define linear_to_dB(x) (log10(x) * 20)
+
+#include <math.h>
+
 #ifndef M_PI
 #define M_PI    3.14159265358979323846
 #endif
@@ -81,8 +85,9 @@
 #ifndef M_LN10
 #define M_LN10  2.30258509299404568402  /* natural log of 10 */
 #endif
-#define dB_to_linear(x) exp((x) * M_LN10 * 0.05)
-#define linear_to_dB(x) (log10(x) * 20)
+#ifndef M_SQRT2
+#define M_SQRT2  sqrt(2.)
+#endif
 
 #ifdef WORDS_BIGENDIAN
 #define MACHINE_IS_BIGENDIAN 1

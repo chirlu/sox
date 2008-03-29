@@ -1,16 +1,15 @@
-/*
- * Copyright (c) 2006 robs@users.sourceforge.net
+/* libSoX test code    copyright (c) 2006 robs@users.sourceforge.net
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or (at your
  * option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
@@ -136,13 +135,13 @@
   int##bits##_2 = SOX_SAMPLE_TO_SIGNED(bits,sample, clips); \
   assert(int##bits##_2 == int##bits && --clips == 0);
 
-#if defined __GNUC__ 
-  #pragma GCC system_header 
-#elif defined __SUNPRO_CC 
-  #pragma disable_warn 
-#elif defined _MSC_VER 
-  #pragma warning(push, 1) 
-#endif 
+#if defined __GNUC__
+  #pragma GCC system_header
+#elif defined __SUNPRO_CC
+  #pragma disable_warn
+#elif defined _MSC_VER
+  #pragma warning(push, 1)
+#endif
 
 int main()
 {
@@ -198,8 +197,8 @@ int main()
   return 0;
 }
 
-#if defined __SUNPRO_CC 
-  #pragma enable_warn 
-#elif defined _MSC_VER 
-  #pragma warning(pop) 
-#endif 
+#if defined __SUNPRO_CC
+  #pragma enable_warn
+#elif defined _MSC_VER
+  #pragma warning(pop)
+#endif

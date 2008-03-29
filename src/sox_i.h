@@ -1,5 +1,4 @@
-/*
- * libSoX Internal header
+/* libSoX Internal header
  *
  *   This file is meant for libSoX internal use only
  *
@@ -129,8 +128,7 @@ __attribute__ ((format (printf, 3, 4)));
 ;
 #endif
 
-typedef struct sox_formats_globals /* Global parameters (for formats) */
-{
+typedef struct sox_formats_globals { /* Global parameters (for formats) */
   sox_globals_t * global_info;
 } sox_formats_globals;
 

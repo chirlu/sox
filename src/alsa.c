@@ -11,14 +11,13 @@
 
 #include <alsa/asoundlib.h>
 
-typedef struct alsa_priv
-{
-    snd_pcm_t *pcm_handle;
-    char *buf;
-    sox_size_t buf_size;
-    snd_pcm_uframes_t period_size;
-    snd_pcm_uframes_t frames_this_period;
-} *alsa_priv_t;
+typedef struct {
+  snd_pcm_t *pcm_handle;
+  char *buf;
+  sox_size_t buf_size;
+  snd_pcm_uframes_t period_size;
+  snd_pcm_uframes_t frames_this_period;
+} priv_t;
 
 static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
 {
@@ -48,7 +47,7 @@ static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
     /* Some hardware only wants to work with 8-bit or 16-bit data */
     if (ft->encoding.bits_per_sample == 8)
     {
-        if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U8)) && 
+        if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U8)) &&
             !(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S8)))
         {
             sox_report("driver doesn't supported byte samples.  Changing to words.");
@@ -57,7 +56,7 @@ static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
     }
     else if (ft->encoding.bits_per_sample == 16)
     {
-        if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)) && 
+        if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)) &&
             !(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
         {
             sox_report("driver doesn't supported word samples.  Changing to bytes.");
@@ -175,7 +174,7 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
 {
     int fmt = SND_PCM_FORMAT_S16;
     int err;
-    alsa_priv_t alsa = (alsa_priv_t)ft->priv;
+    priv_t * alsa = (priv_t *)ft->priv;
     snd_pcm_hw_params_t *hw_params = NULL;
     unsigned int min_rate, max_rate;
     unsigned int min_chan, max_chan;
@@ -188,21 +187,21 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
 
     lsx_set_signal_defaults(&ft->signal);
 
-    if ((err = snd_pcm_open(&(alsa->pcm_handle), ft->filename, 
-                            mode, 0)) < 0) 
+    if ((err = snd_pcm_open(&(alsa->pcm_handle), ft->filename,
+                            mode, 0)) < 0)
     {
         lsx_fail_errno(ft, SOX_EPERM, "cannot open audio device");
         goto open_error;
     }
 
-    if ((err = snd_pcm_hw_params_malloc(&hw_params)) < 0) 
+    if ((err = snd_pcm_hw_params_malloc(&hw_params)) < 0)
     {
-        lsx_fail_errno(ft, SOX_ENOMEM, 
+        lsx_fail_errno(ft, SOX_ENOMEM,
                       "cannot allocate hardware parameter structure");
         goto open_error;
     }
 
-    if ((err = snd_pcm_hw_params_any(alsa->pcm_handle, hw_params)) < 0) 
+    if ((err = snd_pcm_hw_params_any(alsa->pcm_handle, hw_params)) < 0)
     {
         lsx_fail_errno(ft, SOX_EPERM,
                       "cannot initialize hardware parameter structure");
@@ -218,7 +217,7 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
     }
 #endif
 
-    if ((err = snd_pcm_hw_params_set_access(alsa->pcm_handle, hw_params, 
+    if ((err = snd_pcm_hw_params_set_access(alsa->pcm_handle, hw_params,
                                             SND_PCM_ACCESS_RW_INTERLEAVED)) < 0)
     {
         lsx_fail_errno(ft, SOX_EPERM,
@@ -228,12 +227,12 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
 
     snd_pcm_hw_params_get_channels_min(hw_params, &min_chan);
     snd_pcm_hw_params_get_channels_max(hw_params, &max_chan);
-    if (ft->signal.channels == 0) 
+    if (ft->signal.channels == 0)
         ft->signal.channels = min_chan;
-    else 
-        if (ft->signal.channels > max_chan) 
+    else
+        if (ft->signal.channels > max_chan)
             ft->signal.channels = max_chan;
-        else if (ft->signal.channels < min_chan) 
+        else if (ft->signal.channels < min_chan)
             ft->signal.channels = min_chan;
 
     if (snd_pcm_format_mask_malloc(&fmask) < 0)
@@ -246,8 +245,8 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
     snd_pcm_format_mask_free(fmask);
     fmask = NULL;
 
-    if ((err = snd_pcm_hw_params_set_format(alsa->pcm_handle, 
-                                            hw_params, fmt)) < 0) 
+    if ((err = snd_pcm_hw_params_set_format(alsa->pcm_handle,
+                                            hw_params, fmt)) < 0)
     {
         lsx_fail_errno(ft, SOX_EPERM, "cannot set sample format");
         goto open_error;
@@ -264,18 +263,18 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
         ft->signal.rate = rate;
     }
     dir = 0;
-    if ((err = snd_pcm_hw_params_set_rate_near(alsa->pcm_handle, 
-                                               hw_params, 
+    if ((err = snd_pcm_hw_params_set_rate_near(alsa->pcm_handle,
+                                               hw_params,
                                                &rate,
-                                               &dir)) < 0) 
+                                               &dir)) < 0)
     {
         lsx_fail_errno(ft, SOX_EPERM, "cannot set sample rate");
         goto open_error;
     }
-    snd_pcm_hw_params_get_rate(hw_params, 
+    snd_pcm_hw_params_get_rate(hw_params,
                                &rate,
                                &dir);
- 
+
     if (rate != ft->signal.rate)
     {
         sox_report("Could not set exact rate of %g.  Approximating with %i",
@@ -285,8 +284,8 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
     snd_pcm_hw_params_get_rate(hw_params, &rate, &dir);
 
     if ((err = snd_pcm_hw_params_set_channels(alsa->pcm_handle,
-                                              hw_params, 
-                                              ft->signal.channels)) < 0) 
+                                              hw_params,
+                                              ft->signal.channels)) < 0)
     {
         lsx_fail_errno(ft, SOX_EPERM, "cannot set channel count");
         goto open_error;
@@ -308,7 +307,7 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
     }
 
     dir = 0;
-    if (snd_pcm_hw_params_get_period_size_min(hw_params, 
+    if (snd_pcm_hw_params_get_period_size_min(hw_params,
                                               &period_size_min, &dir) < 0)
     {
         lsx_fail_errno(ft, SOX_EPERM, "Error getting min period size.");
@@ -316,7 +315,7 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
     }
 
     dir = 0;
-    if (snd_pcm_hw_params_get_period_size_max(hw_params, 
+    if (snd_pcm_hw_params_get_period_size_max(hw_params,
                                               &period_size_max, &dir) < 0)
     {
         lsx_fail_errno(ft, SOX_EPERM, "Error getting max buffer size.");
@@ -332,8 +331,8 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
     buffer_size = period_size * 8;
 
     dir = 0;
-    if (snd_pcm_hw_params_set_period_size_near(alsa->pcm_handle, hw_params, 
-                                               &period_size, &dir) < 0) 
+    if (snd_pcm_hw_params_set_period_size_near(alsa->pcm_handle, hw_params,
+                                               &period_size, &dir) < 0)
     {
         lsx_fail_errno(ft, SOX_EPERM, "Error setting periods.");
         goto open_error;
@@ -341,7 +340,7 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
     snd_pcm_hw_params_get_period_size(hw_params, &period_size, &dir);
 
     dir = 0;
-    if (snd_pcm_hw_params_set_buffer_size_near(alsa->pcm_handle, hw_params, 
+    if (snd_pcm_hw_params_set_buffer_size_near(alsa->pcm_handle, hw_params,
                                                &buffer_size) < 0) {
         lsx_fail_errno(ft, SOX_EPERM, "Error setting buffer size.");
         goto open_error;
@@ -354,7 +353,7 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
         goto open_error;
     }
 
-    if ((err = snd_pcm_hw_params(alsa->pcm_handle, hw_params)) < 0) 
+    if ((err = snd_pcm_hw_params(alsa->pcm_handle, hw_params)) < 0)
     {
         lsx_fail_errno(ft, SOX_EPERM, "cannot set parameters");
         goto open_error;
@@ -363,7 +362,7 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
     snd_pcm_hw_params_free(hw_params);
     hw_params = NULL;
 
-    if ((err = snd_pcm_prepare(alsa->pcm_handle)) < 0) 
+    if ((err = snd_pcm_prepare(alsa->pcm_handle)) < 0)
     {
         lsx_fail_errno(ft, SOX_EPERM, "cannot prepare audio interface for use");
         goto open_error;
@@ -391,21 +390,21 @@ open_error:
  */
 static int xrun_recovery(snd_pcm_t *handle, int err)
 {
-    if (err == -EPIPE) 
+    if (err == -EPIPE)
     {   /* over/under-run */
         err = snd_pcm_prepare(handle);
         if (err < 0)
             sox_warn("Can't recover from over/underrun, prepare failed: %s", snd_strerror(err));
         return 0;
-    } 
-    else 
+    }
+    else
     {
-        if (err == -ESTRPIPE) 
+        if (err == -ESTRPIPE)
         {
             /* wait until the suspend flag is released */
             while ((err = snd_pcm_resume(handle)) == -EAGAIN)
-                sleep(1);                       
-            if (err < 0) 
+                sleep(1);
+            if (err < 0)
             {
                 err = snd_pcm_prepare(handle);
                 if (err < 0)
@@ -469,7 +468,7 @@ static void sw_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, s
 
 static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
 {
-    alsa_priv_t alsa = (alsa_priv_t)ft->priv;
+    priv_t * alsa = (priv_t *)ft->priv;
     void (*read_buf)(sox_sample_t *, char const *, sox_size_t, sox_bool, sox_size_t *) = 0;
     sox_size_t len;
 
@@ -503,7 +502,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
 
     len = 0;
     while (len < nsamp) {
-      sox_size_t n = snd_pcm_readi(alsa->pcm_handle, alsa->buf, 
+      sox_size_t n = snd_pcm_readi(alsa->pcm_handle, alsa->buf,
           (nsamp - len)/ft->signal.channels); /* ALSA takes "frame" counts. */
       if ((int)n < 0) {
         if (xrun_recovery(alsa->pcm_handle, (int)n) < 0) {
@@ -521,7 +520,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
 
 static int stopread(sox_format_t * ft)
 {
-    alsa_priv_t alsa = (alsa_priv_t)ft->priv;
+    priv_t * alsa = (priv_t *)ft->priv;
 
     snd_pcm_close(alsa->pcm_handle);
 
@@ -574,7 +573,7 @@ static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t l
 static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
 {
     sox_size_t osamp, done;
-    alsa_priv_t alsa = (alsa_priv_t)ft->priv;
+    priv_t * alsa = (priv_t *)ft->priv;
     void (*write_buf)(char *, const sox_sample_t *, sox_size_t, sox_bool, sox_size_t *) = 0;
 
     switch(ft->encoding.bits_per_sample) {
@@ -614,14 +613,14 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
     for (done = 0; done < nsamp; done += osamp) {
       int err;
       sox_size_t len;
-      
+
       osamp = min(nsamp - done, alsa->buf_size / (ft->encoding.bits_per_sample >> 3));
       write_buf(alsa->buf, buf, osamp, ft->encoding.reverse_bytes, &ft->clips);
       buf += osamp;
 
       for (len = 0; len < osamp;) {
-        err = snd_pcm_writei(alsa->pcm_handle, 
-                             alsa->buf + (len * (ft->encoding.bits_per_sample >> 3)), 
+        err = snd_pcm_writei(alsa->pcm_handle,
+                             alsa->buf + (len * (ft->encoding.bits_per_sample >> 3)),
                              (osamp - len) / ft->signal.channels);
         if (errno == EAGAIN) /* Happens naturally; don't report it */
           errno = 0;
@@ -644,7 +643,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
 
 static int stopwrite(sox_format_t * ft)
 {
-  alsa_priv_t alsa = (alsa_priv_t)ft->priv;
+  priv_t * alsa = (priv_t *)ft->priv;
 
   /* Pad to hardware period: */
   sox_size_t npad = (alsa->period_size - alsa->frames_this_period) * ft->signal.channels;
@@ -665,13 +664,12 @@ SOX_FORMAT_HANDLER(alsa)
     SOX_ENCODING_SIGN2, 16, 8, 0,
     SOX_ENCODING_UNSIGNED, 16, 8, 0,
     0};
-  static sox_format_handler_t const handler = {
-    SOX_LIB_VERSION_CODE,
+  static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "Advanced Linux Sound Architecture device driver",
     names, SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
     startread, read_samples, stopread,
     startwrite, write_samples, stopwrite,
-    NULL, write_encodings, NULL
+    NULL, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
 }

@@ -1,5 +1,4 @@
-/*
- * Sounder format handler          (c) 2008 robs@users.sourceforge.net
+/* libSoX Sounder format handler          (c) 2008 robs@users.sourceforge.net
  * Based on description in soundr3b.zip.
  *
  * This library is free software; you can redistribute it and/or modify it
@@ -50,7 +49,7 @@ SOX_FORMAT_HANDLER(sounder)
     names, SOX_FILE_LIT_END | SOX_FILE_MONO,
     start_read, lsx_rawread, NULL,
     write_header, lsx_rawwrite, NULL,
-    lsx_rawseek, write_encodings, NULL
+    lsx_rawseek, write_encodings, NULL, 0
   };
   return &handler;
 }

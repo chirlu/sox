@@ -1,5 +1,4 @@
-/*
- * File format: raw Dialogic/OKI ADPCM        (c) 2007-8 SoX contributors
+/* libSoX file format: raw Dialogic/OKI ADPCM        (c) 2007-8 SoX contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -17,19 +16,18 @@
  */
 
 #include "sox_i.h"
+#include "adpcms.h"
 #include "vox.h"
 
 SOX_FORMAT_HANDLER(vox)
 {
   static char const * const names[] = {"vox", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_OKI_ADPCM, 4, 0, 0};
-  static sox_format_handler_t handler = {
-    SOX_LIB_VERSION_CODE,
-    "Raw OKI/Dialogic ADPCM",
-    names, SOX_FILE_MONO,
+  static sox_format_handler_t handler = {SOX_LIB_VERSION_CODE,
+    "Raw OKI/Dialogic ADPCM", names, SOX_FILE_MONO,
     sox_vox_start, sox_vox_read, sox_vox_stopread,
     sox_vox_start, sox_vox_write, sox_vox_stopwrite,
-    lsx_rawseek, write_encodings, NULL
+    lsx_rawseek, write_encodings, NULL, sizeof(adpcm_io_t)
   };
   return &handler;
 }

@@ -1,5 +1,4 @@
-/*
- * adpcm.c  codex functions for MS_ADPCM data
+/* adpcm.c  codex functions for MS_ADPCM data
  *          (hopefully) provides interoperability with
  *          Microsoft's ADPCM format, but, as usual,
  *          see LACK-OF-WARRANTY information below.
@@ -36,10 +35,9 @@
 #include "adpcm.h"
 
 #include <sys/types.h>
-#include <math.h>
 #include <stdio.h>
 
-typedef struct MsState {
+typedef struct {
         sox_sample_t  step;      /* step size */
         short lsx_ms_adpcm_i_coef[2];
 } MsState_t;

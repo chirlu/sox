@@ -1,29 +1,31 @@
-/*
- * Windowed sinc lowpass/bandpass/highpass filter.
- */
-
-/*
- * November 18, 1999
+/* libSoX Windowed sinc lowpass/bandpass/highpass filter     November 18, 1999
+ * Copyright 1999 Stan Brooks <stabro@megsinet.net>
  * Copyright 1994 Julius O. Smith
  * Copyright 1991 (?) Lance Norskog (?)
- * Copyright 1999 Stan Brooks <stabro@megsinet.net>
  *
- * -------------------------------------------------------------------
- * This source code is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * -------------------------------------------------------------------
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or (at
+ * your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
  *
  * REMARKS: (Stan Brooks speaking)
  * This code is heavily based on the resample.c code which was
  * apparently itself a rewrite (by Lance Norskog?) of code originally
- * by Julius O. Smith, and distributed under the GPL license...
- *
+ * by Julius O. Smith, and distributed under the LGPL.
  */
 
 #include "sox_i.h"
 
-#include <math.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -31,7 +33,7 @@
 #define BUFFSIZE 8192
 
 /* Private data for Lerp via LCM file */
-typedef struct filterstuff {
+typedef struct {
         sox_rate_t rate;
         sox_sample_t freq0;/* low  corner freq */
         sox_sample_t freq1;/* high corner freq */
@@ -41,24 +43,24 @@ typedef struct filterstuff {
         long Xh;/* number of past/future samples needed by filter  */
         long Xt;/* target to enter new data into X */
         double *X, *Y;/* I/O buffers */
-} *filter_t;
+} priv_t;
 
 /* lsx_makeFilter() declared in resample.c */
-extern int 
+extern int
 lsx_makeFilter(double Fp[], long Nwing, double Froll, double Beta, long Num, int Normalize);
 
-static void FiltWin(filter_t f, long Nx);
+static void FiltWin(priv_t * f, long Nx);
 
 /*
  * Process options
  */
 static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
 {
-        filter_t f = (filter_t) effp->priv;
+        priv_t * f = (priv_t *) effp->priv;
 
         f->beta = 16;  /* Kaiser window, beta 16 */
         f->Nwin = 128;
-        
+
         f->freq0 = f->freq1 = 0;
         if (n >= 1) {
                 char *p;
@@ -95,7 +97,7 @@ static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int sox_filter_start(sox_effect_t * effp)
 {
-        filter_t f = (filter_t) effp->priv;
+        priv_t * f = (priv_t *) effp->priv;
         double *Fp0, *Fp1;
         long Xh0, Xh1, Xh;
         int i;
@@ -112,7 +114,7 @@ static int sox_filter_start(sox_effect_t * effp)
                                         f->freq0, f->freq1, f->rate/2);
                 return (SOX_EOF);
         }
-        
+
         Xh = f->Nwin/2;
         Fp0 = (double *) lsx_malloc(sizeof(double) * (Xh + 2)) + 1;
         if (f->freq0 > (sox_sample_t)f->rate/200) {
@@ -171,10 +173,10 @@ static int sox_filter_start(sox_effect_t * effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_filter_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_filter_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                    sox_size_t *isamp, sox_size_t *osamp)
 {
-        filter_t f = (filter_t) effp->priv;
+        priv_t * f = (priv_t *) effp->priv;
         sox_size_t Nx;
         long i, Nproc;
 
@@ -211,7 +213,7 @@ static int sox_filter_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
         /* Copy back portion of input signal that must be re-used */
         Nx += f->Xt;
         if (f->Xh)
-                memmove(f->X, f->X + Nx - 2*f->Xh, sizeof(double)*2*f->Xh); 
+                memmove(f->X, f->X + Nx - 2*f->Xh, sizeof(double)*2*f->Xh);
         f->Xt = 2*f->Xh;
 
         for (i = 0; i < Nproc; i++)
@@ -226,7 +228,7 @@ static int sox_filter_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
  */
 static int sox_filter_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-        filter_t f = (filter_t) effp->priv;
+        priv_t * f = (priv_t *) effp->priv;
         long isamp_res, osamp_res;
         sox_sample_t *Obuf;
 
@@ -258,12 +260,12 @@ static int sox_filter_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t 
 }
 
 /*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
+ * Do anything required when you stop reading samples.
+ * Don't close input file!
  */
 static int sox_filter_stop(sox_effect_t * effp)
 {
-        filter_t f = (filter_t) effp->priv;
+        priv_t * f = (priv_t *) effp->priv;
 
         free(f->Fp - 1);
         free(f->X);
@@ -274,7 +276,7 @@ static double jprod(const double *Fp, const double *Xp, long ct)
 {
         const double *fp, *xp, *xq;
         double v = 0;
-        
+
         fp = Fp + ct;   /* so sum starts with smaller coef's */
         xp = Xp - ct;
         xq = Xp + ct;
@@ -286,7 +288,7 @@ static double jprod(const double *Fp, const double *Xp, long ct)
         return v;
 }
 
-static void FiltWin(filter_t f, long Nx)
+static void FiltWin(priv_t * f, long Nx)
 {
         double *Y;
         double *X, *Xend;
@@ -309,7 +311,7 @@ static sox_effect_handler_t sox_filter_effect = {
   sox_filter_flow,
   sox_filter_drain,
   sox_filter_stop,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_filter_effect_fn(void)

@@ -1,4 +1,4 @@
-/* g711.h - include for G711 u-law and a-law conversion routines
+/* libSoX G711.h - include for G711 u-law and a-law conversion routines
  *
  * Copyright (C) 2001 Chris Bagwell
  *

@@ -1,5 +1,4 @@
-/*
- * File format: raw IMA ADPCM           (c) 2007-8 SoX contributors
+/* libSoX format: raw IMA ADPCM           (c) 2007-8 SoX contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -17,19 +16,18 @@
  */
 
 #include "sox_i.h"
+#include "adpcms.h"
 #include "vox.h"
 
 SOX_FORMAT_HANDLER(ima)
 {
   static char const * const names[] = {"ima", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_IMA_ADPCM, 4, 0, 0};
-  static sox_format_handler_t handler = {
-    SOX_LIB_VERSION_CODE,
-    "Raw IMA ADPCM",
-    names, SOX_FILE_MONO,
+  static sox_format_handler_t handler = {SOX_LIB_VERSION_CODE,
+    "Raw IMA ADPCM", names, SOX_FILE_MONO,
     sox_ima_start, sox_vox_read, sox_vox_stopread,
     sox_ima_start, sox_vox_write, sox_vox_stopwrite,
-    lsx_rawseek, write_encodings, NULL
+    lsx_rawseek, write_encodings, NULL, sizeof(adpcm_io_t)
   };
   return &handler;
 }

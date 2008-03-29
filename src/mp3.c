@@ -1,5 +1,4 @@
-/*
- * MP3 support for SoX
+/* MP3 support for SoX
  *
  * Uses libmad for MP3 decoding
  * and libmp3lame for MP3 encoding
@@ -20,7 +19,6 @@
 
 #ifdef HAVE_LAME_LAME_H
 #include <lame/lame.h>
-#include <math.h>
 #endif
 
 #if HAVE_ID3TAG && HAVE_UNISTD_H
@@ -33,7 +31,7 @@
 #define INPUT_BUFFER_SIZE       (sox_globals.bufsiz)
 
 /* Private data */
-struct mp3priv {
+typedef struct {
 #ifdef HAVE_MAD_H
         struct mad_stream       *Stream;
         struct mad_frame        *Frame;
@@ -46,7 +44,7 @@ struct mp3priv {
 #ifdef HAVE_LAME_LAME_H
         lame_global_flags       *gfp;
 #endif /*HAVE_LAME_LAME_H*/
-};
+} priv_t;
 
 #ifdef HAVE_MAD_H
 
@@ -88,7 +86,7 @@ static int tagtype(const unsigned char *data, size_t length)
  */
 static int sox_mp3_input(sox_format_t * ft)
 {
-    struct mp3priv *p = (struct mp3priv *) ft->priv;
+    priv_t *p = (priv_t *) ft->priv;
     size_t bytes_read;
     size_t remaining;
 
@@ -125,7 +123,7 @@ static int sox_mp3_input(sox_format_t * ft)
  * */
 static int sox_mp3_inputtag(sox_format_t * ft)
 {
-    struct mp3priv *p = (struct mp3priv *) ft->priv;
+    priv_t *p = (priv_t *) ft->priv;
     int rc = SOX_EOF;
     size_t remaining;
     size_t tagsize;
@@ -158,9 +156,9 @@ static int sox_mp3_inputtag(sox_format_t * ft)
     return rc;
 }
 
-static int startread(sox_format_t * ft) 
+static int startread(sox_format_t * ft)
 {
-    struct mp3priv *p = (struct mp3priv *) ft->priv;
+    priv_t *p = (priv_t *) ft->priv;
     size_t ReadSize;
 
     p->Stream = NULL;
@@ -178,9 +176,9 @@ static int startread(sox_format_t * ft)
     if (ft->seekable) {
 #if HAVE_ID3TAG && HAVE_UNISTD_H
       read_comments(ft);
-      if (!ft->length)
-#endif 
-        ft->length = mp3_duration_ms(ft->fp, p->InputBuffer);
+      if (!ft->signal.length)
+#endif
+        ft->signal.length = mp3_duration_ms(ft->fp, p->InputBuffer);
     }
 
     mad_stream_init(p->Stream);
@@ -208,7 +206,7 @@ static int startread(sox_format_t * ft)
      * at the beginning of the audio file.
      */
     p->Stream->error = 0;
-    while (mad_frame_decode(p->Frame,p->Stream)) 
+    while (mad_frame_decode(p->Frame,p->Stream))
     {
         /* check whether input buffer needs a refill */
         if (p->Stream->error == MAD_ERROR_BUFLEN)
@@ -254,8 +252,8 @@ static int startread(sox_format_t * ft)
     mad_timer_add(p->Timer,p->Frame->header.duration);
     mad_synth_frame(p->Synth,p->Frame);
     ft->signal.rate=p->Synth->pcm.samplerate;
-    ft->length = ft->length * .001 * ft->signal.rate + .5;
-    ft->length *= ft->signal.channels;  /* Keep separate from line above! */
+    ft->signal.length = ft->signal.length * .001 * ft->signal.rate + .5;
+    ft->signal.length *= ft->signal.channels;  /* Keep separate from line above! */
 
     p->cursamp = 0;
 
@@ -270,7 +268,7 @@ static int startread(sox_format_t * ft)
  */
 static sox_size_t sox_mp3read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
-    struct mp3priv *p = (struct mp3priv *) ft->priv;
+    priv_t *p = (priv_t *) ft->priv;
     sox_size_t donow,i,done=0;
     mad_fixed_t sample;
     size_t chan;
@@ -333,7 +331,7 @@ static sox_size_t sox_mp3read(sox_format_t * ft, sox_sample_t *buf, sox_size_t l
 
 static int stopread(sox_format_t * ft)
 {
-  struct mp3priv *p=(struct mp3priv*) ft->priv;
+  priv_t *p=(priv_t*) ft->priv;
 
   mad_synth_finish(p->Synth);
   mad_frame_finish(p->Frame);
@@ -365,8 +363,8 @@ static void null_error_func(const char* string UNUSED, va_list va UNUSED)
 
 static int startwrite(sox_format_t * ft)
 {
-  struct mp3priv *p = (struct mp3priv *) ft->priv;
-  
+  priv_t *p = (priv_t *) ft->priv;
+
   if (ft->encoding.encoding != SOX_ENCODING_MP3) {
     if(ft->encoding.encoding != SOX_ENCODING_UNKNOWN)
       sox_report("Encoding forced to MP3");
@@ -413,7 +411,7 @@ static int startwrite(sox_format_t * ft)
 
 static sox_size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t samp)
 {
-    struct mp3priv *p = (struct mp3priv *)ft->priv;
+    priv_t *p = (priv_t *)ft->priv;
     char *mp3buffer;
     sox_size_t mp3buffer_size;
     short signed int *buffer_l, *buffer_r = NULL;
@@ -430,7 +428,7 @@ static sox_size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, sox_s
      * and assumes for the majority of cases that your passing
      * in something scaled based on passed in datatype
      * (16, 32, 64, and float).
-     * 
+     *
      * If we used long buffers then this means it expects
      * different scalling between 32-bit and 64-bit CPU's.
      *
@@ -445,7 +443,7 @@ static sox_size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, sox_s
         /* lame doesn't support iterleaved samples so we must break
          * them out into seperate buffers.
          */
-        if ((buffer_r = 
+        if ((buffer_r =
              (short signed int *)lsx_malloc(nsamples*
                                           sizeof(short signed int))) == NULL)
         {
@@ -465,7 +463,7 @@ static sox_size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, sox_s
         j=0;
         for (i=0; i<nsamples; i++)
         {
-            buffer_l[i]=SOX_SAMPLE_TO_SIGNED_16BIT(buf[j++], ft->clips); 
+            buffer_l[i]=SOX_SAMPLE_TO_SIGNED_16BIT(buf[j++], ft->clips);
         }
     }
 
@@ -504,11 +502,11 @@ end3:
 
 static int stopwrite(sox_format_t * ft)
 {
-  struct mp3priv *p = (struct mp3priv *) ft->priv;
+  priv_t *p = (priv_t *) ft->priv;
   char mp3buffer[7200];
   int written;
   size_t written2;
-  
+
   if ((written=lame_encode_flush(p->gfp, (unsigned char *)mp3buffer, 7200)) <0){
     lsx_fail_errno(ft,SOX_EOF,"Encoding failed");
   }
@@ -535,13 +533,11 @@ SOX_FORMAT_HANDLER(mp3)
   static char const * const names[] = {"mp3", "mp2", NULL};
   static unsigned const write_encodings[] = {
     SOX_ENCODING_GSM, 0, 0};
-  static sox_format_handler_t const handler = {
-    SOX_LIB_VERSION_CODE,
-    "MPEG Layer 3 lossy audio compression",
-    names, 0,
+  static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
+    "MPEG Layer 3 lossy audio compression", names, 0,
     startread, sox_mp3read, stopread,
     startwrite, sox_mp3write, stopwrite,
-    NULL, write_encodings, NULL
+    NULL, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
 }

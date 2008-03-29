@@ -1,4 +1,5 @@
-/*
+/* libSoX ADPCM codecs: IMA, OKI, CL.   (c) 2007-8 robs@users.sourceforge.net
+ *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2.1 of the License, or (at
@@ -13,8 +14,6 @@
  * along with this library; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-/* ADPCM CODECs: IMA, OKI.   (c) 2007 robs@users.sourceforge.net */
 
 typedef struct {
   int max_step_index;
@@ -36,21 +35,21 @@ void lsx_adpcm_init(adpcm_t * p, int type, int first_sample);
 int lsx_adpcm_decode(int code, adpcm_t * p);
 int lsx_adpcm_encode(int sample, adpcm_t * p);
 
-typedef struct adpcm_io {
+typedef struct {
   adpcm_t encoder;
   struct {
     uint8_t byte;               /* write store */
     uint8_t flag;
   } store;
   sox_fileinfo_t file;
-} *adpcm_io_t;
+} adpcm_io_t;
 
 /* Format methods */
-void sox_adpcm_reset(adpcm_io_t state, sox_encoding_t type);
-int sox_adpcm_oki_start(sox_format_t * ft, adpcm_io_t state);
-int sox_adpcm_ima_start(sox_format_t * ft, adpcm_io_t state);
-sox_size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t state, sox_sample_t *buffer, sox_size_t len);
-int sox_adpcm_stopread(sox_format_t * ft, adpcm_io_t state);
-sox_size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t state, const sox_sample_t *buffer, sox_size_t length);
-void sox_adpcm_flush(sox_format_t * ft, adpcm_io_t state);
-int sox_adpcm_stopwrite(sox_format_t * ft, adpcm_io_t state);
+void sox_adpcm_reset(adpcm_io_t * state, sox_encoding_t type);
+int sox_adpcm_oki_start(sox_format_t * ft, adpcm_io_t * state);
+int sox_adpcm_ima_start(sox_format_t * ft, adpcm_io_t * state);
+sox_size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t * state, sox_sample_t *buffer, sox_size_t len);
+int sox_adpcm_stopread(sox_format_t * ft, adpcm_io_t * state);
+sox_size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t * state, const sox_sample_t *buffer, sox_size_t length);
+void sox_adpcm_flush(sox_format_t * ft, adpcm_io_t * state);
+int sox_adpcm_stopwrite(sox_format_t * ft, adpcm_io_t * state);

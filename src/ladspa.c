@@ -1,5 +1,4 @@
-/*
- * LADSPA effect support for sox
+/* LADSPA effect support for sox
  * (c) Reuben Thomas <rrt@sc3d.org> 2007
  *
  * This library is free software; you can redistribute it and/or modify it
@@ -24,7 +23,6 @@
 #include <assert.h>
 #include <limits.h>
 #include <string.h>
-#include <math.h>
 #include <ltdl.h>
 #include <ladspa.h>
 
@@ -38,12 +36,12 @@ typedef struct {
   LADSPA_Handle handle;         /* instantiated plugin handle */
   LADSPA_Data *control;         /* control ports */
   unsigned long input_port, output_port;
-} *ladspa_t;
+} priv_t;
 
 static LADSPA_Data ladspa_default(const LADSPA_PortRangeHint *p)
 {
   LADSPA_Data d;
-  
+
   if (LADSPA_IS_HINT_DEFAULT_0(p->HintDescriptor))
     d = 0.0;
   else if (LADSPA_IS_HINT_DEFAULT_1(p->HintDescriptor))
@@ -85,7 +83,7 @@ static LADSPA_Data ladspa_default(const LADSPA_PortRangeHint *p)
  */
 static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
 {
-  ladspa_t l_st = (ladspa_t)effp->priv;
+  priv_t * l_st = (priv_t *)effp->priv;
   char *path;
   union {LADSPA_Descriptor_Function fn; lt_ptr ptr;} ltptr;
   unsigned long index = 0, i;
@@ -152,7 +150,7 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
       sox_fail("port %lu is both audio and control", i);
       return SOX_EOF;
     }
-               
+
     if (LADSPA_IS_PORT_AUDIO(port)) {
       if (LADSPA_IS_PORT_INPUT(port)) {
         if (l_st->input_port != ULONG_MAX) {
@@ -194,7 +192,7 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
  */
 static int sox_ladspa_start(sox_effect_t * effp)
 {
-  ladspa_t l_st = (ladspa_t)effp->priv;
+  priv_t * l_st = (priv_t *)effp->priv;
   unsigned long i;
 
   /* Instantiate the plugin */
@@ -225,38 +223,38 @@ static int sox_ladspa_start(sox_effect_t * effp)
 static int sox_ladspa_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                            sox_size_t *isamp, sox_size_t *osamp)
 {
-  ladspa_t l_st = (ladspa_t)effp->priv;
+  priv_t * l_st = (priv_t *)effp->priv;
   sox_size_t i, len = min(*isamp, *osamp);
 
   *osamp = *isamp = len;
 
   if (len) {
     LADSPA_Data *buf = lsx_malloc(sizeof(LADSPA_Data) * len);
-    
+
     /* Insert input if effect takes it */
     if (l_st->input_port != ULONG_MAX) {
       /* Copy the input; FIXME: Assume LADSPA_Data == float! */
       for (i = 0; i < len; i++)
         buf[i] = SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i], effp->clips);
-      
+
       /* Connect the input port */
       l_st->desc->connect_port(l_st->handle, l_st->input_port, buf);
     }
-    
+
     /* Connect the output port if used */
     if (l_st->output_port != ULONG_MAX)
       l_st->desc->connect_port(l_st->handle, l_st->output_port, buf);
-    
+
     /* Run the plugin */
     l_st->desc->run(l_st->handle, len);
-    
+
     /* Grab output if effect produces it */
     if (l_st->output_port != ULONG_MAX)
       /* FIXME: Assume LADSPA_Data == float! */
       for (i = 0; i < len; i++) {
         obuf[i] = SOX_FLOAT_32BIT_TO_SAMPLE(buf[i], effp->clips);
       }
-    
+
     free(buf);
   }
 
@@ -279,7 +277,7 @@ static int sox_ladspa_drain(sox_effect_t * effp UNUSED, sox_sample_t *obuf UNUSE
  */
 static int sox_ladspa_stop(sox_effect_t * effp)
 {
-  ladspa_t l_st = (ladspa_t)effp->priv;
+  priv_t * l_st = (priv_t *)effp->priv;
 
   /* If needed, deactivate the plugin */
   if (l_st->desc->deactivate)
@@ -297,7 +295,7 @@ static sox_effect_handler_t sox_ladspa_effect = {
   sox_ladspa_flow,
   sox_ladspa_drain,
   sox_ladspa_stop,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_ladspa_effect_fn(void)

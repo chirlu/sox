@@ -1,5 +1,4 @@
-/*
- * NIST Sphere file format handler.
+/* libSoX NIST Sphere file format handler.
  *
  * August 7, 2000
  *
@@ -138,7 +137,7 @@ static int start_read(sox_format_t * ft)
 static int write_header(sox_format_t * ft)
 {
   char buf[128];
-  long samples = (ft->olength ? ft->olength : ft->length) / ft->signal.channels;
+  long samples = (ft->olength ? ft->olength : ft->signal.length) / ft->signal.channels;
 
   lsx_writes(ft, "NIST_1A\n");
   lsx_writes(ft, "   1024\n");
@@ -183,13 +182,11 @@ SOX_FORMAT_HANDLER(sphere)
     SOX_ENCODING_ULAW, 8, 0,
     0
   };
-  static sox_format_handler_t const handler = {
-    SOX_LIB_VERSION_CODE,
-    "SPeech HEader Resources; defined by NIST",
-    names, SOX_FILE_REWIND,
+  static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
+    "SPeech HEader Resources; defined by NIST", names, SOX_FILE_REWIND,
     start_read, lsx_rawread, NULL,
     write_header, lsx_rawwrite, NULL,
-    lsx_rawseek, write_encodings, NULL
+    lsx_rawseek, write_encodings, NULL, 0
   };
   return &handler;
 }

@@ -1,5 +1,4 @@
-/*
- * noiseprof.h - Headers for SoX Noise Profiling Effect. 
+/* noiseprof.h - Headers for SoX Noise Profiling Effect.
  *
  * Written by Ian Turner (vectro@vectro.org)
  * Copyright 1999 Ian Turner and others

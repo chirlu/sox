@@ -1,5 +1,4 @@
-/*
- * Copyright 1997 Chris Bagwell And Sundry Contributors
+/* Copyright 1997 Chris Bagwell And Sundry Contributors
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained.
  * Chris Bagwell And Sundry Contributors are not
@@ -40,12 +39,13 @@
 
 #include <sys/ioctl.h>
 
+typedef sox_fileinfo_t priv_t;
 /* common r/w initialization code */
 static int ossinit(sox_format_t * ft)
 {
     int sampletype, samplesize, dsp_stereo;
     int tmp, rc;
-    sox_fileinfo_t *file = (sox_fileinfo_t *)ft->priv;
+    priv_t *file = (priv_t *)ft->priv;
     sox_signalinfo_t client_signal = ft->signal;
 
     lsx_set_signal_defaults(&ft->signal);
@@ -164,7 +164,7 @@ static int ossinit(sox_format_t * ft)
     }
 
     tmp = ft->signal.rate;
-    if (ioctl (fileno(ft->fp), SNDCTL_DSP_SPEED, &tmp) < 0 || 
+    if (ioctl (fileno(ft->fp), SNDCTL_DSP_SPEED, &tmp) < 0 ||
         (int)ft->signal.rate != tmp) {
         /* If the rate the sound card is using is not within 1% of what
          * the user specified then override the user setting.
@@ -174,7 +174,7 @@ static int ossinit(sox_format_t * ft)
          * this and having strange output file rates for something that
          * we can't hear anyways.
          */
-        if ((int)ft->signal.rate - tmp > (tmp * .01) || 
+        if ((int)ft->signal.rate - tmp > (tmp * .01) ||
             tmp - (int)ft->signal.rate > (tmp * .01)) {
           if (client_signal.rate != 0)
             sox_warn("Unable to set audio speed to %g (set to %d)",
@@ -213,13 +213,12 @@ SOX_FORMAT_HANDLER(oss)
     SOX_ENCODING_SIGN2, 16, 0,
     SOX_ENCODING_UNSIGNED, 8, 0,
     0};
-  static sox_format_handler_t const handler = {
-    SOX_LIB_VERSION_CODE,
+  static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "Open Sound Sytem device driver for unix-like systems",
     names, SOX_FILE_DEVICE,
     ossinit, lsx_rawread, lsx_rawstopread,
     ossinit, lsx_rawwrite, lsx_rawstopwrite,
-    NULL, write_encodings, NULL
+    NULL, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
 }

@@ -1,5 +1,4 @@
-/*
- * libSoX internal functions that apply to both formats and effects
+/* libSoX internal functions that apply to both formats and effects
  * All public functions & data are prefixed with lsx_ .
  *
  * Copyright 1998-2008 Chris Bagwell and SoX Contributors

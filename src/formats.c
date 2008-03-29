@@ -1,5 +1,4 @@
-/*
- * Implements the public API for using libSoX file formats.
+/* Implements the public API for using libSoX file formats.
  * All public functions & data are prefixed with sox_ .
  *
  * (c) 2005-8 Chris Bagwell and SoX contributors
@@ -25,7 +24,6 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -367,23 +365,23 @@ static sox_bool is_uri(char const * text)
   return *text == ':';
 }
 
-static FILE * xfopen(char const * identifier, char const * mode) 
-{ 
+static FILE * xfopen(char const * identifier, char const * mode)
+{
   if (is_uri(identifier)) {
     FILE * f = NULL;
 #ifdef HAVE_POPEN
     char const * const command_format = "wget --no-check-certificate -q -O- \"%s\"";
-    char * command = lsx_malloc(strlen(command_format) + strlen(identifier)); 
-    sprintf(command, command_format, identifier); 
-    f = popen(command, "r"); 
+    char * command = lsx_malloc(strlen(command_format) + strlen(identifier));
+    sprintf(command, command_format, identifier);
+    f = popen(command, "r");
     free(command);
 #else
     sox_fail("open URL support has not been built into SoX");
-#endif 
+#endif
     return f;
   }
   return fopen(identifier, mode);
-} 
+}
 
 sox_format_t * sox_open_read(
     char               const * path,
@@ -451,20 +449,19 @@ sox_format_t * sox_open_read(
     sox_fail("file type `%s' isn't readable", filetype);
     goto error;
   }
-  
+
   ft->mode = 'r';
-  
+  ft->filetype = lsx_strdup(filetype);
+  ft->filename = lsx_strdup(path);
   if (signal)
     ft->signal = *signal;
-  
+
   if (encoding)
     ft->encoding = *encoding;
   else sox_init_encodinginfo(&ft->encoding);
   set_endiannesses(ft);
 
-  ft->filetype = lsx_strdup(filetype);
-  ft->filename = lsx_strdup(path);
-
+  ft->priv = lsx_calloc(1, ft->handler.priv_size);
   /* Read and write starters can change their formats. */
   if (ft->handler.startread && (*ft->handler.startread)(ft) != SOX_SUCCESS) {
     sox_fail("can't open input file `%s': %s", ft->filename, ft->sox_errstr);
@@ -484,6 +481,7 @@ sox_format_t * sox_open_read(
 error:
   if (ft->fp && ft->fp != stdin)
     fclose(ft->fp);
+  free(ft->priv);
   free(ft->filename);
   free(ft->filetype);
   free(ft);
@@ -674,19 +672,15 @@ static void set_output_format(sox_format_t * ft)
 }
 
 sox_format_t * sox_open_write(
-    sox_bool (*overwrite_permitted)(const char *filename),
     char               const * path,
     sox_signalinfo_t   const * signal,
     sox_encodinginfo_t const * encoding,
     char               const * filetype,
-    sox_comments_t                 comments,
-    sox_size_t                 length,
-    sox_instrinfo_t    const * instr,
-    sox_loopinfo_t     const * loops)
+    sox_oob_t    const * oob,
+    sox_bool           (*overwrite_permitted)(const char *filename))
 {
   sox_format_t * ft = lsx_calloc(sizeof(*ft), 1);
   sox_format_handler_t const * handler;
-  int i;
 
   if (!path || !signal) {
     sox_fail("must specify file name and signal parameters to write file");
@@ -748,39 +742,34 @@ sox_format_t * sox_open_write(
     ft->seekable = is_seekable(ft);
   }
 
+  ft->filetype = lsx_strdup(filetype);
+  ft->filename = lsx_strdup(path);
   ft->mode = 'w';
-
   ft->signal = *signal;
-  
+
   if (encoding)
     ft->encoding = *encoding;
   else sox_init_encodinginfo(&ft->encoding);
   set_endiannesses(ft);
 
-  ft->filetype = lsx_strdup(filetype);
-  ft->filename = lsx_strdup(path);
+  if (oob) {
+    ft->oob = *oob;
+    /* deep copy: */
+    ft->oob.comments = sox_copy_comments(oob->comments);
+  }
 
-  ft->comments = sox_copy_comments(comments);
-
-  if (loops) for (i = 0; i < SOX_MAX_NLOOPS; i++)
-    ft->loops[i] = loops[i];
-
-  /* leave SMPTE # alone since it's absolute */
-  if (instr)
-    ft->instr = *instr;
-
-  ft->length = length;
   set_output_format(ft);
 
   /* FIXME: doesn't cover the situation where
    * codec changes audio length due to block alignment (e.g. 8svx, gsm): */
   if (signal->rate && signal->channels)
-    ft->length = ft->length * ft->signal.rate / signal->rate *
+    ft->signal.length = ft->signal.length * ft->signal.rate / signal->rate *
       ft->signal.channels / signal->channels + .5;
 
-  if ((ft->handler.flags & SOX_FILE_REWIND) && !ft->length && !ft->seekable)
+  if ((ft->handler.flags & SOX_FILE_REWIND) && !ft->signal.length && !ft->seekable)
     sox_warn("can't seek in output file `%s'; length in file header will be unspecified", ft->filename);
 
+  ft->priv = lsx_calloc(1, ft->handler.priv_size);
   /* Read and write starters can change their formats. */
   if (ft->handler.startwrite && (ft->handler.startwrite)(ft) != SOX_SUCCESS){
     sox_fail("can't open output file `%s': %s", ft->filename, ft->sox_errstr);
@@ -794,6 +783,7 @@ sox_format_t * sox_open_write(
 error:
   if (ft->fp && ft->fp != stdout)
     fclose(ft->fp);
+  free(ft->priv);
   free(ft->filename);
   free(ft->filetype);
   free(ft);
@@ -822,7 +812,7 @@ int sox_close(sox_format_t * ft)
     rc = ft->handler.stopread? (*ft->handler.stopread)(ft) : SOX_SUCCESS;
   else {
     if (ft->handler.flags & SOX_FILE_REWIND) {
-      if (ft->olength != ft->length && ft->seekable) {
+      if (ft->olength != ft->signal.length && ft->seekable) {
         rc = lsx_seeki(ft, 0, 0);
         if (rc == SOX_SUCCESS)
           rc = ft->handler.stopwrite? (*ft->handler.stopwrite)(ft)
@@ -836,7 +826,7 @@ int sox_close(sox_format_t * ft)
     fclose(ft->fp);
   free(ft->filename);
   free(ft->filetype);
-  sox_delete_comments(&ft->comments);
+  sox_delete_comments(&ft->oob.comments);
 
   free(ft);
   return rc;
@@ -924,8 +914,8 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
       if (!dirname[0] || is_uri(id) || IS_ABSOLUTE(id))
         filename = lsx_strdup(id);
       else {
-        filename = lsx_malloc(strlen(dirname) + strlen(id) + 2); 
-        sprintf(filename, "%s/%s", dirname, id); 
+        filename = lsx_malloc(strlen(dirname) + strlen(id) + 2);
+        sprintf(filename, "%s/%s", dirname, id);
       }
       if (sox_is_playlist(filename))
         sox_parse_playlist(callback, p, filename);
@@ -1016,7 +1006,7 @@ sox_format_tab_t sox_format_fns[] = {
 int sox_format_init(void) {return SOX_SUCCESS;}
 void sox_format_quit(void) {}
 
-#endif 
+#endif
 
 /* Find a named format in the formats library.
  *

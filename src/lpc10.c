@@ -1,5 +1,4 @@
-/*
- * libSoX lpc-10 format.
+/* libSoX lpc-10 format.
  *
  * Copyright 2007 Reuben Thomas <rrt@sc3d.org>
  *
@@ -22,12 +21,12 @@
 #include "../lpc10/lpc10.h"
 
 /* Private data */
-typedef struct lpcpriv {
+typedef struct {
   struct lpc10_encoder_state *encst;
   float speech[LPC10_SAMPLES_PER_FRAME];
   unsigned samples;
   struct lpc10_decoder_state *decst;
-} *lpcpriv_t;
+} priv_t;
 
 /*
   Write the bits in bits[0] through bits[len-1] to file f, in "packed"
@@ -120,7 +119,7 @@ static int read_bits(sox_format_t * ft, INT32 *bits, int len)
 
 static int startread(sox_format_t * ft)
 {
-  lpcpriv_t lpc = (lpcpriv_t)ft->priv;
+  priv_t * lpc = (priv_t *)ft->priv;
 
   if ((lpc->decst = create_lpc10_decoder_state()) == NULL) {
     fprintf(stderr, "lpc10 could not allocate decoder state");
@@ -130,9 +129,9 @@ static int startread(sox_format_t * ft)
   return lsx_check_read_params(ft, 1, 8000., SOX_ENCODING_LPC10, 0, (off_t)0);
 }
 
-static int startwrite(sox_format_t * ft) 
+static int startwrite(sox_format_t * ft)
 {
-  lpcpriv_t lpc = (lpcpriv_t)ft->priv;
+  priv_t * lpc = (priv_t *)ft->priv;
 
   if ((lpc->encst = create_lpc10_encoder_state()) == NULL) {
     fprintf(stderr, "lpc10 could not allocate encoder state");
@@ -145,7 +144,7 @@ static int startwrite(sox_format_t * ft)
 
 static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
-  lpcpriv_t lpc = (lpcpriv_t)ft->priv;
+  priv_t * lpc = (priv_t *)ft->priv;
   sox_size_t nread = 0;
 
   while (nread < len) {
@@ -169,7 +168,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
 
 static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
-  lpcpriv_t lpc = (lpcpriv_t)ft->priv;
+  priv_t * lpc = (priv_t *)ft->priv;
   sox_size_t nwritten = 0;
 
   while (len > 0) {
@@ -192,7 +191,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
 
 static int stopread(sox_format_t * ft)
 {
-  lpcpriv_t lpc = (lpcpriv_t)ft->priv;
+  priv_t * lpc = (priv_t *)ft->priv;
 
   free(lpc->decst);
 
@@ -201,7 +200,7 @@ static int stopread(sox_format_t * ft)
 
 static int stopwrite(sox_format_t * ft)
 {
-  lpcpriv_t lpc = (lpcpriv_t)ft->priv;
+  priv_t * lpc = (priv_t *)ft->priv;
 
   free(lpc->encst);
 
@@ -213,13 +212,11 @@ SOX_FORMAT_HANDLER(lpc10)
   static char const * const names[] = {"lpc10", "lpc", NULL};
   static sox_rate_t   const write_rates[] = {8000, 0};
   static unsigned     const write_encodings[] = {SOX_ENCODING_LPC10, 0, 0};
-  static sox_format_handler_t handler = {
-    SOX_LIB_VERSION_CODE,
-    "Low bandwidth, robotic sounding speech compression",
-    names, SOX_FILE_MONO,
+  static sox_format_handler_t handler = {SOX_LIB_VERSION_CODE,
+    "Low bandwidth, robotic sounding speech compression", names, SOX_FILE_MONO,
     startread, read_samples, stopread,
     startwrite, write_samples, stopwrite,
-    NULL, write_encodings, write_rates
+    NULL, write_encodings, write_rates, sizeof(priv_t)
   };
   return &handler;
 }

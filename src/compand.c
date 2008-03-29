@@ -1,5 +1,4 @@
-/*
- * Compander effect
+/* libSoX compander effect
  *
  * Written by Nick Bailey (nick@bailey-family.org.uk or
  *                         n.bailey@elec.gla.ac.uk)
@@ -59,11 +58,11 @@ typedef struct {
   sox_ssize_t delay_buf_index; /* Index into delay_buf */
   sox_ssize_t delay_buf_cnt; /* No. of active entries in delay_buf */
   int delay_buf_full;       /* Shows buffer situation (important for drain) */
-} * compand_t;
+} priv_t;
 
 static int getopts(sox_effect_t * effp, int n, char * * argv)
 {
-  compand_t l = (compand_t) effp->priv;
+  priv_t * l = (priv_t *) effp->priv;
   char * s;
   char dummy;     /* To check for extraneous chars. */
   unsigned pairs, i, j, commas;
@@ -128,7 +127,7 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
 
 static int start(sox_effect_t * effp)
 {
-  compand_t l = (compand_t) effp->priv;
+  priv_t * l = (priv_t *) effp->priv;
   unsigned i, j;
 
   sox_debug("%i input channel(s) expected: actually %i",
@@ -163,7 +162,7 @@ static int start(sox_effect_t * effp)
  * Update a volume value using the given sample
  * value, the attack rate and decay rate
  */
-static void doVolume(double *v, double samp, compand_t l, int chan)
+static void doVolume(double *v, double samp, priv_t * l, int chan)
 {
   double s = -samp / SOX_SAMPLE_MIN;
   double delta = s - *v;
@@ -177,7 +176,7 @@ static void doVolume(double *v, double samp, compand_t l, int chan)
 static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                     sox_size_t *isamp, sox_size_t *osamp)
 {
-  compand_t l = (compand_t) effp->priv;
+  priv_t * l = (priv_t *) effp->priv;
   int len =  (*isamp > *osamp) ? *osamp : *isamp;
   int filechans = effp->out_signal.channels;
   int idone,odone;
@@ -237,7 +236,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
 
 static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-  compand_t l = (compand_t) effp->priv;
+  priv_t * l = (priv_t *) effp->priv;
   sox_size_t chan, done = 0;
 
   if (l->delay_buf_full == 0)
@@ -257,7 +256,7 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 
 static int stop(sox_effect_t * effp)
 {
-  compand_t l = (compand_t) effp->priv;
+  priv_t * l = (priv_t *) effp->priv;
 
   free(l->delay_buf);
   return SOX_SUCCESS;
@@ -265,7 +264,7 @@ static int stop(sox_effect_t * effp)
 
 static int kill(sox_effect_t * effp)
 {
-  compand_t l = (compand_t) effp->priv;
+  priv_t * l = (priv_t *) effp->priv;
 
   sox_compandt_kill(&l->transfer_fn);
   free(l->channels);
@@ -276,7 +275,7 @@ sox_effect_handler_t const * sox_compand_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "compand", compand_usage, SOX_EFF_MCHAN,
-    getopts, start, flow, drain, stop, kill
+    getopts, start, flow, drain, stop, kill, sizeof(priv_t)
   };
   return &handler;
 }

@@ -1,22 +1,21 @@
-/*
- * swap - effect to swap ordering of channels in multi-channel audio.
+/* libSoX swap - effect to swap ordering of channels in multi-channel audio.
  *
  * Written by Chris Bagwell (cbagwell@sprynet.com) - March 16, 1999
  *
   * Copyright 1999 Chris Bagwell And Sundry Contributors
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Chris Bagwell And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Chris Bagwell And Sundry Contributors are not responsible for
  * the consequences of using this software.
  */
 
 
 #include "sox_i.h"
 
-typedef struct swapstuff {
-    int         order[4];
-    int         def_opts;
-} *swap_t;
+typedef struct {
+  int         order[4];
+  int         def_opts;
+} priv_t;
 
 /*
  * Process options
@@ -24,9 +23,9 @@ typedef struct swapstuff {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-static int sox_swap_getopts(sox_effect_t * effp, int n, char **argv) 
+static int sox_swap_getopts(sox_effect_t * effp, int n, char **argv)
 {
-    swap_t swap = (swap_t) effp->priv;
+    priv_t * swap = (priv_t *) effp->priv;
 
     swap->order[0] = swap->order[1] = swap->order[2] = swap->order[3] = 0;
     if (n)
@@ -59,7 +58,7 @@ static int sox_swap_getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int sox_swap_start(sox_effect_t * effp)
 {
-    swap_t swap = (swap_t) effp->priv;
+    priv_t * swap = (priv_t *) effp->priv;
     int i;
 
     if (effp->out_signal.channels == 1)
@@ -128,10 +127,10 @@ static int sox_swap_start(sox_effect_t * effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_swap_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_swap_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                  sox_size_t *isamp, sox_size_t *osamp)
 {
-    swap_t swap = (swap_t) effp->priv;
+    priv_t * swap = (priv_t *) effp->priv;
     int len, done;
 
     switch (effp->out_signal.channels)
@@ -149,12 +148,12 @@ static int sox_swap_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
             ibuf += 2;
             obuf += 2;
         }
-        
+
         *isamp = len * 2;
         *osamp = len * 2;
-        
+
         break;
-        
+
     case 4:
         /* Length to process will be buffer length / 4 since we
          * work with four samples at a time.
@@ -172,25 +171,18 @@ static int sox_swap_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
         }
         *isamp = len * 4;
         *osamp = len * 4;
-        
+
         break;
     }
     return (SOX_SUCCESS);
 }
 
-static sox_effect_handler_t sox_swap_effect = {
-  "swap",
-  "[1 2 | 1 2 3 4]",
-  SOX_EFF_MCHAN,
-  sox_swap_getopts,
-  sox_swap_start,
-  sox_swap_flow,
-  NULL,
-  NULL,
-  NULL  
-};
-
 const sox_effect_handler_t *sox_swap_effect_fn(void)
 {
-    return &sox_swap_effect;
+  static sox_effect_handler_t handler = {
+    "swap", "[1 2 | 1 2 3 4]", SOX_EFF_MCHAN,
+    sox_swap_getopts, sox_swap_start, sox_swap_flow,
+    NULL, NULL, NULL, sizeof(priv_t)
+  };
+  return &handler;
 }

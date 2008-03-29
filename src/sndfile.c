@@ -1,5 +1,4 @@
-/*
- * libSoX libsndfile formats.
+/* libSoX libsndfile formats.
  *
  * Copyright 2007 Reuben Thomas <rrt@sc3d.org>
  * Copyright 1999-2005 Erik de Castro Lopo <eridk@mega-nerd.com>
@@ -36,23 +35,19 @@
 #endif
 
 /* Private data for sndfile files */
-typedef struct sndfile
-{
+typedef struct {
   SNDFILE *sf_file;
   SF_INFO *sf_info;
   char * log_buffer;
   char const * log_buffer_ptr;
-} *sndfile_t;
-
-assert_static(sizeof(struct sndfile) <= SOX_MAX_FILE_PRIVSIZE, 
-              /* else */ sndfile_PRIVSIZE_too_big);
+} priv_t;
 
 /*
  * Drain LSF's wonderful log buffer
  */
 static void drain_log_buffer(sox_format_t * ft)
 {
-  sndfile_t sf = (sndfile_t)ft->priv;
+  priv_t * sf = (priv_t *)ft->priv;
 
   sf_command(sf->sf_file, SFC_GET_LOG_INFO, sf->log_buffer, LOG_MAX);
   while (*sf->log_buffer_ptr) {
@@ -81,7 +76,7 @@ static sox_encoding_t sox_encoding_and_size(unsigned format, unsigned * size)
 {
   *size = 0;                   /* Default */
   format &= SF_FORMAT_SUBMASK;
-  
+
   switch (format) {
   case SF_FORMAT_PCM_S8:
     *size = 8;
@@ -193,12 +188,12 @@ static int name_to_format(const char *name)
   if ((cptr = strrchr(name, '.')) != NULL) {
     strncpy(buffer, cptr + 1, FILE_TYPE_BUFLEN);
     buffer[FILE_TYPE_BUFLEN] = '\0';
-  
+
     for (k = 0; buffer[k]; k++)
       buffer[k] = tolower((buffer[k]));
   } else
     strncpy(buffer, name, FILE_TYPE_BUFLEN);
-  
+
   for (k = 0; k < (int)(sizeof(format_map) / sizeof(format_map [0])); k++) {
     if (strcmp(buffer, format_map[k].ext) == 0)
       return format_map[k].format;
@@ -257,7 +252,7 @@ static int sndfile_format(sox_encoding_t encoding, unsigned size)
 
 static void start(sox_format_t * ft)
 {
-  sndfile_t sf = (sndfile_t)ft->priv;
+  priv_t * sf = (priv_t *)ft->priv;
   int subtype = sndfile_format(ft->encoding.encoding, ft->encoding.bits_per_sample? ft->encoding.bits_per_sample : ft->signal.precision);
   sf->log_buffer_ptr = sf->log_buffer = lsx_malloc(LOG_MAX);
   sf->sf_info = (SF_INFO *)lsx_calloc(1, sizeof(SF_INFO));
@@ -272,7 +267,7 @@ static void start(sox_format_t * ft)
   sf->sf_info->samplerate = ft->signal.rate;
   sf->sf_info->channels = ft->signal.channels;
   if (ft->signal.channels)
-    sf->sf_info->frames = ft->length / ft->signal.channels;
+    sf->sf_info->frames = ft->signal.length / ft->signal.channels;
 }
 
 /*
@@ -280,7 +275,7 @@ static void start(sox_format_t * ft)
  */
 static int startread(sox_format_t * ft)
 {
-  sndfile_t sf = (sndfile_t)ft->priv;
+  priv_t * sf = (priv_t *)ft->priv;
 
   start(ft);
 
@@ -299,7 +294,7 @@ static int startread(sox_format_t * ft)
   /* Copy format info */
   ft->encoding.encoding = sox_encoding_and_size((unsigned)sf->sf_info->format, &ft->encoding.bits_per_sample);
   ft->signal.channels = sf->sf_info->channels;
-  ft->length = sf->sf_info->frames * sf->sf_info->channels;
+  ft->signal.length = sf->sf_info->frames * sf->sf_info->channels;
 
   /* FIXME: it would be better if LSF were able to do this */
   if ((sf->sf_info->format & SF_FORMAT_TYPEMASK) == SF_FORMAT_RAW) {
@@ -319,7 +314,7 @@ static int startread(sox_format_t * ft)
  */
 static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
-  sndfile_t sf = (sndfile_t)ft->priv;
+  priv_t * sf = (priv_t *)ft->priv;
 
   /* FIXME: We assume int == sox_sample_t here */
   return (sox_size_t)sf_read_int(sf->sf_file, (int *)buf, (sf_count_t)len);
@@ -330,7 +325,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
  */
 static int stopread(sox_format_t * ft)
 {
-  sndfile_t sf = (sndfile_t)ft->priv;
+  priv_t * sf = (priv_t *)ft->priv;
   sf_stop(sf->sf_file);
   drain_log_buffer(ft);
   sf_close(sf->sf_file);
@@ -339,7 +334,7 @@ static int stopread(sox_format_t * ft)
 
 static int startwrite(sox_format_t * ft)
 {
-  sndfile_t sf = (sndfile_t)ft->priv;
+  priv_t * sf = (priv_t *)ft->priv;
 
   start(ft);
   /* If output format is invalid, try to find a sensible default */
@@ -386,7 +381,7 @@ static int startwrite(sox_format_t * ft)
  */
 static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
-  sndfile_t sf = (sndfile_t)ft->priv;
+  priv_t * sf = (priv_t *)ft->priv;
 
   /* FIXME: We assume int == sox_sample_t here */
   return (sox_size_t)sf_write_int(sf->sf_file, (int *)buf, (sf_count_t)len);
@@ -397,7 +392,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
  */
 static int stopwrite(sox_format_t * ft)
 {
-  sndfile_t sf = (sndfile_t)ft->priv;
+  priv_t * sf = (priv_t *)ft->priv;
   sf_stop(sf->sf_file);
   drain_log_buffer(ft);
   sf_close(sf->sf_file);
@@ -406,7 +401,7 @@ static int stopwrite(sox_format_t * ft)
 
 static int seek(sox_format_t * ft, sox_size_t offset)
 {
-  sndfile_t sf = (sndfile_t)ft->priv;
+  priv_t * sf = (priv_t *)ft->priv;
   sf_seek(sf->sf_file, (sf_count_t)(offset / ft->signal.channels), SEEK_CUR);
   return SOX_SUCCESS;
 }
@@ -458,13 +453,11 @@ SOX_FORMAT_HANDLER(sndfile)
     SOX_ENCODING_GSM, 0,
     0};
 
-  static sox_format_handler_t const format = {
-    SOX_LIB_VERSION_CODE,
-    "Pseudo format to use libsndfile",
-    names, SOX_FILE_NOSTDIO,
+  static sox_format_handler_t const format = {SOX_LIB_VERSION_CODE,
+    "Pseudo format to use libsndfile", names, SOX_FILE_NOSTDIO,
     startread, read_samples, stopread,
     startwrite, write_samples, stopwrite,
-    seek, write_encodings, NULL
+    seek, write_encodings, NULL, sizeof(priv_t)
   };
 
   return &format;

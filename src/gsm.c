@@ -1,8 +1,7 @@
-/*
- * Copyright 1991, 1992, 1993 Guido van Rossum And Sundry Contributors.
+/* Copyright 1991, 1992, 1993 Guido van Rossum And Sundry Contributors.
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Guido van Rossum And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Guido van Rossum And Sundry Contributors are not responsible for
  * the consequences of using this software.
  */
 
@@ -44,20 +43,20 @@
 #define BLOCKSIZE 160
 
 /* Private data */
-struct gsmpriv {
+typedef struct {
         unsigned        channels;
         gsm_signal      *samples;
         gsm_signal      *samplePtr;
         gsm_signal      *sampleTop;
         gsm_byte *frames;
         gsm             handle[MAXCHANS];
-};
+} priv_t;
 
-static int gsmstart_rw(sox_format_t * ft, int w) 
+static int gsmstart_rw(sox_format_t * ft, int w)
 {
-        struct gsmpriv *p = (struct gsmpriv *) ft->priv;
+        priv_t *p = (priv_t *) ft->priv;
         unsigned ch;
-        
+
         ft->encoding.encoding = SOX_ENCODING_GSM;
         if (!ft->signal.rate)
                 ft->signal.rate = 8000;
@@ -87,7 +86,7 @@ static int gsmstart_rw(sox_format_t * ft, int w)
         return (SOX_SUCCESS);
 }
 
-static int sox_gsmstartread(sox_format_t * ft) 
+static int sox_gsmstartread(sox_format_t * ft)
 {
         return gsmstart_rw(ft,0);
 }
@@ -109,14 +108,14 @@ static sox_size_t sox_gsmread(sox_format_t * ft, sox_sample_t *buf, sox_size_t s
         size_t done = 0, r;
         int ch, chans;
         gsm_signal *gbuff;
-        struct gsmpriv *p = (struct gsmpriv *) ft->priv;
+        priv_t *p = (priv_t *) ft->priv;
 
         chans = p->channels;
 
         while (done < samp)
         {
                 while (p->samplePtr < p->sampleTop && done < samp)
-                        buf[done++] = 
+                        buf[done++] =
                             SOX_SIGNED_16BIT_TO_SAMPLE(*(p->samplePtr)++,);
 
                 if (done>=samp) break;
@@ -136,7 +135,7 @@ static sox_size_t sox_gsmread(sox_format_t * ft, sox_sample_t *buf, sox_size_t s
                                 lsx_fail_errno(ft,errno,"error during GSM decode");
                                 return (0);
                         }
-                        
+
                         gsp = p->samples + ch;
                         for (i=0; i<BLOCKSIZE; i++) {
                                 *gsp = *gbuff++;
@@ -152,14 +151,14 @@ static int gsmflush(sox_format_t * ft)
 {
         int r, ch, chans;
         gsm_signal *gbuff;
-        struct gsmpriv *p = (struct gsmpriv *) ft->priv;
+        priv_t *p = (priv_t *) ft->priv;
 
         chans = p->channels;
 
         /* zero-fill samples as needed */
         while (p->samplePtr < p->sampleTop)
                 *(p->samplePtr)++ = 0;
-        
+
         gbuff = p->sampleTop;
         for (ch=0; ch<chans; ch++) {
                 int i;
@@ -186,12 +185,12 @@ static int gsmflush(sox_format_t * ft)
 static sox_size_t sox_gsmwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t samp)
 {
         size_t done = 0;
-        struct gsmpriv *p = (struct gsmpriv *) ft->priv;
+        priv_t *p = (priv_t *) ft->priv;
 
         while (done < samp)
         {
                 while ((p->samplePtr < p->sampleTop) && (done < samp))
-                        *(p->samplePtr)++ = 
+                        *(p->samplePtr)++ =
                             SOX_SAMPLE_TO_SIGNED_16BIT(buf[done++], ft->clips);
 
                 if (p->samplePtr == p->sampleTop)
@@ -208,7 +207,7 @@ static sox_size_t sox_gsmwrite(sox_format_t * ft, const sox_sample_t *buf, sox_s
 
 static int sox_gsmstopread(sox_format_t * ft)
 {
-        struct gsmpriv *p = (struct gsmpriv *) ft->priv;
+        priv_t *p = (priv_t *) ft->priv;
         unsigned ch;
 
         for (ch=0; ch<p->channels; ch++)
@@ -222,7 +221,7 @@ static int sox_gsmstopread(sox_format_t * ft)
 static int sox_gsmstopwrite(sox_format_t * ft)
 {
         int rc;
-        struct gsmpriv *p = (struct gsmpriv *) ft->priv;
+        priv_t *p = (priv_t *) ft->priv;
 
         if (p->samplePtr > p->samples)
         {
@@ -239,13 +238,11 @@ SOX_FORMAT_HANDLER(gsm)
   static char const * const names[] = {"gsm", NULL};
   static sox_rate_t   const write_rates[] = {8000, 0};
   static unsigned const write_encodings[] = {SOX_ENCODING_GSM, 0, 0};
-  static sox_format_handler_t handler = {
-    SOX_LIB_VERSION_CODE,
-    "GSM 06.10 (full-rate) lossy speech compression",
-    names, 0,
+  static sox_format_handler_t handler = {SOX_LIB_VERSION_CODE,
+    "GSM 06.10 (full-rate) lossy speech compression", names, 0,
     sox_gsmstartread, sox_gsmread, sox_gsmstopread,
     sox_gsmstartwrite, sox_gsmwrite, sox_gsmstopwrite,
-    NULL, write_encodings, write_rates
+    NULL, write_encodings, write_rates, sizeof(priv_t)
   };
   return &handler;
 }

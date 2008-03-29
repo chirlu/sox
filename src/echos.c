@@ -1,15 +1,12 @@
-/*
- * August 24, 1998
+/* libSoX Echo effect             August 24, 1998
+ *
  * Copyright (C) 1998 Juergen Mueller And Sundry Contributors
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Juergen Mueller And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Juergen Mueller And Sundry Contributors are not responsible for
  * the consequences of using this software.
- */
-
-/*
- * Echos effect for dsp.
- * 
+ *
+ *
  * Flow diagram scheme for n delays ( 1 <= n <= MAX_ECHOS ):
  *
  *                                                    * gain-in  ___
@@ -20,12 +17,11 @@
  *         |               |             +--------------------->|   |
  *         |               |             |            * decay n |   |
  *         |    _________  |  _________  |     _________   +--->|___|
- *         |   |         | | |         | |    |         |  |      | 
+ *         |   |         | | |         | |    |         |  |      |
  *         +-->| delay 1 |-+-| delay 2 |-+...-| delay n |--+      | * gain-out
  *             |_________|   |_________|      |_________|         |
  *                                                                +----->obuff
- *
- * Usage: 
+ * Usage:
  *   echos gain-in gain-out delay-1 decay-1 [delay-2 decay-2 ... delay-n decay-n]
  *
  * Where:
@@ -35,45 +31,40 @@
  *
  * Note:
  *   when decay is close to 1.0, the samples can begin clipping and the output
- *   can saturate! 
+ *   can saturate!
  *
  * Hint:
  *   1 / out-gain > gain-in ( 1 + decay-1 + ... + decay-n )
  *
-*/
-
-/*
- * libSoX reverb effect file.
  */
 
 #include "sox_i.h"
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
-#include <math.h>
 
 #define DELAY_BUFSIZ ( 50 * 50U * 1024 )
 #define MAX_ECHOS 7     /* 24 bit x ( 1 + MAX_ECHOS ) = */
                         /* 24 bit x 8 = 32 bit !!!      */
 
 /* Private data for SKEL file */
-typedef struct echosstuff {
-        int     counter[MAX_ECHOS];                     
+typedef struct {
+        int     counter[MAX_ECHOS];
         int     num_delays;
         double  *delay_buf;
         float   in_gain, out_gain;
         float   delay[MAX_ECHOS], decay[MAX_ECHOS];
         sox_ssize_t samples[MAX_ECHOS], pointer[MAX_ECHOS];
         sox_size_t sumsamples;
-} *echos_t;
+} priv_t;
 
 /* Private data for SKEL file */
 
 /*
  * Process options
  */
-static int sox_echos_getopts(sox_effect_t * effp, int n, char **argv) 
+static int sox_echos_getopts(sox_effect_t * effp, int n, char **argv)
 {
-        echos_t echos = (echos_t) effp->priv;
+        priv_t * echos = (priv_t *) effp->priv;
         int i;
 
         echos->num_delays = 0;
@@ -105,7 +96,7 @@ static int sox_echos_getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int sox_echos_start(sox_effect_t * effp)
 {
-        echos_t echos = (echos_t) effp->priv;
+        priv_t * echos = (priv_t *) effp->priv;
         int i;
         float sum_in_volume;
         unsigned long j;
@@ -157,7 +148,7 @@ static int sox_echos_start(sox_effect_t * effp)
                 echos->delay_buf[j] = 0.0;
         /* Be nice and check the hint with warning, if... */
         sum_in_volume = 1.0;
-        for ( i = 0; i < echos->num_delays; i++ ) 
+        for ( i = 0; i < echos->num_delays; i++ )
                 sum_in_volume += echos->decay[i];
         if ( sum_in_volume * echos->in_gain > 1.0 / echos->out_gain )
                 sox_warn("echos: warning >>> gain-out can cause saturation of output <<<");
@@ -168,10 +159,10 @@ static int sox_echos_start(sox_effect_t * effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_echos_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_echos_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                 sox_size_t *isamp, sox_size_t *osamp)
 {
-        echos_t echos = (echos_t) effp->priv;
+        priv_t * echos = (priv_t *) effp->priv;
         int j;
         double d_in, d_out;
         sox_sample_t out;
@@ -195,12 +186,12 @@ static int sox_echos_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sam
                         if ( j == 0 )
                                 echos->delay_buf[echos->counter[j] + echos->pointer[j]] = d_in;
                         else
-                                echos->delay_buf[echos->counter[j] + echos->pointer[j]] = 
+                                echos->delay_buf[echos->counter[j] + echos->pointer[j]] =
                                    echos->delay_buf[echos->counter[j-1] + echos->pointer[j-1]] + d_in;
                 }
                 /* Adjust the counters */
                 for ( j = 0; j < echos->num_delays; j++ )
-                        echos->counter[j] = 
+                        echos->counter[j] =
                            ( echos->counter[j] + 1 ) % echos->samples[j];
         }
         /* processed all samples */
@@ -208,11 +199,11 @@ static int sox_echos_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sam
 }
 
 /*
- * Drain out reverb lines. 
+ * Drain out reverb lines.
  */
 static int sox_echos_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-        echos_t echos = (echos_t) effp->priv;
+        priv_t * echos = (priv_t *) effp->priv;
         double d_in, d_out;
         sox_sample_t out;
         int j;
@@ -235,12 +226,12 @@ static int sox_echos_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *
                         if ( j == 0 )
                                 echos->delay_buf[echos->counter[j] + echos->pointer[j]] = d_in;
                         else
-                                echos->delay_buf[echos->counter[j] + echos->pointer[j]] = 
+                                echos->delay_buf[echos->counter[j] + echos->pointer[j]] =
                                    echos->delay_buf[echos->counter[j-1] + echos->pointer[j-1]];
                 }
                 /* Adjust the counters */
                 for ( j = 0; j < echos->num_delays; j++ )
-                        echos->counter[j] = 
+                        echos->counter[j] =
                            ( echos->counter[j] + 1 ) % echos->samples[j];
                 done++;
                 echos->sumsamples--;
@@ -258,7 +249,7 @@ static int sox_echos_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *
  */
 static int sox_echos_stop(sox_effect_t * effp)
 {
-        echos_t echos = (echos_t) effp->priv;
+        priv_t * echos = (priv_t *) effp->priv;
 
         free((char *) echos->delay_buf);
         echos->delay_buf = (double *) -1;   /* guaranteed core dump */
@@ -274,7 +265,7 @@ static sox_effect_handler_t sox_echos_effect = {
   sox_echos_flow,
   sox_echos_drain,
   sox_echos_stop,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_echos_effect_fn(void)

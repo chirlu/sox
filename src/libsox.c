@@ -1,5 +1,4 @@
-/*
- * Implements the public API for libSoX general functions
+/* Implements the public API for libSoX general functions
  * All public functions & data are prefixed with sox_ .
  *
  * (c) 2006-8 Chris Bagwell and SoX contributors

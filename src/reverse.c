@@ -1,9 +1,8 @@
-/*
- * June 1, 1992
+/* June 1, 1992
  * Copyright 1992 Guido van Rossum And Sundry Contributors
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Guido van Rossum And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Guido van Rossum And Sundry Contributors are not responsible for
  * the consequences of using this software.
  */
 
@@ -14,18 +13,14 @@
 #include "sox_i.h"
 #include <string.h>
 
-typedef struct reverse {
+typedef struct {
   off_t         pos;
   FILE          * tmp_file;
-} * priv_t;
-
-assert_static(sizeof(struct reverse) <= SOX_MAX_EFFECT_PRIVSIZE,
-              /* else */ reverse_PRIVSIZE_too_big);
+} priv_t;
+#define p ((priv_t *)effp->priv)
 
 static int start(sox_effect_t * effp)
 {
-  priv_t p = (priv_t)effp->priv;
-
   p->pos = 0;
   p->tmp_file = tmpfile();
   if (p->tmp_file == NULL) {
@@ -38,8 +33,6 @@ static int start(sox_effect_t * effp)
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
-  priv_t p = (priv_t)effp->priv;
-
   if (fwrite(ibuf, sizeof(*ibuf), *isamp, p->tmp_file) != *isamp) {
     sox_fail("error writing temporary file: %s", strerror(errno));
     return SOX_EOF;
@@ -50,7 +43,6 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 
 static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-  priv_t p = (priv_t) effp->priv;
   size_t i, j;
 
   if (p->pos == 0) {
@@ -78,8 +70,6 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 
 static int stop(sox_effect_t * effp)
 {
-  priv_t p = (priv_t)effp->priv;
-
   fclose(p->tmp_file); /* auto-deleted by tmpfile */
   return SOX_SUCCESS;
 }
@@ -87,7 +77,7 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_reverse_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "reverse", NULL, 0, NULL, start, flow, drain, stop, NULL
+    "reverse", NULL, 0, NULL, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
   return &handler;
 }

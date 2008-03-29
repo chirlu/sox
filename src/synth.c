@@ -1,5 +1,4 @@
-/*
- * synth - Synthesizer Effect.
+/* libSoX synth - Synthesizer Effect.
  *
  * Copyright (c) Jan 2001  Carsten Borchardt
  * Copyright (c) 2001-2007 SoX contributors
@@ -12,7 +11,6 @@
 #include "sox_i.h"
 
 #include <string.h>
-#include <math.h>
 #include <ctype.h>
 
 typedef enum {
@@ -173,7 +171,7 @@ typedef struct {
   sox_size_t    samples_to_do;
   channel_t     channels;
   sox_size_t    number_of_channels;
-} * synth_t;
+} priv_t;
 
 
 
@@ -283,7 +281,7 @@ static void set_default_parameters(channel_t chan, size_t c)
 
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
-  synth_t synth = (synth_t) effp->priv;
+  priv_t * synth = (priv_t *) effp->priv;
   int argn = 0;
 
   /* Get duration if given (if first arg starts with digit) */
@@ -384,7 +382,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
 static int start(sox_effect_t * effp)
 {
-  synth_t synth = (synth_t) effp->priv;
+  priv_t * synth = (priv_t *) effp->priv;
   size_t i;
 
   synth->max = lsx_sample_max(effp->out_encoding);
@@ -412,7 +410,7 @@ static int start(sox_effect_t * effp)
 
 
 
-static sox_sample_t do_synth(sox_sample_t synth_input, synth_t synth, unsigned c, double rate)
+static sox_sample_t do_synth(sox_sample_t synth_input, priv_t * synth, unsigned c, double rate)
 {
   channel_t chan = &synth->channels[c];
   double synth_out;              /* [-1, 1] */
@@ -557,7 +555,7 @@ static sox_sample_t do_synth(sox_sample_t synth_input, synth_t synth, unsigned c
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * obuf,
     sox_size_t * isamp, sox_size_t * osamp)
 {
-  synth_t synth = (synth_t) effp->priv;
+  priv_t * synth = (priv_t *) effp->priv;
   unsigned len = min(*isamp, *osamp) / effp->in_signal.channels;
   unsigned c, done;
   int result = SOX_SUCCESS;
@@ -576,7 +574,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
 
 static int stop(sox_effect_t * effp)
 {
-  synth_t synth = (synth_t) effp->priv;
+  priv_t * synth = (priv_t *) effp->priv;
   free(synth->channels);
   return SOX_SUCCESS;
 }
@@ -585,7 +583,7 @@ static int stop(sox_effect_t * effp)
 
 static int kill(sox_effect_t * effp)
 {
-  synth_t synth = (synth_t) effp->priv;
+  priv_t * synth = (priv_t *) effp->priv;
   free(synth->getopts_channels);
   free(synth->length_str);
   return SOX_SUCCESS;
@@ -598,7 +596,7 @@ const sox_effect_handler_t *sox_synth_effect_fn(void)
   static sox_effect_handler_t handler = {
     "synth", "[len] {type [combine] [freq[-freq2] [off [ph [p1 [p2 [p3]]]]]]}",
     SOX_EFF_MCHAN | SOX_EFF_PREC |SOX_EFF_LENGTH,
-    getopts, start, flow, 0, stop, kill
+    getopts, start, flow, 0, stop, kill, sizeof(priv_t)
   };
   return &handler;
 }

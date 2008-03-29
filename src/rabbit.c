@@ -1,5 +1,4 @@
-/*
- * libsamplerate (aka Secret Rabbit Code) support for sox
+/* libsamplerate (aka Secret Rabbit Code) support for sox
  * (c) Reuben Thomas <rrt@sc3d.org> 2006
  *
  * This library is free software; you can redistribute it and/or modify it
@@ -24,7 +23,6 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <samplerate.h>
 
 /* Private data for resampling */
@@ -34,14 +32,14 @@ typedef struct {
   SRC_STATE *state;             /* SRC state struct */
   SRC_DATA *data;               /* SRC_DATA control struct */
   sox_size_t i_alloc, o_alloc;  /* Samples allocated in data->data_{in,out} */
-} *rabbit_t;
+} priv_t;
 
 /*
  * Process options
  */
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
-  rabbit_t r = (rabbit_t) effp->priv;
+  priv_t * r = (priv_t *) effp->priv;
   char dummy;     /* To check for extraneous chars. */
 
   r->converter_type = SRC_SINC_BEST_QUALITY;
@@ -67,7 +65,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
   r->out_rate = HUGE_VAL;
   if (argc) {
-    if (sscanf(*argv, "%lf %c", &r->out_rate, &dummy) != 1 || r->out_rate <= 0) 
+    if (sscanf(*argv, "%lf %c", &r->out_rate, &dummy) != 1 || r->out_rate <= 0)
       return lsx_usage(effp);
     argc--; argv++;
   }
@@ -80,13 +78,13 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
  */
 static int start(sox_effect_t * effp)
 {
-  rabbit_t r = (rabbit_t) effp->priv;
+  priv_t * r = (priv_t *) effp->priv;
   int err = 0;
   double out_rate = r->out_rate != HUGE_VAL? r->out_rate : effp->out_signal.rate;
 
   if (effp->in_signal.rate == out_rate)
     return SOX_EFF_NULL;
-          
+
   effp->out_signal.channels = effp->in_signal.channels;
   effp->out_signal.rate = out_rate;
 
@@ -109,7 +107,7 @@ static int start(sox_effect_t * effp)
 static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf UNUSED,
                    sox_size_t *isamp, sox_size_t *osamp)
 {
-  rabbit_t r = (rabbit_t) effp->priv;
+  priv_t * r = (priv_t *) effp->priv;
   SRC_DATA *d = r->data;
   unsigned int channels = effp->in_signal.channels;
   sox_size_t i;
@@ -165,7 +163,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
  */
 static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-  rabbit_t r = (rabbit_t) effp->priv;
+  priv_t * r = (priv_t *) effp->priv;
   static sox_size_t isamp = 0;
   r->data->end_of_input = 1;
   return flow(effp, NULL, obuf, &isamp, osamp);
@@ -176,7 +174,7 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
  */
 static int stop(sox_effect_t * effp)
 {
-  rabbit_t r = (rabbit_t) effp->priv;
+  priv_t * r = (priv_t *) effp->priv;
 
   free(r->data);
   src_delete(r->state);
@@ -188,7 +186,7 @@ const sox_effect_handler_t *sox_rabbit_effect_fn(void)
   static sox_effect_handler_t handler = {
     "rabbit", "[-c0|-c1|-c2|-c3|-c4] [rate]",
     SOX_EFF_RATE | SOX_EFF_MCHAN,
-    getopts, start, flow, drain, stop, NULL
+    getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
 
   return &handler;

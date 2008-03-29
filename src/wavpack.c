@@ -1,5 +1,4 @@
-/*
- * File format: WavPack   (c) 2008 robs@users.sourceforge.net
+/* libSoX file format: WavPack   (c) 2008 robs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -24,22 +23,20 @@ typedef struct {
   sox_size_t first_block_size;
 } priv_t;
 
-assert_static(sizeof(priv_t) <= SOX_MAX_FILE_PRIVSIZE, WAVPACK_PRIV_TOO_BIG);
-
 static int32_t ft_read_b_buf(void * ft, void * buf, int32_t len) {
-  return (int32_t)lsx_read_b_buf((sox_format_t *)ft, buf, (sox_size_t)len);} 
+  return (int32_t)lsx_read_b_buf((sox_format_t *)ft, buf, (sox_size_t)len);}
 static uint32_t ft_tell(void * ft) {
-  return lsx_tell((sox_format_t *)ft);} 
+  return lsx_tell((sox_format_t *)ft);}
 static int ft_seek_abs(void * ft, uint32_t offset) {
-  return lsx_seeki((sox_format_t *)ft, (sox_ssize_t)offset, SEEK_SET);} 
+  return lsx_seeki((sox_format_t *)ft, (sox_ssize_t)offset, SEEK_SET);}
 static int ft_seek_rel(void * ft, int32_t offset, int mode) {
-  return lsx_seeki((sox_format_t *)ft, offset, mode);} 
+  return lsx_seeki((sox_format_t *)ft, offset, mode);}
 static int ft_unreadb(void * ft, int b) {
-  return lsx_unreadb((sox_format_t *)ft, (unsigned)b);} 
+  return lsx_unreadb((sox_format_t *)ft, (unsigned)b);}
 static uint32_t ft_filelength(void * ft) {
-  return lsx_filelength((sox_format_t *)ft);} 
+  return lsx_filelength((sox_format_t *)ft);}
 static int ft_is_seekable(void *ft) {
-  return ((sox_format_t *)ft)->seekable;} 
+  return ((sox_format_t *)ft)->seekable;}
 static int32_t ft_write_b_buf(void * ft, void * buf, int32_t len) {
   priv_t * p = (priv_t *)((sox_format_t *)ft)->priv;
   if (!p->first_block_size)
@@ -63,8 +60,8 @@ static int start_read(sox_format_t * ft)
     sox_warn("`%s': overriding sample rate", ft->filename);
   else ft->signal.rate = WavpackGetSampleRate(p->codec);
 
-  ft->length = WavpackGetNumSamples(p->codec) * ft->signal.channels;
-  ft->encoding.encoding = (WavpackGetMode(p->codec) & MODE_FLOAT)? 
+  ft->signal.length = WavpackGetNumSamples(p->codec) * ft->signal.channels;
+  ft->encoding.encoding = (WavpackGetMode(p->codec) & MODE_FLOAT)?
     SOX_ENCODING_WAVPACKF : SOX_ENCODING_WAVPACK;
   return SOX_SUCCESS;
 }
@@ -106,7 +103,7 @@ static int start_write(sox_format_t * ft)
   config.num_channels      = ft->signal.channels;
   config.sample_rate       = (int32_t)(ft->signal.rate + .5);
   config.flags = CONFIG_VERY_HIGH_FLAG;
-  if (!WavpackSetConfiguration(p->codec, &config, ft->length? ft->length / ft->signal.channels : (uint32_t)-1)) {
+  if (!WavpackSetConfiguration(p->codec, &config, ft->signal.length? ft->signal.length / ft->signal.channels : (uint32_t)-1)) {
     lsx_fail_errno(ft, SOX_EHDR, WavpackGetErrorMessage(p->codec));
     return SOX_EOF;
   }
@@ -169,13 +166,12 @@ SOX_FORMAT_HANDLER(wavpack)
     SOX_ENCODING_WAVPACK, 8, 16, 24, 32, 0,
     SOX_ENCODING_WAVPACKF, 32, 0,
     0};
-  static sox_format_handler_t handler = {
-    SOX_LIB_VERSION_CODE,
+  static sox_format_handler_t handler = {SOX_LIB_VERSION_CODE,
     "Lossless, lossy, and hybrid audio compression",
     names, 0,
     start_read, read_samples, stop_read,
     start_write, write_samples, stop_write,
-    seek, write_encodings, NULL
+    seek, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
 }

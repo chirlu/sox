@@ -1,5 +1,4 @@
-/*
- * File format: IRCAM SoundFile   (c) 2008 robs@users.sourceforge.net
+/* libSoX file format: IRCAM SoundFile   (c) 2008 robs@users.sourceforge.net
  *
  * See http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/IRCAM/IRCAM.html
  *
@@ -79,7 +78,7 @@ static int startread(sox_format_t * ft)
 
   if (lsx_readchars(ft, magic, sizeof(magic)))
     return SOX_EOF;
- 
+
   for (i = 0; id[i].desc && memcmp(magic, id[i].str, sizeof(magic)); ++i);
   if (!id[i].desc) {
     lsx_fail_errno(ft, SOX_EHDR, "sf: can't find IRCAM identifier");
@@ -90,7 +89,7 @@ static int startread(sox_format_t * ft)
 
   if (lsx_readf(ft, &rate) || lsx_readdw(ft, &channels) || lsx_readdw(ft, &ft_encoding))
     return SOX_EOF;
-  
+
   if (!(encoding = sox_enc(ft_encoding, &bits_per_sample))) {
     lsx_fail_errno(ft, SOX_EFMT, "sf: unsupported encoding %#x)", ft_encoding);
     return SOX_EOF;
@@ -104,7 +103,7 @@ static int startread(sox_format_t * ft)
         free(buf);
         return SOX_EOF;
       }
-      sox_append_comments(&ft->comments, buf);
+      sox_append_comments(&ft->oob.comments, buf);
       free(buf);
     }
     else if (lsx_skipbytes(ft, size))
@@ -112,13 +111,13 @@ static int startread(sox_format_t * ft)
   } while (code);
   if (lsx_skipbytes(ft, FIXED_HDR - (sox_size_t)lsx_tell(ft)))
     return SOX_EOF;
-  
+
   return lsx_check_read_params(ft, channels, rate, encoding, bits_per_sample, (off_t)0);
 }
 
 static int write_header(sox_format_t * ft)
 {
-  char * comment  = sox_cat_comments(ft->comments);
+  char * comment  = sox_cat_comments(ft->oob.comments);
   size_t len      = min(FIXED_HDR - 26, strlen(comment)) + 1; /* null-terminated */
   size_t info_len = max(4, (len + 3) & ~3u); /* Minimum & multiple of 4 bytes */
   int i = ft->encoding.reverse_bytes == MACHINE_IS_BIGENDIAN? 0 : 2;
@@ -149,7 +148,7 @@ SOX_FORMAT_HANDLER(sf)
     names, SOX_FILE_LIT_END,
     startread, lsx_rawread, NULL,
     write_header, lsx_rawwrite, NULL,
-    lsx_rawseek, write_encodings, NULL
+    lsx_rawseek, write_encodings, NULL, 0
   };
   return &handler;
 }

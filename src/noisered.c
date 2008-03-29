@@ -1,11 +1,10 @@
-/*
- * noiseprof - Noise Profiling Effect. 
+/* noiseprof - Noise Profiling Effect.
  *
  * Written by Ian Turner (vectro@vectro.org)
  *
  * Copyright 1999 Ian Turner
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
+ * any purpose.  This copyright notice must be maintained.
  * Authors are not responsible for the consequences of using this software.
  */
 
@@ -16,7 +15,7 @@
 #include <string.h>
 #include <assert.h>
 
-typedef struct chandata {
+typedef struct {
     float *window;
     float *lastwindow;
     float *noisegate;
@@ -24,13 +23,13 @@ typedef struct chandata {
 } chandata_t;
 
 /* Holds profile information */
-typedef struct reddata {
+typedef struct {
     char* profile_filename;
     float threshold;
 
     chandata_t *chandata;
     sox_size_t bufdata;
-} * reddata_t;
+} priv_t;
 
 /*
  * Get the options. Default file is stdin (if the audio
@@ -38,7 +37,7 @@ typedef struct reddata {
  */
 static int sox_noisered_getopts(sox_effect_t * effp, int argc, char **argv)
 {
-  reddata_t p = (reddata_t) effp->priv;
+  priv_t * p = (priv_t *) effp->priv;
 
   if (argc > 0) {
     p->profile_filename = argv[0];
@@ -60,7 +59,7 @@ static int sox_noisered_getopts(sox_effect_t * effp, int argc, char **argv)
  */
 static int sox_noisered_start(sox_effect_t * effp)
 {
-    reddata_t data = (reddata_t) effp->priv;
+    priv_t * data = (priv_t *) effp->priv;
     sox_size_t fchannels = 0;
     sox_size_t channels = effp->in_signal.channels;
     sox_size_t i;
@@ -123,7 +122,7 @@ static int sox_noisered_start(sox_effect_t * effp)
 }
 
 /* Mangle a single window. Each output sample (except the first and last
- * half-window) is the result of two distinct calls to this function, 
+ * half-window) is the result of two distinct calls to this function,
  * due to overlapping windows. */
 static void reduce_noise(chandata_t* chan, float* window, double level)
 {
@@ -136,7 +135,7 @@ static void reduce_noise(chandata_t* chan, float* window, double level)
     outr = ini + WINDOWSIZE;
     outi = outr + WINDOWSIZE;
     power = outi + WINDOWSIZE;
-    
+
     for (i = 0; i < FREQCOUNT; i ++)
         assert(smoothing[i] >= 0 && smoothing[i] <= 1);
 
@@ -156,10 +155,10 @@ static void reduce_noise(chandata_t* chan, float* window, double level)
             smooth = 0.0;
         else
             smooth = 1.0;
-        
+
         smoothing[i] = smooth * 0.5 + smoothing[i] * 0.5;
     }
-    
+
     /* Audacity says this code will eliminate tinkle bells.
      * I have no idea what that means. */
     for (i = 2; i < FREQCOUNT - 2; i ++) {
@@ -171,25 +170,25 @@ static void reduce_noise(chandata_t* chan, float* window, double level)
             smoothing[i+2]<0.1)
             smoothing[i] = 0.0;
     }
-    
+
     outr[0] *= smoothing[0];
     outi[0] *= smoothing[0];
     outr[FREQCOUNT-1] *= smoothing[FREQCOUNT-1];
     outi[FREQCOUNT-1] *= smoothing[FREQCOUNT-1];
-    
+
     for (i = 1; i < FREQCOUNT-1; i ++) {
         int j = WINDOWSIZE - i;
         float smooth = smoothing[i];
-        
+
         outr[i] *= smooth;
         outi[i] *= smooth;
         outr[j] *= smooth;
         outi[j] *= smooth;
     }
-    
+
     FFT(WINDOWSIZE, 1, outr, outi, inr, ini);
     WindowFunc(HANNING, WINDOWSIZE, inr);
-    
+
     memcpy(window, inr, WINDOWSIZE*sizeof(float));
 
     for (i = 0; i < FREQCOUNT; i ++)
@@ -200,7 +199,7 @@ static void reduce_noise(chandata_t* chan, float* window, double level)
 
 /* Do window management once we have a complete window, including mangling
  * the current window. */
-static int process_window(sox_effect_t * effp, reddata_t data, unsigned chan_num, unsigned num_chans,
+static int process_window(sox_effect_t * effp, priv_t * data, unsigned chan_num, unsigned num_chans,
                           sox_sample_t *obuf, unsigned len) {
     int j;
     float* nextwindow;
@@ -210,7 +209,7 @@ static int process_window(sox_effect_t * effp, reddata_t data, unsigned chan_num
 
     if ((nextwindow = (float*)lsx_calloc(WINDOWSIZE, sizeof(float))) == NULL)
         return SOX_EOF;
-    
+
     memcpy(nextwindow, chan->window+WINDOWSIZE/2,
            sizeof(float)*(WINDOWSIZE/2));
 
@@ -231,17 +230,17 @@ static int process_window(sox_effect_t * effp, reddata_t data, unsigned chan_num
     }
     chan->lastwindow = chan->window;
     chan->window = nextwindow;
-    
+
     return use;
 }
 
 /*
  * Read in windows, and call process_window once we get a whole one.
  */
-static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                     sox_size_t *isamp, sox_size_t *osamp)
 {
-    reddata_t data = (reddata_t) effp->priv;
+    priv_t * data = (priv_t *) effp->priv;
     sox_size_t samp = min(*isamp, *osamp);
     sox_size_t tracks = effp->in_signal.channels;
     sox_size_t track_samples = samp / tracks;
@@ -265,7 +264,7 @@ static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_
 
         if (chan->window == NULL)
             chan->window = (float*)lsx_calloc(WINDOWSIZE, sizeof(float));
-        
+
         for (j = 0; j < ncopy; j ++)
             chan->window[oldbuf + j] =
                 SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i + tracks * j], effp->clips);
@@ -275,7 +274,7 @@ static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_
         else
             process_window(effp, data, i, tracks, obuf, oldbuf + ncopy);
     }
-    
+
     *isamp = tracks*ncopy;
     if (whole_window)
         *osamp = tracks*(WINDOWSIZE/2);
@@ -291,7 +290,7 @@ static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_
 
 static int sox_noisered_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-    reddata_t data = (reddata_t)effp->priv;
+    priv_t * data = (priv_t *)effp->priv;
     unsigned i;
     unsigned tracks = effp->in_signal.channels;
     for (i = 0; i < tracks; i ++)
@@ -308,7 +307,7 @@ static int sox_noisered_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_
  */
 static int sox_noisered_stop(sox_effect_t * effp)
 {
-    reddata_t data = (reddata_t) effp->priv;
+    priv_t * data = (priv_t *) effp->priv;
     sox_size_t i;
 
     for (i = 0; i < effp->in_signal.channels; i ++) {
@@ -318,7 +317,7 @@ static int sox_noisered_stop(sox_effect_t * effp)
         free(chan->smoothing);
         free(chan->noisegate);
     }
-    
+
     free(data->chandata);
 
     return (SOX_SUCCESS);
@@ -333,7 +332,7 @@ static sox_effect_handler_t sox_noisered_effect = {
   sox_noisered_flow,
   sox_noisered_drain,
   sox_noisered_stop,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_noisered_effect_fn(void)

@@ -1,5 +1,4 @@
-/*
- * File formats: raw         (c) 2007-8 SoX contributors
+/* libSoX file formats: raw         (c) 2007-8 SoX contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -17,7 +16,7 @@
  */
 
 #include "sox_i.h"
- 
+
 static int raw_start(sox_format_t * ft) {
   return lsx_rawstart(ft, sox_false, sox_false, sox_true, SOX_ENCODING_UNKNOWN, 0);
 }
@@ -32,13 +31,11 @@ SOX_FORMAT_HANDLER(raw)
     SOX_ENCODING_ALAW, 8, 0,
     SOX_ENCODING_FLOAT, 64, 32, 0,
     0};
-  static sox_format_handler_t const handler = {
-    SOX_LIB_VERSION_CODE,
-    "Raw PCM, mu-law, or A-law",
-    names, 0,
+  static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
+    "Raw PCM, mu-law, or A-law", names, 0,
     raw_start, lsx_rawread , NULL,
     raw_start, lsx_rawwrite, NULL,
-    lsx_rawseek, encodings, NULL
+    lsx_rawseek, encodings, NULL, 0
   };
   return &handler;
 }

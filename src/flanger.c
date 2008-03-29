@@ -1,4 +1,5 @@
-/*
+/* libSoX effect: Stereo Flanger   (c) 2006 robs@users.sourceforge.net
+ *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2.1 of the License, or (at
@@ -13,8 +14,6 @@
  * along with this library; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-/* Effect: Stereo Flanger   (c) 2006 robs@users.sourceforge.net */
 
 #define sox_flanger_usage \
   "[delay depth regen width speed shape phase interp]\n"
@@ -54,7 +53,6 @@
 
 
 #include "sox_i.h"
-#include <math.h>
 #include <string.h>
 
 
@@ -65,7 +63,7 @@ typedef enum {INTERP_LINEAR, INTERP_QUADRATIC} interp_t;
 
 
 
-typedef struct flanger {
+typedef struct {
   /* Parameters */
   double     delay_min;
   double     delay_depth;
@@ -75,24 +73,21 @@ typedef struct flanger {
   lsx_wave_t  wave_shape;
   double     channel_phase;
   interp_t   interpolation;
-            
+
   /* Delay buffers */
   double *   delay_bufs[MAX_CHANNELS];
   sox_size_t  delay_buf_length;
   sox_size_t  delay_buf_pos;
   double     delay_last[MAX_CHANNELS];
-            
+
   /* Low Frequency Oscillator */
   float *    lfo;
   sox_size_t  lfo_length;
   sox_size_t  lfo_pos;
-            
+
   /* Balancing */
   double     in_gain;
-} * flanger_t;
-
-assert_static(sizeof(struct flanger) <= SOX_MAX_EFFECT_PRIVSIZE,
-              /* else */ flanger_PRIVSIZE_too_big);
+} priv_t;
 
 
 
@@ -105,7 +100,7 @@ static enum_item const interp_enum[] = {
 
 static int sox_flanger_getopts(sox_effect_t * effp, int argc, char *argv[])
 {
-  flanger_t p = (flanger_t) effp->priv;
+  priv_t * p = (priv_t *) effp->priv;
 
   /* Set non-zero defaults: */
   p->delay_depth  = 2;
@@ -152,7 +147,7 @@ static int sox_flanger_getopts(sox_effect_t * effp, int argc, char *argv[])
 
 static int sox_flanger_start(sox_effect_t * effp)
 {
-  flanger_t f = (flanger_t) effp->priv;
+  priv_t * f = (priv_t *) effp->priv;
   int c, channels = effp->in_signal.channels;
 
   if (channels > MAX_CHANNELS) {
@@ -206,7 +201,7 @@ static int sox_flanger_start(sox_effect_t * effp)
 static int sox_flanger_flow(sox_effect_t * effp, sox_sample_t const * ibuf,
     sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
-  flanger_t f = (flanger_t) effp->priv;
+  priv_t * f = (priv_t *) effp->priv;
   int c, channels = effp->in_signal.channels;
   sox_size_t len = (*isamp > *osamp ? *osamp : *isamp) / channels;
 
@@ -260,7 +255,7 @@ static int sox_flanger_flow(sox_effect_t * effp, sox_sample_t const * ibuf,
 
 static int sox_flanger_stop(sox_effect_t * effp)
 {
-  flanger_t f = (flanger_t) effp->priv;
+  priv_t * f = (priv_t *) effp->priv;
   int c, channels = effp->in_signal.channels;
 
   for (c = 0; c < channels; ++c)
@@ -284,7 +279,7 @@ static sox_effect_handler_t sox_flanger_effect = {
   sox_flanger_flow,
   NULL,
   sox_flanger_stop,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 

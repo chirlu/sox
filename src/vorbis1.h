@@ -1,5 +1,4 @@
-/*
- * This library is free software; you can redistribute it and/or modify it
+/* This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2.1 of the License, or (at
  * your option) any later version.
@@ -14,19 +13,19 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#if defined __GNUC__ 
-  #pragma GCC system_header 
-#elif defined __SUNPRO_CC 
-  #pragma disable_warn 
-#elif defined _MSC_VER 
-  #pragma warning(push, 1) 
-#endif 
+#if defined __GNUC__
+  #pragma GCC system_header
+#elif defined __SUNPRO_CC
+  #pragma disable_warn
+#elif defined _MSC_VER
+  #pragma warning(push, 1)
+#endif
 
   vorbis_encode_init_vbr(
       &ve->vi, ft->signal.channels, ft->signal.rate + .5, quality / 10);
 
-#if defined __SUNPRO_CC 
-  #pragma enable_warn 
-#elif defined _MSC_VER 
-  #pragma warning(pop) 
-#endif 
+#if defined __SUNPRO_CC
+  #pragma enable_warn
+#elif defined _MSC_VER
+  #pragma warning(pop)
+#endif

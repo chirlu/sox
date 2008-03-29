@@ -1,5 +1,4 @@
-/*
- * Simple example of using SoX libraries
+/* Simple example of using SoX libraries
  *
  * Copyright (c) 2008 robs@users.sourceforge.net
  *
@@ -27,7 +26,7 @@
 #endif
 #include <assert.h>
 
-/* 
+/*
  * Reads input file and displays a few seconds of wave-form, starting from
  * a given time through the audio.   E.g. example2 song2.au 30.75 1
  */

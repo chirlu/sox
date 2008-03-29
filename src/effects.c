@@ -1,6 +1,4 @@
-/*
- * SoX Effects chain
- * (c) 2007 robs@users.sourceforge.net
+/* SoX Effects chain     (c) 2007 robs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -65,10 +63,10 @@ static int default_getopts(sox_effect_t * effp, int argc, char **argv UNUSED)
 }
 
 /* Partially initialise the effect structure; signal info will come later */
-void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const * eh)
+sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh)
 {
+  sox_effect_t * effp = lsx_calloc(1, sizeof(*effp));
   assert(eh);
-  memset(effp, 0, sizeof(*effp));
   effp->global_info = &sox_effects_globals;
   effp->handler = *eh;
   if (!effp->handler.getopts) effp->handler.getopts = default_getopts;
@@ -77,6 +75,8 @@ void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const * eh)
   if (!effp->handler.drain  ) effp->handler.drain   = default_drain;
   if (!effp->handler.stop   ) effp->handler.stop    = default_function;
   if (!effp->handler.kill   ) effp->handler.kill    = default_function;
+  effp->priv = lsx_calloc(1, effp->handler.priv_size);
+  return effp;
 }
 
 
@@ -139,18 +139,23 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
   effp->clips = 0;
   effp->imin = 0;
   eff0 = *effp;
+  eff0.priv = lsx_memdup(eff0.priv, eff0.handler.priv_size);
   ret = start(effp);
   if (ret == SOX_EFF_NULL) {
     sox_report("has no effect in this configuration");
+    free(eff0.priv);
     return SOX_SUCCESS;
   }
-  if (ret != SOX_SUCCESS)
+  if (ret != SOX_SUCCESS) {
+    free(eff0.priv);
     return SOX_EOF;
+  }
 
   *in = effp->out_signal;
 
   if (chain->length == SOX_MAX_EFFECTS) {
     sox_fail("Too many effects!");
+    free(eff0.priv);
     return SOX_EOF;
   }
   chain->effects[chain->length] =
@@ -160,11 +165,15 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
   for (f = 1; f < effp->flows; ++f) {
     chain->effects[chain->length][f] = eff0;
     chain->effects[chain->length][f].flow = f;
-    if (start(&chain->effects[chain->length][f]) != SOX_SUCCESS)
+    chain->effects[chain->length][f].priv = lsx_memdup(eff0.priv, eff0.handler.priv_size);
+    if (start(&chain->effects[chain->length][f]) != SOX_SUCCESS) {
+      free(eff0.priv);
       return SOX_EOF;
+    }
   }
 
   ++chain->length;
+  free(eff0.priv);
   return SOX_SUCCESS;
 }
 
@@ -370,6 +379,7 @@ sox_size_t sox_stop_effect(sox_effects_chain_t * chain, sox_size_t e)
 void sox_delete_effects(sox_effects_chain_t * chain)
 {
   sox_size_t e, clips;
+  unsigned f;
 
   for (e = 0; e < chain->length; ++e) {
     sox_effect_t * effp = chain->effects[e];
@@ -377,7 +387,9 @@ void sox_delete_effects(sox_effects_chain_t * chain)
       sox_warn("%s clipped %u samples; decrease volume?",
           chain->effects[e][0].handler.name, clips);
     effp->handler.kill(effp);
-    free(chain->effects[e]);
+    for (f = 0; f < effp->flows; ++f)
+      free(chain->effects[e][f].priv);
+    free(effp);
   }
   chain->length = 0;
 }

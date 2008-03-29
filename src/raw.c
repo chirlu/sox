@@ -1,5 +1,4 @@
-/*
- * libSoX raw I/O
+/* libSoX raw I/O
  *
  * Copyright 1991-2007 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for
@@ -53,8 +52,8 @@ int lsx_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_chan
     else ft->encoding.bits_per_sample = size;
   }
 
-  if (!ft->length && ft->mode == 'r' && default_length && ft->encoding.bits_per_sample)
-    ft->length = div_bits(lsx_filelength(ft), ft->encoding.bits_per_sample);
+  if (!ft->signal.length && ft->mode == 'r' && default_length && ft->encoding.bits_per_sample)
+    ft->signal.length = div_bits(lsx_filelength(ft), ft->encoding.bits_per_sample);
 
   return SOX_SUCCESS;
 }
@@ -130,8 +129,8 @@ static ft_io_fun *check_format(sox_format_t * ft, sox_bool write)
         break;
       }
       break;
-      
-    case 16: 
+
+    case 16:
       switch (ft->encoding.encoding) {
       case SOX_ENCODING_SIGN2:
         return write ? sox_write_sw_samples : sox_read_sw_samples;
@@ -152,7 +151,7 @@ static ft_io_fun *check_format(sox_format_t * ft, sox_bool write)
         break;
       }
       break;
-      
+
     case 32:
       switch (ft->encoding.encoding) {
       case SOX_ENCODING_SIGN2:
@@ -165,7 +164,7 @@ static ft_io_fun *check_format(sox_format_t * ft, sox_bool write)
         break;
       }
       break;
-      
+
     case 64:
       switch (ft->encoding.encoding) {
       case SOX_ENCODING_FLOAT:

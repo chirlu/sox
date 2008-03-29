@@ -1,5 +1,4 @@
-/*
- * File formats: raw         (c) 2007-8 SoX contributors
+/* File format: raw A-law         (c) 2007-8 SoX contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by

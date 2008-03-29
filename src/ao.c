@@ -1,5 +1,4 @@
-/*
- * libao player support for sox
+/* libao player support for sox
  * (c) Reuben Thomas <rrt@sc3d.org> 2007
  *
  * This library is free software; you can redistribute it and/or modify it
@@ -24,18 +23,17 @@
 #include <string.h>
 #include <ao/ao.h>
 
-typedef struct ao_priv
-{
+typedef struct {
   int driver_id;
   ao_device *device;
   ao_sample_format format;
   char *buf;
   sox_size_t buf_size;
-} *ao_priv_t;
+} priv_t;
 
 static int startwrite(sox_format_t * ft)
 {
-  ao_priv_t ao = (ao_priv_t)ft->priv;
+  priv_t * ao = (priv_t *)ft->priv;
 
   lsx_set_signal_defaults(&ft->signal);
   ao->buf_size = sox_globals.bufsiz - (sox_globals.bufsiz % (ft->encoding.bits_per_sample >> 3));
@@ -91,7 +89,7 @@ static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t l
 
 static sox_size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, sox_size_t len)
 {
-  ao_priv_t ao = (ao_priv_t)ft->priv;
+  priv_t * ao = (priv_t *)ft->priv;
   sox_size_t aobuf_size;
 
   if (len > ao->buf_size / (ft->encoding.bits_per_sample >> 3))
@@ -109,7 +107,7 @@ static sox_size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, sox_s
 
 static int stopwrite(sox_format_t * ft)
 {
-  ao_priv_t ao = (ao_priv_t)ft->priv;
+  priv_t * ao = (priv_t *)ft->priv;
 
   free(ao->buf);
 
@@ -126,13 +124,11 @@ SOX_FORMAT_HANDLER(ao)
 {
   static char const * const names[] = {"ao", NULL};
   static unsigned const encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
-  static sox_format_handler_t const handler = {
-    SOX_LIB_VERSION_CODE,
-    "Xiph's libao device driver",
-    names, SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
+  static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
+    "Xiph's libao device driver", names, SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
     NULL, NULL, NULL,
     startwrite, write_samples, stopwrite,
-    NULL, encodings, NULL
+    NULL, encodings, NULL, sizeof(priv_t)
   };
   return &handler;
 }

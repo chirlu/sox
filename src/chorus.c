@@ -1,15 +1,14 @@
-/*
- * August 24, 1998
+/* August 24, 1998
  * Copyright (C) 1998 Juergen Mueller And Sundry Contributors
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Juergen Mueller And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Juergen Mueller And Sundry Contributors are not responsible for
  * the consequences of using this software.
  */
 
 /*
  *      Chorus effect.
- * 
+ *
  * Flow diagram scheme for n delays ( 1 <= n <= MAX_CHORUS ):
  *
  *        * gain-in                                           ___
@@ -28,7 +27,7 @@
  *            +---->| delay n |----------------------------->|   |
  *                  |_________|                              |   |
  *                     /|\                                   |___|
- *                      |                                      |  
+ *                      |                                      |
  *              +-----------------+   +--------------+         | * gain-out
  *              | Delay control n |<--| mod. speed n |         |
  *              +-----------------+   +--------------+         +----->obuff
@@ -36,7 +35,7 @@
  *
  * The delay i is controled by a sine or triangle modulation i ( 1 <= i <= n).
  *
- * Usage: 
+ * Usage:
  *   chorus gain-in gain-out delay-1 decay-1 speed-1 depth-1 -s1|t1 [
  *       delay-2 decay-2 speed-2 depth-2 -s2|-t2 ... ]
  *
@@ -51,7 +50,7 @@
  *
  * Note:
  *   when decay is close to 1.0, the samples can begin clipping and the output
- *   can saturate! 
+ *   can saturate!
  *
  * Hint:
  *   1 / out-gain < gain-in ( 1 + decay-1 + ... + decay-n )
@@ -65,17 +64,16 @@
 #include "sox_i.h"
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
-#include <math.h>
 #include <string.h>
 
 #define MOD_SINE        0
 #define MOD_TRIANGLE    1
 #define MAX_CHORUS      7
 
-typedef struct chorusstuff {
+typedef struct {
         int     num_chorus;
         int     modulation[MAX_CHORUS];
-        int     counter;                        
+        int     counter;
         long    phase[MAX_CHORUS];
         float   *chorusbuf;
         float   in_gain, out_gain;
@@ -86,14 +84,14 @@ typedef struct chorusstuff {
         int     depth_samples[MAX_CHORUS], samples[MAX_CHORUS];
         int maxsamples;
         unsigned int fade_out;
-} *chorus_t;
+} priv_t;
 
 /*
  * Process options
  */
-static int sox_chorus_getopts(sox_effect_t * effp, int n, char **argv) 
+static int sox_chorus_getopts(sox_effect_t * effp, int n, char **argv)
 {
-        chorus_t chorus = (chorus_t) effp->priv;
+        priv_t * chorus = (priv_t *) effp->priv;
         int i;
 
         chorus->num_chorus = 0;
@@ -131,7 +129,7 @@ static int sox_chorus_getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int sox_chorus_start(sox_effect_t * effp)
 {
-        chorus_t chorus = (chorus_t) effp->priv;
+        priv_t * chorus = (priv_t *) effp->priv;
         int i;
         float sum_in_volume;
 
@@ -153,9 +151,9 @@ static int sox_chorus_start(sox_effect_t * effp)
                 return (SOX_EOF);
         }
         for ( i = 0; i < chorus->num_chorus; i++ ) {
-                chorus->samples[i] = (int) ( ( chorus->delay[i] + 
+                chorus->samples[i] = (int) ( ( chorus->delay[i] +
                         chorus->depth[i] ) * effp->in_signal.rate / 1000.0);
-                chorus->depth_samples[i] = (int) (chorus->depth[i] * 
+                chorus->depth_samples[i] = (int) (chorus->depth[i] *
                         effp->in_signal.rate / 1000.0);
 
                 if ( chorus->delay[i] < 20.0 )
@@ -205,12 +203,12 @@ static int sox_chorus_start(sox_effect_t * effp)
                   lsx_generate_wave_table(SOX_WAVE_SINE, SOX_INT, chorus->lookup_tab[i],
                                          (unsigned)chorus->length[i], 0., (double)chorus->depth_samples[i], 0.);
                 else
-                  lsx_generate_wave_table(SOX_WAVE_TRIANGLE, SOX_INT, chorus->lookup_tab[i], 
+                  lsx_generate_wave_table(SOX_WAVE_TRIANGLE, SOX_INT, chorus->lookup_tab[i],
                                          (unsigned)chorus->length[i],
                                          (double)(chorus->samples[i] - 1 - 2 * chorus->depth_samples[i]),
                                          (double)(chorus->samples[i] - 1), 3 * M_PI_2);
                 chorus->phase[i] = 0;
-                
+
                 if ( chorus->samples[i] > chorus->maxsamples )
                   chorus->maxsamples = chorus->samples[i];
         }
@@ -236,10 +234,10 @@ static int sox_chorus_start(sox_effect_t * effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_chorus_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_chorus_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                    sox_size_t *isamp, sox_size_t *osamp)
 {
-        chorus_t chorus = (chorus_t) effp->priv;
+        priv_t * chorus = (priv_t *) effp->priv;
         int i;
         float d_in, d_out;
         sox_sample_t out;
@@ -252,8 +250,8 @@ static int sox_chorus_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
                 /* Compute output first */
                 d_out = d_in * chorus->in_gain;
                 for ( i = 0; i < chorus->num_chorus; i++ )
-                        d_out += chorus->chorusbuf[(chorus->maxsamples + 
-                        chorus->counter - chorus->lookup_tab[i][chorus->phase[i]]) % 
+                        d_out += chorus->chorusbuf[(chorus->maxsamples +
+                        chorus->counter - chorus->lookup_tab[i][chorus->phase[i]]) %
                         chorus->maxsamples] * chorus->decay[i];
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * chorus->out_gain;
@@ -261,10 +259,10 @@ static int sox_chorus_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 chorus->chorusbuf[chorus->counter] = d_in;
-                chorus->counter = 
+                chorus->counter =
                         ( chorus->counter + 1 ) % chorus->maxsamples;
                 for ( i = 0; i < chorus->num_chorus; i++ )
-                        chorus->phase[i]  = 
+                        chorus->phase[i]  =
                                 ( chorus->phase[i] + 1 ) % chorus->length[i];
         }
         /* processed all samples */
@@ -272,14 +270,14 @@ static int sox_chorus_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
 }
 
 /*
- * Drain out reverb lines. 
+ * Drain out reverb lines.
  */
 static int sox_chorus_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-        chorus_t chorus = (chorus_t) effp->priv;
+        priv_t * chorus = (priv_t *) effp->priv;
         sox_size_t done;
         int i;
-        
+
         float d_in, d_out;
         sox_sample_t out;
 
@@ -289,8 +287,8 @@ static int sox_chorus_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t 
                 d_out = 0;
                 /* Compute output first */
                 for ( i = 0; i < chorus->num_chorus; i++ )
-                        d_out += chorus->chorusbuf[(chorus->maxsamples + 
-                chorus->counter - chorus->lookup_tab[i][chorus->phase[i]]) % 
+                        d_out += chorus->chorusbuf[(chorus->maxsamples +
+                chorus->counter - chorus->lookup_tab[i][chorus->phase[i]]) %
                 chorus->maxsamples] * chorus->decay[i];
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * chorus->out_gain;
@@ -298,10 +296,10 @@ static int sox_chorus_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t 
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 chorus->chorusbuf[chorus->counter] = d_in;
-                chorus->counter = 
+                chorus->counter =
                         ( chorus->counter + 1 ) % chorus->maxsamples;
                 for ( i = 0; i < chorus->num_chorus; i++ )
-                        chorus->phase[i]  = 
+                        chorus->phase[i]  =
                                 ( chorus->phase[i] + 1 ) % chorus->length[i];
                 done++;
                 chorus->fade_out--;
@@ -319,7 +317,7 @@ static int sox_chorus_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t 
  */
 static int sox_chorus_stop(sox_effect_t * effp)
 {
-        chorus_t chorus = (chorus_t) effp->priv;
+        priv_t * chorus = (priv_t *) effp->priv;
         int i;
 
         free((char *) chorus->chorusbuf);
@@ -340,7 +338,7 @@ static sox_effect_handler_t sox_chorus_effect = {
   sox_chorus_flow,
   sox_chorus_drain,
   sox_chorus_stop,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_chorus_effect_fn(void)

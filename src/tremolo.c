@@ -1,4 +1,5 @@
-/*
+/* libSoX effect: tremolo  (c) 2007 robs@users.sourceforge.net
+ *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2.1 of the License, or (at
@@ -14,11 +15,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* Effect: tremolo  (c) 2007 robs@users.sourceforge.net */
-
 #include "sox_i.h"
 
-static int getopts(sox_effect_t * effp, int n, char * * argv) 
+static int getopts(sox_effect_t * effp, int n, char * * argv)
 {
   double speed, depth = 40;
   char dummy;     /* To check for extraneous chars. */

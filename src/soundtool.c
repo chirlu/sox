@@ -1,5 +1,4 @@
-/*
- * Sounder format handler          (c) 2008 robs@users.sourceforge.net
+/* libSoX SoundTool format handler          (c) 2008 robs@users.sourceforge.net
  * Based on description in sndtl26.zip.
  *
  * This library is free software; you can redistribute it and/or modify it
@@ -39,15 +38,15 @@ static int start_read(sox_format_t * ft)
     return SOX_EOF;
   }
   comments[text_field_len] = '\0'; /* Be defensive against incorrect files */
-  sox_append_comments(&ft->comments, comments);
+  sox_append_comments(&ft->oob.comments, comments);
   return lsx_check_read_params(ft, 1, (sox_rate_t)rate, SOX_ENCODING_UNSIGNED, 8, (off_t)0);
 }
 
 static int write_header(sox_format_t * ft)
 {
-  char * comment = sox_cat_comments(ft->comments);
+  char * comment = sox_cat_comments(ft->oob.comments);
   char text_buf[text_field_len];
-  sox_size_t length = ft->olength? ft->olength:ft->length;
+  sox_size_t length = ft->olength? ft->olength:ft->signal.length;
 
   memset(text_buf, 0, sizeof(text_buf));
   strncpy(text_buf, comment, text_field_len - 1);
@@ -73,7 +72,7 @@ SOX_FORMAT_HANDLER(soundtool)
     names, SOX_FILE_LIT_END | SOX_FILE_MONO | SOX_FILE_REWIND,
     start_read, lsx_rawread, NULL,
     write_header, lsx_rawwrite, NULL,
-    lsx_rawseek, write_encodings, NULL
+    lsx_rawseek, write_encodings, NULL, 0
   };
   return &handler;
 }

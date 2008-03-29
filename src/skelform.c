@@ -1,5 +1,4 @@
-/*
- * libSoX skeleton file format handler.
+/* libSoX skeleton file format handler.
  *
  * Copyright 1999 Chris Bagwell And Sundry Contributors
  *
@@ -23,13 +22,9 @@
 #include <string.h>
 
 /* Private data for SKEL file */
-typedef struct skelform
-{
+typedef struct {
   sox_size_t remaining_samples;
-} *skelform_t;
-
-assert_static(sizeof(struct skelform) <= SOX_MAX_FILE_PRIVSIZE, 
-              /* else */ skel_PRIVSIZE_too_big);
+} priv_t;
 
 /* Note that if any of your methods doesn't need to do anything, you
    can instead use the relevant sox_*_nothing* method */
@@ -43,7 +38,7 @@ assert_static(sizeof(struct skelform) <= SOX_MAX_FILE_PRIVSIZE,
  */
 static int startread(sox_format_t * ft)
 {
-  skelform_t sk = (skelform_t)ft->priv;
+  priv_t * sk = (priv_t *)ft->priv;
   sox_size_t samples_in_file;
 
   /* If you need to seek around the input file. */
@@ -62,7 +57,7 @@ static int startread(sox_format_t * ft)
   ft->signal.channels = 1; /* or 2 or 3 ... */
   ft->encoding.bits_per_sample = 8; /* or 16 ... */
   ft->encoding.encoding = SOX_ENCODING_UNSIGNED; /* or SIGN2 ... */
-  sox_append_comment(&ft->comments, "any comment in file header.");
+  sox_append_comment(&ft->oob.comments, "any comment in file header.");
 
   /* If your format doesn't have a header then samples_in_file
    * can be determined by the file size.
@@ -70,7 +65,7 @@ static int startread(sox_format_t * ft)
   samples_in_file = lsx_filelength(ft) / (ft->encoding.bits_per_sample >> 3);
 
   /* If you can detect the length of your file, record it here. */
-  ft->length = samples_in_file;
+  ft->signal.length = samples_in_file;
   sk->remaining_samples = samples_in_file;
 
   return SOX_SUCCESS;
@@ -82,7 +77,7 @@ static int startread(sox_format_t * ft)
  */
 static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
-  skelform_t UNUSED sk = (skelform_t)ft->priv;
+  priv_t * UNUSED sk = (priv_t *)ft->priv;
   sox_size_t done;
   unsigned char sample;
 
@@ -121,7 +116,7 @@ static int stopread(sox_format_t UNUSED * ft)
 
 static int startwrite(sox_format_t * ft)
 {
-  skelform_t UNUSED sk = (skelform_t)ft->priv;
+  priv_t * UNUSED sk = (priv_t *)ft->priv;
 
   /* If you have to seek around the output file. */
   /* If header contains a length value then seeking will be
@@ -157,7 +152,7 @@ static int startwrite(sox_format_t * ft)
  */
 static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
-  skelform_t sk = (skelform_t)ft->priv;
+  priv_t * sk = (priv_t *)ft->priv;
   sox_size_t done = 0;
 
   (void)sk;
@@ -216,7 +211,7 @@ SOX_FORMAT_HANDLER(skel)
     names, 0,
     startread, read_samples, stopread,
     startwrite, write_samples, stopwrite,
-    seek, encodings, NULL
+    seek, encodings, NULL, sizeof(priv_t)
   };
 
   return &handler;

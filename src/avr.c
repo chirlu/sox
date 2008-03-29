@@ -1,8 +1,6 @@
-/*
-
-    AVR file format handler for SoX
-    Copyright (C) 1999 Jan Paul Schmidt <jps@fundament.org>
-
+/* AVR file format handler for SoX
+ * Copyright (C) 1999 Jan Paul Schmidt <jps@fundament.org>
+ *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2.1 of the License, or (at
@@ -16,7 +14,6 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this library; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-
  */
 
 #include "sox_i.h"
@@ -28,7 +25,7 @@
 
 /* Taken from the Audio File Formats FAQ */
 
-typedef struct avrstuff {
+typedef struct {
   char magic [5];      /* 2BIT */
   char name [8];       /* null-padded sample name */
   unsigned short mono; /* 0 = mono, 0xffff = stereo */
@@ -50,22 +47,22 @@ typedef struct avrstuff {
   char ext[20];        /* Additional filename space, used
                           if (name[7] != 0) */
   char user[64];       /* User defined. Typically ASCII message. */
-} *avr_t;
+} priv_t;
 
 
 
 /*
  * Do anything required before you start reading samples.
- * Read file header. 
- *      Find out sampling rate, 
- *      size and encoding of samples, 
+ * Read file header.
+ *      Find out sampling rate,
+ *      size and encoding of samples,
  *      mono/stereo/quad.
  */
 
 
-static int startread(sox_format_t * ft) 
+static int startread(sox_format_t * ft)
 {
-  avr_t avr = (avr_t)ft->priv;
+  priv_t * avr = (priv_t *)ft->priv;
   int rc;
 
   lsx_reads(ft, avr->magic, 4);
@@ -141,9 +138,9 @@ static int startread(sox_format_t * ft)
   return(SOX_SUCCESS);
 }
 
-static int startwrite(sox_format_t * ft) 
+static int startwrite(sox_format_t * ft)
 {
-  avr_t avr = (avr_t)ft->priv;
+  priv_t * avr = (priv_t *)ft->priv;
   int rc;
 
   if (!ft->seekable) {
@@ -237,7 +234,7 @@ static int startwrite(sox_format_t * ft)
   lsx_writebuf(ft, (void *)"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", sizeof(avr->ext));
 
   /* user */
-  lsx_writebuf(ft, 
+  lsx_writebuf(ft,
            (void *)"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
            "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
            "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
@@ -246,18 +243,18 @@ static int startwrite(sox_format_t * ft)
   return(SOX_SUCCESS);
 }
 
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp) 
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
 {
-  avr_t avr = (avr_t)ft->priv;
+  priv_t * avr = (priv_t *)ft->priv;
 
   avr->size += nsamp;
 
   return (lsx_rawwrite (ft, buf, nsamp));
 }
 
-static int stopwrite(sox_format_t * ft) 
+static int stopwrite(sox_format_t * ft)
 {
-  avr_t avr = (avr_t)ft->priv;
+  priv_t * avr = (priv_t *)ft->priv;
 
   unsigned size = avr->size / ft->signal.channels;
 
@@ -279,14 +276,12 @@ SOX_FORMAT_HANDLER(avr)
     SOX_ENCODING_SIGN2, 16, 8, 0,
     SOX_ENCODING_UNSIGNED, 16, 8, 0,
     0};
-  static sox_format_handler_t handler = {
-    SOX_LIB_VERSION_CODE,
+  static sox_format_handler_t handler = {SOX_LIB_VERSION_CODE,
     "Audio Visual Research format; used on the Mac",
-    names,
-    SOX_FILE_BIG_END|SOX_FILE_MONO|SOX_FILE_STEREO,
+    names, SOX_FILE_BIG_END | SOX_FILE_MONO | SOX_FILE_STEREO,
     startread, lsx_rawread, NULL,
     startwrite, write_samples, stopwrite,
-    NULL, write_encodings, NULL
+    NULL, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
 }

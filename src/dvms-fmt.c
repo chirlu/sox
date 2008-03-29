@@ -1,5 +1,4 @@
-/*
- * File format: DVMS (see cvsd.c)        (c) 2007-8 SoX contributors
+/* libSoX file format: DVMS (see cvsd.c)        (c) 2007-8 SoX contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -22,13 +21,12 @@ SOX_FORMAT_HANDLER(dvms)
 {
   static char const * const names[] = {"dvms", "vms", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_CVSD, 1, 0, 0};
-  static sox_format_handler_t const handler = {
-    SOX_LIB_VERSION_CODE,
+  static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "Continuously Variable Slope Delta modulation with header",
     names, SOX_FILE_MONO,
     sox_dvmsstartread, sox_cvsdread, sox_cvsdstopread,
     sox_dvmsstartwrite, sox_cvsdwrite, sox_dvmsstopwrite,
-    NULL, write_encodings, NULL
+    NULL, write_encodings, NULL, sizeof(cvsd_priv_t)
   };
   return &handler;
 }

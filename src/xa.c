@@ -1,6 +1,5 @@
-/*
- * xa.c  Support for Maxis .XA file format
- * 
+/* libSoX xa.c  Support for Maxis .XA file format
+ *
  *      Copyright (C) 2006 Dwayne C. Litzenberger <dlitz@dlitz.net>
  *
  * This library is free software; you can redistribute it and/or modify it
@@ -16,10 +15,9 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this library; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
 
-/* Thanks to Valery V. Anisimovsky <samael@avn.mccme.ru> for the 
+/* Thanks to Valery V. Anisimovsky <samael@avn.mccme.ru> for the
  * "Maxis XA Audio File Format Description", dated 5-01-2002. */
 
 #include "sox_i.h"
@@ -54,14 +52,14 @@ typedef struct {
 } xa_state_t;
 
 /* Private data for .xa file */
-typedef struct xastuff {
+typedef struct {
     xa_header_t header;
     xa_state_t *state;
     unsigned int blockSize;
     unsigned int bufPos;    /* position within the current block */
     unsigned char *buf;     /* buffer for the current block */
     unsigned int bytesDecoded;  /* number of decompressed bytes read */
-} *xa_t;
+} priv_t;
 
 /* coefficients for EA ADPCM */
 static int32_t EA_ADPCM_Table[]= {
@@ -86,7 +84,7 @@ static inline int32_t clip16(int32_t sample)
 
 static int startread(sox_format_t * ft)
 {
-    xa_t xa = (xa_t) ft->priv;
+    priv_t * xa = (priv_t *) ft->priv;
     char *magic = xa->header.magic;
 
     /* Check for the magic value */
@@ -98,7 +96,7 @@ static int startread(sox_format_t * ft)
         lsx_fail_errno(ft, SOX_EHDR, "XA: Header not found");
         return SOX_EOF;
     }
-    
+
     /* Read the rest of the header */
     if (lsx_readdw(ft, &xa->header.outSize) != SOX_SUCCESS) return SOX_EOF;
     if (lsx_readw(ft, &xa->header.tag) != SOX_SUCCESS) return SOX_EOF;
@@ -126,32 +124,32 @@ static int startread(sox_format_t * ft)
 
     /* Populate the sox_soundstream structure */
     ft->encoding.encoding = SOX_ENCODING_SIGN2;
-    
+
     if (!ft->encoding.bits_per_sample || ft->encoding.bits_per_sample == xa->header.bits) {
         ft->encoding.bits_per_sample = xa->header.bits;
     } else {
         sox_report("User options overriding size read in .xa header");
     }
-    
+
     if (ft->signal.channels == 0 || ft->signal.channels == xa->header.channels) {
         ft->signal.channels = xa->header.channels;
     } else {
         sox_report("User options overriding channels read in .xa header");
     }
-    
+
     if (ft->signal.rate == 0 || ft->signal.rate == xa->header.sampleRate) {
         ft->signal.rate = xa->header.sampleRate;
     } else {
         sox_report("User options overriding rate read in .xa header");
     }
-    
+
     /* Check for supported formats */
     if (ft->encoding.bits_per_sample != 16) {
         lsx_fail_errno(ft, SOX_EFMT, "%d-bit sample resolution not supported.",
             ft->encoding.bits_per_sample);
         return SOX_EOF;
     }
-    
+
     /* Validate the header */
     if (xa->header.bits != ft->encoding.bits_per_sample) {
         sox_report("Invalid sample resolution %d bits.  Assuming %d bits.",
@@ -175,23 +173,23 @@ static int startread(sox_format_t * ft)
 
     /* Allocate memory for the block buffer */
     xa->buf = (unsigned char *)lsx_calloc(1, xa->blockSize);
-    
+
     /* Allocate memory for the state */
     xa->state = (xa_state_t *)lsx_calloc(sizeof(xa_state_t), ft->signal.channels);
-    
+
     /* Final initialization */
     xa->bytesDecoded = 0;
-    
+
     return SOX_SUCCESS;
 }
 
-/* 
+/*
  * Read up to len samples from a file, converted to signed longs.
  * Return the number of samples read.
  */
 static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
-    xa_t xa = (xa_t) ft->priv;
+    priv_t * xa = (priv_t *) ft->priv;
     int32_t sample;
     unsigned char inByte;
     size_t i, done, bytes;
@@ -216,7 +214,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
                 }
             }
             xa->bufPos = 0;
-            
+
             for (i = 0; i < ft->signal.channels; i++) {
                 inByte = xa->buf[i];
                 xa->state[i].c1 = EA_ADPCM_Table[HNIBBLE(inByte)];
@@ -236,7 +234,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
                 sample = clip16(sample);
                 xa->state[i].prevSample = xa->state[i].curSample;
                 xa->state[i].curSample = sample;
-                
+
                 buf[done++] = SOX_SIGNED_16BIT_TO_SAMPLE(sample,);
                 xa->bytesDecoded += (ft->encoding.bits_per_sample >> 3);
             }
@@ -250,7 +248,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
                 sample = clip16(sample);
                 xa->state[i].prevSample = xa->state[i].curSample;
                 xa->state[i].curSample = sample;
-                
+
                 buf[done++] = SOX_SIGNED_16BIT_TO_SAMPLE(sample,);
                 xa->bytesDecoded += (ft->encoding.bits_per_sample >> 3);
             }
@@ -266,7 +264,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
 
 static int stopread(sox_format_t * ft)
 {
-    xa_t xa = (xa_t) ft->priv;
+    priv_t * xa = (priv_t *) ft->priv;
 
     ft->sox_errno = SOX_SUCCESS;
 
@@ -275,20 +273,19 @@ static int stopread(sox_format_t * ft)
     xa->buf = NULL;
     free(xa->state);
     xa->state = NULL;
-    
+
     return SOX_SUCCESS;
 }
 
 SOX_FORMAT_HANDLER(xa)
 {
   static char const * const names[] = {"xa", NULL };
-  static sox_format_handler_t const handler = {
-    SOX_LIB_VERSION_CODE,
+  static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "16-bit ADPCM audio files used by Maxis games",
     names, SOX_FILE_LIT_END,
     startread, read_samples, stopread,
     NULL, NULL, NULL,
-    NULL, NULL, NULL
+    NULL, NULL, NULL, sizeof(priv_t)
   };
   return &handler;
 }

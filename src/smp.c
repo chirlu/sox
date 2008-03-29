@@ -1,7 +1,6 @@
-/*
- * libSoX SampleVision file format handler.
+/* libSoX SampleVision file format handler.
  * Output is always in little-endian (80x86/VAX) order.
- * 
+ *
  * Derived from: libSoX skeleton handler file.
  *
  * Add: Loop point verbose info.  It's a start, anyway.
@@ -11,8 +10,8 @@
  * June 30, 1992
  * Copyright 1992 Leigh Smith And Sundry Contributors
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Leigh Smith And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Leigh Smith And Sundry Contributors are not responsible for
  * the consequences of using this software.
  */
 
@@ -60,12 +59,12 @@ struct smptrailer {
 };
 
 /* Private data for SMP file */
-typedef struct smpstuff {
+typedef struct {
   uint32_t NoOfSamps;           /* Sample data count in words */
   sox_size_t dataStart;
   /* comment memory resides in private data because it's small */
   char comment[COMMENTLEN + NAMELEN + 3];
-} *smp_t;
+} priv_t;
 
 static char *SVmagic = "SOUND SAMPLE DATA ", *SVvers = "2.1 ";
 
@@ -81,14 +80,14 @@ static int readtrailer(sox_format_t * ft, struct smptrailer *trailer)
         lsx_readw(ft, (unsigned short *)&trash16); /* read reserved word */
         for(i = 0; i < 8; i++) {        /* read the 8 loops */
                 lsx_readdw(ft, &(trailer->loops[i].start));
-                ft->loops[i].start = trailer->loops[i].start;
+                ft->oob.loops[i].start = trailer->loops[i].start;
                 lsx_readdw(ft, &(trailer->loops[i].end));
-                ft->loops[i].length = 
+                ft->oob.loops[i].length =
                         trailer->loops[i].end - trailer->loops[i].start;
                 lsx_readb(ft, (unsigned char *)&(trailer->loops[i].type));
-                ft->loops[i].type = trailer->loops[i].type;
+                ft->oob.loops[i].type = trailer->loops[i].type;
                 lsx_readw(ft, (unsigned short *)&(trailer->loops[i].count));
-                ft->loops[i].count = trailer->loops[i].count;
+                ft->oob.loops[i].count = trailer->loops[i].count;
         }
         for(i = 0; i < 8; i++) {        /* read the 8 markers */
                 if (lsx_readbuf(ft, trailer->markers[i].name, MARKERLEN) != MARKERLEN)
@@ -114,17 +113,17 @@ static void settrailer(sox_format_t * ft, struct smptrailer *trailer, sox_rate_t
         int i;
 
         for(i = 0; i < 8; i++) {        /* copy the 8 loops */
-            if (ft->loops[i].type != 0) {
-                trailer->loops[i].start = ft->loops[i].start;
+            if (ft->oob.loops[i].type != 0) {
+                trailer->loops[i].start = ft->oob.loops[i].start;
                 /* to mark it as not set */
-                trailer->loops[i].end = ft->loops[i].start + ft->loops[i].length;
-                trailer->loops[i].type = ft->loops[i].type;
-                trailer->loops[i].count = ft->loops[i].count;   
+                trailer->loops[i].end = ft->oob.loops[i].start + ft->oob.loops[i].length;
+                trailer->loops[i].type = ft->oob.loops[i].type;
+                trailer->loops[i].count = ft->oob.loops[i].count;
             } else {
                 /* set first loop start as FFFFFFFF */
-                trailer->loops[i].start = ~0u;   
+                trailer->loops[i].start = ~0u;
                 /* to mark it as not set */
-                trailer->loops[i].end = 0;      
+                trailer->loops[i].end = 0;
                 trailer->loops[i].type = 0;
                 trailer->loops[i].count = 0;
             }
@@ -169,10 +168,10 @@ static int writetrailer(sox_format_t * ft, struct smptrailer *trailer)
         return(SOX_SUCCESS);
 }
 
-static int sox_smpseek(sox_format_t * ft, sox_size_t offset) 
+static int sox_smpseek(sox_format_t * ft, sox_size_t offset)
 {
     sox_size_t new_offset, channel_block, alignment;
-    smp_t smp = (smp_t) ft->priv;
+    priv_t * smp = (priv_t *) ft->priv;
 
     new_offset = offset * (ft->encoding.bits_per_sample >> 3);
     /* Make sure request aligns to a channel block (ie left+right) */
@@ -189,20 +188,20 @@ static int sox_smpseek(sox_format_t * ft, sox_size_t offset)
     ft->sox_errno = lsx_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
 
     if( ft->sox_errno == SOX_SUCCESS )
-        smp->NoOfSamps = ft->length - (new_offset / (ft->encoding.bits_per_sample >> 3));
+        smp->NoOfSamps = ft->signal.length - (new_offset / (ft->encoding.bits_per_sample >> 3));
 
     return(ft->sox_errno);
 }
 /*
  * Do anything required before you start reading samples.
- * Read file header. 
- *      Find out sampling rate, 
- *      size and encoding of samples, 
+ * Read file header.
+ *      Find out sampling rate,
+ *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int sox_smpstartread(sox_format_t * ft) 
+static int sox_smpstartread(sox_format_t * ft)
 {
-        smp_t smp = (smp_t) ft->priv;
+        priv_t * smp = (priv_t *) ft->priv;
         int namelen, commentlen;
         sox_size_t samplestart, i;
         struct smpheader header;
@@ -243,7 +242,7 @@ static int sox_smpstartread(sox_format_t * ft)
           ;
         sprintf(smp->comment, "%.*s: %.*s", namelen+1, header.name,
                 commentlen+1, header.comments);
-        sox_append_comments(&ft->comments, smp->comment);
+        sox_append_comments(&ft->oob.comments, smp->comment);
 
         /* Extract out the sample size (always intel format) */
         lsx_readdw(ft, &(smp->NoOfSamps));
@@ -264,7 +263,7 @@ static int sox_smpstartread(sox_format_t * ft)
         }
 
         /* seek back to the beginning of the data */
-        if (lsx_seeki(ft, (sox_ssize_t)samplestart, 0) == -1) 
+        if (lsx_seeki(ft, (sox_ssize_t)samplestart, 0) == -1)
         {
                 lsx_fail_errno(ft,errno,"SMP unable to seek back to start of sample data");
                 return(SOX_EOF);
@@ -275,7 +274,7 @@ static int sox_smpstartread(sox_format_t * ft)
         ft->encoding.encoding = SOX_ENCODING_SIGN2;
         ft->signal.channels = 1;
         smp->dataStart = samplestart;
-        ft->length = smp->NoOfSamps;
+        ft->signal.length = smp->NoOfSamps;
 
         sox_report("SampleVision trailer:");
         for(i = 0; i < 8; i++) if (1 || trailer.loops[i].count) {
@@ -290,23 +289,23 @@ static int sox_smpstartread(sox_format_t * ft)
         }
         sox_report("MIDI Note number: %d", trailer.MIDInote);
 
-        ft->instr.nloops = 0;
-        for(i = 0; i < 8; i++) 
-                if (trailer.loops[i].type) 
-                        ft->instr.nloops++;
-        for(i = 0; i < ft->instr.nloops; i++) {
-                ft->loops[i].type = trailer.loops[i].type;
-                ft->loops[i].count = trailer.loops[i].count;
-                ft->loops[i].start = trailer.loops[i].start;
-                ft->loops[i].length = trailer.loops[i].end 
+        ft->oob.instr.nloops = 0;
+        for(i = 0; i < 8; i++)
+                if (trailer.loops[i].type)
+                        ft->oob.instr.nloops++;
+        for(i = 0; i < ft->oob.instr.nloops; i++) {
+                ft->oob.loops[i].type = trailer.loops[i].type;
+                ft->oob.loops[i].count = trailer.loops[i].count;
+                ft->oob.loops[i].start = trailer.loops[i].start;
+                ft->oob.loops[i].length = trailer.loops[i].end
                         - trailer.loops[i].start;
         }
-        ft->instr.MIDIlow = ft->instr.MIDIhi =
-                ft->instr.MIDInote = trailer.MIDInote;
-        if (ft->instr.nloops > 0)
-                ft->instr.loopmode = SOX_LOOP_8;
+        ft->oob.instr.MIDIlow = ft->oob.instr.MIDIhi =
+                ft->oob.instr.MIDInote = trailer.MIDInote;
+        if (ft->oob.instr.nloops > 0)
+                ft->oob.instr.loopmode = SOX_LOOP_8;
         else
-                ft->instr.loopmode = SOX_LOOP_NONE;
+                ft->oob.instr.loopmode = SOX_LOOP_NONE;
 
         return(SOX_SUCCESS);
 }
@@ -317,12 +316,12 @@ static int sox_smpstartread(sox_format_t * ft)
  * Place in buf[].
  * Return number of samples read.
  */
-static sox_size_t sox_smpread(sox_format_t * ft, sox_sample_t *buf, sox_size_t len) 
+static sox_size_t sox_smpread(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
-        smp_t smp = (smp_t) ft->priv;
+        priv_t * smp = (priv_t *) ft->priv;
         unsigned short datum;
         sox_size_t done = 0;
-        
+
         for(; done < len && smp->NoOfSamps; done++, smp->NoOfSamps--) {
                 lsx_readw(ft, &datum);
                 /* scale signed up to long's range */
@@ -331,11 +330,11 @@ static sox_size_t sox_smpread(sox_format_t * ft, sox_sample_t *buf, sox_size_t l
         return done;
 }
 
-static int sox_smpstartwrite(sox_format_t * ft) 
+static int sox_smpstartwrite(sox_format_t * ft)
 {
-        smp_t smp = (smp_t) ft->priv;
+        priv_t * smp = (priv_t *) ft->priv;
         struct smpheader header;
-        char * comment = sox_cat_comments(ft->comments);
+        char * comment = sox_cat_comments(ft->oob.comments);
 
         /* If you have to seek around the output file */
         if (! ft->seekable)
@@ -362,9 +361,9 @@ static int sox_smpstartwrite(sox_format_t * ft)
         return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_smpwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len) 
+static sox_size_t sox_smpwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
-        smp_t smp = (smp_t) ft->priv;
+        priv_t * smp = (priv_t *) ft->priv;
         int datum;
         sox_size_t done = 0;
 
@@ -378,9 +377,9 @@ static sox_size_t sox_smpwrite(sox_format_t * ft, const sox_sample_t *buf, sox_s
         return(done);
 }
 
-static int sox_smpstopwrite(sox_format_t * ft) 
+static int sox_smpstopwrite(sox_format_t * ft)
 {
-        smp_t smp = (smp_t) ft->priv;
+        priv_t * smp = (priv_t *) ft->priv;
         struct smptrailer trailer;
 
         /* Assign the trailer data */
@@ -400,13 +399,11 @@ SOX_FORMAT_HANDLER(smp)
 {
   static char const * const names[] = {"smp", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
-  static sox_format_handler_t handler = {
-    SOX_LIB_VERSION_CODE,
-    "Turtle Beach SampleVision",
-    names, SOX_FILE_LIT_END | SOX_FILE_MONO,
+  static sox_format_handler_t handler = {SOX_LIB_VERSION_CODE,
+    "Turtle Beach SampleVision", names, SOX_FILE_LIT_END | SOX_FILE_MONO,
     sox_smpstartread, sox_smpread, NULL,
     sox_smpstartwrite, sox_smpwrite, sox_smpstopwrite,
-    sox_smpseek, write_encodings, NULL
+    sox_smpseek, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
 }

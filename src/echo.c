@@ -1,19 +1,12 @@
-/*
- * August 24, 1998
+/* libSoX Echo effect             August 24, 1998
+ *
  * Copyright (C) 1998 Juergen Mueller And Sundry Contributors
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Juergen Mueller And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Juergen Mueller And Sundry Contributors are not responsible for
  * the consequences of using this software.
- */
-
-/*
- * This is the "echo.c" while the old "echo.c" from version 12 moves to
- * "reverb.c" satisfying the definitions made in the Guitar FX FAQ.
  *
  *
- * Echo effect for dsp.
- * 
  * Flow diagram scheme for n delays ( 1 <= n <= MAX_ECHOS ):
  *
  *        * gain-in                                              ___
@@ -29,12 +22,11 @@
  *                  :                 _________                 |   |
  *                  |                |         |      * decay n |   |
  *                  +--------------->| delay n |--------------->|___|
- *                                   |_________|                  | 
+ *                                   |_________|                  |
  *                                                                | * gain-out
  *                                                                |
  *                                                                +----->obuff
- *
- * Usage: 
+ * Usage:
  *   echo gain-in gain-out delay-1 decay-1 [delay-2 decay-2 ... delay-n decay-n]
  *
  * Where:
@@ -44,36 +36,30 @@
  *
  * Note:
  *   when decay is close to 1.0, the samples can begin clipping and the output
- *   can saturate! 
+ *   can saturate!
  *
  * Hint:
  *   1 / out-gain > gain-in ( 1 + decay-1 + ... + decay-n )
- *
-*/
-
-/*
- * libSoX reverb effect file.
  */
 
 #include "sox_i.h"
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
-#include <math.h>
 
 #define DELAY_BUFSIZ ( 50 * 50U * 1024 )
 #define MAX_ECHOS 7     /* 24 bit x ( 1 + MAX_ECHOS ) = */
                         /* 24 bit x 8 = 32 bit !!!      */
 
 /* Private data for SKEL file */
-typedef struct echostuff {
-        int     counter;                        
+typedef struct {
+        int     counter;
         int     num_delays;
         double  *delay_buf;
         float   in_gain, out_gain;
         float   delay[MAX_ECHOS], decay[MAX_ECHOS];
         sox_ssize_t samples[MAX_ECHOS], maxsamples;
         sox_size_t fade_out;
-} *echo_t;
+} priv_t;
 
 /* Private data for SKEL file */
 
@@ -81,9 +67,9 @@ typedef struct echostuff {
 /*
  * Process options
  */
-static int sox_echo_getopts(sox_effect_t * effp, int n, char **argv) 
+static int sox_echo_getopts(sox_effect_t * effp, int n, char **argv)
 {
-        echo_t echo = (echo_t) effp->priv;
+        priv_t * echo = (priv_t *) effp->priv;
         int i;
 
         echo->num_delays = 0;
@@ -111,7 +97,7 @@ static int sox_echo_getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int sox_echo_start(sox_effect_t * effp)
 {
-        echo_t echo = (echo_t) effp->priv;
+        priv_t * echo = (priv_t *) effp->priv;
         int i;
         float sum_in_volume;
         long j;
@@ -163,7 +149,7 @@ static int sox_echo_start(sox_effect_t * effp)
                 echo->delay_buf[j] = 0.0;
         /* Be nice and check the hint with warning, if... */
         sum_in_volume = 1.0;
-        for ( i = 0; i < echo->num_delays; i++ ) 
+        for ( i = 0; i < echo->num_delays; i++ )
                 sum_in_volume += echo->decay[i];
         if ( sum_in_volume * echo->in_gain > 1.0 / echo->out_gain )
                 sox_warn("echo: warning >>> gain-out can cause saturation of output <<<");
@@ -176,10 +162,10 @@ static int sox_echo_start(sox_effect_t * effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_echo_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_echo_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                  sox_size_t *isamp, sox_size_t *osamp)
 {
-        echo_t echo = (echo_t) effp->priv;
+        priv_t * echo = (priv_t *) effp->priv;
         int j;
         double d_in, d_out;
         sox_sample_t out;
@@ -192,8 +178,8 @@ static int sox_echo_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
                 /* Compute output first */
                 d_out = d_in * echo->in_gain;
                 for ( j = 0; j < echo->num_delays; j++ ) {
-                        d_out += echo->delay_buf[ 
-(echo->counter + echo->maxsamples - echo->samples[j]) % echo->maxsamples] 
+                        d_out += echo->delay_buf[
+(echo->counter + echo->maxsamples - echo->samples[j]) % echo->maxsamples]
                         * echo->decay[j];
                 }
                 /* Adjust the output volume and size to 24 bit */
@@ -210,11 +196,11 @@ static int sox_echo_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
 }
 
 /*
- * Drain out reverb lines. 
+ * Drain out reverb lines.
  */
 static int sox_echo_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-        echo_t echo = (echo_t) effp->priv;
+        priv_t * echo = (priv_t *) effp->priv;
         double d_in, d_out;
         sox_sample_t out;
         int j;
@@ -226,8 +212,8 @@ static int sox_echo_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *o
                 d_in = 0;
                 d_out = 0;
                 for ( j = 0; j < echo->num_delays; j++ ) {
-                        d_out += echo->delay_buf[ 
-(echo->counter + echo->maxsamples - echo->samples[j]) % echo->maxsamples] 
+                        d_out += echo->delay_buf[
+(echo->counter + echo->maxsamples - echo->samples[j]) % echo->maxsamples]
                         * echo->decay[j];
                 }
                 /* Adjust the output volume and size to 24 bit */
@@ -254,7 +240,7 @@ static int sox_echo_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *o
  */
 static int sox_echo_stop(sox_effect_t * effp)
 {
-        echo_t echo = (echo_t) effp->priv;
+        priv_t * echo = (priv_t *) effp->priv;
 
         free((char *) echo->delay_buf);
         echo->delay_buf = (double *) -1;   /* guaranteed core dump */
@@ -270,7 +256,7 @@ static sox_effect_handler_t sox_echo_effect = {
   sox_echo_flow,
   sox_echo_drain,
   sox_echo_stop,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_echo_effect_fn(void)

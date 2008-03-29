@@ -1,5 +1,4 @@
-/*
- * File format: AMR   (c) 2007 robs@users.sourceforge.net
+/* File format: AMR   (c) 2007 robs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -19,19 +18,16 @@
 #include <string.h>
 #include <math.h>
 
-typedef struct amr
-{
+typedef struct {
   void * state;
   unsigned mode;
   short pcm[AMR_FRAME];
   sox_size_t pcm_index;
-} * amr_t;
-
-assert_static(sizeof(struct amr) <= SOX_MAX_FILE_PRIVSIZE, AMR_PRIV_TOO_BIG);
+} priv_t;
+#define p (*(priv_t *)ft->priv)
 
 static sox_size_t decode_1_frame(sox_format_t * ft)
 {
-  amr_t amr = (amr_t) ft->priv;
   size_t n_1;
   UWord8 coded[AMR_CODED_MAX];
 
@@ -40,13 +36,12 @@ static sox_size_t decode_1_frame(sox_format_t * ft)
   n_1 = block_size[(coded[0] >> 3) & 0x0F] - 1;
   if (lsx_readbuf(ft, &coded[1], n_1) != n_1)
     return AMR_FRAME;
-  D_IF_decode(amr->state, coded, amr->pcm, 0);
+  D_IF_decode(p.state, coded, p.pcm, 0);
   return 0;
 }
 
 static sox_bool encode_1_frame(sox_format_t * ft)
 {
-  amr_t amr = (amr_t) ft->priv;
   UWord8 coded[AMR_CODED_MAX];
 #include "amr1.h"
   sox_bool result = lsx_writebuf(ft, coded, (unsigned)n) == (unsigned)n;
@@ -57,11 +52,10 @@ static sox_bool encode_1_frame(sox_format_t * ft)
 
 static int startread(sox_format_t * ft)
 {
-  amr_t amr = (amr_t) ft->priv;
   char buffer[sizeof(magic) - 1];
 
-  amr->pcm_index = AMR_FRAME;
-  amr->state = D_IF_init();
+  p.pcm_index = AMR_FRAME;
+  p.state = D_IF_init();
 
   if (lsx_readchars(ft, buffer, sizeof(buffer)))
     return SOX_EOF;
@@ -77,54 +71,49 @@ static int startread(sox_format_t * ft)
 
 static sox_size_t read(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
 {
-  amr_t amr = (amr_t) ft->priv;
   sox_size_t done;
 
   for (done = 0; done < len; done++) {
-    if (amr->pcm_index >= AMR_FRAME)
-      amr->pcm_index = decode_1_frame(ft);
-    if (amr->pcm_index >= AMR_FRAME)
+    if (p.pcm_index >= AMR_FRAME)
+      p.pcm_index = decode_1_frame(ft);
+    if (p.pcm_index >= AMR_FRAME)
       break;
-    *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE(amr->pcm[amr->pcm_index++], ft->clips);
+    *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE(p.pcm[p.pcm_index++], ft->clips);
   }
   return done;
 }
 
 static int stopread(sox_format_t * ft)
 {
-  amr_t amr = (amr_t) ft->priv;
-  D_IF_exit(amr->state);
+  D_IF_exit(p.state);
   return SOX_SUCCESS;
 }
 
 static int startwrite(sox_format_t * ft)
 {
-  amr_t amr = (amr_t) ft->priv;
-
   if (ft->encoding.compression != HUGE_VAL) {
-    amr->mode = ft->encoding.compression;
-    if (amr->mode != ft->encoding.compression || amr->mode > AMR_MODE_MAX) {
+    p.mode = ft->encoding.compression;
+    if (p.mode != ft->encoding.compression || p.mode > AMR_MODE_MAX) {
       lsx_fail_errno(ft, SOX_EINVAL, "compression level must be a whole number from 0 to %i", AMR_MODE_MAX);
       return SOX_EOF;
     }
   }
-  else amr->mode = 0;
+  else p.mode = 0;
 
 #include "amr2.h"
   lsx_writes(ft, magic);
-  amr->pcm_index = 0;
+  p.pcm_index = 0;
   return SOX_SUCCESS;
 }
 
 static sox_size_t write(sox_format_t * ft, const sox_sample_t * buf, sox_size_t len)
 {
-  amr_t amr = (amr_t) ft->priv;
   sox_size_t done;
 
   for (done = 0; done < len; ++done) {
-    amr->pcm[amr->pcm_index++] = SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips);
-    if (amr->pcm_index == AMR_FRAME) {
-      amr->pcm_index = 0;
+    p.pcm[p.pcm_index++] = SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips);
+    if (p.pcm_index == AMR_FRAME) {
+      p.pcm_index = 0;
       if (!encode_1_frame(ft))
         return 0;
     }
@@ -134,17 +123,16 @@ static sox_size_t write(sox_format_t * ft, const sox_sample_t * buf, sox_size_t 
 
 static int stopwrite(sox_format_t * ft)
 {
-  amr_t amr = (amr_t) ft->priv;
   int result = SOX_SUCCESS;
 
-  if (amr->pcm_index) {
+  if (p.pcm_index) {
     do {
-      amr->pcm[amr->pcm_index++] = 0;
-    } while (amr->pcm_index < AMR_FRAME);
+      p.pcm[p.pcm_index++] = 0;
+    } while (p.pcm_index < AMR_FRAME);
     if (!encode_1_frame(ft))
       result = SOX_EOF;
   }
-  E_IF_exit(amr->state);
+  E_IF_exit(p.state);
   return result;
 }
 
@@ -160,7 +148,7 @@ sox_format_handler_t const * AMR_FORMAT_FN(void)
     names, SOX_FILE_MONO,
     startread, read, stopread,
     startwrite, write, stopwrite,
-    NULL, write_encodings, write_rates
+    NULL, write_encodings, write_rates, sizeof(priv_t)
   };
   return &handler;
 }

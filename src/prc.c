@@ -1,9 +1,8 @@
-/*
- * Psion Record format (format of sound files used for EPOC machines).
+/* Psion Record format (format of sound files used for EPOC machines).
  * The file normally has no extension, so SoX uses .prc (Psion ReCord).
- * Based (heavily) on the wve.c format file. 
+ * Based (heavily) on the wve.c format file.
  * Hacked by Bert van Leeuwen (bert@e.co.za)
- * 
+ *
  * Header check improved, ADPCM encoding added, and other improvements
  * by Reuben Thomas <rrt@sc3d.org>, using file format info at
  * http://software.frodo.looijaard.name/psiconv/formats/
@@ -28,13 +27,13 @@
  *******************************************************************
  Copyright 1992 by Stichting Mathematisch Centrum, Amsterdam, The
  Netherlands.
- 
+
                         All Rights Reserved
 
  Permission to use, copy, modify, and distribute this software and its
  documentation for any purpose and without fee is hereby granted,
  provided that the above copyright notice appear in all copies and that
- both that copyright notice and this permission notice appear in 
+ both that copyright notice and this permission notice appear in
  supporting documentation, and that the names of Stichting Mathematisch
  Centrum or CWI not be used in advertising or publicity pertaining to
  distribution of the software without specific, written prior permission.
@@ -48,7 +47,7 @@
  OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  ******************************************************************/
 
- 
+
 #include "sox_i.h"
 
 #include "adpcms.h"
@@ -58,20 +57,20 @@
 #include <errno.h>
 #include <limits.h>
 
-typedef struct prcpriv {
+typedef struct {
   uint32_t nsamp, nbytes;
   short padding;
   short repeats;
   off_t data_start;         /* for seeking */
-  struct adpcm_io adpcm;
+  adpcm_io_t adpcm;
   unsigned frame_samp;     /* samples left to read in current frame */
-} *prc_t;
+} priv_t;
 
 static void prcwriteheader(sox_format_t * ft);
 
 static int seek(sox_format_t * ft, sox_size_t offset)
 {
-  prc_t p = (prc_t)ft->priv;
+  priv_t * p = (priv_t *)ft->priv;
   if (ft->encoding.encoding == SOX_ENCODING_ALAW)
     return lsx_offset_seek(ft, p->data_start, offset);
   return SOX_EOF;
@@ -122,7 +121,7 @@ static int prc_checkheader(sox_format_t * ft, char *head)
 
 static int startread(sox_format_t * ft)
 {
-  prc_t p = (prc_t)ft->priv;
+  priv_t * p = (priv_t *)ft->priv;
   char head[sizeof(prc_header)];
   uint8_t byte;
   uint16_t reps;
@@ -151,7 +150,7 @@ static int startread(sox_format_t * ft)
     lsx_fail_errno(ft, SOX_EHDR, "Invalid application name string %.63s", appname);
     return SOX_EOF;
   }
-        
+
   lsx_readdw(ft, &len);
   p->nsamp = len;
   sox_debug("Number of samples: %d", len);
@@ -169,7 +168,7 @@ static int startread(sox_format_t * ft)
 
   lsx_readw(ft, &reps);    /* Number of repeats */
   sox_debug("Repeats: %d", reps);
-        
+
   lsx_readb(ft, &volume);
   sox_debug("Volume: %d", (unsigned)volume);
   if (volume < 1 || volume > 5)
@@ -192,7 +191,7 @@ static int startread(sox_format_t * ft)
   ft->signal.channels = 1;
 
   p->data_start = lsx_tell(ft);
-  ft->length = p->nsamp / ft->signal.channels;
+  ft->signal.length = p->nsamp / ft->signal.channels;
 
   if (ft->encoding.encoding == SOX_ENCODING_ALAW) {
     ft->encoding.bits_per_sample = 8;
@@ -246,7 +245,7 @@ static unsigned read_cardinal(sox_format_t * ft)
 
 static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t samp)
 {
-  prc_t p = (prc_t)ft->priv;
+  priv_t * p = (priv_t *)ft->priv;
 
   sox_debug_more("length now = %d", p->nsamp);
 
@@ -286,7 +285,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
 
 static int stopread(sox_format_t * ft)
 {
-  prc_t p = (prc_t)ft->priv;
+  priv_t * p = (priv_t *)ft->priv;
 
   if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM)
     return sox_adpcm_stopread(ft, &p->adpcm);
@@ -305,7 +304,7 @@ static int stopread(sox_format_t * ft)
 
 static int startwrite(sox_format_t * ft)
 {
-  prc_t p = (prc_t)ft->priv;
+  priv_t * p = (priv_t *)ft->priv;
 
   if (ft->encoding.encoding == SOX_ENCODING_ALAW) {
     if (lsx_rawstartwrite(ft))
@@ -314,7 +313,7 @@ static int startwrite(sox_format_t * ft)
     if (sox_adpcm_ima_start(ft, &p->adpcm))
       return SOX_EOF;
   }
-        
+
   p->nsamp = 0;
   p->nbytes = 0;
   if (p->repeats == 0)
@@ -360,7 +359,7 @@ static void write_cardinal(sox_format_t * ft, unsigned a)
 
 static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
 {
-  prc_t p = (prc_t)ft->priv;
+  priv_t * p = (priv_t *)ft->priv;
   /* Psion Record seems not to be able to handle frames > 800 samples */
   sox_size_t written = 0;
   sox_debug_more("length now = %d", p->nsamp);
@@ -387,7 +386,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
 
 static int stopwrite(sox_format_t * ft)
 {
-  prc_t p = (prc_t)ft->priv;
+  priv_t * p = (priv_t *)ft->priv;
 
   p->nbytes = lsx_tell(ft) - p->data_start;
 
@@ -406,7 +405,7 @@ static int stopwrite(sox_format_t * ft)
 
 static void prcwriteheader(sox_format_t * ft)
 {
-  prc_t p = (prc_t)ft->priv;
+  priv_t * p = (priv_t *)ft->priv;
 
   lsx_writebuf(ft, prc_header, sizeof(prc_header));
   lsx_writes(ft, "\x2arecord.app");
@@ -418,7 +417,7 @@ static void prcwriteheader(sox_format_t * ft)
     lsx_writedw(ft, 0);
   else
     lsx_writedw(ft, 0x100001a1); /* ADPCM */
-  
+
   lsx_writew(ft, 0);             /* Number of repeats */
   lsx_writeb(ft, 3);             /* Volume: use default value of Record.app */
   lsx_writeb(ft, 0);             /* Unused and seems always zero */
@@ -442,7 +441,7 @@ SOX_FORMAT_HANDLER(prc)
     names, SOX_FILE_LIT_END | SOX_FILE_MONO,
     startread, read_samples, stopread,
     startwrite, write_samples, stopwrite,
-    seek, write_encodings, write_rates
+    seek, write_encodings, write_rates, sizeof(priv_t)
   };
   return &handler;
 }

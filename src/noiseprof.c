@@ -1,5 +1,4 @@
-/*
- * noiseprof - SoX Noise Profiling Effect. 
+/* noiseprof - SoX Noise Profiling Effect.
  *
  * Written by Ian Turner (vectro@vectro.org)
  * Copyright 1999 Ian Turner and others
@@ -25,27 +24,27 @@
 #include <string.h>
 #include <errno.h>
 
-typedef struct chandata {
+typedef struct {
     float *sum;
     int   *profilecount;
 
     float *window;
 } chandata_t;
 
-typedef struct profdata {
+typedef struct {
     char* output_filename;
     FILE* output_file;
 
     chandata_t *chandata;
     sox_size_t bufdata;
-} * profdata_t;
+} priv_t;
 
 /*
  * Get the filename, if any. We don't open it until sox_noiseprof_start.
  */
-static int sox_noiseprof_getopts(sox_effect_t * effp, int n, char **argv) 
+static int sox_noiseprof_getopts(sox_effect_t * effp, int n, char **argv)
 {
-    profdata_t data = (profdata_t) effp->priv;
+    priv_t * data = (priv_t *) effp->priv;
 
     if (n == 1) {
         data->output_filename = argv[0];
@@ -61,10 +60,10 @@ static int sox_noiseprof_getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int sox_noiseprof_start(sox_effect_t * effp)
 {
-  profdata_t data = (profdata_t) effp->priv;
+  priv_t * data = (priv_t *) effp->priv;
   unsigned channels = effp->in_signal.channels;
   unsigned i;
-   
+
   /* Note: don't fall back to stderr if stdout is unavailable
    * since we already use stderr for diagnostics. */
   if (!data->output_filename || !strcmp(data->output_filename, "-")) {
@@ -112,10 +111,10 @@ static void collect_data(chandata_t* chan) {
 /*
  * Grab what we can from ibuf, and process if we have a whole window.
  */
-static int sox_noiseprof_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_noiseprof_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                     sox_size_t *isamp, sox_size_t *osamp)
 {
-    profdata_t data = (profdata_t) effp->priv;
+    priv_t * data = (priv_t *) effp->priv;
     sox_size_t samp = min(*isamp, *osamp);
     sox_size_t tracks = effp->in_signal.channels;
     sox_size_t track_samples = samp / tracks;
@@ -144,7 +143,7 @@ static int sox_noiseprof_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox
     assert(data->bufdata <= WINDOWSIZE);
     if (data->bufdata == WINDOWSIZE)
         data->bufdata = 0;
-        
+
     memcpy(obuf, ibuf, ncopy*tracks);
     *isamp = *osamp = ncopy*tracks;
 
@@ -157,7 +156,7 @@ static int sox_noiseprof_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox
 
 static int sox_noiseprof_drain(sox_effect_t * effp, sox_sample_t *obuf UNUSED, sox_size_t *osamp)
 {
-    profdata_t data = (profdata_t) effp->priv;
+    priv_t * data = (priv_t *) effp->priv;
     int tracks = effp->in_signal.channels;
     int i;
 
@@ -186,7 +185,7 @@ static int sox_noiseprof_drain(sox_effect_t * effp, sox_sample_t *obuf UNUSED, s
  */
 static int sox_noiseprof_stop(sox_effect_t * effp)
 {
-    profdata_t data = (profdata_t) effp->priv;
+    priv_t * data = (priv_t *) effp->priv;
     sox_size_t i;
 
     for (i = 0; i < effp->in_signal.channels; i ++) {
@@ -196,7 +195,7 @@ static int sox_noiseprof_stop(sox_effect_t * effp)
         fprintf(data->output_file, "Channel %d: ", i);
 
         for (j = 0; j < FREQCOUNT; j ++) {
-            double r = chan->profilecount[j] != 0 ? 
+            double r = chan->profilecount[j] != 0 ?
                     chan->sum[j] / chan->profilecount[j] : 0;
             fprintf(data->output_file, "%s%f", j == 0 ? "" : ", ", r);
         }
@@ -210,7 +209,7 @@ static int sox_noiseprof_stop(sox_effect_t * effp)
 
     if (data->output_file != stdout)
         fclose(data->output_file);
-    
+
     return (SOX_SUCCESS);
 }
 
@@ -223,7 +222,7 @@ static sox_effect_handler_t sox_noiseprof_effect = {
   sox_noiseprof_flow,
   sox_noiseprof_drain,
   sox_noiseprof_stop,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_noiseprof_effect_fn(void)

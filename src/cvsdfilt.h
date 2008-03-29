@@ -1,11 +1,10 @@
-/*
- *      CVSD (Continuously Variable Slope Delta modulation)
+/*      libSoX CVSD (Continuously Variable Slope Delta modulation)
  *      conversion routines
  *
  *      The CVSD format is described in the MIL Std 188 113, which is
  *      available from http://bbs.itsi.disa.mil:5580/T3564
  *
- *	Copyright (C) 1996  
+ *	Copyright (C) 1996
  *      Thomas Sailer (sailer@ife.ee.ethz.ch) (HB9JNX/AE4WA)
  *      Swiss Federal Institute of Technology, Electronics Lab
  *
@@ -22,15 +21,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this library; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
-
-/* ---------------------------------------------------------------------- */
-
-#define ENC_FILTERLEN 16  /* PCM sampling rate */
-#define DEC_FILTERLEN 48  /* CVSD sampling rate */
-
-/* ---------------------------------------------------------------------- */
 
 static float dec_filter_16[48] = {
 	       0.001102,       0.001159,       0.000187,      -0.000175,

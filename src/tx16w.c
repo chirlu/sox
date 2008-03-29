@@ -1,9 +1,9 @@
-/* Yamaha TX-16W sampler file support
+/* libSoX Yamaha TX-16W sampler file support
  *
  * May 20, 1993
  * Copyright 1993 Rob Talley   (rob@aii.com)
  * This source code is freely redistributable and may be used for
- * any purpose. This copyright notice and the following copyright 
+ * any purpose. This copyright notice and the following copyright
  * notice must be maintained intact. No warranty whatsoever is
  * provided. This code is furnished AS-IS as a component of the
  * larger work Copyright 1991 Lance Norskog and Sundry Contributors.
@@ -40,13 +40,13 @@
 #define TXMAXLEN 0x3FF80
 
 /* Private data for TX16 file */
-typedef struct txwstuff {
+typedef struct {
   sox_size_t   samples_out;
   sox_size_t   bytes_out;
   sox_size_t   rest;                 /* bytes remaining in sample file */
   sox_sample_t odd;
   sox_bool     odd_flag;
-} * txw_t;
+} priv_t;
 
 struct WaveHeader_ {
   char filetype[6]; /* = "LM8953", */
@@ -65,8 +65,8 @@ static const unsigned char magic2[4] = {0, 0x52, 0x00, 0x52};
 
 /*
  * Do anything required before you start reading samples.
- * Read file header. 
- *      Find out sampling rate, 
+ * Read file header.
+ *      Find out sampling rate,
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
@@ -81,7 +81,7 @@ static int startread(sox_format_t * ft)
     int blewIt;
     uint32_t trash;
 
-    txw_t sk = (txw_t) ft->priv;
+    priv_t * sk = (priv_t *) ft->priv;
     /* If you need to seek around the input file. */
     if (! ft->seekable)
     {
@@ -91,7 +91,7 @@ static int startread(sox_format_t * ft)
 
     /* This is dumb but portable, just count the bytes til EOF */
     while (lsx_read_b_buf(ft, (unsigned char *)&trash, 1) == 1)
-        num_samp_bytes++; 
+        num_samp_bytes++;
     num_samp_bytes -= 32;         /* calculate num samples by sub header size */
     lsx_seeki(ft, 0, 0);           /* rewind file */
     sk->rest = num_samp_bytes;    /* set how many sample bytes to read */
@@ -115,7 +115,7 @@ static int startread(sox_format_t * ft)
     for( c = 0; c < 8; c++ )
         lsx_readb(ft, (unsigned char *)&(gunk[c]));
     /*
-     * We should now be pointing at start of raw sample data in file 
+     * We should now be pointing at start of raw sample data in file
      */
 
     /* Check to make sure we got a good filetype ID from file */
@@ -184,7 +184,7 @@ static int startread(sox_format_t * ft)
 
 static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
-    txw_t sk = (txw_t) ft->priv;
+    priv_t * sk = (priv_t *) ft->priv;
     sox_size_t done = 0;
     unsigned char uc1,uc2,uc3;
     unsigned short s1,s2;
@@ -204,7 +204,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
     /*
      * This is ugly but it's readable!
      * Read three bytes from stream, then decompose these into
-     * two unsigned short samples. 
+     * two unsigned short samples.
      * TCC 3.0 appeared to do unwanted things, so we really specify
      *  exactly what we want to happen.
      * Convert unsigned short to sox_sample_t then shift up the result
@@ -234,7 +234,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
 
 static int startwrite(sox_format_t * ft)
 {
-  txw_t sk = (txw_t) ft->priv;
+  priv_t * sk = (priv_t *) ft->priv;
     struct WaveHeader_ WH;
 
     sox_debug("tx16w selected output");
@@ -258,7 +258,7 @@ static int startwrite(sox_format_t * ft)
 
 static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len0)
 {
-  txw_t sk = (txw_t) ft->priv;
+  priv_t * sk = (priv_t *) ft->priv;
   sox_size_t last_i, i = 0, len = min(len0, TXMAXLEN - sk->samples_out);
   sox_sample_t w1, w2;
 
@@ -291,7 +291,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
 
 static int stopwrite(sox_format_t * ft)
 {
-  txw_t sk = (txw_t) ft->priv;
+  priv_t * sk = (priv_t *) ft->priv;
     struct WaveHeader_ WH;
     int AttackLength, LoopLength, i;
 
@@ -316,7 +316,7 @@ static int stopwrite(sox_format_t * ft)
 
     WH.format = 0xC9;   /* loop off */
 
-    /* the actual sample rate is not that important ! */  
+    /* the actual sample rate is not that important ! */
     if (ft->signal.rate < 24000)      WH.sample_rate = 3;
     else if (ft->signal.rate < 41000) WH.sample_rate = 1;
     else                            WH.sample_rate = 2;
@@ -333,7 +333,7 @@ static int stopwrite(sox_format_t * ft)
             LoopLength   +=0x40;
             AttackLength -= 0x40;
         }
-    }    
+    }
     else if (sk->samples_out >= 0x80) {
         AttackLength                       = sk->samples_out -0x40;
         LoopLength                         = 0x40;
@@ -377,13 +377,11 @@ SOX_FORMAT_HANDLER(txw)
   static char const * const names[] = {"txw", NULL};
   static sox_rate_t   const write_rates[] = {1e5/6, 1e5/3, 1e5/2, 0};
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 12, 0, 0};
-  static sox_format_handler_t const handler = {
-    SOX_LIB_VERSION_CODE,
-    "Yamaha TX-16W sampler",
-    names, SOX_FILE_MONO,
+  static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
+    "Yamaha TX-16W sampler", names, SOX_FILE_MONO,
     startread, read_samples, NULL,
     startwrite, write_samples, stopwrite,
-    NULL, write_encodings, write_rates
+    NULL, write_encodings, write_rates, sizeof(priv_t)
   };
   return &handler;
 }

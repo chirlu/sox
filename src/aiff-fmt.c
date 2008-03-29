@@ -1,5 +1,4 @@
-/*
- * File format: AIFF (see aiff.c)           (c) 2007-8 SoX contributors
+/* File format: AIFF (see aiff.c)           (c) 2007-8 SoX contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -24,13 +23,11 @@ SOX_FORMAT_HANDLER(aiff)
   static char const * const names[] = {"aiff", "aif", NULL};
   static unsigned const write_encodings[] = {
     SOX_ENCODING_SIGN2, 32, 24, 16, 8, 0, 0};
-  static sox_format_handler_t const sox_aiff_format = {
-    SOX_LIB_VERSION_CODE,
-    "AIFF files used on Apple IIc/IIgs and SGI",
-    names, SOX_FILE_BIG_END,
+  static sox_format_handler_t const sox_aiff_format = {SOX_LIB_VERSION_CODE,
+    "AIFF files used on Apple IIc/IIgs and SGI", names, SOX_FILE_BIG_END,
     sox_aiffstartread, sox_aiffread, sox_aiffstopread,
     sox_aiffstartwrite, sox_aiffwrite, sox_aiffstopwrite,
-    sox_aiffseek, write_encodings, NULL
+    sox_aiffseek, write_encodings, NULL, sizeof(aiff_priv_t)
   };
   return &sox_aiff_format;
 }

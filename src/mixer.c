@@ -1,9 +1,8 @@
-/*
- * July 5, 1991
+/* July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Lance Norskog And Sundry Contributors are not responsible for
  * the consequences of using this software.
  *
  * Channel duplication code by Graeme W. Gill - 93/5/18
@@ -20,7 +19,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-typedef struct mixerstuff {
+typedef struct {
         /* How to generate each output channel.  sources[i][j] */
         /* represents the fraction of channel i that should be passed */
         /* through to channel j on output, and so forth.  Channel 0 is */
@@ -29,7 +28,7 @@ typedef struct mixerstuff {
         double  sources[4][4];
         int     num_pans;
         int     mix;                    /* How are we mixing it? */
-} *mixer_t;
+} priv_t;
 
 /* MIX_CENTER is shorthand to mix channels together at 50% each */
 #define MIX_CENTER      0
@@ -39,9 +38,9 @@ typedef struct mixerstuff {
 /*
  * Process options
  */
-static int getopts(sox_effect_t * effp, int n, char **argv) 
+static int getopts(sox_effect_t * effp, int n, char **argv)
 {
-    mixer_t mixer = (mixer_t) effp->priv;
+    priv_t * mixer = (priv_t *) effp->priv;
     double* pans = &mixer->sources[0][0];
     int i;
 
@@ -159,7 +158,7 @@ static int start(sox_effect_t * effp)
 
        GHK 2000/11/28
      */
-     mixer_t mixer = (mixer_t) effp->priv;
+     priv_t * mixer = (priv_t *) effp->priv;
      double pans[16];
      int i, j;
      int ichan, ochan;
@@ -362,7 +361,7 @@ static int start(sox_effect_t * effp)
      {
          for (i = 0; i < ichan; i++)
          {
-             for (j = 0; j < ochan; j++) 
+             for (j = 0; j < ochan; j++)
              {
                  mixer->sources[i][j] = 0;
              }
@@ -500,10 +499,10 @@ static int start(sox_effect_t * effp)
  * Process either isamp or osamp samples, whichever is smaller.
  */
 
-static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                 sox_size_t *isamp, sox_size_t *osamp)
 {
-    mixer_t mixer = (mixer_t) effp->priv;
+    priv_t * mixer = (priv_t *) effp->priv;
     sox_size_t len, done;
     int ichan, ochan;
     int i, j;
@@ -534,12 +533,12 @@ sox_effect_handler_t const * sox_mixer_effect_fn(void)
     "mixer",
     "[ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
     SOX_EFF_MCHAN | SOX_EFF_CHAN,
-    getopts, start, flow, 0, 0, 0
+    getopts, start, flow, 0, 0, 0, sizeof(priv_t)
   };
   return &handler;
 }
 
-static int oops_getopts(sox_effect_t * effp, int argc, char * * argv UNUSED) 
+static int oops_getopts(sox_effect_t * effp, int argc, char * * argv UNUSED)
 {
   char * args[] = {"1,1,-1,-1"};
   return argc? lsx_usage(effp) : sox_mixer_effect_fn()->getopts(effp, array_length(args), args);

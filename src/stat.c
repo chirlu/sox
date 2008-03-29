@@ -1,5 +1,4 @@
-/*
- * libSoX statistics "effect" file.
+/* libSoX statistics "effect" file.
  *
  * Compute various statistics on file and print them.
  *
@@ -15,12 +14,11 @@
 
 #include "sox_i.h"
 
-#include <math.h>
 #include <string.h>
 #include "FFT.h"
 
 /* Private data for stat effect */
-typedef struct statstuff {
+typedef struct {
   double min, max, mid;
   double asum;
   double sum1, sum2;            /* amplitudes */
@@ -37,7 +35,7 @@ typedef struct statstuff {
   float *re_out;
   unsigned long fft_size;
   unsigned long fft_offset;
-} *stat_t;
+} priv_t;
 
 
 /*
@@ -45,7 +43,7 @@ typedef struct statstuff {
  */
 static int sox_stat_getopts(sox_effect_t * effp, int n, char **argv)
 {
-  stat_t stat = (stat_t) effp->priv;
+  priv_t * stat = (priv_t *) effp->priv;
 
   stat->scale = SOX_SAMPLE_MAX;
   stat->volume = 0;
@@ -85,7 +83,7 @@ static int sox_stat_getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int sox_stat_start(sox_effect_t * effp)
 {
-  stat_t stat = (stat_t) effp->priv;
+  priv_t * stat = (priv_t *) effp->priv;
   int i;
 
   stat->min = stat->max = stat->mid = 0;
@@ -120,7 +118,7 @@ static void print_power_spectrum(unsigned samples, double rate, float *re_in, fl
 {
   float ffa = rate / samples;
   unsigned i;
-  
+
   PowerSpectrum(samples, re_in, re_out);
   for (i = 0; i < samples / 2; i++)
     fprintf(stderr, "%f  %f\n", ffa * i, re_out[i]);
@@ -133,7 +131,7 @@ static void print_power_spectrum(unsigned samples, double rate, float *re_in, fl
 static int sox_stat_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                         sox_size_t *isamp, sox_size_t *osamp)
 {
-  stat_t stat = (stat_t) effp->priv;
+  priv_t * stat = (priv_t *) effp->priv;
   int done, x, len = min(*isamp, *osamp);
   short count = 0;
 
@@ -204,7 +202,7 @@ static int sox_stat_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
  */
 static int sox_stat_drain(sox_effect_t * effp, sox_sample_t *obuf UNUSED, sox_size_t *osamp)
 {
-  stat_t stat = (stat_t) effp->priv;
+  priv_t * stat = (priv_t *) effp->priv;
 
   /* When we run out of samples, then we need to pad buffer with
    * zeros and then run FFT one last time to process any unprocessed
@@ -215,7 +213,7 @@ static int sox_stat_drain(sox_effect_t * effp, sox_sample_t *obuf UNUSED, sox_si
 
     for (x = stat->fft_offset; x < stat->fft_size; x++)
       stat->re_in[x] = 0;
-      
+
     print_power_spectrum(stat->fft_size, effp->in_signal.rate, stat->re_in, stat->re_out);
   }
 
@@ -229,7 +227,7 @@ static int sox_stat_drain(sox_effect_t * effp, sox_sample_t *obuf UNUSED, sox_si
  */
 static int sox_stat_stop(sox_effect_t * effp)
 {
-  stat_t stat = (stat_t) effp->priv;
+  priv_t * stat = (priv_t *) effp->priv;
   double amp, scale, rms = 0, freq;
   double x, ct;
 
@@ -328,7 +326,7 @@ static sox_effect_handler_t sox_stat_effect = {
   sox_stat_flow,
   sox_stat_drain,
   sox_stat_stop,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_stat_effect_fn(void)

@@ -1,25 +1,16 @@
-/*
- * earwax - makes listening to headphones easier
+/* libSoX earwax - makes listening to headphones easier     November 9, 2000
  *
- * This effect takes a stereo sound that is meant to be listened to
- * on headphones, and adds audio cues to move the soundstage from inside
- * your head (standard for headphones) to outside and in front of the
- * listener (standard for speakers). This makes the sound much easier to
- * listen to on headphones. See www.geocities.com/beinges for a full
- * explanation.
+ * Copyright (c) 2000 Edward Beingessner And Sundry Contributors.
+ * This source code is freely redistributable and may be used for any purpose.
+ * This copyright notice must be maintained.  Edward Beingessner And Sundry
+ * Contributors are not responsible for the consequences of using this
+ * software.
  *
- * Usage:
- *   earwax
- *
- * Note:
- *   This filter only works for 44.1 kHz stereo signals (CD format)
- *
- * November 9, 2000
- * Copyright (c) 2000 Edward Beingessner And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained.
- * Edward Beingessner And Sundry Contributors are not responsible for
- * the consequences of using this software.
+ * This effect takes a 44.1kHz stereo (CD format) signal that is meant to be
+ * listened to on headphones, and adds audio cues to move the soundstage from
+ * inside your head (standard for headphones) to outside and in front of the
+ * listener (standard for speakers). This makes the sound much easier to listen
+ * to on headphones. See www.geocities.com/beinges for a full explanation.
  */
 
 #include "sox_i.h"
@@ -60,18 +51,17 @@ static const sox_sample_t filt[32 * 2] = {
     0,   -5,
     4,    0};
 
-#define EARWAX_NUMTAPS array_length(filt)
-#define taps ((sox_sample_t *)&(effp->priv)) /* FIR filter z^-1 delays */
+#define NUMTAPS array_length(filt)
+typedef struct {sox_sample_t tap[NUMTAPS];} priv_t; /* FIR filter z^-1 delays */
+#define p (*(priv_t *)effp->priv)
 
 static int start(sox_effect_t * effp)
 {
-  assert_static(EARWAX_NUMTAPS * sizeof(*taps) <= SOX_MAX_EFFECT_PRIVSIZE,
-                /* else */ earwax_PRIVSIZE_too_big);
   if (effp->in_signal.rate != 44100 || effp->in_signal.channels != 2) {
     sox_fail("works only with stereo audio sampled at 44100Hz (i.e. CDDA)");
     return SOX_EOF;
   }
-  memset(taps, 0, EARWAX_NUMTAPS * sizeof(*taps)); /* zero tap memory */
+  memset(p.tap, 0, NUMTAPS * sizeof(*p.tap)); /* zero tap memory */
   return SOX_SUCCESS;
 }
 
@@ -83,12 +73,12 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   while (len--) {       /* update taps and calculate output */
     sox_sample_t output = 0;
 
-    for (i = EARWAX_NUMTAPS - 1; i; --i) {
-      taps[i] = taps[i - 1];
-      output += taps[i] * filt[i];
+    for (i = NUMTAPS - 1; i; --i) {
+      p.tap[i] = p.tap[i - 1];
+      output += p.tap[i] * filt[i];
     }
-    taps[0] = *ibuf++ / 64;
-    *obuf++ = output + taps[0] * filt[0];   /* store scaled output */
+    p.tap[0] = *ibuf++ / 64;
+    *obuf++ = output + p.tap[0] * filt[0];   /* store scaled output */
   }
   return SOX_SUCCESS;
 }
@@ -97,7 +87,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 
 sox_effect_handler_t const *sox_earwax_effect_fn(void)
 {
-  static sox_effect_handler_t handler = {
-    "earwax", NULL, SOX_EFF_MCHAN, NULL, start, flow, NULL, NULL, NULL};
+  static sox_effect_handler_t handler = {"earwax", NULL, SOX_EFF_MCHAN,
+    NULL, start, flow, NULL, NULL, NULL, sizeof(priv_t)};
   return &handler;
 }

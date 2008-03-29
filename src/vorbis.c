@@ -1,5 +1,4 @@
-/*
- * Ogg Vorbis sound format handler
+/* libSoX Ogg Vorbis sound format handler
  * Copyright 2001, Stan Seibert <indigo@aztec.asu.edu>
  *
  * Portions from oggenc, (c) Michael Smith <msmith@labyrinth.net.au>,
@@ -20,7 +19,6 @@
 #include "sox_i.h"
 
 #include <stdio.h>
-#include <math.h>
 #include <string.h>
 #include <errno.h>
 
@@ -39,7 +37,7 @@
 #define HEADER_OK   1
 
 /* Private data for Ogg Vorbis file */
-typedef struct vorbis_enc {
+typedef struct {
   ogg_stream_state os;
   ogg_page og;
   ogg_packet op;
@@ -49,7 +47,7 @@ typedef struct vorbis_enc {
   vorbis_info vi;
 } vorbis_enc_t;
 
-typedef struct vorbisstuff {
+typedef struct {
   /* Decoding data */
   OggVorbis_File *vf;
   char *buf;
@@ -60,7 +58,7 @@ typedef struct vorbisstuff {
   int eof;
 
   vorbis_enc_t *vorbis_enc_data;
-} *vorbis_t;
+} priv_t;
 
 /******** Callback functions used in ov_open_callbacks ************/
 static int myclose(void *datasource UNUSED)
@@ -90,7 +88,7 @@ static int _fseeko64_wrap(FILE * f, ogg_int64_t off, int whence)
  */
 static int startread(sox_format_t * ft)
 {
-  vorbis_t vb = (vorbis_t) ft->priv;
+  priv_t * vb = (priv_t *) ft->priv;
   vorbis_info *vi;
   vorbis_comment *vc;
   int i;
@@ -125,11 +123,11 @@ static int startread(sox_format_t * ft)
    * "frame"-ish results so we must * channels.
    */
   if (ft->seekable)
-    ft->length = ov_pcm_total(vb->vf, -1) * ft->signal.channels;
+    ft->signal.length = ov_pcm_total(vb->vf, -1) * ft->signal.channels;
 
   /* Record comments */
   for (i = 0; i < vc->comments; i++)
-    sox_append_comment(&ft->comments, vc->user_comments[i]);
+    sox_append_comment(&ft->oob.comments, vc->user_comments[i]);
 
   /* Setup buffer */
   vb->buf_len = DEF_BUF_LEN;
@@ -147,7 +145,7 @@ static int startread(sox_format_t * ft)
 /* Refill the buffer with samples.  Returns BUF_EOF if the end of the
  * vorbis data was reached while the buffer was being filled,
  * BUF_ERROR is something bad happens, and BUF_DATA otherwise */
-static int refill_buffer(vorbis_t vb)
+static int refill_buffer(priv_t * vb)
 {
   int num_read;
 
@@ -179,7 +177,7 @@ static int refill_buffer(vorbis_t vb)
 
 static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
 {
-  vorbis_t vb = (vorbis_t) ft->priv;
+  priv_t * vb = (priv_t *) ft->priv;
   sox_size_t i;
   int ret;
   sox_sample_t l;
@@ -211,7 +209,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf, sox_size_t
  */
 static int stopread(sox_format_t * ft)
 {
-  vorbis_t vb = (vorbis_t) ft->priv;
+  priv_t * vb = (priv_t *) ft->priv;
 
   free(vb->buf);
   ov_clear(vb->vf);
@@ -242,17 +240,17 @@ static int write_vorbis_header(sox_format_t * ft, vorbis_enc_t * ve)
   int i, ret = HEADER_OK;
 
   memset(&vc, 0, sizeof(vc));
-  vc.comments = sox_num_comments(ft->comments);
+  vc.comments = sox_num_comments(ft->oob.comments);
   if (vc.comments) {     /* Make the comment structure */
     vc.comment_lengths = lsx_calloc((size_t)vc.comments, sizeof(*vc.comment_lengths));
     vc.user_comments = lsx_calloc((size_t)vc.comments, sizeof(*vc.user_comments));
     for (i = 0; i < vc.comments; ++i) {
       static const char prepend[] = "Comment=";
-      char * text = lsx_calloc(strlen(prepend) + strlen(ft->comments[i]) + 1, sizeof(*text));
+      char * text = lsx_calloc(strlen(prepend) + strlen(ft->oob.comments[i]) + 1, sizeof(*text));
       /* Prepend `Comment=' if no field-name already in the comment */
-      if (!strchr(ft->comments[i], '='))
+      if (!strchr(ft->oob.comments[i], '='))
         strcpy(text, prepend);
-      vc.user_comments[i] = strcat(text, ft->comments[i]);
+      vc.user_comments[i] = strcat(text, ft->oob.comments[i]);
       vc.comment_lengths[i] = strlen(text);
     }
   }
@@ -275,7 +273,7 @@ static int write_vorbis_header(sox_format_t * ft, vorbis_enc_t * ve)
 
 static int startwrite(sox_format_t * ft)
 {
-  vorbis_t vb = (vorbis_t) ft->priv;
+  priv_t * vb = (priv_t *) ft->priv;
   vorbis_enc_t *ve;
   long rate;
   double quality = 3;           /* Default compression quality gives ~112kbps */
@@ -321,7 +319,7 @@ static int startwrite(sox_format_t * ft)
 static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t * buf,
                         sox_size_t len)
 {
-  vorbis_t vb = (vorbis_t) ft->priv;
+  priv_t * vb = (priv_t *) ft->priv;
   vorbis_enc_t *ve = vb->vorbis_enc_data;
   sox_size_t samples = len / ft->signal.channels;
   float **buffer = vorbis_analysis_buffer(&ve->vd, (int) samples);
@@ -371,7 +369,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t * buf,
 
 static int stopwrite(sox_format_t * ft)
 {
-  vorbis_t vb = (vorbis_t) ft->priv;
+  priv_t * vb = (priv_t *) ft->priv;
   vorbis_enc_t *ve = vb->vorbis_enc_data;
 
   /* Close out the remaining data */
@@ -387,7 +385,7 @@ static int stopwrite(sox_format_t * ft)
 
 static int seek(sox_format_t * ft, sox_size_t offset)
 {
-  vorbis_t vb = (vorbis_t) ft->priv;
+  priv_t * vb = (priv_t *) ft->priv;
 
   return ov_pcm_seek(vb->vf, (ogg_int64_t)(offset / ft->signal.channels))? SOX_EOF:SOX_SUCCESS;
 }
@@ -396,13 +394,11 @@ SOX_FORMAT_HANDLER(vorbis)
 {
   static const char *names[] = {"vorbis", "ogg", NULL};
   static unsigned encodings[] = {SOX_ENCODING_VORBIS, 0, 0};
-  static sox_format_handler_t handler = {
-    SOX_LIB_VERSION_CODE,
-    "Xiph's ogg-vorbis lossy compression",
-    names, 0,
+  static sox_format_handler_t handler = {SOX_LIB_VERSION_CODE,
+    "Xiph's ogg-vorbis lossy compression", names, 0,
     startread, read_samples, stopread,
     startwrite, write_samples, stopwrite,
-    seek, encodings, NULL
+    seek, encodings, NULL, sizeof(priv_t)
   };
   return &handler;
 }

@@ -1,5 +1,4 @@
-/*
- * Ari Moisio <armoi@sci.fi> Aug 29 2000, based on skeleton effect
+/* Ari Moisio <armoi@sci.fi> Aug 29 2000, based on skeleton effect
  * Written by Chris Bagwell (cbagwell@sprynet.com) - March 16, 1999
  *
  * Copyright 1999 Chris Bagwell And Sundry Contributors
@@ -21,18 +20,16 @@
 #define FADE_TRI        't'     /* Linear slope. */
 #define FADE_PAR        'p'     /* Inverted parabola. */
 
-#include <math.h>
 #include <string.h>
 
 /* Private data for fade file */
-typedef struct fadestuff
-{ /* These are measured as samples */
+typedef struct { /* These are measured as samples */
     sox_size_t in_start, in_stop, out_start, out_stop, samplesdone;
     char *in_stop_str, *out_start_str, *out_stop_str;
     char in_fadetype, out_fadetype;
     char do_out;
     int endpadwarned;
-} *fade_t;
+} priv_t;
 
 /* prototypes */
 static double fade_gain(sox_size_t index, sox_size_t range, int fadetype);
@@ -47,7 +44,7 @@ static double fade_gain(sox_size_t index, sox_size_t range, int fadetype);
 static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
 {
 
-    fade_t fade = (fade_t) effp->priv;
+    priv_t * fade = (priv_t *) effp->priv;
     char t_char[2];
     int t_argno;
 
@@ -90,7 +87,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
             strcpy(fade->out_stop_str,argv[t_argno]);
 
             /* Do a dummy parse to see if it will fail */
-            if (lsx_parsesamples(0., fade->out_stop_str, 
+            if (lsx_parsesamples(0., fade->out_stop_str,
                                 &fade->out_stop, 't') == NULL)
               return lsx_usage(effp);
         }
@@ -100,7 +97,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
             strcpy(fade->out_start_str,argv[t_argno]);
 
             /* Do a dummy parse to see if it will fail */
-            if (lsx_parsesamples(0., fade->out_start_str, 
+            if (lsx_parsesamples(0., fade->out_start_str,
                                 &fade->out_start, 't') == NULL)
               return lsx_usage(effp);
         }
@@ -115,7 +112,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int sox_fade_start(sox_effect_t * effp)
 {
-    fade_t fade = (fade_t) effp->priv;
+    priv_t * fade = (priv_t *) effp->priv;
 
     /* converting time values to samples */
     fade->in_start = 0;
@@ -150,7 +147,7 @@ static int sox_fade_start(sox_effect_t * effp)
             fade->out_start = fade->out_stop - fade->in_stop;
     }
     else
-        /* If not specified then user wants to process all 
+        /* If not specified then user wants to process all
          * of file.  Use a value of zero to indicate this.
          */
         fade->out_stop = 0;
@@ -177,10 +174,10 @@ static int sox_fade_start(sox_effect_t * effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_fade_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_fade_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                  sox_size_t *isamp, sox_size_t *osamp)
 {
-    fade_t fade = (fade_t) effp->priv;
+    priv_t * fade = (priv_t *) effp->priv;
     /* len is total samples, chcnt counts channels */
     int len = 0, t_output = 1, more_output = 1;
     sox_sample_t t_ibuf;
@@ -260,7 +257,7 @@ static int sox_fade_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
  */
 static int sox_fade_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-    fade_t fade = (fade_t) effp->priv;
+    priv_t * fade = (priv_t *) effp->priv;
     int len;
     sox_size_t t_chan = 0;
 
@@ -301,7 +298,7 @@ static int sox_fade_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *o
  */
 static int kill(sox_effect_t * effp)
 {
-    fade_t fade = (fade_t) effp->priv;
+    priv_t * fade = (priv_t *) effp->priv;
 
     free(fade->in_stop_str);
     free(fade->out_start_str);
@@ -362,7 +359,7 @@ static sox_effect_handler_t sox_fade_effect = {
   sox_fade_flow,
   sox_fade_drain,
   NULL,
-  kill
+  kill, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_fade_effect_fn(void)

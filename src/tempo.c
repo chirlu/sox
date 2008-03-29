@@ -1,5 +1,4 @@
-/*
- * Effect: change tempo (alter duration, maintain pitch) with a WSOLA method.
+/* libSoX effect: change tempo (alter duration, maintain pitch)
  * Copyright (c) 2007 robs@users.sourceforge.net
  * Based on ideas from Olli Parviainen's SoundTouch Library.
  *
@@ -20,7 +19,6 @@
 
 #include "sox_i.h"
 #include "fifo.h"
-#include <math.h>
 
 typedef struct {
   /* Configuration parameters: */
@@ -200,19 +198,15 @@ static tempo_t * tempo_create(size_t channels)
 
 /*------------------------------- SoX Wrapper --------------------------------*/
 
-typedef struct tempo {
+typedef struct {
   tempo_t     * tempo;
   sox_bool    quick_search;
   double      factor, segment_ms, search_ms, overlap_ms;
 } priv_t;
-
-assert_static(sizeof(struct tempo) <= SOX_MAX_EFFECT_PRIVSIZE,
-              /* else */ tempo_PRIVSIZE_too_big);
+#define p ((priv_t *)effp->priv)
 
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
-  priv_t * p = (priv_t *) effp->priv;
-
   p->segment_ms = 82; /* Set non-zero defaults: */
   p->search_ms  = 14;
   p->overlap_ms = 12;
@@ -231,8 +225,6 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
 static int start(sox_effect_t * effp)
 {
-  priv_t * p = (priv_t *) effp->priv;
-
   if (p->factor == 1)
     return SOX_EFF_NULL;
 
@@ -245,7 +237,6 @@ static int start(sox_effect_t * effp)
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
                 sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
-  priv_t * p = (priv_t *) effp->priv;
   sox_size_t i;
   /* odone must be size_t 'cos tempo_output arg. is. (!= sox_size_t on amd64) */
   size_t odone = *osamp /= effp->in_signal.channels;
@@ -269,13 +260,13 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
 {
   static sox_size_t isamp = 0;
-  tempo_flush(((priv_t *)effp->priv)->tempo);
+  tempo_flush(p->tempo);
   return flow(effp, 0, obuf, &isamp, osamp);
 }
 
 static int stop(sox_effect_t * effp)
 {
-  tempo_delete(((priv_t *)effp->priv)->tempo);
+  tempo_delete(p->tempo);
   return SOX_SUCCESS;
 }
 
@@ -283,7 +274,7 @@ sox_effect_handler_t const * sox_tempo_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "tempo", "[-q] factor [segment-ms [search-ms [overlap-ms]]]",
-    SOX_EFF_MCHAN | SOX_EFF_LENGTH, getopts, start, flow, drain, stop, NULL
+    SOX_EFF_MCHAN | SOX_EFF_LENGTH, getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
   return &handler;
 }

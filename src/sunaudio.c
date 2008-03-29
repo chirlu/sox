@@ -1,4 +1,4 @@
-/* Direct to Sun Audio Driver
+/* libSoX direct to Sun Audio Driver
  *
  * Added by Chris Bagwell (cbagwell@sprynet.com) on 2/26/96
  * Based on oss handler.
@@ -35,6 +35,7 @@
 #include <fcntl.h>
 #include <string.h>
 
+typedef sox_fileinfo_t priv_t;
 /*
  * Do anything required before you start reading samples.
  * Read file header.
@@ -44,7 +45,7 @@
  */
 static int sox_sunstartread(sox_format_t * ft)
 {
-    sox_fileinfo_t *file = (sox_fileinfo_t *)ft->priv;
+    priv_t *file = (priv_t *)ft->priv;
     sox_size_t samplesize, encoding;
     audio_info_t audio_if;
 #ifdef __SVR4
@@ -104,7 +105,7 @@ static int sox_sunstartread(sox_format_t * ft)
                 return (SOX_EOF);
         }
         if ((ft->encoding.encoding == SOX_ENCODING_ULAW ||
-             ft->encoding.encoding == SOX_ENCODING_ALAW) && 
+             ft->encoding.encoding == SOX_ENCODING_ALAW) &&
             ft->signal.channels == 2)
         {
             sox_report("Warning: only support mono for ULAW and ALAW data.  Forcing to mono.");
@@ -180,7 +181,7 @@ static int sox_sunstartread(sox_format_t * ft)
 
 static int sox_sunstartwrite(sox_format_t * ft)
 {
-    sox_fileinfo_t *file = (sox_fileinfo_t *)ft->priv;
+    priv_t *file = (priv_t *)ft->priv;
     sox_size_t samplesize, encoding;
     audio_info_t audio_if;
 #ifdef __SVR4
@@ -228,10 +229,10 @@ static int sox_sunstartwrite(sox_format_t * ft)
         }
     }
 
-    if (ft->encoding.bits_per_sample == 8) 
+    if (ft->encoding.bits_per_sample == 8)
     {
         samplesize = 8;
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN) 
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
             ft->encoding.encoding = SOX_ENCODING_ULAW;
         else if (ft->encoding.encoding != SOX_ENCODING_ULAW &&
             ft->encoding.encoding != SOX_ENCODING_ALAW &&
@@ -241,7 +242,7 @@ static int sox_sunstartwrite(sox_format_t * ft)
             ft->encoding.encoding = SOX_ENCODING_ULAW;
         }
         if ((ft->encoding.encoding == SOX_ENCODING_ULAW ||
-             ft->encoding.encoding == SOX_ENCODING_ALAW) && 
+             ft->encoding.encoding == SOX_ENCODING_ALAW) &&
             ft->signal.channels == 2)
         {
             sox_report("Warning: only support mono for ULAW and ALAW data.  Forcing to mono.");
@@ -251,7 +252,7 @@ static int sox_sunstartwrite(sox_format_t * ft)
     }
     else if (ft->encoding.bits_per_sample == 16) {
         samplesize = 16;
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN) 
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
             ft->encoding.encoding = SOX_ENCODING_SIGN2;
         else if (ft->encoding.encoding != SOX_ENCODING_SIGN2) {
             sox_report("Sun Audio driver only supports Signed Linear for words.");
@@ -315,13 +316,11 @@ SOX_FORMAT_HANDLER(sunau)
     SOX_ENCODING_ALAW, 8, 0,
     SOX_ENCODING_SIGN2, 8, 16, 0,
     0};
-  static sox_format_handler_t const handler = {
-    SOX_LIB_VERSION_CODE,
-    "Sun audio device driver",
-    names, SOX_FILE_DEVICE,
+  static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
+    "Sun audio device driver", names, SOX_FILE_DEVICE,
     sox_sunstartread, lsx_rawread, lsx_rawstopread,
     sox_sunstartwrite, lsx_rawwrite, lsx_rawstopwrite,
-    NULL, write_encodings, NULL
+    NULL, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
 }

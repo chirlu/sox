@@ -1,7 +1,6 @@
-/*
- * skeleff - Skeleton Effect.  Use as sample for new effects.
+/* libSoX effect: Skeleton effect used as sample for creating new effects.
  *
- * Copyright 1999 Chris Bagwell And Sundry Contributors
+ * Copyright 1999-2008 Chris Bagwell And SoX Contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -21,12 +20,9 @@
 #include "sox_i.h"
 
 /* Private data for effect */
-typedef struct skeleff {
+typedef struct {
   int  localdata;
-} *skeleff_t;
-
-assert_static(sizeof(struct skeleff) <= SOX_MAX_EFFECT_PRIVSIZE, 
-              /* else */ skeleff_PRIVSIZE_too_big);
+} priv_t;
 
 /*
  * Process command-line options but don't do other
@@ -35,7 +31,7 @@ assert_static(sizeof(struct skeleff) <= SOX_MAX_EFFECT_PRIVSIZE,
  */
 static int getopts(sox_effect_t * effp, int n, char UNUSED **argv)
 {
-  skeleff_t UNUSED skeleff = (skeleff_t)effp->priv;
+  priv_t * UNUSED p = (priv_t *)effp->priv;
 
   if (n && n != 1)
     return lsx_usage(effp);
@@ -61,10 +57,10 @@ static int start(sox_effect_t * effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                            sox_size_t *isamp, sox_size_t *osamp)
 {
-  skeleff_t UNUSED skeleff = (skeleff_t)effp->priv;
+  priv_t * UNUSED p = (priv_t *)effp->priv;
   sox_size_t len, done;
 
   switch (effp->out_signal.channels) {
@@ -81,10 +77,10 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
         ibuf += 2;
         obuf += 2;
       }
-        
+
     *isamp = len * 2;
     *osamp = len * 2;
-        
+
     break;
   }
 
@@ -105,7 +101,7 @@ static int drain(sox_effect_t UNUSED * effp, sox_sample_t UNUSED *obuf, sox_size
 }
 
 /*
- * Do anything required when you stop reading samples.  
+ * Do anything required when you stop reading samples.
  */
 static int stop(sox_effect_t UNUSED * effp)
 {
@@ -113,32 +109,13 @@ static int stop(sox_effect_t UNUSED * effp)
 }
 
 /*
- * Do anything required when you kill an effect.  
+ * Do anything required when you kill an effect.
  *      (free allocated memory, etc.)
  */
 static int kill(sox_effect_t UNUSED * effp)
 {
   return SOX_SUCCESS;
 }
-
-
-/*
- * Effect descriptor.
- * If no specific processing is needed for any of
- * the 6 functions, then the function above can be deleted
- * and 0 used in place of the its name below.
- */
-static sox_effect_handler_t sox_skel_effect = {
-  "skel",
-  "[OPTION]",
-  SOX_EFF_MCHAN,
-  getopts,
-  start,
-  flow,
-  drain,
-  stop,
-  kill,
-};
 
 /*
  * Function returning effect descriptor. This should be the only
@@ -147,5 +124,15 @@ static sox_effect_handler_t sox_skel_effect = {
 const sox_effect_handler_t *sox_skel_effect_fn(void);
 const sox_effect_handler_t *sox_skel_effect_fn(void)
 {
+  /*
+   * Effect descriptor.
+   * If no specific processing is needed for any of
+   * the 6 functions, then the function above can be deleted
+   * and NULL used in place of the its name below.
+   */
+  static sox_effect_handler_t sox_skel_effect = {
+    "skel", "[OPTION]", SOX_EFF_MCHAN,
+    getopts, start, flow, drain, stop, kill, sizeof(priv_t)
+  };
   return &sox_skel_effect;
 }

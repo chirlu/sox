@@ -1,4 +1,6 @@
-/*
+/* libSoX Effect: Adjust the audio speed (pitch and tempo together)
+ * (c) 2006 robs@users.sourceforge.net
+ *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2.1 of the License, or (at
@@ -12,11 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this library; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
-/* libSoX Effect: Adjust the audio speed (pitch and tempo together)
  *
- * (c) 2006 robs@users.sourceforge.net
  *
  * Adjustment is given as the ratio of the new speed to the old speed, or as
  * a number of cents (100ths of a semitone) to change.  Speed change is
@@ -24,7 +22,6 @@
  */
 
 #include "sox_i.h"
-#include <math.h>
 #include <string.h>
 
 static int getopts(sox_effect_t * effp, int n, char * * argv)
@@ -50,10 +47,10 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
   return lsx_usage(effp);
 }
 
-sox_effect_handler_t const *sox_speed_effect_fn(void)
+sox_effect_handler_t const * sox_speed_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "speed", "factor[c]", SOX_EFF_NULL|SOX_EFF_LENGTH,
-    getopts, 0, 0, 0, 0, 0};
+    "speed", "factor[c]", SOX_EFF_NULL | SOX_EFF_LENGTH,
+    getopts, 0, 0, 0, 0, 0, 0};
   return &handler;
 }

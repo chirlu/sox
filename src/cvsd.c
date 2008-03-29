@@ -1,11 +1,10 @@
-/*
- *      CVSD (Continuously Variable Slope Delta modulation)
+/*      libSoX CVSD (Continuously Variable Slope Delta modulation)
  *      conversion routines
  *
  *      The CVSD format is described in the MIL Std 188 113, which is
  *      available from http://bbs.itsi.disa.mil:5580/T3564
  *
- *      Copyright (C) 1996  
+ *      Copyright (C) 1996
  *      Thomas Sailer (sailer@ife.ee.ethz.ch) (HB9JNX/AE4WA)
  *      Swiss Federal Institute of Technology, Electronics Lab
  *
@@ -28,64 +27,21 @@
  * June 1, 1998 - Chris Bagwell (cbagwell@sprynet.com)
  *   Fixed compile warnings reported by Kjetil Torgrim Homme
  *   <kjetilho@ifi.uio.no>
- *
- *
  */
-
-/* ---------------------------------------------------------------------- */
 
 #include "sox_i.h"
 #include "cvsd.h"
+#include "cvsdfilt.h"
 
-#include <math.h>
 #include <string.h>
 #include <time.h>
-#include <stdio.h>
-#include <errno.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>     /* For SEEK_* defines if not found in stdio */
-#endif
-
-#include "cvsdfilt.h"
 
 /* ---------------------------------------------------------------------- */
 /*
  * private data structures
  */
 
-struct cvsd_common_state {
-        unsigned overload;
-        float mla_int;
-        float mla_tc0;
-        float mla_tc1;
-        unsigned phase;
-        unsigned phase_inc;
-        float v_min, v_max;
-};
-
-struct cvsd_decode_state {
-        float output_filter[DEC_FILTERLEN];
-};
-
-struct cvsd_encode_state {
-        float recon_int;
-        float input_filter[ENC_FILTERLEN];
-};
-
-struct cvsdpriv {
-        struct cvsd_common_state com;
-        union {
-                struct cvsd_decode_state dec;
-                struct cvsd_encode_state enc;
-        } c;
-        struct {
-                unsigned char shreg;
-                unsigned mask;
-                unsigned cnt;
-        } bit;
-        unsigned bytes_written;
-        unsigned cvsd_rate;
-};
+typedef cvsd_priv_t priv_t;
 
 static int debug_count = 0;
 
@@ -113,8 +69,8 @@ static float float_conv(float *fp1, float *fp2,int n)
 
 static void cvsdstartcommon(sox_format_t * ft)
 {
-        struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
-        
+        priv_t *p = (priv_t *) ft->priv;
+
         p->cvsd_rate = (ft->signal.rate <= 24000) ? 16000 : 32000;
         ft->signal.rate = 8000;
         ft->signal.channels = 1;
@@ -150,9 +106,9 @@ static void cvsdstartcommon(sox_format_t * ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_cvsdstartread(sox_format_t * ft) 
+int sox_cvsdstartread(sox_format_t * ft)
 {
-        struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
+        priv_t *p = (priv_t *) ft->priv;
         float *fp1;
         int i;
 
@@ -166,9 +122,9 @@ int sox_cvsdstartread(sox_format_t * ft)
          * this is now done in the filter parameter generation utility
          */
         /*
-         * zero the filter 
+         * zero the filter
          */
-        for(fp1 = p->c.dec.output_filter, i = DEC_FILTERLEN; i > 0; i--)
+        for(fp1 = p->c.dec.output_filter, i = CVSD_DEC_FILTERLEN; i > 0; i--)
                 *fp1++ = 0;
 
         return (SOX_SUCCESS);
@@ -176,9 +132,9 @@ int sox_cvsdstartread(sox_format_t * ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_cvsdstartwrite(sox_format_t * ft) 
+int sox_cvsdstartwrite(sox_format_t * ft)
 {
-        struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
+        priv_t *p = (priv_t *) ft->priv;
         float *fp1;
         int i;
 
@@ -187,9 +143,9 @@ int sox_cvsdstartwrite(sox_format_t * ft)
         p->com.mla_tc1 = 0.1 * (1 - p->com.mla_tc0);
         p->com.phase = 4;
         /*
-         * zero the filter 
+         * zero the filter
          */
-        for(fp1 = p->c.enc.input_filter, i = ENC_FILTERLEN; i > 0; i--)
+        for(fp1 = p->c.enc.input_filter, i = CVSD_ENC_FILTERLEN; i > 0; i--)
                 *fp1++ = 0;
         p->c.enc.recon_int = 0;
 
@@ -200,14 +156,14 @@ int sox_cvsdstartwrite(sox_format_t * ft)
 
 int sox_cvsdstopwrite(sox_format_t * ft)
 {
-        struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
+        priv_t *p = (priv_t *) ft->priv;
 
         if (p->bit.cnt) {
                 lsx_writeb(ft, p->bit.shreg);
                 p->bytes_written++;
         }
-        sox_debug("cvsd: min slope %f, max slope %f", 
-               p->com.v_min, p->com.v_max);     
+        sox_debug("cvsd: min slope %f, max slope %f",
+               p->com.v_min, p->com.v_max);
 
         return (SOX_SUCCESS);
 }
@@ -216,9 +172,9 @@ int sox_cvsdstopwrite(sox_format_t * ft)
 
 int sox_cvsdstopread(sox_format_t * ft)
 {
-        struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
+        priv_t *p = (priv_t *) ft->priv;
 
-        sox_debug("cvsd: min value %f, max value %f", 
+        sox_debug("cvsd: min value %f, max value %f",
                p->com.v_min, p->com.v_max);
 
         return(SOX_SUCCESS);
@@ -226,12 +182,12 @@ int sox_cvsdstopread(sox_format_t * ft)
 
 /* ---------------------------------------------------------------------- */
 
-sox_size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp) 
+sox_size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
 {
-        struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
+        priv_t *p = (priv_t *) ft->priv;
         sox_size_t done = 0;
         float oval;
-        
+
         while (done < nsamp) {
                 if (!p->bit.cnt) {
                         if (lsx_read_b_buf(ft, &(p->bit.shreg), 1) != 1)
@@ -243,7 +199,7 @@ sox_size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
                  * handle one bit
                  */
                 p->bit.cnt--;
-                p->com.overload = ((p->com.overload << 1) | 
+                p->com.overload = ((p->com.overload << 1) |
                                    (!!(p->bit.shreg & p->bit.mask))) & 7;
                 p->bit.mask <<= 1;
                 p->com.mla_int *= p->com.mla_tc0;
@@ -260,10 +216,10 @@ sox_size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
                  */
                 p->com.phase += p->com.phase_inc;
                 if (p->com.phase >= 4) {
-                        oval = float_conv(p->c.dec.output_filter, 
-                                          (p->cvsd_rate < 24000) ? 
-                                          dec_filter_16 : dec_filter_32, 
-                                          DEC_FILTERLEN);
+                        oval = float_conv(p->c.dec.output_filter,
+                                          (p->cvsd_rate < 24000) ?
+                                          dec_filter_16 : dec_filter_32,
+                                          CVSD_DEC_FILTERLEN);
                         sox_debug_more("input %d %f\n", debug_count, p->com.mla_int);
                         sox_debug_more("recon %d %f\n", debug_count, oval);
                         debug_count++;
@@ -282,9 +238,9 @@ sox_size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
 
 /* ---------------------------------------------------------------------- */
 
-sox_size_t sox_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp) 
+sox_size_t sox_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
 {
-        struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
+        priv_t *p = (priv_t *) ft->priv;
         sox_size_t done = 0;
         float inval;
 
@@ -297,17 +253,17 @@ sox_size_t sox_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t 
                                 return done;
                         memmove(p->c.enc.input_filter+1, p->c.enc.input_filter,
                                 sizeof(p->c.enc.input_filter)-sizeof(float));
-                        p->c.enc.input_filter[0] = (*buf++) / 
+                        p->c.enc.input_filter[0] = (*buf++) /
                                 ((float)SOX_SAMPLE_MAX);
                         done++;
                 }
                 p->com.phase &= 3;
                 /* insert input filter here! */
-                inval = float_conv(p->c.enc.input_filter, 
-                                   (p->cvsd_rate < 24000) ? 
-                                   (enc_filter_16[(p->com.phase >= 2)]) : 
-                                   (enc_filter_32[p->com.phase]), 
-                                   ENC_FILTERLEN);
+                inval = float_conv(p->c.enc.input_filter,
+                                   (p->cvsd_rate < 24000) ?
+                                   (enc_filter_16[(p->com.phase >= 2)]) :
+                                   (enc_filter_32[p->com.phase]),
+                                   CVSD_ENC_FILTERLEN);
                 /*
                  * encode one bit
                  */
@@ -348,7 +304,7 @@ sox_size_t sox_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t 
 
 static uint32_t get32_le(unsigned char **p)
 {
-  uint32_t val = (((*p)[3]) << 24) | (((*p)[2]) << 16) | 
+  uint32_t val = (((*p)[3]) << 24) | (((*p)[2]) << 16) |
           (((*p)[1]) << 8) | (**p);
   (*p) += 4;
   return val;
@@ -427,7 +383,7 @@ static int dvms_read_header(sox_format_t * ft, struct dvms_header *hdr)
         memcpy(hdr->extend, pch, sizeof(hdr->extend));
         pch += sizeof(hdr->extend);
         hdr->Crc = get16_le(&pch);
-        if (sum != hdr->Crc) 
+        if (sum != hdr->Crc)
         {
                 sox_report("DVMS header checksum error, read %u, calculated %u",
                      hdr->Crc, sum);
@@ -486,9 +442,9 @@ static int dvms_write_header(sox_format_t * ft, struct dvms_header *hdr)
 
 static void make_dvms_hdr(sox_format_t * ft, struct dvms_header *hdr)
 {
-        struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
+        priv_t *p = (priv_t *) ft->priv;
         size_t len;
-        char * comment = sox_cat_comments(ft->comments);
+        char * comment = sox_cat_comments(ft->oob.comments);
 
         memset(hdr->Filename, 0, sizeof(hdr->Filename));
         len = strlen(ft->filename);
@@ -512,7 +468,7 @@ static void make_dvms_hdr(sox_format_t * ft, struct dvms_header *hdr)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_dvmsstartread(sox_format_t * ft) 
+int sox_dvmsstartread(sox_format_t * ft)
 {
         struct dvms_header hdr;
         int rc;
@@ -537,8 +493,8 @@ int sox_dvmsstartread(sox_format_t * ft)
         sox_debug("  custom2   %u", hdr.Custom2);
         sox_debug("  info      \"%.16s\"", hdr.Info);
         ft->signal.rate = (hdr.Srate < 240) ? 16000 : 32000;
-        sox_debug("DVMS rate %dbit/s using %gbit/s deviation %g%%", 
-               hdr.Srate*100, ft->signal.rate, 
+        sox_debug("DVMS rate %dbit/s using %gbit/s deviation %g%%",
+               hdr.Srate*100, ft->signal.rate,
                ((ft->signal.rate - hdr.Srate*100) * 100) / ft->signal.rate);
         rc = sox_cvsdstartread(ft);
         if (rc)
@@ -549,11 +505,11 @@ int sox_dvmsstartread(sox_format_t * ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_dvmsstartwrite(sox_format_t * ft) 
+int sox_dvmsstartwrite(sox_format_t * ft)
 {
         struct dvms_header hdr;
         int rc;
-        
+
         rc = sox_cvsdstartwrite(ft);
         if (rc)
             return rc;
@@ -577,7 +533,7 @@ int sox_dvmsstopwrite(sox_format_t * ft)
 {
         struct dvms_header hdr;
         int rc;
-        
+
         sox_cvsdstopwrite(ft);
         if (!ft->seekable)
         {
@@ -594,6 +550,6 @@ int sox_dvmsstopwrite(sox_format_t * ft)
         if(rc){
             lsx_fail_errno(ft,rc,"cannot write DVMS header");
             return rc;
-        }       
+        }
         return rc;
 }

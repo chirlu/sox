@@ -1,12 +1,11 @@
-/*
- * libSoX text format file.  Tom Littlejohn, March 93.
+/* libSoX text format file.  Tom Littlejohn, March 93.
  *
  * Reads/writes sound files as text.
  *
  * Copyright 1998-2006 Chris Bagwell and SoX Contributors
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Lance Norskog And Sundry Contributors are not responsible for
  * the consequences of using this software.
  */
 
@@ -16,11 +15,11 @@
 #define LINEWIDTH 256
 
 /* Private data for dat file */
-typedef struct dat {
+typedef struct {
     double timevalue, deltat;
     int buffered;
-    char prevline[LINEWIDTH]; 
-} *dat_t;
+    char prevline[LINEWIDTH];
+} priv_t;
 
 static int sox_datstartread(sox_format_t * ft)
 {
@@ -42,10 +41,10 @@ static int sox_datstartread(sox_format_t * ft)
     }
     /* Hold a copy of the last line we read (first non-comment) */
     if (status != SOX_EOF) {
-      strncpy(((dat_t)ft->priv)->prevline, inpstr, LINEWIDTH);
-      ((dat_t)ft->priv)->buffered = 1;
+      strncpy(((priv_t *)ft->priv)->prevline, inpstr, LINEWIDTH);
+      ((priv_t *)ft->priv)->buffered = 1;
     } else {
-      ((dat_t)ft->priv)->buffered = 0;
+      ((priv_t *)ft->priv)->buffered = 0;
     }
 
     /* Default channels to 1 if not found */
@@ -59,7 +58,7 @@ static int sox_datstartread(sox_format_t * ft)
 
 static int sox_datstartwrite(sox_format_t * ft)
 {
-    dat_t dat = (dat_t) ft->priv;
+    priv_t * dat = (priv_t *) ft->priv;
     char s[LINEWIDTH];
 
     dat->timevalue = 0.0;
@@ -90,9 +89,9 @@ static sox_size_t sox_datread(sox_format_t * ft, sox_sample_t *buf, sox_size_t n
     while (done < nsamp) {
 
       /* Read a line or grab the buffered first line */
-      if (((dat_t)ft->priv)->buffered) {
-        strncpy(inpstr, ((dat_t)ft->priv)->prevline, LINEWIDTH);
-        ((dat_t)ft->priv)->buffered=0;
+      if (((priv_t *)ft->priv)->buffered) {
+        strncpy(inpstr, ((priv_t *)ft->priv)->prevline, LINEWIDTH);
+        ((priv_t *)ft->priv)->buffered=0;
       } else {
         lsx_reads(ft, inpstr, LINEWIDTH-1);
         inpstr[LINEWIDTH-1] = 0;
@@ -122,7 +121,7 @@ static sox_size_t sox_datread(sox_format_t * ft, sox_sample_t *buf, sox_size_t n
 
 static sox_size_t sox_datwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
 {
-    dat_t dat = (dat_t) ft->priv;
+    priv_t * dat = (priv_t *) ft->priv;
     sox_size_t done = 0;
     double sampval=0.0;
     char s[LINEWIDTH];
@@ -152,13 +151,11 @@ SOX_FORMAT_HANDLER(dat)
 {
   static char const * const names[] = {"dat", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_FLOAT_TEXT, 0, 0};
-  static sox_format_handler_t const handler = {
-    SOX_LIB_VERSION_CODE,
-    "Textual representation of the sampled audio",
-    names, 0,
+  static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
+    "Textual representation of the sampled audio", names, 0,
     sox_datstartread, sox_datread, NULL,
     sox_datstartwrite, sox_datwrite, NULL,
-    NULL, write_encodings, NULL
+    NULL, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
 }

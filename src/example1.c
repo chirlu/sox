@@ -1,5 +1,4 @@
-/*
- * Simple example of using SoX libraries
+/* Simple example of using SoX libraries
  *
  * Copyright (c) 2007-8 robs@users.sourceforge.net
  *
@@ -25,7 +24,7 @@
 #endif
 #include <assert.h>
 
-static sox_format_t * in, * out; /* input and output files */ 
+static sox_format_t * in, * out; /* input and output files */
 
 /* The function that will be called to input samples into the effects chain.
  * In this example, we get samples to process from a SoX-openned audio file.
@@ -43,7 +42,7 @@ static int input_drain(
    * back to *osamp */
   *osamp = sox_read(in, obuf, *osamp);
 
-  /* sox_read may return a number that is less than was requested; only if 
+  /* sox_read may return a number that is less than was requested; only if
    * 0 samples is returned does it indicate that end-of-file has been reached
    * or an error has occurred */
   if (!*osamp && in->sox_errno)
@@ -53,7 +52,7 @@ static int input_drain(
 
 /* The function that will be called to output samples from the effects chain.
  * In this example, we store the samples in a SoX-openned audio file.
- * In a different application, they might perhaps be analysed in some way, 
+ * In a different application, they might perhaps be analysed in some way,
  * or displayed as a wave-form */
 static int output_flow(sox_effect_t *effp UNUSED, sox_sample_t const * ibuf,
     sox_sample_t * obuf UNUSED, sox_size_t * isamp, sox_size_t * osamp)
@@ -83,7 +82,7 @@ static int output_flow(sox_effect_t *effp UNUSED, sox_sample_t const * ibuf,
 static sox_effect_handler_t const * input_handler(void)
 {
   static sox_effect_handler_t handler = {
-    "input", NULL, SOX_EFF_MCHAN, NULL, NULL, NULL, input_drain, NULL, NULL
+    "input", NULL, SOX_EFF_MCHAN, NULL, NULL, NULL, input_drain, NULL, NULL, 0
   };
   return &handler;
 }
@@ -93,19 +92,19 @@ static sox_effect_handler_t const * input_handler(void)
 static sox_effect_handler_t const * output_handler(void)
 {
   static sox_effect_handler_t handler = {
-    "output", NULL, SOX_EFF_MCHAN, NULL, NULL, output_flow, NULL, NULL, NULL
+    "output", NULL, SOX_EFF_MCHAN, NULL, NULL, output_flow, NULL, NULL, NULL, 0
   };
   return &handler;
 }
 
-/* 
+/*
  * Reads input file, applies vol & flanger effects, stores in output file.
  * E.g. example1 monkey.au monkey.aiff
  */
 int main(int argc, char * argv[])
 {
   sox_effects_chain_t * chain;
-  sox_effect_t e;
+  sox_effect_t * e;
   char * vol[] = {"3dB"};
 
   assert(argc == 3);
@@ -119,7 +118,7 @@ int main(int argc, char * argv[])
   /* Open the output file; we must specify the output signal characteristics.
    * Since we are using only simple effects, they are the same as the input
    * file characteristics */
-  assert(out = sox_open_write(NULL, argv[2], &in->signal, NULL, NULL, NULL, 0, NULL, 0));
+  assert(out = sox_open_write(argv[2], &in->signal, NULL, NULL, NULL, NULL));
 
   /* Create an effects chain; some effects need to know about the input
    * or output file encoding so we provide that information here */
@@ -128,27 +127,27 @@ int main(int argc, char * argv[])
   /* The first effect in the effect chain must be something that can source
    * samples; in this case, we have defined an input handler that inputs
    * data from an audio file */
-  sox_create_effect(&e, input_handler());
+  e = sox_create_effect(input_handler());
   /* This becomes the first `effect' in the chain */
-  assert(sox_add_effect(chain, &e, &in->signal, &in->signal) == SOX_SUCCESS);
+  assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
 
   /* Create the `vol' effect, and initialise it with the desired parameters: */
-  sox_create_effect(&e, sox_find_effect("vol"));
-  assert(e.handler.getopts(&e, 1, vol) == SOX_SUCCESS);
+  e = sox_create_effect(sox_find_effect("vol"));
+  assert(e->handler.getopts(e, 1, vol) == SOX_SUCCESS);
   /* Add the effect to the end of the effects processing chain: */
-  assert(sox_add_effect(chain, &e, &in->signal, &in->signal) == SOX_SUCCESS);
+  assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
 
   /* Create the `flanger' effect, and initialise it with default parameters: */
-  sox_create_effect(&e, sox_find_effect("flanger"));
-  assert(e.handler.getopts(&e, 0, NULL) == SOX_SUCCESS);
+  e = sox_create_effect(sox_find_effect("flanger"));
+  assert(e->handler.getopts(e, 0, NULL) == SOX_SUCCESS);
   /* Add the effect to the end of the effects processing chain: */
-  assert(sox_add_effect(chain, &e, &in->signal, &in->signal) == SOX_SUCCESS);
+  assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
 
   /* The last effect in the effect chain must be something that only consumes
    * samples; in this case, we have defined an output handler that outputs
    * data to an audio file */
-  sox_create_effect(&e, output_handler());
-  assert(sox_add_effect(chain, &e, &in->signal, &in->signal) == SOX_SUCCESS);
+  e = sox_create_effect(output_handler());
+  assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
 
   /* Flow samples through the effects processing chain until EOF is reached */
   sox_flow_effects(chain, NULL);

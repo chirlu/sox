@@ -1,5 +1,4 @@
-/*
- * Effect: stereo reverberation
+/* libSoX effect: stereo reverberation
  * Copyright (c) 2007 robs@users.sourceforge.net
  * Filter design based on freeverb by Jezar at Dreampoint.
  *
@@ -20,7 +19,6 @@
 
 #include "sox_i.h"
 #include "fifo.h"
-#include <math.h>
 
 #define lsx_zalloc(var, n) var = lsx_calloc(n, sizeof(*var))
 #define filter_create(p, n) (p)->ptr=lsx_zalloc((p)->buffer, (p)->size=(size_t)(n))
@@ -57,7 +55,7 @@ static const size_t /* Filter delay lengths in samples (44100Hz sample-rate) */
   allpass_lengths[] = {225, 341, 441, 556};
 #define stereo_adjust 12
 
-typedef struct filter_array {
+typedef struct {
   filter_t comb   [array_length(comb_lengths)];
   filter_t allpass[array_length(allpass_lengths)];
 } filter_array_t;
@@ -103,7 +101,7 @@ static void filter_array_delete(filter_array_t * p)
     filter_delete(&p->comb[i]);
 }
 
-typedef struct reverb {
+typedef struct {
   float feedback;
   float hf_damping;
   float gain;
@@ -160,7 +158,7 @@ static void reverb_delete(reverb_t * p)
 
 /*------------------------------- SoX Wrapper --------------------------------*/
 
-typedef struct priv {
+typedef struct {
   double reverberance, hf_damping, pre_delay_ms;
   double stereo_depth, wet_gain_dB, room_scale;
   sox_bool wet_only;
@@ -171,14 +169,10 @@ typedef struct priv {
     float * dry, * wet[2];
   } chan[2];
 } priv_t;
-
-assert_static(sizeof(struct priv) <= SOX_MAX_EFFECT_PRIVSIZE,
-              /* else */ EFFECT_PRIVSIZE_too_big);
+#define p ((priv_t *)effp->priv)
 
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
-  priv_t * p = (priv_t *) effp->priv;
-
   p->reverberance = p->hf_damping = 50; /* Set non-zero defaults */
   p->stereo_depth = p->room_scale = 100;
 
@@ -198,9 +192,8 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
 static int start(sox_effect_t * effp)
 {
-  priv_t * p = (priv_t *) effp->priv;
   size_t i;
-  
+
   p->ichannels = p->ochannels = 1;
   effp->out_signal.rate = effp->in_signal.rate;
   if (effp->in_signal.channels > 2 && p->stereo_depth) {
@@ -223,13 +216,12 @@ static int start(sox_effect_t * effp)
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
                 sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
-  priv_t * p = (priv_t *) effp->priv;
   sox_size_t c, i, w, len = min(*isamp / p->ichannels, *osamp / p->ochannels);
 
   *isamp = len * p->ichannels, *osamp = len * p->ochannels;
   for (c = 0; c < p->ichannels; ++c)
     p->chan[c].dry = fifo_write(&p->chan[c].reverb.input_fifo, len, 0);
-  for (i = 0; i < len; ++i) for (c = 0; c < p->ichannels; ++c) 
+  for (i = 0; i < len; ++i) for (c = 0; c < p->ichannels; ++c)
     p->chan[c].dry[i] = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++, effp->clips);
   for (c = 0; c < p->ichannels; ++c)
     reverb_process(&p->chan[c].reverb, len);
@@ -247,7 +239,6 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 
 static int stop(sox_effect_t * effp)
 {
-  priv_t * p = (priv_t *) effp->priv;
   size_t i;
   for (i = 0; i < p->ichannels; ++i)
     reverb_delete(&p->chan[i].reverb);
@@ -256,8 +247,7 @@ static int stop(sox_effect_t * effp)
 
 sox_effect_handler_t const *sox_reverb_effect_fn(void)
 {
-  static sox_effect_handler_t handler = {
-    "reverb", 
+  static sox_effect_handler_t handler = {"reverb",
     "[-w|--wet-only]"
     " [reverberance (50%)"
     " [HF-damping (50%)"
@@ -265,7 +255,8 @@ sox_effect_handler_t const *sox_reverb_effect_fn(void)
     " [stereo-depth (100%)"
     " [pre-delay (0ms)"
     " [wet-gain (0dB)"
-    "]]]]]]", SOX_EFF_MCHAN, getopts, start, flow, NULL, stop, NULL
+    "]]]]]]",
+    SOX_EFF_MCHAN, getopts, start, flow, NULL, stop, NULL, sizeof(priv_t)
   };
   return &handler;
 }

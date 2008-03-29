@@ -1,5 +1,4 @@
-/*
- * libSoX rate change effect file.
+/* libSoX rate change effect file.
  * Spiffy rate changer using Smith & Wesson Bandwidth-Limited Interpolation.
  * The algorithm is described in "Bandlimited Interpolation -
  * Introduction and Algorithm" by Julian O. Smith III.
@@ -21,8 +20,8 @@
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Lance Norskog And Sundry Contributors are not responsible for
  * the consequences of using this software.
  *
  * This source code is distributed in the hope that it will be useful,
@@ -39,7 +38,6 @@
 
 #include "sox_i.h"
 
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -94,7 +92,7 @@
 #define BUFFSIZE 8192 /*16384*/  /* Total I/O buffer size */
 
 /* Private data for Lerp via LCM file */
-typedef struct resamplestuff {
+typedef struct {
    double Factor;     /* Factor = Fout/Fin sample rates */
    double rolloff;    /* roll-off frequency */
    double beta;       /* passband/stopband tuning magic */
@@ -116,7 +114,7 @@ typedef struct resamplestuff {
    long Xp;           /* X[Xp] is position to start filter application   */
    unsigned long Xsize,Ysize; /* size (doubles) of X[],Y[]         */
    double *X, *Y;      /* I/O buffers */
-} *resample_t;
+} priv_t;
 
 static void LpFilter(double c[],
                      long N,
@@ -132,8 +130,8 @@ int lsx_makeFilter(double Imp[],
                long Num,
                int Normalize);
 
-static long SrcUD(resample_t r, long Nx);
-static long SrcEX(resample_t r, long Nx);
+static long SrcUD(priv_t * r, long Nx);
+static long SrcEX(priv_t * r, long Nx);
 
 
 /*
@@ -141,7 +139,7 @@ static long SrcEX(resample_t r, long Nx);
  */
 static int getopts(sox_effect_t * effp, int n, char **argv)
 {
-        resample_t r = (resample_t) effp->priv;
+        priv_t * r = (priv_t *) effp->priv;
 
         /* These defaults are conservative with respect to aliasing. */
         r->rolloff = 0.80;
@@ -191,13 +189,13 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int start(sox_effect_t * effp)
 {
-  resample_t r = (resample_t) effp->priv;
+  priv_t * r = (priv_t *) effp->priv;
   long Xoff, gcdrate;
   int i;
 
   if (effp->in_signal.rate == effp->out_signal.rate)
     return SOX_EFF_NULL;
-          
+
   effp->out_signal.channels = effp->in_signal.channels;
 
   r->Factor = effp->out_signal.rate / effp->in_signal.rate;
@@ -273,10 +271,10 @@ static int start(sox_effect_t * effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                      sox_size_t *isamp, sox_size_t *osamp)
 {
-        resample_t r = (resample_t) effp->priv;
+        priv_t * r = (priv_t *) effp->priv;
         long i, last, Nout, Nx, Nproc;
 
         sox_debug_more("Xp %li, Xread %li, isamp %d, ",r->Xp, r->Xread,*isamp);
@@ -299,10 +297,10 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
         sox_debug_more("Nx %li",Nx);
 
         if (ibuf == NULL) {
-                for(i = r->Xread; i < Nx + r->Xread  ; i++) 
+                for(i = r->Xread; i < Nx + r->Xread  ; i++)
                         r->X[i] = 0;
         } else {
-                for(i = r->Xread; i < Nx + r->Xread  ; i++) 
+                for(i = r->Xread; i < Nx + r->Xread  ; i++)
                         r->X[i] = (double)(*ibuf++)/ISCALE;
         }
         last = i;
@@ -316,7 +314,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
                 return (SOX_SUCCESS);
         }
         if (r->quadr < 0) { /* exact coeff's method */
-                long creep; 
+                long creep;
                 Nout = SrcEX(r, Nproc);
                 sox_debug_more("Nproc %li --> %li",Nproc,Nout);
                 /* Move converter Nproc samples back in time */
@@ -324,7 +322,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
                 /* Advance by number of samples processed */
                 r->Xp += Nproc;
                 /* Calc time accumulation in Time */
-                creep = r->t/r->b - r->Xoff; 
+                creep = r->t/r->b - r->Xoff;
                 if (creep)
                 {
                   r->t -= creep * r->b;  /* Remove time accumulation   */
@@ -332,7 +330,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
                   sox_debug_more("Nproc %ld, creep %ld",Nproc,creep);
                 }
         } else { /* approx coeff's method */
-                long creep; 
+                long creep;
                 Nout = SrcUD(r, Nproc);
                 sox_debug_more("Nproc %li --> %li",Nproc,Nout);
                 /* Move converter Nproc samples back in time */
@@ -340,7 +338,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
                 /* Advance by number of samples processed */
                 r->Xp += Nproc;
                 /* Calc time accumulation in Time */
-                creep = r->Time - r->Xoff; 
+                creep = r->Time - r->Xoff;
                 if (creep)
                 {
                   r->Time -= creep;   /* Remove time accumulation   */
@@ -354,14 +352,14 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
         /* Copy back portion of input signal that must be re-used */
         k = r->Xp - r->Xoff;
         sox_debug_more("k %li, last %li",k,last);
-        for (i=0; i<last - k; i++) 
+        for (i=0; i<last - k; i++)
             r->X[i] = r->X[i+k];
 
         /* Pos in input buff to read new data into */
-        r->Xread = i;                 
+        r->Xread = i;
         r->Xp = r->Xoff;
 
-        for(i=0; i < Nout; i++) { 
+        for(i=0; i < Nout; i++) {
                 double ftemp = r->Y[i] * ISCALE;
 
                 SOX_SAMPLE_CLIP_COUNT(ftemp, effp->clips);
@@ -380,7 +378,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
  */
 static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-        resample_t r = (resample_t) effp->priv;
+        priv_t * r = (priv_t *) effp->priv;
         long isamp_res, osamp_res;
         sox_sample_t *Obuf;
         int rc;
@@ -415,22 +413,22 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 }
 
 /*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
+ * Do anything required when you stop reading samples.
+ * Don't close input file!
  */
 static int stop(sox_effect_t * effp)
 {
-        resample_t r = (resample_t) effp->priv;
-        
+        priv_t * r = (priv_t *) effp->priv;
+
         free(r->Imp - 1);
         free(r->X);
-        /* free(r->Y); Y is in same block starting at X */ 
+        /* free(r->Y); Y is in same block starting at X */
         return (SOX_SUCCESS);
 }
 
 /* over 90% of CPU time spent in this iprodUD() function */
 /* quadratic interpolation */
-static double qprodUD(const double Imp[], const double *Xp, long Inc, double T0, 
+static double qprodUD(const double Imp[], const double *Xp, long Inc, double T0,
                       long dhb, long ct)
 {
   const double f = 1.0/(1<<La);
@@ -462,7 +460,7 @@ static double qprodUD(const double Imp[], const double *Xp, long Inc, double T0,
 }
 
 /* linear interpolation */
-static double iprodUD(const double Imp[], const double *Xp, long Inc, 
+static double iprodUD(const double Imp[], const double *Xp, long Inc,
                       double T0, long dhb, long ct)
 {
   const double f = 1.0/(1<<La);
@@ -490,7 +488,7 @@ static double iprodUD(const double Imp[], const double *Xp, long Inc,
 /* From resample:filters.c */
 /* Sampling rate conversion subroutine */
 
-static long SrcUD(resample_t r, long Nx)
+static long SrcUD(priv_t * r, long Nx)
 {
    double *Ystart, *Y;
    double Factor;
@@ -534,7 +532,7 @@ static long SrcUD(resample_t r, long Nx)
 }
 
 /* exact coeff's */
-static double prodEX(const double Imp[], const double *Xp, 
+static double prodEX(const double Imp[], const double *Xp,
                      long Inc, long T0, long dhb, long ct)
 {
   double v;
@@ -551,7 +549,7 @@ static double prodEX(const double Imp[], const double *Xp,
   return v;
 }
 
-static long SrcEX(resample_t r, long Nx)
+static long SrcEX(priv_t * r, long Nx)
 {
    double *Ystart, *Y;
    double Factor;
@@ -586,7 +584,7 @@ static long SrcEX(resample_t r, long Nx)
    return (Y - Ystart);        /* Return the number of output samples */
 }
 
-int lsx_makeFilter(double Imp[], long Nwing, double Froll, double Beta, 
+int lsx_makeFilter(double Imp[], long Nwing, double Froll, double Beta,
                long Num, int Normalize)
 {
    double *ImpR;
@@ -617,7 +615,7 @@ int lsx_makeFilter(double Imp[], long Nwing, double Froll, double Beta,
          DCgain += ImpR[i];
       DCgain = 2*DCgain + ImpR[0];    /* DC gain of real coefficients */
       sox_debug("DCgain err=%.12f",DCgain-1.0);
-  
+
       DCgain = 1.0/DCgain;
       for (i=0; i<Mwing; i++)
          Imp[i] = ImpR[i]*DCgain;
@@ -701,7 +699,7 @@ static void LpFilter(double *c, long N, double frq, double Beta, long Num)
       double x = M_PI*(double)i/(double)(Num);
       c[i] = sin(x*frq)/x;
    }
-  
+
    if (Beta>2) { /* Apply Kaiser window to filter coeffs: */
       double IBeta = 1.0/Izero(Beta);
       for (i=1; i<N; i++) {
@@ -720,7 +718,7 @@ const sox_effect_handler_t *sox_resample_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
      "resample", "[ -qs | -q | -ql ] [ rolloff [ beta ] ]",
-     SOX_EFF_RATE, getopts, start, flow, drain, stop, NULL
+     SOX_EFF_RATE, getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
   return &handler;
 }

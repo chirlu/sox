@@ -4,7 +4,7 @@
  * Minor addition by Donnie Smith 13.08.2003
  *
  * This effect can delete samples from the start of a sound file
- * until it sees a specified count of samples exceed a given threshold 
+ * until it sees a specified count of samples exceed a given threshold
  * (any of the channels).
  * This effect can also delete samples from the end of a sound file
  * when it sees a specified count of samples below a given threshold
@@ -16,7 +16,6 @@
 #include "sox_i.h"
 
 #include <string.h>
-#include <math.h>
 
 /* Private data for silence effect. */
 
@@ -26,8 +25,7 @@
 #define SILENCE_COPY_FLUSH  3
 #define SILENCE_STOP        4
 
-typedef struct silencestuff
-{
+typedef struct {
     char        start;
     int         start_periods;
     char        *start_duration_str;
@@ -63,14 +61,14 @@ typedef struct silencestuff
 
     /* State Machine */
     char        mode;
-} *silence_t;
+} priv_t;
 
 static void clear_rms(sox_effect_t * effp)
 
 {
-    silence_t silence = (silence_t) effp->priv;
+    priv_t * silence = (priv_t *) effp->priv;
 
-    memset(silence->window, 0, 
+    memset(silence->window, 0,
            silence->window_size * sizeof(double));
 
     silence->window_current = silence->window;
@@ -80,7 +78,7 @@ static void clear_rms(sox_effect_t * effp)
 
 static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
 {
-    silence_t   silence = (silence_t) effp->priv;
+    priv_t *   silence = (priv_t *) effp->priv;
     int parse_count;
 
     /* check for option switches */
@@ -125,7 +123,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
                     &silence->start_duration,'s') == NULL)
           return lsx_usage(effp);
 
-        parse_count = sscanf(argv[1], "%lf%c", &silence->start_threshold, 
+        parse_count = sscanf(argv[1], "%lf%c", &silence->start_threshold,
                 &silence->start_unit);
         if (parse_count < 1)
           return lsx_usage(effp);
@@ -166,7 +164,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
                     &silence->stop_duration,'s') == NULL)
           return lsx_usage(effp);
 
-        parse_count = sscanf(argv[1], "%lf%c", &silence->stop_threshold, 
+        parse_count = sscanf(argv[1], "%lf%c", &silence->stop_threshold,
                              &silence->stop_unit);
         if (parse_count < 1)
           return lsx_usage(effp);
@@ -205,7 +203,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
             sox_fail("Invalid unit specified");
             return(SOX_EOF);
         }
-        if ((silence->stop_unit == '%') && ((silence->stop_threshold < 0.0) || 
+        if ((silence->stop_unit == '%') && ((silence->stop_threshold < 0.0) ||
                     (silence->stop_threshold > 100.0)))
         {
             sox_fail("silence threshold should be between 0.0 and 100.0 %%");
@@ -222,13 +220,13 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
 
 static int sox_silence_start(sox_effect_t * effp)
 {
-        silence_t       silence = (silence_t) effp->priv;
+        priv_t *       silence = (priv_t *) effp->priv;
 
         /* When you want to remove silence, small window sizes are
          * better or else RMS will look like non-silence at
          * aburpt changes from load to silence.
          */
-        silence->window_size = (effp->in_signal.rate / 50) * 
+        silence->window_size = (effp->in_signal.rate / 50) *
                                effp->in_signal.channels;
         silence->window = (double *)lsx_malloc(silence->window_size *
                                            sizeof(double));
@@ -308,7 +306,7 @@ static int aboveThreshold(sox_effect_t * effp, sox_sample_t value, double thresh
 
 static sox_sample_t compute_rms(sox_effect_t * effp, sox_sample_t sample)
 {
-    silence_t silence = (silence_t) effp->priv;
+    priv_t * silence = (priv_t *) effp->priv;
     double new_sum;
     sox_sample_t rms;
 
@@ -323,7 +321,7 @@ static sox_sample_t compute_rms(sox_effect_t * effp, sox_sample_t sample)
 
 static void update_rms(sox_effect_t * effp, sox_sample_t sample)
 {
-    silence_t silence = (silence_t) effp->priv;
+    priv_t * silence = (priv_t *) effp->priv;
 
     silence->rms_sum -= *silence->window_current;
     *silence->window_current = ((double)sample * (double)sample);
@@ -336,10 +334,10 @@ static void update_rms(sox_effect_t * effp, sox_sample_t sample)
 
 /* Process signed long samples from ibuf to obuf. */
 /* Return number of samples processed in isamp and osamp. */
-static int sox_silence_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_silence_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                     sox_size_t *isamp, sox_size_t *osamp)
 {
-    silence_t silence = (silence_t) effp->priv;
+    priv_t * silence = (priv_t *) effp->priv;
     int threshold;
     sox_size_t i, j;
     sox_size_t nrOfTicks, nrOfInSamplesRead, nrOfOutSamplesWritten;
@@ -357,8 +355,8 @@ static int sox_silence_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_s
              * prevent getting buffers out of sync.
              */
 silence_trim:
-            nrOfTicks = min((*isamp-nrOfInSamplesRead), 
-                            (*osamp-nrOfOutSamplesWritten)) / 
+            nrOfTicks = min((*isamp-nrOfInSamplesRead),
+                            (*osamp-nrOfOutSamplesWritten)) /
                            effp->in_signal.channels;
             for(i = 0; i < nrOfTicks; i++)
             {
@@ -367,7 +365,7 @@ silence_trim:
                 {
                     threshold |= aboveThreshold(effp,
                                                 compute_rms(effp, ibuf[j]),
-                                                silence->start_threshold, 
+                                                silence->start_threshold,
                                                 silence->start_unit);
                 }
 
@@ -405,7 +403,7 @@ silence_trim:
                     {
                         update_rms(effp, ibuf[j]);
                     }
-                    ibuf += effp->in_signal.channels; 
+                    ibuf += effp->in_signal.channels;
                     nrOfInSamplesRead += effp->in_signal.channels;
                 }
             } /* for nrOfTicks */
@@ -414,8 +412,8 @@ silence_trim:
         case SILENCE_TRIM_FLUSH:
 silence_trim_flush:
             nrOfTicks = min((silence->start_holdoff_end -
-                             silence->start_holdoff_offset), 
-                             (*osamp-nrOfOutSamplesWritten)); 
+                             silence->start_holdoff_offset),
+                             (*osamp-nrOfOutSamplesWritten));
             for(i = 0; i < nrOfTicks; i++)
             {
                 *obuf++ = silence->start_holdoff[silence->start_holdoff_offset++];
@@ -442,9 +440,9 @@ silence_trim_flush:
              * Case A:
              *
              * Case 1a:
-             * If previous silence was detect then see if input sample is 
+             * If previous silence was detect then see if input sample is
              * above threshold.  If found then flush out hold off buffer
-             * and copy over to output buffer.  
+             * and copy over to output buffer.
              *
              * Case 1b:
              * If no previous silence detect then see if input sample
@@ -457,7 +455,7 @@ silence_trim_flush:
              * buffer.  Even though it wasn't put in output
              * buffer, inform user that input was consumed.
              *
-             * If hold off buffer is full after this then stop 
+             * If hold off buffer is full after this then stop
              * copying data and discard data in hold off buffer.
              *
              * Special leave_silence logic:
@@ -472,8 +470,8 @@ silence_trim_flush:
              *
              */
 silence_copy:
-            nrOfTicks = min((*isamp-nrOfInSamplesRead), 
-                            (*osamp-nrOfOutSamplesWritten)) / 
+            nrOfTicks = min((*isamp-nrOfInSamplesRead),
+                            (*osamp-nrOfOutSamplesWritten)) /
                            effp->in_signal.channels;
             if (silence->stop)
             {
@@ -483,9 +481,9 @@ silence_copy:
                     threshold = 1;
                     for (j = 0; j < effp->in_signal.channels; j++)
                     {
-                        threshold &= aboveThreshold(effp, 
+                        threshold &= aboveThreshold(effp,
                                                     compute_rms(effp, ibuf[j]),
-                                                    silence->stop_threshold, 
+                                                    silence->stop_threshold,
                                                     silence->stop_unit);
                     }
 
@@ -534,15 +532,15 @@ silence_copy:
                             nrOfInSamplesRead++;
                         }
 
-                        /* Check if holdoff buffer is greater than duration 
+                        /* Check if holdoff buffer is greater than duration
                          */
-                        if (silence->stop_holdoff_end >= 
+                        if (silence->stop_holdoff_end >=
                                 silence->stop_duration)
                         {
                             /* Increment found counter and see if this
                              * is the last period.  If so then exit.
                              */
-                            if (++silence->stop_found_periods >= 
+                            if (++silence->stop_found_periods >=
                                     silence->stop_periods)
                             {
                                 silence->stop_holdoff_offset = 0;
@@ -569,7 +567,7 @@ silence_copy:
                             }
                             else
                             {
-                                /* Flush this buffer and start 
+                                /* Flush this buffer and start
                                  * looking again.
                                  */
                                 silence->mode = SILENCE_COPY_FLUSH;
@@ -593,7 +591,7 @@ silence_copy:
         case SILENCE_COPY_FLUSH:
 silence_copy_flush:
             nrOfTicks = min((silence->stop_holdoff_end -
-                                silence->stop_holdoff_offset), 
+                                silence->stop_holdoff_offset),
                             (*osamp-nrOfOutSamplesWritten));
 
             for(i = 0; i < nrOfTicks; i++)
@@ -625,17 +623,17 @@ silence_copy_flush:
 
 static int sox_silence_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-    silence_t silence = (silence_t) effp->priv;
+    priv_t * silence = (priv_t *) effp->priv;
     sox_size_t i;
     sox_size_t nrOfTicks, nrOfOutSamplesWritten = 0;
 
     /* Only if in flush mode will there be possible samples to write
      * out during drain() call.
      */
-    if (silence->mode == SILENCE_COPY_FLUSH || 
+    if (silence->mode == SILENCE_COPY_FLUSH ||
         silence->mode == SILENCE_COPY)
     {
-        nrOfTicks = min((silence->stop_holdoff_end - 
+        nrOfTicks = min((silence->stop_holdoff_end -
                             silence->stop_holdoff_offset), *osamp);
         for(i = 0; i < nrOfTicks; i++)
         {
@@ -661,7 +659,7 @@ static int sox_silence_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t
 
 static int sox_silence_stop(sox_effect_t * effp)
 {
-    silence_t silence = (silence_t) effp->priv;
+    priv_t * silence = (priv_t *) effp->priv;
 
     free(silence->window);
     free(silence->start_holdoff);
@@ -671,7 +669,7 @@ static int sox_silence_stop(sox_effect_t * effp)
 
 static int kill(sox_effect_t * effp)
 {
-  silence_t silence = (silence_t) effp->priv;
+  priv_t * silence = (priv_t *) effp->priv;
 
   free(silence->start_duration_str);
   free(silence->stop_duration_str);
@@ -687,7 +685,7 @@ static sox_effect_handler_t sox_silence_effect = {
   sox_silence_flow,
   sox_silence_drain,
   sox_silence_stop,
-  kill
+  kill, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_silence_effect_fn(void)

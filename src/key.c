@@ -1,6 +1,4 @@
-/*
- * Effect: change the audio key (i.e. change pitch but not tempo)
- *
+/* libSoX effect: change the audio key (i.e. change pitch but not tempo)
  * Copyright (c) 2007 robs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or modify it
@@ -24,7 +22,6 @@
  */
 
 #include "sox_i.h"
-#include <math.h>
 #include <string.h>
 
 static int getopts(sox_effect_t * effp, int argc, char **argv)

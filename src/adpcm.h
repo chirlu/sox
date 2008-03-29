@@ -1,5 +1,4 @@
-/*
- * adpcm.h  codex functions for MS_ADPCM data
+/* adpcm.h  codex functions for MS_ADPCM data
  *          (hopefully) provides interoperability with
  *          Microsoft's ADPCM format, but, as usual,
  *          see LACK-OF-WARRANTY information below.

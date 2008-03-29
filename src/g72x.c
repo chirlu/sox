@@ -1,5 +1,4 @@
-/*
- * Common routines for G.721 and G.723 conversions.
+/* Common routines for G.721 and G.723 conversions.
  *
  * (c) SoX Contributors
  *
@@ -17,7 +16,7 @@
  * along with this library; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
- * 
+ *
  * This code is based on code from Sun, which came with the following
  * copyright notice:
  * -----------------------------------------------------------------------
@@ -89,7 +88,7 @@ static inline int log2plus1(int val)
 
         return r + 1;
 }
-  
+
 /*
  * quan()
  *
@@ -294,7 +293,7 @@ int reconstruct(int sign, int dqln, int y)
  *
  * updates the state variables for each output code
  */
-void update(int code_size, int y, int wi, int fi, int dq, int sr, 
+void update(int code_size, int y, int wi, int fi, int dq, int sr,
             int dqsez, struct g72x_state *state_ptr)
 {
         int             cnt;

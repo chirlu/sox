@@ -1,5 +1,4 @@
-/*
- * Implements a libSoX internal interface for implementing effects.
+/* Implements a libSoX internal interface for implementing effects.
  * All public functions & data are prefixed with lsx_ .
  *
  * (c) 2005-8 Chris Bagwell and SoX contributors
@@ -20,7 +19,6 @@
  */
 
 #include "sox_i.h"
-#include <math.h>
 #include <string.h>
 
 #undef sox_fail
@@ -159,7 +157,7 @@ char const * lsx_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samp
 
     pos = strchr(str, ':');
     found_colon = pos && pos < end;
-    
+
     pos = strchr(str, '.');
     found_dot = pos && pos < end;
 

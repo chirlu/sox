@@ -1,5 +1,4 @@
-/*
- * Copyright (c) 2006 robs@users.sourceforge.net
+/* libSoX test code    copyright (c) 2006 robs@users.sourceforge.net
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the

@@ -1,5 +1,4 @@
-/*
- * File format: Psion wve   (c) 2008 robs@users.sourceforge.net
+/* libSoX file format: Psion wve   (c) 2008 robs@users.sourceforge.net
  *
  * See http://filext.com/file-extension/WVE
  *
@@ -42,7 +41,7 @@ static int start_read(sox_format_t * ft)
 static int write_header(sox_format_t * ft)
 {
   return lsx_writechars(ft, ID1, sizeof(ID1))
-      || lsx_writedw(ft, ft->olength? ft->olength:ft->length)
+      || lsx_writedw(ft, ft->olength? ft->olength:ft->signal.length)
       || lsx_writechars(ft, ID2, sizeof(ID2))? SOX_EOF:SOX_SUCCESS;
 }
 
@@ -51,13 +50,12 @@ SOX_FORMAT_HANDLER(wve)
   static char const * const names[] = {"wve", NULL};
   static sox_rate_t   const write_rates[] = {8000, 0};
   static unsigned     const write_encodings[] = {SOX_ENCODING_ALAW, 8, 0, 0};
-  static sox_format_handler_t const handler = {
-    SOX_LIB_VERSION_CODE,
+  static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "Psion 3 audio format",
     names, SOX_FILE_BIG_END | SOX_FILE_MONO | SOX_FILE_REWIND,
     start_read, lsx_rawread, NULL,
     write_header, lsx_rawwrite, NULL,
-    lsx_rawseek, write_encodings, write_rates
+    lsx_rawseek, write_encodings, write_rates, 0
   };
   return &handler;
 }

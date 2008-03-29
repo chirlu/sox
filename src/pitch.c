@@ -1,5 +1,4 @@
-/*
- * (c) Fabien Coelho <fabien@coelho.net> 03/2000 for sox.
+/* (c) Fabien Coelho <fabien@coelho.net> 03/2000 for sox.
  *
  * pitch shifting.
  *
@@ -20,12 +19,12 @@
  * I found a code on the Computer Music Journal web site
  * <http://mitpress.mit.edu/e-journals/Computer_Music_Journal/>
  * for pitch shifting the AD 1848 PC soundcards, with
- * a lot of (unclear) pointer and integer arithmetics, and 
+ * a lot of (unclear) pointer and integer arithmetics, and
  * combine effects (feedback, delay, mixing).
  *
  * I tried to understand the code, dropped the other effects,
- * translated the stuff in float so it's easier to understand, 
- * drop one of the lookup tables (I know that sin(pi/2-x) = cos(x)), 
+ * translated the stuff in float so it's easier to understand,
+ * drop one of the lookup tables (I know that sin(pi/2-x) = cos(x)),
  * and added interpolation and fade options of my own.
  * cross fading is always symetric.
  *
@@ -39,7 +38,7 @@
  * frequencies, and come back to time", but it does not seem to work
  * that way... at least not so easily. Or maybe my attempt was buggy.
  *
- * Here is the result. It can certainly be improved. 
+ * Here is the result. It can certainly be improved.
  * The result buzzes some time.
  * Lot of options available so than one can adjust the result.
  *
@@ -53,8 +52,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-
-#include <math.h>   /* cos(), pow() */
 
 /* cross fading options for transitions
  */
@@ -86,8 +83,7 @@
 typedef enum { pi_input, pi_compute, pi_output } pitch_state_t;
 
 /* structure hold by the effect descriptor. */
-typedef struct 
-{
+typedef struct {
     /* OPTIONS
      */
     double shift;   /* shift in cents, >0 to treble, <0 to bass */
@@ -120,7 +116,7 @@ typedef struct
 
     pitch_state_t state; /* buffer management status. */
 
-} * pitch_t;
+} priv_t;
 
 /* // debug functions
 
@@ -136,10 +132,10 @@ static char * fadeoptname(int opt)
     }
 }
 
-static void debug(pitch_t pitch, char * where)
+static void debug(priv_t * pitch, char * where)
 {
-  sox_debug("%s: ind=%d sz=%ld step=%d o=%d rate=%f ia=%d st=%d fo=%s", 
-  where, pitch->index, pitch->size, pitch->step, pitch->overlap, 
+  sox_debug("%s: ind=%d sz=%ld step=%d o=%d rate=%f ia=%d st=%d fo=%s",
+  where, pitch->index, pitch->size, pitch->step, pitch->overlap,
   pitch->rate, pitch->iacc, pitch->state, fadeoptname(pitch->fadeopt));
 }
 */
@@ -170,7 +166,7 @@ static double cub(
     b = 0.5 * (f1+fm1) - f0;
     a = (1.0/6.0) * (f2-f1+fm1-f0-4.0*b);
     c = f1 - a - b - d;
-    
+
     return ((a * x + b) * x + c) * x + d;
 }
 
@@ -180,8 +176,8 @@ static double cub(
  * result put in output buffer obuf of size olen.
  */
 static void interpolation(
-  pitch_t pitch,
-  const sox_sample_t *ibuf, sox_size_t ilen, 
+  priv_t * pitch,
+  const sox_sample_t *ibuf, sox_size_t ilen,
   double * out, sox_size_t olen,
   double rate) /* signed */
 {
@@ -198,13 +194,13 @@ static void interpolation(
             register double frac = index - ifl;
 
             if (pitch->interopt==PITCH_INTERPOLE_LIN)
-                out[i] = lin((double) ibuf[ifl], 
+                out[i] = lin((double) ibuf[ifl],
                              (double) ibuf[ifl+1],
                              frac);
             else
-                out[i] = cub((double) ibuf[ifl-1], 
-                             (double) ibuf[ifl], 
-                             (double) ibuf[ifl+1], 
+                out[i] = cub((double) ibuf[ifl-1],
+                             (double) ibuf[ifl],
+                             (double) ibuf[ifl+1],
                              (double) ibuf[ifl+2],
                              frac);
         }
@@ -217,13 +213,13 @@ static void interpolation(
             register double frac = index - ifl;
 
             if (pitch->interopt==PITCH_INTERPOLE_LIN)
-                out[i] = lin((double) ibuf[ifl], 
+                out[i] = lin((double) ibuf[ifl],
                              (double) ibuf[ifl+1],
                              frac);
             else
-                out[i] = cub((double) ibuf[ifl-1], 
-                             (double) ibuf[ifl], 
-                             (double) ibuf[ifl+1], 
+                out[i] = cub((double) ibuf[ifl-1],
+                             (double) ibuf[ifl],
+                             (double) ibuf[ifl+1],
                              (double) ibuf[ifl+2],
                              frac);
         }
@@ -232,16 +228,16 @@ static void interpolation(
 
 /* from input buffer to acc
  */
-static void process_intput_buffer(pitch_t pitch)
+static void process_intput_buffer(priv_t * pitch)
 {
     register int i, len = pitch->step;
 
     /* forwards sweep */
-    interpolation(pitch, 
-                  pitch->buf+pitch->overlap, pitch->step+pitch->overlap, 
+    interpolation(pitch,
+                  pitch->buf+pitch->overlap, pitch->step+pitch->overlap,
                   pitch->tmp, pitch->step,
                   pitch->rate);
-    
+
     for (i=0; i<len; i++)
         pitch->acc[i] = pitch->fade[i]*pitch->tmp[i];
 
@@ -250,7 +246,7 @@ static void process_intput_buffer(pitch_t pitch)
                   pitch->buf, pitch->step+pitch->overlap,
                   pitch->tmp, pitch->step,
                   -pitch->rate);
-    
+
     for (i=0; i<len; i++)
         pitch->acc[i] += pitch->fade[pitch->step-i-1]*pitch->tmp[i];
 }
@@ -258,10 +254,10 @@ static void process_intput_buffer(pitch_t pitch)
 /*
  * Process options
  */
-static int sox_pitch_getopts(sox_effect_t * effp, int n, char **argv) 
+static int sox_pitch_getopts(sox_effect_t * effp, int n, char **argv)
 {
-    pitch_t pitch = (pitch_t) effp->priv; 
-    
+    priv_t * pitch = (priv_t *) effp->priv;
+
     /* get pitch shift */
     pitch->shift = 0.0; /* default is no change */
 
@@ -294,7 +290,7 @@ static int sox_pitch_getopts(sox_effect_t * effp, int n, char **argv)
 
     /* fade option */
     pitch->fadeopt = PITCH_FADE_DEFAULT; /* default */
-    if (n>3) 
+    if (n>3)
     {
         switch (argv[3][0]) /* what a parser;-) */
         {
@@ -318,7 +314,7 @@ static int sox_pitch_getopts(sox_effect_t * effp, int n, char **argv)
             return lsx_usage(effp);
         }
     }
-    
+
     pitch->coef = 0.25;
     if (n>4 && (!sscanf(argv[4], "%lf", &pitch->coef) ||
                 pitch->coef<0.0 || pitch->coef>0.5))
@@ -332,7 +328,7 @@ static int sox_pitch_getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int sox_pitch_start(sox_effect_t * effp)
 {
-    pitch_t pitch = (pitch_t) effp->priv;
+    priv_t * pitch = (priv_t *) effp->priv;
     register int sample_rate = effp->out_signal.rate;
     unsigned int i;
 
@@ -357,7 +353,7 @@ static int sox_pitch_start(sox_effect_t * effp)
     if (pitch->rate > 1.0)
         pitch->overlap = (int) ((pitch->rate-1.0)*pitch->step) + 2;
     else
-        pitch->overlap = 2; 
+        pitch->overlap = 2;
 
     pitch->size = pitch->step + 2*pitch->overlap;
 
@@ -375,7 +371,7 @@ static int sox_pitch_start(sox_effect_t * effp)
     {
         /* does it make sense to have such an option? */
         register double pi_step = M_PI / (pitch->step-1);
-        
+
         for (i=0; i<pitch->step; i++)
             pitch->fade[i] = (double) (HAM0 + HAM1*cos(pi_step*i));
     }
@@ -426,10 +422,10 @@ static int sox_pitch_start(sox_effect_t * effp)
 
 /* Processes input.
  */
-static int sox_pitch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_pitch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                 sox_size_t *isamp, sox_size_t *osamp)
 {
-    pitch_t pitch = (pitch_t) effp->priv;
+    priv_t * pitch = (priv_t *) effp->priv;
     int i, size;
     sox_size_t len, iindex, oindex;
 
@@ -442,7 +438,7 @@ static int sox_pitch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sam
     /* warning:
        because of the asynchronous nature of buffering,
        the output index can reach the buffer limits before full consumption.
-       I put the input index just in case. 
+       I put the input index just in case.
        If the code is correct, eithier len or iindex is redundant.
     */
     while (len>0 && iindex<*isamp && oindex<*osamp)
@@ -488,7 +484,7 @@ static int sox_pitch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sam
                 /* shift input buffer. memmove? */
                 for (i=0; i<2*pitch->overlap; i++)
                     pitch->buf[i] = pitch->buf[i+pitch->step];
-                
+
                 pitch->index = 2*pitch->overlap;
             }
         }
@@ -505,7 +501,7 @@ static int sox_pitch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sam
  */
 static int sox_pitch_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-    pitch_t pitch = (pitch_t) effp->priv;
+    priv_t * pitch = (priv_t *) effp->priv;
     sox_size_t i;
 
     if (pitch->state == pi_input)
@@ -542,14 +538,14 @@ static int sox_pitch_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *
     else
         return SOX_SUCCESS;
 }
-    
+
 /*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
+ * Do anything required when you stop reading samples.
+ * Don't close input file!
  */
 static int sox_pitch_stop(sox_effect_t * effp)
 {
-    pitch_t pitch = (pitch_t) effp->priv;
+    priv_t * pitch = (priv_t *) effp->priv;
 
     free(pitch->fade);
     free(pitch->tmp);
@@ -570,7 +566,7 @@ static sox_effect_handler_t sox_pitch_effect = {
   sox_pitch_flow,
   sox_pitch_drain,
   sox_pitch_stop,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_pitch_effect_fn(void)

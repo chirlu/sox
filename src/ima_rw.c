@@ -1,8 +1,6 @@
-/*
-        ima_rw.c -- codex utilities for WAV_FORMAT_IMA_ADPCM
-         
-        Copyright (C) 1999 Stanley J. Brooks <stabro@megsinet.net> 
-
+/* libSoX ima_rw.c -- codex utilities for WAV_FORMAT_IMA_ADPCM
+ * Copyright (C) 1999 Stanley J. Brooks <stabro@megsinet.net>
+ *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2.1 of the License, or (at
@@ -23,7 +21,6 @@
 #include "ima_rw.h"
 
 #include <sys/types.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 /*
@@ -102,7 +99,7 @@ static void ImaExpandS(
                 } else {
                         cm = (*ip++)>>4;
                         if ((i&7) == 0)  /* ends the 8-sample input block for this channel */
-                                ip += i_inc;   /* skip ip for next group */ 
+                                ip += i_inc;   /* skip ip for next group */
                 }
 
                 step = imaStepSizeTable[state];
@@ -179,7 +176,7 @@ static int ImaMashS(
         itop = ibuff + n*chans;
         val = *ip - v0; ip += chans;/* 1st input sample for this channel */
         d2 = val*val;/* d2 will be sum of squares of errors, given input v0 and *st */
-        val = v0;       
+        val = v0;
 
         op = obuff;            /* output pointer (or NULL) */
         if (op) {              /* NULL means don't output, just compute the rms error */
@@ -209,7 +206,7 @@ static int ImaMashS(
                         if (i&1) {       /* odd numbered output */
                                 *op++ |= (cm<<4);
                                 if (i == 7)    /* ends the 8-sample output block for this channel */
-                                        op += o_inc; /* skip op for next group */ 
+                                        op += o_inc; /* skip op for next group */
                         } else {
                                 *op = cm;
                         }

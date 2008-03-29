@@ -1,5 +1,4 @@
-/*
- * Effect: Contrast Enhancement        (c) 2008 robs@users.sourceforge.net
+/* libSoX effect: Contrast Enhancement    (c) 2008 robs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -17,27 +16,22 @@
  */
 
 #include "sox_i.h"
-#include <math.h>
 
 typedef struct {double contrast;} priv_t;
-assert_static(sizeof(priv_t) <= SOX_MAX_EFFECT_PRIVSIZE, PRIVSIZE_too_big);
+#define p ((priv_t *)effp->priv)
 
 static int create(sox_effect_t * effp, int argc, char * * argv)
 {
-  priv_t * p = (priv_t *)effp->priv;
-
   p->contrast = 75;
   do {NUMERIC_PARAMETER(contrast, 0, 100)} while (0);
-  p->contrast /= 750;
-  return argc?  lsx_usage(effp) : SOX_SUCCESS;
+  p->contrast /= 750; /* shift range to 0 to 0.1333, default 0.1 */
+  return argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
-  priv_t * p = (priv_t *)effp->priv;
   sox_size_t len = *isamp = *osamp = min(*isamp, *osamp);
-
   while (len--) {
     double d = *ibuf++ * (-M_PI_2 / SOX_SAMPLE_MIN);
     *obuf++ = sin(d + p->contrast * sin(d * 4)) * SOX_SAMPLE_MAX;
@@ -47,8 +41,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 
 sox_effect_handler_t const * sox_contrast_effect_fn(void)
 {
-  static sox_effect_handler_t handler = {
-    "contrast", "[enhancement]", SOX_EFF_MCHAN, create, 0, flow, 0, 0, 0
-  };
+  static sox_effect_handler_t handler = {"contrast", "[enhancement (75)]",
+    SOX_EFF_MCHAN, create, NULL, flow, NULL, NULL, NULL, sizeof(priv_t)};
   return &handler;
 }

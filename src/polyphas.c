@@ -1,5 +1,4 @@
-/*
- * libSoX rate change effect file.
+/* libSoX rate change effect file.
  *
  * July 14, 1998
  * Copyright 1998  K. Bradley, Carnegie Mellon University
@@ -25,7 +24,6 @@
 
 #include "sox_i.h"
 
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,7 +42,7 @@ typedef struct {
   Float *window;  /* this is past_hist[hsize], then input[size]     */
 } polystage;
 
-typedef struct polyphase {
+typedef struct {
   unsigned lcmrate;             /* least common multiple of rates */
   unsigned inskip, outskip;     /* LCM increments for I & O rates */
   double Factor;                 /* out_rate/in_rate               */
@@ -56,17 +54,14 @@ typedef struct polyphase {
   int win_width;
   Float cutoff;
   int m1[MF], m2[MF], b1[MF], b2[MF]; /* arrays used in optimize_factors */
-} *poly_t;
-
-assert_static(sizeof(struct polyphase) <= SOX_MAX_EFFECT_PRIVSIZE, 
-              /* else */ skeleff_PRIVSIZE_too_big);
+} priv_t;
 
 /*
  * Process options
  */
 static int sox_poly_getopts(sox_effect_t * effp, int n, char **argv)
 {
-  poly_t rate = (poly_t) effp->priv;
+  priv_t * rate = (priv_t *) effp->priv;
 
   rate->win_type = 0;           /* 0: nuttall, 1: hamming */
   rate->win_width = 1024;
@@ -103,7 +98,7 @@ static int sox_poly_getopts(sox_effect_t * effp, int n, char **argv)
     sox_fail("Polyphase: unknown argument (%s %s)!", argv[0], argv[1]);
     return SOX_EOF;
   }
-  
+
   return SOX_SUCCESS;
 }
 
@@ -190,7 +185,7 @@ static int permute(int *m, int *l, int ct, int ct1, size_t amalg)
   return (p-m);
 }
 
-static int optimize_factors(poly_t rate, unsigned numer, unsigned denom, int *l1, int *l2)
+static int optimize_factors(priv_t * rate, unsigned numer, unsigned denom, int *l1, int *l2)
 {
   unsigned f_min;
   int c_min,u_min,ct1,ct2;
@@ -309,7 +304,7 @@ static Float sinc(double value)
 
    buffer must already be allocated.
 */
-static void fir_design(poly_t rate, Float *buffer, int length, double cutoff)
+static void fir_design(priv_t * rate, Float *buffer, int length, double cutoff)
 {
     int j;
     double sum;
@@ -343,7 +338,7 @@ static void fir_design(poly_t rate, Float *buffer, int length, double cutoff)
 
 static int sox_poly_start(sox_effect_t * effp)
 {
-    poly_t rate = (poly_t) effp->priv;
+    priv_t * rate = (priv_t *) effp->priv;
     static int l1[MF], l2[MF];
     double skip = 0;
     int total, size, uprate;
@@ -417,7 +412,7 @@ static int sox_poly_start(sox_effect_t * effp)
       skip *= s->up;
       skip += f_len;
       skip /= s->down;
-      
+
       size = (size * s->up) / s->down;  /* this is integer */
     }
     rate->oskip = skip/2;
@@ -494,7 +489,7 @@ static void update_hist(Float *hist, int hist_size, int in_size)
 static int sox_poly_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                  sox_size_t *isamp, sox_size_t *osamp)
 {
-  poly_t rate = (poly_t) effp->priv;
+  priv_t * rate = (priv_t *) effp->priv;
   polystage *s0,*s1;
 
   /* Sanity check:  how much can we tolerate? */
@@ -608,7 +603,7 @@ static int sox_poly_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *o
  */
 static int sox_poly_stop(sox_effect_t * effp)
 {
-    poly_t rate = (poly_t)effp->priv;
+    priv_t * rate = (priv_t *)effp->priv;
     sox_size_t k;
 
     for (k = 0; k <= rate->total; k++) {
@@ -632,7 +627,7 @@ static sox_effect_handler_t sox_polyphase_effect = {
   sox_poly_flow,
   sox_poly_drain,
   sox_poly_stop,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_polyphase_effect_fn(void)

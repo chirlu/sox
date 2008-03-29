@@ -1,5 +1,4 @@
-/*
- * SoX - The Swiss Army Knife of Audio Manipulation.
+/* SoX - The Swiss Army Knife of Audio Manipulation.
  *
  * This is the main function for the command line sox program.
  *
@@ -87,8 +86,7 @@ static sox_option_t show_progress = SOX_OPTION_DEFAULT;
 
 /* Input & output files */
 
-typedef struct file_info
-{
+typedef struct {
   char * filename;
 
   /* fopts */
@@ -97,16 +95,16 @@ typedef struct file_info
   sox_encodinginfo_t encoding;
   double volume;
   double replay_gain;
-  rg_mode replay_gain_mode;
-  sox_comments_t comments;
+  sox_oob_t oob;
 
   sox_format_t * ft;  /* libSoX file descriptor */
   sox_size_t volume_clips;
-} * file_t;
+  rg_mode replay_gain_mode;
+} file_t;
 
 #define MAX_INPUT_FILES 32
 #define MAX_FILES MAX_INPUT_FILES + 2 /* 1 output file plus record input */
-static file_t files[MAX_FILES]; /* Array tracking input and output files */
+static file_t * files[MAX_FILES]; /* Array tracking input and output files */
 #define ofile files[file_count - 1]
 static size_t file_count = 0;
 static size_t input_count = 0;
@@ -125,7 +123,7 @@ static size_t input_count = 0;
  * a resample effect, a channel mixing effect, the input, and the output.
  */
 #define MAX_USER_EFF (SOX_MAX_EFFECTS - 4)
-static sox_effect_t user_efftab[MAX_USER_EFF];
+static sox_effect_t * user_efftab[MAX_USER_EFF];
 static unsigned nuser_effects;
 static sox_effects_chain_t ofile_effects_chain;
 
@@ -188,12 +186,12 @@ static char const * str_time(double duration)
   return string[i];
 }
 
-static void play_file_info(sox_format_t * ft, file_t f, sox_bool full)
+static void play_file_info(sox_format_t * ft, file_t * f, sox_bool full)
 {
   FILE * const output = sox_mode == sox_soxi? stdout : stderr;
   char const * text;
   char buffer[30];
-  sox_size_t ws = ft->length / ft->signal.channels;
+  sox_size_t ws = ft->signal.length / ft->signal.channels;
   (void)full;
 
   fprintf(output, "\n");
@@ -205,21 +203,21 @@ static void play_file_info(sox_format_t * ft, file_t f, sox_bool full)
   }
 
   fprintf(output, "  Encoding: %-14s", sox_encodings_short_str[ft->encoding.encoding]);
-  text = sox_find_comment(f->ft->comments, "Comment");
+  text = sox_find_comment(f->ft->oob.comments, "Comment");
   if (!text)
-    text = sox_find_comment(f->ft->comments, "Description");
+    text = sox_find_comment(f->ft->oob.comments, "Description");
   if (!text)
-    text = sox_find_comment(f->ft->comments, "Year");
+    text = sox_find_comment(f->ft->oob.comments, "Year");
   if (text)
     fprintf(output, "Info: %s", text);
   fprintf(output, "\n");
 
   sprintf(buffer, "  Channels: %u @ %u-bit", ft->signal.channels, ft->signal.precision);
   fprintf(output, "%-25s", buffer);
-  text = sox_find_comment(f->ft->comments, "Tracknumber");
+  text = sox_find_comment(f->ft->oob.comments, "Tracknumber");
   if (text) {
     fprintf(output, "Track: %s", text);
-    text = sox_find_comment(f->ft->comments, "Tracktotal");
+    text = sox_find_comment(f->ft->oob.comments, "Tracktotal");
     if (text)
       fprintf(output, " of %s", text);
   }
@@ -227,7 +225,7 @@ static void play_file_info(sox_format_t * ft, file_t f, sox_bool full)
 
   sprintf(buffer, "Samplerate: %gHz", ft->signal.rate);
   fprintf(output, "%-25s", buffer);
-  text = sox_find_comment(f->ft->comments, "Album");
+  text = sox_find_comment(f->ft->oob.comments, "Album");
   if (text)
     fprintf(output, "Album: %s", text);
   fprintf(output, "\n");
@@ -238,19 +236,19 @@ static void play_file_info(sox_format_t * ft, file_t f, sox_bool full)
     fprintf(output, "%-24s", buffer);
   } else
     fprintf(output, "%-24s", "Replaygain: off");
-  text = sox_find_comment(f->ft->comments, "Artist");
+  text = sox_find_comment(f->ft->oob.comments, "Artist");
   if (text)
     fprintf(output, "Artist: %s", text);
   fprintf(output, "\n");
 
-  fprintf(output, "  Duration: %-13s", ft->length? str_time((double)ws / ft->signal.rate) : "unknown");
-  text = sox_find_comment(f->ft->comments, "Title");
+  fprintf(output, "  Duration: %-13s", ft->signal.length? str_time((double)ws / ft->signal.rate) : "unknown");
+  text = sox_find_comment(f->ft->oob.comments, "Title");
   if (text)
     fprintf(output, "Title: %s", text);
   fprintf(output, "\n\n");
 }
 
-static void display_file_info(sox_format_t * ft, file_t f, sox_bool full)
+static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
 {
   static char const * const no_yes[] = {"no", "yes"};
   FILE * const output = sox_mode == sox_soxi? stdout : stderr;
@@ -274,8 +272,8 @@ static void display_file_info(sox_format_t * ft, file_t f, sox_bool full)
     ft->signal.rate,
     ft->signal.precision);
 
-  if (ft->length && ft->signal.channels && ft->signal.rate) {
-    sox_size_t ws = ft->length / ft->signal.channels;
+  if (ft->signal.length && ft->signal.channels && ft->signal.rate) {
+    sox_size_t ws = ft->signal.length / ft->signal.channels;
     fprintf(output,
       "Duration       : %s = %u samples %c %g CDDA sectors\n",
       str_time((double)ws / ft->signal.rate),
@@ -309,19 +307,19 @@ static void display_file_info(sox_format_t * ft, file_t f, sox_bool full)
   if (f && f->volume != HUGE_VAL)
     fprintf(output, "Level adjust   : %g (linear gain)\n" , f->volume);
 
-  if (!(ft->handler.flags & SOX_FILE_DEVICE) && ft->comments) {
-    if (sox_num_comments(ft->comments) > 1) {
-      sox_comments_t p = ft->comments;
+  if (!(ft->handler.flags & SOX_FILE_DEVICE) && ft->oob.comments) {
+    if (sox_num_comments(ft->oob.comments) > 1) {
+      sox_comments_t p = ft->oob.comments;
       fprintf(output, "Comments       : \n");
       do fprintf(output, "%s\n", *p);
       while (*++p);
     }
-    else fprintf(output, "Comment        : '%s'\n", ft->comments[0]);
+    else fprintf(output, "Comment        : '%s'\n", ft->oob.comments[0]);
   }
   fprintf(output, "\n");
 }
 
-static void report_file_info(file_t f)
+static void report_file_info(file_t * f)
 {
   if (sox_globals.verbosity > 2)
     display_file_info(f->ft, f, sox_true);
@@ -344,14 +342,14 @@ static void display_error(sox_format_t * ft)
       strerror(ft->sox_errno) : sox_strerror[ft->sox_errno - SOX_EHDR]);
 }
 
-static void progress_to_file(file_t f)
+static void progress_to_file(file_t * f)
 {
   if (user_skip) {
     user_skip = sox_false;
     fprintf(stderr, "\nSkipped (Ctrl-C twice to quit).\n");
   }
   read_wide_samples = 0;
-  input_wide_samples = f->ft->length / f->ft->signal.channels;
+  input_wide_samples = f->ft->signal.length / f->ft->signal.channels;
   if (show_progress && (sox_globals.verbosity < 3 ||
                         (combine_method <= sox_concatenate && input_count > 1)))
     display_file_info(f->ft, f, sox_false);
@@ -371,7 +369,7 @@ static sox_size_t sox_read_wide(sox_format_t * ft, sox_sample_t * buf, sox_size_
   return len;
 }
 
-static void balance_input(sox_sample_t * buf, sox_size_t ws, file_t f)
+static void balance_input(sox_sample_t * buf, sox_size_t ws, file_t * f)
 {
   sox_size_t s = ws * f->ft->signal.channels;
 
@@ -386,9 +384,6 @@ typedef struct input_combiner
 {
   sox_sample_t *ibuf[MAX_INPUT_FILES];
 } * input_combiner_t;
-
-assert_static(sizeof(struct input_combiner) <= SOX_MAX_EFFECT_PRIVSIZE,
-              /* else */ input_combiner_PRIVSIZE_too_big);
 
 static int combiner_start(sox_effect_t *effp)
 {
@@ -493,7 +488,7 @@ static sox_effect_handler_t const * input_combiner_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "input", 0, SOX_EFF_MCHAN,
-    0, combiner_start, 0, combiner_drain, combiner_stop, 0
+    0, combiner_start, 0, combiner_drain, combiner_stop, 0, 0
   };
   return &handler;
 }
@@ -530,21 +525,21 @@ static int output_flow(sox_effect_t *effp, sox_sample_t const * ibuf,
 static sox_effect_handler_t const * output_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "output", 0, SOX_EFF_MCHAN, NULL, NULL, output_flow, NULL, NULL, NULL
+    "output", 0, SOX_EFF_MCHAN, NULL, NULL, output_flow, NULL, NULL, NULL, 0
   };
   return &handler;
 }
 
 static void add_auto_effect(sox_effects_chain_t * chain, char const * name, sox_signalinfo_t * signal)
 {
-  sox_effect_t eff;
+  sox_effect_t * effp;
 
   /* Auto effect should always succeed here */
-  sox_create_effect(&eff, sox_find_effect(name));
-  eff.handler.getopts(&eff, 0, NULL);          /* Set up with default opts */
+  effp = sox_create_effect(sox_find_effect(name));
+  effp->handler.getopts(effp, 0, NULL);          /* Set up with default opts */
 
   /* But could fail here */
-  if (sox_add_effect(chain, &eff, signal, &ofile->ft->signal) != SOX_SUCCESS)
+  if (sox_add_effect(chain, effp, signal, &ofile->ft->signal) != SOX_SUCCESS)
     exit(2);
 }
 
@@ -553,18 +548,18 @@ static void add_effects(sox_effects_chain_t * chain)
 {
   sox_signalinfo_t signal = combiner_signal;
   unsigned i, min_chan = 0, min_rate = 0;
-  sox_effect_t eff;
+  sox_effect_t * effp;
 
   /* Find points after which we might add effects to change rate/chans */
   for (i = 0; i < nuser_effects; i++) {
-    if (user_efftab[i].handler.flags & (SOX_EFF_CHAN|SOX_EFF_MCHAN))
+    if (user_efftab[i]->handler.flags & (SOX_EFF_CHAN | SOX_EFF_MCHAN))
       min_chan = i + 1;
-    if (user_efftab[i].handler.flags & SOX_EFF_RATE)
+    if (user_efftab[i]->handler.flags & SOX_EFF_RATE)
       min_rate = i + 1;
   }
   /* 1st `effect' in the chain is the input combiner_signal */
-  sox_create_effect(&eff, input_combiner_effect_fn());
-  sox_add_effect(chain, &eff, &signal, &ofile->ft->signal);
+  effp = sox_create_effect(input_combiner_effect_fn());
+  sox_add_effect(chain, effp, &signal, &ofile->ft->signal);
 
   /* Add auto effects if appropriate; add user specified effects */
   for (i = 0; i <= nuser_effects; i++) {
@@ -578,7 +573,7 @@ static void add_effects(sox_effects_chain_t * chain)
       add_auto_effect(chain, "resample", &signal);
 
     if (i < nuser_effects)
-      if (sox_add_effect(chain, &user_efftab[i], &signal, &ofile->ft->signal) != SOX_SUCCESS)
+      if (sox_add_effect(chain, user_efftab[i], &signal, &ofile->ft->signal) != SOX_SUCCESS)
         exit(2);
   }
   /* Add auto effects if still needed at this point */
@@ -588,8 +583,8 @@ static void add_effects(sox_effects_chain_t * chain)
     add_auto_effect(chain, "mixer", &signal);     /* Must be increasing channels */
 
   /* Last `effect' in the chain is the output file */
-  sox_create_effect(&eff, output_effect_fn());
-  if (sox_add_effect(chain, &eff, &signal, &ofile->ft->signal) != SOX_SUCCESS)
+  effp = sox_create_effect(output_effect_fn());
+  if (sox_add_effect(chain, effp, &signal, &ofile->ft->signal) != SOX_SUCCESS)
     exit(2);
 
   for (i = 0; i < chain->length; ++i) {
@@ -720,7 +715,7 @@ static int update_status(sox_bool all_done)
   return user_abort? SOX_EOF : SOX_SUCCESS;
 }
 
-static void optimize_trim(void)          
+static void optimize_trim(void)
 {
   /* Speed hack.  If the "trim" effect is the first effect then
    * peek inside its "effect descriptor" and see what the
@@ -731,21 +726,21 @@ static void optimize_trim(void)
    * complex and problably never used.
    * This hack is a huge time savings when trimming
    * gigs of audio data into managable chunks
-   */ 
+   */
   if (input_count == 1 && ofile_effects_chain.length > 1 && strcmp(ofile_effects_chain.effects[1][0].handler.name, "trim") == 0) {
     if (files[0]->ft->handler.seek && files[0]->ft->seekable){
       sox_size_t offset = sox_trim_get_start(&ofile_effects_chain.effects[1][0]);
-      if (offset && sox_seek(files[0]->ft, offset, SOX_SEEK_SET) == SOX_SUCCESS) { 
+      if (offset && sox_seek(files[0]->ft, offset, SOX_SEEK_SET) == SOX_SUCCESS) {
         read_wide_samples = offset / files[0]->ft->signal.channels;
-        /* Assuming a failed seek stayed where it was.  If the 
-         * seek worked then reset the start location of 
+        /* Assuming a failed seek stayed where it was.  If the
+         * seek worked then reset the start location of
          * trim so that it thinks user didn't request a skip.
-         */ 
+         */
         sox_trim_clear_start(&ofile_effects_chain.effects[1][0]);
         sox_debug("optimize_trim successful");
-      }    
-    }        
-  }    
+      }
+    }
+  }
 }
 
 static sox_bool overwrite_permitted(char const * filename)
@@ -764,23 +759,23 @@ static sox_bool overwrite_permitted(char const * filename)
   return c == 'y' || c == 'Y';
 }
 
-static void open_output_file(sox_size_t olen)
+static void open_output_file(void)
 {
-  sox_loopinfo_t loops[SOX_MAX_NLOOPS];
   double factor;
   int i;
-  sox_comments_t comments = sox_copy_comments(files[0]->ft->comments);
-  sox_comments_t p = ofile->comments;
+  sox_comments_t p = ofile->oob.comments;
+  sox_oob_t oob = files[0]->ft->oob;
+  oob.comments = sox_copy_comments(files[0]->ft->oob.comments);
 
-  if (!comments && !p)
-    sox_append_comment(&comments, "Processed by SoX");
+  if (!oob.comments && !p)
+    sox_append_comment(&oob.comments, "Processed by SoX");
   else if (p) {
     if (!(*p)[0]) {
-      sox_delete_comments(&comments);
+      sox_delete_comments(&oob.comments);
       ++p;
     }
     while (*p)
-      sox_append_comment(&comments, *p++);
+      sox_append_comment(&oob.comments, *p++);
   }
 
   /*
@@ -791,22 +786,13 @@ static void open_output_file(sox_size_t olen)
    */
   factor = (double) ofile->signal.rate / combiner_signal.rate;
   for (i = 0; i < SOX_MAX_NLOOPS; i++) {
-    loops[i].start = files[0]->ft->loops[i].start * factor;
-    loops[i].length = files[0]->ft->loops[i].length * factor;
-    loops[i].count = files[0]->ft->loops[i].count;
-    loops[i].type = files[0]->ft->loops[i].type;
+    oob.loops[i].start = oob.loops[i].start * factor;
+    oob.loops[i].length = oob.loops[i].length * factor;
   }
 
-  ofile->ft = sox_open_write(overwrite_permitted,
-                        ofile->filename,
-                        &ofile->signal,
-                        &ofile->encoding,
-                        ofile->filetype,
-                        comments,
-                        olen,
-                        &files[0]->ft->instr,
-                        loops);
-  sox_delete_comments(&comments);
+  ofile->ft = sox_open_write(ofile->filename, &ofile->signal, &ofile->encoding,
+      ofile->filetype, &oob, overwrite_permitted);
+  sox_delete_comments(&oob.comments);
 
   if (!ofile->ft)
     /* sox_open_write() will call sox_warn for most errors.
@@ -861,11 +847,11 @@ static int process(void) {
       max_channels = max(max_channels, files[i]->ft->signal.channels);
       min_rate = min(min_rate, files[i]->ft->signal.rate);
       max_rate = max(max_rate, files[i]->ft->signal.rate);
-      known_length = known_length && files[i]->ft->length != 0;
+      known_length = known_length && files[i]->ft->signal.length != 0;
       if (combine_method == sox_concatenate)
-        olen += files[i]->ft->length / files[i]->ft->signal.channels;
+        olen += files[i]->ft->signal.length / files[i]->ft->signal.channels;
       else
-        olen = max(olen, files[i]->ft->length / files[i]->ft->signal.channels);
+        olen = max(olen, files[i]->ft->signal.length / files[i]->ft->signal.channels);
     }
     if (min_rate != max_rate)
       sox_fail("Input files must have the same sample-rate");
@@ -879,7 +865,7 @@ static int process(void) {
     if (min_rate != max_rate)
       exit(1);
 
-    combiner_signal.channels = 
+    combiner_signal.channels =
       combine_method == sox_merge? total_channels : max_channels;
   }
 
@@ -889,7 +875,7 @@ static int process(void) {
   if (ofile->signal.channels == 0) {
     unsigned j;
     for (j = 0; j < nuser_effects && !ofile->signal.channels; ++j)
-      ofile->signal.channels = user_efftab[nuser_effects - 1 - j].out_signal.channels;
+      ofile->signal.channels = user_efftab[nuser_effects - 1 - j]->out_signal.channels;
     if (ofile->signal.channels == 0)
       ofile->signal.channels = combiner_signal.channels;
   }
@@ -908,12 +894,12 @@ static int process(void) {
   }
 
   for (i = 0; i < nuser_effects; i++)
-    known_length = known_length && !(user_efftab[i].handler.flags & SOX_EFF_LENGTH);
+    known_length = known_length && !(user_efftab[i]->handler.flags & SOX_EFF_LENGTH);
 
   if (!known_length)
     olen = 0;
-
-  open_output_file((sox_size_t)(olen * ofile->signal.channels * ofile->signal.rate / combiner_signal.rate + .5));
+  ofile->signal.length = (sox_size_t)(olen * ofile->signal.channels * ofile->signal.rate / combiner_signal.rate + .5);
+  open_output_file();
 
   ofile_effects_chain.global_info = sox_effects_globals;
   ofile_effects_chain.in_enc = &combiner_encoding;
@@ -925,7 +911,7 @@ static int process(void) {
   signal(SIGINT, sigint);
   /* FIXME: For SIGTERM at least we really should guarantee to stop quickly */
   signal(SIGTERM, sigint); /* Stop gracefully even in extremis */
-  
+
   flowstatus = sox_flow_effects(&ofile_effects_chain, update_status);
 
   sox_delete_effects(&ofile_effects_chain);
@@ -1266,7 +1252,7 @@ static int enum_option(int option_index, enum_item const * items)
   return p->value;
 }
 
-static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
+static sox_bool parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 {
   while (sox_true) {
     int c, option_index;
@@ -1281,7 +1267,7 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
       switch (option_index) {
       case 0:
         if (optarg)
-          sox_append_comment(&f->comments, optarg);
+          sox_append_comment(&f->oob.comments, optarg);
         break;
 
       case 1:
@@ -1298,14 +1284,14 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
         break;
 
       case 3:
-        sox_append_comment(&f->comments, "");
-        read_comment_file(&f->comments, optarg);
+        sox_append_comment(&f->oob.comments, "");
+        read_comment_file(&f->oob.comments, optarg);
         break;
 
       case 4:
-        sox_append_comment(&f->comments, "");
+        sox_append_comment(&f->oob.comments, "");
         if (optarg)
-          sox_append_comment(&f->comments, optarg);
+          sox_append_comment(&f->oob.comments, optarg);
         break;
 
       case 5:
@@ -1471,7 +1457,7 @@ static char const * device_name(char const * const type)
   return name? from_env? from_env : name : NULL;
 }
 
-static char const * set_default_device(file_t f)
+static char const * set_default_device(file_t * f)
 {
   /* Default audio driver type in order of preference: */
   if (!f->filetype) f->filetype = getenv("AUDIODRIVER");
@@ -1488,9 +1474,9 @@ static char const * set_default_device(file_t f)
   return device_name(f->filetype);
 }
 
-static int add_file(struct file_info const * const opts, char const * const filename)
+static int add_file(file_t const * const opts, char const * const filename)
 {
-  file_t f = lsx_malloc(sizeof(*f));
+  file_t * f = lsx_malloc(sizeof(*f));
 
   if (file_count >= MAX_FILES) {
     sox_fail("too many files; maximum is %d input files (and 1 output file)", MAX_INPUT_FILES);
@@ -1504,7 +1490,7 @@ static int add_file(struct file_info const * const opts, char const * const file
   return 0;
 }
 
-static void init_file(file_t f)
+static void init_file(file_t * f)
 {
   memset(f, 0, sizeof(*f));
   sox_init_encodinginfo(&f->encoding);
@@ -1514,7 +1500,7 @@ static void init_file(file_t f)
 
 static void parse_options_and_filenames(int argc, char **argv)
 {
-  struct file_info opts, opts_none;
+  file_t opts, opts_none;
   init_file(&opts), init_file(&opts_none);
 
   if (sox_mode == sox_rec)
@@ -1523,7 +1509,7 @@ static void parse_options_and_filenames(int argc, char **argv)
   for (; optind < argc && !sox_find_effect(argv[optind]); init_file(&opts)) {
     if (parse_gopts_and_fopts(&opts, argc, argv)) { /* is null file? */
       if (opts.filetype != NULL && strcmp(opts.filetype, "null") != 0)
-        sox_warn("Ignoring `-t %s'.", opts.filetype);
+        sox_warn("ignoring `-t %s'.", opts.filetype);
       opts.filetype = "null";
       add_file(&opts, "");
     }
@@ -1543,7 +1529,7 @@ static void parse_options_and_filenames(int argc, char **argv)
 static void parse_effects(int argc, char **argv)
 {
   for (nuser_effects = 0; optind < argc; ++nuser_effects) {
-    sox_effect_t *e = &user_efftab[nuser_effects];
+    sox_effect_t * e;
     int i;
 
     if (nuser_effects >= MAX_USER_EFF) {
@@ -1552,7 +1538,7 @@ static void parse_effects(int argc, char **argv)
     }
 
     /* Name should always be correct! */
-    sox_create_effect(e, sox_find_effect(argv[optind++]));
+    e = sox_create_effect(sox_find_effect(argv[optind++]));
 
     for (i = 0; i < argc - optind && !sox_find_effect(argv[optind + i]); ++i);
     if (e->handler.getopts(e, i, &argv[optind]) == SOX_EOF)
@@ -1561,7 +1547,8 @@ static void parse_effects(int argc, char **argv)
     optind += i; /* Skip past the effect arguments */
 
     if (e->handler.flags & SOX_EFF_DEPRECATED)
-      sox_warn("Effect `%s' is deprecated; see sox(1) for an alternative", e->handler.name);
+      sox_warn("effect `%s' is deprecated; see sox(1) for an alternative", e->handler.name);
+    user_efftab[nuser_effects] = e;
   }
 }
 
@@ -1575,7 +1562,7 @@ static int soxi1(soxi_t * type, char * filename)
 
   if (!ft)
     return 1;
-  ws = ft->length / max(ft->signal.channels, 1);
+  ws = ft->signal.length / max(ft->signal.channels, 1);
   switch (*type) {
     case rate: printf("%g\n", ft->signal.rate); break;
     case channels: printf("%u\n", ft->signal.channels); break;
@@ -1583,8 +1570,8 @@ static int soxi1(soxi_t * type, char * filename)
     case duration: printf("%s\n", str_time((double)ws / max(ft->signal.rate, 1))); break;
     case bits: printf("%u\n", ft->encoding.bits_per_sample); break;
     case encoding: printf("%s\n", sox_encodings_str[ft->encoding.encoding]); break;
-    case annotation: if (ft->comments) {
-      sox_comments_t p = ft->comments;
+    case annotation: if (ft->oob.comments) {
+      sox_comments_t p = ft->oob.comments;
       do printf("%s\n", *p); while (*++p);
     }
     break;
@@ -1624,7 +1611,7 @@ static int soxi(int argc, char * const * argv)
   return num_errors;
 }
 
-static void set_replay_gain(sox_comments_t comments, file_t f)
+static void set_replay_gain(sox_comments_t comments, file_t * f)
 {
   rg_mode rg = replay_gain_mode;
   int try = 2; /* Will try to find the other GAIN if preferred one not found */
@@ -1684,7 +1671,7 @@ int main(int argc, char **argv)
 
   if (sox_format_init() != SOX_SUCCESS)
     exit(1);
- 
+
   if (sox_mode == sox_soxi)
     exit(soxi(argc, argv));
 
@@ -1692,7 +1679,7 @@ int main(int argc, char **argv)
 
   if (sox_globals.verbosity > 2)
     display_SoX_version(stderr);
- 
+
   /* Make sure we got at least the required # of input filenames */
   input_count = file_count ? file_count - 1 : 0;
   if (input_count < (combine_method <= sox_concatenate ? 1 : 2))
@@ -1702,7 +1689,7 @@ int main(int argc, char **argv)
   for (i = 0; i < input_count; ++i) {
     if (files[i]->encoding.compression != HUGE_VAL)
       usage("A compression factor can be given only for an output file");
-    if (files[i]->comments != NULL)
+    if (files[i]->oob.comments != NULL)
       usage("Comments can be given only for an output file");
   }
   if (ofile->volume != HUGE_VAL)
@@ -1712,7 +1699,7 @@ int main(int argc, char **argv)
   signal(SIGINT, SIG_IGN); /* So child pipes aren't killed by track skip */
   for (i = 0; i < input_count; i++) {
     int j = input_count - 1 - i; /* Open in reverse order 'cos of rec (below) */
-    file_t f = files[j];
+    file_t * f = files[j];
 
     /* When mixing audio, default to input side volume adjustments that will
      * make sure no clipping will occur.  Users probably won't be happy with
@@ -1738,15 +1725,15 @@ int main(int argc, char **argv)
   /* Simple heuristic to determine if replay-gain should be in album mode */
   if (sox_mode == sox_play && replay_gain_mode == RG_track && input_count > 1 &&
       cmp_comment_text(
-        sox_find_comment(files[0]->ft->comments, "artist"),
-        sox_find_comment(files[1]->ft->comments, "artist")) &&
+        sox_find_comment(files[0]->ft->oob.comments, "artist"),
+        sox_find_comment(files[1]->ft->oob.comments, "artist")) &&
       cmp_comment_text(
-        sox_find_comment(files[0]->ft->comments, "album"),
-        sox_find_comment(files[1]->ft->comments, "album")))
+        sox_find_comment(files[0]->ft->oob.comments, "album"),
+        sox_find_comment(files[1]->ft->oob.comments, "album")))
     replay_gain_mode = RG_album;
 
   for (i = 0; i < input_count; i++)
-    set_replay_gain(files[i]->ft->comments, files[i]);
+    set_replay_gain(files[i]->ft->oob.comments, files[i]);
   signal(SIGINT, SIG_DFL);
 
   /* Loop through the rest of the arguments looking for effects */
@@ -1763,7 +1750,7 @@ int main(int argc, char **argv)
   for (i = 0; i < input_count; i++) {
     unsigned j;
     for (j =0; j < nuser_effects && !files[i]->ft->signal.channels; ++j)
-      files[i]->ft->signal.channels = user_efftab[j].in_signal.channels;
+      files[i]->ft->signal.channels = user_efftab[j]->in_signal.channels;
     if (!files[i]->ft->signal.channels)
       ++files[i]->ft->signal.channels;
   }

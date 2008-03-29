@@ -1,5 +1,4 @@
-/*
- * (c) 20/03/2000 Fabien COELHO <fabien@coelho.net> for sox.
+/* (c) 20/03/2000 Fabien COELHO <fabien@coelho.net> for sox.
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -17,14 +16,14 @@
  *
  * Change panorama of sound file with basic linear volume interpolation.
  * The human ear is not sensible to phases? What about delay? too short?
- * 
- * Volume is kept constant (?). 
+ *
+ * Volume is kept constant (?).
  * Beware of saturations!
  * Operations are carried out on doubles.
  * Can handle different number of channels.
  * Cannot handle rate change.
  *
- * Initially based on avg effect. 
+ * Initially based on avg effect.
  * pan 0.0 basically behaves as avg.
  */
 
@@ -33,21 +32,19 @@
 
 /* structure to hold pan parameter */
 
-typedef struct {
-    double dir; /* direction, from left (-1.0) to right (1.0) */
-} * pan_t;
+typedef struct {double direction;} priv_t; /* from left (-1.0) to right (1.0) */
 
 /*
  * Process options
  */
-static int sox_pan_getopts(sox_effect_t * effp, int n, char **argv) 
+static int sox_pan_getopts(sox_effect_t * effp, int n, char **argv)
 {
-    pan_t pan = (pan_t) effp->priv; 
-    
-    pan->dir = 0.0; /* default is no change */
-    
-    if (n && (!sscanf(argv[0], "%lf", &pan->dir) || 
-              pan->dir < -1.0 || pan->dir > 1.0))
+    priv_t * pan = (priv_t *) effp->priv;
+
+    pan->direction = 0.0; /* default is no change */
+
+    if (n && (!sscanf(argv[0], "%lf", &pan->direction) ||
+              pan->direction < -1.0 || pan->direction > 1.0))
       return lsx_usage(effp);
 
     return SOX_SUCCESS;
@@ -72,20 +69,20 @@ static int sox_pan_start(sox_effect_t * effp)
 /*
  * Process either isamp or osamp samples, whichever is smaller.
  */
-static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                 sox_size_t *isamp, sox_size_t *osamp)
 {
-    pan_t pan = (pan_t) effp->priv;
+    priv_t * pan = (priv_t *) effp->priv;
     sox_size_t len, done;
     sox_sample_t *ibuf_copy;
     char ich, och;
-    double left, right, dir, hdir;
-    
+    double left, right, direction, hdir;
+
     ibuf_copy = (sox_sample_t *)lsx_malloc(*isamp * sizeof(sox_sample_t));
     memcpy(ibuf_copy, ibuf, *isamp * sizeof(sox_sample_t));
 
-    dir   = pan->dir;    /* -1   <=  dir  <= 1   */
-    hdir  = 0.5 * dir;  /* -0.5 <=  hdir <= 0.5 */
+    direction   = pan->direction;    /* -1   <=  direction  <= 1   */
+    hdir  = 0.5 * direction;  /* -0.5 <=  hdir <= 0.5 */
     left  = 0.5 - hdir; /*  0   <=  left <= 1   */
     right = 0.5 + hdir; /*  0   <= right <= 1   */
 
@@ -97,7 +94,7 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sampl
     /* report back how much is processed. */
     *isamp = len*ich;
     *osamp = len*och;
-    
+
     /* 9 different cases to handle: (1,2,4) X (1,2,4) */
     switch (och) {
     case 1: /* pan on mono channel... not much sense. just avg. */
@@ -120,7 +117,7 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sampl
             for (done=0; done<len; done++)
             {
                 double f;
-                f = 0.25*ibuf_copy[0] + 0.25*ibuf_copy[1] + 
+                f = 0.25*ibuf_copy[0] + 0.25*ibuf_copy[1] +
                         0.25*ibuf_copy[2] + 0.25*ibuf_copy[3];
                 SOX_SAMPLE_CLIP_COUNT(f, effp->clips);
                 *obuf++ = f;
@@ -149,17 +146,17 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sampl
                 ibuf_copy++;
             }
             break;
-        case 2: /* linear panorama. 
+        case 2: /* linear panorama.
                  * I'm not sure this is the right way to do it.
                  */
-            if (dir <= 0.0) /* to the left */
+            if (direction <= 0.0) /* to the left */
             {
                 register double volume, cll, clr, cr;
 
-                volume = 1.0 - 0.5*dir;
+                volume = 1.0 - 0.5*direction;
                 cll = volume*(1.5-left);
                 clr = volume*(left-0.5);
-                cr  = volume*(1.0+dir);
+                cr  = volume*(1.0+direction);
 
                 for (done=0; done<len; done++)
                 {
@@ -179,8 +176,8 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sampl
             {
                 register double volume, cl, crl, crr;
 
-                volume = 1.0 + 0.5*dir;
-                cl  = volume*(1.0-dir);
+                volume = 1.0 + 0.5*direction;
+                cl  = volume*(1.0-direction);
                 crl = volume*(right-0.5);
                 crr = volume*(1.5-right);
 
@@ -200,14 +197,14 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sampl
             }
             break;
         case 4:
-            if (dir <= 0.0) /* to the left */
+            if (direction <= 0.0) /* to the left */
             {
                 register double volume, cll, clr, cr;
 
-                volume = 1.0 - 0.5*dir;
+                volume = 1.0 - 0.5*direction;
                 cll = volume*(1.5-left);
                 clr = volume*(left-0.5);
-                cr  = volume*(1.0+dir);
+                cr  = volume*(1.0+direction);
 
                 for (done=0; done<len; done++)
                 {
@@ -232,8 +229,8 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sampl
             {
                 register double volume, cl, crl, crr;
 
-                volume = 1.0 + 0.5*dir;
-                cl  = volume*(1.0-dir);
+                volume = 1.0 + 0.5*direction;
+                cl  = volume*(1.0-direction);
                 crl = volume*(right-0.5);
                 crr = volume*(1.5-right);
 
@@ -285,14 +282,14 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sampl
             }
             break;
         case 2: /* simple linear panorama */
-            if (dir <= 0.0) /* to the left */
+            if (direction <= 0.0) /* to the left */
             {
                 register double volume, cll, clr, cr;
 
-                volume = 0.5 - 0.25*dir;
+                volume = 0.5 - 0.25*direction;
                 cll = volume * (1.5-left);
                 clr = volume * (left-0.5);
-                cr  = volume * (1.0+dir);
+                cr  = volume * (1.0+direction);
 
                 for (done=0; done<len; done++)
                 {
@@ -312,8 +309,8 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sampl
             {
                 register double volume, cl, crl, crr;
 
-                volume = 0.5 + 0.25*dir;
-                cl  = volume * (1.0-dir);
+                volume = 0.5 + 0.25*direction;
+                cl  = volume * (1.0-direction);
                 crl = volume * (right-0.5);
                 crr = volume * (1.5-right);
 
@@ -336,12 +333,12 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sampl
             /* maybe I could improve the formula to reverse...
                also, turn only by quarters.
              */
-            if (dir <= 0.0) /* to the left */
+            if (direction <= 0.0) /* to the left */
             {
                 register double cown, cright;
 
-                cright = -dir;
-                cown = 1.0 + dir;
+                cright = -direction;
+                cown = 1.0 + direction;
 
                 for (done=0; done<len; done++)
                 {
@@ -360,15 +357,15 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sampl
                     SOX_SAMPLE_CLIP_COUNT(f, effp->clips);
                     obuf[3] = f;
                     obuf += 4;
-                    ibuf_copy += 4;              
+                    ibuf_copy += 4;
                 }
             }
             else /* to the right */
             {
                 register double cleft, cown;
 
-                cleft = dir;
-                cown = 1.0 - dir;
+                cleft = direction;
+                cown = 1.0 - direction;
 
                 for (done=0; done<len; done++)
                 {
@@ -402,7 +399,7 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sampl
     } /* end switch out channel */
 
     free(ibuf_copy - len * ich);
-    
+
     return SOX_SUCCESS;
 }
 
@@ -419,7 +416,7 @@ static sox_effect_handler_t sox_pan_effect = {
   sox_pan_flow,
   NULL,
   NULL,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_pan_effect_fn(void)

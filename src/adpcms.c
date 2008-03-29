@@ -1,4 +1,5 @@
-/*
+/* libSoX ADPCM codecs: IMA, OKI, CL.   (c) 2007-8 robs@users.sourceforge.net
+ *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2.1 of the License, or (at
@@ -13,8 +14,6 @@
  * along with this library; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-/* ADPCM CODECs: IMA, OKI, CL.   (c) 2007-8 robs@users.sourceforge.net */
 
 #include "sox_i.h"
 #include "adpcms.h"
@@ -75,7 +74,7 @@ int lsx_adpcm_decode(int code, adpcm_t * p)
   if (s < min_sample || s > max_sample) {
     int grace = (p->setup.steps[p->step_index] >> (p->setup.shift + 1)) & p->setup.mask;
     if (s < min_sample - grace || s > max_sample + grace) {
-      sox_debug_most("code=%i step=%i grace=%i s=%i", 
+      sox_debug_most("code=%i step=%i grace=%i s=%i",
           code & (2 * p->setup.sign - 1), p->setup.steps[p->step_index], grace, s);
       p->errors++;
     }
@@ -120,7 +119,7 @@ int lsx_adpcm_encode(int sample, adpcm_t * p)
  *                 the decoder between frames.
  ******************************************************************************/
 
-void sox_adpcm_reset(adpcm_io_t state, sox_encoding_t type)
+void sox_adpcm_reset(adpcm_io_t * state, sox_encoding_t type)
 {
   state->file.count = 0;
   state->file.pos = 0;
@@ -141,13 +140,13 @@ void sox_adpcm_reset(adpcm_io_t state, sox_encoding_t type)
  * Exceptions :
  * Notes      : 1. This function can be used as a startread or
  *                 startwrite method.
- *              2. VOX file format is 4-bit OKI ADPCM that decodes to 
+ *              2. VOX file format is 4-bit OKI ADPCM that decodes to
  *                 to 12 bit signed linear PCM.
  *              3. Dialogic only supports 6kHz, 8kHz and 11 kHz sampling
  *                 rates but the codecs allows any user specified rate.
  ******************************************************************************/
 
-static int adpcm_start(sox_format_t * ft, adpcm_io_t state, sox_encoding_t type)
+static int adpcm_start(sox_format_t * ft, adpcm_io_t * state, sox_encoding_t type)
 {
   /* setup file info */
   state->file.buf = (char *) lsx_malloc(sox_globals.bufsiz);
@@ -155,22 +154,22 @@ static int adpcm_start(sox_format_t * ft, adpcm_io_t state, sox_encoding_t type)
   ft->signal.channels = 1;
 
   sox_adpcm_reset(state, type);
-  
+
   return lsx_rawstart(ft, sox_true, sox_false, sox_true, type, 4);
 }
 
-int sox_adpcm_oki_start(sox_format_t * ft, adpcm_io_t state)
+int sox_adpcm_oki_start(sox_format_t * ft, adpcm_io_t * state)
 {
   return adpcm_start(ft, state, SOX_ENCODING_OKI_ADPCM);
 }
 
-int sox_adpcm_ima_start(sox_format_t * ft, adpcm_io_t state)
+int sox_adpcm_ima_start(sox_format_t * ft, adpcm_io_t * state)
 {
   return adpcm_start(ft, state, SOX_ENCODING_IMA_ADPCM);
 }
 
 /******************************************************************************
- * Function   : sox_adpcm_read 
+ * Function   : sox_adpcm_read
  * Description: Converts the OKI ADPCM 4-bit samples to 16-bit signed PCM and
  *              then scales the samples to full sox_sample_t range.
  * Parameters : ft     - file info structure
@@ -179,10 +178,10 @@ int sox_adpcm_ima_start(sox_format_t * ft, adpcm_io_t state)
  *              len    - size of output buffer
  * Returns    :        - number of samples returned in buffer
  * Exceptions :
- * Notes      : 
+ * Notes      :
  ******************************************************************************/
 
-sox_size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t state, sox_sample_t * buffer, sox_size_t len)
+sox_size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t * state, sox_sample_t * buffer, sox_size_t len)
 {
   sox_size_t n = 0;
   uint8_t byte;
@@ -211,16 +210,16 @@ sox_size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t state, sox_sample_t * bu
 }
 
 /******************************************************************************
- * Function   : stopread 
+ * Function   : stopread
  * Description: Frees the internal buffer allocated in voxstart/imastart.
  * Parameters : ft   - file info structure
  *              state  - ADPCM state structure
  * Returns    : int  - SOX_SUCCESS
  * Exceptions :
- * Notes      : 
+ * Notes      :
  ******************************************************************************/
 
-int sox_adpcm_stopread(sox_format_t * ft UNUSED, adpcm_io_t state)
+int sox_adpcm_stopread(sox_format_t * ft UNUSED, adpcm_io_t * state)
 {
   if (state->encoder.errors)
     sox_warn("%s: ADPCM state errors: %u", ft->filename, state->encoder.errors);
@@ -241,10 +240,10 @@ int sox_adpcm_stopread(sox_format_t * ft UNUSED, adpcm_io_t state)
  * Returns    : int    - SOX_SUCCESS
  *                       SOX_EOF
  * Exceptions :
- * Notes      : 
+ * Notes      :
  ******************************************************************************/
 
-sox_size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t state, const sox_sample_t * buffer, sox_size_t length)
+sox_size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t * state, const sox_sample_t * buffer, sox_size_t length)
 {
   sox_size_t count = 0;
   uint8_t byte = state->store.byte;
@@ -288,7 +287,7 @@ sox_size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t state, const sox_sample
  * Notes      : 1. Called directly for writing framed formats
  ******************************************************************************/
 
-void sox_adpcm_flush(sox_format_t * ft, adpcm_io_t state)
+void sox_adpcm_flush(sox_format_t * ft, adpcm_io_t * state)
 {
   uint8_t byte = state->store.byte;
   uint8_t flag = state->store.flag;
@@ -305,16 +304,16 @@ void sox_adpcm_flush(sox_format_t * ft, adpcm_io_t state)
 
 /******************************************************************************
  * Function   : sox_adpcm_stopwrite
- * Description: Flushes any leftover samples and frees the internal buffer 
+ * Description: Flushes any leftover samples and frees the internal buffer
  *              allocated in voxstart/imastart.
  * Parameters : ft   - file info structure
  *              state  - ADPCM state structure
  * Returns    : int  - SOX_SUCCESS
  * Exceptions :
- * Notes      : 
+ * Notes      :
  ******************************************************************************/
 
-int sox_adpcm_stopwrite(sox_format_t * ft, adpcm_io_t state)
+int sox_adpcm_stopwrite(sox_format_t * ft, adpcm_io_t * state)
 {
   sox_adpcm_flush(ft, state);
   free(state->file.buf);

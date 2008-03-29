@@ -1,5 +1,4 @@
-/*
- * libSoX Macintosh HCOM format.
+/* libSoX Macintosh HCOM format.
  * These are really FSSD type files with Huffman compression,
  * in MacBinary format.
  * TODO: make the MacBinary format optional (so that .data files
@@ -50,29 +49,33 @@ typedef struct {
         short dict_rightson;
 } dictent;
 
-/* Private data used by reader */
-struct readpriv {
-        /* Static data from the header */
-        dictent *dictionary;
-        int32_t checksum;
-        int deltacompression;
-        /* Engine state */
-        long huffcount;
-        long cksum;
-        int dictentry;
-        int nrbits;
-        uint32_t current;
-        short sample;
-        /* Dictionary */
-        dictent *de;
-        int32_t new_checksum;
-        int nbits;
-        int32_t curword;
-};
+typedef struct {
+  /* Static data from the header */
+  dictent *dictionary;
+  int32_t checksum;
+  int deltacompression;
+  /* Engine state */
+  long huffcount;
+  long cksum;
+  int dictentry;
+  int nrbits;
+  uint32_t current;
+  short sample;
+  /* Dictionary */
+  dictent *de;
+  int32_t new_checksum;
+  int nbits;
+  int32_t curword;
+
+  /* Private data used by writer */
+  unsigned char *data;          /* Buffer allocated with lsx_malloc */
+  sox_size_t size;               /* Size of allocated buffer */
+  sox_size_t pos;                /* Where next byte goes */
+} priv_t;
 
 static int startread(sox_format_t * ft)
 {
-        struct readpriv *p = (struct readpriv *) ft->priv;
+        priv_t *p = (priv_t *) ft->priv;
         int i;
         char buf[5];
         uint32_t datasize, rsrcsize;
@@ -167,7 +170,7 @@ static int startread(sox_format_t * ft)
 
 static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
-        register struct readpriv *p = (struct readpriv *) ft->priv;
+        register priv_t *p = (priv_t *) ft->priv;
         int done = 0;
         unsigned char sample_rate;
 
@@ -230,7 +233,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
 
 static int stopread(sox_format_t * ft)
 {
-        register struct readpriv *p = (struct readpriv *) ft->priv;
+        register priv_t *p = (priv_t *) ft->priv;
 
         if (p->huffcount != 0)
         {
@@ -247,17 +250,11 @@ static int stopread(sox_format_t * ft)
         return (SOX_SUCCESS);
 }
 
-struct writepriv {
-  unsigned char *data;          /* Buffer allocated with lsx_malloc */
-  sox_size_t size;               /* Size of allocated buffer */
-  sox_size_t pos;                /* Where next byte goes */
-};
-
 #define BUFINCR (10*BUFSIZ)
 
 static int startwrite(sox_format_t * ft)
 {
-  struct writepriv * p = (struct writepriv *) ft->priv;
+  priv_t * p = (priv_t *) ft->priv;
 
   p->size = BUFINCR;
   p->pos = 0;
@@ -267,7 +264,7 @@ static int startwrite(sox_format_t * ft)
 
 static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
-  struct writepriv *p = (struct writepriv *) ft->priv;
+  priv_t *p = (priv_t *) ft->priv;
   sox_sample_t datum;
   sox_size_t i;
 
@@ -301,7 +298,7 @@ static void makecodes(int e, int c, int s, int b, dictent newdict[511], long cod
 
 static void putcode(sox_format_t * ft, long codes[256], long codesize[256], unsigned c, unsigned char **df)
 {
-  struct readpriv *p = (struct readpriv *) ft->priv;
+  priv_t *p = (priv_t *) ft->priv;
   long code, size;
   int i;
 
@@ -324,7 +321,7 @@ static void putcode(sox_format_t * ft, long codes[256], long codesize[256], unsi
 
 static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl)
 {
-  struct readpriv *p = (struct readpriv *) ft->priv;
+  priv_t *p = (priv_t *) ft->priv;
   int samplerate;
   unsigned char *datafork = *df;
   unsigned char *ddf, *dfp;
@@ -339,7 +336,7 @@ static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl)
   memset(codes, 0, sizeof(codes));
   memset(codesize, 0, sizeof(codesize));
   memset(newdict, 0, sizeof(newdict));
-  
+
   for (i = 1; i < *dl; i++) {
     d = (datafork[i] - (sample & 0xff)) & 0xff; /* creates absolute entries LMS */
     sample = datafork[i];
@@ -428,7 +425,7 @@ static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl)
 
 static int stopwrite(sox_format_t * ft)
 {
-  struct writepriv *p = (struct writepriv *) ft->priv;
+  priv_t *p = (priv_t *) ft->priv;
   unsigned char *compressed_data = p->data;
   sox_size_t compressed_len = p->pos;
   int rc = SOX_SUCCESS;
@@ -469,13 +466,12 @@ SOX_FORMAT_HANDLER(hcom)
   static sox_rate_t   const write_rates[] = {22050,22050/2,22050/3,22050/4.,0};
   static unsigned     const write_encodings[] = {
     SOX_ENCODING_HCOM, 8, 0, 0};
-  static sox_format_handler_t handler   = {
-    SOX_LIB_VERSION_CODE,
+  static sox_format_handler_t handler = {SOX_LIB_VERSION_CODE,
     "Mac FSSD files with Huffman compression",
     names, SOX_FILE_BIG_END|SOX_FILE_MONO,
     startread, read_samples, stopread,
     startwrite, write_samples, stopwrite,
-    NULL, write_encodings, write_rates
+    NULL, write_encodings, write_rates, sizeof(priv_t)
   };
   return &handler;
 }

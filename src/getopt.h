@@ -1,10 +1,10 @@
-#if defined __GNUC__ 
-  #pragma GCC system_header 
-#elif defined __SUNPRO_CC 
-  #pragma disable_warn 
-#elif defined _MSC_VER 
-  #pragma warning(push, 1) 
-#endif 
+#if defined __GNUC__
+  #pragma GCC system_header
+#elif defined __SUNPRO_CC
+  #pragma disable_warn
+#elif defined _MSC_VER
+  #pragma warning(push, 1)
+#endif
 
 /* Declarations for getopt.
    Copyright (C) 1989-1994, 1996-1999, 2001 Free Software Foundation, Inc.
@@ -188,8 +188,8 @@ extern int _getopt_internal ();
 
 #endif /* getopt.h */
 
-#if defined __SUNPRO_CC 
-  #pragma enable_warn 
-#elif defined _MSC_VER 
-  #pragma warning(pop) 
-#endif 
+#if defined __SUNPRO_CC
+  #pragma enable_warn
+#elif defined _MSC_VER
+  #pragma warning(pop)
+#endif

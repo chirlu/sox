@@ -1,5 +1,4 @@
-/*
- * dcshift.c
+/* libSoX dcshift.c
  * (c) 2000.04.15 Chris Ausbrooks <weed@bucket.pp.ualr.edu>
  *
  * based on vol.c which is
@@ -13,8 +12,6 @@
 
 #include "sox_i.h"
 
-#include <math.h>   /* exp(), sqrt() */
-
 typedef struct {
     double dcshift; /* DC shift. */
     int uselimiter; /* boolean: are we using the limiter? */
@@ -23,14 +20,14 @@ typedef struct {
     int limited; /* number of limited values to report. */
     int totalprocessed;
     int clipped;    /* number of clipped values to report. */
-} * dcs_t;
+} priv_t;
 
 /*
  * Process options: dcshift (double) type (amplitude, power, dB)
  */
 static int sox_dcshift_getopts(sox_effect_t * effp, int n, char **argv)
 {
-    dcs_t dcs = (dcs_t) effp->priv;
+    priv_t * dcs = (priv_t *) effp->priv;
     dcs->dcshift = 1.0; /* default is no change */
     dcs->uselimiter = 0; /* default is no limiter */
 
@@ -46,11 +43,11 @@ static int sox_dcshift_getopts(sox_effect_t * effp, int n, char **argv)
           return lsx_usage(effp);
 
         dcs->uselimiter = 1; /* ok, we'll use it */
-        /* The following equation is derived so that there is no 
+        /* The following equation is derived so that there is no
          * discontinuity in output amplitudes */
-        /* and a SOX_SAMPLE_MAX input always maps to a SOX_SAMPLE_MAX output 
+        /* and a SOX_SAMPLE_MAX input always maps to a SOX_SAMPLE_MAX output
          * when the limiter is activated. */
-        /* (NOTE: There **WILL** be a discontinuity in the slope of the 
+        /* (NOTE: There **WILL** be a discontinuity in the slope of the
          * output amplitudes when using the limiter.) */
         dcs->limiterthreshhold = SOX_SAMPLE_MAX * (1.0 - (fabs(dcs->dcshift) - dcs->limitergain));
     }
@@ -63,7 +60,7 @@ static int sox_dcshift_getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int sox_dcshift_start(sox_effect_t * effp)
 {
-    dcs_t dcs = (dcs_t) effp->priv;
+    priv_t * dcs = (priv_t *) effp->priv;
 
     if (dcs->dcshift == 0)
       return SOX_EFF_NULL;
@@ -78,10 +75,10 @@ static int sox_dcshift_start(sox_effect_t * effp)
 /*
  * Process data.
  */
-static int sox_dcshift_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_dcshift_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                     sox_size_t *isamp, sox_size_t *osamp)
 {
-    dcs_t dcs = (dcs_t) effp->priv;
+    priv_t * dcs = (priv_t *) effp->priv;
     double dcshift = dcs->dcshift;
     double limitergain = dcs->limitergain;
     double limiterthreshhold = dcs->limiterthreshhold;
@@ -147,7 +144,7 @@ static int sox_dcshift_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_s
  */
 static int sox_dcshift_stop(sox_effect_t * effp)
 {
-    dcs_t dcs = (dcs_t) effp->priv;
+    priv_t * dcs = (priv_t *) effp->priv;
 
     if (dcs->limited)
     {
@@ -181,7 +178,7 @@ static sox_effect_handler_t sox_dcshift_effect = {
    sox_dcshift_flow,
    NULL,
    sox_dcshift_stop,
-  NULL
+  NULL, sizeof(priv_t)
 };
 
 const sox_effect_handler_t *sox_dcshift_effect_fn(void)

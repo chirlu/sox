@@ -1,4 +1,5 @@
-/*
+/* libSoX effect: Normalise   (c) 2008 robs@users.sourceforge.net
+ *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2.1 of the License, or (at
@@ -14,40 +15,28 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* Effect: Normalise   (c) 2008 robs@users.sourceforge.net */
-
 #include "sox_i.h"
-#include <math.h>
 #include <string.h>
 
-typedef struct norm {
+typedef struct {
   sox_bool      individual;
   double        norm0;    /* Multiplier to take to 0dB FSD */
   double        level;    /* Multiplier to take to 'level' */
   sox_sample_t  min, max;
   FILE          * tmp_file;
-} * priv_t;
-
-assert_static(sizeof(struct norm) <= SOX_MAX_EFFECT_PRIVSIZE,
-              /* else */ norm_PRIVSIZE_too_big);
+} priv_t;
+#define p ((priv_t *)effp->priv)
 
 static int create(sox_effect_t * effp, int argc, char * * argv)
 {
-  priv_t p = (priv_t)effp->priv;
-  char dummy;
-
   if (argc && !strcmp(*argv, "-i")) p->individual = sox_true, ++argv, --argc;
-  if (argc > 1 || (argc == 1 &&
-        (sscanf(*argv, "%lf%c", &p->level, &dummy) != 1 || p->level > 0)))
-    return lsx_usage(effp);
+  do {NUMERIC_PARAMETER(level, -100, 0)} while (0);
   p->level = dB_to_linear(p->level);
-  return SOX_SUCCESS;
+  return argc?  lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static int start(sox_effect_t * effp)
 {
-  priv_t p = (priv_t)effp->priv;
-
   if (!p->individual)
     effp->flows = 1;
   p->norm0 = p->max = p->min = 0;
@@ -62,7 +51,6 @@ static int start(sox_effect_t * effp)
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
-  priv_t p = (priv_t)effp->priv;
   sox_size_t len;
 
   if (fwrite(ibuf, sizeof(*ibuf), *isamp, p->tmp_file) != *isamp) {
@@ -79,7 +67,6 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 
 static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
 {
-  priv_t p = (priv_t)effp->priv;
   sox_size_t len;
   int result = SOX_SUCCESS;
 
@@ -100,16 +87,13 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
 
 static int stop(sox_effect_t * effp)
 {
-  priv_t p = (priv_t)effp->priv;
-
   fclose(p->tmp_file); /* auto-deleted by tmpfile */
   return SOX_SUCCESS;
 }
 
 sox_effect_handler_t const * sox_norm_effect_fn(void)
 {
-  static sox_effect_handler_t handler = {
-    "norm", "[-i] [level]", 0, create, start, flow, drain, stop, NULL
-  };
+  static sox_effect_handler_t handler = {"norm", "[-i] [level]", 0,
+    create, start, flow, drain, stop, NULL, sizeof(priv_t)};
   return &handler;
 }

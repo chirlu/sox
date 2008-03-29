@@ -1,9 +1,8 @@
-/*
- * July 5, 1991
+/* July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Lance Norskog And Sundry Contributors are not responsible for
  * the consequences of using this software.
  */
 
@@ -22,14 +21,14 @@ typedef struct {
     /* internal stuff */
     sox_size_t index;
     sox_size_t trimmed;
-} * trim_t;
+} priv_t;
 
 /*
  * Process options
  */
-static int sox_trim_getopts(sox_effect_t * effp, int n, char **argv) 
+static int sox_trim_getopts(sox_effect_t * effp, int n, char **argv)
 {
-    trim_t trim = (trim_t) effp->priv;
+    priv_t * trim = (priv_t *) effp->priv;
 
     /* Do not know sample rate yet so hold off on completely parsing
      * time related strings.
@@ -60,7 +59,7 @@ static int sox_trim_getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int sox_trim_start(sox_effect_t * effp)
 {
-    trim_t trim = (trim_t) effp->priv;
+    priv_t * trim = (priv_t *) effp->priv;
 
     if (lsx_parsesamples(effp->in_signal.rate, trim->start_str,
                         &trim->start, 't') == NULL)
@@ -92,7 +91,7 @@ static int sox_trim_start(sox_effect_t * effp)
  * Place in buf[].
  * Return number of samples read.
  */
-static int sox_trim_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_trim_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                  sox_size_t *isamp, sox_size_t *osamp)
 {
     int result = SOX_SUCCESS;
@@ -100,7 +99,7 @@ static int sox_trim_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
     int offset = 0;
     int done;
 
-    trim_t trim = (trim_t) effp->priv;
+    priv_t * trim = (priv_t *) effp->priv;
 
     /* Compute the most samples we can process this time */
     done = ((*isamp < *osamp) ? *isamp : *osamp);
@@ -149,7 +148,7 @@ static int sox_trim_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
 
 static int kill(sox_effect_t * effp)
 {
-    trim_t trim = (trim_t) effp->priv;
+    priv_t * trim = (priv_t *) effp->priv;
 
     free(trim->start_str);
     free(trim->length_str);
@@ -157,31 +156,24 @@ static int kill(sox_effect_t * effp)
     return (SOX_SUCCESS);
 }
 
-sox_size_t sox_trim_get_start(sox_effect_t * effp)          
-{        
-    trim_t trim = (trim_t)effp->priv;    
-    return trim->start;          
-}        
-
-void sox_trim_clear_start(sox_effect_t * effp)     
-{        
-    trim_t trim = (trim_t)effp->priv;    
-    trim->start = 0;     
+sox_size_t sox_trim_get_start(sox_effect_t * effp)
+{
+    priv_t * trim = (priv_t *)effp->priv;
+    return trim->start;
 }
 
-static sox_effect_handler_t sox_trim_effect = {
-  "trim",
-  "start [length]",
-  SOX_EFF_MCHAN|SOX_EFF_LENGTH,
-  sox_trim_getopts,
-  sox_trim_start,
-  sox_trim_flow,
-  NULL,
-  NULL,
-  kill
-};
+void sox_trim_clear_start(sox_effect_t * effp)
+{
+    priv_t * trim = (priv_t *)effp->priv;
+    trim->start = 0;
+}
 
 const sox_effect_handler_t *sox_trim_effect_fn(void)
 {
-    return &sox_trim_effect;
+  static sox_effect_handler_t handler = {
+    "trim", "start [length]", SOX_EFF_MCHAN|SOX_EFF_LENGTH,
+    sox_trim_getopts, sox_trim_start, sox_trim_flow,
+    NULL, NULL, kill, sizeof(priv_t)
+  };
+  return &handler;
 }

@@ -1,10 +1,7 @@
-/*
- * Amiga 8SVX format handler: W V Neisius, February 1992
- */
+/* Amiga 8SVX format handler: W V Neisius, February 1992 */
 
 #include "sox_i.h"
 
-#include <math.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
@@ -15,10 +12,10 @@
 #endif
 
 /* Private data used by writer */
-typedef struct svxpriv {
-        uint32_t nsamples;
-        FILE *ch[4];
-}*svx_t;
+typedef struct{
+  uint32_t nsamples;
+  FILE * ch[4];
+} priv_t;
 
 static void svxwriteheader(sox_format_t *, sox_size_t);
 
@@ -28,7 +25,7 @@ static void svxwriteheader(sox_format_t *, sox_size_t);
 
 static int startread(sox_format_t * ft)
 {
-        svx_t p = (svx_t ) ft->priv;
+        priv_t * p = (priv_t * ) ft->priv;
 
         char buf[12];
         char *chunk_buf;
@@ -157,7 +154,7 @@ static int startread(sox_format_t * ft)
         }
         lsx_readdw(ft, &(p->nsamples));
 
-        ft->length = p->nsamples;
+        ft->signal.length = p->nsamples;
         ft->signal.channels = channels;
         ft->signal.rate = rate;
         ft->encoding.encoding = SOX_ENCODING_SIGN2;
@@ -198,7 +195,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
         unsigned char datum;
         size_t done = 0, i;
 
-        svx_t p = (svx_t ) ft->priv;
+        priv_t * p = (priv_t * ) ft->priv;
 
         while (done < nsamp) {
                 for (i = 0; i < ft->signal.channels; i++) {
@@ -221,7 +218,7 @@ static int stopread(sox_format_t * ft)
 {
         size_t i;
 
-        svx_t p = (svx_t ) ft->priv;
+        priv_t * p = (priv_t * ) ft->priv;
 
         /* close channel files */
         for (i = 1; i < ft->signal.channels; i++) {
@@ -235,7 +232,7 @@ static int stopread(sox_format_t * ft)
 /*======================================================================*/
 static int startwrite(sox_format_t * ft)
 {
-        svx_t p = (svx_t ) ft->priv;
+        priv_t * p = (priv_t * ) ft->priv;
         size_t i;
 
         /* open channel output files */
@@ -260,7 +257,7 @@ static int startwrite(sox_format_t * ft)
 
 static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
-        svx_t p = (svx_t ) ft->priv;
+        priv_t * p = (priv_t * ) ft->priv;
 
         unsigned char datum;
         size_t done = 0, i;
@@ -284,7 +281,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
 
 static int stopwrite(sox_format_t * ft)
 {
-        svx_t p = (svx_t ) ft->priv;
+        priv_t * p = (priv_t * ) ft->priv;
 
         size_t i, len;
         char svxbuf[512];
@@ -363,13 +360,12 @@ SOX_FORMAT_HANDLER(svx)
 {
   static char const * const names[] = {"8svx", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 8, 0, 0};
-  static sox_format_handler_t const handler = {
-    SOX_LIB_VERSION_CODE,
+  static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "Amiga audio format (a subformat of the Interchange File Format)",
     names, SOX_FILE_BIG_END|SOX_FILE_MONO|SOX_FILE_STEREO|SOX_FILE_QUAD,
     startread, read_samples, stopread,
     startwrite, write_samples, stopwrite,
-    NULL, write_encodings, NULL
+    NULL, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
 }

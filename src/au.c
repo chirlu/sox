@@ -1,5 +1,6 @@
-/*
+/* libSoX Sun format with header (SunOS 4.1; see /usr/demo/SOUND).
  * Copyright 1991, 1992, 1993 Guido van Rossum And Sundry Contributors.
+ *
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained.
  * Guido van Rossum And Sundry Contributors are not responsible for
@@ -8,7 +9,6 @@
  * October 7, 1998 - cbagwell@sprynet.com
  *   G.723 was using incorrect # of bits.  Corrected to 3 and 5 bits.
  *
- * libSoX Sun format with header (SunOS 4.1; see /usr/demo/SOUND).
  * NeXT uses this format also, but has more format codes defined.
  * DEC uses a slight variation and swaps bytes.
  * We support only the common formats, plus
@@ -93,7 +93,7 @@ typedef struct {        /* For G72x decoding: */
  */
 static int unpack_input(sox_format_t * ft, unsigned char *code)
 {
-  priv_t * p = (priv_t * ) ft->priv;
+  priv_t * p = (priv_t *) ft->priv;
   unsigned char           in_byte;
 
   if (p->in_bits < (int)ft->encoding.bits_per_sample) {
@@ -124,7 +124,7 @@ static sox_size_t dec_read(sox_format_t *ft, sox_sample_t *buf, sox_size_t samp)
 
 static int startread(sox_format_t * ft)
 {
-  priv_t * p = (priv_t * ) ft->priv;
+  priv_t * p = (priv_t *) ft->priv;
   char     magic[4];     /* These 6 variables represent a Sun sound */
   uint32_t hdr_size;     /* header on disk.  The uint32_t are written as */
   uint32_t data_size;    /* big-endians.  At least extra bytes (totalling */
@@ -136,7 +136,7 @@ static int startread(sox_format_t * ft)
 
   if (lsx_readchars(ft, magic, sizeof(magic)))
     return SOX_EOF;
- 
+
   for (i = 0; id[i].desc && memcmp(magic, id[i].str, sizeof(magic)); ++i);
   if (!id[i].desc) {
     lsx_fail_errno(ft, SOX_EHDR, "au: can't find Sun/NeXT/DEC identifier");
@@ -183,7 +183,7 @@ static int startread(sox_format_t * ft)
       free(buf);
       return SOX_EOF;
     }
-    sox_append_comments(&ft->comments, buf);
+    sox_append_comments(&ft->oob.comments, buf);
     free(buf);
   }
   if (data_size == SUN_UNSPEC)
@@ -194,10 +194,10 @@ static int startread(sox_format_t * ft)
 
 static int write_header(sox_format_t * ft)
 {
-  char * comment  = sox_cat_comments(ft->comments);
+  char * comment  = sox_cat_comments(ft->oob.comments);
   size_t len      = strlen(comment) + 1;     /* Write out null-terminated */
   size_t info_len = max(4, (len + 3) & ~3u); /* Minimum & multiple of 4 bytes */
-  size_t size     = ft->olength? ft->olength : ft->length;
+  size_t size     = ft->olength? ft->olength : ft->signal.length;
   int i = ft->encoding.reverse_bytes == MACHINE_IS_BIGENDIAN? 2 : 0;
   sox_bool error  = sox_false
   ||lsx_writechars(ft, id[i].str, sizeof(id[i].str))
@@ -226,7 +226,7 @@ SOX_FORMAT_HANDLER(au)
     names, SOX_FILE_BIG_END | SOX_FILE_REWIND,
     startread, lsx_rawread, NULL,
     write_header, lsx_rawwrite, NULL,
-    lsx_rawseek, write_encodings, NULL
+    lsx_rawseek, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
 }

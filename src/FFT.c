@@ -1,6 +1,19 @@
-/*
+/* libSoX FFT funtions    copyright Ian Turner and others.
  *
- * FFT.c
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or (at
+ * your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
  *
  * Based on FFT.cpp from Audacity, with the following permission from
  * its author, Dominic Mazzoni (in particular, relicensing the code
@@ -27,29 +40,12 @@
  *
  * The basic algorithm for his code was based on Numerical Recipes
  * in Fortran.
- *
- * This file is now part of SoX, and is copyright Ian Turner and others.
- * 
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "sox_i.h"
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
 #include <assert.h>
 
 #include "FFT.h"
@@ -96,9 +92,9 @@ static unsigned ReverseBits(unsigned index, unsigned NumBits)
 static void InitFFT(void)
 {
    unsigned len, b;
-   
+
    gFFTBitTable = lsx_calloc(MaxFastBits, sizeof(*gFFTBitTable));
-   
+
    for (b = 1, len = 2; b <= MaxFastBits; b++) {
       unsigned i;
 
@@ -250,22 +246,22 @@ void RealFFT(unsigned NumSamples, const float *RealIn, float *RealOut, float *Im
 
    for (i = 1; i < Half / 2; i++) {
      i3 = Half - i;
-       
+
      h1r = 0.5 * (RealOut[i] + RealOut[i3]);
      h1i = 0.5 * (ImagOut[i] - ImagOut[i3]);
      h2r = 0.5 * (ImagOut[i] + ImagOut[i3]);
      h2i = -0.5 * (RealOut[i] - RealOut[i3]);
-       
+
      RealOut[i] = h1r + wr * h2r - wi * h2i;
      ImagOut[i] = h1i + wr * h2i + wi * h2r;
      RealOut[i3] = h1r - wr * h2r + wi * h2i;
      ImagOut[i3] = -h1i + wr * h2i + wi * h2r;
-       
+
      wtemp = wr;
      wr = wr * wpr - wi * wpi + wr;
      wi = wi * wpr + wtemp * wpi + wi;
    }
-     
+
    h1r = RealOut[0];
    RealOut[0] += ImagOut[0];
    ImagOut[0] = h1r - ImagOut[0];
@@ -310,23 +306,23 @@ void PowerSpectrum(unsigned NumSamples, const float *In, float *Out)
   }
 
   FFT(Half, 0, tmpReal, tmpImag, RealOut, ImagOut);
-  
+
   wtemp = (float) sin(0.5 * theta);
 
   wpr = -2.0 * wtemp * wtemp;
   wpi = (float) sin(theta);
   wr = 1.0 + wpr;
   wi = wpi;
-    
+
   for (i = 1; i < Half / 2; i++) {
-      
+
     i3 = Half - i;
-    
+
     h1r = 0.5 * (RealOut[i] + RealOut[i3]);
     h1i = 0.5 * (ImagOut[i] - ImagOut[i3]);
     h2r = 0.5 * (ImagOut[i] + ImagOut[i3]);
     h2i = -0.5 * (RealOut[i] - RealOut[i3]);
-    
+
     rt = h1r + wr * h2r - wi * h2i;
     it = h1i + wr * h2i + wi * h2r;
 
@@ -334,9 +330,9 @@ void PowerSpectrum(unsigned NumSamples, const float *In, float *Out)
 
     rt = h1r - wr * h2r + wi * h2i;
     it = -h1i + wr * h2i + wi * h2r;
-    
+
     Out[i3] = rt * rt + it * it;
-    
+
     wr = (wtemp = wr) * wpr - wi * wpi + wr;
     wi = wi * wpr + wtemp * wpi + wi;
   }
@@ -344,11 +340,11 @@ void PowerSpectrum(unsigned NumSamples, const float *In, float *Out)
   rt = (h1r = RealOut[0]) + ImagOut[0];
   it = h1r - ImagOut[0];
   Out[0] = rt * rt + it * it;
-  
+
   rt = RealOut[Half / 2];
   it = ImagOut[Half / 2];
   Out[Half / 2] = rt * rt + it * it;
-  
+
   free(tmpReal);
 }
 
@@ -359,7 +355,7 @@ void PowerSpectrum(unsigned NumSamples, const float *In, float *Out)
 void WindowFunc(windowfunc_t whichFunction, int NumSamples, float *in)
 {
     int i;
-    
+
     switch (whichFunction) {
     case BARTLETT:
         for (i = 0; i < NumSamples / 2; i++) {
@@ -368,12 +364,12 @@ void WindowFunc(windowfunc_t whichFunction, int NumSamples, float *in)
                 (1.0 - (i / (float) (NumSamples / 2)));
         }
         break;
-        
+
     case HAMMING:
         for (i = 0; i < NumSamples; i++)
             in[i] *= 0.54 - 0.46 * cos(2 * M_PI * i / (NumSamples - 1));
         break;
-        
+
     case HANNING:
         for (i = 0; i < NumSamples; i++)
             in[i] *= 0.50 - 0.50 * cos(2 * M_PI * i / (NumSamples - 1));
