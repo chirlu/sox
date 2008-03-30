@@ -1,4 +1,6 @@
-/* This library is free software; you can redistribute it and/or modify it
+/* libSoX static formats list   (c) 2006-8 Chris Bagwell and SoX contributors
+ *
+ * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2.1 of the License, or (at
  * your option) any later version.
@@ -83,6 +85,17 @@
 #endif
 #if defined HAVE_SNDFILE_H
   FORMAT(sndfile)
+  #if defined HAVE_SNDFILE_1_0_12
+  FORMAT(caf)
+  #endif
+  FORMAT(fap)
+  FORMAT(mat4)
+  FORMAT(mat5)
+  FORMAT(paf)
+  FORMAT(pvf)
+  FORMAT(sd2)
+  FORMAT(w64)
+  FORMAT(xi)
 #endif
 #if defined(HAVE_SYS_AUDIOIO_H) || defined(HAVE_SUN_AUDIOIO_H)
   FORMAT(sunau)

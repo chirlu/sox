@@ -24,10 +24,10 @@ typedef struct {
   short pcm[AMR_FRAME];
   sox_size_t pcm_index;
 } priv_t;
-#define p (*(priv_t *)ft->priv)
 
 static sox_size_t decode_1_frame(sox_format_t * ft)
 {
+  priv_t * p = (priv_t *)ft->priv;
   size_t n_1;
   UWord8 coded[AMR_CODED_MAX];
 
@@ -36,12 +36,13 @@ static sox_size_t decode_1_frame(sox_format_t * ft)
   n_1 = block_size[(coded[0] >> 3) & 0x0F] - 1;
   if (lsx_readbuf(ft, &coded[1], n_1) != n_1)
     return AMR_FRAME;
-  D_IF_decode(p.state, coded, p.pcm, 0);
+  D_IF_decode(p->state, coded, p->pcm, 0);
   return 0;
 }
 
 static sox_bool encode_1_frame(sox_format_t * ft)
 {
+  priv_t * p = (priv_t *)ft->priv;
   UWord8 coded[AMR_CODED_MAX];
 #include "amr1.h"
   sox_bool result = lsx_writebuf(ft, coded, (unsigned)n) == (unsigned)n;
@@ -52,10 +53,11 @@ static sox_bool encode_1_frame(sox_format_t * ft)
 
 static int startread(sox_format_t * ft)
 {
+  priv_t * p = (priv_t *)ft->priv;
   char buffer[sizeof(magic) - 1];
 
-  p.pcm_index = AMR_FRAME;
-  p.state = D_IF_init();
+  p->pcm_index = AMR_FRAME;
+  p->state = D_IF_init();
 
   if (lsx_readchars(ft, buffer, sizeof(buffer)))
     return SOX_EOF;
@@ -71,49 +73,53 @@ static int startread(sox_format_t * ft)
 
 static sox_size_t read(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
 {
+  priv_t * p = (priv_t *)ft->priv;
   sox_size_t done;
 
   for (done = 0; done < len; done++) {
-    if (p.pcm_index >= AMR_FRAME)
-      p.pcm_index = decode_1_frame(ft);
-    if (p.pcm_index >= AMR_FRAME)
+    if (p->pcm_index >= AMR_FRAME)
+      p->pcm_index = decode_1_frame(ft);
+    if (p->pcm_index >= AMR_FRAME)
       break;
-    *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE(p.pcm[p.pcm_index++], ft->clips);
+    *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE(p->pcm[p->pcm_index++], ft->clips);
   }
   return done;
 }
 
 static int stopread(sox_format_t * ft)
 {
-  D_IF_exit(p.state);
+  priv_t * p = (priv_t *)ft->priv;
+  D_IF_exit(p->state);
   return SOX_SUCCESS;
 }
 
 static int startwrite(sox_format_t * ft)
 {
+  priv_t * p = (priv_t *)ft->priv;
   if (ft->encoding.compression != HUGE_VAL) {
-    p.mode = ft->encoding.compression;
-    if (p.mode != ft->encoding.compression || p.mode > AMR_MODE_MAX) {
+    p->mode = ft->encoding.compression;
+    if (p->mode != ft->encoding.compression || p->mode > AMR_MODE_MAX) {
       lsx_fail_errno(ft, SOX_EINVAL, "compression level must be a whole number from 0 to %i", AMR_MODE_MAX);
       return SOX_EOF;
     }
   }
-  else p.mode = 0;
+  else p->mode = 0;
 
 #include "amr2.h"
   lsx_writes(ft, magic);
-  p.pcm_index = 0;
+  p->pcm_index = 0;
   return SOX_SUCCESS;
 }
 
 static sox_size_t write(sox_format_t * ft, const sox_sample_t * buf, sox_size_t len)
 {
+  priv_t * p = (priv_t *)ft->priv;
   sox_size_t done;
 
   for (done = 0; done < len; ++done) {
-    p.pcm[p.pcm_index++] = SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips);
-    if (p.pcm_index == AMR_FRAME) {
-      p.pcm_index = 0;
+    p->pcm[p->pcm_index++] = SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips);
+    if (p->pcm_index == AMR_FRAME) {
+      p->pcm_index = 0;
       if (!encode_1_frame(ft))
         return 0;
     }
@@ -123,16 +129,17 @@ static sox_size_t write(sox_format_t * ft, const sox_sample_t * buf, sox_size_t 
 
 static int stopwrite(sox_format_t * ft)
 {
+  priv_t * p = (priv_t *)ft->priv;
   int result = SOX_SUCCESS;
 
-  if (p.pcm_index) {
+  if (p->pcm_index) {
     do {
-      p.pcm[p.pcm_index++] = 0;
-    } while (p.pcm_index < AMR_FRAME);
+      p->pcm[p->pcm_index++] = 0;
+    } while (p->pcm_index < AMR_FRAME);
     if (!encode_1_frame(ft))
       result = SOX_EOF;
   }
-  E_IF_exit(p.state);
+  E_IF_exit(p->state);
   return result;
 }
 

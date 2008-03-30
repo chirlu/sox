@@ -21,7 +21,7 @@
   #pragma warning(push, 1)
 #endif
 
-  p.state = E_IF_init();
+  p->state = E_IF_init();
 
 #if defined __SUNPRO_CC
   #pragma enable_warn

@@ -14,10 +14,10 @@
 #include "sox_i.h"
 
 typedef struct {double amount;} priv_t;
-#define p ((priv_t *)effp->priv)
 
 static int getopts(sox_effect_t * effp, int argc, char * * argv)
 {
+  priv_t * p = (priv_t *)effp->priv;
   p->amount = M_SQRT2;   /* Default to half a bit. */
   do {NUMERIC_PARAMETER(amount, 1, 10)} while (0);
   return argc?  lsx_usage(effp) : SOX_SUCCESS;
@@ -25,6 +25,7 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
 
 static int start(sox_effect_t * effp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   if (effp->out_signal.precision > 16)
     return SOX_EFF_NULL;   /* Dithering not needed at >= 24 bits */
   p->amount *= 1 << (16 - effp->out_signal.precision);
@@ -34,6 +35,7 @@ static int start(sox_effect_t * effp)
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   sox_size_t len = *isamp = *osamp = min(*isamp, *osamp);
 
   while (len--) {   /* 16 signed bits of triangular noise: */

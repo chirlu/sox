@@ -1,4 +1,6 @@
-/* This library is free software; you can redistribute it and/or modify it
+/* libSoX file format: PVF   Copyright (c) 2008 robs@users.sourceforge.net
+ *
+ * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2.1 of the License, or (at
  * your option) any later version.
@@ -13,18 +15,20 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#if defined __GNUC__
-  #pragma GCC system_header
-#elif defined __SUNPRO_CC
-  #pragma disable_warn
-#elif defined _MSC_VER
-  #pragma warning(push, 1)
-#endif
+#include "sox_i.h"
 
-  int n = E_IF_encode(p->state, p->mode, p->pcm, coded, 1);
+#if defined HAVE_SNDFILE_H
 
-#if defined __SUNPRO_CC
-  #pragma enable_warn
-#elif defined _MSC_VER
-  #pragma warning(pop)
+SOX_FORMAT_HANDLER(pvf)
+{
+  static char const * const names[] = {"pvf", NULL};
+  static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 32, 16, 8,0,0};
+  static sox_format_handler_t handler;
+  handler = *sox_sndfile_format_fn();
+  handler.description = "Portable Voice Format";
+  handler.names = names;
+  handler.write_formats = write_encodings;
+  return &handler;
+}
+
 #endif

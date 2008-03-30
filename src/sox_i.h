@@ -158,6 +158,8 @@ int lsx_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_chan
 #define lsx_rawstopread NULL
 #define lsx_rawstopwrite NULL
 
+extern sox_format_handler_t const * sox_sndfile_format_fn(void);
+
 
 
 /*--------------------------------- Effects ----------------------------------*/

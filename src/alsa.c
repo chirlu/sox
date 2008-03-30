@@ -164,7 +164,7 @@ static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
     }
     else {
         lsx_fail_errno(ft,SOX_EFMT,"ALSA driver does not support %s %u-bit output",
-                      sox_encodings_str[(unsigned char)ft->encoding.encoding], ft->encoding.bits_per_sample);
+                      sox_encodings_info[(unsigned char)ft->encoding.encoding].desc, ft->encoding.bits_per_sample);
         return SOX_EOF;
     }
     return 0;

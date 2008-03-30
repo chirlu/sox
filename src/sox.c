@@ -157,18 +157,14 @@ static void cleanup(void)
   }
 
   if (file_count) {
-    if (ofile->ft) {
-      if (!(ofile->ft->handler.flags & SOX_FILE_NOSTDIO)) {
-        struct stat st;
+    if (ofile->ft) {                  
+      if (!success && ofile->ft->fp) {   /* If we failed part way through */
+        struct stat st;                  /* writing a normal file, remove it. */
         fstat(fileno(ofile->ft->fp), &st);
-
-        /* If we didn't succeed and we created an output file, remove it. */
-        if (!success && (st.st_mode & S_IFMT) == S_IFREG)
+        if ((st.st_mode & S_IFMT) == S_IFREG)
           unlink(ofile->ft->filename);
       }
-
-      /* Assumption: we can unlink a file before sox_closing it. */
-      sox_close(ofile->ft);
+      sox_close(ofile->ft); /* Assume we can unlink a file before closing it. */
     }
     free(ofile);
   }
@@ -202,7 +198,7 @@ static void play_file_info(sox_format_t * ft, file_t * f, sox_bool full)
     fprintf(output, "\n\n");
   }
 
-  fprintf(output, "  Encoding: %-14s", sox_encodings_short_str[ft->encoding.encoding]);
+  fprintf(output, "  Encoding: %-14s", sox_encodings_info[ft->encoding.encoding].name);
   text = sox_find_comment(f->ft->oob.comments, "Comment");
   if (!text)
     text = sox_find_comment(f->ft->oob.comments, "Description");
@@ -286,7 +282,7 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
       sprintf(buffer, "%u-bit ", ft->encoding.bits_per_sample);
 
     fprintf(output, "Sample Encoding: %s%s\n", buffer,
-        sox_encodings_str[ft->encoding.encoding]);
+        sox_encodings_info[ft->encoding.encoding].desc);
   }
 
   if (full) {
@@ -1115,7 +1111,7 @@ static void usage_format1(sox_format_handler_t const * f)
             printf("  ");
             if (s)
               printf("%2u-bit ", s);
-            printf("%s (%u-bit precision)\n", sox_encodings_str[e], sox_precision(e, s));
+            printf("%s (%u-bit precision)\n", sox_encodings_info[e].desc, sox_precision(e, s));
           }
         } while (s);
       }
@@ -1569,7 +1565,7 @@ static int soxi1(soxi_t * type, char * filename)
     case samples: printf("%u\n", ws); break;
     case duration: printf("%s\n", str_time((double)ws / max(ft->signal.rate, 1))); break;
     case bits: printf("%u\n", ft->encoding.bits_per_sample); break;
-    case encoding: printf("%s\n", sox_encodings_str[ft->encoding.encoding]); break;
+    case encoding: printf("%s\n", sox_encodings_info[ft->encoding.encoding].desc); break;
     case annotation: if (ft->oob.comments) {
       sox_comments_t p = ft->oob.comments;
       do printf("%s\n", *p); while (*++p);

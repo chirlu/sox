@@ -33,70 +33,6 @@
   #include <io.h>
 #endif
 
-const char * const sox_encodings_str[] = {
-  "?",
-  "Signed Integer PCM",
-  "Unsigned Integer PCM",
-  "Floating Point PCM",
-  "Floating Point (text) PCM",
-  "FLAC",
-  "HCOM",
-  "WavPack",
-  "Floating Point WavPack",
-  "", /* Lossless above, lossy below */
-  "u-law",
-  "A-law",
-  "G.721 ADPCM",
-  "G.723 ADPCM",
-  "CL ADPCM (from 8-bit)",
-  "CL ADPCM (from 16-bit)",
-  "MS ADPCM",
-  "IMA ADPCM",
-  "OKI ADPCM",
-  "GSM",
-  "MPEG audio (layer I, II or III)",
-  "Vorbis",
-  "AMR-WB",
-  "AMR-NB",
-  "CVSD",
-  "LPC10",
-};
-
-assert_static(array_length(sox_encodings_str) == SOX_ENCODINGS,
-    SIZE_MISMATCH_BETWEEN_sox_encodings_t_AND_sox_encodings_str);
-
-const char * const sox_encodings_short_str[] = {
-  "n/a",
-  "Signed PCM",
-  "Unsigned PCM",
-  "F.P. PCM",
-  "F.P. PCM",
-  "FLAC",
-  "HCOM",
-  "WavPack",
-  "F.P. WavPack",
-  "", /* Lossless above, lossy below */
-  "u-law",
-  "A-law",
-  "G.721 ADPCM",
-  "G.723 ADPCM",
-  "CL ADPCM (8)",
-  "CL ADPCM (16)",
-  "MS ADPCM",
-  "IMA ADPCM",
-  "OKI ADPCM",
-  "GSM",
-  "MPEG audio",
-  "Vorbis",
-  "AMR-WB",
-  "AMR-NB",
-  "CVSD",
-  "LPC10",
-};
-
-assert_static(array_length(sox_encodings_short_str) == SOX_ENCODINGS,
-    SIZE_MISMATCH_BETWEEN_sox_encodings_t_AND_sox_encodings_short_str);
-
 static char const * detect_magic(sox_format_t * ft, char const * ext)
 {
   char data[256];
@@ -147,9 +83,45 @@ static char const * detect_magic(sox_format_t * ft, char const * ext)
   return NULL;
 }
 
+sox_encodings_info_t const sox_encodings_info[] = {
+  {0         , "n/a"          , "Unknown or not applicable"},
+  {0         , "Signed PCM"   , "Signed Integer PCM"},
+  {0         , "Unsigned PCM" , "Unsigned Integer PCM"},
+  {0         , "F.P. PCM"     , "Floating Point PCM"},
+  {0         , "F.P. PCM"     , "Floating Point (text) PCM"},
+  {0         , "FLAC"         , "FLAC"},
+  {0         , "HCOM"         , "HCOM"},
+  {0         , "WavPack"      , "WavPack"},
+  {0         , "F.P. WavPack" , "Floating Point WavPack"},
+  {SOX_LOSSY1, "u-law"        , "u-law"},
+  {SOX_LOSSY1, "A-law"        , "A-law"},
+  {SOX_LOSSY1, "G.721 ADPCM"  , "G.721 ADPCM"},
+  {SOX_LOSSY1, "G.723 ADPCM"  , "G.723 ADPCM"},
+  {SOX_LOSSY1, "CL ADPCM (8)" , "CL ADPCM (from 8-bit)"},
+  {SOX_LOSSY1, "CL ADPCM (16)", "CL ADPCM (from 16-bit)"},
+  {SOX_LOSSY1, "MS ADPCM"     , "MS ADPCM"},
+  {SOX_LOSSY1, "IMA ADPCM"    , "IMA ADPCM"},
+  {SOX_LOSSY1, "OKI ADPCM"    , "OKI ADPCM"},
+  {SOX_LOSSY1, "DPCM"         , "DPCM"},
+  {0         , "DWVW"         , "DWVW"},
+  {0         , "DWVWN"        , "DWVWN"},
+  {SOX_LOSSY2, "GSM"          , "GSM"},
+  {SOX_LOSSY2, "MPEG audio"   , "MPEG audio (layer I, II or III)"},
+  {SOX_LOSSY2, "Vorbis"       , "Vorbis"},
+  {SOX_LOSSY2, "AMR-WB"       , "AMR-WB"},
+  {SOX_LOSSY2, "AMR-NB"       , "AMR-NB"},
+  {SOX_LOSSY2, "CVSD"         , "CVSD"},
+  {SOX_LOSSY2, "LPC10"        , "LPC10"},
+};
+
+assert_static(array_length(sox_encodings_info) == SOX_ENCODINGS,
+    SIZE_MISMATCH_BETWEEN_sox_encodings_t_AND_sox_encodings_info);
+
 unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample)
 {
   switch (encoding) {
+    case SOX_ENCODING_DWVW:       return bits_per_sample;
+    case SOX_ENCODING_DWVWN:      return !bits_per_sample? 16: 0; /* ? */
     case SOX_ENCODING_HCOM:       return !(bits_per_sample & 7) && (bits_per_sample >> 3) - 1 < 1? bits_per_sample: 0;
     case SOX_ENCODING_WAVPACK:
     case SOX_ENCODING_FLAC:       return !(bits_per_sample & 7) && (bits_per_sample >> 3) - 1 < 4? bits_per_sample: 0;
@@ -168,6 +140,7 @@ unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample)
     case SOX_ENCODING_G723:       return bits_per_sample == 3? 8:
                                          bits_per_sample == 5? 14: 0;
     case SOX_ENCODING_CVSD:       return bits_per_sample == 1? 16: 0;
+    case SOX_ENCODING_DPCM:       return bits_per_sample; /* ? */
 
     case SOX_ENCODING_GSM:
     case SOX_ENCODING_MP3:
@@ -181,7 +154,6 @@ unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample)
     case SOX_ENCODING_FLOAT_TEXT: return !bits_per_sample? 53: 0;
 
     case SOX_ENCODINGS:
-    case SOX_ENCODING_LOSSLESS:
     case SOX_ENCODING_UNKNOWN:    break;
   }
   return 0;
@@ -584,7 +556,7 @@ static void set_output_format(sox_format_t * ft)
       while (enc_arg(unsigned));
     }
     if (e != ft->encoding.encoding) {
-      sox_warn("%s can't encode %s", ft->handler.names[0], sox_encodings_str[ft->encoding.encoding]);
+      sox_warn("%s can't encode %s", ft->handler.names[0], sox_encodings_info[ft->encoding.encoding].desc);
       ft->encoding.encoding = 0;
     }
     else {
@@ -612,7 +584,7 @@ static void set_output_format(sox_format_t * ft)
       if (given_size) {
         if (found)
           ft->encoding.bits_per_sample = given_size;
-        else sox_warn("%s can't encode %s to %u-bit", ft->handler.names[0], sox_encodings_str[ft->encoding.encoding], given_size);
+        else sox_warn("%s can't encode %s to %u-bit", ft->handler.names[0], sox_encodings_info[ft->encoding.encoding].desc, given_size);
       }
     }
   }
@@ -636,7 +608,7 @@ static void set_output_format(sox_format_t * ft)
     i = 0;
     while ((e = enc_arg(sox_encoding_t)))
       while ((s = enc_arg(unsigned)))
-        if (e < SOX_ENCODING_LOSSLESS &&
+        if (!(sox_encodings_info[e].flags & (SOX_LOSSY1 | SOX_LOSSY2)) &&
             sox_precision(e, s) >= ft->signal.precision && s < ft->encoding.bits_per_sample) {
           ft->encoding.encoding = e;
           ft->encoding.bits_per_sample = s;

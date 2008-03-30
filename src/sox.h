@@ -210,11 +210,8 @@ typedef enum {
   SOX_ENCODING_HCOM      , /*  */
   SOX_ENCODING_WAVPACK   , /*  */
   SOX_ENCODING_WAVPACKF  , /*  */
-
-  SOX_ENCODING_LOSSLESS  , /* Lossless above, lossy below */
-
   SOX_ENCODING_ULAW      , /* u-law signed logs: US telephony, SPARC */
-  SOX_ENCODING_ALAW      , /* A-law signed logs: non-US telephony */
+  SOX_ENCODING_ALAW      , /* A-law signed logs: non-US telephony, Psion */
   SOX_ENCODING_G721      , /* G.721 4-bit ADPCM */
   SOX_ENCODING_G723      , /* G.723 3 or 5 bit ADPCM */
   SOX_ENCODING_CL_ADPCM  , /* Creative Labs 8 --> 2,3,4 bit Compressed PCM */
@@ -222,6 +219,9 @@ typedef enum {
   SOX_ENCODING_MS_ADPCM  , /* Microsoft Compressed PCM */
   SOX_ENCODING_IMA_ADPCM , /* IMA Compressed PCM */
   SOX_ENCODING_OKI_ADPCM , /* Dialogic/OKI Compressed PCM */
+  SOX_ENCODING_DPCM      , /*  */
+  SOX_ENCODING_DWVW      , /*  */
+  SOX_ENCODING_DWVWN     , /*  */
   SOX_ENCODING_GSM       , /* GSM 6.10 33byte frame lossy compression */
   SOX_ENCODING_MP3       , /* MP3 compression */
   SOX_ENCODING_VORBIS    , /* Vorbis compression */
@@ -229,11 +229,20 @@ typedef enum {
   SOX_ENCODING_AMR_NB    , /* AMR-NB compression */
   SOX_ENCODING_CVSD      , /*  */
   SOX_ENCODING_LPC10     , /*  */
+
   SOX_ENCODINGS            /* End of list marker */
 } sox_encoding_t;
 
-extern const char * const sox_encodings_str[];
-extern const char * const sox_encodings_short_str[];
+typedef struct {
+  unsigned flags;
+  #define SOX_LOSSY1 1     /* encode, decode, encode, decode: lossy once */
+  #define SOX_LOSSY2 2     /* encode, decode, encode, decode: lossy twice */
+
+  char const * name;
+  char const * desc;
+} sox_encodings_info_t;
+
+extern sox_encodings_info_t const sox_encodings_info[];
 
 typedef enum {SOX_OPTION_NO, SOX_OPTION_YES, SOX_OPTION_DEFAULT} sox_option_t;
 

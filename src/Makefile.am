@@ -123,7 +123,7 @@ libsox_fmt_vox_la_SOURCES = vox-fmt.c
 libsox_fmt_vox_la_LIBADD = libsox.la
 libsox_fmt_ima_la_SOURCES = ima-fmt.c
 libsox_fmt_ima_la_LIBADD = libsox.la
-libsox_fmt_wav_la_SOURCES = adpcm.c adpcm.h ima_rw.c ima_rw.h wav.c wav.h
+libsox_fmt_wav_la_SOURCES = adpcm.c adpcm.h ima_rw.c ima_rw.h wav.c
 libsox_fmt_wav_la_LIBADD = libsox.la @GSM_LIBS@ @LIBGSM_LIBADD@
 libsox_fmt_wve_la_SOURCES = wve.c
 libsox_fmt_wve_la_LIBADD = libsox.la
@@ -143,7 +143,25 @@ if HAVE_SNDFILE
 libsox_fmt_sndfile_la_SOURCES = sndfile.c
 libsox_fmt_sndfile_la_CFLAGS = @SNDFILE_CFLAGS@
 libsox_fmt_sndfile_la_LIBADD = libsox.la @SNDFILE_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_sndfile.la
+libsox_fmt_caf_la_SOURCES = caf.c
+libsox_fmt_caf_la_LIBADD = libsox.la libsox_fmt_sndfile.la 
+libsox_fmt_mat4_la_SOURCES = mat4.c
+libsox_fmt_mat4_la_LIBADD = libsox.la libsox_fmt_sndfile.la 
+libsox_fmt_mat5_la_SOURCES = mat5.c
+libsox_fmt_mat5_la_LIBADD = libsox.la libsox_fmt_sndfile.la 
+libsox_fmt_paf_la_SOURCES = paf.c
+libsox_fmt_paf_la_LIBADD = libsox.la libsox_fmt_sndfile.la 
+libsox_fmt_fap_la_SOURCES = fap.c
+libsox_fmt_fap_la_LIBADD = libsox.la libsox_fmt_sndfile.la 
+libsox_fmt_w64_la_SOURCES = w64.c
+libsox_fmt_w64_la_LIBADD = libsox.la libsox_fmt_sndfile.la 
+libsox_fmt_xi_la_SOURCES = xi.c
+libsox_fmt_xi_la_LIBADD = libsox.la libsox_fmt_sndfile.la 
+libsox_fmt_pvf_la_SOURCES = pvf.c
+libsox_fmt_pvf_la_LIBADD = libsox.la libsox_fmt_sndfile.la 
+libsox_fmt_sd2_la_SOURCES = sd2.c
+libsox_fmt_sd2_la_LIBADD = libsox.la libsox_fmt_sndfile.la 
+pkglib_LTLIBRARIES += libsox_fmt_sndfile.la libsox_fmt_caf.la libsox_fmt_mat4.la libsox_fmt_mat5.la libsox_fmt_paf.la libsox_fmt_fap.la libsox_fmt_w64.la libsox_fmt_xi.la libsox_fmt_pvf.la libsox_fmt_sd2.la
 endif
 if HAVE_AMRWB
 libsox_fmt_amr_wb_la_SOURCES = amr-wb.c amr.h amr1.h amr2.h
@@ -229,7 +247,7 @@ else
     lu-fmt.c 8svx.c aiff-fmt.c aifc-fmt.c au.c avr.c cdr.c cvsd-fmt.c \
     dvms-fmt.c dat.c gsm.c hcom.c htk.c lpc10.c maud.c prc.c sf.c smp.c \
     sounder.c soundtool.c sphere.c tx16w.c voc.c vox-fmt.c ima-fmt.c adpcm.c adpcm.h \
-    ima_rw.c ima_rw.h wav.c wav.h wve.c xa.c nulfile.c
+    ima_rw.c ima_rw.h wav.c wve.c xa.c nulfile.c
 libsox_la_LIBADD = @GSM_LIBS@ @LIBGSM_LIBADD@
 libsox_la_LIBADD += ../lpc10/liblpc10.la
 
@@ -247,7 +265,7 @@ if HAVE_FFMPEG
     sox_LDADD += @FFMPEG_LIBS@
 endif
 if HAVE_SNDFILE
-    libsox_la_SOURCES += sndfile.c
+    libsox_la_SOURCES += sndfile.c caf.c mat4.c mat5.c paf.c fap.c w64.c xi.c pvf.c sd2.c
     libsox_la_CFLAGS += @SNDFILE_CFLAGS@
     libsox_la_LIBADD += @SNDFILE_LIBS@
     sox_LDADD += @SNDFILE_LIBS@

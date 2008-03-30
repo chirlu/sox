@@ -169,10 +169,10 @@ typedef struct {
     float * dry, * wet[2];
   } chan[2];
 } priv_t;
-#define p ((priv_t *)effp->priv)
 
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
+  priv_t * p = (priv_t *)effp->priv;
   p->reverberance = p->hf_damping = 50; /* Set non-zero defaults */
   p->stereo_depth = p->room_scale = 100;
 
@@ -192,6 +192,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
 static int start(sox_effect_t * effp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   size_t i;
 
   p->ichannels = p->ochannels = 1;
@@ -216,6 +217,7 @@ static int start(sox_effect_t * effp)
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
                 sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   sox_size_t c, i, w, len = min(*isamp / p->ichannels, *osamp / p->ochannels);
 
   *isamp = len * p->ichannels, *osamp = len * p->ochannels;
@@ -239,6 +241,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 
 static int stop(sox_effect_t * effp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   size_t i;
   for (i = 0; i < p->ichannels; ++i)
     reverb_delete(&p->chan[i].reverb);

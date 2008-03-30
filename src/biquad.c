@@ -19,8 +19,6 @@
 #include <string.h>
 
 typedef biquad_t priv_t;
-#define p (*(priv_t *)effp->priv)
-
 
 static char const * const width_str[] = {
   "band-width(Hz)",
@@ -36,31 +34,33 @@ int sox_biquad_getopts(sox_effect_t * effp, int n, char **argv,
     int min_args, int max_args, int fc_pos, int width_pos, int gain_pos,
     char const * allowed_width_types, filter_t filter_type)
 {
+  priv_t * p = (priv_t *)effp->priv;
   char width_type = *allowed_width_types;
   char dummy;     /* To check for extraneous chars. */
 
-  p.filter_type = filter_type;
+  p->filter_type = filter_type;
   if (n < min_args || n > max_args ||
-      (n > fc_pos    && (sscanf(argv[fc_pos], "%lf %c", &p.fc, &dummy) != 1 || p.fc <= 0)) ||
-      (n > width_pos && ((unsigned)(sscanf(argv[width_pos], "%lf%c %c", &p.width, &width_type, &dummy)-1) > 1 || p.width <= 0)) ||
-      (n > gain_pos  && sscanf(argv[gain_pos], "%lf %c", &p.gain, &dummy) != 1) ||
-      !strchr(allowed_width_types, width_type) || (width_type == 's' && p.width > 1))
+      (n > fc_pos    && (sscanf(argv[fc_pos], "%lf %c", &p->fc, &dummy) != 1 || p->fc <= 0)) ||
+      (n > width_pos && ((unsigned)(sscanf(argv[width_pos], "%lf%c %c", &p->width, &width_type, &dummy)-1) > 1 || p->width <= 0)) ||
+      (n > gain_pos  && sscanf(argv[gain_pos], "%lf %c", &p->gain, &dummy) != 1) ||
+      !strchr(allowed_width_types, width_type) || (width_type == 's' && p->width > 1))
     return lsx_usage(effp);
-  p.width_type = strchr(all_width_types, width_type) - all_width_types;
-  if (p.width_type >= strlen(all_width_types))
-    p.width_type = 0;
+  p->width_type = strchr(all_width_types, width_type) - all_width_types;
+  if (p->width_type >= strlen(all_width_types))
+    p->width_type = 0;
   return SOX_SUCCESS;
 }
 
 
 int sox_biquad_start(sox_effect_t * effp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   /* Simplify: */
-  p.b2 /= p.a0;
-  p.b1 /= p.a0;
-  p.b0 /= p.a0;
-  p.a2 /= p.a0;
-  p.a1 /= p.a0;
+  p->b2 /= p->a0;
+  p->b1 /= p->a0;
+  p->b0 /= p->a0;
+  p->a2 /= p->a0;
+  p->a1 /= p->a0;
 
   if (effp->global_info->plot == sox_plot_octave) {
     printf(
@@ -76,9 +76,9 @@ int sox_biquad_start(sox_effect_t * effp)
       "semilogx(w,20*log10(h))\n"
       "disp('Hit return to continue')\n"
       "pause\n"
-      , effp->handler.name, p.gain, p.fc, width_str[p.width_type], p.width
+      , effp->handler.name, p->gain, p->fc, width_str[p->width_type], p->width
       , effp->in_signal.rate, effp->in_signal.rate
-      , p.b0, p.b1, p.b2, p.a1, p.a2);
+      , p->b0, p->b1, p->b2, p->a1, p->a2);
     return SOX_EOF;
   }
   if (effp->global_info->plot == sox_plot_gnuplot) {
@@ -96,12 +96,12 @@ int sox_biquad_start(sox_effect_t * effp)
       "set key off\n"
       "plot [f=10:Fs/2] [-35:25] 20*log10(H(f))\n"
       "pause -1 'Hit return to continue'\n"
-      , effp->handler.name, p.gain, p.fc, width_str[p.width_type], p.width
+      , effp->handler.name, p->gain, p->fc, width_str[p->width_type], p->width
       , effp->in_signal.rate, effp->in_signal.rate
-      , p.b0, p.b1, p.b2, p.a1, p.a2);
+      , p->b0, p->b1, p->b2, p->a1, p->a2);
     return SOX_EOF;
   }
-  p.o2 = p.o1 = p.i2 = p. i1 = 0;
+  p->o2 = p->o1 = p->i2 = p-> i1 = 0;
   return SOX_SUCCESS;
 }
 
@@ -109,11 +109,12 @@ int sox_biquad_start(sox_effect_t * effp)
 int sox_biquad_flow(sox_effect_t * effp, const sox_sample_t *ibuf,
     sox_sample_t *obuf, sox_size_t *isamp, sox_size_t *osamp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   sox_size_t len = *isamp = *osamp = min(*isamp, *osamp);
   while (len--) {
-    double o0 = *ibuf*p.b0 + p.i1*p.b1 + p.i2*p.b2 - p.o1*p.a1 - p.o2*p.a2;
-    p.i2 = p.i1, p.i1 = *ibuf++;
-    p.o2 = p.o1, p.o1 = o0;
+    double o0 = *ibuf*p->b0 + p->i1*p->b1 + p->i2*p->b2 - p->o1*p->a1 - p->o2*p->a2;
+    p->i2 = p->i1, p->i1 = *ibuf++;
+    p->o2 = p->o1, p->o1 = o0;
     *obuf++ = SOX_ROUND_CLIP_COUNT(o0, effp->clips);
   }
   return SOX_SUCCESS;

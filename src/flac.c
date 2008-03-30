@@ -67,13 +67,13 @@ typedef struct {
   FLAC__StreamMetadata * metadata[2];
   unsigned num_metadata;
 } priv_t;
-#define p ((priv_t *)ft->priv)
 
 
 
 static void FLAC__decoder_metadata_callback(FLAC__StreamDecoder const * const flac, FLAC__StreamMetadata const * const metadata, void * const client_data)
 {
   sox_format_t * ft = (sox_format_t *) client_data;
+  priv_t * p = (priv_t *)ft->priv;
 
   (void) flac;
 
@@ -115,6 +115,7 @@ static void FLAC__decoder_error_callback(FLAC__StreamDecoder const * const flac,
 static FLAC__StreamDecoderWriteStatus FLAC__frame_decode_callback(FLAC__StreamDecoder const * const flac, FLAC__Frame const * const frame, FLAC__int32 const * const buffer[], void * const client_data)
 {
   sox_format_t * ft = (sox_format_t *) client_data;
+  priv_t * p = (priv_t *)ft->priv;
 
   (void) flac;
 
@@ -133,6 +134,7 @@ static FLAC__StreamDecoderWriteStatus FLAC__frame_decode_callback(FLAC__StreamDe
 
 static int start_read(sox_format_t * const ft)
 {
+  priv_t * p = (priv_t *)ft->priv;
   sox_debug("API version %u", FLAC_API_VERSION_CURRENT);
   p->decoder = FLAC__stream_decoder_new();
   if (p->decoder == NULL) {
@@ -189,6 +191,7 @@ static int start_read(sox_format_t * const ft)
 
 static sox_size_t read_samples(sox_format_t * const ft, sox_sample_t * sampleBuffer, sox_size_t const requested)
 {
+  priv_t * p = (priv_t *)ft->priv;
   size_t actual = 0;
 
   while (!p->eof && actual < requested) {
@@ -218,6 +221,7 @@ static sox_size_t read_samples(sox_format_t * const ft, sox_sample_t * sampleBuf
 
 static int stop_read(sox_format_t * const ft)
 {
+  priv_t * p = (priv_t *)ft->priv;
   if (!FLAC__stream_decoder_finish(p->decoder) && p->eof)
     sox_warn("decoder MD5 checksum mismatch.");
   FLAC__stream_decoder_delete(p->decoder);
@@ -278,6 +282,7 @@ static FLAC__StreamEncoderTellStatus flac_stream_encoder_tell_callback(FLAC__Str
 
 static int start_write(sox_format_t * const ft)
 {
+  priv_t * p = (priv_t *)ft->priv;
   FLAC__StreamEncoderState status;
   unsigned compression_level = MAX_COMPRESSION; /* Default to "best" */
 
@@ -427,6 +432,7 @@ static int start_write(sox_format_t * const ft)
 
 static sox_size_t write_samples(sox_format_t * const ft, sox_sample_t const * const sampleBuffer, sox_size_t const len)
 {
+  priv_t * p = (priv_t *)ft->priv;
   unsigned i;
 
   for (i = 0; i < len; ++i) {
@@ -456,6 +462,7 @@ static sox_size_t write_samples(sox_format_t * const ft, sox_sample_t const * co
 
 static int stop_write(sox_format_t * const ft)
 {
+  priv_t * p = (priv_t *)ft->priv;
   FLAC__StreamEncoderState state = FLAC__stream_encoder_get_state(p->encoder);
   unsigned i;
 
@@ -479,6 +486,7 @@ static int stop_write(sox_format_t * const ft)
  */
 static int seek(sox_format_t * ft, sox_size_t offset)
 {
+  priv_t * p = (priv_t *)ft->priv;
   int result = ft->mode == 'r' && FLAC__stream_decoder_seek_absolute(p->decoder, (FLAC__uint64)(offset / ft->signal.channels)) ?  SOX_SUCCESS : SOX_EOF;
   p->wide_sample_number = p->number_of_wide_samples = 0;
   return result;

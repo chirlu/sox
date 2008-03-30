@@ -42,6 +42,8 @@ Brackets [ ] are used to denote parameters that are optional, braces
 { } to denote those that are both optional and repeatable,
 and angle brackets < > to denote those that are repeatable but not
 optional.
+.SP
+Where applicable, default values for optional parameters are shown in parenthesis.
 .TP
 \fBallpass\fR \fIfrequency width\fR[\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]
 Apply a two-pole all-pass filter with central frequency (in Hz)
@@ -230,7 +232,7 @@ See also
 .B mcompand
 for a multiple-band companding effect.
 .TP
-\fBcontrast [\fIenhancement-amount\fR]
+\fBcontrast [\fIenhancement-amount (75)\fR]
 Comparable to compression, this effect modifies an audio signal to 
 make it sound louder.
 .I enhancement-amount
@@ -983,7 +985,6 @@ output-rate \(di gcd(input-rate, output-rate) \(<= 511.
 [\fIpre-delay\fR (0ms) [\fIwet-gain\fR (0dB)]]]]]]
 .SP
 Add reverberation to the audio using the freeverb algorithm.
-Default values are shown in parenthesis.
 .SP
 Note that
 .B reverb

@@ -18,10 +18,10 @@
 #include "sox_i.h"
 
 typedef struct {double contrast;} priv_t;
-#define p ((priv_t *)effp->priv)
 
 static int create(sox_effect_t * effp, int argc, char * * argv)
 {
+  priv_t * p = (priv_t *)effp->priv;
   p->contrast = 75;
   do {NUMERIC_PARAMETER(contrast, 0, 100)} while (0);
   p->contrast /= 750; /* shift range to 0 to 0.1333, default 0.1 */
@@ -31,6 +31,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   sox_size_t len = *isamp = *osamp = min(*isamp, *osamp);
   while (len--) {
     double d = *ibuf++ * (-M_PI_2 / SOX_SAMPLE_MIN);

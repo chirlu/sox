@@ -17,10 +17,10 @@ typedef struct {
   off_t         pos;
   FILE          * tmp_file;
 } priv_t;
-#define p ((priv_t *)effp->priv)
 
 static int start(sox_effect_t * effp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   p->pos = 0;
   p->tmp_file = tmpfile();
   if (p->tmp_file == NULL) {
@@ -33,6 +33,7 @@ static int start(sox_effect_t * effp)
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   if (fwrite(ibuf, sizeof(*ibuf), *isamp, p->tmp_file) != *isamp) {
     sox_fail("error writing temporary file: %s", strerror(errno));
     return SOX_EOF;
@@ -43,6 +44,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 
 static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   size_t i, j;
 
   if (p->pos == 0) {
@@ -70,6 +72,7 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 
 static int stop(sox_effect_t * effp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   fclose(p->tmp_file); /* auto-deleted by tmpfile */
   return SOX_SUCCESS;
 }

@@ -53,32 +53,33 @@ static const sox_sample_t filt[32 * 2] = {
 
 #define NUMTAPS array_length(filt)
 typedef struct {sox_sample_t tap[NUMTAPS];} priv_t; /* FIR filter z^-1 delays */
-#define p (*(priv_t *)effp->priv)
 
 static int start(sox_effect_t * effp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   if (effp->in_signal.rate != 44100 || effp->in_signal.channels != 2) {
     sox_fail("works only with stereo audio sampled at 44100Hz (i.e. CDDA)");
     return SOX_EOF;
   }
-  memset(p.tap, 0, NUMTAPS * sizeof(*p.tap)); /* zero tap memory */
+  memset(p->tap, 0, NUMTAPS * sizeof(*p->tap)); /* zero tap memory */
   return SOX_SUCCESS;
 }
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
                 sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   sox_size_t i, len = *isamp = *osamp = min(*isamp, *osamp);
 
   while (len--) {       /* update taps and calculate output */
     sox_sample_t output = 0;
 
     for (i = NUMTAPS - 1; i; --i) {
-      p.tap[i] = p.tap[i - 1];
-      output += p.tap[i] * filt[i];
+      p->tap[i] = p->tap[i - 1];
+      output += p->tap[i] * filt[i];
     }
-    p.tap[0] = *ibuf++ / 64;
-    *obuf++ = output + p.tap[0] * filt[0];   /* store scaled output */
+    p->tap[0] = *ibuf++ / 64;
+    *obuf++ = output + p->tap[0] * filt[0];   /* store scaled output */
   }
   return SOX_SUCCESS;
 }

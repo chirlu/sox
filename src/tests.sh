@@ -131,12 +131,13 @@ do_multichannel_formats () {
 
   format1=u3
   convertToAndFrom s3 u3 s4 u4 raw Raw wav aiff aifc flac sph wv
+  (samples=23500; convertToAndFrom paf) || exit 1
 
   format1=s4
-  convertToAndFrom s4 u4 Raw wav aiff aifc caf sph wv
+  convertToAndFrom s4 u4 Raw wav aiff aifc caf sph wv mat4 mat5
 
   format1=al
-  convertToAndFrom al s2 u2 s4 raw Raw dat aiff aifc flac caf
+  convertToAndFrom al s2 u2 s4 raw Raw dat aiff aifc flac caf w64
 
   format1=ul
   convertToAndFrom ul s2 u2 s4 raw Raw dat aiff aifc flac caf sph
@@ -190,15 +191,20 @@ timeIO () {
   done
 }
 
+# Don't try to test un-built formats
+skip_check () {
+  while [ $# -ne 0 ]; do
+    ${bindir}/sox --help|grep "^AUDIO FILE.*\<$1\>">/dev/null || skip="$1 $skip"
+    shift
+  done
+}
+
 
 # Run tests
 
 ${builddir}/sox_sample_test || exit 1
 
-# Don't try to test unsupported stuff
-${bindir}/sox --help|grep "^AUDIO FILE.*\<wv\>">/dev/null || skip="wv $skip"
-${bindir}/sox --help|grep "^AUDIO FILE.*\<flac\>">/dev/null || skip="flac $skip"
-${bindir}/sox --help|grep "^AUDIO FILE.*\<caf\>" >/dev/null || skip="caf $skip"
+skip_check caf flac mat4 mat5 paf w64 wv
 
 vectors=0
 

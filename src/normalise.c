@@ -25,10 +25,10 @@ typedef struct {
   sox_sample_t  min, max;
   FILE          * tmp_file;
 } priv_t;
-#define p ((priv_t *)effp->priv)
 
 static int create(sox_effect_t * effp, int argc, char * * argv)
 {
+  priv_t * p = (priv_t *)effp->priv;
   if (argc && !strcmp(*argv, "-i")) p->individual = sox_true, ++argv, --argc;
   do {NUMERIC_PARAMETER(level, -100, 0)} while (0);
   p->level = dB_to_linear(p->level);
@@ -37,6 +37,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
 
 static int start(sox_effect_t * effp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   if (!p->individual)
     effp->flows = 1;
   p->norm0 = p->max = p->min = 0;
@@ -51,6 +52,7 @@ static int start(sox_effect_t * effp)
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   sox_size_t len;
 
   if (fwrite(ibuf, sizeof(*ibuf), *isamp, p->tmp_file) != *isamp) {
@@ -67,6 +69,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 
 static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   sox_size_t len;
   int result = SOX_SUCCESS;
 
@@ -87,6 +90,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
 
 static int stop(sox_effect_t * effp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   fclose(p->tmp_file); /* auto-deleted by tmpfile */
   return SOX_SUCCESS;
 }

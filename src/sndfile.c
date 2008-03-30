@@ -48,7 +48,6 @@ typedef struct {
 static void drain_log_buffer(sox_format_t * ft)
 {
   priv_t * sf = (priv_t *)ft->priv;
-
   sf_command(sf->sf_file, SFC_GET_LOG_INFO, sf->log_buffer, LOG_MAX);
   while (*sf->log_buffer_ptr) {
     static char const warning_prefix[] = "*** Warning : ";
@@ -68,74 +67,78 @@ static void drain_log_buffer(sox_format_t * ft)
   }
 }
 
-/* Get sample encoding and size from libsndfile subtype; return value
-   is encoding if conversion was made, or SOX_ENCODING_UNKNOWN for
-   invalid input. If the libsndfile subtype can't be represented in
-   SoX types, use 16-bit signed. */
-static sox_encoding_t sox_encoding_and_size(unsigned format, unsigned * size)
+/* Make libsndfile subtype from sample encoding and size */
+static int ft_enc(unsigned size, sox_encoding_t e)
 {
-  *size = 0;                   /* Default */
-  format &= SF_FORMAT_SUBMASK;
+  if (e == SOX_ENCODING_ULAW      && size ==  8) return SF_FORMAT_ULAW;
+  if (e == SOX_ENCODING_ALAW      && size ==  8) return SF_FORMAT_ALAW;
+  if (e == SOX_ENCODING_SIGN2     && size ==  8) return SF_FORMAT_PCM_S8;
+  if (e == SOX_ENCODING_SIGN2     && size == 16) return SF_FORMAT_PCM_16;
+  if (e == SOX_ENCODING_SIGN2     && size == 24) return SF_FORMAT_PCM_24;
+  if (e == SOX_ENCODING_SIGN2     && size == 32) return SF_FORMAT_PCM_32;
+  if (e == SOX_ENCODING_UNSIGNED  && size ==  8) return SF_FORMAT_PCM_U8;
+  if (e == SOX_ENCODING_FLOAT     && size == 32) return SF_FORMAT_FLOAT;
+  if (e == SOX_ENCODING_FLOAT     && size == 64) return SF_FORMAT_DOUBLE;
+  if (e == SOX_ENCODING_G721      && size ==  4) return SF_FORMAT_G721_32;
+  if (e == SOX_ENCODING_G723      && size ==  3) return SF_FORMAT_G723_24;
+  if (e == SOX_ENCODING_G723      && size ==  5) return SF_FORMAT_G723_40;
+  if (e == SOX_ENCODING_MS_ADPCM  && size ==  4) return SF_FORMAT_MS_ADPCM;
+  if (e == SOX_ENCODING_IMA_ADPCM && size ==  4) return SF_FORMAT_IMA_ADPCM;
+  if (e == SOX_ENCODING_OKI_ADPCM && size ==  4) return SF_FORMAT_VOX_ADPCM;
+  if (e == SOX_ENCODING_DPCM      && size ==  8) return SF_FORMAT_DPCM_8;
+  if (e == SOX_ENCODING_DPCM      && size == 16) return SF_FORMAT_DPCM_16;
+  if (e == SOX_ENCODING_DWVW      && size == 12) return SF_FORMAT_DWVW_12;
+  if (e == SOX_ENCODING_DWVW      && size == 16) return SF_FORMAT_DWVW_16;
+  if (e == SOX_ENCODING_DWVW      && size == 24) return SF_FORMAT_DWVW_24;
+  if (e == SOX_ENCODING_DWVWN     && size ==  0) return SF_FORMAT_DWVW_N;
+  if (e == SOX_ENCODING_GSM       && size ==  0) return SF_FORMAT_GSM610;
+#ifdef HAVE_SNDFILE_1_0_12
+  if (e == SOX_ENCODING_FLAC      && size ==  8) return SF_FORMAT_PCM_S8;
+  if (e == SOX_ENCODING_FLAC      && size == 16) return SF_FORMAT_PCM_16;
+  if (e == SOX_ENCODING_FLAC      && size == 24) return SF_FORMAT_PCM_24;
+  if (e == SOX_ENCODING_FLAC      && size == 32) return SF_FORMAT_PCM_32;
+#endif
+  return 0; /* Bad encoding */
+}
 
-  switch (format) {
-  case SF_FORMAT_PCM_S8:
-    *size = 8;
-    return SOX_ENCODING_SIGN2;
-  case SF_FORMAT_PCM_16:
-    *size = 16;
-    return SOX_ENCODING_SIGN2;
-  case SF_FORMAT_PCM_24:
-    *size = 24;
-    return SOX_ENCODING_SIGN2;
-  case SF_FORMAT_PCM_32:
-    *size = 32;
-    return SOX_ENCODING_SIGN2;
-  case SF_FORMAT_PCM_U8:
-    *size = 8;
-    return SOX_ENCODING_UNSIGNED;
-  case SF_FORMAT_FLOAT:
-    *size = 32;
-    return SOX_ENCODING_FLOAT;
-  case SF_FORMAT_DOUBLE:
-    *size = 64;
-    return SOX_ENCODING_FLOAT;
-  case SF_FORMAT_ULAW:
-    *size = 8;
-    return SOX_ENCODING_ULAW;
-  case SF_FORMAT_ALAW:
-    *size = 8;
-    return SOX_ENCODING_ALAW;
-  case SF_FORMAT_IMA_ADPCM:
-    *size = 16;
-    return SOX_ENCODING_IMA_ADPCM;
-  case SF_FORMAT_MS_ADPCM:
-    *size = 16;
-    return SOX_ENCODING_MS_ADPCM;
-  case SF_FORMAT_GSM610:
-    *size = 16;
-    return SOX_ENCODING_GSM;
-  case SF_FORMAT_VOX_ADPCM:
-    *size = 16;
-    return SOX_ENCODING_OKI_ADPCM;
+/* Convert format's encoding type to libSoX encoding type & size. */
+static sox_encoding_t sox_enc(int ft_encoding, unsigned * size)
+{
+  int sub = ft_encoding & SF_FORMAT_SUBMASK;
+  int type = ft_encoding & SF_FORMAT_TYPEMASK;
 
-  /* For encodings we can't represent, have a sensible default */
-  case SF_FORMAT_G721_32:
-  case SF_FORMAT_G723_24:
-  case SF_FORMAT_G723_40:
-  case SF_FORMAT_DWVW_12:
-  case SF_FORMAT_DWVW_16:
-  case SF_FORMAT_DWVW_24:
-  case SF_FORMAT_DWVW_N:
-  case SF_FORMAT_DPCM_8:
-  case SF_FORMAT_DPCM_16:
-    return SOX_ENCODING_SIGN2;
-
-  default: /* Invalid libsndfile subtype */
-    return SOX_ENCODING_UNKNOWN;
+#ifdef HAVE_SNDFILE_1_0_12
+  if (type == SF_FORMAT_FLAC) switch (sub) {
+    case SF_FORMAT_PCM_S8   : *size =  8; return SOX_ENCODING_FLAC;
+    case SF_FORMAT_PCM_16   : *size = 16; return SOX_ENCODING_FLAC;
+    case SF_FORMAT_PCM_24   : *size = 24; return SOX_ENCODING_FLAC;
   }
-
-  assert(0); /* Should never reach here */
-  return SOX_ENCODING_UNKNOWN;
+#endif
+  switch (sub) {
+    case SF_FORMAT_ULAW     : *size =  8; return SOX_ENCODING_ULAW;
+    case SF_FORMAT_ALAW     : *size =  8; return SOX_ENCODING_ALAW;
+    case SF_FORMAT_PCM_S8   : *size =  8; return SOX_ENCODING_SIGN2;
+    case SF_FORMAT_PCM_16   : *size = 16; return SOX_ENCODING_SIGN2;
+    case SF_FORMAT_PCM_24   : *size = 24; return SOX_ENCODING_SIGN2;
+    case SF_FORMAT_PCM_32   : *size = 32; return SOX_ENCODING_SIGN2;
+    case SF_FORMAT_PCM_U8   : *size =  8; return SOX_ENCODING_UNSIGNED;
+    case SF_FORMAT_FLOAT    : *size = 32; return SOX_ENCODING_FLOAT;
+    case SF_FORMAT_DOUBLE   : *size = 64; return SOX_ENCODING_FLOAT;
+    case SF_FORMAT_G721_32  : *size =  4; return SOX_ENCODING_G721;
+    case SF_FORMAT_G723_24  : *size =  3; return SOX_ENCODING_G723;
+    case SF_FORMAT_G723_40  : *size =  5; return SOX_ENCODING_G723;
+    case SF_FORMAT_MS_ADPCM : *size =  4; return SOX_ENCODING_MS_ADPCM;
+    case SF_FORMAT_IMA_ADPCM: *size =  4; return SOX_ENCODING_IMA_ADPCM;
+    case SF_FORMAT_VOX_ADPCM: *size =  4; return SOX_ENCODING_OKI_ADPCM;
+    case SF_FORMAT_DPCM_8   : *size =  8; return SOX_ENCODING_DPCM;
+    case SF_FORMAT_DPCM_16  : *size = 16; return SOX_ENCODING_DPCM;
+    case SF_FORMAT_DWVW_12  : *size = 12; return SOX_ENCODING_DWVW;
+    case SF_FORMAT_DWVW_16  : *size = 16; return SOX_ENCODING_DWVW;
+    case SF_FORMAT_DWVW_24  : *size = 24; return SOX_ENCODING_DWVW;
+    case SF_FORMAT_DWVW_N   : *size =  0; return SOX_ENCODING_DWVWN;
+    case SF_FORMAT_GSM610   : *size =  0; return SOX_ENCODING_GSM;
+    default                 : *size =  0; return SOX_ENCODING_UNKNOWN;
+  }
 }
 
 static struct {
@@ -202,58 +205,10 @@ static int name_to_format(const char *name)
   return 0;
 }
 
-/* Make libsndfile subtype from sample encoding and size */
-static int sndfile_format(sox_encoding_t encoding, unsigned size)
-{
-  size = (size + 7) & ~7u;
-  switch (encoding) {
-    case SOX_ENCODING_ULAW:
-      return SF_FORMAT_ULAW;
-    case SOX_ENCODING_ALAW:
-      return SF_FORMAT_ALAW;
-    case SOX_ENCODING_MS_ADPCM:
-      return SF_FORMAT_MS_ADPCM;
-    case SOX_ENCODING_IMA_ADPCM:
-      return SF_FORMAT_IMA_ADPCM;
-    case SOX_ENCODING_OKI_ADPCM:
-      return SF_FORMAT_VOX_ADPCM;
-    case SOX_ENCODING_UNSIGNED:
-      if (size == 8)
-        return SF_FORMAT_PCM_U8;
-      else
-        return 0;
-    case SOX_ENCODING_SIGN2:
-    case SOX_ENCODING_MP3:
-    case SOX_ENCODING_VORBIS:
-#ifdef HAVE_SNDFILE_1_0_12
-    case SOX_ENCODING_FLAC:
-      switch (size) {
-      case 8:
-        return SF_FORMAT_PCM_S8;
-      case 16:
-        return SF_FORMAT_PCM_16;
-      case 24:
-        return SF_FORMAT_PCM_24;
-      case 32:
-        return SF_FORMAT_PCM_32;
-      default: /* invalid size */
-        return 0;
-      }
-      break;
-#endif
-    case SOX_ENCODING_FLOAT:
-      return SF_FORMAT_FLOAT;
-    case SOX_ENCODING_GSM:
-      return SF_FORMAT_GSM610;
-    default: /* Bad encoding */
-      return 0;
-  }
-}
-
 static void start(sox_format_t * ft)
 {
   priv_t * sf = (priv_t *)ft->priv;
-  int subtype = sndfile_format(ft->encoding.encoding, ft->encoding.bits_per_sample? ft->encoding.bits_per_sample : ft->signal.precision);
+  int subtype = ft_enc(ft->encoding.bits_per_sample? ft->encoding.bits_per_sample : ft->signal.precision, ft->encoding.encoding);
   sf->log_buffer_ptr = sf->log_buffer = lsx_malloc(LOG_MAX);
   sf->sf_info = (SF_INFO *)lsx_calloc(1, sizeof(SF_INFO));
 
@@ -270,18 +225,47 @@ static void start(sox_format_t * ft)
     sf->sf_info->frames = ft->signal.length / ft->signal.channels;
 }
 
+static int check_read_params(sox_format_t * ft, unsigned channels,
+    sox_rate_t rate, sox_encoding_t encoding, unsigned bits_per_sample, off_t length)
+{
+  ft->signal.length = length;
+
+  if (channels && ft->signal.channels && ft->signal.channels != channels)
+    sox_warn("`%s': overriding number of channels", ft->filename);
+  else ft->signal.channels = channels;
+
+  if (rate && ft->signal.rate && ft->signal.rate != rate)
+    sox_warn("`%s': overriding sample rate", ft->filename);
+  else ft->signal.rate = rate;
+
+  if (encoding && ft->encoding.encoding && ft->encoding.encoding != encoding)
+    sox_warn("`%s': overriding encoding type", ft->filename);
+  else ft->encoding.encoding = encoding;
+
+  if (bits_per_sample && ft->encoding.bits_per_sample && ft->encoding.bits_per_sample != bits_per_sample)
+    sox_warn("`%s': overriding encoding size", ft->filename);
+  ft->encoding.bits_per_sample = bits_per_sample;
+
+  if (sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample))
+    return SOX_SUCCESS;
+  lsx_fail_errno(ft, EINVAL, "invalid format for this file type");
+  return SOX_EOF;
+}
+
 /*
  * Open file in sndfile.
  */
 static int startread(sox_format_t * ft)
 {
   priv_t * sf = (priv_t *)ft->priv;
+  unsigned bits_per_sample;
+  sox_encoding_t encoding;
+  sox_rate_t rate;
 
   start(ft);
 
-  /* We'd like to use sf_open_fd, but auto file typing has already
-     invoked stdio buffering. */
-  sf->sf_file = sf_open(ft->filename, SFM_READ, sf->sf_info);
+  sf->sf_file = sf_open_fd(fileno(ft->fp), SFM_READ, sf->sf_info, 1);
+  ft->fp = NULL; /* Transfer ownership of fp to LSF */
   drain_log_buffer(ft);
 
   if (sf->sf_file == NULL) {
@@ -291,21 +275,24 @@ static int startread(sox_format_t * ft)
     return SOX_EOF;
   }
 
-  /* Copy format info */
-  ft->encoding.encoding = sox_encoding_and_size((unsigned)sf->sf_info->format, &ft->encoding.bits_per_sample);
-  ft->signal.channels = sf->sf_info->channels;
-  ft->signal.length = sf->sf_info->frames * sf->sf_info->channels;
-
-  /* FIXME: it would be better if LSF were able to do this */
-  if ((sf->sf_info->format & SF_FORMAT_TYPEMASK) == SF_FORMAT_RAW) {
-    if (ft->signal.rate == 0) {
-      sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
-      ft->signal.rate = 8000;
-    }
+  if (!(encoding = sox_enc(sf->sf_info->format, &bits_per_sample))) {
+    lsx_fail_errno(ft, SOX_EFMT, "unsupported sndfile encoding %#x", sf->sf_info->format);
+    return SOX_EOF;
   }
-  else ft->signal.rate = sf->sf_info->samplerate;
 
-  return SOX_SUCCESS;
+  /* Don't believe LSF's rate for raw files */
+  if ((sf->sf_info->format & SF_FORMAT_TYPEMASK) == SF_FORMAT_RAW && !ft->signal.rate) {
+    sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
+    rate = 8000;
+  }
+  else rate = sf->sf_info->samplerate;
+
+#if 0 /* FIXME */
+    sox_append_comments(&ft->oob.comments, buf);
+#endif
+
+  return check_read_params(ft, (unsigned)sf->sf_info->channels, rate,
+      encoding, bits_per_sample, (off_t)(sf->sf_info->frames * sf->sf_info->channels));
 }
 
 /*
@@ -315,7 +302,6 @@ static int startread(sox_format_t * ft)
 static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
   priv_t * sf = (priv_t *)ft->priv;
-
   /* FIXME: We assume int == sox_sample_t here */
   return (sox_size_t)sf_read_int(sf->sf_file, (int *)buf, (sf_count_t)len);
 }
@@ -335,7 +321,6 @@ static int stopread(sox_format_t * ft)
 static int startwrite(sox_format_t * ft)
 {
   priv_t * sf = (priv_t *)ft->priv;
-
   start(ft);
   /* If output format is invalid, try to find a sensible default */
   if (!sf_format_check(sf->sf_info)) {
@@ -362,7 +347,8 @@ static int startwrite(sox_format_t * ft)
       sox_warn("cannot use desired output encoding, choosing default");
   }
 
-  sf->sf_file = sf_open(ft->filename, SFM_WRITE, sf->sf_info);
+  sf->sf_file = sf_open_fd(fileno(ft->fp), SFM_WRITE, sf->sf_info, 1);
+  ft->fp = NULL; /* Transfer ownership of fp to LSF */
   drain_log_buffer(ft);
 
   if (sf->sf_file == NULL) {
@@ -382,7 +368,6 @@ static int startwrite(sox_format_t * ft)
 static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
   priv_t * sf = (priv_t *)ft->priv;
-
   /* FIXME: We assume int == sox_sample_t here */
   return (sox_size_t)sf_write_int(sf->sf_file, (int *)buf, (sf_count_t)len);
 }
@@ -408,36 +393,24 @@ static int seek(sox_format_t * ft, sox_size_t offset)
 
 SOX_FORMAT_HANDLER(sndfile)
 {
-  /* Format file suffixes */
-  /* For now, comment out formats built in to SoX */
   static char const * const names[] = {
-    "sndfile", /* special type to force use of sndfile */
+    "sndfile", /* Special type to force use of sndfile for the following: */
+  /* LSF implementation of formats built in to SoX: */
     /* "aif", */
-    /* "wav", */
     /* "au", */
-#ifdef HAVE_SNDFILE_1_0_12
-    "caf",
-#endif
-    /* "flac", */
-    /* "snd", */
-    /* "svx", */
-    "paf",
-    "fap",
     /* "gsm", */
     /* "nist", */
-    /* "ircam", */
-    /* "sf", */
-    /* "voc", */
-    "w64",
     /* "raw", */
-    "mat4",
-    "mat5",
-    "mat",
-    "pvf",
-    "sds",
-    "sd2",
+    /* "sf", "ircam", */
+    /* "snd", */
+    /* "svx", */
+    /* "voc", */
     /* "vox", */
-    "xi",
+    /* "wav", */
+  /* LSF wrappers of formats already wrapped in SoX: */
+    /* "flac", */
+
+    "sds",  /* ?? */
     NULL
   };
 
@@ -454,7 +427,7 @@ SOX_FORMAT_HANDLER(sndfile)
     0};
 
   static sox_format_handler_t const format = {SOX_LIB_VERSION_CODE,
-    "Pseudo format to use libsndfile", names, SOX_FILE_NOSTDIO,
+    "Pseudo format to use libsndfile", names, 0,
     startread, read_samples, stopread,
     startwrite, write_samples, stopwrite,
     seek, write_encodings, NULL, sizeof(priv_t)

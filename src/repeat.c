@@ -28,16 +28,17 @@ typedef struct {
   sox_size_t remaining;
   int repeats;
 } priv_t;
-#define p ((priv_t *)effp->priv)
 
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
+  priv_t * p = (priv_t *)effp->priv;
   do {NUMERIC_PARAMETER(repeats, 0, 1e6)} while (0);
   return argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static int start(sox_effect_t * effp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   if (p->repeats == 0)
     return SOX_EFF_NULL;
 
@@ -52,6 +53,7 @@ static int start(sox_effect_t * effp)
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   if (fwrite(ibuf, sizeof(*ibuf), *isamp, p->tmp_file) != *isamp) {
     sox_fail("error writing temporary file: %s", strerror(errno));
     return SOX_EOF;
@@ -62,6 +64,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 
 static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   size_t read = 0;
   sox_sample_t *buf;
   sox_size_t samp;
@@ -153,6 +156,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
 
 static int stop(sox_effect_t * effp)
 {
+  priv_t * p = (priv_t *)effp->priv;
   fclose(p->tmp_file);
   return SOX_SUCCESS;
 }
