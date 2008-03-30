@@ -133,6 +133,7 @@ static FLAC__StreamDecoderWriteStatus FLAC__frame_decode_callback(FLAC__StreamDe
 
 static int start_read(sox_format_t * const ft)
 {
+  sox_debug("API version %u", FLAC_API_VERSION_CURRENT);
   p->decoder = FLAC__stream_decoder_new();
   if (p->decoder == NULL) {
     lsx_fail_errno(ft, SOX_ENOMEM, "FLAC ERROR creating the decoder instance");
@@ -142,25 +143,26 @@ static int start_read(sox_format_t * const ft)
   FLAC__stream_decoder_set_md5_checking(p->decoder, sox_true);
   FLAC__stream_decoder_set_metadata_respond_all(p->decoder);
 #if FLAC_API_VERSION_CURRENT <= 7
+  /* This is wrong: not using SoX IO, and there will be 2 FILEs open;
+   * however, it's an old FLAC API, so not worth fixing now. */
   FLAC__file_decoder_set_filename(p->decoder, ft->filename);
   FLAC__file_decoder_set_write_callback(p->decoder, FLAC__frame_decode_callback);
   FLAC__file_decoder_set_metadata_callback(p->decoder, FLAC__decoder_metadata_callback);
   FLAC__file_decoder_set_error_callback(p->decoder, FLAC__decoder_error_callback);
   FLAC__file_decoder_set_client_data(p->decoder, ft);
   if (FLAC__file_decoder_init(p->decoder) != FLAC__FILE_DECODER_OK) {
-#else
-  if (FLAC__stream_decoder_init_file(
-    p->decoder,
-    ft->filename,
-    FLAC__frame_decode_callback,
-    FLAC__decoder_metadata_callback,
-    FLAC__decoder_error_callback,
-    ft) != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
-#endif
     lsx_fail_errno(ft, SOX_EHDR, "FLAC ERROR initialising decoder");
     return SOX_EOF;
   }
-
+#else
+  if (FLAC__stream_decoder_init_FILE(p->decoder, ft->fp, /* Not using SoX IO */
+      FLAC__frame_decode_callback, FLAC__decoder_metadata_callback,
+      FLAC__decoder_error_callback, ft) != FLAC__STREAM_DECODER_INIT_STATUS_OK){
+    lsx_fail_errno(ft, SOX_EHDR, "FLAC ERROR initialising decoder");
+    return SOX_EOF;
+  }
+  ft->fp = NULL; /* Transfer ownership of fp to FLAC */
+#endif
 
   if (!FLAC__stream_decoder_process_until_end_of_metadata(p->decoder)) {
     lsx_fail_errno(ft, SOX_EHDR, "FLAC ERROR whilst decoding metadata");
@@ -488,7 +490,7 @@ SOX_FORMAT_HANDLER(flac)
   static char const * const names[] = {"flac", NULL};
   static unsigned const encodings[] = {SOX_ENCODING_FLAC, 8, 16, 24, 0, 0};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
-    "Free Lossless Audio CODEC compressed audio", names, 0,
+    "Free Lossless Audio CODEC compressed audio API v", names, 0,
     start_read, read_samples, stop_read,
     start_write, write_samples, stop_write,
     seek, encodings, NULL, sizeof(priv_t)
