@@ -806,7 +806,6 @@ sox_size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
   return ret;
 }
 
-/* N.B. The file (if any) may already have been deleted. */
 int sox_close(sox_format_t * ft)
 {
   int rc = SOX_SUCCESS;
