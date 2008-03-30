@@ -47,6 +47,8 @@ File formats:
   o For wav & au, fix [548256] size in header wrong when piping out.  (robs)
   o Fix IRCAM SF header processing; support all (modern) variants.  (robs)
   o Fix 24-bit read/write on big-endian systems.  (robs)
+  o Fix crash trying to open non-existent play-list.  (robs)
+  o Fix FLAC read from stdin with libFLAC >= 8.  (Patrick Taylor Ramsey/robs)
 
 Effects:
 
@@ -94,6 +96,7 @@ Internal improvements:
   o Use FORTIFY_SOURCE with gcc.  (robs)
   o Fixed all compiler warnings (AFAICT).  (robs)
   o Reimplement (separately) SoundTool & Sounder format handlers.  (robs)
+  o Allow formats & effects to have any size of private data.  (robs)
 
 Deprecated features to be removed in future:
 
