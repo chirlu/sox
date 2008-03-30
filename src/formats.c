@@ -313,10 +313,13 @@ static void set_endiannesses(sox_format_t * ft)
       sox_report("`%s': overriding file-type nibble-order", ft->filename);
 }
 
-static int is_seekable(sox_format_t * ft)
+static sox_bool is_seekable(sox_format_t const * ft)
 {
   struct stat st;
 
+  assert(ft);
+  if (!ft->fp)
+    return sox_false;
   fstat(fileno(ft->fp), &st);
   return ((st.st_mode & S_IFMT) == S_IFREG);
 }
@@ -822,7 +825,7 @@ int sox_close(sox_format_t * ft)
     else rc = ft->handler.stopwrite? (*ft->handler.stopwrite)(ft) : SOX_SUCCESS;
   }
 
-  if (!(ft->handler.flags & SOX_FILE_NOSTDIO))
+  if (ft->fp && ft->fp != stdin && ft->fp != stdout)
     fclose(ft->fp);
   free(ft->filename);
   free(ft->filetype);
@@ -878,58 +881,60 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
     sox_fail("Can't open playlist file `%s': %s", listname, strerror(errno));
     result = SOX_EOF;
   }
-  else do {
-    size_t i = 0;
-    size_t begin = 0, end = 0;
+  else {
+    do {
+      size_t i = 0;
+      size_t begin = 0, end = 0;
 
-    while (isspace(c = getc(file)));
-    if (c == EOF)
-      break;
-    while (c != EOF && !strchr("\r\n", c) && c != comment_char) {
-      if (i == text_length)
-        text = lsx_realloc(text, (text_length <<= 1) + 1);
-      text[i++] = c;
-      if (!strchr(" \t\f", c))
-        end = i;
-      c = getc(file);
-    }
-    if (ferror(file))
-      break;
-    if (c == comment_char) {
-      do c = getc(file);
-      while (c != EOF && !strchr("\r\n", c));
+      while (isspace(c = getc(file)));
+      if (c == EOF)
+        break;
+      while (c != EOF && !strchr("\r\n", c) && c != comment_char) {
+        if (i == text_length)
+          text = lsx_realloc(text, (text_length <<= 1) + 1);
+        text[i++] = c;
+        if (!strchr(" \t\f", c))
+          end = i;
+        c = getc(file);
+      }
       if (ferror(file))
         break;
-    }
-    text[end] = '\0';
-    if (is_pls) {
-      char dummy;
-      if (!strncasecmp(text, "file", 4) && sscanf(text + 4, "%*u=%c", &dummy) == 1)
-        begin = strchr(text + 5, '=') - text + 1;
-      else end = 0;
-    }
-    if (begin != end) {
-      char const * id = text + begin;
-
-      if (!dirname[0] || is_uri(id) || IS_ABSOLUTE(id))
-        filename = lsx_strdup(id);
-      else {
-        filename = lsx_malloc(strlen(dirname) + strlen(id) + 2);
-        sprintf(filename, "%s/%s", dirname, id);
+      if (c == comment_char) {
+        do c = getc(file);
+        while (c != EOF && !strchr("\r\n", c));
+        if (ferror(file))
+          break;
       }
-      if (sox_is_playlist(filename))
-        sox_parse_playlist(callback, p, filename);
-      else if (callback(p, filename))
-        c = EOF;
-      free(filename);
-    }
-  } while (c != EOF);
+      text[end] = '\0';
+      if (is_pls) {
+        char dummy;
+        if (!strncasecmp(text, "file", 4) && sscanf(text + 4, "%*u=%c", &dummy) == 1)
+          begin = strchr(text + 5, '=') - text + 1;
+        else end = 0;
+      }
+      if (begin != end) {
+        char const * id = text + begin;
 
-  if (ferror(file)) {
-    sox_fail("Error reading playlist file `%s': %s", listname, strerror(errno));
-    result = SOX_EOF;
+        if (!dirname[0] || is_uri(id) || IS_ABSOLUTE(id))
+          filename = lsx_strdup(id);
+        else {
+          filename = lsx_malloc(strlen(dirname) + strlen(id) + 2);
+          sprintf(filename, "%s/%s", dirname, id);
+        }
+        if (sox_is_playlist(filename))
+          sox_parse_playlist(callback, p, filename);
+        else if (callback(p, filename))
+          c = EOF;
+        free(filename);
+      }
+    } while (c != EOF);
+
+    if (ferror(file)) {
+      sox_fail("error reading playlist file `%s': %s", listname, strerror(errno));
+      result = SOX_EOF;
+    }
+    fclose(file);
   }
-  if (file) fclose(file);
   free(text);
   free(dirname);
   return result;
