@@ -376,14 +376,13 @@ static void balance_input(sox_sample_t * buf, sox_size_t ws, file_t * f)
     }
 }
 
-typedef struct input_combiner
-{
+typedef struct {
   sox_sample_t *ibuf[MAX_INPUT_FILES];
-} * input_combiner_t;
+} input_combiner_t;
 
 static int combiner_start(sox_effect_t *effp)
 {
-  input_combiner_t z = (input_combiner_t) effp->priv;
+  input_combiner_t * z = (input_combiner_t *) effp->priv;
   sox_size_t ws, i;
 
   if (combine_method <= sox_concatenate)
@@ -391,7 +390,7 @@ static int combiner_start(sox_effect_t *effp)
   else {
     ws = 0;
     for (i = 0; i < input_count; i++) {
-      z->ibuf[i] = (sox_sample_t *)lsx_malloc(sox_globals.bufsiz * sizeof(sox_sample_t));
+      z->ibuf[i] = lsx_malloc(sox_globals.bufsiz * sizeof(sox_sample_t));
       progress_to_file(files[i]);
       ws = max(ws, input_wide_samples);
     }
@@ -409,7 +408,7 @@ static sox_bool can_segue(sox_size_t i)
 
 static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, sox_size_t * osamp)
 {
-  input_combiner_t z = (input_combiner_t) effp->priv;
+  input_combiner_t * z = (input_combiner_t *) effp->priv;
   sox_size_t ws, s, i;
   sox_size_t ilen[MAX_INPUT_FILES];
   sox_size_t olen = 0;
@@ -469,7 +468,7 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, sox_size_t * 
 
 static int combiner_stop(sox_effect_t *effp)
 {
-  input_combiner_t z = (input_combiner_t) effp->priv;
+  input_combiner_t * z = (input_combiner_t *) effp->priv;
   sox_size_t i;
 
   if (combine_method > sox_concatenate)
@@ -483,8 +482,8 @@ static int combiner_stop(sox_effect_t *effp)
 static sox_effect_handler_t const * input_combiner_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "input", 0, SOX_EFF_MCHAN,
-    0, combiner_start, 0, combiner_drain, combiner_stop, 0, 0
+    "input", 0, SOX_EFF_MCHAN, 0, combiner_start, 0, combiner_drain,
+    combiner_stop, 0, sizeof(input_combiner_t)
   };
   return &handler;
 }
@@ -935,7 +934,7 @@ static void display_supported_formats(void)
     while (*names++)
       formats++;
   }
-  format_list = (const char **)lsx_malloc(formats * sizeof(char *));
+  format_list = lsx_malloc(formats * sizeof(*format_list));
 
   printf("AUDIO FILE FORMATS:");
   for (i = formats = 0; sox_format_fns[i].fn; ++i) {
@@ -944,7 +943,7 @@ static void display_supported_formats(void)
       for (names = handler->names; *names; ++names)
         format_list[formats++] = *names;
   }
-  qsort(format_list, formats, sizeof(char *), strcmp_p);
+  qsort(format_list, formats, sizeof(*format_list), strcmp_p);
   for (i = 0; i < formats; i++)
     printf(" %s", format_list[i]);
   putchar('\n');
@@ -956,7 +955,7 @@ static void display_supported_formats(void)
       for (names = handler->names; *names; ++names)
         format_list[formats++] = *names;
   }
-  qsort(format_list, formats, sizeof(char *), strcmp_p);
+  qsort(format_list, formats, sizeof(*format_list), strcmp_p);
   for (i = 0; i < formats; i++)
     printf(" %s", format_list[i]);
   puts("\n");
