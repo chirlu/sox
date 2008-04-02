@@ -213,7 +213,8 @@ static int start(sox_effect_t * effp)
   /* Nwing: # of filter coeffs in right wing */
   r->Nwing = r->Nq * (r->Nmult / 2 + 1) + 1;
 
-  r->Imp = (double *) lsx_malloc(sizeof(double) * (r->Nwing + 2)) + 1;
+  r->Imp = lsx_malloc(sizeof(double) * (r->Nwing + 2));
+  ++r->Imp;
   /* need Imp[-1] and Imp[Nwing] for quadratic interpolation */
   /* returns error # <=0, or adjusted wing-len > 0 */
   i = lsx_makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq, 1);
@@ -258,7 +259,7 @@ static int start(sox_effect_t * effp)
   r->Ysize = BUFFSIZE - r->Xsize;
   sox_debug("Xsize %li, Ysize %li, Xoff %li", r->Xsize, r->Ysize, r->Xoff);
 
-  r->X = (double *) lsx_malloc(sizeof(double) * (BUFFSIZE));
+  r->X = lsx_malloc(sizeof(double) * (BUFFSIZE));
   r->Y = r->X + r->Xsize;
 
   /* Need Xoff zeros at beginning of sample */
@@ -390,10 +391,10 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
         osamp_res = *osamp;
         Obuf = obuf;
         while (isamp_res>0 && osamp_res>0) {
-                sox_sample_t Isamp, Osamp;
+                sox_size_t Isamp, Osamp;
                 Isamp = isamp_res;
                 Osamp = osamp_res;
-                rc = flow(effp, NULL, Obuf, (sox_size_t *)&Isamp, (sox_size_t *)&Osamp);
+                rc = flow(effp, NULL, Obuf, &Isamp, &Osamp);
                 if (rc)
                     return rc;
                 sox_debug("DRAIN isamp,osamp  (%li,%li) -> (%d,%d)",
@@ -601,7 +602,7 @@ int lsx_makeFilter(double Imp[], long Nwing, double Froll, double Beta,
    if (Mwing==0)
       return(-4);
 
-   ImpR = (double *) lsx_malloc(sizeof(double) * Mwing);
+   ImpR = lsx_malloc(sizeof(double) * Mwing);
 
    /* Design a Nuttall or Kaiser windowed Sinc low-pass filter */
    LpFilter(ImpR, Mwing, Froll, Beta, Num);

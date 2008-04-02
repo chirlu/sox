@@ -70,7 +70,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
         fade->out_fadetype = 'l';
     }
 
-    fade->in_stop_str = (char *)lsx_malloc(strlen(argv[0])+1);
+    fade->in_stop_str = lsx_malloc(strlen(argv[0])+1);
     strcpy(fade->in_stop_str,argv[0]);
     /* Do a dummy parse to see if it will fail */
     if (lsx_parsesamples(0., fade->in_stop_str, &fade->in_stop, 't') == NULL)
@@ -83,7 +83,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
         /* See if there is fade-in/fade-out times/curves specified. */
         if(t_argno == 1)
         {
-            fade->out_stop_str = (char *)lsx_malloc(strlen(argv[t_argno])+1);
+            fade->out_stop_str = lsx_malloc(strlen(argv[t_argno])+1);
             strcpy(fade->out_stop_str,argv[t_argno]);
 
             /* Do a dummy parse to see if it will fail */
@@ -93,7 +93,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
         }
         else
         {
-            fade->out_start_str = (char *)lsx_malloc(strlen(argv[t_argno])+1);
+            fade->out_start_str = lsx_malloc(strlen(argv[t_argno])+1);
             strcpy(fade->out_start_str,argv[t_argno]);
 
             /* Do a dummy parse to see if it will fail */

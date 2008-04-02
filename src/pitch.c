@@ -357,10 +357,10 @@ static int sox_pitch_start(sox_effect_t * effp)
 
     pitch->size = pitch->step + 2*pitch->overlap;
 
-    pitch->fade = (double *) lsx_malloc(pitch->step*sizeof(double));
-    pitch->tmp  = (double *) lsx_malloc(pitch->step*sizeof(double));
-    pitch->acc  = (double *) lsx_malloc(pitch->step*sizeof(double));
-    pitch->buf  = (sox_sample_t *) lsx_malloc(pitch->size*sizeof(sox_sample_t));
+    pitch->fade = lsx_malloc(pitch->step*sizeof(double));
+    pitch->tmp  = lsx_malloc(pitch->step*sizeof(double));
+    pitch->acc  = lsx_malloc(pitch->step*sizeof(double));
+    pitch->buf  = lsx_malloc(pitch->size*sizeof(sox_sample_t));
     pitch->index = pitch->overlap;
 
     /* default initial signal */

@@ -141,12 +141,12 @@ static int startread(sox_format_t * ft)
         ft->signal.channels = 1;
 
         /* Allocate memory for the dictionary */
-        p->dictionary = (dictent *)lsx_malloc(511 * sizeof(dictent));
+        p->dictionary = lsx_malloc(511 * sizeof(dictent));
 
         /* Read dictionary */
         for(i = 0; i < dictsize; i++) {
-                lsx_readw(ft, (unsigned short *)&(p->dictionary[i].dict_leftson));
-                lsx_readw(ft, (unsigned short *)&(p->dictionary[i].dict_rightson));
+                lsx_readsw(ft, &(p->dictionary[i].dict_leftson));
+                lsx_readsw(ft, &(p->dictionary[i].dict_rightson));
                 sox_debug("%d %d",
                        p->dictionary[i].dict_leftson,
                        p->dictionary[i].dict_rightson);
@@ -245,7 +245,7 @@ static int stopread(sox_format_t * ft)
                 lsx_fail_errno(ft,SOX_EFMT,"checksum error in HCOM data");
                 return (SOX_EOF);
         }
-        free((char *)p->dictionary);
+        free(p->dictionary);
         p->dictionary = NULL;
         return (SOX_SUCCESS);
 }
@@ -273,7 +273,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
 
   if (p->pos + len > p->size) {
     p->size = ((p->pos + len) / BUFINCR + 1) * BUFINCR;
-    p->data = (unsigned char *)lsx_realloc(p->data, p->size);
+    p->data = lsx_realloc(p->data, p->size);
   }
 
   for (i = 0; i < len; i++) {
@@ -391,7 +391,7 @@ static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl)
   l = (((l + 31) >> 5) << 2) + 24 + dictsize * 4;
   sox_debug("  Original size: %6d bytes", *dl);
   sox_debug("Compressed size: %6d bytes", l);
-  datafork = (unsigned char *)lsx_malloc((unsigned)l);
+  datafork = lsx_malloc((unsigned)l);
   ddf = datafork + 22;
   for(i = 0; i < dictsize; i++) {
     put16_be(&ddf, newdict[i].dict_leftson);
@@ -409,7 +409,7 @@ static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl)
     codesize[0] = 32 - p->nbits;
     putcode(ft, codes, codesize, 0, &ddf);
   }
-  strncpy((char *)datafork, "HCOM", 4);
+  memcpy(datafork, "HCOM", 4);
   dfp = datafork + 4;
   put32_be(&dfp, *dl);
   put32_be(&dfp, p->new_checksum);
@@ -433,10 +433,10 @@ static int stopwrite(sox_format_t * ft)
   /* Compress it all at once */
   if (compressed_len)
     compress(ft, &compressed_data, (int32_t *)&compressed_len);
-  free((char *)p->data);
+  free(p->data);
 
   /* Write the header */
-  lsx_writebuf(ft, (void *)"\000\001A", 3); /* Dummy file name "A" */
+  lsx_writebuf(ft, "\000\001A", 3); /* Dummy file name "A" */
   lsx_padbytes(ft, 65-3);
   lsx_writes(ft, "FSSD");
   lsx_padbytes(ft, 83-69);
@@ -451,7 +451,7 @@ static int stopwrite(sox_format_t * ft)
     lsx_fail_errno(ft, errno, "can't write compressed HCOM data");
     rc = SOX_EOF;
   }
-  free((char *)compressed_data);
+  free(compressed_data);
 
   if (rc == SOX_SUCCESS)
     /* Pad the compressed_data fork to a multiple of 128 bytes */

@@ -151,7 +151,7 @@ static int sox_stretch_start(sox_effect_t * effp)
   stretch->size = (int)(effp->out_signal.rate * 0.001 * stretch->window);
   /* start in the middle of an input to avoid initial fading... */
   stretch->index = stretch->size / 2;
-  stretch->ibuf = (sox_sample_t *)lsx_malloc(stretch->size * sizeof(sox_sample_t));
+  stretch->ibuf = lsx_malloc(stretch->size * sizeof(sox_sample_t));
 
   /* the shift ratio deal with the longest of ishift/oshift
      hence ishift<=size and oshift<=size. */
@@ -166,9 +166,9 @@ static int sox_stretch_start(sox_effect_t * effp)
   assert(stretch->oshift <= stretch->size);
 
   stretch->oindex = stretch->index; /* start as synchronized */
-  stretch->obuf = (double *)lsx_malloc(stretch->size * sizeof(double));
+  stretch->obuf = lsx_malloc(stretch->size * sizeof(double));
   stretch->fsize = (int)(stretch->fading * stretch->size);
-  stretch->fbuf = (double *)lsx_malloc(stretch->fsize * sizeof(double));
+  stretch->fbuf = lsx_malloc(stretch->fsize * sizeof(double));
 
   /* initialize buffers */
   for (i = 0; i<stretch->size; i++)

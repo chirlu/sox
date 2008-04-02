@@ -418,7 +418,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
             }
             break;
           case 16:
-            lsx_readw(ft, (unsigned short *) &sw);
+            lsx_readsw(ft, &sw);
             if (lsx_eof(ft)) {
               sox_warn("VOC input: short file");
               v->block_remaining = 0;
@@ -555,8 +555,6 @@ static int getblock(sox_format_t * ft)
   uint24_t sblen;
   uint16_t new_rate_16;
   uint32_t new_rate_32;
-  uint32_t i;
-  uint32_t trash;
 
   v->silent = 0;
   /* DO while we have no audio to read */
@@ -619,10 +617,7 @@ static int getblock(sox_format_t * ft)
         v->size = uc;
         lsx_readb(ft, &(v->channels));
         lsx_readw(ft, &(v->format));    /* ANN: added format */
-        lsx_readb(ft, (unsigned char *) &trash);        /* notused */
-        lsx_readb(ft, (unsigned char *) &trash);        /* notused */
-        lsx_readb(ft, (unsigned char *) &trash);        /* notused */
-        lsx_readb(ft, (unsigned char *) &trash);        /* notused */
+        lsx_skipbytes(ft, 4);
         v->block_remaining = sblen - 12;
         return (SOX_SUCCESS);
       case VOC_CONT:
@@ -658,12 +653,12 @@ static int getblock(sox_format_t * ft)
       case VOC_TEXT:
         {
           uint32_t i = sblen;
-          char c                /*, line_buf[80];
+          int8_t c                /*, line_buf[80];
                                  * int len = 0 */ ;
 
           sox_warn("VOC TEXT");
           while (i--) {
-            lsx_readb(ft, (unsigned char *) &c);
+            lsx_readsb(ft, &c);
             /* FIXME: this needs to be tested but I couldn't
              * find a voc file with a VOC_TEXT chunk :(
              if (c != '\0' && c != '\r')
@@ -682,8 +677,7 @@ static int getblock(sox_format_t * ft)
       case VOC_LOOP:
       case VOC_LOOPEND:
         sox_debug("skipping repeat loop");
-        for (i = 0; i < sblen; i++)
-          lsx_readb(ft, (unsigned char *) &trash);
+        lsx_skipbytes(ft, sblen);
         break;
       case VOC_EXTENDED:
         /* An Extended block is followed by a data block */
@@ -714,8 +708,7 @@ static int getblock(sox_format_t * ft)
         continue;
       default:
         sox_debug("skipping unknown block code %d", block);
-        for (i = 0; i < sblen; i++)
-          lsx_readb(ft, (unsigned char *) &trash);
+        lsx_skipbytes(ft, sblen);
     }
   }
   return SOX_SUCCESS;

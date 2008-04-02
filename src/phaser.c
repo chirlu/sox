@@ -149,10 +149,10 @@ static int sox_phaser_start(sox_effect_t * effp)
                 sox_warn("phaser: warning >>> gain-out can cause saturation or clipping of output <<<");
 
         phaser->length = effp->in_signal.rate / phaser->speed;
-        phaser->phaserbuf = (double *) lsx_malloc(sizeof (double) * phaser->maxsamples);
+        phaser->phaserbuf = lsx_malloc(sizeof (double) * phaser->maxsamples);
         for ( i = 0; i < phaser->maxsamples; i++ )
                 phaser->phaserbuf[i] = 0.0;
-        phaser->lookup_tab = (int *) lsx_malloc(sizeof (int) * phaser->length);
+        phaser->lookup_tab = lsx_malloc(sizeof (int) * phaser->length);
 
         if (phaser->modulation == MOD_SINE)
           lsx_generate_wave_table(SOX_WAVE_SINE, SOX_INT, phaser->lookup_tab,

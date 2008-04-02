@@ -383,7 +383,7 @@ static int sox_poly_start(sox_effect_t * effp)
       int j, prod, f_cutoff, f_len;
       polystage *s;
 
-      rate->stage[k] = s = (polystage*) lsx_malloc(sizeof(polystage));
+      rate->stage[k] = s = lsx_malloc(sizeof(polystage));
       s->up = l1[k];
       s->down = l2[k];
       f_cutoff = max(s->up, s->down);
@@ -397,8 +397,8 @@ static int sox_poly_start(sox_effect_t * effp)
       sox_debug("Poly:  stage %d:  Up by %d, down by %d,  i_samps %d, hsize %d",
               k+1,s->up,s->down,size, s->hsize);
       s->filt_len = f_len;
-      s->filt_array = (Float *) lsx_malloc(sizeof(Float) * f_len);
-      s->window = (Float *) lsx_malloc(sizeof(Float) * (s->hsize+size));
+      s->filt_array = lsx_malloc(sizeof(Float) * f_len);
+      s->window = lsx_malloc(sizeof(Float) * (s->hsize+size));
       /* zero past_history section of window */
       for(j = 0; j < s->hsize; j++)
         s->window[j] = 0.0;
@@ -418,14 +418,14 @@ static int sox_poly_start(sox_effect_t * effp)
     rate->oskip = skip/2;
     { /* bogus last stage is for output buffering */
       polystage *s;
-      rate->stage[k] = s = (polystage*) lsx_malloc(sizeof(polystage));
+      rate->stage[k] = s = lsx_malloc(sizeof(polystage));
       s->up = s->down = 0;
       s->size = size;
       s->hsize = 0;
       s->held = 0;
       s->filt_len = 0;
       s->filt_array = NULL;
-      s->window = (Float *) lsx_malloc(sizeof(Float) * size);
+      s->window = lsx_malloc(sizeof(Float) * size);
     }
     sox_debug("Poly:  output samples %d, oskip %d",size, rate->oskip);
     return (SOX_SUCCESS);

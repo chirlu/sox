@@ -97,7 +97,7 @@ static sox_size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, sox_s
 
   aobuf_size = (ft->encoding.bits_per_sample >> 3) * len;
 
-  sox_sw_write_buf((char *)ao->buf, buf, len, ft->encoding.reverse_bytes,
+  sox_sw_write_buf(ao->buf, buf, len, ft->encoding.reverse_bytes,
                    &(ft->clips));
   if (ao_play(ao->device, (void *)ao->buf, aobuf_size) == 0)
     return 0;

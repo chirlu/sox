@@ -165,7 +165,7 @@ static unsigned short  AdpcmReadBlock(sox_format_t * ft)
     errmsg = lsx_ms_adpcm_block_expand_i(ft->signal.channels, wav->nCoefs, wav->lsx_ms_adpcm_i_coefs, wav->packet, wav->samples, samplesThisBlock);
 
     if (errmsg)
-        sox_warn((char*)errmsg);
+        sox_warn(errmsg);
 
     return samplesThisBlock;
 }
@@ -230,7 +230,7 @@ static int wavgsminit(sox_format_t * ft)
         return (SOX_EOF);
     }
 
-    wav->gsmsample=(gsm_signal*)lsx_malloc(sizeof(gsm_signal)*160*2);
+    wav->gsmsample=lsx_malloc(sizeof(gsm_signal)*160*2);
     wav->gsmindex=0;
     return (SOX_SUCCESS);
 }
@@ -657,7 +657,7 @@ static int startread(sox_format_t * ft)
             lsx_fail_errno(ft,SOX_EOF,"ADPCM file nCoefs (%.4hx) makes no sense", wav->nCoefs);
             return SOX_EOF;
         }
-        wav->packet = (unsigned char *)lsx_malloc(wav->blockAlign);
+        wav->packet = lsx_malloc(wav->blockAlign);
 
         len -= 4;
 
@@ -667,14 +667,14 @@ static int startread(sox_format_t * ft)
             return SOX_EOF;
         }
 
-        wav->samples = (short *)lsx_malloc(wChannels*wav->samplesPerBlock*sizeof(short));
+        wav->samples = lsx_malloc(wChannels*wav->samplesPerBlock*sizeof(short));
 
         /* nCoefs, lsx_ms_adpcm_i_coefs used by adpcm.c */
-        wav->lsx_ms_adpcm_i_coefs = (short *)lsx_malloc(wav->nCoefs * 2 * sizeof(short));
+        wav->lsx_ms_adpcm_i_coefs = lsx_malloc(wav->nCoefs * 2 * sizeof(short));
         {
             int i, errct=0;
             for (i=0; len>=2 && i < 2*wav->nCoefs; i++) {
-                lsx_readw(ft, (unsigned short *)&(wav->lsx_ms_adpcm_i_coefs[i]));
+                lsx_readsw(ft, &(wav->lsx_ms_adpcm_i_coefs[i]));
                 len -= 2;
                 if (i<14) errct += (wav->lsx_ms_adpcm_i_coefs[i] != lsx_ms_adpcm_i_coef[i/2][i%2]);
                 /* sox_debug("lsx_ms_adpcm_i_coefs[%2d] %4d",i,wav->lsx_ms_adpcm_i_coefs[i]); */
@@ -708,10 +708,10 @@ static int startread(sox_format_t * ft)
             return SOX_EOF;
         }
 
-        wav->packet = (unsigned char *)lsx_malloc(wav->blockAlign);
+        wav->packet = lsx_malloc(wav->blockAlign);
         len -= 2;
 
-        wav->samples = (short *)lsx_malloc(wChannels*wav->samplesPerBlock*sizeof(short));
+        wav->samples = lsx_malloc(wChannels*wav->samplesPerBlock*sizeof(short));
 
         bytespersample = 2;  /* AFTER de-compression */
         break;
@@ -863,7 +863,7 @@ static int startread(sox_format_t * ft)
         if (lsx_seeki(ft, (sox_ssize_t)len, SEEK_CUR) == SOX_SUCCESS &&
             findChunk(ft, "LIST", &len) != SOX_EOF)
         {
-            wav->comment = (char*)lsx_malloc(256);
+            wav->comment = lsx_malloc(256);
             /* Initialize comment to a NULL string */
             wav->comment[0] = 0;
             while(!lsx_eof(ft))
@@ -1128,8 +1128,8 @@ static int startwrite(sox_format_t * ft)
             for (ch=0; ch<ft->signal.channels; ch++)
                 wav->state[ch] = 0;
             sbsize = ft->signal.channels * wav->samplesPerBlock;
-            wav->packet = (unsigned char *)lsx_malloc(wav->blockAlign);
-            wav->samples = (short *)lsx_malloc(sbsize*sizeof(short));
+            wav->packet = lsx_malloc(wav->blockAlign);
+            wav->samples = lsx_malloc(sbsize*sizeof(short));
             wav->sampleTop = wav->samples + sbsize;
             wav->samplePtr = wav->samples;
             break;

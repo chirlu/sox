@@ -25,8 +25,10 @@ int lsx_rawseek(sox_format_t * ft, sox_size_t offset)
 }
 
 /* Works nicely for starting read and write; lsx_rawstart{read,write}
-   are #defined in sox_i.h */
-int lsx_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_bool default_length, sox_encoding_t encoding, unsigned size)
+ * are #defined in sox_i.h */
+int lsx_rawstart(sox_format_t * ft, sox_bool default_rate,
+                 sox_bool default_channels, sox_bool default_length,
+                 sox_encoding_t encoding, unsigned size)
 {
   if (default_rate && ft->signal.rate == 0) {
     sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
@@ -39,21 +41,27 @@ int lsx_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_chan
   }
 
   if (encoding != SOX_ENCODING_UNKNOWN) {
-    if (ft->mode == 'r' &&
-        ft->encoding.encoding != SOX_ENCODING_UNKNOWN &&
+    if (ft->mode == 'r' && ft->encoding.encoding != SOX_ENCODING_UNKNOWN &&
         ft->encoding.encoding != encoding)
-      sox_report("'%s': Format options overriding file-type encoding", ft->filename);
-    else ft->encoding.encoding = encoding;
+      sox_report("'%s': Format options overriding file-type encoding",
+                 ft->filename);
+    else
+      ft->encoding.encoding = encoding;
   }
 
   if (size != 0) {
-    if (ft->mode == 'r' && ft->encoding.bits_per_sample != 0 && ft->encoding.bits_per_sample != size)
-      sox_report("'%s': Format options overriding file-type sample-size", ft->filename);
-    else ft->encoding.bits_per_sample = size;
+    if (ft->mode == 'r' && ft->encoding.bits_per_sample != 0 &&
+        ft->encoding.bits_per_sample != size)
+      sox_report("'%s': Format options overriding file-type sample-size",
+                 ft->filename);
+    else
+      ft->encoding.bits_per_sample = size;
   }
 
-  if (!ft->signal.length && ft->mode == 'r' && default_length && ft->encoding.bits_per_sample)
-    ft->signal.length = div_bits(lsx_filelength(ft), ft->encoding.bits_per_sample);
+  if (!ft->signal.length && ft->mode == 'r' && default_length &&
+      ft->encoding.bits_per_sample)
+    ft->signal.length =
+        div_bits(lsx_filelength(ft), ft->encoding.bits_per_sample);
 
   return SOX_SUCCESS;
 }
@@ -86,7 +94,7 @@ READ_SAMPLES_FUNC(df, sizeof(double), su, double, double, SOX_FLOAT_64BIT_TO_SAM
 
 #define WRITE_SAMPLES_FUNC(type, size, sign, ctype, uctype, cast) \
   static sox_size_t sox_write_ ## sign ## type ## _samples( \
-      sox_format_t * ft, sox_sample_t *buf, sox_size_t len) \
+      sox_format_t * ft, sox_sample_t const * buf, sox_size_t len) \
   { \
     sox_size_t n, nwritten; \
     ctype *data = lsx_malloc(sizeof(ctype) * len); \
@@ -97,110 +105,88 @@ READ_SAMPLES_FUNC(df, sizeof(double), su, double, double, SOX_FLOAT_64BIT_TO_SAM
     return nwritten; \
   }
 
-WRITE_SAMPLES_FUNC(b, 1, u, uint8_t, uint8_t, SOX_SAMPLE_TO_UNSIGNED_8BIT)
+
+WRITE_SAMPLES_FUNC(b, 1, u, uint8_t, uint8_t, SOX_SAMPLE_TO_UNSIGNED_8BIT) 
 WRITE_SAMPLES_FUNC(b, 1, s, int8_t, uint8_t, SOX_SAMPLE_TO_SIGNED_8BIT)
-WRITE_SAMPLES_FUNC(b, 1, ulaw, uint8_t, uint8_t, SOX_SAMPLE_TO_ULAW_BYTE)
+WRITE_SAMPLES_FUNC(b, 1, ulaw, uint8_t, uint8_t, SOX_SAMPLE_TO_ULAW_BYTE) 
 WRITE_SAMPLES_FUNC(b, 1, alaw, uint8_t, uint8_t, SOX_SAMPLE_TO_ALAW_BYTE)
-WRITE_SAMPLES_FUNC(w, 2, u, uint16_t, uint16_t, SOX_SAMPLE_TO_UNSIGNED_16BIT)
+WRITE_SAMPLES_FUNC(w, 2, u, uint16_t, uint16_t, SOX_SAMPLE_TO_UNSIGNED_16BIT) 
 WRITE_SAMPLES_FUNC(w, 2, s, int16_t, uint16_t, SOX_SAMPLE_TO_SIGNED_16BIT)
-WRITE_SAMPLES_FUNC(3, 3, u, uint24_t, uint24_t, SOX_SAMPLE_TO_UNSIGNED_24BIT)
+WRITE_SAMPLES_FUNC(3, 3, u, uint24_t, uint24_t, SOX_SAMPLE_TO_UNSIGNED_24BIT) 
 WRITE_SAMPLES_FUNC(3, 3, s, int24_t, uint24_t, SOX_SAMPLE_TO_SIGNED_24BIT)
-WRITE_SAMPLES_FUNC(dw, 4, u, uint32_t, uint32_t, SOX_SAMPLE_TO_UNSIGNED_32BIT)
+WRITE_SAMPLES_FUNC(dw, 4, u, uint32_t, uint32_t, SOX_SAMPLE_TO_UNSIGNED_32BIT) 
 WRITE_SAMPLES_FUNC(dw, 4, s, int32_t, uint32_t, SOX_SAMPLE_TO_SIGNED_32BIT)
-WRITE_SAMPLES_FUNC(f, sizeof(float), su, float, float, SOX_SAMPLE_TO_FLOAT_32BIT)
-WRITE_SAMPLES_FUNC(df, sizeof(double), su, double, double, SOX_SAMPLE_TO_FLOAT_64BIT)
+WRITE_SAMPLES_FUNC(f, sizeof(float), su, float, float, SOX_SAMPLE_TO_FLOAT_32BIT) 
+WRITE_SAMPLES_FUNC(df, sizeof (double), su, double, double, SOX_SAMPLE_TO_FLOAT_64BIT)
 
-typedef sox_size_t (ft_io_fun)(sox_format_t * ft, sox_sample_t *buf, sox_size_t len);
+#define GET_FORMAT(type) \
+static ft_##type##_fn * type##_fn(sox_format_t * ft) { \
+  switch (ft->encoding.bits_per_sample) { \
+    case 8: \
+      switch (ft->encoding.encoding) { \
+        case SOX_ENCODING_SIGN2: return sox_##type##_sb_samples; \
+        case SOX_ENCODING_UNSIGNED: return sox_##type##_ub_samples; \
+        case SOX_ENCODING_ULAW: return sox_##type##_ulawb_samples; \
+        case SOX_ENCODING_ALAW: return sox_##type##_alawb_samples; \
+        default: break; } \
+      break; \
+    case 16: \
+      switch (ft->encoding.encoding) { \
+        case SOX_ENCODING_SIGN2: return sox_##type##_sw_samples; \
+        case SOX_ENCODING_UNSIGNED: return sox_##type##_uw_samples; \
+        default: break; } \
+      break; \
+    case 24: \
+      switch (ft->encoding.encoding) { \
+        case SOX_ENCODING_SIGN2:    return sox_##type##_s3_samples; \
+        case SOX_ENCODING_UNSIGNED: return sox_##type##_u3_samples; \
+        default: break; } \
+      break; \
+    case 32: \
+      switch (ft->encoding.encoding) { \
+        case SOX_ENCODING_SIGN2: return sox_##type##_sdw_samples; \
+        case SOX_ENCODING_UNSIGNED: return sox_##type##_udw_samples; \
+        case SOX_ENCODING_FLOAT: return sox_##type##_suf_samples; \
+        default: break; } \
+      break; \
+    case 64: \
+      switch (ft->encoding.encoding) { \
+        case SOX_ENCODING_FLOAT: return sox_##type##_sudf_samples; \
+        default: break; } \
+      break; \
+    default: \
+      lsx_fail_errno(ft, SOX_EFMT, "this handler does not support this data size"); \
+      return NULL; } \
+  lsx_fail_errno(ft, SOX_EFMT, "this encoding is not supported for this data size"); \
+  return NULL; }
 
-static ft_io_fun *check_format(sox_format_t * ft, sox_bool write)
-{
-    switch (ft->encoding.bits_per_sample) {
-    case 8:
-      switch (ft->encoding.encoding) {
-      case SOX_ENCODING_SIGN2:
-        return write ? sox_write_sb_samples : sox_read_sb_samples;
-      case SOX_ENCODING_UNSIGNED:
-        return write ? sox_write_ub_samples : sox_read_ub_samples;
-      case SOX_ENCODING_ULAW:
-        return write ? sox_write_ulawb_samples : sox_read_ulawb_samples;
-      case SOX_ENCODING_ALAW:
-        return write ? sox_write_alawb_samples : sox_read_alawb_samples;
-      default:
-        break;
-      }
-      break;
+typedef sox_size_t(ft_read_fn)
+  (sox_format_t * ft, sox_sample_t * buf, sox_size_t len);
 
-    case 16:
-      switch (ft->encoding.encoding) {
-      case SOX_ENCODING_SIGN2:
-        return write ? sox_write_sw_samples : sox_read_sw_samples;
-      case SOX_ENCODING_UNSIGNED:
-        return write ? sox_write_uw_samples : sox_read_uw_samples;
-      default:
-        break;
-      }
-      break;
-
-    case 24:
-      switch (ft->encoding.encoding) {
-      case SOX_ENCODING_SIGN2:
-        return write ? sox_write_s3_samples : sox_read_s3_samples;
-      case SOX_ENCODING_UNSIGNED:
-        return write ? sox_write_u3_samples: sox_read_u3_samples;
-      default:
-        break;
-      }
-      break;
-
-    case 32:
-      switch (ft->encoding.encoding) {
-      case SOX_ENCODING_SIGN2:
-        return write ? sox_write_sdw_samples : sox_read_sdw_samples;
-      case SOX_ENCODING_UNSIGNED:
-        return write ? sox_write_udw_samples : sox_read_udw_samples;
-      case SOX_ENCODING_FLOAT:
-        return write ? sox_write_suf_samples : sox_read_suf_samples;
-      default:
-        break;
-      }
-      break;
-
-    case 64:
-      switch (ft->encoding.encoding) {
-      case SOX_ENCODING_FLOAT:
-        return write ? sox_write_sudf_samples : sox_read_sudf_samples;
-      default:
-        break;
-      }
-      break;
-
-    default:
-      lsx_fail_errno(ft,SOX_EFMT,"this handler does not support this data size");
-      return NULL;
-    }
-
-    lsx_fail_errno(ft,SOX_EFMT,"this encoding is not supported for this data size");
-    return NULL;
-}
+GET_FORMAT(read)
 
 /* Read a stream of some type into SoX's internal buffer format. */
-sox_size_t lsx_rawread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
+sox_size_t lsx_rawread(sox_format_t * ft, sox_sample_t * buf, sox_size_t nsamp)
 {
-    ft_io_fun * read_buf = check_format(ft, sox_false);
+  ft_read_fn * read_buf = read_fn(ft);
 
-    if (read_buf && nsamp)
-      return read_buf(ft, buf, nsamp);
-
-    return 0;
+  if (read_buf && nsamp)
+    return read_buf(ft, buf, nsamp);
+  return 0;
 }
 
+typedef sox_size_t(ft_write_fn)
+  (sox_format_t * ft, sox_sample_t const * buf, sox_size_t len);
+
+GET_FORMAT(write)
+
 /* Writes SoX's internal buffer format to buffer of various data types. */
-sox_size_t lsx_rawwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
+sox_size_t lsx_rawwrite(
+    sox_format_t * ft, sox_sample_t const * buf, sox_size_t nsamp)
 {
-    ft_io_fun *write_buf = check_format(ft, sox_true);
+  ft_write_fn * write_buf = write_fn(ft);
 
-    if (write_buf && nsamp)
-      return write_buf(ft, (sox_sample_t *)buf, nsamp);
-
-    return 0;
+  if (write_buf && nsamp)
+    return write_buf(ft, buf, nsamp);
+  return 0;
 }

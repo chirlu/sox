@@ -35,13 +35,13 @@ static int sox_trim_getopts(sox_effect_t * effp, int n, char **argv)
      */
     switch (n) {
         case 2:
-            trim->length_str = (char *)lsx_malloc(strlen(argv[1])+1);
+            trim->length_str = lsx_malloc(strlen(argv[1])+1);
             strcpy(trim->length_str,argv[1]);
             /* Do a dummy parse to see if it will fail */
             if (lsx_parsesamples(0., trim->length_str, &trim->length, 't') == NULL)
               return lsx_usage(effp);
         case 1:
-            trim->start_str = (char *)lsx_malloc(strlen(argv[0])+1);
+            trim->start_str = lsx_malloc(strlen(argv[0])+1);
             strcpy(trim->start_str,argv[0]);
             /* Do a dummy parse to see if it will fail */
             if (lsx_parsesamples(0., trim->start_str, &trim->start, 't') == NULL)

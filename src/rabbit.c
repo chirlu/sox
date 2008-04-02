@@ -88,7 +88,7 @@ static int start(sox_effect_t * effp)
   effp->out_signal.channels = effp->in_signal.channels;
   effp->out_signal.rate = out_rate;
 
-  r->data = (SRC_DATA *)lsx_calloc(1, sizeof(SRC_DATA));
+  r->data = lsx_calloc(1, sizeof(SRC_DATA));
   r->data->src_ratio = out_rate / effp->in_signal.rate;
   r->i_alloc = r->o_alloc = 0;
   r->state = src_new(r->converter_type, (int)effp->in_signal.channels, &err);

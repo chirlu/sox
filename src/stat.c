@@ -104,8 +104,8 @@ static int sox_stat_start(sox_effect_t * effp)
 
   if (stat->fft) {
     stat->fft_offset = 0;
-    stat->re_in = (float *)lsx_malloc(sizeof(float) * stat->fft_size);
-    stat->re_out = (float *)lsx_malloc(sizeof(float) * (stat->fft_size / 2));
+    stat->re_in = lsx_malloc(sizeof(float) * stat->fft_size);
+    stat->re_out = lsx_malloc(sizeof(float) * (stat->fft_size / 2));
   }
 
   return SOX_SUCCESS;

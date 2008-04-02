@@ -1,6 +1,6 @@
 /* libSoX Library Public Interface
  *
- * Copyright 1999-2007 Chris Bagwell and SoX Contributors.
+ * Copyright 1999-2008 Chris Bagwell and SoX Contributors.
  *
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained.
@@ -166,9 +166,9 @@ static double sox_macro_temp_double UNUSED;
 
 
 #include <stddef.h>
-typedef size_t sox_size_t;
-#define SOX_SIZE_MAX (sox_size_t)(-1)
-typedef ptrdiff_t sox_ssize_t;
+#define sox_size_t size_t
+#define SOX_SIZE_MAX (sox_size_t)(-sizeof(char))
+#define sox_ssize_t ptrdiff_t
 
 typedef void (*sox_output_message_handler_t)(unsigned level, const char *filename, const char *fmt, va_list ap);
 
@@ -284,8 +284,8 @@ typedef struct {
 /* vague attempt at generic information for sampler-specific info */
 
 typedef struct {
-  char MIDInote;       /* for unity pitch playback */
-  char MIDIlow, MIDIhi;/* MIDI pitch-bend range */
+  int8_t MIDInote;       /* for unity pitch playback */
+  int8_t MIDIlow, MIDIhi;/* MIDI pitch-bend range */
   char loopmode;       /* semantics of loop data */
   unsigned nloops;     /* number of active loops (max SOX_MAX_NLOOPS) */
 } sox_instrinfo_t;

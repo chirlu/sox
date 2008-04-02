@@ -210,7 +210,7 @@ static void start(sox_format_t * ft)
   priv_t * sf = (priv_t *)ft->priv;
   int subtype = ft_enc(ft->encoding.bits_per_sample? ft->encoding.bits_per_sample : ft->signal.precision, ft->encoding.encoding);
   sf->log_buffer_ptr = sf->log_buffer = lsx_malloc(LOG_MAX);
-  sf->sf_info = (SF_INFO *)lsx_calloc(1, sizeof(SF_INFO));
+  sf->sf_info = lsx_calloc(1, sizeof(SF_INFO));
 
   /* Copy format info */
   if (subtype) {

@@ -101,7 +101,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
     buf = obuf;
     samp = p->remaining;
 
-    read = fread((char *) buf, sizeof(sox_sample_t), samp, p->tmp_file);
+    read = fread(buf, sizeof(sox_sample_t), samp, p->tmp_file);
     if (read != samp) {
       perror(strerror(errno));
       sox_fail("read error on temporary file");
@@ -126,7 +126,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
 
       p->remaining = p->total - samp;
 
-      read = fread((char *) buf, sizeof(sox_sample_t), samp, p->tmp_file);
+      read = fread(buf, sizeof(sox_sample_t), samp, p->tmp_file);
       if (read != samp) {
         perror(strerror(errno));
         sox_fail("repeat2: read error on temporary " "file\n");
@@ -139,7 +139,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
     }
     *osamp = done;
   } else {
-    read = fread((char *) obuf, sizeof(sox_sample_t), *osamp, p->tmp_file);
+    read = fread(obuf, sizeof(sox_sample_t), *osamp, p->tmp_file);
     if (read != *osamp) {
       perror(strerror(errno));
       sox_fail("repeat3: read error on temporary file");

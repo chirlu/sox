@@ -65,11 +65,11 @@ static int sox_noisered_start(sox_effect_t * effp)
     sox_size_t i;
     FILE* ifp;
 
-    data->chandata = (chandata_t*)lsx_calloc(channels, sizeof(*(data->chandata)));
+    data->chandata = lsx_calloc(channels, sizeof(*(data->chandata)));
     data->bufdata = 0;
     for (i = 0; i < channels; i ++) {
-        data->chandata[i].noisegate = (float*)lsx_calloc(FREQCOUNT, sizeof(float));
-        data->chandata[i].smoothing = (float*)lsx_calloc(FREQCOUNT, sizeof(float));
+        data->chandata[i].noisegate = lsx_calloc(FREQCOUNT, sizeof(float));
+        data->chandata[i].smoothing = lsx_calloc(FREQCOUNT, sizeof(float));
         data->chandata[i].lastwindow = NULL;
     }
 
@@ -130,7 +130,7 @@ static void reduce_noise(chandata_t* chan, float* window, double level)
     float *smoothing = chan->smoothing;
     int i;
 
-    inr = (float*)lsx_calloc(WINDOWSIZE * 5, sizeof(float));
+    inr = lsx_calloc(WINDOWSIZE * 5, sizeof(float));
     ini = inr + WINDOWSIZE;
     outr = ini + WINDOWSIZE;
     outi = outr + WINDOWSIZE;
@@ -207,7 +207,7 @@ static int process_window(sox_effect_t * effp, priv_t * data, unsigned chan_num,
     chandata_t *chan = &(data->chandata[chan_num]);
     int first = (chan->lastwindow == NULL);
 
-    if ((nextwindow = (float*)lsx_calloc(WINDOWSIZE, sizeof(float))) == NULL)
+    if ((nextwindow = lsx_calloc(WINDOWSIZE, sizeof(float))) == NULL)
         return SOX_EOF;
 
     memcpy(nextwindow, chan->window+WINDOWSIZE/2,
@@ -263,7 +263,7 @@ static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_
         sox_size_t j;
 
         if (chan->window == NULL)
-            chan->window = (float*)lsx_calloc(WINDOWSIZE, sizeof(float));
+            chan->window = lsx_calloc(WINDOWSIZE, sizeof(float));
 
         for (j = 0; j < ncopy; j ++)
             chan->window[oldbuf + j] =

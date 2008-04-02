@@ -74,12 +74,12 @@ static int startread(sox_format_t * ft)
 {
     int c;
     char filetype[7];
-    char format;
-    char sample_rate;
+    int8_t format;
+    unsigned char sample_rate;
     sox_size_t num_samp_bytes = 0;
-    char gunk[8];
+    unsigned char gunk[8];
     int blewIt;
-    uint32_t trash;
+    uint8_t trash;
 
     priv_t * sk = (priv_t *) ft->priv;
     /* If you need to seek around the input file. */
@@ -90,30 +90,25 @@ static int startread(sox_format_t * ft)
     }
 
     /* This is dumb but portable, just count the bytes til EOF */
-    while (lsx_read_b_buf(ft, (unsigned char *)&trash, 1) == 1)
+    while (lsx_read_b_buf(ft, &trash, 1) == 1)
         num_samp_bytes++;
     num_samp_bytes -= 32;         /* calculate num samples by sub header size */
     lsx_seeki(ft, 0, 0);           /* rewind file */
     sk->rest = num_samp_bytes;    /* set how many sample bytes to read */
 
     /* first 6 bytes are file type ID LM8953 */
-    lsx_readb(ft, (unsigned char *)&filetype[0]);
-    lsx_readb(ft, (unsigned char *)&filetype[1]);
-    lsx_readb(ft, (unsigned char *)&filetype[2]);
-    lsx_readb(ft, (unsigned char *)&filetype[3]);
-    lsx_readb(ft, (unsigned char *)&filetype[4]);
-    lsx_readb(ft, (unsigned char *)&filetype[5]);
+    lsx_readchars(ft, filetype, sizeof(filetype) - 1);
     filetype[6] = '\0';
     for( c = 16; c > 0 ; c-- )    /* Discard next 16 bytes */
-        lsx_readb(ft, (unsigned char *)&trash);
-    lsx_readb(ft, (unsigned char *)&format);
-    lsx_readb(ft, (unsigned char *)&sample_rate);
+        lsx_readb(ft, &trash);
+    lsx_readsb(ft, &format);
+    lsx_readb(ft, &sample_rate);
     /*
      * save next 8 bytes - if sample rate is 0, then we need
      *  to look at gunk[2] and gunk[5] to get real rate
      */
     for( c = 0; c < 8; c++ )
-        lsx_readb(ft, (unsigned char *)&(gunk[c]));
+        lsx_readb(ft, &(gunk[c]));
     /*
      * We should now be pointing at start of raw sample data in file
      */
@@ -162,7 +157,7 @@ static int startread(sox_format_t * ft)
                     break;
             }
             if ( blewIt ) {
-                sox_debug("Invalid sample rate identifier found %d", (int)sample_rate);
+                sox_debug("Invalid sample rate identifier found %d", sample_rate);
                 ft->signal.rate = 1e5 / 3;
             }
     }

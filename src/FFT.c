@@ -121,7 +121,7 @@ void FFT(unsigned NumSamples,
    int BlockEnd;
 
    double angle_numerator = 2.0 * M_PI;
-   float tr, ti;                /* temp real, temp imaginary */
+   double tr, ti;                /* temp real, temp imaginary */
 
    if (!IsPowerOfTwo(NumSamples)) {
       sox_fail("%d is not a power of two", NumSamples);
@@ -155,12 +155,12 @@ void FFT(unsigned NumSamples,
 
       double delta_angle = angle_numerator / (double) BlockSize;
 
-      float sm2 = sin(-2 * delta_angle);
-      float sm1 = sin(-delta_angle);
-      float cm2 = cos(-2 * delta_angle);
-      float cm1 = cos(-delta_angle);
-      float w = 2 * cm1;
-      float ar0, ar1, ar2, ai0, ai1, ai2;
+      double sm2 = sin(-2 * delta_angle);
+      double sm1 = sin(-delta_angle);
+      double cm2 = cos(-2 * delta_angle);
+      double cm1 = cos(-delta_angle);
+      double w = 2 * cm1;
+      double ar0, ar1, ar2, ai0, ai1, ai2;
 
       for (i = 0; i < NumSamples; i += BlockSize) {
          ar2 = cm2;
@@ -234,7 +234,7 @@ void RealFFT(unsigned NumSamples, const float *RealIn, float *RealOut, float *Im
    float h1r, h1i, h2r, h2i;
    float *tmpReal, *tmpImag;
 
-   tmpReal = (float*)lsx_calloc(NumSamples, sizeof(float));
+   tmpReal = lsx_calloc(NumSamples, sizeof(float));
    tmpImag = tmpReal + Half;
 
    for (i = 0; i < Half; i++) {
@@ -295,7 +295,7 @@ void PowerSpectrum(unsigned NumSamples, const float *In, float *Out)
 
   theta = M_PI / Half;
 
-  tmpReal = (float*)lsx_calloc(Half * 4, sizeof(float));
+  tmpReal = lsx_calloc(Half * 4, sizeof(float));
   tmpImag = tmpReal + Half;
   RealOut = tmpImag + Half;
   ImagOut = RealOut + Half;

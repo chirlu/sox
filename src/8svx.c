@@ -85,7 +85,7 @@ static int startread(sox_format_t * ft)
                         lsx_readdw(ft, &chunksize);
                         if (chunksize & 1)
                                 chunksize++;
-                        chunk_buf = (char *) lsx_malloc(chunksize + 2);
+                        chunk_buf = lsx_malloc(chunksize + 2);
                         if (lsx_readbuf(ft, chunk_buf,(size_t)chunksize)
                                         != chunksize)
                         {
@@ -103,7 +103,7 @@ static int startread(sox_format_t * ft)
                         lsx_readdw(ft, &chunksize);
                         if (chunksize & 1)
                                 chunksize++;
-                        chunk_buf = (char *) lsx_malloc(chunksize + 1);
+                        chunk_buf = lsx_malloc(chunksize + 1);
                         if (lsx_readbuf(ft, chunk_buf,(size_t)chunksize)
                                         != chunksize)
                         {

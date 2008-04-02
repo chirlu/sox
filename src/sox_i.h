@@ -100,14 +100,20 @@ int lsx_readdw(sox_format_t * ft, uint32_t * udw);
 int lsx_readf(sox_format_t * ft, float * f);
 int lsx_readw(sox_format_t * ft, uint16_t * uw);
 
+UNUSED static int lsx_readsb(sox_format_t * ft, int8_t * sb)
+  {return lsx_readb(ft, (uint8_t *)sb);}
+UNUSED static int lsx_readsw(sox_format_t * ft, int16_t * sw)
+  {return lsx_readw(ft, (uint16_t *)sw);}
+
 int lsx_write3(sox_format_t * ft, unsigned u3);
 int lsx_writeb(sox_format_t * ft, unsigned ub);
 int lsx_writedf(sox_format_t * ft, double d);
 int lsx_writedw(sox_format_t * ft, unsigned udw);
 int lsx_writef(sox_format_t * ft, double f);
+int lsx_writew(sox_format_t * ft, unsigned uw);
+
 int lsx_writesb(sox_format_t * ft, signed);
 int lsx_writesw(sox_format_t * ft, signed);
-int lsx_writew(sox_format_t * ft, unsigned uw);
 
 int lsx_eof(sox_format_t * ft);
 int lsx_error(sox_format_t * ft);

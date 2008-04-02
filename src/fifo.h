@@ -44,7 +44,7 @@ UNUSED static void * fifo_reserve(fifo_t * f, size_t n)
 
   while (1) {
     if (f->end + n <= f->allocation) {
-      void *p = (char *) f->data + f->end;
+      void *p = f->data + f->end;
 
       f->end += n;
       return p;

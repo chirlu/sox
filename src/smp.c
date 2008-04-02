@@ -51,7 +51,7 @@ struct marker {
 struct smptrailer {
         struct loop loops[8];           /* loops */
         struct marker markers[8];       /* markers */
-        char MIDInote;                  /* for unity pitch playback */
+        int8_t MIDInote;                /* for unity pitch playback */
         uint32_t rate;                  /* in hertz */
         uint32_t SMPTEoffset;           /* in subframes - huh? */
         uint32_t CycleSize;             /* sample count in one cycle of the */
@@ -75,18 +75,18 @@ static char *SVmagic = "SOUND SAMPLE DATA ", *SVvers = "2.1 ";
 static int readtrailer(sox_format_t * ft, struct smptrailer *trailer)
 {
         int i;
-        int16_t trash16;
+        uint16_t trash16;
 
-        lsx_readw(ft, (unsigned short *)&trash16); /* read reserved word */
+        lsx_readw(ft, &trash16); /* read reserved word */
         for(i = 0; i < 8; i++) {        /* read the 8 loops */
                 lsx_readdw(ft, &(trailer->loops[i].start));
                 ft->oob.loops[i].start = trailer->loops[i].start;
                 lsx_readdw(ft, &(trailer->loops[i].end));
                 ft->oob.loops[i].length =
                         trailer->loops[i].end - trailer->loops[i].start;
-                lsx_readb(ft, (unsigned char *)&(trailer->loops[i].type));
+                lsx_readb(ft, &(trailer->loops[i].type));
                 ft->oob.loops[i].type = trailer->loops[i].type;
-                lsx_readw(ft, (unsigned short *)&(trailer->loops[i].count));
+                lsx_readw(ft, &(trailer->loops[i].count));
                 ft->oob.loops[i].count = trailer->loops[i].count;
         }
         for(i = 0; i < 8; i++) {        /* read the 8 markers */
@@ -98,7 +98,7 @@ static int readtrailer(sox_format_t * ft, struct smptrailer *trailer)
                 trailer->markers[i].name[MARKERLEN] = 0;
                 lsx_readdw(ft, &(trailer->markers[i].position));
         }
-        lsx_readb(ft, (unsigned char *)&(trailer->MIDInote));
+        lsx_readsb(ft, &(trailer->MIDInote));
         lsx_readdw(ft, &(trailer->rate));
         lsx_readdw(ft, &(trailer->SMPTEoffset));
         lsx_readdw(ft, &(trailer->CycleSize));
@@ -215,7 +215,7 @@ static int sox_smpstartread(sox_format_t * ft)
         }
 
         /* Read SampleVision header */
-        if (lsx_readbuf(ft, (char *)&header, HEADERSIZE) != HEADERSIZE)
+        if (lsx_readbuf(ft, &header, HEADERSIZE) != HEADERSIZE)
         {
                 lsx_fail_errno(ft,SOX_EHDR,"unexpected EOF in SMP header");
                 return(SOX_EOF);

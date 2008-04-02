@@ -172,10 +172,10 @@ static int startread(sox_format_t * ft)
     xa->bufPos = xa->blockSize;
 
     /* Allocate memory for the block buffer */
-    xa->buf = (unsigned char *)lsx_calloc(1, xa->blockSize);
+    xa->buf = lsx_calloc(1, xa->blockSize);
 
     /* Allocate memory for the state */
-    xa->state = (xa_state_t *)lsx_calloc(sizeof(xa_state_t), ft->signal.channels);
+    xa->state = lsx_calloc(sizeof(xa_state_t), ft->signal.channels);
 
     /* Final initialization */
     xa->bytesDecoded = 0;

@@ -144,7 +144,7 @@ static int sox_echo_start(sox_effect_t * effp)
                 if ( echo->samples[i] > echo->maxsamples )
                         echo->maxsamples = echo->samples[i];
         }
-        echo->delay_buf = (double *) lsx_malloc(sizeof (double) * echo->maxsamples);
+        echo->delay_buf = lsx_malloc(sizeof (double) * echo->maxsamples);
         for ( j = 0; j < echo->maxsamples; ++j )
                 echo->delay_buf[j] = 0.0;
         /* Be nice and check the hint with warning, if... */
@@ -242,8 +242,8 @@ static int sox_echo_stop(sox_effect_t * effp)
 {
         priv_t * echo = (priv_t *) effp->priv;
 
-        free((char *) echo->delay_buf);
-        echo->delay_buf = (double *) -1;   /* guaranteed core dump */
+        free(echo->delay_buf);
+        echo->delay_buf = NULL;
         return (SOX_SUCCESS);
 }
 

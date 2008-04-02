@@ -21,7 +21,7 @@
  * REMARKS: (Stan Brooks speaking)
  * This code is heavily based on the resample.c code which was
  * apparently itself a rewrite (by Lance Norskog?) of code originally
- * by Julius O. Smith, and distributed under the LGPL.
+ * by Julius O. Smith, now distributed under the LGPL.
  */
 
 #include "sox_i.h"
@@ -116,7 +116,8 @@ static int sox_filter_start(sox_effect_t * effp)
         }
 
         Xh = f->Nwin/2;
-        Fp0 = (double *) lsx_malloc(sizeof(double) * (Xh + 2)) + 1;
+        Fp0 = lsx_malloc(sizeof(double) * (Xh + 2));
+        ++Fp0;
         if (f->freq0 > (sox_sample_t)f->rate/200) {
                 Xh0 = lsx_makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, 1, 0);
                 if (Xh0 <= 1)
@@ -127,7 +128,8 @@ static int sox_filter_start(sox_effect_t * effp)
         } else {
                 Xh0 = 0;
         }
-        Fp1 = (double *) lsx_malloc(sizeof(double) * (Xh + 2)) + 1;
+        Fp1 = lsx_malloc(sizeof(double) * (Xh + 2));
+        ++Fp1;
         /* need Fp[-1] and Fp[Xh] for lsx_makeFilter */
         if (f->freq1 < (sox_sample_t)f->rate/2) {
                 Xh1 = lsx_makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, 1, 0);
@@ -160,7 +162,7 @@ static int sox_filter_start(sox_effect_t * effp)
         f->Xh = Xh;
         f->Xt = Xh;
 
-        f->X = (double *) lsx_malloc(sizeof(double) * (2*BUFFSIZE + 2*Xh));
+        f->X = lsx_malloc(sizeof(double) * (2*BUFFSIZE + 2*Xh));
         f->Y = f->X + BUFFSIZE + 2*Xh;
 
         /* Need Xh zeros at beginning of X */
@@ -239,10 +241,10 @@ static int sox_filter_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t 
         osamp_res = *osamp;
         Obuf = obuf;
         while (isamp_res>0 && osamp_res>0) {
-                sox_sample_t Isamp, Osamp;
+                sox_size_t Isamp, Osamp;
                 Isamp = isamp_res;
                 Osamp = osamp_res;
-                sox_filter_flow(effp, NULL, Obuf, (sox_size_t *)&Isamp, (sox_size_t *)&Osamp);
+                sox_filter_flow(effp, NULL, Obuf, &Isamp, &Osamp);
           /* sox_debug("DRAIN isamp,osamp  (%d,%d) -> (%d,%d)",
                  * isamp_res,osamp_res,Isamp,Osamp); */
                 Obuf += Osamp;

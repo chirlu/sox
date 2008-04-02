@@ -93,7 +93,7 @@ static int startread(sox_format_t * ft)
                         lsx_readw(ft, &bitpersam);
 
                         /* number of bits per sample after decompression */
-                        lsx_readw(ft, (unsigned short *)&trash16);
+                        lsx_readw(ft, &trash16);
 
                         lsx_readdw(ft, &nom);         /* clock source frequency */
                         lsx_readw(ft, &denom);       /* clock devide           */
@@ -160,7 +160,7 @@ static int startread(sox_format_t * ft)
                         lsx_readdw(ft, &chunksize);
                         if (chunksize & 1)
                                 chunksize++;
-                        chunk_buf = (char *) lsx_malloc(chunksize + 1);
+                        chunk_buf = lsx_malloc(chunksize + 1);
                         if (lsx_readbuf(ft, chunk_buf, chunksize)
                             != chunksize)
                         {
