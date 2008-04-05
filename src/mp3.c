@@ -336,7 +336,7 @@ static int stopread(sox_format_t * ft)
 #else /*HAVE_MAD_H*/
 static int startread(sox_format_t * ft)
 {
-  lsx_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
+  lsx_fail_errno(ft,SOX_EOF,"SoX cannot find the MP3 decoder");
   return SOX_EOF;
 }
 #define sox_mp3read NULL
@@ -496,7 +496,7 @@ static int stopwrite(sox_format_t * ft)
 #else /* HAVE_LAME_LAME_H */
 static int startwrite(sox_format_t * ft UNUSED)
 {
-  lsx_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
+  lsx_fail_errno(ft,SOX_EOF,"SoX cannot find the MP3 encoder");
   return SOX_EOF;
 }
 #define sox_mp3write NULL
