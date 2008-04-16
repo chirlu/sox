@@ -13,11 +13,13 @@ LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
 #########################
 
 bin_PROGRAMS = sox
-EXTRA_PROGRAMS = example1 example2 sox_sample_test
+EXTRA_PROGRAMS = example0 example1 example2 sox_sample_test
 lib_LTLIBRARIES = libsox.la libsfx.la
 include_HEADERS = sox.h soxstdint.h
 sox_SOURCES = sox.c
 sox_LDADD = libsox.la libsfx.la
+example0_SOURCES = example0.c
+example0_LDADD = libsox.la libsfx.la
 example1_SOURCES = example1.c
 example1_LDADD = libsox.la libsfx.la
 example2_SOURCES = example2.c
@@ -225,7 +227,7 @@ libsfx_la_SOURCES = band.h biquad.c biquad.h biquads.c chorus.c compand.c \
 	  pan.c phaser.c pitch.c polyphas.c rabbit.c remix.c repeat.c \
 	  resample.c reverb.c reverse.c silence.c skeleff.c speed.c	\
 	  splice.c stat.c stretch.c swap.c synth.c tempo.c tremolo.c trim.c \
-	  vol.c normalise.c delay.c contrast.c effects_i.c
+	  vol.c normalise.c delay.c contrast.c effects_i.c input.c output.c
 libsfx_la_CFLAGS = @SAMPLERATE_CFLAGS@
 libsfx_la_LIBADD = @SAMPLERATE_LIBS@ libsox.la
 
@@ -321,7 +323,7 @@ EXTRA_DIST = monkey.au monkey.wav \
 	     CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake \
 	     tests.sh testall.sh tests.bat testall.bat test-comments
 
-all: sox$(EXEEXT) play rec soxi sox_sample_test$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT)
+all: sox$(EXEEXT) play rec soxi sox_sample_test$(EXEEXT) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT)
 
 play rec soxi: sox$(EXEEXT)
 	./sox --help > /dev/null
@@ -340,7 +342,7 @@ uninstall-hook:
 clean-local:
 	$(RM) play rec soxi
 	$(RM) sox_sample_test
-	$(RM) example1 example2
+	$(RM) example0 example1 example2
 
 distclean-local:
 	$(RM) soxstdint.h

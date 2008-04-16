@@ -36,6 +36,7 @@
   EFFECT(flanger)
   EFFECT(gain)
   EFFECT(highpass)
+  EFFECT(input)
   EFFECT(key)
 #ifdef HAVE_LADSPA_H
   EFFECT(ladspa)
@@ -47,6 +48,7 @@
   EFFECT(noisered)
   EFFECT(norm)
   EFFECT(oops)
+  EFFECT(output)
   EFFECT(pad)
   EFFECT(pan)
   EFFECT(phaser)
