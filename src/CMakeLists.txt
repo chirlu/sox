@@ -19,16 +19,16 @@ add_custom_command(
 
 # Format with: !xargs echo|tr ' ' '\n'|sort|column|expand|sed 's/^/  /'
 set(effects_srcs
-  biquad          echo            noiseprof       repeat          swap
-  biquads         echos           noisered        resample        synth
-  chorus          fade            normalise       reverb          tempo
-  compand         FFT             output          reverse         tremolo
-  compandt        filter          pad             silence         trim
-  contrast        flanger         pan             skeleff         vol
-  dcshift         input           phaser          speed
-  delay           key             pitch           splice
-  dither          mcompand        polyphas        stat
-  earwax          mixer           remix           stretch
+  biquad          echo            noiseprof       remix           stretch
+  biquads         echos           noisered        repeat          swap
+  chorus          fade            normalise       resample        synth
+  compand         FFT             output          reverb          tempo
+  compandt        filter          pad             reverse         tremolo
+  contrast        flanger         pan             silence         trim
+  dcshift         input           phaser          skeleff         vol
+  delay           key             pitch           speed
+  dither          mcompand        polyphas        splice
+  earwax          mixer           rate            stat
 )
 set(formats_srcs
   8svx            cvsd-fmt        ima-fmt         s2-fmt          u2-fmt
@@ -47,7 +47,7 @@ add_library(lib${PROJECT_NAME}
   effects                 formats_i               ${optional_srcs}
   effects_i               ${formats_srcs}         soxstdint
   ${effects_srcs}         libsox                  xmalloc
-  formats                 libsox_i remez0
+  formats                 libsox_i
 )
 add_executable(${PROJECT_NAME} ${PROJECT_NAME}.c getopt getopt1)
 target_link_libraries(${PROJECT_NAME} lib${PROJECT_NAME} lpc10 ${optional_libs})
