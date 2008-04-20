@@ -1223,8 +1223,8 @@ This is done by repeating an output channel on the command-line.  For example,
 will overwrite channel 1 with channel 2; creating a stereo
 file with both channels containing the same audio.
 .TP
-\fBsynth\fR [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR] [\fIfreq\fR[\fI\-freq2\fR]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
-This effect can be used to generate fixed or linearly swept frequency audio tones
+\fBsynth\fR [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR] [\fIfreq\fR[\fI\-freq2\fR|\fI~freq2\fR]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
+This effect can be used to generate fixed or swept frequency audio tones
 with various wave shapes, or to generate wide-band noise of various
 `colours'.
 Multiple synth effects can be cascaded to produce more complex
@@ -1243,7 +1243,7 @@ length specified as a parameter to \fBsynth\fR or by another given
 effect that can has an associated length).
 .SP
 For example, the following produces a 3 second, 44\*d1\ kHz,
-audio file containing a sine-wave swept linearly from 300 to 3300\ Hz:
+audio file containing a sine-wave swept from 300 to 3300\ Hz:
 .EX
 	sox -n output.au synth 3 sine 300-3300
 .EE
@@ -1302,7 +1302,11 @@ synthesis in Hz or, if preceded with `%', semitones relative to A
 .I freq2
 is given, then
 .I len
-must also have been given.
+must also have been given and the generated tone will be swept between
+the given frequencies.  If
+.I freq2
+is preceded with `-', the tone will change by a fixed number of octaves
+per second; if `~', a fixed number of hertz per second.
 Not used for noise.
 .SP
 \fIoff\fR is the bias (DC-offset) of the signal in percent; default=0.

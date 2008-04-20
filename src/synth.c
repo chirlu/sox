@@ -150,6 +150,7 @@ typedef struct {
   type_t type;
   combine_t combine;
   double freq, freq2;
+  sox_bool linear_sweep;
   double offset, phase;
   double p1, p2, p3; /* Use depends on synth type */
 
@@ -325,9 +326,10 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
         sox_fail("invalid freq");
         return SOX_EOF;
       }
-      if (*char_ptr == '-') {        /* freq2 given? */
+      if (*char_ptr == '-' || *char_ptr == '~') {        /* freq2 given? */
         char *hlp2;
 
+        chan->linear_sweep = *char_ptr == '~';
         chan->freq2 = StringToFreq(char_ptr + 1, &hlp2);
         if (chan->freq2 < 0) {
           sox_fail("invalid freq2");
@@ -423,9 +425,9 @@ static sox_sample_t do_synth(sox_sample_t synth_input, priv_t * synth, unsigned 
 
     if (synth->samples_to_do <= 0)
       f = chan->freq;      /* Can't sweep if synth duration is unknown */
-    else
-      f = chan->freq * exp((log(chan->freq2) - log(chan->freq)) *
-          synth->samples_done / synth->samples_to_do);
+    else if (chan->linear_sweep)
+      f = chan->freq + (chan->freq2 - chan->freq) * synth->samples_done / synth->samples_to_do;
+    else f = chan->freq * exp((log(chan->freq2) - log(chan->freq)) * synth->samples_done / synth->samples_to_do);
     cycle_period_s = 1 / f;
     total_elapsed_time_s = synth->samples_done / rate;
     cycle_elapsed_time_s = total_elapsed_time_s - chan->cycle_start_time_s;
@@ -594,7 +596,7 @@ static int kill(sox_effect_t * effp)
 const sox_effect_handler_t *sox_synth_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "synth", "[len] {type [combine] [freq[-freq2] [off [ph [p1 [p2 [p3]]]]]]}",
+    "synth", "[len] {type [combine] [freq[-freq2|~freq2] [off [ph [p1 [p2 [p3]]]]]]}",
     SOX_EFF_MCHAN | SOX_EFF_PREC |SOX_EFF_LENGTH,
     getopts, start, flow, 0, stop, kill, sizeof(priv_t)
   };

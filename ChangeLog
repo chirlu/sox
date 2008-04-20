@@ -57,8 +57,9 @@ Effects:
   o New `norm' (normalise) effect.  (robs)
   o New `delay' effect; delay one or more channels.  (robs)
   o New `contrast' enhancement effect [FR 708923].  (robs)
-  o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)
+  o `synth' can now sweep linearly (as well as logarithmically).  (robs)
   o Fix synth max. level setting for some output encodings.  (robs)
+  o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)
   o `gain' alias for the vol effect.  (robs)
 
 Other new features:
@@ -77,6 +78,8 @@ Other new features:
     be used to override the default audio device driver (rec/play)
     and default audio device (all).  (robs)
   o Simpler file info display for `play'.  (robs)
+  o Added example0: simpler example of how to use the libSoX effects
+    chain.  (robs)
   o Added example2: simple example of how to use libSoX to read an
     audio file.  (robs)
   o For some file-types, warn if file size seems too short.  (robs)
