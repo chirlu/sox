@@ -6,3 +6,4 @@ aclocal.m4
 libtool
 sox*.tar.gz
 *.txt *.pdf
+sox.pc
