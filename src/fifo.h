@@ -20,6 +20,10 @@
 
 #include <string.h>
 
+#ifndef FIFO_SIZE_T
+#define FIFO_SIZE_T size_t
+#endif
+
 typedef struct {
   char * data;
   size_t allocation;   /* Number of bytes allocated for data. */
@@ -35,7 +39,7 @@ UNUSED static void fifo_clear(fifo_t * f)
   f->end = f->begin = 0;
 }
 
-UNUSED static void * fifo_reserve(fifo_t * f, size_t n)
+UNUSED static void * fifo_reserve(fifo_t * f, FIFO_SIZE_T n)
 {
   n *= f->item_size;
 
@@ -60,7 +64,7 @@ UNUSED static void * fifo_reserve(fifo_t * f, size_t n)
   }
 }
 
-UNUSED static void * fifo_write(fifo_t * f, size_t n, void const * data)
+UNUSED static void * fifo_write(fifo_t * f, FIFO_SIZE_T n, void const * data)
 {
   void * s = fifo_reserve(f, n);
   if (data)
@@ -68,25 +72,31 @@ UNUSED static void * fifo_write(fifo_t * f, size_t n, void const * data)
   return s;
 }
 
-UNUSED static void fifo_trim(fifo_t * f, size_t n)
+UNUSED static void fifo_trim_to(fifo_t * f, FIFO_SIZE_T n)
 {
   n *= f->item_size;
   f->end = f->begin + n;
 }
 
-UNUSED static size_t fifo_occupancy(fifo_t * f)
+UNUSED static void fifo_trim_by(fifo_t * f, FIFO_SIZE_T n)
+{
+  n *= f->item_size;
+  f->end -= n;
+}
+
+UNUSED static FIFO_SIZE_T fifo_occupancy(fifo_t * f)
 {
   return (f->end - f->begin) / f->item_size;
 }
 
-UNUSED static void * fifo_read(fifo_t * f, size_t n, void * data)
+UNUSED static void * fifo_read(fifo_t * f, FIFO_SIZE_T n, void * data)
 {
   char * ret = f->data + f->begin;
   n *= f->item_size;
-  if (n > f->end - f->begin)
+  if (n > (FIFO_SIZE_T)(f->end - f->begin))
     return NULL;
   if (data)
-    memcpy(data, ret, n);
+    memcpy(data, ret, (size_t)n);
   f->begin += n;
   return ret;
 }
@@ -98,7 +108,7 @@ UNUSED static void fifo_delete(fifo_t * f)
   free(f->data);
 }
 
-UNUSED static void fifo_create(fifo_t * f, size_t item_size)
+UNUSED static void fifo_create(fifo_t * f, FIFO_SIZE_T item_size)
 {
   f->item_size = item_size;
   f->allocation = FIFO_MIN;

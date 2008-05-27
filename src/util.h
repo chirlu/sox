@@ -1,4 +1,4 @@
-/* General purpose, i.e. non SoX specific, utility functions and macros
+/* General purpose, i.e. non SoX specific, utility functions and macros.
  *
  * (c) 2006-8 Chris Bagwell and SoX contributors
  *
@@ -100,25 +100,7 @@
 typedef struct {char const *text; unsigned value;} enum_item;
 #define ENUM_ITEM(prefix, item) {#item, prefix##item},
 
-UNUSED static enum_item const * find_enum_text(char const * text, enum_item const * enum_items)
-{
-  enum_item const * result = NULL; /* Assume not found */
-
-  while (enum_items->text) {
-    if (strncasecmp(text, enum_items->text, strlen(text)) == 0) {
-      if (result != NULL && result->value != enum_items->value)
-        return NULL;        /* Found ambiguity */
-      result = enum_items;  /* Found match */
-    }
-    ++enum_items;
-  }
-  return result;
-}
-
-UNUSED static enum_item const * find_enum_value(unsigned value, enum_item const * enum_items)
-{
-  for (;enum_items->text; ++enum_items)
-    if (value == enum_items->value)
-      return enum_items;
-  return NULL;
-}
+enum_item const * find_enum_text(char const * text, enum_item const * enum_items);
+enum_item const * find_enum_value(unsigned value, enum_item const * enum_items);
+char const * sigfigs3(size_t number);
+char const * sigfigs3p(double percentage);

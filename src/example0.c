@@ -53,7 +53,7 @@ int main(int argc, char * argv[])
   chain = sox_create_effects_chain(&in->encoding, &out->encoding);
 
   /* The first effect in the effect chain must be something that can source
-   * samples; in this case, we have defined an input handler that inputs
+   * samples; in this case, we use the built-in handler that inputs
    * data from an audio file */
   e = sox_create_effect(sox_find_effect("input"));
   args[0] = (char *)in, assert(e->handler.getopts(e, 1, args) == SOX_SUCCESS);
@@ -73,7 +73,7 @@ int main(int argc, char * argv[])
   assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
 
   /* The last effect in the effect chain must be something that only consumes
-   * samples; in this case, we have defined an output handler that outputs
+   * samples; in this case, we use the built-in handler that outputs
    * data to an audio file */
   e = sox_create_effect(sox_find_effect("output"));
   args[0] = (char *)out, assert(e->handler.getopts(e, 1, args) == SOX_SUCCESS);

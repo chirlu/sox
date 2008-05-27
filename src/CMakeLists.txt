@@ -3,7 +3,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}config.h.cmake ${CMAKE
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 if(CMAKE_COMPILER_IS_GNUCC)
-  #add_definitions(-Wconversion -Werror)
+  add_definitions(-Wconversion -Werror)
   #add_definitions(-Wno-missing-field-initializers)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
@@ -46,8 +46,8 @@ set(formats_srcs
 add_library(lib${PROJECT_NAME}
   effects                 formats_i               ${optional_srcs}
   effects_i               ${formats_srcs}         soxstdint
-  ${effects_srcs}         libsox                  xmalloc
-  formats                 libsox_i
+  ${effects_srcs}         libsox                  util
+  formats                 libsox_i                xmalloc
 )
 add_executable(${PROJECT_NAME} ${PROJECT_NAME}.c getopt getopt1)
 target_link_libraries(${PROJECT_NAME} lib${PROJECT_NAME} lpc10 ${optional_libs})

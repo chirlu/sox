@@ -599,34 +599,6 @@ static sox_size_t total_clips(void)
   return clips + mixing_clips + sox_effects_clips(&ofile_effects_chain);
 }
 
-static char const * sigfigs3(sox_size_t number)
-{
-  static char string[16][10];
-  static unsigned n;
-  unsigned a, b, c = 2;
-  sprintf(string[n = (n+1) & 15], "%#.3g", (double)number);
-  if (sscanf(string[n], "%u.%ue%u", &a, &b, &c) == 3)
-    a = 100*a + b;
-  switch (c%3) {
-    case 0: sprintf(string[n], "%u.%02u%c", a/100,a%100, " kMGTPE"[c/3]); break;
-    case 1: sprintf(string[n], "%u.%u%c"  , a/10 ,a%10 , " kMGTPE"[c/3]); break;
-    case 2: sprintf(string[n], "%u%c"     , a          , " kMGTPE"[c/3]); break;
-  }
-  return string[n];
-}
-
-static char const * sigfigs3p(double percentage)
-{
-  static char string[16][10];
-  static unsigned n;
-  sprintf(string[n = (n+1) & 15], "%.1f%%", percentage);
-  if (strlen(string[n]) < 5)
-    sprintf(string[n], "%.2f%%", percentage);
-  else if (strlen(string[n]) > 5)
-    sprintf(string[n], "%.0f%%", percentage);
-  return string[n];
-}
-
 static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
 {
   sox_bool ret;

@@ -157,7 +157,7 @@ static void tempo_flush(tempo_t * t)
       tempo_input(t, buff, 128);
       tempo_process(t);
     }
-    fifo_trim(&t->output_fifo, remaining);
+    fifo_trim_to(&t->output_fifo, remaining);
     t->samples_in = 0;
   }
   free(buff);
