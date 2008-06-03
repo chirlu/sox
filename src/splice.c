@@ -238,7 +238,7 @@ static int kill(sox_effect_t * effp)
 sox_effect_handler_t const * sox_splice_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "splice", "{position[,excess[,leaway]]}", SOX_EFF_MCHAN|SOX_EFF_LENGTH,
+    "splice", "{position[,excess[,leeway]]}", SOX_EFF_MCHAN|SOX_EFF_LENGTH,
     create, start, flow, drain, stop, kill, sizeof(priv_t)
   };
   return &handler;
