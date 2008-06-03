@@ -18,7 +18,6 @@ Deprecated features removed in this release:
   13.0.0   E avg, pick             mixer
   13.0.0   E highp, lowp           highpass -1, lowpass -1
   13.0.0   E mask                  dither
-  13.0.0   E rate                  ~= resample
   13.0.0   E vibro                 ~= tremolo
   13.0.0   F auto                  Becomes internal only
 
@@ -57,6 +56,7 @@ Effects:
   o New `norm' (normalise) effect.  (robs)
   o New `delay' effect; delay one or more channels.  (robs)
   o New `contrast' enhancement effect [FR 708923].  (robs)
+  o Rewrite of rate; resample, polyphase, & rabbit now deprecated.  (robs)
   o `synth' can now sweep linearly (as well as logarithmically).  (robs)
   o Fix synth max. level setting for some output encodings.  (robs)
   o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)
@@ -64,6 +64,8 @@ Effects:
 
 Other new features:
 
+  o Now possible to control play-back resampling quality (and hence
+    cpu-load) via the PLAY_RATE_ARG environment variable.  (robs)
   o Command line support for multiple file comments.  (robs)
   o Soxi utility to extract/display file header fields.  (robs)
   o Pkg-config support. (Pascal Giard)
@@ -108,11 +110,14 @@ Deprecated features to be removed in future:
   -------  ----------------------  ----------------------  -------
   14.0.0   E stretch               ~= tempo                2008-09-11
   14.0.0   E pitch                 ~= key                  2008-09-11
+  14.0.0   E resample              ~= rate                 14.1.0 + 1 year
+  14.0.0   E polyphase             ~= rate                 14.1.0 + 1 year
+  14.0.0   E rabbit                ~= rate                 14.1.0 + 1 year
   14.1.0   F wve (native)          wve (libsndfile)        14.1.0 + 1 year
   14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1         14.1.0 + 6 months
   14.1.0   Behaviour whereby       soxi                    14.1.0 + 1 year
            sox -V file(s) -n
-	   doesn't read to EOF.
+           doesn't read to EOF.
 
 
 sox-14.0.1	2008-01-29

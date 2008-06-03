@@ -199,7 +199,7 @@ The point \fB0,0\fR is assumed but may be overridden (by
 If the list is preceded by a
 .I soft-knee-dB
 value, then the points at where adjacent line segments on the
-transfer function meet will be rounded by the amout given. 
+transfer function meet will be rounded by the amount given. 
 Typical values for the transfer function are
 .BR 6:\-70,\-60,\-20 .
 .SP
@@ -319,7 +319,7 @@ and the decay (relative to gain-in) of that echo.
 Gain-out is the volume of the output.
 .TP
 \fBechos \fIgain-in gain-out\fR <\fIdelay decay\fR>
-Add a sequence of echos to the audio.
+Add a sequence of echoes to the audio.
 Each
 .I "delay decay"
 pair gives the delay in milliseconds
@@ -387,12 +387,22 @@ A high-pass filter is obtained by leaving \fIhigh\fR unspecified, or 0,
 or greater than or equal to the Nyquist frequency.
 .SP
 The \fIwindow-len\fR, if unspecified, defaults to 128.
-Longer windows give a sharper cutoff, smaller windows a more gradual cutoff.
+Longer windows give a sharper cut-off, smaller windows a more gradual cut-off.
 .SP
-The \fIbeta\fR, if unspecified, defaults to 16.  This selects a Kaiser window.
-You can select a Nuttall window by specifying anything \(<= 2 here.
-For more discussion of beta, look under the \fBresample\fR effect.
+The \fIbeta\fR parameter
+determines the type of filter window used.  Any value greater than 2 is
+the beta for a Kaiser window.  Beta \(<= 2 selects a Nuttall window.
+If unspecified, the default is a Kaiser window with beta 16.
 .SP
+In the case of Kaiser window (beta > 2), lower betas produce a
+somewhat faster transition from pass-band to stop-band, at the cost of
+noticeable artifacts. A beta of 16 is the default, beta less than 10
+is not recommended. If you want a sharper cut-off, don't use low
+beta's, use a longer sample window. A Nuttall window is selected by
+specifying any `beta' \(<= 2, and the Nuttall window has somewhat
+steeper cut-off than the default Kaiser window. You will probably not
+need to use the beta parameter at all, unless you are just curious
+about comparing the effects of Nuttall vs. Kaiser windows.
 .TP
 \fBflanger\fR [\fIdelay depth regen width speed shape phase interp\fR]
 Apply a flanging effect to the audio.
@@ -430,7 +440,7 @@ See [3] for a detailed description of flanging.
 .TP
 \fBgain \fIdB-gain\fR
 Apply an amplification or an attenuation to the audio signal.
-This is just a alias for the
+This is just an alias for the
 .B vol
 effect\*mhandy for those who prefer to work in dBs by default.
 .TP
@@ -474,7 +484,7 @@ argument is the plugin module, the second the name of the plugin (a
 module can contain more than one plugin) and any other arguments are
 for the control ports of the plugin. Missing arguments are supplied by
 default values if possible. Only plugins with at most one audio input
-and one audio output port can be used.  If found, the enviornment varible
+and one audio output port can be used.  If found, the environment varible
 LADSPA_PATH will be used as search path for plugins.
 .TP
 \fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR]]
@@ -694,46 +704,47 @@ The modulation is either sinusoidal (\fB\-s\fR) or triangular
 (\fB\-t\fR).  The decay should be less than 0\*d5 to avoid
 feedback.  Gain-out is the volume of the output.
 .TP
-\fBpolyphase\fR [\fB\-w nut\fR\^|\^\fBham\fR] [\fB\-width \fIn\fR] [\fB\-cutoff \fIc\fR]
-Change the sampling rate using `polyphase interpolation', a DSP algorithm.
-This method is relatively slow and memory intensive.
+\fBrate\fR [\fB\-q\fR\^|\^\fB\-l\fR\^|\^\fB\-m\fR\^|\^\fB\-h\fR\^|\^\fB\-v\fR]
+Change the audio sampling rate (i.e. resample the audio)
+using a quality level as follows:
+.TS
+center box;
+cI cI cI cI lI
+cB c c c l.
+\ 	Quality	BW %	Rej dB	Typical Use
+\-q	T{
+quick & dirty
+T}	n/a	\(~=30 @ Fs/4	T{
+.na
+playback on ancient hardware
+T}
+\-l	low	80	100	T{
+.na
+playback on old hardware
+T}
+\-m	medium	99	100	audio playback
+\-h	high	99	120	T{
+.na
+16-bit mastering (use with dither)
+T}
+\-v	very high	99\*d7	150	24-bit mastering\ 
+.TE
+.DT
 .SP
-If the \fB\-w\fR parameter is \fBnut\fR, then a Nuttall (~90 dB
-stop-band) window will be used; \fBham\fR selects a Hamming (~43
-dB stop-band) window.  The default is Nuttall.
-.SP
-The \fB\-width\fR parameter specifies the (approximate) width of the filter. The default is 1024 samples, which produces reasonable results.
-.SP
-The \fB\-cutoff\fR value (\fIc\fR) specifies the filter cutoff frequency in terms of fraction of
-frequency bandwidth, also know as the Nyquist frequency.  See
-the \fBresample\fR effect for
-further information on Nyquist frequency.  If up-sampling, then this is the
-fraction of the original signal
-that should go through.  If down-sampling, this is the fraction of the
-signal left after down-sampling.  The default is 0\*d95.
+where
+.B BW %
+is the percentage of the audio band that is preserved (based on the 3dB point)
+during sample rate conversion, and
+.B Rej dB
+is the level of noise rejection.
+The default quality level is `high' (\fB-h\fR).
 .SP
 See also
-.B rabbit
-and
-.B resample
-for other sample-rate changing effects.
-.TP
-\fBrabbit\fR [\fB\-c0\fR\^|\^\fB\-c1\fR\^|\^\fB\-c2\fR\^|\^\fB\-c3\fR\^|\^\fB\-c4\fR]
-Change the sampling rate using libsamplerate, also known as `Secret Rabbit
-Code'.  This effect is
-optional and must have been selected at compile time of SoX.  See
-http://www.mega-nerd.com/SRC for details of the algorithms.  Algorithms
-0 through 2 are progressively faster and lower quality versions of the
-sinc algorithm; the default is \fB\-c0\fR, which is probably the best
-quality algorithm for general use currently available in SoX.
-Algorithm 3 is zero-order hold, and 4 is linear interpolation.
-.SP
-See also
+.BR resample ,
 .B polyphase
 and
-.B resample
-for other sample-rate changing effects, and see
-\fBresample\fR for more discussion of resampling.
+.B rabbit
+for other sample-rate changing effects.
 .TP
 \fBremix\fR [\fB\-a\fR\^|\^\fB\-m\fR] <\fIout-spec\fR>
 \fIout-spec\fR	= \fIin-spec\fR{\fB,\fIin-spec\fR} | \fB0\fR
@@ -883,102 +894,6 @@ Requires temporary file space to store the audio to be repeated.
 Note that repeating once yields two copies: the original audio and the
 repeated audio.
 .TP
-\fBresample\fR [\fB\-qs\fR\^|\^\fB\-q\fR\^|\^\fB\-ql\fR] [\fIrolloff\fR [\fIbeta\fR]]
-Change the sampling rate using simulated
-analog filtration.  Other rate changing effects available are
-\fBpolyphase\fR and \fBrabbit\fR.  There is a detailed analysis of
-\fBresample\fR and \fBpolyphase\fR at
-http://leute.server.de/wilde/resample.html; see \fBrabbit\fR for a
-pointer to its own documentation.
-.SP
-By default, linear interpolation is used,
-with a window width about 45 samples at the lower of the two rates.
-This gives an accuracy of about 16 bits, but insufficient stop-band rejection
-in the case that you want to have roll-off greater than about 0\*d8 of
-the Nyquist frequency.
-.SP
-The \fB\-q*\fR options will change the default values for roll-off and beta
-as well as use quadratic interpolation of filter
-coefficients, resulting in about 24 bits precision.
-The \fB\-qs\fR, \fB\-q\fR, or \fB\-ql\fR options specify increased accuracy
-at the cost of lower execution speed.  It is optional to specify
-roll-off and beta parameters when using the \fB\-q*\fR options.
-.SP
-Following is a table of the reasonable defaults which are built-in to
-SoX:
-.SP
-.TS
-center box;
-cB cB cB cB cB
-c c n c c
-cB c n c c.
-Option	Window	Roll-off	Beta	Interpolation
-(none)	45	0\*d80	16	linear
-\-qs	45	0\*d80	16	quadratic
-\-q	75	0\*d875	16	quadratic
-\-ql	149	0\*d94	16	quadratic
-.TE
-.DT
-.SP
-\fB\-qs\fR, \fB\-q\fR, or \fB\-ql\fR use window lengths of 45, 75, or 149
-samples, respectively, at the lower sample-rate of the two files.
-This means progressively sharper stop-band rejection, at proportionally
-slower execution times.
-.SP
-\fIrolloff\fR refers to the cut-off frequency of the
-low pass filter and is given in terms of the
-Nyquist frequency for the lower sample rate.  rolloff therefore should
-be something between 0 and 1, in practise 0\*d8\-0\*d95.  The defaults are
-indicated above.
-.SP
-The \fINyquist frequency\fR is equal to half the sample rate.  Logically,
-this is because the A/D converter needs at least 2 samples to detect 1
-cycle at the Nyquist frequency.  Frequencies higher then the Nyquist
-will actually appear as lower frequencies to the A/D converter and
-is called aliasing.  Normally, A/D converts run the signal through
-a lowpass filter first to avoid these problems.
-.SP
-Similar problems will happen in software when reducing the sample rate of
-an audio file (frequencies above the new Nyquist frequency can be aliased
-to lower frequencies).  Therefore, a good resample effect
-will remove all frequency information above the new Nyquist frequency.
-.SP
-The \fIrolloff\fR refers to how close to the Nyquist frequency this cutoff
-is, with closer being better.  When increasing the sample rate of an
-audio file you would not expect to have any frequencies exist that are
-past the original Nyquist frequency.  Because of resampling properties, it
-is common to have aliasing artifacts created above the old
-Nyquist frequency.  In that case the \fIrolloff\fR refers to how close
-to the original Nyquist frequency to use a highpass filter to remove
-these artifacts, with closer also being better.
-.SP
-The \fIbeta\fR parameter
-determines the type of filter window used.  Any value greater than 2 is
-the beta for a Kaiser window.  Beta \(<= 2 selects a Nuttall window.
-If unspecified, the default is a Kaiser window with beta 16.
-.SP
-In the case of Kaiser window (beta > 2), lower betas produce a
-somewhat faster transition from pass-band to stop-band, at the cost of
-noticeable artifacts. A beta of 16 is the default, beta less than 10
-is not recommended. If you want a sharper cutoff, don't use low
-beta's, use a longer sample window. A Nuttall window is selected by
-specifying any `beta' \(<= 2, and the Nuttall window has somewhat
-steeper cutoff than the default Kaiser window. You will probably not
-need to use the beta parameter at all, unless you are just curious
-about comparing the effects of Nuttall vs. Kaiser windows.
-.SP
-This is the default effect if the two files have different sampling rates.
-Default parameters are, as indicated above, Kaiser window of length 45,
-roll-off 0\*d80, beta 16, linear interpolation.
-.SP
-Note: \fB\-qs\fR is only slightly slower, but more accurate for
-16-bit or higher precision.
-.SP
-Note: In many cases of up-sampling, no interpolation is needed,
-as exact filter coefficients can be computed in a reasonable amount of space.
-To be precise, this is done when both input-rate < output-rate, and
-output-rate \(di gcd(input-rate, output-rate) \(<= 511.
-.TP
 \fBreverb\fR [\fB-w\fR|\fB--wet-only\fR] [\fIreverberance\fR (50%) [\fIHF-damping\fR (50%)
 [\fIroom-scale\fR (100%) [\fIstereo-depth\fR (100%)
 .br
@@ -991,7 +906,7 @@ Note that
 increases both the volume and the length of the audio, so to prevent clipping
 in these domains, a typical invocation might be:
 .EX
-	play dry.au vol -3dB pad 0 3 reverb
+	play dry.au gain -3 pad 0 3 reverb
 .EE
 .TP
 \fBreverse\fR
@@ -1083,16 +998,15 @@ letter
 which the pitch (and tempo) should be adjusted: greater than 0
 increases, less than 0 decreases.
 .SP
-By default, the speed change is performed by the \fBresample\fR
-effect with its default parameters.  For higher quality
+By default, the speed change is performed by resampling with the \fBrate\fR
+effect using its default quality/speed.  For higher quality or higher speed
 resampling, in addition to the \fBspeed\fR effect, specify
-either the \fBresample\fR or the \fBrabbit\fR effect with
-appropriate parameters.
+the \fBrate\fR effect with the desired quality options.
 .TP
-\fBsplice \fR { \fIposition\fR[\fB,\fIexcess\fR[\fB,\fIleaway\fR]] }
+\fBsplice \fR { \fIposition\fR[\fB,\fIexcess\fR[\fB,\fIleeway\fR]] }
 Splice together audio sections.  This effect provides two things over
 simple audio concatenation: a (usually short) cross-fade is applied at
-the join and a wave similarity comparison is made to help determine the
+the join, and a wave similarity comparison is made to help determine the
 best place at which to make the join.
 .SP
 To perform a splice, first use the
@@ -1106,7 +1020,7 @@ beginning of the audio section to splice on should be trimmed with the
 same
 .IR excess
 (before the ideal joining point), plus an additional
-.I leaway
+.I leeway
 (default 0\*d005 seconds).  Sox should then be invoked with the two
 audio sections as input files and the
 .B splice
@@ -1127,7 +1041,7 @@ The following commands cut out the first verse:
 .EX
 	sox long.au part2.au trim 1:03.422
 .EE
-(5 ms excess plus 5 ms leaway, before the second verse starts)
+(5 ms excess plus 5 ms leeway, before the second verse starts)
 .EX
 	sox part1.au part2.au just-right.au splice 30.130
 .EE
@@ -1142,7 +1056,7 @@ invocation.  For example:
 # All times measured in samples.
 rate=\`soxi -r "$1"\`
 e=\`expr $rate '*' 5 / 1000\`  # Using default excess
-l=$e                         # and leaway.
+l=$e                         # and leeway.
 sox "$1" piece.au trim \`expr $2 - $e - $l\`s \\
 	\`expr $3 - $2 + $e + $l + $e\`s
 sox "$1" part1.au trim 0 \`expr $4 + $e\`s
@@ -1164,7 +1078,7 @@ join two songs.
 In this case,
 .I excess
 would typically be an number of seconds, and
-.I leaway
+.I leeway
 should be set to zero.
 .TP
 \fBstat\fR [\fB\-s \fIn\fR] [\fB\-rms\fR] [\fB\-freq\fR] [\fB\-v\fR] [\fB\-d\fR]
@@ -1192,7 +1106,8 @@ The
 option is used to scale the input data by a given factor.  The default value
 of
 .I n
-is the max value of a signed long variable (0x7fffffff).  Internal effects
+is the maximum value of a signed long integer (7fffffff in hexadecimal).
+Internal effects
 always work with signed long PCM data and so the value should relate to this
 fact.
 .SP
@@ -1461,7 +1376,7 @@ See also
 for a dynamic-range compression/expansion/limiting effect.
 .SS Deprecated Effects
 The following effects have been renamed or have their functionality
-included in another effect.  They continue to work in this version of
+included in another effect; they continue to work in this version of
 SoX but may be removed in future.
 .TP
 \fBpitch \fIshift\fR [\fIwidth interpolate fade\fR]
@@ -1470,7 +1385,7 @@ This effect is equivalent to the
 .B key
 effect with
 .I search
-set to zero, so its results are comparitively poor; 
+set to zero, so its results are comparatively poor; 
 it is retained for backwards compatibility only.
 .SP
 Change by cross-fading shifted samples.
@@ -1486,13 +1401,152 @@ option, can be \fBcubic\fR or \fBlinear\fR.  Default is \fBcubic\fR.  The
 option, can be \fBcos\fR, \fBhamming\fR, \fBlinear\fR or
 \fBtrapezoid\fR; the default is \fBcos\fR.
 .TP
+\fBpolyphase\fR [\fB\-w nut\fR\^|\^\fBham\fR] [\fB\-width \fIn\fR] [\fB\-cut-off \fIc\fR]
+Change the sampling rate using `polyphase interpolation', a DSP algorithm.
+\fBpolyphase\fR copes with only certain rational fraction resampling ratios,
+and, compared with the \fBrate\fR effect, is generally slow, memory intensive,
+and has poorer stop-band rejection.
+.SP
+If the \fB\-w\fR parameter is \fBnut\fR, then a Nuttall (~90 dB
+stop-band) window will be used; \fBham\fR selects a Hamming (~43
+dB stop-band) window.  The default is Nuttall.
+.SP
+The \fB\-width\fR parameter specifies the (approximate) width of the filter. The default is 1024 samples, which produces reasonable results.
+.SP
+The \fB\-cut-off\fR value (\fIc\fR) specifies the filter cut-off frequency in terms of fraction of
+frequency bandwidth, also know as the Nyquist frequency.  See
+the \fBresample\fR effect for
+further information on Nyquist frequency.  If up-sampling, then this is the
+fraction of the original signal
+that should go through.  If down-sampling, this is the fraction of the
+signal left after down-sampling.  The default is 0\*d95.
+.SP
+See also
+.BR rate ,
+.B rabbit
+and
+.B resample
+for other sample-rate changing effects.
+.TP
+\fBrabbit\fR [\fB\-c0\fR\^|\^\fB\-c1\fR\^|\^\fB\-c2\fR\^|\^\fB\-c3\fR\^|\^\fB\-c4\fR]
+Change the sampling rate using libsamplerate, also known as `Secret Rabbit
+Code'.  This effect is optional and, due to licence issues,
+is not included in all versions of SoX.
+Compared with the \fBrate\fR effect, \fBrabbit\fR is very slow.
+.SP
+See http://www.mega-nerd.com/SRC for details of the algorithms.  Algorithms
+0 through 2 are progressively faster and lower quality versions of the
+sinc algorithm; the default is \fB\-c0\fR.
+Algorithm 3 is zero-order hold, and 4 is linear interpolation.
+.SP
+See also
+.BR rate ,
+.B polyphase
+and
+.B resample
+for other sample-rate changing effects, and see
+\fBresample\fR for more discussion of resampling.
+.TP
+\fBresample\fR [\fB\-qs\fR\^|\^\fB\-q\fR\^|\^\fB\-ql\fR] [\fIrolloff\fR [\fIbeta\fR]]
+Change the sampling rate using simulated analog filtration.
+Compared with the \fBrate\fR effect, \fBresample\fR is slow, and has poorer
+stop-band rejection.
+Only the low quality option works with all resampling ratios.
+.SP
+By default, linear interpolation of the filter coefficients is used,
+with a window width about 45 samples at the lower of the two rates.
+This gives an accuracy of about 16 bits, but insufficient stop-band rejection
+in the case that you want to have roll-off greater than about 0\*d8 of
+the Nyquist frequency.
+.SP
+The \fB\-q*\fR options will change the default values for roll-off and beta
+as well as use quadratic interpolation of filter
+coefficients, resulting in about 24 bits precision.
+The \fB\-qs\fR, \fB\-q\fR, or \fB\-ql\fR options specify increased accuracy
+at the cost of lower execution speed.  It is optional to specify
+roll-off and beta parameters when using the \fB\-q*\fR options.
+.SP
+Following is a table of the reasonable defaults which are built-in to
+SoX:
+.SP
+.TS
+center box;
+cB cB cB cB cB
+c c n c c
+cB c n c c.
+Option	Window	Roll-off	Beta	Interpolation
+(none)	45	0\*d80	16	linear
+\-qs	45	0\*d80	16	quadratic
+\-q	75	0\*d875	16	quadratic
+\-ql	149	0\*d94	16	quadratic
+.TE
+.DT
+.SP
+\fB\-qs\fR, \fB\-q\fR, or \fB\-ql\fR use window lengths of 45, 75, or 149
+samples, respectively, at the lower sample-rate of the two files.
+This means progressively sharper stop-band rejection, at proportionally
+slower execution times.
+.SP
+\fIrolloff\fR refers to the cut-off frequency of the
+low pass filter and is given in terms of the
+Nyquist frequency for the lower sample rate.  rolloff therefore should
+be something between 0 and 1, in practise 0\*d8\-0\*d95.  The defaults are
+indicated above.
+.SP
+The \fINyquist frequency\fR is equal to half the sample rate.  Logically,
+this is because the A/D converter needs at least 2 samples to detect 1
+cycle at the Nyquist frequency.  Frequencies higher then the Nyquist
+will actually appear as lower frequencies to the A/D converter and
+is called aliasing.  Normally, A/D converts run the signal through
+a lowpass filter first to avoid these problems.
+.SP
+Similar problems will happen in software when reducing the sample rate of
+an audio file (frequencies above the new Nyquist frequency can be aliased
+to lower frequencies).  Therefore, a good resample effect
+will remove all frequency information above the new Nyquist frequency.
+.SP
+The \fIrolloff\fR refers to how close to the Nyquist frequency this cut-off
+is, with closer being better.  When increasing the sample rate of an
+audio file you would not expect to have any frequencies exist that are
+past the original Nyquist frequency.  Because of resampling properties, it
+is common to have aliasing artifacts created above the old
+Nyquist frequency.  In that case the \fIrolloff\fR refers to how close
+to the original Nyquist frequency to use a highpass filter to remove
+these artifacts, with closer also being better.
+.SP
+The \fIbeta\fR, if unspecified, defaults to 16.  This selects a Kaiser window.
+You can select a Nuttall window by specifying anything \(<= 2 here.
+For more discussion of beta, look under the \fBfilter\fR effect.
+.SP
+Default parameters are, as indicated above, Kaiser window of length 45,
+roll-off 0\*d80, beta 16, linear interpolation.
+.SP
+Note: \fB\-qs\fR is only slightly slower, but more accurate for
+16-bit or higher precision.
+.SP
+Note: In many cases of up-sampling, no interpolation is needed,
+as exact filter coefficients can be computed in a reasonable amount of space.
+To be precise, this is done when both input-rate < output-rate, and
+output-rate \(di gcd(input-rate, output-rate) \(<= 511.
+.SP
+See also
+.BR rate ,
+.B polyphase
+and
+.B rabbit
+for other sample-rate changing effects.
+There is a detailed analysis of
+\fBresample\fR and \fBpolyphase\fR at
+http://leute.server.de/wilde/resample.html; see \fBrabbit\fR for a
+pointer to its own documentation.
+.TP
 \fBstretch \fIfactor\fR [\fIwindow fade shift fading\fR]
 Change the audio duration (but not its pitch).
 This effect is equivalent to the
 .B tempo
 effect with (\fIfactor\fR inverted and)
 .I search
-set to zero, so its results are comparitively poor; 
+set to zero, so its results are comparatively poor; 
 it is retained for backwards compatibility only.
 .SP
 .I factor

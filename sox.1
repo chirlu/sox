@@ -90,11 +90,9 @@ the \fBvol\fR and \fBdither\fR effects.
 .EE
 adds a header to a raw audio file,
 .EX
-	sox slow.aiff fixed.aiff speed 1.027 rabbit
+	sox slow.aiff fixed.aiff speed 1.027
 .EE
-adjusts audio speed using the
-.B rabbit
-algorithm,
+adjusts audio speed,
 .EX
 	sox short.au long.au longer.au
 .EE
@@ -250,6 +248,27 @@ or
 	set AUDIODEV=hw:0
 	play ...
 	sox ... -t alsa
+.EE
+(Note that the syntax of the
+.B set
+command may vary from system to system.)
+.SP
+When playing a file with a sample rate that is not supported by the
+audio output device, SoX will automatically invoke the \fBrate\fR effect
+to perform the necessary sample rate conversion.  For
+compatibility with old hardware, here, the
+default \fBrate\fR quality level is set to `low'; however, this
+can be changed if desired, by explicitly specifing the \fBrate\fR
+effect with a different quality level, e.g.
+.EX
+	play ... rate -m
+.EE
+or by setting the environment varible
+.B PLAY_RATE_ARG
+to the desired quality option, e.g.
+.EX
+	set PLAY_RATE_ARG=-m
+	play ...
 .EE
 (Note that the syntax of the
 .B set
@@ -684,7 +703,8 @@ If the input and output files have
 different rates then a sample rate change effect must be run.  Since
 SoX has
 multiple rate changing effects, the user can specify which to use as an effect.
-If no rate change effect is specified then a default one will be chosen.
+If no rate change effect is specified then the \fBrate\fR effect will
+be chosen by default.
 .TP
 \fB\-t\fR, \fB\-\-type\fR \fIfile-type\fR
 Gives the type of the audio file.  This is useful when the

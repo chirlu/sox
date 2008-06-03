@@ -220,14 +220,18 @@ endif
 # libsfx - effects library #
 ############################
 
-libsfx_la_SOURCES = band.h biquad.c biquad.h biquads.c chorus.c compand.c \
-	  compandt.c compandt.h dcshift.c dither.c earwax.c echo.c echos.c \
-	  effects.c effects.h fade.c FFT.c FFT.h fifo.h filter.c flanger.c key.c \
-	  ladspa.c mcompand.c mixer.c noiseprof.c noisered.c noisered.h pad.c \
-	  pan.c phaser.c pitch.c polyphas.c rabbit.c remix.c repeat.c \
-	  resample.c reverb.c reverse.c silence.c skeleff.c speed.c	\
-	  splice.c stat.c stretch.c swap.c synth.c tempo.c tremolo.c trim.c \
-	  vol.c normalise.c delay.c contrast.c effects_i.c input.c output.c
+libsfx_la_SOURCES = \
+	band.h biquad.c biquad.h biquads.c chorus.c compand.c compandt.c \
+	compandt.h contrast.c dcshift.c delay.c dither.c earwax.c echo.c \
+	echos.c effects.c effects.h effects_i.c fade.c fft4g.c fft4g.h FFT.c \
+	FFT.h fifo.h filter.c flanger.c input.c key.c ladspa.c mcompand.c \
+	mixer.c noiseprof.c noisered.c noisered.h normalise.c output.c pad.c \
+	pan.c phaser.c pitch.c polyphas.c rabbit.c rate.c rate_coefs.h \
+	rate_filters.h rate_half_fir.h rate_poly_fir0.h rate_poly_fir.h \
+	remix.c repeat.c resample.c reverb.c reverse.c silence.c skeleff.c \
+	speed.c	splice.c stat.c stretch.c swap.c synth.c tempo.c tremolo.c \
+	trim.c vol.c
+
 libsfx_la_CFLAGS = @SAMPLERATE_CFLAGS@
 libsfx_la_LIBADD = @SAMPLERATE_LIBS@ libsox.la
 

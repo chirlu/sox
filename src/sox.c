@@ -115,12 +115,12 @@ static size_t input_count = 0;
 /* We parse effects into a temporary effects table and then place into
  * the real effects table.  This makes it easier to reorder some effects
  * as needed.  For instance, we can run a resampling effect before
- * converting a mono file to stereo.  This allows the resample to work
+ * converting a mono file to stereo.  This allows the resampling to work
  * on half the data.
  *
  * User effects table must be 4 entries smaller then the real
  * effects table.  This is because at most we will need to add
- * a resample effect, a channel mixing effect, the input, and the output.
+ * a resampling effect, a channel mixing effect, the input, and the output.
  */
 #define MAX_USER_EFF (SOX_MAX_EFFECTS - 4)
 static sox_effect_t * user_efftab[MAX_USER_EFF];
@@ -525,17 +525,18 @@ static sox_effect_handler_t const * output_effect_fn(void)
   return &handler;
 }
 
-static void add_auto_effect(sox_effects_chain_t * chain, char const * name, sox_signalinfo_t * signal)
+static void add_auto_effect(sox_effects_chain_t * chain, char const * name, char * arg, sox_signalinfo_t * signal)
 {
   sox_effect_t * effp;
+  char * * argv = & arg;
 
-  /* Auto effect should always succeed here */
-  effp = sox_create_effect(sox_find_effect(name));
-  effp->handler.getopts(effp, 0, NULL);          /* Set up with default opts */
+  effp = sox_create_effect(sox_find_effect(name)); /* Should always succeed. */
 
-  /* But could fail here */
+  if (effp->handler.getopts(effp, arg != NULL, argv) == SOX_EOF)
+    exit(1); /* The failing effect should have displayed an error message */
+  
   if (sox_add_effect(chain, effp, signal, &ofile->ft->signal) != SOX_SUCCESS)
-    exit(2);
+    exit(2); /* The effects chain should have displayed an error message */
 }
 
 /* If needed effects are not given, auto-add at (performance) optimal point. */
@@ -544,6 +545,8 @@ static void add_effects(sox_effects_chain_t * chain)
   sox_signalinfo_t signal = combiner_signal;
   unsigned i, min_chan = 0, min_rate = 0;
   sox_effect_t * effp;
+  char * rate_arg = sox_mode != sox_play? NULL :
+    (rate_arg = getenv("PLAY_RATE_ARG"))? rate_arg : "-l";
 
   /* Find points after which we might add effects to change rate/chans */
   for (i = 0; i < nuser_effects; i++) {
@@ -560,12 +563,12 @@ static void add_effects(sox_effects_chain_t * chain)
   for (i = 0; i <= nuser_effects; i++) {
     /* If reducing channels, it's faster to do so before all other effects: */
     if (signal.channels > ofile->ft->signal.channels && i >= min_chan)
-      add_auto_effect(chain, "mixer", &signal);
+      add_auto_effect(chain, "mixer", NULL, &signal);
 
     /* If reducing rate, it's faster to do so before all other effects
      * (except reducing channels): */
     if (signal.rate > ofile->ft->signal.rate && i >= min_rate)
-      add_auto_effect(chain, "resample", &signal);
+      add_auto_effect(chain, "rate", rate_arg, &signal);
 
     if (i < nuser_effects)
       if (sox_add_effect(chain, user_efftab[i], &signal, &ofile->ft->signal) != SOX_SUCCESS)
@@ -573,9 +576,9 @@ static void add_effects(sox_effects_chain_t * chain)
   }
   /* Add auto effects if still needed at this point */
   if (signal.rate != ofile->ft->signal.rate)
-    add_auto_effect(chain, "resample", &signal);  /* Must be up-sampling */
+    add_auto_effect(chain, "rate", rate_arg, &signal); /* Must be up-sampling */
   if (signal.channels != ofile->ft->signal.channels)
-    add_auto_effect(chain, "mixer", &signal);     /* Must be increasing channels */
+    add_auto_effect(chain, "mixer", NULL, &signal); /* Must be increasing channels */
 
   /* Last `effect' in the chain is the output file */
   effp = sox_create_effect(output_effect_fn());
