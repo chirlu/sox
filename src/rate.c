@@ -18,6 +18,10 @@
 /* Based upon the techniques described in `The Quest For The Perfect Resampler'
  * by Laurent De Soras; http://ldesoras.free.fr/doc/articles/resampler-en.pdf */
 
+#ifdef NDEBUG /* Enable assert always. */
+#undef NDEBUG /* Must undef above assert.h or other that might include it. */
+#endif
+
 #include "sox_i.h"
 #include "fft4g.h"
 #define  FIFO_SIZE_T int
@@ -32,9 +36,6 @@
 #define  TO_SOX     SOX_FLOAT_64BIT_TO_SAMPLE
 #define  FROM_SOX   SOX_SAMPLE_TO_FLOAT_64BIT
 #define  coef(coef_p, interp_order, fir_len, phase_num, coef_interp_num, fir_coef_num) coef_p[(fir_len) * ((interp_order) + 1) * (phase_num) + ((interp_order) + 1) * (fir_coef_num) + (interp_order - coef_interp_num)]
-#ifdef   NDEBUG
-#undef   NDEBUG     /* Enable assert always */
-#endif
 
 static sample_t * prepare_coefs(raw_coef_t const * coefs, int num_coefs,
     int num_phases, int interp_order, int multiplier)
@@ -69,11 +70,11 @@ static sample_t * prepare_coefs(raw_coef_t const * coefs, int num_coefs,
 typedef struct {
   int        dft_length, num_taps;
   sample_t   * coefs;
-} half_band_t;
+} half_band_t;      /* Note: not half-band as in symmetric about Fn/2 (Fs/4) */
 
 typedef struct {    /* Data that are shared between channels and filters */
   sample_t   * poly_fir_coefs;
-  half_band_t half_band[2];    /* [0]: halve; [1]: down/up: halve/double */ 
+  half_band_t half_band[2];    /* [0]: halve; [1]: down/up: halve/double */
   sample_t   * sin_cos_table;  /* For Ooura fft */
   int        * bit_rev_table;  /* ditto */
 } rate_shared_t;
@@ -81,17 +82,14 @@ typedef struct {    /* Data that are shared between channels and filters */
 struct stage;
 typedef void (* stage_fn_t)(struct stage * input, fifo_t * output);
 typedef struct stage {
+  rate_shared_t * shared;
   fifo_t     fifo;
   int        pre;              /* Number of past samples to store */
   int        pre_post;         /* pre + number of future samples to store */
   int        preload;          /* Number of zero samples to pre-load the fifo */
   int        which;            /* Which of the 2 half-band filters to use */
   stage_fn_t fn;
-  sample_t   out_in_ratio;
-
-  rate_shared_t * shared;
                                /* For poly_fir & spline: */
-  int       divisor;
   union {                      /* 32bit.32bit fixed point arithmetic */
     #if defined(WORDS_BIGENDIAN)
     struct {int32_t integer; uint32_t fraction;} parts;
@@ -101,6 +99,8 @@ typedef struct stage {
     int64_t all;
     #define MULT32 (65536. * 65536.)
   } at, step;
+  int        divisor;          /* For step: > 1 for rational; 1 otherwise */
+  double     out_in_ratio;
 } stage_t;
 
 #define stage_occupancy(s) max(0, fifo_occupancy(&(s)->fifo) - (s)->pre_post)
@@ -223,10 +223,10 @@ static double * design_lpf(
 {
   double tr_bw, beta;
 
-  Fp /= Fn, Fc /= Fn;        /* Normalise to Fn (nyquist) = 1 */
+  Fp /= Fn, Fc /= Fn;        /* Normalise to Fn = 1 */
   tr_bw = .5869 * (Fc - Fp); /* Transition band-width: 6dB to stop points */
 
-  if (*num_taps == 0) {
+  if (*num_taps == 0) {        /* TODO this could be cleaner, esp. for k != 0 */
     double n160 = (.0425* att - 1.4) /  tr_bw;    /* Half order for att = 160 */
     int n = n160 * (16.556 / (att - 39.6) + .8625) + .5;  /* For att [80,160) */
     *num_taps = k? 2 * n : 2 * (n + (n & 1)) + 1; /* =1 %4 (0 phase 1/2 band) */
@@ -248,10 +248,11 @@ static int set_dft_length(int num_taps) /* Set to 4 x nearest power of 2 */
   return result;
 }
 
-static void half_band_filter_init(rate_shared_t * p, unsigned which, int num_taps, sample_t const h[], double Fp, double atten, int multiplier)
+static void half_band_filter_init(rate_shared_t * p, unsigned which,
+    int num_taps, sample_t const h[], double Fp, double atten, int multiplier)
 {
   half_band_t * f = &p->half_band[which];
-  int dft_length, i, M = num_taps / 2;
+  int dft_length, i;
 
   if (f->num_taps)
     return;
@@ -260,7 +261,7 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which, int num_tap
     f->coefs = calloc(dft_length, sizeof(*f->coefs));
     for (i = 0; i < num_taps; ++i)
       f->coefs[(i + dft_length - num_taps + 1) & (dft_length - 1)]
-          = h[abs(M - i)] / dft_length * 2 * multiplier;
+          = h[abs(num_taps / 2 - i)] / dft_length * 2 * multiplier;
   }
   else {
     double * h = design_lpf(Fp, 1., 2., atten, &num_taps, 0);
@@ -274,10 +275,11 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which, int num_tap
   assert(num_taps & 1);
   f->num_taps = num_taps;
   f->dft_length = dft_length;
-  sox_debug("fir_len=%i dft_length=%i Fp=%g atten=%g", num_taps, dft_length, Fp, atten);
+  sox_debug("fir_len=%i dft_length=%i Fp=%g atten=%g mult=%i",
+      num_taps, dft_length, Fp, atten, multiplier);
   if (!p->bit_rev_table) {
-    p->bit_rev_table = calloc((size_t)sqrt((double)dft_length) + 2, sizeof(*p->bit_rev_table));
-    p->sin_cos_table = calloc(dft_length / 2, sizeof(*p->sin_cos_table));
+    p->bit_rev_table = calloc(dft_br_len(dft_length),sizeof(*p->bit_rev_table));
+    p->sin_cos_table = calloc(dft_sc_len(dft_length),sizeof(*p->sin_cos_table));
   }
   rdft(dft_length, 1, f->coefs, p->bit_rev_table, p->sin_cos_table);
 }
@@ -287,7 +289,7 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which, int num_tap
 typedef struct {
   double     factor;
   size_t     samples_in, samples_out;
-  int        level, input_level, output_level;
+  int        level, input_stage_num, output_stage_num;
   sox_bool   upsample;
   stage_t    * stages;
 } rate_t;
@@ -334,10 +336,10 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor, quality
   sox_debug("i/o=%g; %.9g:%i @ level %i", p->factor, factor, divisor, p->level);
 
   mult = 1 + p->upsample; /* Compensate for zero-stuffing in double_sample */
-  p->input_level = -p->upsample;
-  p->output_level = p->level;
+  p->input_stage_num = -p->upsample;
+  p->output_stage_num = p->level;
   if (quality == Quick) {
-    ++p->output_level;
+    ++p->output_stage_num;
     last_stage.fn = cubic_spline;
     last_stage.pre_post = max(3, last_stage.step.parts.integer);
     last_stage.preload = last_stage.pre = 1;
@@ -350,9 +352,9 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor, quality
       interp_order = quality > High;
     interp_order = divisor == 1? 1 + interp_order : 0;
     last_stage.divisor = divisor;
-    p->output_level += 2;
+    p->output_stage_num += 2;
     if (p->upsample && quality == Low)
-      mult = 1, ++p->input_level, --p->output_level, --n;
+      mult = 1, ++p->input_stage_num, --p->output_stage_num, --n;
     f = &poly_firs[n];
     f1 = &f->interp[interp_order];
     if (!last_stage.shared->poly_fir_coefs) {
@@ -362,7 +364,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor, quality
       assert(num_taps == f->num_coefs * phases - 1);
       last_stage.shared->poly_fir_coefs =
           prepare_coefs(coefs, f->num_coefs, phases, interp_order, mult);
-      sox_debug("fir_len=%i phases=%i coef_interp=%i multiplier=%i size=%s",
+      sox_debug("fir_len=%i phases=%i coef_interp=%i mult=%i size=%s",
           f->num_coefs, phases, interp_order, mult,
           sigfigs3((num_taps + 1) * (interp_order + 1) * sizeof(sample_t)));
       free(coefs);
@@ -373,12 +375,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor, quality
     last_stage.preload = last_stage.pre_post >> 1;
     mult = 1;
   }
-  if (quality == Low) { /* dft is slower here, so use normal convolution */
-    post_stage.fn = half_sample_low;
-    post_stage.pre_post = 2 * (array_length(half_fir_coefs_low) - 1);
-    post_stage.preload = post_stage.pre = post_stage.pre_post >> 1;
-  }
-  else if (quality != Quick) {
+  if (quality > Low) {
     typedef struct {int len; sample_t const * h; double bw, a;} filter_t;
     static filter_t const filters[] = {
       {2 * array_length(half_fir_coefs_low) - 1, half_fir_coefs_low, 0,0},
@@ -396,13 +393,18 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor, quality
         half_band_filter_init(shared, 0, 0, NULL, max(p->factor, .64), f->a, 1);
       else shared->half_band[0] = shared->half_band[1];
     }
-    else if (p->level > 0 && p->output_level > p->level) {
+    else if (p->level > 0 && p->output_stage_num > p->level) {
       double pass = f->bw * divisor / factor / 2;
       if ((1 - pass) / (1 - f->bw) > 2)
         half_band_filter_init(shared, 1, 0, NULL, max(pass, .64), f->a, 1);
     }
     post_stage.fn = half_sample;
     post_stage.preload = shared->half_band[0].num_taps >> 1;
+  }
+  else if (quality == Low && !p->upsample) {    /* dft is slower here, so */
+    post_stage.fn = half_sample_low;            /* use normal convolution */
+    post_stage.pre_post = 2 * (array_length(half_fir_coefs_low) - 1);
+    post_stage.preload = post_stage.pre = post_stage.pre_post >> 1;
   }
   if (p->level > 0) {
     stage_t * s = & p->stages[p->level - 1];
@@ -413,7 +415,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor, quality
     }
     else *s = post_stage;
   }
-  for (i = p->input_level; i <= p->output_level; ++i) {
+  for (i = p->input_stage_num; i <= p->output_stage_num; ++i) {
     stage_t * s = &p->stages[i];
     if (i >= 0 && i < p->level - 1) {
       s->fn = half_sample_25;
@@ -422,36 +424,37 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor, quality
     }
     fifo_create(&s->fifo, sizeof(sample_t));
     memset(fifo_reserve(&s->fifo, s->preload), 0, sizeof(sample_t)*s->preload);
-    if (i < p->output_level)
-      sox_debug("stage=%-3ipre_post=%-3ipre=%-3ipreload=%i", i, s->pre_post, s->pre, s->preload);
+    if (i < p->output_stage_num)
+      sox_debug("stage=%-3ipre_post=%-3ipre=%-3ipreload=%i",
+          i, s->pre_post, s->pre, s->preload);
   }
 }
 
 static void rate_process(rate_t * p)
 {
-  stage_t * stage = p->stages + p->input_level;
+  stage_t * stage = p->stages + p->input_stage_num;
   int i;
 
-  for (i = p->input_level; i < p->output_level; ++i, ++stage)
+  for (i = p->input_stage_num; i < p->output_stage_num; ++i, ++stage)
     stage->fn(stage, &(stage+1)->fifo);
 }
 
 static sample_t * rate_input(rate_t * p, sample_t const * samples, size_t n)
 {
   p->samples_in += n;
-  return fifo_write(&p->stages[p->input_level].fifo, (int)n, samples);
+  return fifo_write(&p->stages[p->input_stage_num].fifo, (int)n, samples);
 }
 
 static sample_t const * rate_output(rate_t * p, sample_t * samples, size_t * n)
 {
-  fifo_t * fifo = &p->stages[p->output_level].fifo;
+  fifo_t * fifo = &p->stages[p->output_stage_num].fifo;
   p->samples_out += *n = min(*n, (size_t)fifo_occupancy(fifo));
   return fifo_read(fifo, (int)*n, samples);
 }
 
 static void rate_flush(rate_t * p)
 {
-  fifo_t * fifo = &p->stages[p->output_level].fifo;
+  fifo_t * fifo = &p->stages[p->output_stage_num].fifo;
   size_t samples_out = p->samples_in / p->factor + .5;
   size_t remaining = samples_out - p->samples_out;
   sample_t * buff = calloc(1024, sizeof(*buff));
@@ -472,7 +475,7 @@ static void rate_close(rate_t * p)
   rate_shared_t * shared = p->stages[0].shared;
   int i;
 
-  for (i = p->input_level; i <= p->output_level; ++i)
+  for (i = p->input_stage_num; i <= p->output_stage_num; ++i)
     fifo_delete(&p->stages[i].fifo);
   free(shared->bit_rev_table);
   free(shared->sin_cos_table);
@@ -569,10 +572,10 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_rate_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "rate", "[-q|-l|-m|-s|-h]\n"
+    "rate", "[-q|-l|-m|-h|-v]\n"
     "     Quality        BW %    Rej dB    Typical Use\n"
     " -q  quick & dirty  n/a   ~30 @ Fs/4  playback on ancient hardware\n"
-    " -l  low            80       100      playback on old hardware\n" 
+    " -l  low            80       100      playback on old hardware\n"
     " -m  medium         99       100      audio playback\n"
     " -h  high           99       120      16-bit mastering (use with dither)\n"
     " -v  very high      99.7     150      24-bit mastering"
