@@ -26,3 +26,6 @@ void ddct_f(int, int, float *, int *, float *);
 void ddst_f(int, int, float *, int *, float *);
 void dfct_f(int, float *, float *, int *, float *);
 void dfst_f(int, float *, float *, int *, float *);
+
+#define dft_br_len(l) (2 + (1 << (int)(log(l / 2 + .5) / log(2.)) / 2))
+#define dft_sc_len(l) (l / 2)
