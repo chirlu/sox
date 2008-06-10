@@ -621,7 +621,7 @@ static sox_effect_handler_t sox_polyphase_effect = {
   "       -width n       window width in samples [default 1024]\n"
   "\n"
   "       -cutoff float  frequency cutoff for base bandwidth [default 0.95]",
-  SOX_EFF_RATE,
+  SOX_EFF_RATE | SOX_EFF_DEPRECATED,
   sox_poly_getopts,
   sox_poly_start,
   sox_poly_flow,

@@ -206,3 +206,14 @@ char const * lsx_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samp
     }
     return NULL;
 }
+
+double bessel_I_0(double x)
+{
+  double term = 1, sum = 1, last_sum, x2 = x / 2;
+  int i = 1;
+  do {
+    double y = x2 / i++;
+    last_sum = sum, sum += term *= y * y;
+  } while (sum != last_sum);
+  return sum;
+}

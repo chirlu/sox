@@ -185,7 +185,7 @@ const sox_effect_handler_t *sox_rabbit_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "rabbit", "[-c0|-c1|-c2|-c3|-c4] [rate]",
-    SOX_EFF_RATE | SOX_EFF_MCHAN,
+    SOX_EFF_RATE | SOX_EFF_MCHAN | SOX_EFF_DEPRECATED,
     getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
 

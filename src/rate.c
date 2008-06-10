@@ -187,29 +187,19 @@ static void double_sample(stage_t * p, fifo_t * output_fifo)
   }
 }
 
-static double bessel_I_0(double x)
-{
-  double term = 1, sum = 1, last_sum, x2 = x / 2;
-  int i = 1;
-  do {
-    double y = x2 / i++;
-    last_sum = sum, sum += term *= y * y;
-  } while (sum != last_sum);
-  return sum;
-}
-
 static double * make_lpf(int num_taps, double Fc, double beta, double scale)
 {
-  double * h = malloc(num_taps * sizeof(*h));
+  double * h = malloc(num_taps * sizeof(*h)), sum = 0;
   int i, m = num_taps - 1;
   assert(Fc >= 0 && Fc <= 1);
-  scale /= bessel_I_0(beta);
   for (i = 0; i <= m / 2; ++i) {
     double x = M_PI * (i - .5 * m), y = 2. * i / m - 1;
     h[i] = x? sin(Fc * x) / x : Fc;
-    h[i] *= bessel_I_0(beta * sqrt(1 - y * y)) * scale;
-    h[m - i] = h[i];
+    sum += h[i] *= bessel_I_0(beta * sqrt(1 - y * y));
+    if (m - i != i)
+      sum += h[m - i] = h[i];
   }
+  for (i = 0; i < num_taps; ++i) h[i] *= scale / sum;
   return h;
 }
 
@@ -380,7 +370,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor, quality
     static filter_t const filters[] = {
       {2 * array_length(half_fir_coefs_low) - 1, half_fir_coefs_low, 0,0},
       {0, NULL, .986, 110}, {0, NULL, .986, 125},
-      {0, NULL, .996, 156}, {0, NULL, .999, 156},
+      {0, NULL, .996, 165}, {0, NULL, .999, 165},
     };
     filter_t const * f = &filters[quality - Low];
     assert((size_t)(quality - Low) < array_length(filters));
@@ -499,7 +489,7 @@ typedef struct {
 static int create(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *) effp->priv;
-  char dummy, * found_at, * bws = "-qlmhvu", * nums = "01";
+  char dummy, * found_at, * bws = "-qlmhvu", * nums = "123";
 
   p->quality = p->coef_interp = -1;
   p->shared_ptr = &p->shared;

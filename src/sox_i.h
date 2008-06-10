@@ -48,6 +48,8 @@ char const * lsx_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samp
 sox_sample_t lsx_gcd(sox_sample_t a, sox_sample_t b);
 sox_sample_t lsx_lcm(sox_sample_t a, sox_sample_t b);
 
+double bessel_I_0(double x);
+
 #ifndef HAVE_STRCASECMP
 int strcasecmp(const char *s1, const char *s2);
 int strncasecmp(char const * s1, char const * s2, size_t n);
