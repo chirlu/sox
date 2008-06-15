@@ -33,29 +33,64 @@
 .SH NAME
 SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH DESCRIPTION
-.SS SOX EFFECTS
-Multiple effects may be applied to the audio by specifying them
-one after another at the end of the SoX command line.
+In addition to converting and playing audio files, SoX can be used to
+invoke a number of audio effects `effects'.  Multiple effects may be applied
+by specifying them one after another at the end of the SoX command line.
 .SP
-.I Note:
-Brackets [ ] are used to denote parameters that are optional, braces
+In the descriptions that follow, 
+brackets [ ] are used to denote parameters that are optional, braces
 { } to denote those that are both optional and repeatable,
 and angle brackets < > to denote those that are repeatable but not
 optional.
 .SP
 Where applicable, default values for optional parameters are shown in parenthesis.
+.SP
+The following parameters are used with, and have the same meaning for,
+several effects:
 .TP
-\fBallpass\fR \fIfrequency width\fR[\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]
+\fIcentre\fR[\fBk\fR]
+See
+.IR frequency .
+.TP
+\fIfrequency\fR[\fBk\fR]
+A frequency in Hz, or, if appended with `k', kHz.
+.TP
+\fIgain\fR
+A power gain in dB.
+Zero gives no gain; less than zero gives an attenuation.
+.TP
+\fIwidth\fR[\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]
+Used to specify the band-width of a filter.  A number of different
+methods to specify the width are available (though not all for every effect);
+one of the characters shown may be appended to select the desired method
+as follows:
+.TS
+center box;
+cI cI lI
+cB c l.
+\ 	Method	Notes
+h	Hz	\ 
+k	kHz	\ 
+o	Octaves	\ 
+q	Q-factor	See [2]
+.TE
+.DT
+.SP
+For each effect that uses this parameter, the default method (i.e. if no
+characters is appended) is the one that it listed first in the effect's
+first line of description.
+.SS SOX EFFECTS
+.TP
+\fBallpass\fR \fIfrequency\fR[\fBk\fR]\fI width\fR[\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]
 Apply a two-pole all-pass filter with central frequency (in Hz)
-\fIfrequency\fR, and filter-width \fIwidth\fR: in Hz (the default, or if
-appended with `\fBh\fR'), in octaves (if appended with `\fBo\fR'), or as
-a Q-factor (if appended with `\fBq\fR').  An all-pass filter changes the
+\fIfrequency\fR, and filter-width \fIwidth\fR.
+An all-pass filter changes the
 audio's frequency to phase relationship without changing its frequency
 to amplitude relationship.  The filter is described in detail in [1].
 .SP
 This effect supports the \fB\-\-plot\fR global option.
 .TP
-\fBband\fR [\fB\-n\fR] \fIcenter\fR [width\fR[\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]]
+\fBband\fR [\fB\-n\fR] \fIcenter\fR[\fBk\fR]\fR [\fIwidth\fR[\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]]
 Apply a band-pass filter.
 The frequency response drops logarithmically
 around the
@@ -63,9 +98,7 @@ around the
 frequency.
 The
 .I width
-in Hz (the default, or if appended with `\fBh\fR'), in octaves (if
-appended with `\fBo\fR'), or as a Q-factor (if appended with `\fBq\fR'),
-gives the slope of the drop.
+parameter gives the slope of the drop.
 The frequencies at
 .I center
 +
@@ -93,12 +126,10 @@ This effect supports the \fB\-\-plot\fR global option.
 .SP
 See also \fBfilter\fR for a bandpass filter with steeper shoulders.
 .TP
-\fBbandpass\fR\^|\^\fBbandreject\fR [\fB\-c\fR] \fIfrequency width\fR[\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]
+\fBbandpass\fR\^|\^\fBbandreject\fR [\fB\-c\fR] \fIfrequency\fR[\fBk\fR]\fI width\fR[\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]
 Apply a two-pole Butterworth band-pass or band-reject filter with
-central frequency (in Hz) \fIfrequency\fR, and (3dB-point) band-width
-\fIwidth\fR: in Hz (the default, or if appended with `\fBh\fR'), in
-octaves (if appended with `\fBo\fR'), or as a Q-factor (if appended with
-`\fBq\fR').  The
+central frequency \fIfrequency\fR, and (3dB-point) band-width
+\fIwidth\fR.  The
 .B \-c
 option applies only to
 .B bandpass
@@ -111,17 +142,17 @@ These effects support the \fB\-\-plot\fR global option.
 .SP
 See also \fBfilter\fR for a bandpass filter with steeper shoulders.
 .TP
-\fBbandreject \fIfrequency width\fR[\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]
+\fBbandreject \fIfrequency\fR[\fBk\fR]\fI width\fR[\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]
 Apply a band-reject filter.
 See the description of the \fBbandpass\fR effect for details.
 .TP
-\fBbass\fR\^|\^\fBtreble \fIgain\fR [\fIfrequency\fR [\fIwidth\fR[\fBs\fR\^|\^\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]]]
+\fBbass\fR\^|\^\fBtreble \fIgain\fR [\fIfrequency\fR[\fBk\fR]\fR [\fIwidth\fR[\fBs\fR\^|\^\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]]]
 Boost or cut the bass (lower) or treble (upper) frequencies of the audio
 using a two-pole shelving filter with a response similar to that
 of a standard hi-fi's (Baxandall) tone-controls.  This is also
 known as shelving equalisation (EQ).
 .SP
-\fIgain\fR gives the dB gain at 0\ Hz (for \fBbass\fR), or whichever is
+\fIgain\fR gives the gain at 0\ Hz (for \fBbass\fR), or whichever is
 the lower of \(ap22\ kHz and the Nyquist frequency (for \fBtreble\fR).  Its
 useful range is about \-20 (for a large cut) to +20 (for a large
 boost).
@@ -139,11 +170,9 @@ cut.  The default value is 100\ Hz (for \fBbass\fR) or 3\ kHz (for
 .SP
 \fIwidth\fR 
 determines how
-steep the filter's shelf transition is and can be expressed as:
-a `slope' (the default, or if appended with `\fBs\fR'),
-a Q-factor (if appended with `\fBq\fR'),
-the transition width in octaves (if appended with `\fBo\fR'),
-or the transition width in Hz (if appended with `\fBh\fR').
+steep is the filter's shelf transition.  In addition to the common
+width specification methods described above, 
+`slope' (the default, or if appended with `\fBs\fR') may be used.
 The useful range of `slope' is
 about 0\*d3, for a gentle slope, to 1 (the maximum), for a steep slope; the
 default value is 0\*d5.
@@ -326,7 +355,7 @@ pair gives the delay in milliseconds
 and the decay (relative to gain-in) of that echo.
 Gain-out is the volume of the output.
 .TP
-\fBequalizer \fIfrequency width\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR] \fIgain\fR
+\fBequalizer \fIfrequency\fR[\fBk\fR]\fI width\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR\^|\^\fBk\fR] \fIgain\fR
 Apply a two-pole peaking equalisation (EQ) filter.
 With this filter, the signal-level at and around a selected frequency
 can be increased or decreased, whilst (unlike band-pass and band-reject
@@ -334,9 +363,6 @@ filters) that at all other frequencies is unchanged.
 .SP
 \fIfrequency\fR gives the filter's central frequency in Hz,
 \fIwidth\fR, the band-width,
-as a Q-factor [2] (the default, or if appended with `\fBq\fR'),
-in octaves (if appended with `\fBo\fR'),
-or in Hz (if appended with `\fBh\fR'),
 and \fIgain\fR the required gain
 or attenuation in dB.
 Beware of
@@ -444,17 +470,15 @@ This is just an alias for the
 .B vol
 effect\*mhandy for those who prefer to work in dBs by default.
 .TP
-\fBhighpass\fR\^|\^\fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR]]
+\fBhighpass\fR\^|\^\fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR[\fBk\fR]\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR\^|\^\fBk\fR]]
 Apply a high-pass or low-pass filter with 3dB point \fIfrequency\fR.
 The filter can be either single-pole (with
 .BR \-1 ),
 or double-pole (the default, or with
 .BR \-2 ).
 .I width
-applies only to double-pole filters and is the filter-width: as a
-Q-factor (the default, or if appended with `\fBq\fR'), in octaves (if
-appended with `\fBo\fR'), or in Hz (if appended with `\fBh\fR');
-the default Q is 0\*d707 and gives a Butterworth response.  The filters
+applies only to double-pole filters;
+the default is Q = 0\*d707 and gives a Butterworth response.  The filters
 roll off at 6dB per pole per octave (20dB per pole per decade).  The
 double-pole filters are described in detail in [1].
 .SP
@@ -487,14 +511,14 @@ default values if possible. Only plugins with at most one audio input
 and one audio output port can be used.  If found, the environment varible
 LADSPA_PATH will be used as search path for plugins.
 .TP
-\fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR]]
+\fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR[\fBk\fR]\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR\^|\^\fBk\fR]]
 Apply a low-pass filter.
 See the description of the \fBhighpass\fR effect for details.
 .TP
 \fBmcompand\fR \(dq\fIattack1\fB,\fIdecay1\fR{\fB,\fIattack2\fB,\fIdecay2\fR}
 [\fIsoft-knee-dB\fB:\fR]\fIin-dB1\fR[\fB,\fIout-dB1\fR]{\fB,\fIin-dB2\fB,\fIout-dB2\fR}
 .br
-[\fIgain\fR [\fIinitial-volume-dB\fR [\fIdelay\fR]]]\(dq {\fIxover-freq\fR \(dqattack1,...\(dq}
+[\fIgain\fR [\fIinitial-volume-dB\fR [\fIdelay\fR]]]\(dq {\fIxover-freq\fR[\fBk\fR] \(dqattack1,...\(dq}
 .SP
 The multi-band compander is similar to the single-band compander but the
 audio is first divided into bands using Butterworth cross-over filters
@@ -727,7 +751,7 @@ T}
 .na
 16-bit mastering (use with dither)
 T}
-\-v	very high	99\*d7	150	24-bit mastering\ 
+\-v	very high	99	150	24-bit mastering\ 
 .TE
 .DT
 .SP
@@ -1093,7 +1117,9 @@ gives you the parameter to the
 which will make the audio as loud as possible without clipping.
 Note: See the discussion on
 .B Clipping
-above for reasons why it is rarely a good idea to actually do this.
+in
+.BR sox (1)
+for reasons why it is rarely a good idea to actually do this.
 .SP
 The option
 .B \-v
@@ -1138,7 +1164,7 @@ This is done by repeating an output channel on the command-line.  For example,
 will overwrite channel 1 with channel 2; creating a stereo
 file with both channels containing the same audio.
 .TP
-\fBsynth\fR [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR] [\fIfreq\fR[\fI\-freq2\fR|\fI~freq2\fR]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
+\fBsynth\fR [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR] [\fIfreq\fR[\fBk\fR][\fI\-freq2\fR[\fBk\fR]|\fI~freq2\fR[\fBk\fR]]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
 This effect can be used to generate fixed or swept frequency audio tones
 with various wave shapes, or to generate wide-band noise of various
 `colours'.
@@ -1276,7 +1302,7 @@ See also
 .B stretch
 for a similar effect.
 .TP
-\fBtreble \fIgain\fR [\fIfrequency\fR [\fIwidth\fR[\fBs\fR\^|\^\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]]]
+\fBtreble \fIgain\fR [\fIfrequency\fR[\fBk\fR]\fR [\fIwidth\fR[\fBs\fR\^|\^\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]]]
 Apply a treble tone-control effect.
 See the description of the \fBbass\fR effect for details.
 .TP
