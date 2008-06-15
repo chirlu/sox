@@ -22,12 +22,13 @@ typedef biquad_t priv_t;
 
 static char const * const width_str[] = {
   "band-width(Hz)",
+  "band-width(kHz)",
   "band-width(Hz, no warp)", /* deprecated */
   "band-width(octaves)",
   "Q",
   "slope",
 };
-static char const all_width_types[] = "hboqs";
+static char const all_width_types[] = "hkboqs";
 
 
 int sox_biquad_getopts(sox_effect_t * effp, int n, char **argv,
@@ -36,11 +37,11 @@ int sox_biquad_getopts(sox_effect_t * effp, int n, char **argv,
 {
   priv_t * p = (priv_t *)effp->priv;
   char width_type = *allowed_width_types;
-  char dummy;     /* To check for extraneous chars. */
+  char dummy, * dummy_p;     /* To check for extraneous chars. */
 
   p->filter_type = filter_type;
   if (n < min_args || n > max_args ||
-      (n > fc_pos    && (sscanf(argv[fc_pos], "%lf %c", &p->fc, &dummy) != 1 || p->fc <= 0)) ||
+      (n > fc_pos    && ((p->fc = lsx_parse_frequency(argv[fc_pos], &dummy_p)) <= 0 || *dummy_p)) ||
       (n > width_pos && ((unsigned)(sscanf(argv[width_pos], "%lf%c %c", &p->width, &width_type, &dummy)-1) > 1 || p->width <= 0)) ||
       (n > gain_pos  && sscanf(argv[gain_pos], "%lf %c", &p->gain, &dummy) != 1) ||
       !strchr(allowed_width_types, width_type) || (width_type == 's' && p->width > 1))
@@ -48,6 +49,10 @@ int sox_biquad_getopts(sox_effect_t * effp, int n, char **argv,
   p->width_type = strchr(all_width_types, width_type) - all_width_types;
   if (p->width_type >= strlen(all_width_types))
     p->width_type = 0;
+  if (p->width_type == width_bw_kHz) {
+    p->width *= 1000;
+    p->width_type = width_bw_Hz;
+  }
   return SOX_SUCCESS;
 }
 

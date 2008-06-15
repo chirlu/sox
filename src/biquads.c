@@ -59,6 +59,7 @@
 
 
 #include "biquad.h"
+#include <assert.h>
 #include <string.h>
 
 typedef biquad_t priv_t;
@@ -77,7 +78,7 @@ static int hilo2_getopts(sox_effect_t * effp, int n, char **argv) {
   if (n != 0 && strcmp(argv[0], "-2") == 0)
     ++argv, --n;
   p->width = sqrt(0.5); /* Default to Butterworth */
-  return sox_biquad_getopts(effp, n, argv, 1, 2, 0, 1, 2, "qoh",
+  return sox_biquad_getopts(effp, n, argv, 1, 2, 0, 1, 2, "qohk",
       *effp->handler.name == 'l'? filter_LPF : filter_HPF);
 }
 
@@ -86,12 +87,12 @@ static int bandpass_getopts(sox_effect_t * effp, int n, char **argv) {
   filter_t type = filter_BPF;
   if (n != 0 && strcmp(argv[0], "-c") == 0)
     ++argv, --n, type = filter_BPF_CSG;
-  return sox_biquad_getopts(effp, n, argv, 2, 2, 0, 1, 2, "hqob", type);
+  return sox_biquad_getopts(effp, n, argv, 2, 2, 0, 1, 2, "hkqob", type);
 }
 
 
 static int bandrej_getopts(sox_effect_t * effp, int n, char **argv) {
-  return sox_biquad_getopts(effp, n, argv, 2, 2, 0, 1, 2, "hqob", filter_notch);
+  return sox_biquad_getopts(effp, n, argv, 2, 2, 0, 1, 2, "hkqob", filter_notch);
 }
 
 
@@ -103,7 +104,7 @@ static int allpass_getopts(sox_effect_t * effp, int n, char **argv) {
   else if (n != 0 && strcmp(argv[0], "-2") == 0)
     ++argv, --n, type = filter_AP2;
   m = 1 + (type == filter_APF);
-  return sox_biquad_getopts(effp, n, argv, m, m, 0, 1, 2, "hqo", type);
+  return sox_biquad_getopts(effp, n, argv, m, m, 0, 1, 2, "hkqo", type);
 }
 
 
@@ -111,13 +112,13 @@ static int tone_getopts(sox_effect_t * effp, int n, char **argv) {
   priv_t * p = (priv_t *)effp->priv;
   p->width = 0.5;
   p->fc = *effp->handler.name == 'b'? 100 : 3000;
-  return sox_biquad_getopts(effp, n, argv, 1, 3, 1, 2, 0, "shqo",
+  return sox_biquad_getopts(effp, n, argv, 1, 3, 1, 2, 0, "shkqo",
       *effp->handler.name == 'b'?  filter_lowShelf: filter_highShelf);
 }
 
 
 static int equalizer_getopts(sox_effect_t * effp, int n, char **argv) {
-  return sox_biquad_getopts(effp, n, argv, 3, 3, 0, 1, 2, "qoh", filter_peakingEQ);
+  return sox_biquad_getopts(effp, n, argv, 3, 3, 0, 1, 2, "qohk", filter_peakingEQ);
 }
 
 
@@ -125,7 +126,7 @@ static int band_getopts(sox_effect_t * effp, int n, char **argv) {
   filter_t type = filter_BPF_SPK;
   if (n != 0 && strcmp(argv[0], "-n") == 0)
     ++argv, --n, type = filter_BPF_SPK_N;
-  return sox_biquad_getopts(effp, n, argv, 1, 2, 0, 1, 2, "hqo", type);
+  return sox_biquad_getopts(effp, n, argv, 1, 2, 0, 1, 2, "hkqo", type);
 }
 
 
@@ -170,6 +171,8 @@ static int start(sox_effect_t * effp)
     case width_bw_Hz:
       alpha = sin(w0)/(2*p->fc/p->width);
       break;
+
+    case width_bw_kHz: assert(0); /* Shouldn't get here */
 
     case width_bw_old:
       alpha = tan(M_PI * p->width / effp->in_signal.rate);
@@ -320,13 +323,13 @@ sox_effect_handler_t const * sox_##name##_effect_fn(void) { \
   return &handler; \
 }
 
-BIQUAD_EFFECT(highpass,  hilo2,    "[-1|-2] frequency [width[q|o|h]]", 0)
-BIQUAD_EFFECT(lowpass,   hilo2,    "[-1|-2] frequency [width[q|o|h]]", 0)
-BIQUAD_EFFECT(bandpass,  bandpass, "[-c] frequency width[h|q|o]", 0)
-BIQUAD_EFFECT(bandreject,bandrej,  "frequency width[h|q|o]", 0)
-BIQUAD_EFFECT(allpass,   allpass,  "frequency width[h|q|o]", 0)
-BIQUAD_EFFECT(bass,      tone,     "gain [frequency [width[s|h|q|o]]]", 0)
-BIQUAD_EFFECT(treble,    tone,     "gain [frequency [width[s|h|q|o]]]", 0)
-BIQUAD_EFFECT(equalizer, equalizer,"frequency width[q|o|h] gain", 0)
-BIQUAD_EFFECT(band,      band,     "[-n] center [width[h|q|o]]", 0)
+BIQUAD_EFFECT(highpass,  hilo2,    "[-1|-2] frequency [width[q|o|h|k](0.707q)]", 0)
+BIQUAD_EFFECT(lowpass,   hilo2,    "[-1|-2] frequency [width[q|o|h|k]](0.707q)", 0)
+BIQUAD_EFFECT(bandpass,  bandpass, "[-c] frequency width[h|k|q|o]", 0)
+BIQUAD_EFFECT(bandreject,bandrej,  "frequency width[h|k|q|o]", 0)
+BIQUAD_EFFECT(allpass,   allpass,  "frequency width[h|k|q|o]", 0)
+BIQUAD_EFFECT(bass,      tone,     "gain [frequency(100) [width[s|h|k|q|o]](0.5s)]", 0)
+BIQUAD_EFFECT(treble,    tone,     "gain [frequency(3000) [width[s|h|k|q|o]](0.5s)]", 0)
+BIQUAD_EFFECT(equalizer, equalizer,"frequency width[q|o|h|k] gain", 0)
+BIQUAD_EFFECT(band,      band,     "[-n] center [width[h|k|q|o]]", 0)
 BIQUAD_EFFECT(deemph,    deemph,   NULL, 0)

@@ -330,7 +330,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
     if (i == (c->nBands-1))
       c->bands[i].topfreq = 0;
     else {
-      c->bands[i].topfreq = strtod(argv[(i<<1)+1],&cp);
+      c->bands[i].topfreq = lsx_parse_frequency(argv[(i<<1)+1],&cp);
       if (*cp) {
         sox_fail("bad frequency in args to mcompand");
         return SOX_EOF;
@@ -627,7 +627,7 @@ const sox_effect_handler_t *sox_mcompand_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "mcompand",
-    "quoted_compand_args [crossover_frequency quoted_compand_args [...]]\n"
+    "quoted_compand_args [crossover_frequency[k] quoted_compand_args [...]]\n"
     "\n"
     "quoted_compand_args are as for the compand effect:\n"
     "\n"

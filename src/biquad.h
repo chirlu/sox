@@ -41,6 +41,7 @@ typedef enum {
 
 typedef enum {
   width_bw_Hz,
+  width_bw_kHz,
   /* The old, non-RBJ, non-freq-warped band-pass/reject response;
    * leaving here for now just in case anybody misses it: */
   width_bw_old,
