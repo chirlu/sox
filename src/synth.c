@@ -149,8 +149,8 @@ typedef struct {
   /* options */
   type_t type;
   combine_t combine;
-  double freq, freq2;
-  sox_bool linear_sweep;
+  double freq, freq2, mult;
+  sox_bool log_sweep;
   double offset, phase;
   double p1, p2, p3; /* Use depends on synth type */
 
@@ -167,54 +167,12 @@ typedef struct {
   char *        length_str;
   channel_t     getopts_channels;
   sox_size_t    getopts_nchannels;
-  sox_sample_t max;
+  sox_sample_t  max;
   sox_size_t    samples_done;
   sox_size_t    samples_to_do;
   channel_t     channels;
   sox_size_t    number_of_channels;
 } priv_t;
-
-
-
-/* a note is given as an int,
- * 0   => 440 Hz = A
- * >0  => number of half notes 'up',
- * <0  => number of half notes down,
- * example 12 => A of next octave, 880Hz
- *
- * calculated by freq = 440Hz * 2**(note/12)
- */
-static double calc_note_freq(double note)
-{
-  return 440.0 * pow(2.0, note / 12.0);
-}
-
-
-
-/* Read string 's' and convert to frequency.
- * 's' can be a positive number which is the frequency in Hz.
- * If 's' starts with a hash '%' and a following number the corresponding
- * note is calculated.
- * Return -1 on error.
- */
-static double StringToFreq(char *s, char **h)
-{
-  double f;
-
-  if (*s == '%') {
-    f = strtod(s + 1, h);
-    if (*h == s + 1)
-      return -1;
-    f = calc_note_freq(f);
-  } else {
-    f = strtod(s, h);
-    if (*h == s)
-      return -1;
-  }
-  if (f < 0)
-    return -1;
-  return f;
-}
 
 
 
@@ -290,14 +248,14 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     synth->length_str = lsx_malloc(strlen(argv[argn]) + 1);
     strcpy(synth->length_str, argv[argn]);
     /* Do a dummy parse of to see if it will fail */
-    if (lsx_parsesamples(0., synth->length_str, &synth->samples_to_do, 't') == NULL)
+    if (lsx_parsesamples(9e9, synth->length_str, &synth->samples_to_do, 't') == NULL || !synth->samples_to_do)
       return lsx_usage(effp);
     argn++;
   }
 
   while (argn < argc) { /* type [combine] [f1[-f2] [p1 [p2 [p3 [p3 [p4]]]]]] */
     channel_t chan;
-    char * char_ptr;
+    char * end_ptr;
     enum_item const *p = find_enum_text(argv[argn], synth_type);
 
     if (p == NULL) {
@@ -320,17 +278,16 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     }
 
     /* read frequencies if given */
-    if (isdigit((int) argv[argn][0]) || argv[argn][0] == '%') {
-      chan->freq2 = chan->freq = StringToFreq(argv[argn], &char_ptr);
+    if (isdigit((int) argv[argn][0]) ||
+        argv[argn][0] == '.' || argv[argn][0] == '%') {
+      chan->freq2 = chan->freq = lsx_parse_frequency(argv[argn], &end_ptr);
       if (chan->freq < 0) {
         sox_fail("invalid freq");
         return SOX_EOF;
       }
-      if (*char_ptr == '-' || *char_ptr == '~') {        /* freq2 given? */
-        char *hlp2;
-
-        chan->linear_sweep = *char_ptr == '~';
-        chan->freq2 = StringToFreq(char_ptr + 1, &hlp2);
+      if (*end_ptr == '-' || *end_ptr == '~') {        /* freq2 given? */
+        chan->log_sweep = *end_ptr == '-';
+        chan->freq2 = lsx_parse_frequency(end_ptr + 1, &end_ptr);
         if (chan->freq2 < 0) {
           sox_fail("invalid freq2");
           return SOX_EOF;
@@ -340,6 +297,15 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
           return SOX_EOF;
         }
       }
+      if (*end_ptr) {
+        sox_fail("frequency: invalid trailing character");
+        return SOX_EOF;
+      }
+      if (chan->log_sweep && chan->freq * chan->freq2 == 0) {
+        sox_fail("invalid frequency for logarithmic sweep");
+        return SOX_EOF;
+      }
+
       if (++argn == argc)
         break;
     }
@@ -391,7 +357,7 @@ static int start(sox_effect_t * effp)
   synth->samples_done = 0;
 
   if (synth->length_str)
-    if (lsx_parsesamples(effp->in_signal.rate, synth->length_str, &synth->samples_to_do, 't') == NULL)
+    if (lsx_parsesamples(effp->in_signal.rate, synth->length_str, &synth->samples_to_do, 't') == NULL || !synth->samples_to_do)
       return lsx_usage(effp);
 
   synth->number_of_channels = effp->in_signal.channels;
@@ -400,42 +366,42 @@ static int start(sox_effect_t * effp)
     channel_t chan = &synth->channels[i];
     *chan = synth->getopts_channels[i % synth->getopts_nchannels];
     set_default_parameters(chan, i);
+    chan->mult = chan->log_sweep ?
+        synth->samples_to_do? (log(chan->freq2) - log(chan->freq)) / synth->samples_to_do : 1 :
+        synth->samples_to_do? (chan->freq2 - chan->freq)  / synth->samples_to_do / 2 : 0;
     sox_debug("type=%s, combine=%s, samples_to_do=%u, f1=%g, f2=%g, "
-              "offset=%g, phase=%g, p1=%g, p2=%g, p3=%g",
+              "offset=%g, phase=%g, p1=%g, p2=%g, p3=%g mult=%g",
         find_enum_value(chan->type, synth_type)->text,
         find_enum_value(chan->combine, combine_type)->text,
         synth->samples_to_do, chan->freq, chan->freq2,
-        chan->offset, chan->phase, chan->p1, chan->p2, chan->p3);
+        chan->offset, chan->phase, chan->p1, chan->p2, chan->p3, chan->mult);
   }
   return SOX_SUCCESS;
 }
 
 
 
-static sox_sample_t do_synth(sox_sample_t synth_input, priv_t * synth, unsigned c, double rate)
+static sox_sample_t do_synth(sox_sample_t synth_input, priv_t * synth, unsigned c, double elapsed_time_s)
 {
   channel_t chan = &synth->channels[c];
   double synth_out;              /* [-1, 1] */
 
   if (chan->type < synth_noise) { /* Need to calculate phase: */
-    double f;              /* Current frequency; variable if sweeping */
-    double cycle_period_s; /* Current period in seconds */
-    double total_elapsed_time_s, cycle_elapsed_time_s;
     double phase;            /* [0, 1) */
 
-    if (synth->samples_to_do <= 0)
-      f = chan->freq;      /* Can't sweep if synth duration is unknown */
-    else if (chan->linear_sweep)
-      f = chan->freq + (chan->freq2 - chan->freq) * synth->samples_done / synth->samples_to_do;
-    else f = chan->freq * exp((log(chan->freq2) - log(chan->freq)) * synth->samples_done / synth->samples_to_do);
-    cycle_period_s = 1 / f;
-    total_elapsed_time_s = synth->samples_done / rate;
-    cycle_elapsed_time_s = total_elapsed_time_s - chan->cycle_start_time_s;
-    if (cycle_elapsed_time_s >= cycle_period_s) {  /* move to next cycle */
-      chan->cycle_start_time_s += cycle_period_s;
-      cycle_elapsed_time_s = total_elapsed_time_s - chan->cycle_start_time_s;
+    if (!chan->log_sweep) {
+      double f = chan->freq + synth->samples_done * chan->mult;
+      phase = f * elapsed_time_s;
     }
-    phase = cycle_elapsed_time_s / cycle_period_s;
+    else {
+      double f = chan->freq * exp(synth->samples_done * chan->mult);
+      double cycle_elapsed_time_s = elapsed_time_s - chan->cycle_start_time_s;
+      if (f * cycle_elapsed_time_s >= 1) {  /* move to next cycle */
+        chan->cycle_start_time_s += 1 / f;
+        cycle_elapsed_time_s = elapsed_time_s - chan->cycle_start_time_s;
+      }
+      phase = f * cycle_elapsed_time_s;
+    }
     phase = fmod(phase + chan->phase, 1.0);
 
     switch (chan->type) {
@@ -560,11 +526,13 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
   priv_t * synth = (priv_t *) effp->priv;
   unsigned len = min(*isamp, *osamp) / effp->in_signal.channels;
   unsigned c, done;
+  double sample_period = 1 / effp->in_signal.rate;
   int result = SOX_SUCCESS;
 
   for (done = 0; done < len && result == SOX_SUCCESS; ++done) {
+    double elapsed_time_s = synth->samples_done * sample_period;
     for (c = 0; c < effp->in_signal.channels; c++)
-      *obuf++ = do_synth(*ibuf++, synth, c, effp->in_signal.rate);
+      *obuf++ = do_synth(*ibuf++, synth, c, elapsed_time_s);
     if (++synth->samples_done == synth->samples_to_do)
       result = SOX_EOF;
   }
@@ -596,7 +564,7 @@ static int kill(sox_effect_t * effp)
 const sox_effect_handler_t *sox_synth_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "synth", "[len] {type [combine] [freq[-freq2|~freq2] [off [ph [p1 [p2 [p3]]]]]]}",
+    "synth", "[len] {type [combine] [freq[k][-freq2[k]|~freq2[k]] [off [ph [p1 [p2 [p3]]]]]]}",
     SOX_EFF_MCHAN | SOX_EFF_PREC |SOX_EFF_LENGTH,
     getopts, start, flow, 0, stop, kill, sizeof(priv_t)
   };
