@@ -207,6 +207,47 @@ char const * lsx_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samp
     return NULL;
 }
 
+/* a note is given as an int,
+ * 0   => 440 Hz = A
+ * >0  => number of half notes 'up',
+ * <0  => number of half notes down,
+ * example 12 => A of next octave, 880Hz
+ *
+ * calculated by freq = 440Hz * 2**(note/12)
+ */
+static double calc_note_freq(double note)
+{
+  return 440.0 * pow(2.0, note / 12.0);
+}
+
+/* Read string 'text' and convert to frequency.
+ * 'text' can be a positive number which is the frequency in Hz.
+ * If 'text' starts with a hash '%' and a following number the corresponding
+ * note is calculated.
+ * Return -1 on error.
+ */
+double lsx_parse_frequency(char const * text, char * * end_ptr)
+{
+  double result;
+
+  if (*text == '%') {
+    result = strtod(text + 1, end_ptr);
+    if (*end_ptr == text + 1)
+      return -1;
+    return calc_note_freq(result);
+  }
+  result = strtod(text, end_ptr);
+  if (end_ptr) {
+    if (*end_ptr == text)
+      return -1;
+    if (**end_ptr == 'k') {
+      result *= 1000;
+      ++*end_ptr;
+    }
+  }
+  return result < 0 ? -1 : result;
+}
+
 double bessel_I_0(double x)
 {
   double term = 1, sum = 1, last_sum, x2 = x / 2;
