@@ -370,7 +370,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor, quality
     static filter_t const filters[] = {
       {2 * array_length(half_fir_coefs_low) - 1, half_fir_coefs_low, 0,0},
       {0, NULL, .986, 110}, {0, NULL, .986, 125},
-      {0, NULL, .996, 165}, {0, NULL, .999, 165},
+      {0, NULL, .986, 165}, {0, NULL, .996, 165},
     };
     filter_t const * f = &filters[quality - Low];
     assert((size_t)(quality - Low) < array_length(filters));
@@ -568,7 +568,7 @@ sox_effect_handler_t const * sox_rate_effect_fn(void)
     " -l  low            80       100      playback on old hardware\n"
     " -m  medium         99       100      audio playback\n"
     " -h  high           99       120      16-bit mastering (use with dither)\n"
-    " -v  very high      99.7     150      24-bit mastering"
+    " -v  very high      99       150      24-bit mastering"
     , SOX_EFF_RATE, create, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
   return &handler;
