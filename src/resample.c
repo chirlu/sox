@@ -51,7 +51,6 @@
 #define Amask    (Na-1)
 #define Pmask    (Np-1)
 
-#define MAXNWING  (80<<Lc)
 /* Description of constants:
  *
  * Nc - is the number of look-up values available for the lowpass filter
@@ -116,13 +115,7 @@ typedef struct {
    double *X, *Y;      /* I/O buffers */
 } priv_t;
 
-static void LpFilter(double c[],
-                     long N,
-                     double frq,
-                     double Beta,
-                     long Num);
-
-/* lsx_makeFilter is used by filter.c */
+/* lsx_makeFilter() declared in filter.c */
 int lsx_makeFilter(double Imp[],
                long Nwing,
                double Froll,
@@ -585,141 +578,11 @@ static long SrcEX(priv_t * r, long Nx)
    return (Y - Ystart);        /* Return the number of output samples */
 }
 
-int lsx_makeFilter(double Imp[], long Nwing, double Froll, double Beta,
-               long Num, int Normalize)
-{
-   double *ImpR;
-   long Mwing, i;
-
-   if (Nwing > MAXNWING)                      /* Check for valid parameters */
-      return(-1);
-   if ((Froll<=0) || (Froll>1))
-      return(-2);
-
-   /* it does help accuracy a bit to have the window stop at
-    * a zero-crossing of the sinc function */
-   Mwing = floor((double)Nwing/(Num/Froll))*(Num/Froll) +0.5;
-   if (Mwing==0)
-      return(-4);
-
-   ImpR = lsx_malloc(sizeof(double) * Mwing);
-
-   /* Design a Nuttall or Kaiser windowed Sinc low-pass filter */
-   LpFilter(ImpR, Mwing, Froll, Beta, Num);
-
-   if (Normalize) { /* 'correct' the DC gain of the lowpass filter */
-      long Dh;
-      double DCgain;
-      DCgain = 0;
-      Dh = Num;                  /* Filter sampling period for factors>=1 */
-      for (i=Dh; i<Mwing; i+=Dh)
-         DCgain += ImpR[i];
-      DCgain = 2*DCgain + ImpR[0];    /* DC gain of real coefficients */
-      sox_debug("DCgain err=%.12f",DCgain-1.0);
-
-      DCgain = 1.0/DCgain;
-      for (i=0; i<Mwing; i++)
-         Imp[i] = ImpR[i]*DCgain;
-
-   } else {
-      for (i=0; i<Mwing; i++)
-         Imp[i] = ImpR[i];
-   }
-   free(ImpR);
-   for (i=Mwing; i<=Nwing; i++) Imp[i] = 0;
-   /* Imp[Mwing] and Imp[-1] needed for quadratic interpolation */
-   Imp[-1] = Imp[1];
-
-   return(Mwing);
-}
-
-/* LpFilter()
- *
- * reference: "Digital Filters, 2nd edition"
- *            R.W. Hamming, pp. 178-179
- *
- * Izero() computes the 0th order modified bessel function of the first kind.
- *    (Needed to compute Kaiser window).
- *
- * LpFilter() computes the coeffs of a Kaiser-windowed low pass filter with
- *    the following characteristics:
- *
- *       c[]  = array in which to store computed coeffs
- *       frq  = roll-off frequency of filter
- *       N    = Half the window length in number of coeffs
- *       Beta = parameter of Kaiser window
- *       Num  = number of coeffs before 1/frq
- *
- * Beta trades the rejection of the lowpass filter against the transition
- *    width from passband to stopband.  Larger Beta means a slower
- *    transition and greater stopband rejection.  See Rabiner and Gold
- *    (Theory and Application of DSP) under Kaiser windows for more about
- *    Beta.  The following table from Rabiner and Gold gives some feel
- *    for the effect of Beta:
- *
- * All ripples in dB, width of transition band = D*N where N = window length
- *
- *               BETA    D       PB RIP   SB RIP
- *               2.120   1.50  +-0.27      -30
- *               3.384   2.23    0.0864    -40
- *               4.538   2.93    0.0274    -50
- *               5.658   3.62    0.00868   -60
- *               6.764   4.32    0.00275   -70
- *               7.865   5.0     0.000868  -80
- *               8.960   5.7     0.000275  -90
- *               10.056  6.4     0.000087  -100
- */
-
-
-#define IzeroEPSILON 1E-21               /* Max error acceptable in Izero */
-
-static double Izero(double x)
-{
-   double sum, u, halfx, temp;
-   long n;
-
-   sum = u = n = 1;
-   halfx = x/2.0;
-   do {
-      temp = halfx/(double)n;
-      n += 1;
-      temp *= temp;
-      u *= temp;
-      sum += u;
-   } while (u >= IzeroEPSILON*sum);
-   return(sum);
-}
-
-static void LpFilter(double *c, long N, double frq, double Beta, long Num)
-{
-   long i;
-
-   /* Calculate filter coeffs: */
-   c[0] = frq;
-   for (i=1; i<N; i++) {
-      double x = M_PI*(double)i/(double)(Num);
-      c[i] = sin(x*frq)/x;
-   }
-
-   if (Beta>2) { /* Apply Kaiser window to filter coeffs: */
-      double IBeta = 1.0/Izero(Beta);
-      for (i=1; i<N; i++) {
-         double x = (double)i / (double)(N);
-         c[i] *= Izero(Beta*sqrt(1.0-x*x)) * IBeta;
-      }
-   } else { /* Apply Nuttall window: */
-      for(i = 0; i < N; i++) {
-         double x = M_PI*i / N;
-         c[i] *= 0.36335819 + 0.4891775*cos(x) + 0.1365995*cos(2*x) + 0.0106411*cos(3*x);
-      }
-   }
-}
-
 const sox_effect_handler_t *sox_resample_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
      "resample", "[ -qs | -q | -ql ] [ rolloff [ beta ] ]",
-     SOX_EFF_RATE, getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
+     SOX_EFF_RATE | SOX_EFF_DEPRECATED, getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
   return &handler;
 }
