@@ -64,6 +64,9 @@
   EFFECT(reverb)
   EFFECT(reverse)
   EFFECT(silence)
+#ifdef HAVE_PNG
+  EFFECT(spectrogram)
+#endif
   EFFECT(speed)
   EFFECT(splice)
   EFFECT(stat)

@@ -231,9 +231,12 @@ libsfx_la_SOURCES = \
 	remix.c repeat.c resample.c reverb.c reverse.c silence.c skeleff.c \
 	speed.c	splice.c stat.c stretch.c swap.c synth.c tempo.c tremolo.c \
 	trim.c vol.c
+if HAVE_PNG
+    libsfx_la_SOURCES += spectrogram.c
+endif
 
 libsfx_la_CFLAGS = @SAMPLERATE_CFLAGS@
-libsfx_la_LIBADD = @SAMPLERATE_LIBS@ libsox.la
+libsfx_la_LIBADD = @PNG_LIBS@ @SAMPLERATE_LIBS@ libsox.la
 
 ############################################
 # libsox - file format and utility library #

@@ -71,9 +71,11 @@ The sound effects include:
   o Band-reject filter
   o Bass tone control
   o Compress and Expand (compand) the dynamic range of a sample
+  o Contrast enhancement effect
   o Chorus effect
   o DC-shift audio - useful to get the best volume adjustments
   o De-emphasis filter
+  o Delay one or more channels
   o Move sound stage of CD audio to in front of you (for headphone
     use)
   o Add an echo
@@ -91,15 +93,13 @@ The sound effects include:
   o Apply a phaser effect
   o Change the key (pitch) of a sound file without affecting its speed
   o Repeat audio data
-  o Change sampling rates using several different algorithms. A
-     'resample' and 'polyphase' effect use high-grade signal rate
-     changes using real signal theory!
+  o Change sampling rate
   o Apply a reverb effect
   o Reverse the sound samples (to search for Satanic messages ;-)
   o Detect periods of silence and start and stop processing based on
     it
+  o Create a spectrogram PNG
   o Change speed (pitch and tempo together)
-    motor on a tape recorder)
   o Splice together audio sections
   o Display general stats on a sound sample
   o Change the tempo an audio file (without affecting pitch)

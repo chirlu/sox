@@ -19,6 +19,7 @@
 #cmakedefine HAVE_MAD_H               1
 #cmakedefine HAVE_OGG_VORBIS          1
 #cmakedefine HAVE_POPEN               1
+#cmakedefine HAVE_PNG                 1
 #cmakedefine HAVE_SAMPLERATE_H        1
 #cmakedefine HAVE_SNDFILE_1_0_12      1
 #cmakedefine HAVE_SNDFILE_H           1

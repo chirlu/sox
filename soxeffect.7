@@ -1027,6 +1027,110 @@ effect using its default quality/speed.  For higher quality or higher speed
 resampling, in addition to the \fBspeed\fR effect, specify
 the \fBrate\fR effect with the desired quality options.
 .TP
+\fBspectrogram \fR[options]
+Create a spectrogram of the audio.  This effect is optional; type \fBsox
+\-\-help\fR and check the list of supported effects to see if it has
+been included.
+.SP
+The spectrogram is rendered in a Portable Network Graphic (PNG) file,
+and shows time in the X-axis, frequency in the Y-axis, and audio signal
+magnitude in the Z-axis.  Z-axis values are represented by the colour
+(or intensity) of the pixels in the X-Y plane.
+.RS
+.IP \fB-x\ \fInum\fR
+X-axis pixels/second, default 100.  This controls the width of the
+spectrogram;
+.I num
+can be from 1 (low time resolution) to 5000 (high time resolution).  SoX
+may make a slight adjustment to the given number for processing
+quantisation reasons; if so, SoX will report the actual number used
+(viewable when
+.B \-\-verbose
+is in effect).
+.SP
+The maximum width of the spectrogram is 999 pixels; if the audio length
+and the given
+.B \-x
+number are such that this would be exceeded, then the spectrogram (and
+the effects chain) will be truncated.  To move the spectrogram to a
+point later in the audio stream, first invoke the
+.B trim
+effect; e.g.
+.EX
+  sox audio.ogg -n trim 1:00 spectrogram
+.EE
+starts the spectrogram at 1 minute through the audio.
+.IP \fB-y\ \fInum\fR
+Y-axis resolution (1 - 4), default 2.
+This controls the height of the spectrogram;
+.I num
+can be from 1 (low frequency resolution) to 4 (high frequency
+resolution).  For values greater than 2, the resulting image may be too
+tall to display on the screen; if so, a graphic manipulation package
+(such as
+.BR
+ImageMagick (1))
+can be used to re-size the image.
+.SP
+To increase the frequency resolution without increasing the height of
+the spectrogram, the
+.B rate
+effect may be invoked to reduce the sampling rate of the signal before
+invoking
+.BR spectrogram ;
+e.g.
+.EX
+  sox audio.ogg -r 4k -n rate spectrogram
+.EE
+allows detailed analysis of frequencies up to 2kHz (half the sampling
+rate).
+.IP \fB-z\ \fInum\fR
+Z-axis (colour) range in dB, default 120.  This sets the dynamic-range
+of the spectrogram to be \-\fInum\fR\ dBFS to 0\ dBFS.
+.I Num
+may range from 40 to 180.  Decreasing dynamic-range, effectively
+increases the `contrast' of the spectrogram display, and vice versa.
+.IP \fB-g\ \fInum\fR
+Apply
+.I num
+dB gain (or attenuation if
+.I num
+is negative) to the audio before displaying it.  Appling gain or
+attenuation shifts the the range of the Z-axis and effectively controls
+the `brightness' of the spectrogram display.  Note that the audio in the
+SoX effects chain remains unaffected by this option (cf. the
+.B gain
+effect).
+.IP \fB-w\ \fIname\fR
+Window: Hann (default), Hamming, Bartlett, Rectangular, Kaiser.  The
+spectrogram is produced using the Discrete Fourier Transform (DFT)
+algorithm.  A significant paramater to this algorithm is the choice of
+`window function'.  By default, SoX uses the Hann window which has good
+all-round frequency-resolution and dynamic-range properties.  For better
+frequency resolution (but lower dynamic-range), select a Hamming window;
+for higher dynamic-range (but poorer frequency-resolution), select a
+Kaiser window.  Selecting a window other than Hann will usually require
+a corresponding 
+.B \-z
+setting.
+.IP \fB-s\ \fInum\fR
+Display style (1 - 4), default 1.  There are 2 colour and 2 monochrome
+styles; select the style that works best with the given audio signal and
+your display or printer.
+.IP \fB-a\fR
+Toggle the presence of the axes lines.  This is sometimes useful in
+helping to discern artefacts at the spectrogram edges.
+.IP \fB-t\ \fItext\fR
+Text to display above the spectrogram.
+.IP \fB-c\ \fItext\fR
+Text to display below and to the left of the spectrogram.
+.IP \fB-o\ \fItext\fR
+Name of the spectrogram output PNG file, default `spectrogram.png'.
+.RE
+For the ability to perform off-line processing of spectral data, see the
+.B stat
+effect.
+.TP
 \fBsplice \fR { \fIposition\fR[\fB,\fIexcess\fR[\fB,\fIleeway\fR]] }
 Splice together audio sections.  This effect provides two things over
 simple audio concatenation: a (usually short) cross-fade is applied at

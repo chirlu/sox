@@ -9,7 +9,7 @@ Creator:
 Mantainers:
 	Chris Bagwell		cbagwell@users.sourceforge.net
 		OSS and Sun players, bugfixes, ADPCM support,
-		patch collection and maintance.
+		patch collection and maintenance.
 	Reuben Thomas		rrt@sc3d.org
 		Build system makeover, libsndfile and ffmpeg sound
 		format support, libao playback, Secret Rabbit Code
@@ -21,7 +21,7 @@ Mantainers:
 		EFFECTS: key, tempo, pad, bass, treble, delay, new reverb, new
 		flanger, soft-knee companding, speed via resampling, filters
 		makeover inc. gnuplot & octave plotting, splice, remix, norm,
-		contrast, new rate;
+		contrast, new rate, spectrogram;
                 new effects chain with buffering and any # channels.
                 OTHERS: open input files via URL, file merge, play
                 multiple files with mixed format types, play with replay-gain,

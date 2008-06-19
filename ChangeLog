@@ -57,6 +57,7 @@ Effects:
   o New `delay' effect; delay one or more channels.  (robs)
   o New `contrast' enhancement effect [FR 708923].  (robs)
   o Rewrite of rate; resample, polyphase, & rabbit now deprecated.  (robs)
+  o New `spectrogram' effect; creates a PNG.  (robs)
   o `synth' can now sweep linearly (as well as logarithmically).  (robs)
   o Fix synth max. level setting for some output encodings.  (robs)
   o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)

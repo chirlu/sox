@@ -414,6 +414,26 @@ fi
 AM_CONDITIONAL(HAVE_WAVPACK, test x$using_wavpack = xyes)
 AC_SUBST(WAVPACK_LIBS)
 
+dnl Check for png libraries
+AC_ARG_WITH(png,
+    AC_HELP_STRING([--without-png],
+        [Don't try to use png]))
+using_png=no
+if test "$with_png" != "no"; then
+    using_png=yes
+    AC_CHECK_HEADER(png.h,
+        [AC_CHECK_LIB(png, png_set_rows, PNG_LIBS="$PNG_LIBS -lpng -lz" ,using_png=no)],
+        using_png=no)
+    if test "$with_png" = "yes" -a "$using_png" = "no"; then
+        AC_MSG_FAILURE([cannot find png])
+    fi
+fi
+if test "$using_png" = yes; then
+   AC_DEFINE(HAVE_PNG, 1, [Define to 1 if you have PNG.])
+fi
+AM_CONDITIONAL(HAVE_PNG, test x$using_png = xyes)
+AC_SUBST(PNG_LIBS)
+
 dnl Test for libsamplerate.
 AC_ARG_WITH(samplerate,
     AC_HELP_STRING([--without-samplerate],
@@ -483,6 +503,7 @@ echo "AMR-WB format..................... $using_amr_wb"
 echo "AMR-NB format..................... $using_amr_nb"
 echo "WavPack format.................... $using_wavpack"
 echo "LADSPA effects.................... $using_ladspa"
+echo "PNG support....................... $using_png"
 echo "Secret Rabbit Code resampling..... $using_samplerate"
 echo "pkg-config location............... $pkgconfig_option"
 echo
