@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# Sample rate conversion tests.  Create a 30s sweep of 0-48kHz @ 96kHz sampling
+# rate, then use each resampler to convert it to 44.1kHz.  Display the results
+# in a PNG file for each converter.
+
+# Set up the following two before running the script:
+SOX=./sox                        # The actual sox executable
+SSRC_PATH=/usr/local/bin         # Path to the two ssrc executables
+
+RANGE=180
+if [ "$1" -ne "" ]; then
+  RANGE="$1"
+fi
+
+# Temporary files
+IN=/tmp/$0-in-$$.wav
+OUT=/tmp/$0-out-$$.wav
+TIME=/tmp/$0-time-$$.wav
+
+# Create input file
+$SOX -r96k -n -twavpcm $IN synth 30 sin 0~48k gain -1 
+
+# Test each one
+for src in \
+    "polyphase" \
+    "rabbit -c0" \
+    "rabbit -c1" \
+    "rate -h" \
+    "rate -v" \
+    "resample -q" \
+    "resample -ql" \
+    "ssrc" \
+    "ssrc_hp" \
+    ; do
+  echo $src
+  case "$src" in
+    ssrc*) time -f %U -o $TIME $SSRC_PATH/$src --quiet --rate 44100 $IN $OUT;;
+    *)     time -f %U -o $TIME $SOX $IN -r 44.1k $OUT $src;;
+  esac
+  t=`cat $TIME`
+  $SOX $OUT -n spectrogram \
+    -x 20 -z $RANGE -w kaiser \
+    -t " $src " -c "${t}s user time" \
+    -o "spectrogram-`echo $src | tr ' ' '_'`.png"
+done
+
+# Clean up
+rm -f $IN $OUT $TIME

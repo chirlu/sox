@@ -99,7 +99,7 @@ typedef struct {
   double     pixels_per_sec, block_norm, max;
   int        dB_range, gain, style, read, end, end_min, last_end;
   char const * out_name, * title, * comment;
-  sox_bool   no_axes;
+  sox_bool   slack_overlap, no_axes;
   win_type_t win_type;
 } priv_t;
 
@@ -136,6 +136,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *)effp->priv;
   int c, callers_optind = optind, callers_opterr = opterr;
+  sox_bool monochrome = sox_false, light_background = sox_false;
 
   assert(array_length(p->bit_rev_table) >= (size_t)dft_br_len(MAX_DFT_SIZE));
 
@@ -143,25 +144,28 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   p->pixels_per_sec = 100, p->y_size = 2, p->dB_range = 120;/* non-0 defaults */
   p->style = 1, p->out_name = "spectrogram.png", p->comment = "Created by SoX";
 
-  while ((c = getopt(argc, argv, "+x:y:z:g:s:w:t:c:o:a")) != -1) switch (c) {
+  while ((c = getopt(argc, argv, "+x:y:z:g:w:st:c:amlo:")) != -1) switch (c) {
     GETOPT_NUMERIC('x', pixels_per_sec,  1 , 5000)
     GETOPT_NUMERIC('y', y_size        ,  1 , 1 + MAX_DFT_SIZE_SHIFT)
     GETOPT_NUMERIC('z', dB_range      , 40 , 180)
     GETOPT_NUMERIC('g', gain          ,-100, 100)
-    GETOPT_NUMERIC('s', style         ,  1 , 4)
     case 'w': p->win_type = enum_option(c, window_options);   break;
+    case 's': p->slack_overlap = sox_true; break;
     case 't': p->title    = optarg;   break;
     case 'c': p->comment  = optarg;   break;
-    case 'o': p->out_name = optarg;   break;
     case 'a': p->no_axes  = sox_true; break;
+    case 'm': monochrome  = sox_true; break;
+    case 'l': light_background = sox_true; break;
+    case 'o': p->out_name = optarg;   break;
     default: sox_fail("unknown option `-%c'", optopt); return lsx_usage(effp);
   }
-  p->y_size -= 1, p->style -= 1;
+  p->y_size -= 1;
+  p->style = 2 * monochrome + light_background;
   argc -= optind, optind = callers_optind, opterr = callers_opterr;
   return argc || p->win_type == INT_MAX? lsx_usage(effp) : SOX_SUCCESS;
 }
 
-static int make_window(priv_t * p, int end)
+static double make_window(priv_t * p, int end)
 {
   double sum = 0, * w = end < 0? p->window : p->window + end;
   int i, n = p->dft_size - abs(end);
@@ -178,7 +182,7 @@ static int make_window(priv_t * p, int end)
   for (i = 0; i < p->dft_size; ++i) sum += p->window[i];
   for (i = 0; i < p->dft_size; ++i) p->window[i] *= 2 / sum
     * sqr((double)n / p->dft_size);    /* empirical small window adjustment */
-  return sum + .5;
+  return sum;
 }
 
 static int start(sox_effect_t * effp)
@@ -192,7 +196,9 @@ static int start(sox_effect_t * effp)
   }
   p->end = p->dft_size = DFT_BASE_SIZE << p->y_size;
   p->rows = (p->dft_size >> 1) + 1;
-  p->step_size = make_window(p, p->last_end = 0);
+  actual = make_window(p, p->last_end = 0);
+  sox_debug("window_density=%g", actual / p->dft_size);
+  p->step_size = (p->slack_overlap? sqrt(actual * p->dft_size) : actual) + .5;
   p->block_steps = effp->in_signal.rate / p->pixels_per_sec;
   p->step_size = p->block_steps / ceil((double)p->block_steps / p->step_size) +.5;
   p->block_steps = floor((double)p->block_steps / p->step_size +.5);
@@ -370,7 +376,7 @@ static unsigned char * font;
 static void print_at_(png_byte * pixels, int cols, int x, int y, int c, char const * text, int orientation)
 {
   for (;*text; ++text) {
-    int pos = (*text - ' ') * font_y;
+    int pos = ((*text < ' ' || *text > '~'? '~' + 1 : *text) - ' ') * font_y;
     int i, j;
     for (i = 0; i < font_y; ++i) {
       unsigned line = font[pos++];
@@ -387,7 +393,7 @@ static void print_at_(png_byte * pixels, int cols, int x, int y, int c, char con
   }
 }
 
-static int axis(double to, int max_steps, int * limit, char * * prefix)
+static int axis(double to, int max_steps, double * limit, char * * prefix)
 {
   double scale = 1, step = 1;
   int i, prefix_num = 0;
@@ -422,8 +428,9 @@ static int stop(sox_effect_t * effp)
   png_structp png      = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0,0);
   png_infop   png_info = png_create_info_struct(png);
   png_byte    palette[palette_size * 3];
-  int         i, j, step, limit, tick_len = 2 + do_frame;
+  int         i, j, step, tick_len = 2 + do_frame;
   char        text[200], * prefix;
+  double      limit;
 
   if (!file) {
     sox_fail("failed to create `%s' :(", p->out_name);
@@ -526,11 +533,13 @@ sox_effect_handler_t const * sox_spectrogram_effect_fn(void)
       "  -z num    Z-axis (colour) range in dB, default 120\n"
       "  -g num    Apply num dB gain; to shift Z-axis\n"
       "  -w name   Window: Hann (default), Hamming, Bartlett, Rectangular, Kaiser\n"
-      "  -s num    Display style (1 - 4), default 1\n"
-      "  -a        Toggle the presence of the axes' lines\n"
+      "  -s        Slack overlap\n"
+      "  -a        Suppress axes' lines\n"
       "  -t text   Title text\n"
       "  -c text   Comment text\n"
-      "  -o text   Name of the spectrogram output file, default `spectrogram.png'\n",
+      "  -l        Light background\n"
+      "  -m        Monochrome display\n"
+      "  -o text   output file name, default `spectrogram.png'\n",
     0, getopts, start, flow, drain, stop, NULL, sizeof(priv_t)};
   return &handler;
 }

@@ -1102,9 +1102,9 @@ SoX effects chain remains unaffected by this option (cf. the
 .B gain
 effect).
 .IP \fB-w\ \fIname\fR
-Window: Hann (default), Hamming, Bartlett, Rectangular, Kaiser.  The
+Window: Hann (default), Hamming, Bartlett, Rectangular or Kaiser.  The
 spectrogram is produced using the Discrete Fourier Transform (DFT)
-algorithm.  A significant paramater to this algorithm is the choice of
+algorithm.  A significant parameter to this algorithm is the choice of
 `window function'.  By default, SoX uses the Hann window which has good
 all-round frequency-resolution and dynamic-range properties.  For better
 frequency resolution (but lower dynamic-range), select a Hamming window;
@@ -1113,17 +1113,25 @@ Kaiser window.  Selecting a window other than Hann will usually require
 a corresponding 
 .B \-z
 setting.
-.IP \fB-s\ \fInum\fR
-Display style (1 - 4), default 1.  There are 2 colour and 2 monochrome
-styles; select the style that works best with the given audio signal and
-your display or printer.
+.IP \fB-s\fR
+Allow slack overlapping of DFT windows.
+This can, in some cases, increase image sharpness and give greater adherence
+to the
+.B \-x
+value, but at the expense of a little spectral loss.
+.IP \fB-m\fR
+Creates a monochrome spectrogram (the default is colour).
+.IP \fB-l\fR
+Creates a `printer friendly' spectrogram with a light background (the
+default has a dark background).
 .IP \fB-a\fR
-Toggle the presence of the axes lines.  This is sometimes useful in
+Suppress the display of the axes lines.  This is sometimes useful in
 helping to discern artefacts at the spectrogram edges.
 .IP \fB-t\ \fItext\fR
-Text to display above the spectrogram.
+Set the image title\*mtext to display above the spectrogram.
 .IP \fB-c\ \fItext\fR
-Text to display below and to the left of the spectrogram.
+Set the image comment\*mtext to display below and to the left of the
+spectrogram.
 .IP \fB-o\ \fItext\fR
 Name of the spectrogram output PNG file, default `spectrogram.png'.
 .RE
