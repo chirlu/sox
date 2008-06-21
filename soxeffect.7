@@ -470,7 +470,7 @@ This is just an alias for the
 .B vol
 effect\*mhandy for those who prefer to work in dBs by default.
 .TP
-\fBhighpass\fR\^|\^\fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR[\fBk\fR]\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR\^|\^\fBk\fR]]
+\fBhighpass\fR\^|\^\fBlowpass\fR [\fB\-1\fR|\fB\-2\fR] \fIfrequency\fR[\fBk\fR]\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR\^|\^\fBk\fR]]
 Apply a high-pass or low-pass filter with 3dB point \fIfrequency\fR.
 The filter can be either single-pole (with
 .BR \-1 ),
@@ -511,7 +511,7 @@ default values if possible. Only plugins with at most one audio input
 and one audio output port can be used.  If found, the environment varible
 LADSPA_PATH will be used as search path for plugins.
 .TP
-\fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR[\fBk\fR]\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR\^|\^\fBk\fR]]
+\fBlowpass\fR [\fB\-1\fR|\fB\-2\fR] \fIfrequency\fR[\fBk\fR]\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR\^|\^\fBk\fR]]
 Apply a low-pass filter.
 See the description of the \fBhighpass\fR effect for details.
 .TP
@@ -634,7 +634,7 @@ using a pipe, e.g.
 	sox noisy.au -n trim 0 1 noiseprof | play noisy.au noisered
 .EE
 .TP
-\fBnorm\fR [\fB-i\fR] [\fIlevel\fR]
+\fBnorm\fR [\fB\-i\fR] [\fIlevel\fR]
 Normalise audio to 0dB FSD or to a given level relative to 0dB.
 Requires temporary file space to store the audio to be normalised.
 .SP
@@ -761,7 +761,7 @@ is the percentage of the audio band that is preserved (based on the 3dB point)
 during sample rate conversion, and
 .B Rej dB
 is the level of noise rejection.
-The default quality level is `high' (\fB-h\fR).
+The default quality level is `high' (\fB\-h\fR).
 .SP
 See also
 .BR resample ,
@@ -918,7 +918,7 @@ Requires temporary file space to store the audio to be repeated.
 Note that repeating once yields two copies: the original audio and the
 repeated audio.
 .TP
-\fBreverb\fR [\fB-w\fR|\fB--wet-only\fR] [\fIreverberance\fR (50%) [\fIHF-damping\fR (50%)
+\fBreverb\fR [\fB\-w\fR|\fB\-\-wet-only\fR] [\fIreverberance\fR (50%) [\fIHF-damping\fR (50%)
 [\fIroom-scale\fR (100%) [\fIstereo-depth\fR (100%)
 .br
 [\fIpre-delay\fR (0ms) [\fIwet-gain\fR (0dB)]]]]]]
@@ -1036,8 +1036,18 @@ The spectrogram is rendered in a Portable Network Graphic (PNG) file,
 and shows time in the X-axis, frequency in the Y-axis, and audio signal
 magnitude in the Z-axis.  Z-axis values are represented by the colour
 (or intensity) of the pixels in the X-Y plane.
+.SP
+This effect supports only one channel; for multi-channel input files,
+use either SoX's
+.B \-c 1
+option with the output file (to obtain a spectrogram on the mix-down),
+or the
+.B remix
+.I n
+effect to select a particular channel.  Be aware though, that both of
+these methods affect the audio in the effects chain.
 .RS
-.IP \fB-x\ \fInum\fR
+.IP \fB\-x\ \fInum\fR
 X-axis pixels/second, default 100.  This controls the width of the
 spectrogram;
 .I num
@@ -1060,7 +1070,7 @@ effect; e.g.
   sox audio.ogg -n trim 1:00 spectrogram
 .EE
 starts the spectrogram at 1 minute through the audio.
-.IP \fB-y\ \fInum\fR
+.IP \fB\-y\ \fInum\fR
 Y-axis resolution (1 - 4), default 2.
 This controls the height of the spectrogram;
 .I num
@@ -1084,24 +1094,28 @@ e.g.
 .EE
 allows detailed analysis of frequencies up to 2kHz (half the sampling
 rate).
-.IP \fB-z\ \fInum\fR
+.IP \fB\-z\ \fInum\fR
 Z-axis (colour) range in dB, default 120.  This sets the dynamic-range
 of the spectrogram to be \-\fInum\fR\ dBFS to 0\ dBFS.
 .I Num
-may range from 40 to 180.  Decreasing dynamic-range, effectively
+may range from 20 to 180.  Decreasing dynamic-range, effectively
 increases the `contrast' of the spectrogram display, and vice versa.
-.IP \fB-g\ \fInum\fR
-Apply
+.IP \fB\-Z\ \fInum\fR
+Sets the upper limit of the Z-axis in dBFS.
+A negative
 .I num
-dB gain (or attenuation if
-.I num
-is negative) to the audio before displaying it.  Appling gain or
-attenuation shifts the the range of the Z-axis and effectively controls
-the `brightness' of the spectrogram display.  Note that the audio in the
-SoX effects chain remains unaffected by this option (cf. the
-.B gain
-effect).
-.IP \fB-w\ \fIname\fR
+effectively increases the `brightness' of the spectrogram display,
+and vice versa.
+.IP \fB\-q\ \fInum\fR
+Sets the Z-axis quantisation, i.e. the number of different colours (or
+intensities) in which to render Z-axis
+values.  A small number (e.g. 4) will give a `poster'-like effect making
+it easier to discern magnitude bands of similar level.  Smaller numbers
+also usually
+result in a smaller PNG files.  The number given specifies the number of
+colours to use inside the Z-axis range; two colours are reserved to
+represent out-of-range values.
+.IP \fB\-w\ \fIname\fR
 Window: Hann (default), Hamming, Bartlett, Rectangular or Kaiser.  The
 spectrogram is produced using the Discrete Fourier Transform (DFT)
 algorithm.  A significant parameter to this algorithm is the choice of
@@ -1109,30 +1123,42 @@ algorithm.  A significant parameter to this algorithm is the choice of
 all-round frequency-resolution and dynamic-range properties.  For better
 frequency resolution (but lower dynamic-range), select a Hamming window;
 for higher dynamic-range (but poorer frequency-resolution), select a
-Kaiser window.  Selecting a window other than Hann will usually require
+Kaiser window.  Bartlett and Rectangular windows are also available.
+Selecting a window other than Hann will usually require
 a corresponding 
 .B \-z
 setting.
-.IP \fB-s\fR
+.IP \fB\-s\fR
 Allow slack overlapping of DFT windows.
 This can, in some cases, increase image sharpness and give greater adherence
 to the
 .B \-x
 value, but at the expense of a little spectral loss.
-.IP \fB-m\fR
+.IP \fB\-m\fR
 Creates a monochrome spectrogram (the default is colour).
-.IP \fB-l\fR
+.IP \fB\-h\fR
+Selects a high-colour palette\*mless visually pleasing than the default
+colour palette, but may make it easier to differentiate different levels.
+Also works with
+.B \-m
+to create a hybrid monochrome/colour palette.
+.IP \fB\-p\ \fInum\fR
+Permute the colours in a colour or hybrid palette.
+The
+.I num
+parameter (from 1 to 6) selects the permutation.
+.IP \fB\-l\fR
 Creates a `printer friendly' spectrogram with a light background (the
 default has a dark background).
-.IP \fB-a\fR
-Suppress the display of the axes lines.  This is sometimes useful in
+.IP \fB\-a\fR
+Suppress the display of the axis lines.  This is sometimes useful in
 helping to discern artefacts at the spectrogram edges.
-.IP \fB-t\ \fItext\fR
+.IP \fB\-t\ \fItext\fR
 Set the image title\*mtext to display above the spectrogram.
-.IP \fB-c\ \fItext\fR
+.IP \fB\-c\ \fItext\fR
 Set the image comment\*mtext to display below and to the left of the
 spectrogram.
-.IP \fB-o\ \fItext\fR
+.IP \fB\-o\ \fItext\fR
 Name of the spectrogram output PNG file, default `spectrogram.png'.
 .RE
 For the ability to perform off-line processing of spectral data, see the
@@ -1291,7 +1317,7 @@ Though this effect is used to generate audio, an input file must still
 be given, the characteristics of which will be used to set the
 synthesised audio length, the number of channels, and the sampling rate;
 however, since the input file's audio is not normally needed, a `null
-file' (with the special name \fB-n\fR) is often given instead (and the
+file' (with the special name \fB\-n\fR) is often given instead (and the
 length specified as a parameter to \fBsynth\fR or by another given
 effect that can has an associated length).
 .SP

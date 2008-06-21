@@ -89,18 +89,16 @@ static enum_item const window_options[] = {
 
 typedef struct {
   int        y_size, dft_size, rows, cols, step_size, block_steps, block_num;
-  double     buf[MAX_DFT_SIZE];
-  double     dft_buf[MAX_DFT_SIZE];
-  double     window[MAX_DFT_SIZE];
+  int        dB_range, gain, style, read, end, end_min, last_end;
+  int        spectrum_points, perm;
+  char const * out_name, * title, * comment;
+  sox_bool   high_colour, slack_overlap, no_axes, truncated;
+  win_type_t win_type;
+  double     buf[MAX_DFT_SIZE], dft_buf[MAX_DFT_SIZE], window[MAX_DFT_SIZE];
+  double     pixels_per_sec, block_norm, max, magnitudes[(MAX_DFT_SIZE>>1) + 1];
   int        bit_rev_table[100];  /* For Ooura fft */
   double     sin_cos_table[dft_sc_len(MAX_DFT_SIZE)];  /* ditto */
-  double     magnitudes[(MAX_DFT_SIZE >> 1) + 1];
   float      * dBfs;
-  double     pixels_per_sec, block_norm, max;
-  int        dB_range, gain, style, read, end, end_min, last_end;
-  char const * out_name, * title, * comment;
-  sox_bool   slack_overlap, no_axes;
-  win_type_t win_type;
 } priv_t;
 
 #define GETOPT_NUMERIC(ch, name, min, max) case ch:{ \
@@ -142,13 +140,16 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
   --argv, ++argc, optind = 1, opterr = 0;                /* re-jig for getopt */
   p->pixels_per_sec = 100, p->y_size = 2, p->dB_range = 120;/* non-0 defaults */
+  p->spectrum_points = 249, p->perm = 1;
   p->style = 1, p->out_name = "spectrogram.png", p->comment = "Created by SoX";
 
-  while ((c = getopt(argc, argv, "+x:y:z:g:w:st:c:amlo:")) != -1) switch (c) {
+  while ((c = getopt(argc, argv, "+x:y:z:Z:q:p:w:st:c:amlho:")) != -1) switch (c) {
     GETOPT_NUMERIC('x', pixels_per_sec,  1 , 5000)
     GETOPT_NUMERIC('y', y_size        ,  1 , 1 + MAX_DFT_SIZE_SHIFT)
-    GETOPT_NUMERIC('z', dB_range      , 40 , 180)
-    GETOPT_NUMERIC('g', gain          ,-100, 100)
+    GETOPT_NUMERIC('z', dB_range      , 20 , 180)
+    GETOPT_NUMERIC('Z', gain          ,-100, 100)
+    GETOPT_NUMERIC('q', spectrum_points, 0 , p->spectrum_points)
+    GETOPT_NUMERIC('p', perm          ,  1 , 6)
     case 'w': p->win_type = enum_option(c, window_options);   break;
     case 's': p->slack_overlap = sox_true; break;
     case 't': p->title    = optarg;   break;
@@ -156,11 +157,14 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     case 'a': p->no_axes  = sox_true; break;
     case 'm': monochrome  = sox_true; break;
     case 'l': light_background = sox_true; break;
+    case 'h': p->high_colour = sox_true; break;
     case 'o': p->out_name = optarg;   break;
     default: sox_fail("unknown option `-%c'", optopt); return lsx_usage(effp);
   }
-  p->y_size -= 1;
+  p->gain = - p->gain;
+  --p->y_size, --p->perm;
   p->style = 2 * monochrome + light_background;
+  p->spectrum_points += 2;
   argc -= optind, optind = callers_optind, opterr = callers_opterr;
   return argc || p->win_type == INT_MAX? lsx_usage(effp) : SOX_SUCCESS;
 }
@@ -219,6 +223,7 @@ static int do_column(sox_effect_t * effp)
 
   if (p->cols == MAX_COLS) {
     sox_warn("PNG truncated at %g seconds", (double)MAX_COLS * p->step_size * p->block_steps / effp->in_signal.rate);
+    p->truncated = sox_true;
     return SOX_EOF;
   }
   ++p->cols;
@@ -275,7 +280,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf_, sox_size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
 
-  if (p->cols != MAX_COLS) {
+  if (!p->truncated) {
     sox_sample_t * ibuf = calloc(p->dft_size, sizeof(*ibuf));
     sox_sample_t * obuf = calloc(p->dft_size, sizeof(*obuf));
     sox_size_t isamp = (p->dft_size - p->step_size) / 2;
@@ -298,52 +303,72 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf_, sox_size_t * osamp)
   return SOX_SUCCESS;
 }
 
-#define spectrum_points (1 + 250)
-enum {Background = spectrum_points, Text, Labels, Grid, palette_size};
+enum {Background, Text, Labels, Grid, fixed_palette};
 
-static unsigned colour(double x, int range)
+static unsigned colour(priv_t const * p, double x)
 {
-  x = range_limit(x, -range, 0);
-  return (1 + x / range) * (spectrum_points - 1) + .5;
+  unsigned c = x < -p->dB_range? 0 : x >= 0? p->spectrum_points - 1 : 
+      1 + (1 + x / p->dB_range) * (p->spectrum_points - 2);
+  return fixed_palette + c;
 }
 
-static void make_palette(png_byte * palette, int style)
+static void make_palette(priv_t const * p, png_color * palette)
 {
-  int i, j, at;
-  for (i = j = 0; j < spectrum_points; i += 3, ++j) {
-    double r, g, b, x = (double)j / (spectrum_points - 1);
-    if (style > 1)
-      palette[i+2] = palette[i+1] = palette[i+0] = style == 2? j : 255 - j;
-    else {
-      at = style? (spectrum_points - 1) * 3 - i : i;
-      if      (x < .16) r = 0;
-      else if (x < .72) r = .99 *           sin((x - .16) / .56 * M_PI / 2);
-      else              r = .01 *               (x - .72) / .28          + .99;
-      if      (x < .52) g = 0;
-      else if (x < .86) g = .99 * .5 * (1 - cos((x - .52) / .34 * M_PI));
-      else              g = .01 *               (x - .86) / .14          + .99;
-      if      (x < .34) b = .5  *           sin((x - .00) / .34 * M_PI / 2);
-      else if (x < .63) b = .5  * .5 * (1 + cos((x - .34) / .29 * M_PI));
-      else              b =            (1 - cos((x - .63) / .37 * M_PI / 2));
-      palette[at + 0] = r * 255 + .5;
-      palette[at + 1] = g * 255 + .5;
-      palette[at + 2] = b * 255 + .5;
+  int i;
+
+  if (p->style & 1) {
+    memcpy(palette++, (p->style & 2)? "\337\337\337":"\335\330\320", 3);
+    memcpy(palette++, "\0\0\0"      , 3);
+    memcpy(palette++, "\077\077\077", 3);
+    memcpy(palette++, "\077\077\077", 3);
+  } else {
+    memcpy(palette++, "\0\0\0"      , 3);
+    memcpy(palette++, "\377\377\377", 3);
+    memcpy(palette++, "\277\277\277", 3);
+    memcpy(palette++, "\177\177\177", 3);
+  }
+  for (i = 0; i < p->spectrum_points; ++i) {
+    double c[3] , x = (double)i / (p->spectrum_points - 1);
+    int at = (p->style & 1)? p->spectrum_points - 1 - i : i;
+    if (p->style > 1) {
+      c[2] = c[1] = c[0] = x;
+      if (p->high_colour) {
+        c[(1 + p->perm) % 3] = x < .4? 0 : 5 / 3. * (x - .4);
+        if (p->perm < 3)
+          c[(2 + p->perm) % 3] = x < .4? 0 : 5 / 3. * (x - .4);
+      }
+      palette[at].red  = .5 + 255 * c[0];
+      palette[at].green= .5 + 255 * c[1];
+      palette[at].blue = .5 + 255 * c[2];
+      continue;
     }
+    if (p->high_colour) {
+      static const int states[3][7] = {
+        {4,5,0,0,2,1,1}, {0,0,2,1,1,3,2}, {4,1,1,3,0,0,2}};
+      int j, phase_num = min(6, x * 7);
+      for (j = 0; j < 3; ++j) switch (states[j][phase_num]) {
+        case 0: c[j] = 0; break;
+        case 1: c[j] = 1; break;
+        case 2: c[j] = sin((7 * x - phase_num) * M_PI / 2); break;
+        case 3: c[j] = cos((7 * x - phase_num) * M_PI / 2); break;
+        case 4: c[j] = 7 * x - phase_num; break;
+        case 5: c[j] = 1 - (7 * x - phase_num); break;
+      }
+    } else {
+      if      (x < .16) c[0] = 0;
+      else if (x < .72) c[0] = .99 *           sin((x - .16) / .56 * M_PI / 2);
+      else              c[0] = .01 *               (x - .72) / .28        + .99;
+      if      (x < .52) c[1] = 0;
+      else if (x < .86) c[1] = .99 * .5 * (1 - cos((x - .52) / .34 * M_PI));
+      else              c[1] = .01 *               (x - .86) / .14        + .99;
+      if      (x < .34) c[2] = .5  *           sin((x - .00) / .34 * M_PI / 2);
+      else if (x < .63) c[2] = .5  * .5 * (1 + cos((x - .34) / .29 * M_PI));
+      else              c[2] =            (1 - cos((x - .63) / .37 * M_PI / 2));
+    }
+    palette[at].red  = .5 + 255 * c[p->perm % 3];
+    palette[at].green= .5 + 255 * c[(1 + p->perm + (p->perm % 2)) % 3];
+    palette[at].blue = .5 + 255 * c[(2 + p->perm - (p->perm % 2)) % 3];
   }
-  i = spectrum_points * 3;
-  switch (style) {
-    case 0: case 2:
-      memcpy(palette + i, "\0\0\0"      , 3), i+= 3;
-      memcpy(palette + i, "\377\377\377", 3), i+= 3;
-      memcpy(palette + i, "\277\277\277", 3), i+= 3;
-      memcpy(palette + i, "\177\177\177", 3), i+= 3;
-      return;
-    case 1:  memcpy(palette + i, "\335\330\320", 3), i+= 3; break;
-    default: memcpy(palette + i, "\337\337\337", 3), i+= 3;
-  }
-  memcpy(palette + i, "\0\0\0"      , 3), i+= 3;
-  memcpy(palette + i, "\077\077\077", 3), i+= 3;
-  memcpy(palette + i, "\077\077\077", 3), i+= 3;
 }
 
 static const Bytef fixed[] =
@@ -405,7 +430,7 @@ static int axis(double to, int max_steps, double * limit, char * * prefix)
     scale = pow(10., -3. * prefix_num);
   }
   *prefix = "pnum-kMGTPE" + prefix_num + (prefix_num? 4 : 11);
-  *limit = to * scale + .5;
+  *limit = to * scale;
   return step * scale + .5;
 }
 
@@ -427,7 +452,7 @@ static int stop(sox_effect_t * effp)
   png_bytepp  png_rows = malloc(rows * sizeof(*png_rows));
   png_structp png      = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0,0);
   png_infop   png_info = png_create_info_struct(png);
-  png_byte    palette[palette_size * 3];
+  png_color   palette[256];
   int         i, j, step, tick_len = 2 + do_frame;
   char        text[200], * prefix;
   double      limit;
@@ -443,10 +468,10 @@ static int stop(sox_effect_t * effp)
   sox_debug("signal-max=%g", p->max);
   font = malloc(font_len);
   assert(uncompress(font, &font_len, fixed, sizeof(fixed)-1) == Z_OK);
-  make_palette(palette, p->style);
+  make_palette(p, palette);
   memset(pixels, Background, cols * rows * sizeof(*pixels));
   png_init_io(png, file);
-  png_set_PLTE(png, png_info, (png_colorp)palette, palette_size);
+  png_set_PLTE(png, png_info, palette, fixed_palette + p->spectrum_points);
   png_set_IHDR(png, png_info, (size_t)cols, (size_t)rows, 8,
       PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
       PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
@@ -461,7 +486,7 @@ static int stop(sox_effect_t * effp)
   /* Spectrogram */
   for (j = 0; j < p->rows; ++j) {
     for (i = 0; i < p->cols; ++i)
-      pixel(left + i, below + j) = colour(p->dBfs[i*p->rows + j], p->dB_range);
+      pixel(left + i, below + j) = colour(p, p->dBfs[i*p->rows + j]);
     if (do_frame)                                      /* Frame verticals */
       pixel(left - 1, below + j) = pixel(left + p->cols,below + j) = Grid;
   }
@@ -503,7 +528,7 @@ static int stop(sox_effect_t * effp)
   /* Z-axis */
   print_at(cols - right - 2 - font_X, below - 13, Text, "dBFS");/* Axis label */
   for (j = 0; j < p->rows; ++j) {                      /* Spectrum */
-    png_byte b = colour(p->dB_range * (j / (p->rows - 1.) - 1), p->dB_range);
+    png_byte b = colour(p, p->dB_range * (j / (p->rows - 1.) - 1));
     for (i = 0; i < spectrum_width; ++i)
       pixel(cols - right - 1 - i, below + j) = b;
   }
@@ -528,18 +553,21 @@ sox_effect_handler_t const * sox_spectrogram_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "spectrogram", "[options]\n"
-      "  -x num    X-axis pixels/second, default 100\n"
-      "  -y num    Y-axis resolution (1 - 4), default 2\n"
-      "  -z num    Z-axis (colour) range in dB, default 120\n"
-      "  -g num    Apply num dB gain; to shift Z-axis\n"
-      "  -w name   Window: Hann (default), Hamming, Bartlett, Rectangular, Kaiser\n"
-      "  -s        Slack overlap\n"
-      "  -a        Suppress axes' lines\n"
-      "  -t text   Title text\n"
-      "  -c text   Comment text\n"
-      "  -l        Light background\n"
-      "  -m        Monochrome display\n"
-      "  -o text   output file name, default `spectrogram.png'\n",
+      "\t-x num\tX-axis pixels/second, default 100\n"
+      "\t-y num\tY-axis resolution (1 - 4), default 2\n"
+      "\t-z num\tZ-axis range in dB, default 120\n"
+      "\t-Z num\tZ-axis maximum in dBFS, default 0\n"
+      "\t-q num\tZ-axis quantisation, default 249\n"
+      "\t-w name\tWindow: Hann (default), Hamming, Bartlett, Rectangular, Kaiser\n"
+      "\t-s\tSlack overlap\n"
+      "\t-a\tSuppress axis lines\n"
+      "\t-l\tLight background\n"
+      "\t-m\tMonochrome\n"
+      "\t-h\tHigh colour\n"
+      "\t-p num\tPermute colours\n"
+      "\t-t text\tTitle text\n"
+      "\t-c text\tComment text\n"
+      "\t-o text\toutput file name, default `spectrogram.png'\n",
     0, getopts, start, flow, drain, stop, NULL, sizeof(priv_t)};
   return &handler;
 }
