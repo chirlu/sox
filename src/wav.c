@@ -1135,8 +1135,7 @@ static int startwrite(sox_format_t * ft)
             break;
 
         case WAVE_FORMAT_GSM610:
-            wavgsminit(ft);
-            break;
+            return wavgsminit(ft);
 
         default:
             break;
@@ -1561,60 +1560,39 @@ static char *wav_format_str(unsigned wFormatTag)
 
 static int seek(sox_format_t * ft, sox_size_t offset)
 {
-    priv_t *   wav = (priv_t *) ft->priv;
-    int new_offset, channel_block, alignment;
+  priv_t *   wav = (priv_t *) ft->priv;
 
-    switch (wav->formatTag)
-    {
-        case WAVE_FORMAT_IMA_ADPCM:
-        case WAVE_FORMAT_ADPCM:
-            lsx_fail_errno(ft,SOX_ENOTSUP,"ADPCM not supported");
-            break;
+  if (ft->encoding.bits_per_sample & 7)
+    lsx_fail_errno(ft, SOX_ENOTSUP, "seeking not supported with this encoding");
+  else if (wav->formatTag == WAVE_FORMAT_GSM610) {
+    int new_offset, alignment;
+    sox_size_t gsmoff;
 
-        case WAVE_FORMAT_GSM610:
-            {
-                sox_size_t gsmoff;
+    /* rounding bytes to blockAlign so that we
+     * don't have to decode partial block. */
+    gsmoff = offset * wav->blockAlign / wav->samplesPerBlock +
+             wav->blockAlign * ft->signal.channels / 2;
+    gsmoff -= gsmoff % (wav->blockAlign * ft->signal.channels);
 
-                /* rounding bytes to blockAlign so that we
-                 * don't have to decode partial block. */
-                gsmoff = offset * wav->blockAlign / wav->samplesPerBlock +
-                         wav->blockAlign * ft->signal.channels / 2;
-                gsmoff -= gsmoff % (wav->blockAlign * ft->signal.channels);
-
-                ft->sox_errno = lsx_seeki(ft, (sox_ssize_t)(gsmoff + wav->dataStart), SEEK_SET);
-                if (ft->sox_errno != SOX_SUCCESS)
-                    return SOX_EOF;
-
-                /* offset is in samples */
-                new_offset = offset;
-                alignment = offset % wav->samplesPerBlock;
-                if (alignment != 0)
-                    new_offset += (wav->samplesPerBlock - alignment);
-                wav->numSamples = ft->signal.length - (new_offset / ft->signal.channels);
-            }
-            break;
-
-        default:
-            new_offset = offset * (ft->encoding.bits_per_sample >> 3);
-            /* Make sure request aligns to a channel block (ie left+right) */
-            channel_block = ft->signal.channels * (ft->encoding.bits_per_sample >> 3);
-            alignment = new_offset % channel_block;
-            /* Most common mistaken is to compute something like
-             * "skip everthing upto and including this sample" so
-             * advance to next sample block in this case.
-             */
-            if (alignment != 0)
-                new_offset += (channel_block - alignment);
-            new_offset += wav->dataStart;
-
-            ft->sox_errno = lsx_seeki(ft, new_offset, SEEK_SET);
-
-            if( ft->sox_errno == SOX_SUCCESS )
-                wav->numSamples = (ft->signal.length / ft->signal.channels) -
-                                  (new_offset / (ft->encoding.bits_per_sample >> 3) / ft->signal.channels);
+    ft->sox_errno = lsx_seeki(ft, (sox_ssize_t)(gsmoff + wav->dataStart), SEEK_SET);
+    if (ft->sox_errno == SOX_SUCCESS) {
+      /* offset is in samples */
+      new_offset = offset;
+      alignment = offset % wav->samplesPerBlock;
+      if (alignment != 0)
+          new_offset += (wav->samplesPerBlock - alignment);
+      wav->numSamples = ft->signal.length - (new_offset / ft->signal.channels);
     }
+  } else {
+    double wide_sample = offset - (offset % ft->signal.channels);
+    double to_d = wide_sample * ft->encoding.bits_per_sample / 8;
+    off_t to = to_d;
+    ft->sox_errno = (to != to_d)? SOX_EOF : lsx_seeki(ft, (sox_ssize_t)wav->dataStart + to, SEEK_SET);
+    if (ft->sox_errno == SOX_SUCCESS)
+      wav->numSamples -= (sox_size_t)wide_sample / ft->signal.channels;
+  }
 
-    return(ft->sox_errno);
+  return ft->sox_errno;
 }
 
 SOX_FORMAT_HANDLER(wav)

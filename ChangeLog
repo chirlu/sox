@@ -48,6 +48,7 @@ File formats:
   o Fix 24-bit read/write on big-endian systems.  (robs)
   o Fix crash trying to open non-existent play-list.  (robs)
   o Fix FLAC read from stdin with libFLAC >= 8.  (Patrick Taylor Ramsey/robs)
+  o Fix [1997637] Trim effect loses samples (with wav).  (robs)
 
 Effects:
 
