@@ -1051,7 +1051,8 @@ these methods affect the audio in the effects chain.
 X-axis pixels/second, default 100.  This controls the width of the
 spectrogram;
 .I num
-can be from 1 (low time resolution) to 5000 (high time resolution).  SoX
+can be from 1 (low time resolution) to 5000 (high time resolution);
+non-integer values (e.g. 1\*d5) can be used here.  SoX
 may make a slight adjustment to the given number for processing
 quantisation reasons; if so, SoX will report the actual number used
 (viewable when

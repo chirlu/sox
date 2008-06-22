@@ -15,6 +15,11 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+/* TODO
+ *   o Two-channel support.
+ *   o Option for a larger font (for use with image down-scaling).
+ */
+
 #ifdef NDEBUG /* Enable assert always. */
 #undef NDEBUG /* Must undef above assert.h or other that might include it. */
 #endif
@@ -88,18 +93,27 @@ static enum_item const window_options[] = {
   {0, 0}};
 
 typedef struct {
-  int        y_size, dft_size, rows, cols, step_size, block_steps, block_num;
-  int        dB_range, gain, style, read, end, end_min, last_end;
-  int        spectrum_points, perm;
-  char const * out_name, * title, * comment;
-  sox_bool   high_colour, slack_overlap, no_axes, truncated;
+  /* Parameters */
+  double     pixels_per_sec;
+  int        y_size, dB_range, gain, spectrum_points, perm;
+  sox_bool   monochrome, light_background, high_colour, slack_overlap, no_axes;
   win_type_t win_type;
+  char const * out_name, * title, * comment;
+
+  /* Work area */
+  int        WORK;  /* Start of work area is marked by this dummy variable. */
+  int        dft_size, step_size, block_steps, block_num, rows, cols, read;
+  int        end, end_min, last_end;
+  sox_bool   truncated;
   double     buf[MAX_DFT_SIZE], dft_buf[MAX_DFT_SIZE], window[MAX_DFT_SIZE];
-  double     pixels_per_sec, block_norm, max, magnitudes[(MAX_DFT_SIZE>>1) + 1];
-  int        bit_rev_table[100];  /* For Ooura fft */
+  double     block_norm, max, magnitudes[(MAX_DFT_SIZE>>1) + 1];
+  int        bit_rev_table[100];                       /* For Ooura fft */
   double     sin_cos_table[dft_sc_len(MAX_DFT_SIZE)];  /* ditto */
   float      * dBfs;
 } priv_t;
+
+#define secs(cols) \
+  ((double)(cols) * p->step_size * p->block_steps / effp->in_signal.rate)
 
 #define GETOPT_NUMERIC(ch, name, min, max) case ch:{ \
   char * end_ptr; \
@@ -134,14 +148,13 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *)effp->priv;
   int c, callers_optind = optind, callers_opterr = opterr;
-  sox_bool monochrome = sox_false, light_background = sox_false;
 
   assert(array_length(p->bit_rev_table) >= (size_t)dft_br_len(MAX_DFT_SIZE));
 
   --argv, ++argc, optind = 1, opterr = 0;                /* re-jig for getopt */
   p->pixels_per_sec = 100, p->y_size = 2, p->dB_range = 120;/* non-0 defaults */
   p->spectrum_points = 249, p->perm = 1;
-  p->style = 1, p->out_name = "spectrogram.png", p->comment = "Created by SoX";
+  p->out_name = "spectrogram.png", p->comment = "Created by SoX";
 
   while ((c = getopt(argc, argv, "+x:y:z:Z:q:p:w:st:c:amlho:")) != -1) switch (c) {
     GETOPT_NUMERIC('x', pixels_per_sec,  1 , 5000)
@@ -155,15 +168,14 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     case 't': p->title    = optarg;   break;
     case 'c': p->comment  = optarg;   break;
     case 'a': p->no_axes  = sox_true; break;
-    case 'm': monochrome  = sox_true; break;
-    case 'l': light_background = sox_true; break;
+    case 'm': p->monochrome = sox_true; break;
+    case 'l': p->light_background = sox_true; break;
     case 'h': p->high_colour = sox_true; break;
     case 'o': p->out_name = optarg;   break;
     default: sox_fail("unknown option `-%c'", optopt); return lsx_usage(effp);
   }
-  p->gain = - p->gain;
+  p->gain = -p->gain;
   --p->y_size, --p->perm;
-  p->style = 2 * monochrome + light_background;
   p->spectrum_points += 2;
   argc -= optind, optind = callers_optind, opterr = callers_opterr;
   return argc || p->win_type == INT_MAX? lsx_usage(effp) : SOX_SUCCESS;
@@ -198,6 +210,7 @@ static int start(sox_effect_t * effp)
     sox_fail("only 1 channel is supported");
     return SOX_EOF;
   }
+  memset(&p->WORK, 0, sizeof(*p) - field_offset(priv_t, WORK));
   p->end = p->dft_size = DFT_BASE_SIZE << p->y_size;
   p->rows = (p->dft_size >> 1) + 1;
   actual = make_window(p, p->last_end = 0);
@@ -222,7 +235,7 @@ static int do_column(sox_effect_t * effp)
   int i;
 
   if (p->cols == MAX_COLS) {
-    sox_warn("PNG truncated at %g seconds", (double)MAX_COLS * p->step_size * p->block_steps / effp->in_signal.rate);
+    sox_warn("PNG truncated at %g seconds", secs(p->cols));
     p->truncated = sox_true;
     return SOX_EOF;
   }
@@ -231,8 +244,7 @@ static int do_column(sox_effect_t * effp)
   for (i = 0; i < p->rows; ++i) {
     double dBfs = 10 * log10(p->magnitudes[i] * p->block_norm);
     p->dBfs[(p->cols - 1) * p->rows + i] = dBfs + p->gain;
-    if (dBfs > p->max)
-      p->max = dBfs;
+    p->max = max(dBfs, p->max);
   }
   memset(p->magnitudes, 0, p->rows * sizeof(*p->magnitudes));
   p->block_num = 0;
@@ -289,8 +301,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf_, sox_size_t * osamp)
     if (left_over >= p->step_size >> 1)
       isamp += p->step_size - left_over;
     sox_debug("cols=%i left=%i end=%i", p->cols, p->read, p->end);
-    p->end = 0;
-    p->end_min = -p->dft_size;
+    p->end = 0, p->end_min = -p->dft_size;
     if (flow(effp, ibuf, obuf, &isamp, &isamp) == SOX_SUCCESS && p->block_num) {
       p->block_norm *= (double)p->block_steps / p->block_num;
       do_column(effp);
@@ -316,8 +327,8 @@ static void make_palette(priv_t const * p, png_color * palette)
 {
   int i;
 
-  if (p->style & 1) {
-    memcpy(palette++, (p->style & 2)? "\337\337\337":"\335\330\320", 3);
+  if (p->light_background) {
+    memcpy(palette++, (p->monochrome)? "\337\337\337":"\335\330\320", 3);
     memcpy(palette++, "\0\0\0"      , 3);
     memcpy(palette++, "\077\077\077", 3);
     memcpy(palette++, "\077\077\077", 3);
@@ -328,9 +339,9 @@ static void make_palette(priv_t const * p, png_color * palette)
     memcpy(palette++, "\177\177\177", 3);
   }
   for (i = 0; i < p->spectrum_points; ++i) {
-    double c[3] , x = (double)i / (p->spectrum_points - 1);
-    int at = (p->style & 1)? p->spectrum_points - 1 - i : i;
-    if (p->style > 1) {
+    double c[3], x = (double)i / (p->spectrum_points - 1);
+    int at = (p->light_background)? p->spectrum_points - 1 - i : i;
+    if (p->monochrome) {
       c[2] = c[1] = c[0] = x;
       if (p->high_colour) {
         c[(1 + p->perm) % 3] = x < .4? 0 : 5 / 3. * (x - .4);
@@ -345,13 +356,13 @@ static void make_palette(priv_t const * p, png_color * palette)
     if (p->high_colour) {
       static const int states[3][7] = {
         {4,5,0,0,2,1,1}, {0,0,2,1,1,3,2}, {4,1,1,3,0,0,2}};
-      int j, phase_num = min(6, x * 7);
+      int j, phase_num = min(7 * x, 6);
       for (j = 0; j < 3; ++j) switch (states[j][phase_num]) {
         case 0: c[j] = 0; break;
         case 1: c[j] = 1; break;
         case 2: c[j] = sin((7 * x - phase_num) * M_PI / 2); break;
         case 3: c[j] = cos((7 * x - phase_num) * M_PI / 2); break;
-        case 4: c[j] = 7 * x - phase_num; break;
+        case 4: c[j] =      7 * x - phase_num;  break;
         case 5: c[j] = 1 - (7 * x - phase_num); break;
       }
     } else {
@@ -447,13 +458,12 @@ static int stop(sox_effect_t * effp)
   uLong       font_len = 96 * font_y;
   int         rows     = below + p->rows + 30 + 20 * !!p->title;
   int         cols     = left + p->cols + between + spectrum_width + right;
-  sox_bool    do_frame = !p->no_axes;
   png_byte *  pixels   = malloc(cols * rows * sizeof(*pixels));
   png_bytepp  png_rows = malloc(rows * sizeof(*png_rows));
   png_structp png      = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0,0);
   png_infop   png_info = png_create_info_struct(png);
   png_color   palette[256];
-  int         i, j, step, tick_len = 2 + do_frame;
+  int         i, j, step, tick_len = 3 - p->no_axes;
   char        text[200], * prefix;
   double      limit;
 
@@ -475,7 +485,7 @@ static int stop(sox_effect_t * effp)
   png_set_IHDR(png, png_info, (size_t)cols, (size_t)rows, 8,
       PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
       PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-  for (j = 0; j < rows; ++j)
+  for (j = 0; j < rows; ++j)               /* Put (0,0) at bottom-left of PNG */
     png_rows[rows - 1 - j] = (png_bytep)(pixels + j * cols);
 
   if (p->title && (i = (int)strlen(p->title) * font_X) < cols + 1) /* Title */
@@ -487,20 +497,20 @@ static int stop(sox_effect_t * effp)
   for (j = 0; j < p->rows; ++j) {
     for (i = 0; i < p->cols; ++i)
       pixel(left + i, below + j) = colour(p, p->dBfs[i*p->rows + j]);
-    if (do_frame)                                      /* Frame verticals */
+    if (!p->no_axes)                                   /* Y-axis lines */
       pixel(left - 1, below + j) = pixel(left + p->cols,below + j) = Grid;
   }
-  if (do_frame) for (i = -1; i <= p->cols; ++i)        /* Frame horizontals */
+  if (!p->no_axes) for (i = -1; i <= p->cols; ++i)     /* X-axis lines */
     pixel(left + i, below - 1) = pixel(left + i, below + p->rows) = Grid;
 
   /* X-axis */
-  step = axis((double)p->cols * p->step_size * p->block_steps / effp->in_signal.rate, p->cols / (font_X * 9 / 2), &limit, &prefix);
+  step = axis(secs(p->cols), p->cols / (font_X * 9 / 2), &limit, &prefix);
   sprintf(text, "Time (%.1ss)", prefix);               /* Axis label */
   print_at(left + (p->cols - font_X * (int)strlen(text)) / 2, 24, Text, text);
   for (i = 0; i <= limit; i += step) {
     int y, x = limit? (double)i / limit * p->cols + .5 : 0;
     for (y = 0; y < tick_len; ++y)                     /* Ticks */
-      pixel(left - 1 + x, below - 1 - y) = pixel(left - 1 + x, below + p->rows + y) = Grid;
+      pixel(left-1+x, below-1-y) = pixel(left-1+x, below+p->rows+y) = Grid;
     if (step == 5 && (i%10))
       continue;
     sprintf(text, "%g", .1 * i);                       /* Tick labels */
@@ -510,13 +520,14 @@ static int stop(sox_effect_t * effp)
   }
 
   /* Y-axis */
-  step = axis(effp->in_signal.rate / 2, (p->rows - 1) / ((font_y * 3 + 1) >> 1), &limit, &prefix);
+  step = axis(effp->in_signal.rate / 2,
+      (p->rows - 1) / ((font_y * 3 + 1) >> 1), &limit, &prefix);
   sprintf(text, "Frequency (%.1sHz)", prefix);         /* Axis label */
   print_up(10, below + (p->rows - font_X * (int)strlen(text)) / 2, Text, text);
   for (i = 0; i <= limit; i += step) {
     int x, y = limit? (double)i / limit * (p->rows - 1) + .5 : 0;
     for (x = 0; x < tick_len; ++x)                     /* Ticks */
-      pixel(left - 1 - x, below + y) = pixel(left + p->cols + x, below + y) = Grid;
+      pixel(left-1-x, below+y) = pixel(left+p->cols+x, below+y) = Grid;
     if (step == 5 && (i%10))
       continue;
     sprintf(text, i?"%5g":"   DC", .1 * i);            /* Tick labels */

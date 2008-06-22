@@ -69,6 +69,7 @@
 #define assert_static(e,f) enum {assert_static__##f = 1/(e)}
 #define range_limit(x, lower, upper) (min(max(x, lower), upper))
 #define array_length(a) (sizeof(a)/sizeof(a[0]))
+#define field_offset(type, field) ((unsigned)&(((type *)0)->field))
 #define sqr(a) ((a) * (a))
 
 #define dB_to_linear(x) exp((x) * M_LN10 * 0.05)
