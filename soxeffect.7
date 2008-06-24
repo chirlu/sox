@@ -34,7 +34,7 @@
 SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH DESCRIPTION
 In addition to converting and playing audio files, SoX can be used to
-invoke a number of audio effects `effects'.  Multiple effects may be applied
+invoke a number of audio `effects'.  Multiple effects may be applied
 by specifying them one after another at the end of the SoX command line.
 .SP
 In the descriptions that follow, 
@@ -42,8 +42,7 @@ brackets [ ] are used to denote parameters that are optional, braces
 { } to denote those that are both optional and repeatable,
 and angle brackets < > to denote those that are repeatable but not
 optional.
-.SP
-Where applicable, default values for optional parameters are shown in parenthesis.
+Where applicable, default values for optional parameters are shown in parenthesis ( ).
 .SP
 The following parameters are used with, and have the same meaning for,
 several effects:
@@ -77,7 +76,7 @@ q	Q-factor	See [2]
 .DT
 .SP
 For each effect that uses this parameter, the default method (i.e. if no
-characters is appended) is the one that it listed first in the effect's
+character is appended) is the one that it listed first in the effect's
 first line of description.
 .SS SOX EFFECTS
 .TP
@@ -149,7 +148,7 @@ See the description of the \fBbandpass\fR effect for details.
 \fBbass\fR\^|\^\fBtreble \fIgain\fR [\fIfrequency\fR[\fBk\fR]\fR [\fIwidth\fR[\fBs\fR\^|\^\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]]]
 Boost or cut the bass (lower) or treble (upper) frequencies of the audio
 using a two-pole shelving filter with a response similar to that
-of a standard hi-fi's (Baxandall) tone-controls.  This is also
+of a standard hi-fi's tone-controls.  This is also
 known as shelving equalisation (EQ).
 .SP
 \fIgain\fR gives the gain at 0\ Hz (for \fBbass\fR), or whichever is
@@ -678,7 +677,7 @@ and Replay Gain in
 Out Of Phase Stereo effect.
 Mixes stereo to twin-mono where each mono channel contains the
 difference between the left and right stereo channels.
-This is sometimes known as the karaoke effect as it often has the effect
+This is sometimes known as the `karaoke' effect as it often has the effect
 of removing most or all of the vocals from a recording.
 .TP
 \fBpad\fR { \fIlength\fR[\fB@\fIposition\fR] }
@@ -1025,7 +1024,7 @@ increases, less than 0 decreases.
 By default, the speed change is performed by resampling with the \fBrate\fR
 effect using its default quality/speed.  For higher quality or higher speed
 resampling, in addition to the \fBspeed\fR effect, specify
-the \fBrate\fR effect with the desired quality options.
+the \fBrate\fR effect with the desired quality option.
 .TP
 \fBspectrogram \fR[options]
 Create a spectrogram of the audio.  This effect is optional; type \fBsox
@@ -1051,8 +1050,8 @@ these methods affect the audio in the effects chain.
 X-axis pixels/second, default 100.  This controls the width of the
 spectrogram;
 .I num
-can be from 1 (low time resolution) to 5000 (high time resolution);
-non-integer values (e.g. 1\*d5) can be used here.  SoX
+can be from 1 (low time resolution) to 5000 (high time resolution)
+and need not be an integer.  SoX
 may make a slight adjustment to the given number for processing
 quantisation reasons; if so, SoX will report the actual number used
 (viewable when
@@ -1072,15 +1071,14 @@ effect; e.g.
 .EE
 starts the spectrogram at 1 minute through the audio.
 .IP \fB\-y\ \fInum\fR
-Y-axis resolution (1 - 4), default 2.
+Y-axis resolution (1 \- 4), default 2.
 This controls the height of the spectrogram;
 .I num
 can be from 1 (low frequency resolution) to 4 (high frequency
 resolution).  For values greater than 2, the resulting image may be too
 tall to display on the screen; if so, a graphic manipulation package
 (such as
-.BR
-ImageMagick (1))
+.BR ImageMagick (1))
 can be used to re-size the image.
 .SP
 To increase the frequency resolution without increasing the height of
@@ -1099,7 +1097,7 @@ rate).
 Z-axis (colour) range in dB, default 120.  This sets the dynamic-range
 of the spectrogram to be \-\fInum\fR\ dBFS to 0\ dBFS.
 .I Num
-may range from 20 to 180.  Decreasing dynamic-range, effectively
+may range from 20 to 180.  Decreasing dynamic-range effectively
 increases the `contrast' of the spectrogram display, and vice versa.
 .IP \fB\-Z\ \fInum\fR
 Sets the upper limit of the Z-axis in dBFS.
@@ -1113,7 +1111,7 @@ intensities) in which to render Z-axis
 values.  A small number (e.g. 4) will give a `poster'-like effect making
 it easier to discern magnitude bands of similar level.  Smaller numbers
 also usually
-result in a smaller PNG files.  The number given specifies the number of
+result in smaller PNG files.  The number given specifies the number of
 colours to use inside the Z-axis range; two colours are reserved to
 represent out-of-range values.
 .IP \fB\-w\ \fIname\fR
@@ -1139,10 +1137,10 @@ value, but at the expense of a little spectral loss.
 Creates a monochrome spectrogram (the default is colour).
 .IP \fB\-h\fR
 Selects a high-colour palette\*mless visually pleasing than the default
-colour palette, but may make it easier to differentiate different levels.
-Also works with
-.B \-m
-to create a hybrid monochrome/colour palette.
+colour palette, but it may make it easier to differentiate different levels.
+If this option is used in conjunction with
+.BR \-m ,
+the result will be a hybrid monochrome/colour palette.
 .IP \fB\-p\ \fInum\fR
 Permute the colours in a colour or hybrid palette.
 The
@@ -1184,7 +1182,7 @@ same
 .IR excess
 (before the ideal joining point), plus an additional
 .I leeway
-(default 0\*d005 seconds).  Sox should then be invoked with the two
+(default 0\*d005 seconds).  SoX should then be invoked with the two
 audio sections as input files and the
 .B splice
 effect given with the position at which to perform the splice\*mthis is
@@ -1229,7 +1227,7 @@ sox part1.au piece.au part2.au "$5" splice \\
 	\`expr $4 + $e + $3 - $2 + $e + $l + $e\`s
 .EE
 In the above Bourne shell script,
-two splices are used to `copy and paste' audio:
+two splices are used to `copy and paste' audio.
 .TS
 center;
 c8 c8 c.
@@ -1351,12 +1349,13 @@ following could be used to help tune a guitar's `E' strings:
 	play -n synth sine %-17
 .EE
 .B N.B.
-This effect generates audio at maximum volume, which means that there
+This effect generates audio at maximum volume (0dBFS), which means that there
 is a high chance of clipping when using the audio subsequently, so
-in most cases, you will want to follow this effect with the \fBvol\fR
+in most cases, you will want to follow this effect with the \fBgain\fR
 effect to prevent this from happening. (See also
 .B Clipping
-above.)
+in
+.BR sox (1).)
 .SP
 A detailed description of each
 .B synth

@@ -1517,7 +1517,7 @@ static void parse_effects(int argc, char **argv)
     optind += i; /* Skip past the effect arguments */
 
     if (e->handler.flags & SOX_EFF_DEPRECATED)
-      sox_warn("effect `%s' is deprecated; see sox(1) for an alternative", e->handler.name);
+      sox_warn("effect `%s' is deprecated; see soxeffect(7) for an alternative", e->handler.name);
     user_efftab[nuser_effects] = e;
   }
 }
