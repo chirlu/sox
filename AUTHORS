@@ -10,10 +10,6 @@ Mantainers:
 	Chris Bagwell		cbagwell@users.sourceforge.net
 		OSS and Sun players, bugfixes, ADPCM support,
 		patch collection and maintenance.
-	Reuben Thomas		rrt@sc3d.org
-		Build system makeover, libsndfile and ffmpeg sound
-		format support, libao playback, Secret Rabbit Code
-		resampling; many fixes and much cleanup.
 	Rob Sykes		robs@users.sourceforge.net
                 FORMATS: M3U, PLS, FLAC, AMR, HTK, WavPack, VOX/IMA/VOC ADPCM
                 support, 24bit support for popular formats, MP3 tags & duration
@@ -30,6 +26,10 @@ Mantainers:
                 libSoX examples, various fixes, enhancements and clean-ups.
 
 Contributors:
+	Reuben Thomas		rrt@sc3d.org
+		Build system makeover, libsndfile and ffmpeg sound
+		format support, libao playback, Secret Rabbit Code
+		resampling; many fixes and much cleanup.
 	Juergen Mueller		jmueller@uia.ua.ac.be
 		chorus, echo, echos, flanger, phaser, and reverb
 		effects.
@@ -61,7 +61,7 @@ Contributors:
 		BSD386 port, VOC stereo support.
 	Ken Kubo		ken@hmcvax.claremont.edu
 		VMS port, VOC stereo support.
-	Frank Gadegast 		<phade@cs.tu-berlin.de>
+	Frank Gadegast          <phade@cs.tu-berlin.de>
 		Microsoft C 7.0 & C Borland 3.0 ports.
 	David Elliot		<dce@scmc.sony.com>
 		CD-R format support.
@@ -69,7 +69,7 @@ Contributors:
 		Linux support.
 	Tom Littlejohn          <tlit@seq1.loc.gov>
 		Raw textual data
-	Boisy G. Pitre 		boisy@microware.com
+	Boisy G. Pitre          boisy@microware.com
 		OS9 port.
         Sun Microsystems, Guido Van Rossum
 	        CCITT G.711, G.721, G.723 implementation
@@ -78,18 +78,18 @@ Contributors:
 		expansion.
 	Allen Grider		grider@hfsi.hfsi.com
 		VOC stereo mode, WAV file handling
-	Michel Fingerhut 	Michel.Fingerhut@ircam.fr
+	Michel Fingerhut        Michel.Fingerhut@ircam.fr
 		Upgrade 'sf' format to current IRCAM format,
 		float file support.
 	Chris Knight
 		Acorn Archimedes support.
-	Richard Caley 		R.Caley@ed.ac.uk
+	Richard Caley           R.Caley@ed.ac.uk
 		Psion WVE handler.
 	Lutz Vieweg		lkv@mania.RoBIN.de
 		MAUD (Amiga) file handler
 	Tim Gardner		timg@tpi.com
 		Windows NT port for V7.
-	Jimen Ching 		jiching@wiliki.eng.hawaii.edu
+	Jimen Ching             jiching@wiliki.eng.hawaii.edu
 		Libst porting bugs.
 	Lauren Weinstein	lauren@vortex.com
 		DOS porting, scripts, professional use.
