@@ -226,7 +226,7 @@ libsfx_la_SOURCES = \
 	echos.c effects.c effects.h effects_i.c fade.c fft4g.c fft4g.h FFT.c \
 	FFT.h fifo.h filter.c flanger.c input.c key.c ladspa.c mcompand.c \
 	mixer.c noiseprof.c noisered.c noisered.h normalise.c output.c pad.c \
-	pan.c phaser.c pitch.c polyphas.c rabbit.c rate.c rate_coefs.h \
+	pan.c phaser.c pitch.c polyphas.c rabbit.c rate.c \
 	rate_filters.h rate_half_fir.h rate_poly_fir0.h rate_poly_fir.h \
 	remix.c repeat.c resample.c reverb.c reverse.c silence.c skeleff.c \
 	speed.c	splice.c stat.c stretch.c swap.c synth.c tempo.c tremolo.c \
