@@ -958,6 +958,7 @@ static void usage(char const * message)
   static char const * lines[] = {
 "SPECIAL FILENAMES:",
 "-               stdin (infile) or stdout (outfile)",
+"-d              use the default audio device (where applicable)",
 "-n              use the null file handler; for use with e.g. synth & stat",
 "",
 "GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):",
@@ -1151,7 +1152,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
   free(text);
 }
 
-static char *getoptstr = "+ac:fghimnoqr:st:uv:xABC:LMNRSTUV::X12348";
+static char *getoptstr = "+ac:dfghimnoqr:st:uv:xABC:LMNRSTUV::X12348";
 
 static struct option long_options[] =
   {
@@ -1222,7 +1223,7 @@ static int enum_option(int option_index, enum_item const * items)
   return p->value;
 }
 
-static sox_bool parse_gopts_and_fopts(file_t * f, int argc, char **argv)
+static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 {
   while (sox_true) {
     int c, option_index;
@@ -1231,7 +1232,7 @@ static sox_bool parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 
     switch (c=getopt_long(argc, argv, getoptstr, long_options, &option_index)) {
     case -1:        /* @ one of: file-name, effect name, end of arg-list. */
-      return sox_false; /* i.e. not null file. */
+      return '\0'; /* i.e. not device. */
 
     case 0:         /* Long options with no short equivalent. */
       switch (option_index) {
@@ -1309,8 +1310,8 @@ static sox_bool parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       sox_globals.repeatable = sox_true;
       break;
 
-    case 'n':
-      return sox_true;          /* i.e. is null file. */
+    case 'd': case 'n':
+      return c;
       break;
 
     case 'h': case '?':
@@ -1477,12 +1478,15 @@ static void parse_options_and_filenames(int argc, char **argv)
     add_file(&opts, set_default_device(&opts)), init_file(&opts);
 
   for (; optind < argc && !sox_find_effect(argv[optind]); init_file(&opts)) {
-    if (parse_gopts_and_fopts(&opts, argc, argv)) { /* is null file? */
+    char c = parse_gopts_and_fopts(&opts, argc, argv);
+    if (c == 'n') { /* is null file? */
       if (opts.filetype != NULL && strcmp(opts.filetype, "null") != 0)
         sox_warn("ignoring `-t %s'.", opts.filetype);
       opts.filetype = "null";
       add_file(&opts, "");
     }
+    else if (c == 'd') /* is default device? */
+      add_file(&opts, set_default_device(&opts));
     else if (optind >= argc || sox_find_effect(argv[optind]))
       break;
     else if (!sox_is_playlist(argv[optind]))
