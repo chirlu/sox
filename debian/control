@@ -51,7 +51,7 @@ Replaces: libsox-fmt-gsm, libsox-fmt-sndfile
 Description: Minimal set of SoX format libraries
  SoX is the swiss army knife of sound processing.
  .
- This package contains most audio formats libraries support by SoX.
+ This package contains most audio formats libraries supported by SoX.
 
 Package: libsox-fmt-alsa
 Architecture: any
