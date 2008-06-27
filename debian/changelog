@@ -14,6 +14,9 @@ sox (14.0.1+cvs-1) UNRELEASED; urgency=low
     - Removed, fixed upstream.
   * [debian/rules]:
     - Disabled patch system.
+  * [debian/control]:
+    - Added Build-Dep on libavutil-dev and libwavpack-dev.
+    - Fixed lintian warning, "meta package" changed to "metapackage".
 
  -- Pascal Giard <evilynux@gmail.com>  Fri, 14 Mar 2008 16:02:58 -0400
 

@@ -3,7 +3,7 @@ Section: sound
 Priority: optional
 Maintainer: Pascal Giard <pascal@debian.org>
 Uploaders: Guenter Geiger (Debian/GNU) <geiger@debian.org>
-Build-Depends: debhelper (>= 1.2.64), cdbs, libltdl3-dev, libvorbis-dev, libmad0-dev, libgsm1-dev, libsndfile1-dev (>= 1.0.12), libsamplerate0-dev, libavcodec-dev (>= 0.cvs20070301), libavformat-dev, libao-dev, libid3tag0-dev, ladspa-sdk, libasound2-dev [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386], chrpath
+Build-Depends: debhelper (>= 1.2.64), cdbs, libltdl3-dev, libvorbis-dev, libmad0-dev, libgsm1-dev, libsndfile1-dev (>= 1.0.12), libsamplerate0-dev, libavcodec-dev (>= 0.cvs20070301), libavformat-dev, libavutil-dev, libwavpack-dev, libao-dev, libid3tag0-dev, ladspa-sdk, libasound2-dev [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386], chrpath
 Standards-Version: 3.7.3
 
 Package: sox
@@ -166,7 +166,7 @@ Homepage: http://sox.sourceforge.net
 Description: All SoX format libraries
  SoX is the swiss army knife of sound processing.
  .
- This is a meta package depending on all free SoX format libraries.
+ This is a metapackage depending on all free SoX format libraries.
 
 Package: libsox-dev
 Architecture: any
