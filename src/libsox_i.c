@@ -11,21 +11,3 @@
  */
 
 #include "sox_i.h"
-#include <ctype.h>
-
-#ifndef HAVE_STRCASECMP
-int lsx_strcasecmp(const char * s1, const char * s2)
-{
-  while (*s1 && (toupper(*s1) == toupper(*s2)))
-    s1++, s2++;
-  return toupper(*s1) - toupper(*s2);
-}
-
-int lsx_strncasecmp(char const * s1, char const * s2, size_t n)
-{
-  while (--n && *s1 && (toupper(*s1) == toupper(*s2)))
-    s1++, s2++;
-  return toupper(*s1) - toupper(*s2);
-}
-#endif
-

@@ -54,8 +54,6 @@ double bessel_I_0(double x);
 #ifndef HAVE_STRCASECMP
 int strcasecmp(const char *s1, const char *s2);
 int strncasecmp(char const * s1, char const * s2, size_t n);
-#define strcasecmp lsx_strcasecmp
-#define strncasecmp lsx_strncasecmp
 #endif
 
 #ifdef HAVE_BYTESWAP_H

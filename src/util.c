@@ -16,8 +16,25 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "util.h"
+#include "sox_i.h"
+#include <ctype.h>
 #include <stdio.h>
+
+#ifndef HAVE_STRCASECMP
+int strcasecmp(const char * s1, const char * s2)
+{
+  while (*s1 && (toupper(*s1) == toupper(*s2)))
+    s1++, s2++;
+  return toupper(*s1) - toupper(*s2);
+}
+
+int strncasecmp(char const * s1, char const * s2, size_t n)
+{
+  while (--n && *s1 && (toupper(*s1) == toupper(*s2)))
+    s1++, s2++;
+  return toupper(*s1) - toupper(*s2);
+}
+#endif
 
 enum_item const * find_enum_text(char const * text, enum_item const * enum_items)
 {
