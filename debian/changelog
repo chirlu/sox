@@ -3,9 +3,20 @@ sox (14.0.1+cvs-1) UNRELEASED; urgency=low
   * CVS version.
     - Adds support for for the 2, 2.6 and 4-bit ADPCM .voc (closes: #103479).
     - Adds pkgconfig support (closes: #462704).
+    - Adds many formats supported by sndfile.
   * [debian/libsox-fmt-base.install]:
     - Removed auto library, no longer exists upstream.
-    - Added htk format library.
+    - Added Hidden Markov Model speech processing format (htk) library.
+    - Added Aaron Wallace's `Sounder' of 1991 format (sndr) library.
+    - Added Martin Hepperle's `SoundTool' of 1991/2 format (sndt) library.
+    - Added WavPack format (wv) library.
+    - Added Apples's Core Audio Format (caf) library.
+    - Added Ensoniq PARIS digitial audio format (fap, paf) libraries.
+    - Added Gnu Octave 2.0 and 2.1 format (mat, mat4, mat5) libraries.
+    - Added Portable Voice Format (pvf) library.
+    - Added Sound Designer II format (sd2) library.
+    - Added Sound Forge Audio Format (w64) library.
+    - Added Fasttracker 2 format (xi) library.
   * [debian/libsox-dev.install]:
     - Added pkgconfig file.
   * [debian/sox.install]:
@@ -13,12 +24,17 @@ sox (14.0.1+cvs-1) UNRELEASED; urgency=low
   * [debian/patches/00-fix-segfault-64bit.diff]:
     - Removed, fixed upstream.
   * [debian/rules]:
-    - Disabled patch system.
+    - Disabled patch system, no more patches.
   * [debian/control]:
     - Added Build-Dep on libavutil-dev and libwavpack-dev.
     - Fixed lintian warning, "meta package" changed to "metapackage".
-
- -- Pascal Giard <evilynux@gmail.com>  Fri, 14 Mar 2008 16:02:58 -0400
+    - Bumped Standards-Version to 3.8.0, needed changes were already made.
+    - Removed libsox-fmt-gsm and libsox-fmt-sndfile, merged in libsox-fmt-base.
+  * [debian/libsox-fmt-gsm.install, debian/libsox-fmt-gsm.dirs,
+     debian/libsox-fmt-libsndfile.install, debian/libsox-fmt-libsndfile.dirs]:
+    - Removed, merged gsm in libsox-fmt-base.
+  
+ -- Pascal Giard <evilynux@gmail.com>  Thu, 26 Jun 2008 21:18:00 -0400
 
 sox (14.0.1-2) unstable; urgency=low
 
@@ -103,7 +119,6 @@ sox (14.0.0-1) unstable; urgency=low
     - Splitted format libraries in different packages (libsox-fmt-foo).
     - Added !hurd-i386 to dependency on libasound-dev (closes: #440470).
     - Replaced ${Source-Version} with ${binary:Version}.
-    - Added Build-Dep on chrpath.
   * [debian/libsox-dev.dirs]:
     - Added /usr/lib/sox/ for format plugins.
   * [debian/libsox0.install, debian/libsox-dev.install]:
@@ -114,7 +129,7 @@ sox (14.0.0-1) unstable; urgency=low
     - Removed fPIC from CFLAGS as libtool takes care of it upstream.
     - Removed LDFLAGS -Wl,-z,defs as upstream is now doing it.
     - Added DEB_DH_MAKESHLIBS_ARGS -Xfmt to avoid useless calls to ldconfig.
-    - Fixed all lintian binary-or-shlib-defines-rpath warnings using chrpath.
+    - Fixed lintian binary-or-shlib-defines-rpath warnings with configure flag.
 	
  -- Pascal Giard <pascal@debian.org>  Wed, 12 Sep 2007 12:10:38 -0400
 

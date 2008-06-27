@@ -9,15 +9,6 @@ include /usr/share/cdbs/1/class/autotools.mk
 #include /usr/share/cdbs/1/rules/simple-patchsys.mk
 
 CFLAGS += -D_REENTRANT
-DEB_CONFIGURE_EXTRA_FLAGS := --disable-lame
+DEB_CONFIGURE_EXTRA_FLAGS := --disable-rpath --disable-lame
 # Takes care of postinst-has-useless-call-to-ldconfig for libsox-fmt-*
 DEB_DH_MAKESHLIBS_ARGS := -Xfmt
-
-binary-post-install/sox::
-	chrpath -d debian/sox/usr/bin/sox
-
-binary-post-install/libsox0::
-	chrpath -d debian/libsox0/usr/lib/lib*.so.*
-
-binary-post-install/libsox-fmt-all::
-	chrpath -d debian/libsox-fmt-*/usr/lib/sox/libsox_fmt_*.so.*

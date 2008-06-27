@@ -3,8 +3,8 @@ Section: sound
 Priority: optional
 Maintainer: Pascal Giard <pascal@debian.org>
 Uploaders: Guenter Geiger (Debian/GNU) <geiger@debian.org>
-Build-Depends: debhelper (>= 1.2.64), cdbs, libltdl3-dev, libvorbis-dev, libmad0-dev, libgsm1-dev, libsndfile1-dev (>= 1.0.12), libsamplerate0-dev, libavcodec-dev (>= 0.cvs20070301), libavformat-dev, libavutil-dev, libwavpack-dev, libao-dev, libid3tag0-dev, ladspa-sdk, libasound2-dev [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386], chrpath
-Standards-Version: 3.7.3
+Build-Depends: debhelper (>= 1.2.64), cdbs, libltdl3-dev, libvorbis-dev, libmad0-dev, libgsm1-dev, libsndfile1-dev (>= 1.0.12), libsamplerate0-dev, libavcodec-dev (>= 0.cvs20070301), libavformat-dev, libavutil-dev, libwavpack-dev, libao-dev, libid3tag0-dev, ladspa-sdk, libasound2-dev [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386]
+Standards-Version: 3.8.0
 
 Package: sox
 Section: sound
@@ -47,10 +47,11 @@ Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}
 Homepage: http://sox.sourceforge.net
+Replaces: libsox-fmt-gsm, libsox-fmt-sndfile
 Description: Minimal set of SoX format libraries
  SoX is the swiss army knife of sound processing.
  .
- This package contains the minimal set of SoX format libraries.
+ This package contains most audio formats libraries support by SoX.
 
 Package: libsox-fmt-alsa
 Architecture: any
@@ -100,17 +101,6 @@ Description: SoX FLAC format library
  .
  FLAC: http://flac.sourceforge.net
 
-Package: libsox-fmt-gsm
-Architecture: any
-Section: sound
-Depends: ${shlibs:Depends}
-Description: SoX GSM format library
- SoX is the swiss army knife of sound processing.
- .
- This package contains the SoX GSM format library.
- .
- SoX: http://sox.sourceforge.net
-
 Package: libsox-fmt-mp3
 Architecture: any
 Section: sound
@@ -136,18 +126,6 @@ Description: SoX OGG Vorbis format library
  .
  OGG Vorbis: http://www.vorbis.com
 
-Package: libsox-fmt-sndfile
-Architecture: any
-Section: sound
-Depends: ${shlibs:Depends}
-Homepage: http://sox.sourceforge.net
-Description: SoX libsndfile format library
- SoX is the swiss army knife of sound processing.
- .
- This package contains the SoX libsndfile format library.
- .
- libsndfile: http://www.mega-nerd.com/libsndfile/
-
 Package: libsox-fmt-oss
 Architecture: any
 Section: sound
@@ -161,7 +139,7 @@ Description: SoX OSS format I/O library
 Package: libsox-fmt-all
 Architecture: any
 Section: sound
-Depends: libsox-fmt-base, libsox-fmt-ffmpeg, libsox-fmt-flac, libsox-fmt-gsm, libsox-fmt-mp3, libsox-fmt-ogg, libsox-fmt-sndfile, libsox-fmt-alsa, libsox-fmt-ao, libsox-fmt-oss
+Depends: libsox-fmt-base, libsox-fmt-ffmpeg, libsox-fmt-flac, libsox-fmt-mp3, libsox-fmt-ogg, libsox-fmt-alsa, libsox-fmt-ao, libsox-fmt-oss
 Homepage: http://sox.sourceforge.net
 Description: All SoX format libraries
  SoX is the swiss army knife of sound processing.
