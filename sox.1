@@ -29,7 +29,7 @@
 .SP
 .fi
 ..
-.TH SoX 1 "April 17, 2007" "sox" "Sound eXchange"
+.TH SoX 1 "July 1, 2008" "sox" "Sound eXchange"
 .SH NAME
 SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH SYNOPSIS
@@ -477,6 +477,15 @@ SoX will send audio data to `standard output' (stdout).
 Note that when using this option, the file-type (see
 .B \-t
 below) must also be given.
+.TP
+\fB\-d\fR
+This can be used in place of an input or output filename to specify that
+the default audio device (if one has been built into SoX) is to be used.
+This is akin to invoking
+.B rec
+or
+.B play
+(as described above).
 .TP
 \fB\-n\fR
 This can be used in place of an input or output filename to specify that

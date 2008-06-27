@@ -15,9 +15,21 @@
 .ds RA \(->
 '\"
 '\" Decimal point set slightly raised
-.ds d \v'-.15m'.\v'+.15m'
+.if t .ds d \v'-.15m'.\v'+.15m'
+.if n .ds d .
 '\"
-.TH SoX 3 "January 31, 2007"
+'\" Enclosure macro for examples
+.de EX
+.SP
+.nf
+.ft CW
+..
+.de EE
+.ft R
+.SP
+.fi
+..
+.TH SoX 3 "July 1, 2008"
 .SH NAME
 libsox \- SoX, an audio file-format and effect library
 .SH SYNOPSIS
