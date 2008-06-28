@@ -366,15 +366,15 @@ static void make_palette(priv_t const * p, png_color * palette)
         case 5: c[j] = 1 - (7 * x - phase_num); break;
       }
     } else {
-      if      (x < .16) c[0] = 0;
-      else if (x < .72) c[0] = .99 *           sin((x - .16) / .56 * M_PI / 2);
-      else              c[0] = .01 *               (x - .72) / .28        + .99;
-      if      (x < .52) c[1] = 0;
-      else if (x < .86) c[1] = .99 * .5 * (1 - cos((x - .52) / .34 * M_PI));
-      else              c[1] = .01 *               (x - .86) / .14        + .99;
-      if      (x < .34) c[2] = .5  *           sin((x - .00) / .34 * M_PI / 2);
-      else if (x < .63) c[2] = .5  * .5 * (1 + cos((x - .34) / .29 * M_PI));
-      else              c[2] =            (1 - cos((x - .63) / .37 * M_PI / 2));
+      if      (x < .13) c[0] = 0;
+      else if (x < .73) c[0] = 1  * sin((x - .13) / .60 * M_PI / 2);
+      else              c[0] = 1;
+      if      (x < .60) c[1] = 0;
+      else if (x < .91) c[1] = 1  * sin((x - .60) / .31 * M_PI / 2);
+      else              c[1] = 1;
+      if      (x < .60) c[2] = .5 * sin((x - .00) / .60 * M_PI);
+      else if (x < .78) c[2] = 0;
+      else              c[2] =          (x - .78) / .22;
     }
     palette[at].red  = .5 + 255 * c[p->perm % 3];
     palette[at].green= .5 + 255 * c[(1 + p->perm + (p->perm % 2)) % 3];
