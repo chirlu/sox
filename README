@@ -32,6 +32,7 @@ This release understands:
   o CD-R (music CD format)
   o CVS and VMS files (continuous variable slope)
   o GSM files
+  o HTK files
   o LPC-10 files
   o Macintosh HCOM files
   o Amiga MAUD files
@@ -55,6 +56,7 @@ This release understands:
     o MS ADPCM, IMA ADPCM
     o GSM
     o RIFX (big endian)
+  o WavPack files (with optional libwavpack library)
   o Psion (palmtop) A-law WVE files and Record voice notes
   o Maxis XA Audio files
     o EA ADPCM (read support only, for now)
