@@ -8,7 +8,7 @@ sox-11gamma.
 sox-14.1.0	2008-TBD
 ----------
 
-Deprecated features removed in this release:
+Previously deprecated features that are removed in this release:
 
   Deprec-  Feature    [O(ption)]
   ated in  [F(ormat)] [E(ffect)]   Replacement
@@ -21,12 +21,35 @@ Deprecated features removed in this release:
   13.0.0   E vibro                 ~= tremolo
   13.0.0   F auto                  Becomes internal only
 
+Previously deprecated features to be removed in future:
+
+  Deprec-  Feature    [O(ption)]                           Removal
+  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
+  -------  ----------------------  ----------------------  -------
+  14.0.0   E stretch               ~= tempo                2008-09-11
+  14.0.0   E pitch                 ~= key                  2008-09-11
+
+Newly deprecated features to be removed in future:
+
+  Deprec-  Feature    [O(ption)]                           Removal
+  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
+  -------  ----------------------  ----------------------  -------
+  14.1.0   F wve (native)          wve (libsndfile)        14.1.0 + 1 year
+  14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1         14.1.0 + 6 months
+  14.1.0   E resample              ~= rate                 14.1.0 + 1 year
+  14.1.0   E polyphase             ~= rate                 14.1.0 + 1 year
+  14.1.0   E rabbit                ~= rate                 14.1.0 + 1 year
+  14.1.0   Behaviour whereby       soxi                    14.1.0 + 1 year
+           sox -V file(s) -n
+           doesn't read to EOF.
+
 File formats:
 
   o New option --help-format shows info about supported format(s).  (robs)
   o New WavPack format (includes lossless audio compression, but not
     guaranteed lossless file compression).  (robs)
   o New htk format.  (robs)
+  o Add .f4 & .f8 raw file extensions.  (robs)
   o Writing aiff, aifc & dvms now repeatable with -R.  (robs)
   o Writing hcom no longer fails with unsupported rate--chooses
     best match.  (robs)
@@ -57,8 +80,9 @@ Effects:
   o New `norm' (normalise) effect.  (robs)
   o New `delay' effect; delay one or more channels.  (robs)
   o New `contrast' enhancement effect [FR 708923].  (robs)
-  o Rewrite of rate; resample, polyphase, & rabbit now deprecated.  (robs)
-  o New `spectrogram' effect; creates a PNG.  (robs)
+  o Improved `rate' resampling effect; resample, polyphase, & rabbit
+    now deprecated.  (robs)
+  o New `spectrogram' effect; creates a PNG (if built with PNG lib).  (robs)
   o `synth' can now sweep linearly (as well as logarithmically).  (robs)
   o Fix synth max. level setting for some output encodings.  (robs)
   o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)
@@ -69,10 +93,10 @@ Other new features:
   o Now possible to control play-back resampling quality (and hence
     cpu-load) via the PLAY_RATE_ARG environment variable.  (robs)
   o Command line support for multiple file comments.  (robs)
-  o Soxi utility to extract/display file header fields.  (robs)
+  o New `soxi' utility to extract/display file header fields.  (robs)
   o Pkg-config support. (Pascal Giard)
-  o Basic VU meter.  (robs)
-  o Simple heuristic to detect when playing an album and set
+  o Simple VU meter.  (robs)
+  o Heuristic to detect when playing an album and set
     the default replay-gain mode to `album'.  (robs)
   o Better auto-choice of output file format parameters when
     type is different to that of input file.  (robs)
@@ -82,21 +106,21 @@ Other new features:
     be used to override the default audio device driver (rec/play)
     and default audio device (all).  (robs)
   o Simpler file info display for `play'.  (robs)
-  o Added example0: simpler example of how to use the libSoX effects
-    chain.  (robs)
-  o Added example2: simple example of how to use libSoX to read an
-    audio file.  (robs)
   o For some file-types, warn if file size seems too short.  (robs)
   o Added auto-detect for caf, sndr, txw & sf files.  (robs)
+  o Added example0: simpler example of how to develop applications that
+    use the libSoX effects chain.  (robs)
+  o Added example2: simple example of how to develop applications that
+    use libSoX to read an audio file.  (robs)
 
 Other bug fixes:
 
   o Fix [1890983] rec shortcut should apply bit depth (8-bit,
     16-bit, etc.) to input handler.  (robs)
-  o Fix auto-detect of hcom files.  (robs)
   o Fix ungraceful handling of out of disc space and other write
     errors (bug was introduced in 14.0.0).  (robs)
   o Fix endian selection (-B, -L, -x) in some circumstances.  (robs)
+  o Fix auto-detect of hcom files.  (robs)
 
 Internal improvements:
 
@@ -104,22 +128,6 @@ Internal improvements:
   o Fixed all compiler warnings (AFAICT).  (robs)
   o Reimplement (separately) SoundTool & Sounder format handlers.  (robs)
   o Allow formats & effects to have any size of private data.  (robs)
-
-Deprecated features to be removed in future:
-
-  Deprec-  Feature    [O(ption)]                           Removal
-  ated in  [F(ormat)] [E(ffect)]   Replacement             due in
-  -------  ----------------------  ----------------------  -------
-  14.0.0   E stretch               ~= tempo                2008-09-11
-  14.0.0   E pitch                 ~= key                  2008-09-11
-  14.0.0   E resample              ~= rate                 14.1.0 + 1 year
-  14.0.0   E polyphase             ~= rate                 14.1.0 + 1 year
-  14.0.0   E rabbit                ~= rate                 14.1.0 + 1 year
-  14.1.0   F wve (native)          wve (libsndfile)        14.1.0 + 1 year
-  14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1         14.1.0 + 6 months
-  14.1.0   Behaviour whereby       soxi                    14.1.0 + 1 year
-           sox -V file(s) -n
-           doesn't read to EOF.
 
 
 sox-14.0.1	2008-01-29
@@ -162,8 +170,8 @@ sox-14.0.1	2008-01-29
   o Fix AMR detection with --disable-shared.  (robs)
   o Updated configure to support linking to static libraries
     on mingw for flac, ogg, and libsamplerate libraries.
-  o Added example1: simple example of how to use the libSoX effects
-    chain.  (robs)
+  o Added example1: simple example of how to develop applications that
+    use the libSoX effects chain.  (robs)
 
 
 sox-14.0.0	2007-09-11
