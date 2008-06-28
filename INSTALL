@@ -246,10 +246,12 @@ o Rebuild "ALL_BUILD" and confirm all "File Modification Detected" dialogs
   with "Reload".
 
 o Add in the libsox "Preprocessor Definitions" (right click on libsox ->
-  Properties -> Configuration Properties -> C/C++ -> Preprocessor) HAVE_STRING_H  before the first line.  Set the "Runtime Library" to Multi-threaded DLL (/MD)
+  Properties -> Configuration Properties -> C/C++ -> Preprocessor) HAVE_STRING_H
+  before the first line.  Set the "Runtime Library" to Multi-threaded DLL (/MD)
   as described above.
 
-o Do the same for sox and add in the "Additional Dependencies" (Linker -> Input)  after the last line mpglib.lib.
+o Do the same for sox and add in the "Additional Dependencies" (Linker -> Input)
+  after the last line mpglib.lib.
 
 o Now build libsox
 
