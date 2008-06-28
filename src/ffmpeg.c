@@ -175,7 +175,7 @@ static int startread(sox_format_t * ft)
   av_read_play(ffmpeg->ctxt);
 
   /* Find audio stream (FIXME: allow different stream to be selected) */
-  for (i = 0; i < ffmpeg->ctxt->nb_streams; i++) {
+  for (i = 0; (unsigned)i < ffmpeg->ctxt->nb_streams; i++) {
     AVCodecContext *enc = ffmpeg->ctxt->streams[i]->codec;
     if (enc->codec_type == CODEC_TYPE_AUDIO && ffmpeg->audio_index < 0) {
       ffmpeg->audio_index = i;
@@ -451,7 +451,7 @@ static int stopwrite(sox_format_t * ft)
   av_write_trailer(ffmpeg->ctxt);
 
   /* Free the streams */
-  for (i = 0; i < ffmpeg->ctxt->nb_streams; i++) {
+  for (i = 0; (unsigned)i < ffmpeg->ctxt->nb_streams; i++) {
     av_freep(&ffmpeg->ctxt->streams[i]->codec);
     av_freep(&ffmpeg->ctxt->streams[i]);
   }
