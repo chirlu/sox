@@ -923,7 +923,7 @@ static void display_supported_formats(void)
     printf(" %s", format_list[i]);
   putchar('\n');
 
-  printf("PLAYLIST FORMATS: m3u pls\nAUDIO DEVICES:");
+  printf("PLAYLIST FORMATS: m3u pls\nAUDIO DEVICE DRIVERS:");
   for (i = formats = 0; sox_format_fns[i].fn; ++i) {
     sox_format_handler_t const * handler = sox_format_fns[i].fn();
     if ((handler->flags & SOX_FILE_DEVICE) && !(handler->flags & SOX_FILE_PHONY))

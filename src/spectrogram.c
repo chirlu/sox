@@ -578,7 +578,7 @@ sox_effect_handler_t const * sox_spectrogram_effect_fn(void)
       "\t-p num\tPermute colours\n"
       "\t-t text\tTitle text\n"
       "\t-c text\tComment text\n"
-      "\t-o text\toutput file name, default `spectrogram.png'\n",
+      "\t-o text\tOutput file name, default `spectrogram.png'\n",
     0, getopts, start, flow, drain, stop, NULL, sizeof(priv_t)};
   return &handler;
 }
