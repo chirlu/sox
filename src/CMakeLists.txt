@@ -31,17 +31,18 @@ set(effects_srcs
   earwax          mcompand        polyphas        splice
 )
 set(formats_srcs
-  8svx            cvsd-fmt        ima-fmt         s2-fmt          u2-fmt
-  adpcm           dat             ima_rw          s3-fmt          u3-fmt
-  adpcms          dvms-fmt        la-fmt          s4-fmt          u4-fmt
-  aifc-fmt        g711            lpc10.c         sf              ul-fmt
-  aiff            g721            lu-fmt          skelform        voc
-  aiff-fmt        g723_24         maud            smp             vox
-  al-fmt          g723_40         nulfile         sounder         vox-fmt
-  au              g72x            prc             soundtool       wav
-  avr             gsm.c           raw             sphere          wve
-  cdr             hcom            raw-fmt         tx16w           xa
-  cvsd            htk             s1-fmt          u1-fmt
+  8svx            dat             ima-fmt         s3-fmt          u4-fmt
+  adpcm           dvms-fmt        ima_rw          s4-fmt          ul-fmt
+  adpcms          f4-fmt          la-fmt          sf              voc
+  aifc-fmt        f8-fmt          lpc10.c         skelform        vox
+  aiff            g711            lu-fmt          smp             vox-fmt
+  aiff-fmt        g721            maud            sounder         wav
+  al-fmt          g723_24         nulfile         soundtool       wve
+  au              g723_40         prc             sphere          xa
+  avr             g72x            raw             tx16w
+  cdr             gsm.c           raw-fmt         u1-fmt
+  cvsd            hcom            s1-fmt          u2-fmt
+  cvsd-fmt        htk             s2-fmt          u3-fmt
 )
 add_library(lib${PROJECT_NAME}
   effects                 ${formats_srcs}         ${optional_srcs}

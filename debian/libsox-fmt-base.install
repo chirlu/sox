@@ -7,6 +7,8 @@ debian/tmp/usr/lib/sox/libsox_fmt_cdr.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_cvsd.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_dat.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_dvms.so* usr/lib/sox/
+debian/tmp/usr/lib/sox/libsox_fmt_f4.so* usr/lib/sox/
+debian/tmp/usr/lib/sox/libsox_fmt_f8.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_gsm.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_hcom.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_htk.so* usr/lib/sox/
@@ -24,7 +26,6 @@ debian/tmp/usr/lib/sox/libsox_fmt_s3.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_s4.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_sf.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_smp.so* usr/lib/sox/
-debian/tmp/usr/lib/sox/libsox_fmt_sndrtool.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_sounder.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_soundtool.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_sphere.so* usr/lib/sox/
@@ -40,9 +41,7 @@ debian/tmp/usr/lib/sox/libsox_fmt_vox.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_wav.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_wve.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_xa.so* usr/lib/sox/
-
 debian/tmp/usr/lib/sox/libsox_fmt_wavpack.so* usr/lib/sox/
-
 debian/tmp/usr/lib/sox/libsox_fmt_sndfile.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_caf.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_fap.so* usr/lib/sox/

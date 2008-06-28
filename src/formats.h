@@ -26,6 +26,8 @@
   FORMAT(cvsd)
   FORMAT(dat)
   FORMAT(dvms)
+  FORMAT(f4)
+  FORMAT(f8)
   FORMAT(gsm)
   FORMAT(hcom)
   FORMAT(htk)

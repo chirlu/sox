@@ -57,9 +57,15 @@ and look for its name under the list:
 .PP
 \&\fB.raw\fR (also with \fB\-t sndfile\fR),
 .br
-\&\fB.s1\fR, \fB.s2\fR, \fB.s3\fR, \fB.s4\fR, \fB.u1\fR, \fB.u2\fR, \fB.u3\fR, \fB.u4\fR,
+\&\fB.f4\fR, \fB.f8\fR,
 .br
-\&\fB.ul\fR, \fB.al\fR, \fB.lu\fR, \fB.la\fR, \fB.sb\fR, \fB.sw\fR, \fB.ub\fR, \fB.uw\fR
+\&\fB.s1\fR, \fB.s2\fR, \fB.s3\fR, \fB.s4\fR,
+.br
+\&\fB.u1\fR, \fB.u2\fR, \fB.u3\fR, \fB.u4\fR,
+.br
+\&\fB.ul\fR, \fB.al\fR, \fB.lu\fR, \fB.la\fR,
+.br
+\&\fB.sb\fR, \fB.sw\fR, \fB.ub\fR, \fB.uw\fR
 .if t .sp -.5
 .if n .sp -1
 .TP
@@ -67,19 +73,19 @@ and look for its name under the list:
 Raw (headerless) audio files.  For
 .BR raw ,
 the sample rate and the data encoding must be given using command-line
-format options; for all other types, the sample rate defaults to 8kHz (but
-may be overridden), and the data encoding is defined by the given suffix.
-Thus \fBs1\fR, \fBs2\fR, \fBs3\fR, and \fBs4\fR indicate files encoded
-as 1, 2, 3, and 4-byte signed integer PCM respectively; \fBu1\fR,
-\fBu2\fR, \fBu3\fR, and \fBu4\fR indicate files encoded as 1, 2, 3, and
-4-byte unsigned integer PCM respectively; \fBul\fR indicates `\(*m-law'
-(byte), \fBal\fR indicates `A-law' (byte), and \fBlu\fR and \fBla\fR are
-inverse bit order `\(*m-law' and inverse bit order `A-law' respectively.
-\fBsb\fR, \fBsw\fR, \fBub\fR, \fBuw\fR, and \fBsl\fR are
-aliases for
-\fBs1\fR, \fBs2\fR, \fBu1\fR, \fBu2\fR, and \fBs4\fR respectively.
-For all raw formats, the number of channels defaults to 1 (but
-may be overridden).
+format options; for the other listed types, the sample rate defaults to
+8kHz (but may be overridden), and the data encoding is defined by the
+given suffix.  Thus \fBf4\fR and \fBf8\fR indicate files encoded as 4
+and 8-byte (IEEE single and double precision) floating point PCM
+respectively; \fBs1\fR, \fBs2\fR, \fBs3\fR, and \fBs4\fR indicate as 1,
+2, 3, and 4-byte signed integer PCM respectively; \fBu1\fR, \fBu2\fR,
+\fBu3\fR, and \fBu4\fR indicate as 1, 2, 3, and 4-byte unsigned integer
+PCM respectively; \fBul\fR indicates `\(*m-law' (byte), \fBal\fR
+indicates `A-law' (byte), and \fBlu\fR and \fBla\fR are inverse bit
+order `\(*m-law' and inverse bit order `A-law' respectively.  \fBsb\fR,
+\fBsw\fR, \fBub\fR, \fBuw\fR, and \fBsl\fR are aliases for \fBs1\fR,
+\fBs2\fR, \fBu1\fR, \fBu2\fR, and \fBs4\fR respectively.  For all raw
+formats, the number of channels defaults to 1 (but may be overridden).
 .SP
 Headerless audio files on a SPARC computer are likely to be of format
 \fBul\fR;  on a Mac, they're likely to be \fBu1\fR but with a

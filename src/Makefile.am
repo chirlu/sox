@@ -48,11 +48,16 @@ pkglib_LTLIBRARIES = libsox_fmt_raw.la libsox_fmt_s1.la \
 	  libsox_fmt_sphere.la libsox_fmt_txw.la libsox_fmt_voc.la	\
 	  libsox_fmt_vox.la libsox_fmt_ima.la libsox_fmt_wav.la		\
 	  libsox_fmt_wve.la libsox_fmt_xa.la libsox_fmt_nul.la \
-	  libsox_fmt_htk.la libsox_fmt_sounder.la libsox_fmt_soundtool.la
+	  libsox_fmt_htk.la libsox_fmt_sounder.la libsox_fmt_soundtool.la \
+	  libsox_fmt_f4.la libsox_fmt_f8.la
 
 # File formats
 libsox_fmt_raw_la_SOURCES = raw-fmt.c
 libsox_fmt_raw_la_LIBADD = libsox.la
+libsox_fmt_f4_la_SOURCES = f4-fmt.c
+libsox_fmt_f4_la_LIBADD = libsox.la
+libsox_fmt_f8_la_SOURCES = f8-fmt.c
+libsox_fmt_f8_la_LIBADD = libsox.la
 libsox_fmt_s1_la_SOURCES = s1-fmt.c
 libsox_fmt_s1_la_LIBADD = libsox.la
 libsox_fmt_s2_la_SOURCES = s2-fmt.c
@@ -256,7 +261,7 @@ else
     lu-fmt.c 8svx.c aiff-fmt.c aifc-fmt.c au.c avr.c cdr.c cvsd-fmt.c \
     dvms-fmt.c dat.c gsm.c hcom.c htk.c lpc10.c maud.c prc.c sf.c smp.c \
     sounder.c soundtool.c sphere.c tx16w.c voc.c vox-fmt.c ima-fmt.c adpcm.c adpcm.h \
-    ima_rw.c ima_rw.h wav.c wve.c xa.c nulfile.c
+    ima_rw.c ima_rw.h wav.c wve.c xa.c nulfile.c f4-fmt.c f8-fmt.c
 libsox_la_LIBADD = @GSM_LIBS@ @LIBGSM_LIBADD@
 libsox_la_LIBADD += ../lpc10/liblpc10.la
 
