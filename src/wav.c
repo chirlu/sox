@@ -1587,7 +1587,7 @@ static int seek(sox_format_t * ft, sox_size_t offset)
     double wide_sample = offset - (offset % ft->signal.channels);
     double to_d = wide_sample * ft->encoding.bits_per_sample / 8;
     off_t to = to_d;
-    ft->sox_errno = (to != to_d)? SOX_EOF : lsx_seeki(ft, (sox_ssize_t)wav->dataStart + to, SEEK_SET);
+    ft->sox_errno = (to != to_d)? SOX_EOF : lsx_seeki(ft, (sox_ssize_t)wav->dataStart + (sox_ssize_t)to, SEEK_SET);
     if (ft->sox_errno == SOX_SUCCESS)
       wav->numSamples -= (sox_size_t)wide_sample / ft->signal.channels;
   }
