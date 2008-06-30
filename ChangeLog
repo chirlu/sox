@@ -83,7 +83,8 @@ Effects:
   o Improved `rate' resampling effect; resample, polyphase, & rabbit
     now deprecated.  (robs)
   o New `spectrogram' effect; creates a PNG (if built with PNG lib).  (robs)
-  o `synth' can now sweep linearly (as well as logarithmically).  (robs)
+  o `synth' can now sweep linearly and squarely (as well as
+    exponentially).  (robs)
   o Fix synth max. level setting for some output encodings.  (robs)
   o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)
   o `gain' alias for the vol effect.  (robs)

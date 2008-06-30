@@ -1,7 +1,7 @@
 /* libSoX synth - Synthesizer Effect.
  *
  * Copyright (c) Jan 2001  Carsten Borchardt
- * Copyright (c) 2001-2007 SoX contributors
+ * Copyright (c) 2001-2008 SoX contributors
  *
  * This source code is freely redistributable and may be used for any purpose.
  * This copyright notice must be maintained.  The authors are not responsible
@@ -145,12 +145,14 @@ static float GeneratePinkNoise(PinkNoise * pink)
 
 
 
+typedef enum {Linear, Square, Exp, Exp_cycle} sweep_t;
+
 typedef struct {
   /* options */
   type_t type;
   combine_t combine;
   double freq, freq2, mult;
-  sox_bool log_sweep;
+  sweep_t sweep;
   double offset, phase;
   double p1, p2, p3; /* Use depends on synth type */
 
@@ -280,13 +282,15 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     /* read frequencies if given */
     if (isdigit((int) argv[argn][0]) ||
         argv[argn][0] == '.' || argv[argn][0] == '%') {
+      static const char sweeps[] = ":+/-";
+
       chan->freq2 = chan->freq = lsx_parse_frequency(argv[argn], &end_ptr);
       if (chan->freq < 0) {
         sox_fail("invalid freq");
         return SOX_EOF;
       }
-      if (*end_ptr == '-' || *end_ptr == '~') {        /* freq2 given? */
-        chan->log_sweep = *end_ptr == '-';
+      if (*end_ptr && strchr(sweeps, *end_ptr)) {         /* freq2 given? */
+        chan->sweep = strchr(sweeps, *end_ptr) - sweeps;
         chan->freq2 = lsx_parse_frequency(end_ptr + 1, &end_ptr);
         if (chan->freq2 < 0) {
           sox_fail("invalid freq2");
@@ -301,8 +305,8 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
         sox_fail("frequency: invalid trailing character");
         return SOX_EOF;
       }
-      if (chan->log_sweep && chan->freq * chan->freq2 == 0) {
-        sox_fail("invalid frequency for logarithmic sweep");
+      if (chan->sweep >= Exp && chan->freq * chan->freq2 == 0) {
+        sox_fail("invalid frequency for exponential sweep");
         return SOX_EOF;
       }
 
@@ -366,9 +370,23 @@ static int start(sox_effect_t * effp)
     channel_t chan = &synth->channels[i];
     *chan = synth->getopts_channels[i % synth->getopts_nchannels];
     set_default_parameters(chan, i);
-    chan->mult = chan->log_sweep ?
-        synth->samples_to_do? (log(chan->freq2) - log(chan->freq)) / synth->samples_to_do : 1 :
-        synth->samples_to_do? (chan->freq2 - chan->freq)  / synth->samples_to_do / 2 : 0;
+    switch (chan->sweep) {
+      case Linear: chan->mult = synth->samples_to_do?
+          (chan->freq2 - chan->freq) / synth->samples_to_do / 2 : 0;
+        break;
+      case Square: chan->mult = synth->samples_to_do?
+           sqrt(fabs(chan->freq2 - chan->freq)) / synth->samples_to_do / sqrt(3.) : 0;
+        if (chan->freq > chan->freq2)
+          chan->mult = -chan->mult;
+        break;
+      case Exp: chan->mult = synth->samples_to_do?
+          log(chan->freq2 / chan->freq) / synth->samples_to_do * effp->in_signal.rate : 1;
+        chan->freq /= chan->mult;
+        break;
+      case Exp_cycle: chan->mult = synth->samples_to_do?
+          (log(chan->freq2) - log(chan->freq)) / synth->samples_to_do : 1;
+        break;
+    }
     sox_debug("type=%s, combine=%s, samples_to_do=%u, f1=%g, f2=%g, "
               "offset=%g, phase=%g, p1=%g, p2=%g, p3=%g mult=%g",
         find_enum_value(chan->type, synth_type)->text,
@@ -381,144 +399,8 @@ static int start(sox_effect_t * effp)
 
 
 
-static sox_sample_t do_synth(sox_sample_t synth_input, priv_t * synth, unsigned c, double elapsed_time_s)
-{
-  channel_t chan = &synth->channels[c];
-  double synth_out;              /* [-1, 1] */
-
-  if (chan->type < synth_noise) { /* Need to calculate phase: */
-    double phase;            /* [0, 1) */
-
-    if (!chan->log_sweep) {
-      double f = chan->freq + synth->samples_done * chan->mult;
-      phase = f * elapsed_time_s;
-    }
-    else {
-      double f = chan->freq * exp(synth->samples_done * chan->mult);
-      double cycle_elapsed_time_s = elapsed_time_s - chan->cycle_start_time_s;
-      if (f * cycle_elapsed_time_s >= 1) {  /* move to next cycle */
-        chan->cycle_start_time_s += 1 / f;
-        cycle_elapsed_time_s = elapsed_time_s - chan->cycle_start_time_s;
-      }
-      phase = f * cycle_elapsed_time_s;
-    }
-    phase = fmod(phase + chan->phase, 1.0);
-
-    switch (chan->type) {
-      case synth_sine:
-        synth_out = sin(2 * M_PI * phase);
-        break;
-
-      case synth_square:
-        /* |_______           | +1
-         * |       |          |
-         * |_______|__________|  0
-         * |       |          |
-         * |       |__________| -1
-         * |                  |
-         * 0       p1          1
-         */
-        synth_out = -1 + 2 * (phase < chan->p1);
-        break;
-
-      case synth_sawtooth:
-        /* |           __| +1
-         * |        __/  |
-         * |_______/_____|  0
-         * |  __/        |
-         * |_/           | -1
-         * |             |
-         * 0             1
-         */
-        synth_out = -1 + 2 * phase;
-        break;
-
-      case synth_triangle:
-        /* |    .    | +1
-         * |   / \   |
-         * |__/___\__|  0
-         * | /     \ |
-         * |/       \| -1
-         * |         |
-         * 0   p1    1
-         */
-
-        if (phase < chan->p1)
-          synth_out = -1 + 2 * phase / chan->p1;          /* In rising part of period */
-        else
-          synth_out = 1 - 2 * (phase - chan->p1) / (1 - chan->p1); /* In falling part */
-        break;
-
-      case synth_trapezium:
-        /* |    ______             |+1
-         * |   /      \            |
-         * |__/________\___________| 0
-         * | /          \          |
-         * |/            \_________|-1
-         * |                       |
-         * 0   p1    p2   p3       1
-         */
-        if (phase < chan->p1)       /* In rising part of period */
-          synth_out = -1 + 2 * phase / chan->p1;
-        else if (phase < chan->p2)  /* In high part of period */
-          synth_out = 1;
-        else if (phase < chan->p3)  /* In falling part */
-          synth_out = 1 - 2 * (phase - chan->p2) / (chan->p3 - chan->p2);
-        else                        /* In low part of period */
-          synth_out = -1;
-        break;
-
-      case synth_exp:
-        /* |             |              | +1
-         * |            | |             |
-         * |          _|   |_           | 0
-         * |       __-       -__        |
-         * |____---             ---____ | f(p2)
-         * |                            |
-         * 0             p1             1
-         */
-        synth_out = dB_to_linear(chan->p2 * -100);  /* 0 ..  1 */
-        if (phase < chan->p1)
-          synth_out = synth_out * exp(phase * log(1 / synth_out) / chan->p1);
-        else
-          synth_out = synth_out * exp((1 - phase) * log(1 / synth_out) / (1 - chan->p1));
-        synth_out = synth_out * 2 - 1;      /* map 0 .. 1 to -1 .. +1 */
-        break;
-
-      default: synth_out = 0;
-    }
-  } else switch (chan->type) {
-#define RAND (2. * rand() * (1. / RAND_MAX) - 1)
-    case synth_whitenoise:
-      synth_out = RAND;
-      break;
-
-    case synth_pinknoise:
-      synth_out = GeneratePinkNoise(&(chan->pink_noise));
-      break;
-
-    case synth_brownnoise:
-      do synth_out = chan->brown_noise + RAND * (1. / 16);
-      while (fabs(synth_out) > 1);
-      chan->brown_noise = synth_out;
-      break;
-
-    default: synth_out = 0;
-  }
-
-  /* Add offset, but prevent clipping: */
-  synth_out = synth_out * (1 - fabs(chan->offset)) + chan->offset;
-
-  switch (chan->combine) {
-    case synth_create: return  synth_out * synth->max;
-    case synth_mix   : return (synth_out * synth->max + synth_input) * 0.5;
-    case synth_amod  : return (synth_out + 1) * synth_input * 0.5;
-    case synth_fmod  : return  synth_out * synth_input;
-  }
-  return 0;
-}
-
-
+#define sign(d) ((d) < 0? -1. : 1.)
+#define elapsed_time_s synth->samples_done / effp->in_signal.rate
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * obuf,
     sox_size_t * isamp, sox_size_t * osamp)
@@ -526,13 +408,153 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
   priv_t * synth = (priv_t *) effp->priv;
   unsigned len = min(*isamp, *osamp) / effp->in_signal.channels;
   unsigned c, done;
-  double sample_period = 1 / effp->in_signal.rate;
   int result = SOX_SUCCESS;
 
   for (done = 0; done < len && result == SOX_SUCCESS; ++done) {
-    double elapsed_time_s = synth->samples_done * sample_period;
-    for (c = 0; c < effp->in_signal.channels; c++)
-      *obuf++ = do_synth(*ibuf++, synth, c, elapsed_time_s);
+    for (c = 0; c < effp->in_signal.channels; c++) {
+      sox_sample_t synth_input = *ibuf++;
+      channel_t chan = &synth->channels[c];
+      double synth_out;              /* [-1, 1] */
+
+      if (chan->type < synth_noise) { /* Need to calculate phase: */
+        double phase;            /* [0, 1) */
+        switch (chan->sweep) {
+          case Linear:
+            phase = (chan->freq + synth->samples_done * chan->mult) *
+                elapsed_time_s;
+            break;
+          case Square:
+            phase = (chan->freq + sign(chan->mult) * 
+                sqr(synth->samples_done * chan->mult)) * elapsed_time_s;
+            break;
+          case Exp:
+            phase = chan->freq * exp(chan->mult * elapsed_time_s);
+            break;
+          case Exp_cycle: {
+            double f = chan->freq * exp(synth->samples_done * chan->mult);
+            double cycle_elapsed_time_s = elapsed_time_s - chan->cycle_start_time_s;
+            if (f * cycle_elapsed_time_s >= 1) {  /* move to next cycle */
+              chan->cycle_start_time_s += 1 / f;
+              cycle_elapsed_time_s = elapsed_time_s - chan->cycle_start_time_s;
+            }
+            phase = f * cycle_elapsed_time_s;
+            break;
+          }
+        }
+        phase = fmod(phase + chan->phase, 1.0);
+
+        switch (chan->type) {
+          case synth_sine:
+            synth_out = sin(2 * M_PI * phase);
+            break;
+
+          case synth_square:
+            /* |_______           | +1
+             * |       |          |
+             * |_______|__________|  0
+             * |       |          |
+             * |       |__________| -1
+             * |                  |
+             * 0       p1          1
+             */
+            synth_out = -1 + 2 * (phase < chan->p1);
+            break;
+
+          case synth_sawtooth:
+            /* |           __| +1
+             * |        __/  |
+             * |_______/_____|  0
+             * |  __/        |
+             * |_/           | -1
+             * |             |
+             * 0             1
+             */
+            synth_out = -1 + 2 * phase;
+            break;
+
+          case synth_triangle:
+            /* |    .    | +1
+             * |   / \   |
+             * |__/___\__|  0
+             * | /     \ |
+             * |/       \| -1
+             * |         |
+             * 0   p1    1
+             */
+
+            if (phase < chan->p1)
+              synth_out = -1 + 2 * phase / chan->p1;          /* In rising part of period */
+            else
+              synth_out = 1 - 2 * (phase - chan->p1) / (1 - chan->p1); /* In falling part */
+            break;
+
+          case synth_trapezium:
+            /* |    ______             |+1
+             * |   /      \            |
+             * |__/________\___________| 0
+             * | /          \          |
+             * |/            \_________|-1
+             * |                       |
+             * 0   p1    p2   p3       1
+             */
+            if (phase < chan->p1)       /* In rising part of period */
+              synth_out = -1 + 2 * phase / chan->p1;
+            else if (phase < chan->p2)  /* In high part of period */
+              synth_out = 1;
+            else if (phase < chan->p3)  /* In falling part */
+              synth_out = 1 - 2 * (phase - chan->p2) / (chan->p3 - chan->p2);
+            else                        /* In low part of period */
+              synth_out = -1;
+            break;
+
+          case synth_exp:
+            /* |             |              | +1
+             * |            | |             |
+             * |          _|   |_           | 0
+             * |       __-       -__        |
+             * |____---             ---____ | f(p2)
+             * |                            |
+             * 0             p1             1
+             */
+            synth_out = dB_to_linear(chan->p2 * -100);  /* 0 ..  1 */
+            if (phase < chan->p1)
+              synth_out = synth_out * exp(phase * log(1 / synth_out) / chan->p1);
+            else
+              synth_out = synth_out * exp((1 - phase) * log(1 / synth_out) / (1 - chan->p1));
+            synth_out = synth_out * 2 - 1;      /* map 0 .. 1 to -1 .. +1 */
+            break;
+
+          default: synth_out = 0;
+        }
+      } else switch (chan->type) {
+#define RAND (2. * rand() * (1. / RAND_MAX) - 1)
+        case synth_whitenoise:
+          synth_out = RAND;
+          break;
+
+        case synth_pinknoise:
+          synth_out = GeneratePinkNoise(&(chan->pink_noise));
+          break;
+
+        case synth_brownnoise:
+          do synth_out = chan->brown_noise + RAND * (1. / 16);
+          while (fabs(synth_out) > 1);
+          chan->brown_noise = synth_out;
+          break;
+
+        default: synth_out = 0;
+      }
+
+      /* Add offset, but prevent clipping: */
+      synth_out = synth_out * (1 - fabs(chan->offset)) + chan->offset;
+
+      switch (chan->combine) {
+        case synth_create: *obuf++ =  synth_out * synth->max; break;
+        case synth_mix   : *obuf++ = (synth_out * synth->max + synth_input) * 0.5; break;
+        case synth_amod  : *obuf++ = (synth_out + 1) * synth_input * 0.5; break;
+        case synth_fmod  : *obuf++ =  synth_out * synth_input; break;
+      }
+    }
     if (++synth->samples_done == synth->samples_to_do)
       result = SOX_EOF;
   }
@@ -564,7 +586,7 @@ static int kill(sox_effect_t * effp)
 const sox_effect_handler_t *sox_synth_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "synth", "[len] {type [combine] [freq[k][-freq2[k]|~freq2[k]] [off [ph [p1 [p2 [p3]]]]]]}",
+    "synth", "[len] {type [combine] [[%]freq[k][:|+|/|-[%]freq2[k]] [off [ph [p1 [p2 [p3]]]]]]}",
     SOX_EFF_MCHAN | SOX_EFF_PREC |SOX_EFF_LENGTH,
     getopts, start, flow, 0, stop, kill, sizeof(priv_t)
   };

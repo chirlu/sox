@@ -1160,6 +1160,8 @@ spectrogram.
 .IP \fB\-o\ \fItext\fR
 Name of the spectrogram output PNG file, default `spectrogram.png'.
 .RE
+.TP
+\ 
 For the ability to perform off-line processing of spectral data, see the
 .B stat
 effect.
@@ -1301,7 +1303,7 @@ This is done by repeating an output channel on the command-line.  For example,
 will overwrite channel 1 with channel 2; creating a stereo
 file with both channels containing the same audio.
 .TP
-\fBsynth\fR [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR] [\fIfreq\fR[\fBk\fR][\fI\-freq2\fR[\fBk\fR]|\fI~freq2\fR[\fBk\fR]]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
+\fBsynth\fR [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR] [[\fB%\fR]\fIfreq\fR[\fBk\fR][\fB:\fR\^|\^\fB+\fR\^|\^\fB/\fR\^|\^\fB\-\fR[\fB%\fR]\fIfreq2\fR[\fBk\fR]]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
 This effect can be used to generate fixed or swept frequency audio tones
 with various wave shapes, or to generate wide-band noise of various
 `colours'.
@@ -1382,10 +1384,22 @@ synthesis in Hz or, if preceded with `%', semitones relative to A
 is given, then
 .I len
 must also have been given and the generated tone will be swept between
-the given frequencies.  If
-.I freq2
-is preceded with `-', the tone will change by a fixed number of octaves
-per second; if `~', a fixed number of hertz per second.
+the given frequencies.  The two given frequencies must be separated by
+one of the characters `:', `+', `/', or `-'.  This character is used to
+specify the sweep function as follows:
+.RS
+.IP \fB:\fR
+Linear: the tone will change by a fixed number of hertz per second.
+.IP \fB+\fR
+Square: a second-order function is used to change the tone.
+.IP \fB/\fR
+Exponential: the tone will change by a fixed number of semitones per second.
+.IP \fB\-\fR
+Exponential: as `/', but initial phase always zero, and stepped (less
+smooth) frequency changes.
+.RE
+.TP
+\ 
 Not used for noise.
 .SP
 \fIoff\fR is the bias (DC-offset) of the signal in percent; default=0.
