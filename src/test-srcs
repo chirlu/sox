@@ -17,7 +17,7 @@ TIME=/tmp/$0-time-$$.wav
 
 test_converters () {
   # Create input file
-  $SOX -r $1 -n -twavpcm $IN synth 20 sin 0~`expr $1 / 2` gain -2 
+  $SOX -r $1 -n -twavpcm $IN synth 20 sin 0:`expr $1 / 2` gain -2 
   for src in \
       "polyphase" \
       "rabbit -c0" \
