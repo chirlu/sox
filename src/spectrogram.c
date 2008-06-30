@@ -193,7 +193,7 @@ static double make_window(priv_t * p, int end)
     case Window_Hamming: apply_hamming(w, n); break;
     case Window_Bartlett: apply_bartlett(w, n); break;
     case Window_Rectangular: break;
-    default: apply_kaiser(w, n, kaiser_beta(p->dB_range + 10.));
+    default: apply_kaiser(w, n, kaiser_beta(p->dB_range + 20.));
   }
   for (i = 0; i < p->dft_size; ++i) sum += p->window[i];
   for (i = 0; i < p->dft_size; ++i) p->window[i] *= 2 / sum
