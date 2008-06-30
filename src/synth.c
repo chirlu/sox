@@ -430,7 +430,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
           case Exp:
             phase = chan->freq * exp(chan->mult * elapsed_time_s);
             break;
-          case Exp_cycle: {
+          case Exp_cycle: default: {
             double f = chan->freq * exp(synth->samples_done * chan->mult);
             double cycle_elapsed_time_s = elapsed_time_s - chan->cycle_start_time_s;
             if (f * cycle_elapsed_time_s >= 1) {  /* move to next cycle */
