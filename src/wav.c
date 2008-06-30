@@ -23,21 +23,27 @@
 #include "ima_rw.h"
 #include "adpcm.h"
 #ifdef EXTERNAL_GSM
+
+#ifdef HAVE_GSM_GSM_H
 #include <gsm/gsm.h>
+#else
+#include <gsm/gsm.h>
+#endif
+
 #else
 #include "../libgsm/gsm.h"
 #endif
 
-#define	WAVE_FORMAT_UNKNOWN		(0x0000U)
-#define	WAVE_FORMAT_PCM			(0x0001U)
-#define	WAVE_FORMAT_ADPCM		(0x0002U)
+#define WAVE_FORMAT_UNKNOWN             (0x0000U)
+#define WAVE_FORMAT_PCM                 (0x0001U)
+#define WAVE_FORMAT_ADPCM               (0x0002U)
 #define WAVE_FORMAT_IEEE_FLOAT          (0x0003U)
-#define	WAVE_FORMAT_ALAW		(0x0006U)
-#define	WAVE_FORMAT_MULAW		(0x0007U)
-#define	WAVE_FORMAT_OKI_ADPCM		(0x0010U)
-#define WAVE_FORMAT_IMA_ADPCM		(0x0011U)
-#define	WAVE_FORMAT_DIGISTD		(0x0015U)
-#define	WAVE_FORMAT_DIGIFIX		(0x0016U)
+#define WAVE_FORMAT_ALAW                (0x0006U)
+#define WAVE_FORMAT_MULAW               (0x0007U)
+#define WAVE_FORMAT_OKI_ADPCM           (0x0010U)
+#define WAVE_FORMAT_IMA_ADPCM           (0x0011U)
+#define WAVE_FORMAT_DIGISTD             (0x0015U)
+#define WAVE_FORMAT_DIGIFIX             (0x0016U)
 #define WAVE_FORMAT_DOLBY_AC2           (0x0030U)
 #define WAVE_FORMAT_GSM610              (0x0031U)
 #define WAVE_FORMAT_ROCKWELL_ADPCM      (0x003bU)
