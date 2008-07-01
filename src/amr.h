@@ -71,7 +71,7 @@ static int startread(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t read(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
+static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
 {
   priv_t * p = (priv_t *)ft->priv;
   sox_size_t done;
@@ -111,7 +111,7 @@ static int startwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t write(sox_format_t * ft, const sox_sample_t * buf, sox_size_t len)
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t * buf, sox_size_t len)
 {
   priv_t * p = (priv_t *)ft->priv;
   sox_size_t done;
@@ -153,8 +153,8 @@ sox_format_handler_t const * AMR_FORMAT_FN(void)
     SOX_LIB_VERSION_CODE,
     "3GPP Adaptive Multi Rate lossy speech compressor",
     names, SOX_FILE_MONO,
-    startread, read, stopread,
-    startwrite, write, stopwrite,
+    startread, read_samples, stopread,
+    startwrite, write_samples, stopwrite,
     NULL, write_encodings, write_rates, sizeof(priv_t)
   };
   return &handler;
