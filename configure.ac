@@ -35,6 +35,9 @@ if test "$with_libltdl" != "no"; then
       *cygwin*)
         using_libltdl=no
         ;;
+      *os2*)
+        using_libltdl=no
+        ;;
     esac
 fi
 

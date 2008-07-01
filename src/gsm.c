@@ -32,7 +32,7 @@
 #ifdef HAVE_GSM_GSM_H
 #include <gsm/gsm.h>
 #else
-#include <gsm/gsm.h>
+#include <gsm.h>
 #endif
 
 #else
