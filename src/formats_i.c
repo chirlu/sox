@@ -100,7 +100,7 @@ size_t lsx_readbuf(sox_format_t * ft, void *buf, sox_size_t len)
   size_t ret = fread(buf, 1, len, ft->fp);
   if (ret != len && ferror(ft->fp))
     lsx_fail_errno(ft, errno, "lsx_readbuf");
-  ft->tell += ret;
+  ft->tell_off += ret;
   return ret;
 }
 
@@ -136,7 +136,7 @@ size_t lsx_writebuf(sox_format_t * ft, void const * buf, sox_size_t len)
     lsx_fail_errno(ft, errno, "error writing output file");
     clearerr(ft->fp); /* Allows us to seek back to write header */
   }
-  ft->tell += ret;
+  ft->tell_off += ret;
   return ret;
 }
 
@@ -155,7 +155,7 @@ int lsx_flush(sox_format_t * ft)
 
 sox_ssize_t lsx_tell(sox_format_t * ft)
 {
-  return ft->seekable? (sox_ssize_t)ftello(ft->fp) : ft->tell;
+  return ft->seekable? (sox_ssize_t)ftello(ft->fp) : ft->tell_off;
 }
 
 int lsx_eof(sox_format_t * ft)
@@ -197,7 +197,7 @@ int lsx_seeki(sox_format_t * ft, sox_ssize_t offset, int whence)
             while (offset > 0 && !feof(ft->fp)) {
                 getc(ft->fp);
                 offset--;
-                ++ft->tell;
+                ++ft->tell_off;
             }
             if (offset)
                 lsx_fail_errno(ft,SOX_EOF, "offset past EOF");
