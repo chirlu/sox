@@ -33,7 +33,7 @@
 .SH NAME
 SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH DESCRIPTION
-SoX supported file formats and audio devices.
+SoX supported file formats and audio device types.
 .SP
 Format types that can be determined by a filename
 extension are listed with their names preceded by a dot.
@@ -77,9 +77,9 @@ format options; for the other listed types, the sample rate defaults to
 8kHz (but may be overridden), and the data encoding is defined by the
 given suffix.  Thus \fBf4\fR and \fBf8\fR indicate files encoded as 4
 and 8-byte (IEEE single and double precision) floating point PCM
-respectively; \fBs1\fR, \fBs2\fR, \fBs3\fR, and \fBs4\fR indicate as 1,
+respectively; \fBs1\fR, \fBs2\fR, \fBs3\fR, and \fBs4\fR indicate 1,
 2, 3, and 4-byte signed integer PCM respectively; \fBu1\fR, \fBu2\fR,
-\fBu3\fR, and \fBu4\fR indicate as 1, 2, 3, and 4-byte unsigned integer
+\fBu3\fR, and \fBu4\fR indicate 1, 2, 3, and 4-byte unsigned integer
 PCM respectively; \fBul\fR indicates `\(*m-law' (byte), \fBal\fR
 indicates `A-law' (byte), and \fBlu\fR and \fBla\fR are inverse bit
 order `\(*m-law' and inverse bit order `A-law' respectively.  \fBsb\fR,
@@ -557,7 +557,7 @@ To write a RIFX file, use the
 option with the output file options.
 .TP
 .B .wavpcm
-A non-standard variant of
+A non-standard, but widely used, variant of
 .BR .wav .
 Some applications cannot read a standard WAV file header for PCM-encoded
 data with sample-size greater than 16-bits or with more than two
@@ -567,8 +567,14 @@ updated to support the standard header, but in the mean time, this SoX
 format can be used to create files with the non-standard header that
 should work with these applications.  (Note that SoX will automatically
 detect and read WAV files with the non-standard header.)
+.SP
+The most common use of this file-type is likely to be along the following
+lines:
+.EX
+	sox infile.any -t wavpcm -s outfile.wav
+.EE
 .TP
-.B .wv
+\&\fB.wv\fR (optional)
 WavPack lossless audio compression.  Note that, when converting
 .B .wav
 to this format and back again,
