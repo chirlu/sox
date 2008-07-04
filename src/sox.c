@@ -72,6 +72,8 @@ static enum {sox_sox, sox_play, sox_rec, sox_soxi} sox_mode;
 
 static enum {sox_sequence, sox_concatenate, sox_mix, sox_merge, sox_multiply}
     combine_method = sox_concatenate;
+#define is_serial(m) ((m) <= sox_concatenate)
+#define is_parallel(m) (!is_serial(m))
 static sox_bool interactive = sox_false;
 static sox_bool uservolume = sox_false;
 typedef enum {RG_off, RG_track, RG_album} rg_mode;
@@ -130,8 +132,8 @@ static sox_effects_chain_t ofile_effects_chain;
 
 /* Flowing */
 
-static sox_signalinfo_t combiner_signal, ofile_signal;
-static sox_encodinginfo_t combiner_encoding, ofile_encoding;
+static sox_signalinfo_t combiner_signal, ofile_signal_options;
+static sox_encodinginfo_t combiner_encoding, ofile_encoding_options;
 static sox_size_t mixing_clips = 0;
 static size_t current_input = 0;
 static unsigned long input_wide_samples = 0;
@@ -338,7 +340,7 @@ static void display_error(sox_format_t * ft)
       strerror(ft->sox_errno) : sox_strerror[ft->sox_errno - SOX_EHDR]);
 }
 
-static void progress_to_file(file_t * f)
+static void progress_to_next_input_file(file_t * f)
 {
   if (user_skip) {
     user_skip = sox_false;
@@ -347,7 +349,7 @@ static void progress_to_file(file_t * f)
   read_wide_samples = 0;
   input_wide_samples = f->ft->signal.length / f->ft->signal.channels;
   if (show_progress && (sox_globals.verbosity < 3 ||
-                        (combine_method <= sox_concatenate && input_count > 1)))
+                        (is_serial(combine_method) && input_count > 1)))
     display_file_info(f->ft, f, sox_false);
   if (f->volume == HUGE_VAL)
     f->volume = 1;
@@ -356,6 +358,8 @@ static void progress_to_file(file_t * f)
   f->ft->sox_errno = errno = 0;
 }
 
+/* Read up to max `wide' samples.  A wide sample contains one sample per channel
+ * from the input audio. */
 static sox_size_t sox_read_wide(sox_format_t * ft, sox_sample_t * buf, sox_size_t max)
 {
   sox_size_t len = max / combiner_signal.channels;
@@ -376,6 +380,8 @@ static void balance_input(sox_sample_t * buf, sox_size_t ws, file_t * f)
     }
 }
 
+/* The input combiner: contains one sample buffer per input file, but only
+ * needed if is_parallel(combine_method) */
 typedef struct {
   sox_sample_t *ibuf[MAX_INPUT_FILES];
 } input_combiner_t;
@@ -385,13 +391,13 @@ static int combiner_start(sox_effect_t *effp)
   input_combiner_t * z = (input_combiner_t *) effp->priv;
   sox_size_t ws, i;
 
-  if (combine_method <= sox_concatenate)
-    progress_to_file(files[current_input]);
+  if (is_serial(combine_method))
+    progress_to_next_input_file(files[current_input]);
   else {
     ws = 0;
     for (i = 0; i < input_count; i++) {
       z->ibuf[i] = lsx_malloc(sox_globals.bufsiz * sizeof(sox_sample_t));
-      progress_to_file(files[i]);
+      progress_to_next_input_file(files[i]);
       ws = max(ws, input_wide_samples);
     }
     input_wide_samples = ws; /* Output length is that of longest input file. */
@@ -413,14 +419,14 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, sox_size_t * 
   sox_size_t ilen[MAX_INPUT_FILES];
   sox_size_t olen = 0;
 
-  if (combine_method <= sox_concatenate) while (sox_true) {
+  if (is_serial(combine_method)) while (sox_true) {
     if (!user_skip)
       olen = sox_read_wide(files[current_input]->ft, obuf, *osamp);
     if (olen == 0) {   /* If EOF, go to the next input file. */
       if (++current_input < input_count) {
         if (combine_method == sox_sequence && !can_segue(current_input))
           break;
-        progress_to_file(files[current_input]);
+        progress_to_next_input_file(files[current_input]);
         continue;
       }
     }
@@ -471,7 +477,7 @@ static int combiner_stop(sox_effect_t *effp)
   input_combiner_t * z = (input_combiner_t *) effp->priv;
   sox_size_t i;
 
-  if (combine_method > sox_concatenate)
+  if (is_parallel(combine_method))
     /* Free input buffers now that they are not used */
     for (i = 0; i < input_count; i++)
       free(z->ibuf[i]);
@@ -783,7 +789,7 @@ static void sigint(int s)
 {
   static struct timeval then;
   if (input_count > 1 && show_progress && s == SIGINT &&
-      combine_method <= sox_concatenate && since(&then, 1.0, sox_true))
+      is_serial(combine_method) && since(&then, 1.0, sox_true))
     user_skip = sox_true;
   else user_abort = sox_true;
 }
@@ -839,7 +845,7 @@ static int process(void) {
       combine_method == sox_merge? total_channels : max_channels;
   }
 
-  ofile->signal = ofile_signal;
+  ofile->signal = ofile_signal_options;
   if (ofile->signal.rate == 0)
     ofile->signal.rate = combiner_signal.rate;
   if (ofile->signal.channels == 0) {
@@ -853,7 +859,12 @@ static int process(void) {
 
   combiner_signal.rate *= sox_effects_globals.speed;
 
-  ofile->encoding = ofile_encoding; {
+  ofile->encoding = ofile_encoding_options;
+ 
+  /* Get unspecified output file encoding attributes from the input file
+   * and set the output file to the resultant encoding if this is
+   * supported by the output file type.  */
+  {
     sox_encodinginfo_t t = ofile->encoding;
     if (!t.encoding)
       t.encoding = combiner_encoding.encoding;
@@ -871,6 +882,8 @@ static int process(void) {
   ofile->signal.length = (sox_size_t)(olen * ofile->signal.channels * ofile->signal.rate / combiner_signal.rate + .5);
   open_output_file();
 
+  ofile_effects_chain.length = 0; /* FIXME: needs proper cleanup of effects
+                                     chain memory. `kill' auto effects? */
   ofile_effects_chain.global_info = sox_effects_globals;
   ofile_effects_chain.in_enc = &combiner_encoding;
   ofile_effects_chain.out_enc = &ofile->ft->encoding;
@@ -884,7 +897,6 @@ static int process(void) {
 
   flowstatus = sox_flow_effects(&ofile_effects_chain, update_status);
 
-  sox_delete_effects(&ofile_effects_chain);
   return flowstatus;
 }
 
@@ -1656,7 +1668,7 @@ int main(int argc, char **argv)
 
   /* Make sure we got at least the required # of input filenames */
   input_count = file_count ? file_count - 1 : 0;
-  if (input_count < (combine_method <= sox_concatenate ? 1 : 2))
+  if (input_count < (is_serial(combine_method) ? 1 : 2))
     usage("Not enough input filenames specified");
 
   /* Check for misplaced input/output-specific options */
@@ -1738,13 +1750,14 @@ int main(int argc, char **argv)
     srand((unsigned)t);
   }
 
-  ofile_signal = ofile->signal;
-  ofile_encoding = ofile->encoding;
+  ofile_signal_options = ofile->signal;
+  ofile_encoding_options = ofile->encoding;
   if (combine_method == sox_sequence) do {
     if (ofile->ft)
       sox_close(ofile->ft);
   } while (process() != SOX_EOF && !user_abort && current_input < input_count);
   else process();
+  sox_delete_effects(&ofile_effects_chain);
 
   for (i = 0; i < file_count; ++i)
     if (files[i]->ft->clips != 0)
