@@ -8,7 +8,7 @@ sox-11gamma.
 sox-14.1.0	2008-TBD
 ----------
 
-Previously deprecated features that are removed in this release:
+Previously deprecated features that have been removed in this release:
 
   Deprec-  Feature    [O(ption)]
   ated in  [F(ormat)] [E(ffect)]   Replacement
@@ -21,7 +21,7 @@ Previously deprecated features that are removed in this release:
   13.0.0   E vibro                 ~= tremolo
   13.0.0   F auto                  Becomes internal only
 
-Previously deprecated features to be removed in future:
+Previously deprecated features (to be removed in future):
 
   Deprec-  Feature    [O(ption)]                           Removal
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
@@ -29,7 +29,7 @@ Previously deprecated features to be removed in future:
   14.0.0   E stretch               ~= tempo                2008-09-11
   14.0.0   E pitch                 ~= key                  2008-09-11
 
-Newly deprecated features to be removed in future:
+Newly deprecated features (to be removed in future):
 
   Deprec-  Feature    [O(ption)]                           Removal
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
@@ -85,6 +85,8 @@ Effects:
   o New `spectrogram' effect; creates a PNG (if built with PNG lib).  (robs)
   o `synth' can now sweep linearly and squarely (as well as
     exponentially).  (robs)
+  o Can now `fade' out to EOF without giving file-length (if it can
+    be determined from the input file header).  (robs)
   o Fix synth max. level setting for some output encodings.  (robs)
   o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)
   o `gain' alias for the vol effect.  (robs)

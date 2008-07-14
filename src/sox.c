@@ -1666,9 +1666,14 @@ int main(int argc, char **argv)
   if (sox_globals.verbosity > 2)
     display_SoX_version(stderr);
 
-  /* Make sure we got at least the required # of input filenames */
   input_count = file_count ? file_count - 1 : 0;
-  if (input_count < (is_serial(combine_method) ? 1 : 2))
+
+  /* Allow e.g. known length processing in this case */
+  if (combine_method == sox_sequence && input_count == 1)
+    combine_method = sox_concatenate;
+
+  /* Make sure we got at least the required # of input filenames */
+  if (input_count < is_serial(combine_method ? 1 : 2))
     usage("Not enough input filenames specified");
 
   /* Check for misplaced input/output-specific options */

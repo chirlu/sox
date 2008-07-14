@@ -393,6 +393,10 @@ is not specified, it defaults to the same value as
 No fade-out is performed if
 .I stop-time
 is not specified.
+If the file length can be determined from the input file header and length-changing effects are not in effect, then \fB0\fR may be specified for
+.I stop-time
+to indicate the usual case of a fade-out that ends at the end of the input
+audio stream.
 .SP
 All times can be specified in either periods of time or sample counts.
 To specify time periods use the format hh:mm:ss.frac format.  To specify
