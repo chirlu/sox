@@ -181,7 +181,7 @@ typedef struct { /* Global parameters (for effects & formats) */
  * to perform file I/O.  It can be useful to pass in similar sized
  * data to get max performance.
  */
-  sox_size_t   bufsiz;
+  sox_size_t   bufsiz, input_bufsiz;
 
 /* private: */
   char const * stdin_in_use_by;

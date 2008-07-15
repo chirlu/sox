@@ -1174,6 +1174,7 @@ static struct option long_options[] =
     {"comment-file"    , required_argument, NULL, 0},
     {"comment"         , required_argument, NULL, 0},
     {"endian"          , required_argument, NULL, 0},
+    {"input-buffer"    , required_argument, NULL, 0},
     {"interactive"     ,       no_argument, NULL, 0},
     {"help-effect"     , required_argument, NULL, 0},
     {"help-format"     , required_argument, NULL, 0},
@@ -1256,8 +1257,8 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       case 1:
 #define SOX_BUFMIN 16
         if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= SOX_BUFMIN) {
-        sox_fail("Buffer size `%s' must be > %d", optarg, SOX_BUFMIN);
-        exit(1);
+          sox_fail("Buffer size `%s' must be > %d", optarg, SOX_BUFMIN);
+          exit(1);
         }
         sox_globals.bufsiz = i;
         break;
@@ -1288,26 +1289,34 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
         break;
 
       case 6:
-        interactive = sox_true;
+        if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= SOX_BUFMIN) {
+          sox_fail("Buffer size `%s' must be > %d", optarg, SOX_BUFMIN);
+          exit(1);
+        }
+        sox_globals.input_bufsiz = i;
         break;
 
       case 7:
-        usage_effect(optarg);
+        interactive = sox_true;
         break;
 
       case 8:
-        usage_format(optarg);
+        usage_effect(optarg);
         break;
 
       case 9:
-        sox_effects_globals.plot = enum_option(option_index, plot_methods);
+        usage_format(optarg);
         break;
 
       case 10:
-        replay_gain_mode = enum_option(option_index, rg_modes);
+        sox_effects_globals.plot = enum_option(option_index, plot_methods);
         break;
 
       case 11:
+        replay_gain_mode = enum_option(option_index, rg_modes);
+        break;
+
+      case 12:
         display_SoX_version(stdout);
         exit(0);
         break;

@@ -376,6 +376,9 @@ sox_format_t * sox_open_read(
   }
 
   if (!(ft->handler.flags & SOX_FILE_NOSTDIO)) {
+    sox_size_t   input_bufsiz = sox_globals.input_bufsiz?
+        sox_globals.input_bufsiz : sox_globals.bufsiz;
+
     if (!strcmp(path, "-")) { /* Use stdin if the filename is "-" */
       if (sox_globals.stdin_in_use_by) {
         sox_fail("`-' (stdin) already in use by `%s'", sox_globals.stdin_in_use_by);
@@ -387,6 +390,10 @@ sox_format_t * sox_open_read(
     }
     else if ((ft->fp = xfopen(path, "rb")) == NULL) {
       sox_fail("can't open input file `%s': %s", path, strerror(errno));
+      goto error;
+    }
+    if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char) * input_bufsiz)) {
+      sox_fail("Can't set read buffer");
       goto error;
     }
     ft->seekable = is_seekable(ft);
