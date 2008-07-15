@@ -7,10 +7,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>     /* For SEEK_* defines if not found in stdio */
-#endif
-
 /* Private data used by writer */
 typedef struct{
   uint32_t nsamples;

@@ -23,9 +23,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <limits.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>     /* For SEEK_* defines if not found in stdio */
-#endif
 
 /* forward declarations */
 static double read_ieee_extended(sox_format_t *);

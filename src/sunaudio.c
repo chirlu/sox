@@ -30,7 +30,6 @@
 #if !defined(__NetBSD__) && !defined(__OpenBSD__)
 #include <stropts.h>
 #endif
-#include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>

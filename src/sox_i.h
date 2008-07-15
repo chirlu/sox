@@ -22,8 +22,8 @@ typedef enum {SOX_SHORT, SOX_INT, SOX_FLOAT, SOX_DOUBLE} sox_data_t;
 typedef enum {SOX_WAVE_SINE, SOX_WAVE_TRIANGLE} lsx_wave_t;
 extern enum_item const lsx_wave_enum[];
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h> /* For off_t not found in stdio.h */
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h> /* For off_t not found in stdio.h */
 #endif
 
 /* Define fseeko and ftello for platforms lacking them */
