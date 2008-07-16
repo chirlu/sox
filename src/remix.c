@@ -20,6 +20,7 @@
 
 typedef struct {
   enum {semi, automatic, manual} mode;
+  sox_bool mix_power;
   unsigned num_out_channels, min_in_channels;
   struct {
     char * str;          /* Command-line argument to parse for this out_spec */
@@ -48,6 +49,7 @@ static int parse(sox_effect_t * effp, char * * argv, unsigned channels)
 {
   priv_t * p = (priv_t *)effp->priv;
   unsigned i, j;
+  double mult;
 
   p->min_in_channels = 0;
   for (i = 0; i < p->num_out_channels; ++i) {
@@ -87,9 +89,10 @@ static int parse(sox_effect_t * effp, char * * argv, unsigned channels)
       p->min_in_channels = max(p->min_in_channels, (unsigned)chan2);
     }
     p->out_specs[i].num_in_channels = j;
+    mult = 1. / (p->mix_power? sqrt((double)j) : j);
     for (j = 0; j < p->out_specs[i].num_in_channels; ++j)
       if (p->out_specs[i].in_specs[j].multiplier == HUGE_VAL)
-        p->out_specs[i].in_specs[j].multiplier = (p->mode == automatic || (p->mode == semi && !mul_spec)) ?  1. / p->out_specs[i].num_in_channels : 1;
+        p->out_specs[i].in_specs[j].multiplier = (p->mode == automatic || (p->mode == semi && !mul_spec)) ? mult : 1;
   }
   effp->out_signal.channels = p->num_out_channels;
   return SOX_SUCCESS;
@@ -100,6 +103,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   priv_t * p = (priv_t *)effp->priv;
   if (argc && !strcmp(*argv, "-m")) p->mode = manual   , ++argv, --argc;
   if (argc && !strcmp(*argv, "-a")) p->mode = automatic, ++argv, --argc;
+  if (argc && !strcmp(*argv, "-p")) p->mix_power = sox_true, ++argv, --argc;
   p->out_specs = lsx_calloc(p->num_out_channels = argc, sizeof(*p->out_specs));
   return parse(effp, argv, 1); /* No channels yet; parse with dummy */
 }
@@ -148,7 +152,7 @@ static int kill(sox_effect_t * effp)
 sox_effect_handler_t const * sox_remix_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "remix", "<0|in-chan[v|d|i volume]{,in-chan[v|d|i volume]}>",
+    "remix", "[-m|-a] [-p] <0|in-chan[v|d|i volume]{,in-chan[v|d|i volume]}>",
     SOX_EFF_MCHAN | SOX_EFF_CHAN, create, start, flow, NULL, NULL, kill, sizeof(priv_t)
   };
   return &handler;

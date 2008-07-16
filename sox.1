@@ -360,8 +360,9 @@ guarantees that the treble boost will not clip.
 If clipping occurs at any point during processing, then
 SoX will display a warning message to that effect.
 .SS Input File Combining 
-SoX's input combiner can combine multiple files using any of the
-following methods: `concatenate', `sequence', `mix', or `merge'.
+SoX's input combiner can be configured (see OPTIONS below) to
+combine multiple files using any of the
+following methods: `concatenate', `sequence', `mix', `mix-power', or `merge'.
 The default method is `sequence' for
 .BR play ,
 and `concatenate' for
@@ -387,7 +388,7 @@ files\*mthis may be just what is needed when sending audio to an output
 device, but is not generally useful when the output file is a normal
 file.
 .SP
-If the `mix' combining method is selected (with \fB-m\fR) then two or
+If the `mix' (or `mix-power') combining method is selected, then two or
 more input files must be given and will be mixed together to form the
 output file.  The number of channels in each input file need not be the
 same, however, SoX will issue a warning if they are not and some
@@ -395,7 +396,7 @@ channels in the output file will not contain audio from every input
 file.  A mixed audio file cannot be un-mixed (without reference to the
 orignal input files).
 .SP
-If the `merge' combining method is selected (with \fB-M\fR), then two or
+If the `merge' combining method is selected, then two or
 more input files must be given and will be merged together to form the
 output file.  The number of channels in each input file need not be the
 same.  A merged audio file comprises all of the channels from all of the
@@ -434,14 +435,24 @@ performed.  So here, if manual volume adjustments are not given, to
 ensure that clipping does not occur, SoX will automatically adjust the
 volume (amplitude) of each input signal by a factor of \(S1/\s-2n\s+2,
 where n is the number of input files.  If this results in audio that is
-too quiet or otherwise unbalanced then the input file volumes should be
-set manually as described above.
+too quiet or otherwise unbalanced then the input file volumes can be
+set manually as described above; using the
+.B norm
+effect on the mix is another alternative.
 .SP
-If mixed audio seems loud enough at some points through the audio but
+If mixed audio seems loud enough at some points through the mixed audio but
 too quiet in others, then dynamic-range compression should be applied to
 correct this\*msee the
 .B compand
 effect.
+.SP
+With the `mix-power' combine method, the
+mixed volume is appropriately equal to that of one of the input signals.
+This is achieved by balancing using a factor of 
+\(S1/\s-2\(srn\s+2 instead of \(S1/\s-2n\s+2.
+Note that this balancing factor does not guarantee that no clipping will occur,
+however, in many cases, the number of clips will be low and the resultant
+distortion imperceptable.
 .SS Stopping SoX
 Usually SoX will complete its processing and exit automatically, however
 if desired, it can be terminated by pressing the
@@ -544,7 +555,7 @@ may be an appropriate way of permanently enabling it.
 \fB\-\-buffer\fR \fBBYTES\fR
 Set the size in bytes of the buffers used for reading and writing sound data (default 8192).
 .TP
-\fB\-m\fR\^|\^\fB\-M\fR\^|\^\fB\-\-combine concatenate\fR\^|\^\fBmerge\fR\^|\^\fBmix\fR\^|\^\fBsequence\fR
+\fB\-m\fR\^|\^\fB\-M\fR\^|\^\fB\-\-combine concatenate\fR\^|\^\fBmerge\fR\^|\^\fBmix\fR\^|\^\fBmix\-power\fR\^|\^\fBsequence\fR
 Select the input file combining method;
 .B \-m
 selects `mix',

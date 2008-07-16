@@ -41,10 +41,12 @@ enum_item const * find_enum_text(char const * text, enum_item const * enum_items
   enum_item const * result = NULL; /* Assume not found */
 
   while (enum_items->text) {
+    if (strcasecmp(text, enum_items->text) == 0)
+      return enum_items;    /* Found exact match */
     if (strncasecmp(text, enum_items->text, strlen(text)) == 0) {
       if (result != NULL && result->value != enum_items->value)
         return NULL;        /* Found ambiguity */
-      result = enum_items;  /* Found match */
+      result = enum_items;  /* Found sub-string match */
     }
     ++enum_items;
   }

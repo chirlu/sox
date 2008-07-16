@@ -70,7 +70,7 @@ static enum {sox_sox, sox_play, sox_rec, sox_soxi} sox_mode;
 
 /* gopts */
 
-static enum {sox_sequence, sox_concatenate, sox_mix, sox_merge, sox_multiply}
+static enum {sox_sequence, sox_concatenate, sox_mix, sox_mix_power, sox_merge, sox_multiply}
     combine_method = sox_concatenate;
 #define is_serial(m) ((m) <= sox_concatenate)
 #define is_parallel(m) (!is_serial(m))
@@ -440,8 +440,8 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, sox_size_t * 
       olen = max(olen, ilen[i]);
     }
     for (ws = 0; ws < olen; ++ws) /* wide samples */
-      if (combine_method == sox_mix) {          /* sum samples together */
-        for (s = 0; s < effp->in_signal.channels; ++s, ++p) {
+      if (combine_method == sox_mix || combine_method == sox_mix_power) {
+        for (s = 0; s < effp->in_signal.channels; ++s, ++p) { /* sum samples */
           *p = 0;
           for (i = 0; i < input_count; ++i)
             if (ws < ilen[i] && s < files[i]->ft->signal.channels) {
@@ -835,7 +835,8 @@ static int process(void) {
       if (combine_method == sox_concatenate) {
         sox_fail("Input files must have the same # channels");
         exit(1);
-      } else if (combine_method == sox_mix || combine_method == sox_multiply)
+      } else if (combine_method == sox_mix || combine_method == sox_mix_power ||
+          combine_method == sox_multiply)
         sox_warn("Input files don't have the same # channels");
     }
     if (min_rate != max_rate)
@@ -1200,6 +1201,7 @@ static enum_item const combine_methods[] = {
   ENUM_ITEM(sox_,sequence)
   ENUM_ITEM(sox_,concatenate)
   ENUM_ITEM(sox_,mix)
+  {"mix-power", sox_mix_power},
   ENUM_ITEM(sox_,merge)
   ENUM_ITEM(sox_,multiply)
   {0, 0}};
@@ -1706,6 +1708,8 @@ int main(int argc, char **argv)
      * this, and will override it, possibly causing clipping to occur. */
     if (combine_method == sox_mix && !uservolume)
       f->volume = 1.0 / input_count;
+    else if (combine_method == sox_mix_power && !uservolume)
+      f->volume = 1.0 / sqrt((double)input_count);
 
     if (sox_mode == sox_rec && !j) {       /* Set the recording parameters: */
       if (input_count > 1)                 /* from the (just openned) next */

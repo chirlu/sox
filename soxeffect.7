@@ -773,7 +773,7 @@ and
 .B rabbit
 for other sample-rate changing effects.
 .TP
-\fBremix\fR [\fB\-a\fR\^|\^\fB\-m\fR] <\fIout-spec\fR>
+\fBremix\fR [\fB\-a\fR\^|\^\fB\-m\fR\^|\^\fB\-p\fR] <\fIout-spec\fR>
 \fIout-spec\fR	= \fIin-spec\fR{\fB,\fIin-spec\fR} | \fB0\fR
 .br
 \fIin-spec\fR	= [\fIin-chan\fR]\^[\fB\-\fR[\fIin-chan2\fR]]\^[\fIvol-spec\fR]
@@ -879,6 +879,10 @@ is stereo, then
 is a mono equivalent of the
 .B oops
 effect.
+.SP
+If the \fB\-p\fR option is given, then any automatic \(S1/\s-2n\s+2 scaling
+is replaced by \(S1/\s-2\(srn\s+2 (`power') scaling; this gives a louder mix
+but one that might occasionally clip.
 .TS
 center;
 c8 c8 c.
