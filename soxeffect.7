@@ -731,7 +731,7 @@ The modulation is either sinusoidal (\fB\-s\fR) or triangular
 (\fB\-t\fR).  The decay should be less than 0\*d5 to avoid
 feedback.  Gain-out is the volume of the output.
 .TP
-\fBrate\fR [\fB\-q\fR\^|\^\fB\-l\fR\^|\^\fB\-m\fR\^|\^\fB\-h\fR\^|\^\fB\-v\fR]
+\fBrate\fR [\fB\-q\fR\^|\^\fB\-l\fR\^|\^\fB\-m\fR\^|\^\fB\-h\fR\^|\^\fB\-v\fR] [\fIRATE\fR[\fBk\fR]]
 Change the audio sampling rate (i.e. resample the audio)
 using a quality level as follows:
 .TS
@@ -750,11 +750,11 @@ T}
 playback on old hardware
 T}
 \-m	medium	99	100	audio playback
-\-h	high	99	120	T{
+\-h	high	99	125	T{
 .na
 16-bit mastering (use with dither)
 T}
-\-v	very high	99	150	24-bit mastering\ 
+\-v	very high	99	175	24-bit mastering\ 
 .TE
 .DT
 .SP
@@ -765,6 +765,22 @@ during sample rate conversion, and
 .B Rej dB
 is the level of noise rejection.
 The default quality level is `high' (\fB\-h\fR).
+.SP
+This effect is invoked automatically if SoX's \fB\-r\fR option specifies a
+rate that is different to that of the input file(s).  Alternatively, this
+effect may be invoked with the output rate parameter
+.I RATE
+and SoX's
+.B \-r
+option need not be given.  For example, the following two commands are
+equivalent:
+.EX
+	sox input.au -r 48k output.au bass -3
+	sox input.au output.au bass -3 rate 48k
+.EE
+though the second command is more flexible as it allows a
+.B rate
+quality option to be given, and it allows the effects to be ordered arbitrarily.
 .SP
 See also
 .BR resample ,

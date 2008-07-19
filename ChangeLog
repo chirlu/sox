@@ -98,6 +98,7 @@ Other new features:
   o Command line support for multiple file comments.  (robs)
   o New --combine=mix-power option to mix combine using 1/sqrt(n) scaling
     instead of 1/n [FR 2012856].  (robs)
+  o New --input-buffer option to specify (only) input buffer size.  (robs)
   o New `soxi' utility to extract/display file header fields.  (robs)
   o Pkg-config support. (Pascal Giard)
   o Simple VU meter.  (robs)

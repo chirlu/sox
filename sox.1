@@ -552,8 +552,19 @@ then, without this option, file2 will be overwritten.  Hence, using this
 option is strongly recommended; a `shell' alias, script, or batch file
 may be an appropriate way of permanently enabling it.
 .TP
-\fB\-\-buffer\fR \fBBYTES\fR
-Set the size in bytes of the buffers used for reading and writing sound data (default 8192).
+\fB\-\-buffer\fR \fBBYTES\fR, \fB\-\-input\-buffer\fR \fBBYTES\fR
+Set the size in bytes of the buffers used for processing audio (default 8192).
+.B \-\-buffer
+applies to input, effects, and output processing;
+.B \-\-input\-buffer
+applies only to input processing (for which it overrides
+.B \-\-buffer
+if both are given).
+.SP
+Be aware that large values for
+.B \-\-buffer
+will cause SoX to be become slow to respond to requests to terminate or to skip
+the current input file.
 .TP
 \fB\-m\fR\^|\^\fB\-M\fR\^|\^\fB\-\-combine concatenate\fR\^|\^\fBmerge\fR\^|\^\fBmix\fR\^|\^\fBmix\-power\fR\^|\^\fBsequence\fR
 Select the input file combining method;

@@ -489,7 +489,7 @@ typedef struct {
 static int create(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *) effp->priv;
-  char dummy, * found_at, * bws = "-qlmhvu", * nums = "123";
+  char * dummy_p, * found_at, * bws = "-qlmhvu", * nums = "123";
 
   p->quality = p->coef_interp = -1;
   p->shared_ptr = &p->shared;
@@ -503,9 +503,10 @@ static int create(sox_effect_t * effp, int argc, char **argv)
     argc--; argv++;
   }
   if (argc) {
-    if (sscanf(*argv, "%lf %c", &p->out_rate, &dummy) != 1 || p->out_rate <= 0)
+    if ((p->out_rate = lsx_parse_frequency(*argv, &dummy_p)) <= 0 || *dummy_p)
       return lsx_usage(effp);
     argc--; argv++;
+    effp->out_signal.rate = p->out_rate;
   }
   return argc? lsx_usage(effp) : SOX_SUCCESS;
 }
@@ -562,13 +563,14 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_rate_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "rate", "[-q|-l|-m|-h|-v]\n"
-    "     Quality        BW %    Rej dB    Typical Use\n"
-    " -q  quick & dirty  n/a   ~30 @ Fs/4  playback on ancient hardware\n"
-    " -l  low            80       100      playback on old hardware\n"
-    " -m  medium         99       100      audio playback\n"
-    " -h  high           99       120      16-bit mastering (use with dither)\n"
-    " -v  very high      99       150      24-bit mastering"
+    "rate", "[-q|-l|-m|-h|-v] [RATE[k]]"
+    "\n\tQuality        BW %    Rej dB    Typical Use"
+    "\n -q\tquick & dirty  n/a   ~30 @ Fs/4  playback on ancient hardware"
+    "\n -l\tlow            80       100      playback on old hardware"
+    "\n -m\tmedium         99       100      audio playback"
+    "\n -h\thigh           99       125      16-bit mastering (use with dither)"
+    "\n -v\tvery high      99       175      24-bit mastering"
+    /* "\n -u\tultra high     99.7     175      " */
     , SOX_EFF_RATE, create, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
   return &handler;

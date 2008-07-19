@@ -115,8 +115,8 @@ static size_t input_count = 0;
 /* Effects */
 
 /* We parse effects into a temporary effects table and then place into
- * the real effects table.  This makes it easier to reorder some effects
- * as needed.  For instance, we can run a resampling effect before
+ * the real effects table.  This makes it easier to auto-add some effects
+ * as appropriate.  For instance, we can run a resampling effect before
  * converting a mono file to stereo.  This allows the resampling to work
  * on half the data.
  *
@@ -125,7 +125,7 @@ static size_t input_count = 0;
  * a resampling effect, a channel mixing effect, the input, and the output.
  */
 #define MAX_USER_EFF (SOX_MAX_EFFECTS - 4)
-static sox_effect_t * user_efftab[MAX_USER_EFF];
+static sox_effect_t * user_efftab[MAX_USER_EFF], efftab_options[MAX_USER_EFF];
 static unsigned nuser_effects;
 static sox_effects_chain_t ofile_effects_chain;
 
@@ -693,25 +693,21 @@ static int update_status(sox_bool all_done)
 
 static void optimize_trim(void)
 {
-  /* Speed hack.  If the "trim" effect is the first effect then
-   * peek inside its "effect descriptor" and see what the
-   * start location is.  This has to be done after its start()
-   * is called to have the correct location.
-   * Also, only do this when only working with one input file.
-   * This is because the logic to do it for multiple files is
-   * complex and problably never used.
-   * This hack is a huge time savings when trimming
-   * gigs of audio data into managable chunks
-   */
+  /* Speed hack.  If the "trim" effect is the first effect then peek inside its
+   * "effect descriptor" and see what the start location is.  This has to be
+   * done after its start() is called to have the correct location.  Also, only
+   * do this when only working with one input file.  This is because the logic
+   * to do it for multiple files is complex and problably never used.  This
+   * hack is a huge time savings when trimming gigs of audio data into
+   * managable chunks.  */
   if (input_count == 1 && ofile_effects_chain.length > 1 && strcmp(ofile_effects_chain.effects[1][0].handler.name, "trim") == 0) {
     if (files[0]->ft->handler.seek && files[0]->ft->seekable){
       sox_size_t offset = sox_trim_get_start(&ofile_effects_chain.effects[1][0]);
       if (offset && sox_seek(files[0]->ft, offset, SOX_SEEK_SET) == SOX_SUCCESS) {
         read_wide_samples = offset / files[0]->ft->signal.channels;
-        /* Assuming a failed seek stayed where it was.  If the
-         * seek worked then reset the start location of
-         * trim so that it thinks user didn't request a skip.
-         */
+        /* Assuming a failed seek stayed where it was.  If the seek worked then
+         * reset the start location of trim so that it thinks user didn't
+         * request a skip.  */
         sox_trim_clear_start(&ofile_effects_chain.effects[1][0]);
         sox_debug("optimize_trim successful");
       }
@@ -754,12 +750,9 @@ static void open_output_file(void)
       sox_append_comment(&oob.comments, *p++);
   }
 
-  /*
-   * copy loop info, resizing appropriately
-   * it's in samples, so # channels don't matter
-   * FIXME: This doesn't work for multi-file processing or
-   * effects that change file length.
-   */
+  /* Copy loop info, resizing appropriately it's in samples, so # channels
+   * don't matter FIXME: This doesn't work for multi-file processing or effects
+   * that change file length.  */
   factor = (double) ofile->signal.rate / combiner_signal.rate;
   for (i = 0; i < SOX_MAX_NLOOPS; i++) {
     oob.loops[i].start = oob.loops[i].start * factor;
@@ -775,9 +768,9 @@ static void open_output_file(void)
      * Rely on that printing something. */
     exit(2);
 
-  /* When writing to an audio device, auto turn on the
-   * progress display to match behavior of ogg123,
-   * unless the user requested us not to display anything. */
+  /* If whether to enable the progress display (similar to that of ogg123) has
+   * not been specified by the user, auto turn on when outputting to an audio
+   * device: */
   if (show_progress == SOX_OPTION_DEFAULT)
     show_progress = (ofile->ft->handler.flags & SOX_FILE_DEVICE) != 0 &&
                     (ofile->ft->handler.flags & SOX_FILE_PHONY) == 0;
@@ -794,19 +787,21 @@ static void sigint(int s)
   else user_abort = sox_true;
 }
 
-/*
- * Process:   Input(s) -> Balancing -> Combiner -> Effects -> Output
- */
-
-static int process(void) {
-  int flowstatus = 0;
-  sox_size_t i;
+static void calculate_combiner_and_output_signal_parameters(void)
+{
   sox_bool known_length = combine_method != sox_sequence;
-  sox_size_t olen = 0;
+  sox_size_t i, olen = 0;
 
+  /* Set the combiner output signal attributes to those of the 1st/next input
+   * file.  If we are in sox_sequence mode then we don't need to check the
+   * attributes of the other inputs, otherwise, it is mandatory that all input
+   * files have the same sample rate, and for sox_concatenate, it is mandatory
+   * that they have the same number of channels, otherwise, the number of
+   * channels at the output of the combiner is calculated according to the
+   * combiner mode. */
   combiner_signal = files[current_input]->ft->signal;
-  combiner_encoding = files[current_input]->ft->encoding;
   if (combine_method == sox_sequence) {
+    /* Report all input files; do this only the 1st time process() is called: */
     if (!current_input) for (i = 0; i < input_count; i++)
       report_file_info(files[i]);
   } else {
@@ -816,55 +811,89 @@ static int process(void) {
     sox_size_t min_rate = SOX_SIZE_MAX;
     sox_size_t max_rate = 0;
 
-    for (i = 0; i < input_count; i++) { /* Report all inputs, then check */
+    /* Report all input files and gather info on differing rates & numbers of
+     * channels, and on the resulting output audio length: */
+    for (i = 0; i < input_count; i++) {
       report_file_info(files[i]);
       total_channels += files[i]->ft->signal.channels;
       min_channels = min(min_channels, files[i]->ft->signal.channels);
       max_channels = max(max_channels, files[i]->ft->signal.channels);
-      min_rate = min(min_rate, files[i]->ft->signal.rate);
-      max_rate = max(max_rate, files[i]->ft->signal.rate);
+      min_rate     = min(min_rate    , files[i]->ft->signal.rate);
+      max_rate     = max(max_rate    , files[i]->ft->signal.rate);
       known_length = known_length && files[i]->ft->signal.length != 0;
       if (combine_method == sox_concatenate)
         olen += files[i]->ft->signal.length / files[i]->ft->signal.channels;
       else
         olen = max(olen, files[i]->ft->signal.length / files[i]->ft->signal.channels);
     }
+
+    /* Check for invalid/unusual rate or channel combinations: */
     if (min_rate != max_rate)
       sox_fail("Input files must have the same sample-rate");
+      /* Don't exit quite yet; give the user any other message 1st */
     if (min_channels != max_channels) {
       if (combine_method == sox_concatenate) {
         sox_fail("Input files must have the same # channels");
         exit(1);
-      } else if (combine_method == sox_mix || combine_method == sox_mix_power ||
-          combine_method == sox_multiply)
+      } else if (combine_method != sox_merge)
         sox_warn("Input files don't have the same # channels");
     }
     if (min_rate != max_rate)
       exit(1);
 
+    /* Store the calculated # of combined channels: */
     combiner_signal.channels =
       combine_method == sox_merge? total_channels : max_channels;
   }
 
+  /* Determine the output file signal attributes; set from user options
+   * if given: */
   ofile->signal = ofile_signal_options;
-  if (ofile->signal.rate == 0)
+
+  /* If no user option for output rate or # of channels, set from the last
+   * effect that sets these, or from the input combiner if there is none such */
+  for (i = 0; i < nuser_effects && !ofile->signal.rate; ++i)
+    ofile->signal.rate = user_efftab[nuser_effects - 1 - i]->out_signal.rate;
+  for (i = 0; i < nuser_effects && !ofile->signal.channels; ++i)
+    ofile->signal.channels = user_efftab[nuser_effects - 1 - i]->out_signal.channels;
+  if (!ofile->signal.rate)
     ofile->signal.rate = combiner_signal.rate;
-  if (ofile->signal.channels == 0) {
-    unsigned j;
-    for (j = 0; j < nuser_effects && !ofile->signal.channels; ++j)
-      ofile->signal.channels = user_efftab[nuser_effects - 1 - j]->out_signal.channels;
-    if (ofile->signal.channels == 0)
-      ofile->signal.channels = combiner_signal.channels;
-  }
+  if (!ofile->signal.channels)
+    ofile->signal.channels = combiner_signal.channels;
+
+  /* FIXME: comment this: */
   ofile->signal.precision = combiner_signal.precision;
 
+  /* Now take account of any net speed change specified by user effects by
+   * adjusting the nominal sample rate at the output of the combiner: */
   combiner_signal.rate *= sox_effects_globals.speed;
 
+  /* If any given user effect modifies the audio length, then we assume that
+   * we don't know what the output length will be.  FIXME: in most cases,
+   * an effect that modifies length will be able to determine by how much from
+   * its getopts parameters, so olen should be calculable. */
+  for (i = 0; i < nuser_effects; i++)
+    known_length = known_length && !(user_efftab[i]->handler.flags & SOX_EFF_LENGTH);
+
+  if (!known_length)
+    olen = 0;
+  ofile->signal.length = (sox_size_t)(olen * ofile->signal.channels * ofile->signal.rate / combiner_signal.rate + .5);
+}
+
+static void set_combiner_and_output_encoding_parameters(void)
+{
+  /* The input encoding parameters passed to the effects chain are those of
+   * the first input file (for each segued block if sox_sequence):*/
+  combiner_encoding = files[current_input]->ft->encoding;
+
+  /* Determine the output file encoding attributes; set from user options
+   * if given: */
   ofile->encoding = ofile_encoding_options;
  
-  /* Get unspecified output file encoding attributes from the input file
-   * and set the output file to the resultant encoding if this is
-   * supported by the output file type.  */
+  /* Get unspecified output file encoding attributes from the input file and
+   * set the output file to the resultant encoding if this is supported by the
+   * output file type; if not, the output file handler should select an
+   * encoding suitable for the output signal and its precision. */
   {
     sox_encodinginfo_t t = ofile->encoding;
     if (!t.encoding)
@@ -874,17 +903,23 @@ static int process(void) {
     if (sox_format_supports_encoding(ofile->filename, ofile->filetype, &t))
       ofile->encoding = t;
   }
+}
 
-  for (i = 0; i < nuser_effects; i++)
-    known_length = known_length && !(user_efftab[i]->handler.flags & SOX_EFF_LENGTH);
+static int process(void)
+{         /* Input(s) -> Balancing -> Combiner -> Effects -> Output */
+  int i;
 
-  if (!known_length)
-    olen = 0;
-  ofile->signal.length = (sox_size_t)(olen * ofile->signal.channels * ofile->signal.rate / combiner_signal.rate + .5);
+  for (i = 0; i < nuser_effects; ++i)
+    *user_efftab[i] = efftab_options[i];
+
+  calculate_combiner_and_output_signal_parameters();
+  set_combiner_and_output_encoding_parameters();
   open_output_file();
 
-  ofile_effects_chain.length = 0; /* FIXME: needs proper cleanup of effects
-                                     chain memory. `kill' auto effects? */
+  /* FIXME: For sox_sequence, this needs proper cleanup of effects-chain memory
+   * (including `kill' of auto effects) */
+  ofile_effects_chain.length = 0;
+
   ofile_effects_chain.global_info = sox_effects_globals;
   ofile_effects_chain.in_enc = &combiner_encoding;
   ofile_effects_chain.out_enc = &ofile->ft->encoding;
@@ -892,13 +927,9 @@ static int process(void) {
 
   optimize_trim();
 
-  signal(SIGINT, sigint);
-  /* FIXME: For SIGTERM at least we really should guarantee to stop quickly */
-  signal(SIGTERM, sigint); /* Stop gracefully even in extremis */
-
-  flowstatus = sox_flow_effects(&ofile_effects_chain, update_status);
-
-  return flowstatus;
+  signal(SIGTERM, sigint); /* Stop gracefully, as soon as we possibly can. */
+  signal(SIGINT , sigint); /* Either skip current input or behave as SIGTERM. */
+  return sox_flow_effects(&ofile_effects_chain, update_status);
 }
 
 static void display_SoX_version(FILE * file)
@@ -1768,8 +1799,13 @@ int main(int argc, char **argv)
     srand((unsigned)t);
   }
 
+  /* Save things that sox_sequence needs to be reinitialised for each segued
+   * block of input files: */
   ofile_signal_options = ofile->signal;
   ofile_encoding_options = ofile->encoding;
+  for (i = 0; i < nuser_effects; ++i)
+    efftab_options[i] = *user_efftab[i];
+
   if (combine_method == sox_sequence) do {
     if (ofile->ft)
       sox_close(ofile->ft);
