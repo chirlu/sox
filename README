@@ -1,23 +1,55 @@
-                         SoX: Sound eXchange
-                         -------------------
+			  SoX: Sound eXchange
+			  -------------------
 
-SoX (Sound eXchange) is the Swiss Army knife of sound processing
-tools: it translates sound files between many different file formats,
-and can apply many sound effects and transforms, as well as doing
-basic analysis and providing input to more capable analysis and
-plotting tools.
+SoX (Sound eXchange) is the Swiss Army knife of sound processing tools: it
+can convert sound files between many different file formats & audio devices,
+and can apply many sound effects & transformations, as well as doing basic
+analysis and providing input to more capable analysis and plotting tools.
 
-SoX is distributed under the GNU GPL and GNU LGPL. To be precise: the
-sox program is distributed under the GPL, while the library libsox, in
-which most of SoX's functionality resides, is dual-licensed. Note that
-some optional components of libsox are GPL only: if you use these, you
-must use libsox under the GPL.
+SoX is licensed under the GNU GPL and GNU LGPL.  To be precise, the `sox'
+and `soxi' programs are distributed under the GPL, while the library
+`libsox' (in which most of SoX's functionality resides) is dual-licensed.
+Note that some optional components of libsox are GPL only: if you use these,
+you must use libsox under the GPL.
 
-Send bug fixes, enhancements and feature requests to
-sox-devel@lists.sourceforge.net, or post them to the relevant tracker
-at http://sourceforge.net/projects/sox/.
+If this distribution is of source code (as opposed to pre-built binaries),
+then you will need to compile and install SoX as described in the `INSTALL'
+file.
 
-This release understands:
+Changes between this release and previous releases of SoX can be found in
+the `ChangeLog' file; a summary of the file formats and effects supported in
+this release can be found below.  Detailed documentation for using SoX can
+be found in the distributed `man' pages:
+
+  o sox(1)
+  o soxi(1)
+  o soxformat(7)
+  o soxeffect(7)
+  o soxexam(7)
+  o libsox(3)
+
+or in plain text or PDF files for those systems without man.
+
+The majority of SoX features and fixes are contributed by SoX users - thank
+you very much for making SoX a success!  There are several new features
+wanted for SoX, listed on the feature request tracker at the SoX project
+home-page:
+		    http://sourceforge.net/projects/sox
+
+users are encouraged to implement them!
+
+Please submit bug reports, new feature requests, and patches to the relevant
+tracker at the above address, or by email:
+
+		   mailto:sox-devel@lists.sourceforge.net
+
+Also accessible via the project home-page is the SoX users' discussion
+mailing list which you can join to discuss all matters SoX with other SoX
+users; the mail address for this list is:
+
+		   mailto:sox-users@lists.sourceforge.net
+
+This release handles the following audio file formats:
 
   o Raw files in various binary formats
   o Raw textual data
@@ -29,7 +61,7 @@ This release understands:
     o mutant DEC .au files
     o NeXT .snd files
   o AVR files
-  o CD-R (music CD format)
+  o CDDA (Compact Disc Digital Audio format)
   o CVS and VMS files (continuous variable slope)
   o GSM files
   o HTK files
@@ -43,13 +75,13 @@ This release understands:
   o AVI, WMV, Ogg Theora, MPEG video files (with optional ffmpeg
     library)
   o Ogg Vorbis files (with optional Ogg Vorbis libraries)
-  o FLAC files (with optional libflac)
+  o FLAC files (with optional libFLAC)
   o IRCAM SoundFile files
   o NIST SPHERE files
   o Turtle beach SampleVision files
-  o Soundtool (DOS) files
+  o Sounder & Soundtool (DOS) files
   o Yamaha TX-16W sampler files
-  o Sound Blaster .VOC files
+  o SoundBlaster .VOC files
   o Dialogic/OKI ADPCM files (.VOX)
   o Microsoft .WAV files
     o PCM, u-law, A-law
@@ -64,67 +96,84 @@ This release understands:
     from most audio devices
   o The "null" pseudo-file that reads and writes from/to nowhere
 
-Most sound formats are auto-detected.
+The audio effects/tools included in this release are as follows:
 
-The sound effects include:
+  o Tone/filter effects
+    o allpass		RBJ all-pass biquad IIR filter
+    o bandpass		RBJ band-pass biquad IIR filter
+    o bandreject	RBJ band-reject biquad IIR filter
+    o band		SPKit resonator band-pass IIR filter
+    o bass		Tone control: RBJ shelving biquad IIR filter
+    o deemph		ISO 908 CD de-emphasis (shelving) IIR filter
+    o equalizer		RBJ peaking equalisation biquad IIR filter
+    o filter		JOS low/high/band pass FIR filter with many taps
+    o highpass		High-pass filter: Single pole or RBJ biquad IIR
+    o lowpass		Low-pass filter: single pole or RBJ biquad IIR
+    o treble		Tone control: RBJ shelving biquad IIR filter
 
-  o Channel averaging, duplication, and removal (general mixer)
-  o Band-pass filters
-  o Band-reject filter
-  o Bass tone control
-  o Compress and Expand (compand) the dynamic range of a sample
-  o Contrast enhancement effect
-  o Chorus effect
-  o DC-shift audio - useful to get the best volume adjustments
-  o De-emphasis filter
-  o Delay one or more channels
-  o Move sound stage of CD audio to in front of you (for headphone
-    use)
-  o Add an echo
-  o Add a sequence of echos
-  o Fade in and out
-  o Apply a flanger effect
-  o Apply a high-pass filter
-  o Apply a low-pass filter
-  o Apply an equalizer effect
-  o Add dithering/masking noise to a signal
-  o Multi-band compander
-  o Normalise the audio level
-  o Pad with silence
-  o Pan sound between channels
-  o Apply a phaser effect
-  o Change the key (pitch) of a sound file without affecting its speed
-  o Repeat audio data
-  o Change sampling rate
-  o Apply a reverb effect
-  o Reverse the sound samples (to search for Satanic messages ;-)
-  o Detect periods of silence and start and stop processing based on
-    it
-  o Create a spectrogram PNG
-  o Change speed (pitch and tempo together)
-  o Splice together audio sections
-  o Display general stats on a sound sample
-  o Change the tempo an audio file (without affecting pitch)
-  o Swap stereo channels
-  o Create sounds with a simple synthesizer
-  o Treble tone control
-  o Trim audio data from beginning and end of file
-  o Apply a tremolo effect
-  o Volume adjustment
-  o Noise elimination using frequency profiling
-  o Resample using libsamplerate (aka Secret Rabbit code, optional
-    external library)
-  o Apply LADSPA (Linux Audio Developer's Simple Plugin API) effects
-    such as cmt (Computer Music Toolkit)
+  o Production effects
+    o chorus		Make a single instrument sound like many
+    o delay		Delay one or more channels
+    o echo		Add an echo
+    o echos		Add a sequence of echoes
+    o flanger		Stereo flanger
+    o phaser		Phase shifter
+    o repeat		Loop the audio a number of times
+    o reverb		Add reverberation
+    o reverse		Reverse the audio (to search for Satanic messages ;-)
+    o tremolo		Sinusoidal volume modulation
 
-Unless you're using a pre-compiled binary version, you will need to
-compile SoX as described in the INSTALL file.
+  o Volume/level effects
+    o compand		Signal level compression/expansion/limiting
+    o contrast		Phase contrast volume enhancement
+    o dcshift		Apply or remove DC offset
+    o fade		Apply a fade-in and/or fade-out to the audio
+    o gain		Apply gain or attenuation
+    o mcompand		Multi-band compression/expansion/limiting
+    o norm		Normalise the audio to 0dB or to a specified value
+    o vol		Adjust audio volume
 
-SoX is distributed with man pages, with plain text versions for those
-on systems without man.
+  o Editting effects
+    o pad		Pad (usually) the ends of the audio with silence
+    o silence		Remove portions of silence from the audio
+    o splice		Perform the equivalent of a crossfaded tape splice
+    o trim		Trim the ends of the audio
 
-The majority of SoX features and source code are contributed by users.
-Thank you very much for making SoX a success! There are many new
-features wanted for SoX, listed on the feature request tracker at
-http://sourceforge.net/projects/sox/. Users are encouraged to
-implement them!
+  o Mixing effects
+    o mixer		Mix up to 4 channels in certain ways
+    o pan		Fade from one channel to another
+    o remix		Produce arbirarily mixed output channels
+    o swap		Swap stereo channels
+
+  o Key/tempo effects
+    o key		Adjust key (= pitch) without changing tempo
+    o speed		Adjust key & tempo together
+    o tempo		Adjust tempo without changing key
+
+  o Mastering effects
+    o dither		Add dither noise to increase SNR of <= 16-bit audio
+    o rate		Change audio sampling rate
+
+  o Specialised filters/mixers
+    o earwax		Process CD audio to best effect for headphone use
+    o noisered		Filter out noise from the audio
+    o oops		Out Of Phase Stereo (or `Karaoke') effect
+
+  o Analysis `effects'
+    o noiseprof		Produce a DFT profile of the audio (use with noisered)
+    o spectrogram	Produce a graph of signal level vs. frequency & time
+			(with optional libpng library)
+    o stat		Enumerate audio peak & rms levels, approx. freq., etc.
+
+  o Miscellaneous effects
+    o ladspa		Apply LADSPA (Linux Audio Developer's Simple Plugin API)
+			effects such as cmt (Computer Music Toolkit)
+    o synth		Synthesise/modulate audio tones or noise signals
+
+In this release, multiple audio files can be combined (and then further
+processed with effects) using any one of the following combiner methods:
+
+  o concatenate
+  o mix
+  o merge		E.g. two mono files to one stereo file
+  o sequence		For playing multiple audio files/streams

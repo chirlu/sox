@@ -131,7 +131,7 @@ Other bug fixes:
 Internal improvements:
 
   o Use FORTIFY_SOURCE with gcc.  (robs)
-  o Fixed all compiler warnings (AFAICT).  (robs)
+  o Fixed all compiler warnings (with gcc 4.2.3).  (robs)
   o Reimplement (separately) SoundTool & Sounder format handlers.  (robs)
   o Allow formats & effects to have any size of private data.  (robs)
 

@@ -289,6 +289,14 @@ An optional
 .I limitergain
 can be specified as well.  It should have a value much less than 1
 (e.g. 0\*d05 or 0\*d02) and is used only on peaks to prevent clipping.
+.SP
+An alternative approach to removing a DC offset (albeit with a short delay)
+is to use the
+.B highpass
+filter effect at a frequency of say 10Hz; i.e.
+.EX
+	sox -n out.au synth 5 sin %0 50 highpass 10
+.EE
 .TP
 \fBdeemph\fR
 Apply a treble attenuation shelving filter to audio in
