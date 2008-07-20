@@ -3,8 +3,15 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}config.h.cmake ${CMAKE
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 if(CMAKE_COMPILER_IS_GNUCC)
-  add_definitions(-Wconversion -Werror)
-  #add_definitions(-Wno-missing-field-initializers)
+  execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
+    OUTPUT_VARIABLE ver)
+  string(REGEX REPLACE "[^0-9]+" "" ver "${ver}")
+  if(${ver} LESS 430)
+    add_definitions(-Wconversion)
+  else(${ver} LESS 430)
+    add_definitions(-Wtraditional-conversion)
+  endif(${ver} LESS 430)
+  add_definitions(-Werror)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 if (NOT EXTERNAL_GSM)

@@ -907,7 +907,7 @@ static void set_combiner_and_output_encoding_parameters(void)
 
 static int process(void)
 {         /* Input(s) -> Balancing -> Combiner -> Effects -> Output */
-  int i;
+  unsigned i;
 
   for (i = 0; i < nuser_effects; ++i)
     *user_efftab[i] = efftab_options[i];
