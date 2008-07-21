@@ -130,7 +130,7 @@ static int sox_fade_start(sox_effect_t * effp)
           return lsx_usage(effp);
 
         if (!fade->out_stop) {
-          fade->out_stop = effp->in_signal.length;
+          fade->out_stop = effp->in_signal.length / effp->in_signal.channels;
           if (!fade->out_stop) {
             sox_fail("cannot fade out: audio length is neither known nor given");
             return SOX_EOF;
