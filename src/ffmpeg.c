@@ -46,7 +46,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#if HAVE_LIBAVFORMAT_AVFORMAT_H
+#include <libavformat/avformat.h>
+#else
 #include <ffmpeg/avformat.h>
+#endif
 
 /* Private data for ffmpeg files */
 typedef struct {
