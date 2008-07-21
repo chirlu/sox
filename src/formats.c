@@ -340,8 +340,18 @@ static sox_bool is_uri(char const * text)
   return *text == ':';
 }
 
-static FILE * xfopen(char const * identifier, char const * mode)
+static int xfclose(FILE * file, sox_bool is_process)
 {
+  return
+#ifdef HAVE_POPEN
+    is_process? pclose(file) :
+#endif
+    fclose(file);
+}
+
+static FILE * xfopen(char const * identifier, char const * mode, sox_bool * is_process)
+{
+  *is_process = sox_false;
   if (is_uri(identifier)) {
     FILE * f = NULL;
 #ifdef HAVE_POPEN
@@ -350,6 +360,7 @@ static FILE * xfopen(char const * identifier, char const * mode)
     sprintf(command, command_format, identifier);
     f = popen(command, "r");
     free(command);
+    *is_process = sox_true;
 #else
     sox_fail("open URL support has not been built into SoX");
 #endif
@@ -388,7 +399,7 @@ sox_format_t * sox_open_read(
       SET_BINARY_MODE(stdin);
       ft->fp = stdin;
     }
-    else if ((ft->fp = xfopen(path, "rb")) == NULL) {
+    else if ((ft->fp = xfopen(path, "rb", &ft->is_process)) == NULL) {
       sox_fail("can't open input file `%s': %s", path, strerror(errno));
       goto error;
     }
@@ -423,7 +434,7 @@ sox_format_t * sox_open_read(
     }
     ft->handler = *handler;
     if (ft->handler.flags & SOX_FILE_NOSTDIO) {
-      fclose(ft->fp);
+      xfclose(ft->fp, ft->is_process);
       ft->fp = NULL;
     }
   }
@@ -462,7 +473,7 @@ sox_format_t * sox_open_read(
 
 error:
   if (ft->fp && ft->fp != stdin)
-    fclose(ft->fp);
+    xfclose(ft->fp, ft->is_process);
   free(ft->priv);
   free(ft->filename);
   free(ft->filetype);
@@ -764,7 +775,7 @@ sox_format_t * sox_open_write(
 
 error:
   if (ft->fp && ft->fp != stdout)
-    fclose(ft->fp);
+    xfclose(ft->fp, ft->is_process);
   free(ft->priv);
   free(ft->filename);
   free(ft->filetype);
@@ -804,7 +815,7 @@ int sox_close(sox_format_t * ft)
   }
 
   if (ft->fp && ft->fp != stdin && ft->fp != stdout)
-    fclose(ft->fp);
+    xfclose(ft->fp, ft->is_process);
   free(ft->filename);
   free(ft->filetype);
   sox_delete_comments(&ft->oob.comments);
@@ -846,7 +857,8 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
   char * text = lsx_malloc(text_length + 1);
   char * dirname = lsx_strdup(listname);
   char * slash_pos = LAST_SLASH(dirname);
-  FILE * file = xfopen(listname, "r");
+  sox_bool is_process;
+  FILE * file = xfopen(listname, "r", &is_process);
   char * filename;
   int c, result = SOX_SUCCESS;
 
@@ -911,7 +923,7 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
       sox_fail("error reading playlist file `%s': %s", listname, strerror(errno));
       result = SOX_EOF;
     }
-    fclose(file);
+    xfclose(file, is_process);
   }
   free(text);
   free(dirname);

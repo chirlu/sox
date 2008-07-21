@@ -369,6 +369,7 @@ struct sox_format {
   int              sox_errno;       /* Failure error code */
   char             sox_errstr[256]; /* Failure error text */
   FILE             * fp;            /* File stream pointer */
+  sox_bool         is_process;      /* True/false if fp is from popen/fopen */
   long             tell_off;
   long             data_start;
   sox_format_handler_t handler;     /* Format handler for this file */
