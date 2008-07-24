@@ -3,6 +3,7 @@ sox (14.0.1+cvs-1) UNRELEASED; urgency=low
   * CVS version.
     - Adds support for for the 2, 2.6 and 4-bit ADPCM .voc (closes: #103479).
     - Adds pkgconfig support (closes: #462704).
+    - Fixes issue with ALSA playback (closes: #474961).
     - Adds many formats supported by sndfile.
   * [debian/libsox-fmt-base.install]:
     - Removed auto library, no longer exists upstream.
