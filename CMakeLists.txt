@@ -98,6 +98,9 @@ optional3(HAVE_OGG_VORBIS vorbis/codec.h vorbis vorbis_analysis_headerout vorbis
 optional3(HAVE_FFMPEG ffmpeg/avformat.h avformat av_open_input_file avutil av_rescale_q avcodec avcodec_decode_audio2 ffmpeg)
 optional(HAVE_WAVPACK wavpack/wavpack.h wavpack WavpackGetSampleRate wavpack)
 
+configure_file(sox.pc.in sox.pc @ONLY)
+install_files(/lib/pkgconfig FILES sox.pc)
+
 subdirs(src lpc10)
 
 if (NOT EXTERNAL_GSM)
