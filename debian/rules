@@ -9,6 +9,7 @@ include /usr/share/cdbs/1/class/autotools.mk
 #include /usr/share/cdbs/1/rules/simple-patchsys.mk
 
 CFLAGS += -D_REENTRANT
+CPPFLAGS += -I/usr/include/ffmpeg
 DEB_CONFIGURE_EXTRA_FLAGS := --disable-rpath --disable-lame
 # Takes care of postinst-has-useless-call-to-ldconfig for libsox-fmt-*
 DEB_DH_MAKESHLIBS_ARGS := -Xfmt
