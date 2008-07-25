@@ -191,38 +191,40 @@ These effects support the \fB\-\-plot\fR global option.
 See also \fBequalizer\fR for a peaking equalisation effect.
 .TP
 \fBchorus \fIgain-in gain-out\fR <\fIdelay decay speed depth \fB\-s\fR\^|\^\fB\-t\fR>
-Add a chorus effect to the audio.  Each four-tuple
+Add a chorus effect to the audio.  This can make a single vocal sound
+like a chorus, but can also be applied to instrumentation.
+.SP
+Chorus resembles an echo effect with a short delay, but
+whereas with echo the delay is constant, with chorus, it
+is varied using sinusoidal or triangular modulation.  The modulation
+depth defines the range the modulated delay is played before or after the
+delay. Hence the delayed sound will sound slower or faster, that is the delayed
+sound tuned around the original one, like in a chorus where some vocals are
+slightly off key.
+See [3] for more discussion of the chorus effect.
+.SP
+Each four-tuple parameter
 delay/decay/speed/depth gives the delay in milliseconds
 and the decay (relative to gain-in) with a modulation
 speed in Hz using depth in milliseconds.
 The modulation is either sinusoidal (\fB\-s\fR) or triangular
 (\fB\-t\fR).  Gain-out is the volume of the output.
 .SP
-The chorus effect has its name because it will often be used to make a single
-vocal sound like a chorus. But it can be applied to other instrument samples
-too.
-.SP
-It works like the echo effect with a short delay, but the delay isn't constant.
-The delay is varied using a sinusoidal or triangular modulation. The modulation
-depth defines the range the modulated delay is played before or after the
-delay. Hence the delayed sound will sound slower or faster, that is the delayed
-sound tuned around the original one, like in a chorus where some vocals are
-a bit out of tune.
-.SP
-The typical delay is around 40ms to 60ms, the speed of the modulation is best
+A typical delay is around 40ms to 60ms; the modulation speed is best
 near 0\*d25Hz and the modulation depth around 2ms.
-.SP
-A single delay will make the sample more overloaded:
+For example, a single delay:
 .EX
-	play file.xxx chorus 0.7 0.9 55 0.4 0.25 2 \-t
+	play guitar1.wav chorus 0.7 0.9 55 0.4 0.25 2 \-t
 .EE
-Two delays of the original samples sound like this:
+Two delays of the original samples:
 .EX
-	play file.xxx chorus 0.6 0.9 50 0.4 0.25 2 \-t 60 0.32 0.4 1.3 \-s
+	play guitar1.wav chorus 0.6 0.9 50 0.4 0.25 2 \-t \\
+		 60 0.32 0.4 1.3 \-s
 .EE
-A big chorus of the sample is (three additional samples):
+A fuller sounding chorus (with three additional delays):
 .EX
-	play file.xxx chorus 0.5 0.9 50 0.4 0.25 2 \-t 60 0.32 0.4 2.3 \-t 40 0.3 0.3 1.3 \-s
+	play guitar1.wav chorus 0.5 0.9 50 0.4 0.25 2 \-t \\
+		 60 0.32 0.4 2.3 \-t 40 0.3 0.3 1.3 \-s
 .EE
 .TP
 \fBcompand \fIattack1\fB,\fIdecay1\fR{\fB,\fIattack2\fB,\fIdecay2\fR}
@@ -420,9 +422,7 @@ Each given
 pair gives the delay in milliseconds
 and the decay (relative to gain-in) of that echo.
 Gain-out is the volume of the output.
-.SP
 For example:
-.SP
 This will make it sound as if there are twice as many instruments as are
 actually playing:
 .EX
@@ -919,6 +919,8 @@ during sample rate conversion, and
 .B Rej dB
 is the level of noise rejection.
 The default quality level is `high' (\fB\-h\fR).
+The \-q algorithm uses cubic interpolation; the others use linear-phase
+bandwidth-limited interpolation.
 .SP
 This effect is invoked automatically if SoX's \fB\-r\fR option specifies a
 rate that is different to that of the input file(s).  Alternatively, this
