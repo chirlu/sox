@@ -118,9 +118,12 @@ records 10 seconds of stereo audio, and
 .EE
 records a new track in a multi-track recording.
 .SP
-Further examples are included throughout this manual;
-more-detailed examples can be found in
-.BR soxexam (7).
+Detailed explanations of how to use each SoX parameter, file format, and
+effect can be found below in this manual, and in
+.BR soxformat (7),
+&
+.BR soxeffect (7)
+respectively.
 .SS File Formats
 There are two types of audio file format that SoX can work with.  The
 first is `self-describing'; these formats include a header that
@@ -138,12 +141,11 @@ example, digital telephony traditionally uses a sample rate of 8000\ Hz
 (8\ kHz); audio Compact Discs use 44100\ Hz (44\*d1\ kHz).
 .TP
 sample size
-The number of bits used to store each sample. Most popular are 8-bit
-(one byte) and 16-bit (two bytes). (Since many now-common sound
-formats were invented when most computers used a 16-bit word, two
-bytes is often called a `word', but since current personal computers
-overwhelmingly have 32-bit or 64-bit words, this usage is confusing,
-and is not used in the SoX documentation.)
+The number of bits used to store each sample.  The most popular is 16-bit
+(two bytes); 8-bit (one byte) was popular in the early days of computer
+audio, and is still used in telephony; 24-bit (three bytes) is used,
+primarily as an intermediate format, in the professional audio arena.  Other
+sizes are also used.
 .TP
 data encoding
 The way in which each audio sample is represented (or `encoded').  Some
@@ -879,7 +881,6 @@ Please report any bugs found in this version of SoX to the mailing list
 (sox-users@lists.sourceforge.net).
 .SH SEE ALSO
 .BR soxi (1),
-.BR soxexam (7),
 .BR soxformat (7),
 .BR soxeffect (7),
 .BR gnuplot (1),
@@ -888,6 +889,8 @@ Please report any bugs found in this version of SoX to the mailing list
 .BR libsox (3)
 .SP
 The SoX web site at http://sox.sourceforge.net
+.br
+SoX scripting examples at http://sox.sourceforge.net/Docs/Scripts
 .SH LICENSE
 Copyright 1991 Lance Norskog and Sundry Contributors.
 Copyright 1998\-2008 by Chris Bagwell and SoX Contributors.

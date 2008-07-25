@@ -118,6 +118,7 @@ Other new features:
     use the libSoX effects chain.  (robs)
   o Added example2: simple example of how to develop applications that
     use libSoX to read an audio file.  (robs)
+  o Moved contents of soxexam man page into soxeffect man page.  (robs)
 
 Other bug fixes:
 

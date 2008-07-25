@@ -36,6 +36,14 @@ SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 In addition to converting and playing audio files, SoX can be used to
 invoke a number of audio `effects'.  Multiple effects may be applied
 by specifying them one after another at the end of the SoX command line.
+Note that applying multiple effects in real-time (i.e. when playing audio)
+is likely to need a high performance computer; stopping other applications
+may alleviate performance issues should they occur.
+.SP
+Some of the SoX effects are primarily intended to be applied to a single
+instrument or `voice'.  To facilitate this, the \fBremix\fR effect and
+the global SoX option \fB-M\fR can be used to isolate then recombine
+tracks from a multi-track recording.
 .SP
 In the descriptions that follow, 
 brackets [ ] are used to denote parameters that are optional, braces
@@ -189,6 +197,33 @@ and the decay (relative to gain-in) with a modulation
 speed in Hz using depth in milliseconds.
 The modulation is either sinusoidal (\fB\-s\fR) or triangular
 (\fB\-t\fR).  Gain-out is the volume of the output.
+.SP
+The chorus effect has its name because it will often be used to make a single
+vocal sound like a chorus. But it can be applied to other instrument samples
+too.
+.SP
+It works like the echo effect with a short delay, but the delay isn't constant.
+The delay is varied using a sinusoidal or triangular modulation. The modulation
+depth defines the range the modulated delay is played before or after the
+delay. Hence the delayed sound will sound slower or faster, that is the delayed
+sound tuned around the original one, like in a chorus where some vocals are
+a bit out of tune.
+.SP
+The typical delay is around 40ms to 60ms, the speed of the modulation is best
+near 0\*d25Hz and the modulation depth around 2ms.
+.SP
+A single delay will make the sample more overloaded:
+.EX
+	play file.xxx chorus 0.7 0.9 55 0.4 0.25 2 \-t
+.EE
+Two delays of the original samples sound like this:
+.EX
+	play file.xxx chorus 0.6 0.9 50 0.4 0.25 2 \-t 60 0.32 0.4 1.3 \-s
+.EE
+A big chorus of the sample is (three additional samples):
+.EX
+	play file.xxx chorus 0.5 0.9 50 0.4 0.25 2 \-t 60 0.32 0.4 2.3 \-t 40 0.3 0.3 1.3 \-s
+.EE
 .TP
 \fBcompand \fIattack1\fB,\fIdecay1\fR{\fB,\fIattack2\fB,\fIdecay2\fR}
 [\fIsoft-knee-dB\fB:\fR]\fIin-dB1\fR[\fB,\fIout-dB1\fR]{\fB,\fIin-dB2\fB,\fIout-dB2\fR}
@@ -204,7 +239,11 @@ and
 parameters (in seconds) determine the time over which the
 instantaneous level of the input signal is averaged to determine its
 volume; attacks refer to increases in volume and decays refer to
-decreases.  Where more than one pair of attack/decay parameters are
+decreases.
+For most situations, the attack time (response to the music getting
+louder) should be shorter than the decay time because the human ear is more
+sensitive to sudden loud music than sudden soft music.
+Where more than one pair of attack/decay parameters are
 specified, each input channel is companded separately and the number of
 pairs must agree with the number of input channels.
 Typical values are
@@ -255,6 +294,26 @@ A typical value is
 seconds.
 .SP
 This effect supports the \fB\-\-plot\fR global option (for the transfer function).
+.SP
+The following example might be used to make a piece of music with both
+quiet and loud passages suitable for listening to in a noisy environment
+such as a moving vehicle:
+.EX
+	sox asz.flac asz-car.flac compand 0.3,1 6:-70,-60,-20 -5 -90 0.2
+.EE
+The transfer function (`6:\-70,...') says that very soft sounds (below
+\-70dB) will remain unchanged.  This will stop the compander from
+boosting the volume on `silent' passages such as between movements.
+However, sounds in the range \-60dB to 0dB (maximum
+volume) will be boosted so that the 60dB dynamic range of the
+original music will be compressed 3-to-1 into a 20dB range, which is
+wide enough to enjoy the music but narrow enough to get around the
+road noise.  The `6:' selects 6dB soft-knee companding.
+The \-5 (dB) output gain is needed to avoid clipping (the number is
+inexact, and was derived by experimentation).
+The \-90 (dB) for the initial volume will work fine for a clip that starts
+with near silence, and the delay of 0\*d2 (seconds) has the effect of causing
+the compander to react a bit more quickly to sudden volume changes.
 .SP
 See also
 .B mcompand
@@ -348,11 +407,40 @@ for a full explanation.
 .TP
 \fBecho \fIgain-in gain-out\fR <\fIdelay decay\fR>
 Add echoing to the audio.
-Each
+Echoes are reflected sound and can occur naturally amongst mountains
+(and sometimes large buildings) when talking or shouting; digital echo
+effects emulate this behaviour and are often used to help fill
+out the sound of a single instrument or vocal.  The time difference
+between the original signal and the reflection is the `delay' (time),
+and the loudness of the relected signal is the `decay'.  Multiple echoes
+can have different delays and decays.
+.SP
+Each given
 .I "delay decay"
 pair gives the delay in milliseconds
 and the decay (relative to gain-in) of that echo.
 Gain-out is the volume of the output.
+.SP
+For example:
+.SP
+This will make it sound as if there are twice as many instruments as are
+actually playing:
+.EX
+	play file.xxx echo 0.8 0.88 60 0.4
+.EE
+If the delay is very short, then it sound like a (metallic) robot playing
+music:
+.EX
+	play file.xxx echo 0.8 0.88 6 0.4
+.EE
+A longer delay will sound like an open air concert in the mountains:
+.EX
+	play file.xxx echo 0.8 0.9 1000 0.3
+.EE
+One mountain more, and:
+.EX
+	play file.xxx echo 0.8 0.9 1000 0.3 1800 0.25
+.EE
 .TP
 \fBechos \fIgain-in gain-out\fR <\fIdelay decay\fR>
 Add a sequence of echoes to the audio.
@@ -361,6 +449,25 @@ Each
 pair gives the delay in milliseconds
 and the decay (relative to gain-in) of that echo.
 Gain-out is the volume of the output.
+.SP
+Like the echo effect, echos stand for `ECHO in Sequel', that is the first echos
+takes the input, the second the input and the first echos, the third the input
+and the first and the second echos, ... and so on.
+Care should be taken using many echos; a single echos
+has the same effect as a single echo.
+.SP
+The sample will be bounced twice in symmetric echos:
+.EX
+	play file.xxx echos 0.8 0.7 700 0.25 700 0.3
+.EE
+The sample will be bounced twice in asymmetric echos:
+.EX
+	play file.xxx echos 0.8 0.7 700 0.25 900 0.3
+.EE
+The sample will sound as if played in a garage:
+.EX
+	play file.xxx echos 0.8 0.7 40 0.25 63 0.3
+.EE
 .TP
 \fBequalizer \fIfrequency\fR[\fBk\fR]\fI width\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR\^|\^\fBk\fR] \fIgain\fR
 Apply a two-pole peaking equalisation (EQ) filter.
@@ -443,6 +550,8 @@ about comparing the effects of Nuttall vs. Kaiser windows.
 .TP
 \fBflanger\fR [\fIdelay depth regen width speed shape phase interp\fR]
 Apply a flanging effect to the audio.
+See [3] for a detailed description of flanging.
+.SP
 All parameters are optional (right to left).
 .TS
 center box;
@@ -472,12 +581,10 @@ Digital delay-line interpolation: \fBlinear\fR\^|\^\fBquadratic\fR.
 T}
 .TE
 .DT
-.SP
-See [3] for a detailed description of flanging.
 .TP
 \fBgain \fIdB-gain\fR
 Apply an amplification or an attenuation to the audio signal.
-This is just an alias for the
+This is an alias for the
 .B vol
 effect\*mhandy for those who prefer to work in dBs by default.
 .TP
@@ -538,6 +645,22 @@ and a separately specifiable compander run on each band.  See the
 parameters are specified between double quotes and the crossover
 frequency for that band is given by \fIxover-freq\fR; these can be
 repeated to create multiple bands.
+.SP
+For example, the following (one long) command shows how multi-band
+companding is typically used in FM radio:
+.EX
+	play file.xxx gain -3 filter 8000- 32 100 mcompand \\
+	\(dq0.005,0.1 -47,-40,-34,-34,-17,-33\(dq 100 \\
+	\(dq0.003,0.05 -47,-40,-34,-34,-17,-33\(dq 400 \\
+	\(dq0.000625,0.0125 -47,-40,-34,-34,-15,-33\(dq 1600 \\
+	\(dq0.0001,0.025 -47,-40,-34,-34,-31,-31,-0,-30\(dq 6400 \\
+	\(dq0,0.025 -38,-31,-28,-28,-0,-25\(dq \\
+	gain 15 highpass 22 highpass 22 filter -17500 256 \\
+	gain 9 lowpass -1 17801
+.EE
+The audio file is played with a simulated FM radio sound (or broadcast
+signal condition if the lowpass filter at the end is skipped).
+Note that the pipeline is set up with US-style 75us preemphasis.
 .SP
 See also
 .B compand
@@ -732,12 +855,35 @@ pan effect without totally muting the opposite channel.
 .TP
 \fBphaser \fIgain-in gain-out delay decay speed\fR [\fB\-s\fR\^|\^\fB\-t\fR]
 Add a phasing effect to the audio.  
+See [3] for a detailed description of phasing.
+.SP
 delay/decay/speed gives the delay in milliseconds
 and the decay (relative to gain-in) with a modulation
 speed in Hz.
-The modulation is either sinusoidal (\fB\-s\fR) or triangular
-(\fB\-t\fR).  The decay should be less than 0\*d5 to avoid
+The modulation is either sinusoidal (\fB\-s\fR) \*mpreferable for multiple
+instruments, or triangular
+(\fB\-t\fR) \*mgives single instruments a sharper phasing effect.
+The decay should be less than 0\*d5 to avoid
 feedback.  Gain-out is the volume of the output.
+.SP
+A good range is about 0\*d5 to 0\*d1 for the decay.
+.SP
+Examples:
+.EX
+	play file.xxx phaser 0.8 0.74 3 0.4 0.5 \-t
+.EE
+Less severe:
+.EX
+	play file.xxx phaser 0.9 0.85 4 0.23 1.3 \-s
+.EE
+A popular sound:
+.EX
+	play file.xxx phaser 0.89 0.85 1 0.24 2 \-t
+.EE
+This sounds as if ten springs are in your ears:
+.EX
+	play file.xxx phaser 0.6 0.66 3 0.6 2 \-t
+.EE
 .TP
 \fBrate\fR [\fB\-q\fR\^|\^\fB\-l\fR\^|\^\fB\-m\fR\^|\^\fB\-h\fR\^|\^\fB\-v\fR] [\fIRATE\fR[\fBk\fR]]
 Change the audio sampling rate (i.e. resample the audio)
@@ -954,10 +1100,14 @@ repeated audio.
 .br
 [\fIpre-delay\fR (0ms) [\fIwet-gain\fR (0dB)]]]]]]
 .SP
-Add reverberation to the audio using the freeverb algorithm.
+Add reverberation to the audio using the `freeverb' algorithm.  A
+reverberation effect is sometimes desirable for concert halls that are too
+small or contain so many people that the hall's natural reverberance is
+diminished.  Applying a small amount of stereo reverb to a (dry) mono signal
+will usually make it sound more natural.  See [3] for a detailed description
+of reverberation.
 .SP
-Note that
-.B reverb
+Note that this effect
 increases both the volume and the length of the audio, so to prevent clipping
 in these domains, a typical invocation might be:
 .EX
@@ -1043,6 +1193,13 @@ to indicate the value is in decibels, or
 .B %
 to indicate a percentage of maximum value of the sample value
 (\fB0%\fR specifies pure digital silence).
+.SP
+The following example shows how this effect can be used to start a recording
+that does not contain the delay at the start which usually occurs between
+`pressing the record button' and the start of the performance:
+.EX
+	rec \fIparameters filename other-effects\fR silence 1 5 2%
+.EE
 .TP
 \fBspeed \fIfactor\fR[\fBc\fR]
 Adjust the audio speed (pitch and tempo together).  \fIfactor\fR
@@ -1462,7 +1619,8 @@ parameter is given, tree searches are used instead, giving a quicker,
 but possibly lower quality, result.
 .SP
 .I factor
-gives the ratio of new tempo to the old tempo.
+gives the ratio of new tempo to the old tempo, so e.g. 1.1 speeds up the
+tempo by 10%, and 0.9 slows it down by 10%.
 .SP
 The optional
 .I segment
@@ -1484,7 +1642,11 @@ parameter gives the segment overlap length in milliseconds (default 12).
 .SP
 See also
 .B stretch
-for a similar effect.
+for a similar effect,
+.B speed
+for an effect that changes tempo and key together, and
+.B key
+for an effect that changes key without changing tempo.
 .TP
 \fBtreble \fIgain\fR [\fIfrequency\fR[\fBk\fR]\fR [\fIwidth\fR[\fBs\fR\^|\^\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]]]
 Apply a treble tone-control effect.
@@ -1777,9 +1939,10 @@ and \fIshift\fR.
 .BR soxi (1),
 .BR soxformat (7),
 .BR libsox (3),
-.BR soxexam (7)
 .SP
 The SoX web page at http://sox.sourceforge.net
+.br
+SoX scripting examples at http://sox.sourceforge.net/Docs/Scripts
 .SS References
 .TP
 [1]
@@ -1794,8 +1957,8 @@ http://en.wikipedia.org/wiki/Q_factor
 .TP
 [3]
 Scott Lehman,
-.IR "Flanging" ,
-http://harmony-central.com/Effects/Articles/Flanging
+.IR "Effects Explained" ,
+http://harmony-central.com/Effects/effects-explained.html
 .TP
 [4]
 Wikipedia,
