@@ -118,19 +118,14 @@ Japanese data broadcasting.  Any private chunks are not supported.
 Note: The input file is currently processed as .aiff.
 .TP
 \fBalsa\fR (optional)
-Advanced Linux Sound Architecture device driver.
-When this driver is used
-it allows you to open up a ALSA device and configure it to
-use the same data format as passed in to SoX.
-It works for both playing and recording audio files.  When playing audio
-files it attempts to set up the ALSA driver to use the same format as the
-input file.  It is suggested to always override the output values to use
-the highest quality format your ALSA system can handle.  Examples:
+Advanced Linux Sound Architecture device driver; supports both playing and
+recording audio.  ALSA is only used in Linux-based operating systems, though
+these often support OSS (see below) as well.  Examples:
 .EX
 	sox infile -t alsa
 	sox infile -t alsa default
 	sox infile -t alsa hw:0
-	sox -t alsa hw:1 outfile
+	sox -2 -t alsa hw:1 outfile
 .EE
 See also
 .BR play (1)
@@ -168,22 +163,23 @@ option): 0 = 6\*d6 kbit/s, 1 = 8\*d85 kbit/s, 2 = 12\*d65 kbit/s, 3 =
 kbit/s, 7 = 23\*d05 kbit/s, 8 = 23\*d85 kbit/s.
 .TP
 \fBao\fR (optional)
-Xiph's Audio Output device driver.
-It works only for
-playing audio files.  It can play to a wide range of devices and sound
-systems. See its documentation for the full range.  For the most part, SoX's
-use of libao cannot be configured directly; you must use libao
-configuration files.
+Xiph.org's Audio Output device driver; works only for playing audio.  It
+supports a wide range of devices and sound systems\*msee its documentation
+for the full range.  For the most part, SoX's use of libao cannot be
+configured directly; instead, libao configuration files must be used.
 .SP
 The filename specified is used to determine which libao plugin to
-us.  Normally, you should specify `default' as the filename.  If that
+use.  Normally, you should specify `default' as the filename.  If that
 doesn't give the desired behavior then you can specify the short name
 for a given plugin (such as \fBpulse\fR for pulse audio plugin).
-.SP
+Examples:
+.EX
+	sox infile -t ao
+	sox infile -t ao default
+	sox infile -t ao pulse
+.EE
 See also
-.BR play (1)
-and
-.BR rec (1).
+.BR play (1).
 .TP
 \&\fB.au\fR, \fB.snd\fR (also with \fB\-t sndfile\fR)
 Sun Microsystems AU files.
@@ -260,7 +256,7 @@ documented here, and also the audio track of many video files
 of a file can be read.
 .TP
 \&\fB.flac\fR (optional; also with \fB\-t sndfile\fR)
-Free Lossless Audio CODEC compressed audio.
+Xiph.org's Free Lossless Audio CODEC compressed audio.
 FLAC is an open, patent-free CODEC designed for compressing
 music.  It is similar to MP3 and Ogg Vorbis, but lossless,
 meaning that audio is compressed in FLAC without any loss in
@@ -335,10 +331,17 @@ Allows 8bit linear, 16bit linear, A-Law, \(*m-law
 in mono and stereo.
 .TP
 \&\fB.mp3\fR, \fB.mp2\fR (optional read, optional write)
-MP3 compressed audio.  MP3 (MPEG Layer 3) is part of the
+MP3 compressed audio; MP3 (MPEG Layer 3) is a part of the patent-encumbered
 MPEG standards for audio and video compression.  It is a lossy
 compression format that achieves good compression rates with little
-quality loss.  See also
+quality loss.
+.SP
+Because MP3 is patented, SoX cannot be distributed with MP3 support without
+incurring the patent holder's fees.  Users who require SoX with MP3 support
+must currently compile and build SoX with the MP3 libraries (LAME & MAD)
+from source code.
+.SP
+See also
 .B Ogg Vorbis
 for a similar format.
 .TP
@@ -352,11 +355,10 @@ for more information.
 See \fB.sph\fR.
 .TP
 \&\fB.ogg\fR, \fB.vorbis\fR (optional)
-Ogg Vorbis compressed audio.
-Ogg Vorbis is a open, patent-free CODEC designed for compressing music
-and streaming audio.  It is a lossy compression format (similar to MP3,
-VQF & AAC) that achieves good compression rates with a minimum amount of
-quality loss.
+Xiph.org's Ogg Vorbis compressed audio; an open, patent-free CODEC designed
+for music and streaming audio.  It is a lossy compression format (similar to
+MP3, VQF & AAC) that achieves good compression rates with a minimum amount
+of quality loss.
 .SP
 SoX can decode all types of Ogg Vorbis files, and can encode at different
 compression levels/qualities given as a number from \-1 (highest
@@ -369,18 +371,17 @@ option (see above) with a number from \-1 to 10; fractional numbers (e.g.
 Decoding is somewhat CPU intensive and encoding is very CPU intensive.
 .SP
 See also
-.B MP3
+.B .mp3
 for a similar format.
 .TP
 \fBoss\fR (optional)
-Open Sound System /dev/dsp device driver.
-When this driver is used it allows you to
-play and record sounds on supported systems. When playing audio
-files it attempts to set up the OSS driver to use the same format as
-the input file. It is suggested to always override the output values
-to use the highest quality format your OSS system can handle. Example:
+Open Sound System /dev/dsp device driver; supports both playing and
+recording audio.  OSS support is available in Unix-like operating systems,
+sometimes together with alternative sound systems (such as ALSA).  Examples:
 .EX
-	sox infile -t oss -2 -s /dev/dsp
+	sox infile -t oss
+	sox infile -t oss /dev/dsp
+	sox -2 -t oss /dev/dsp outfile
 .EE
 See also
 .BR play (1)
@@ -475,16 +476,10 @@ An alias for the
 raw format.
 .TP
 \fBsunau\fR (optional)
-Sun /dev/audio device driver.
-When this driver is used
-it allows you to open up a Sun /dev/audio file and configure it to
-use the same data type as passed in to SoX.
-It works for both playing and recording audio files.  When playing audio
-files it attempts to set up the audio driver to use the same format as the
-input file.  It is suggested to always override the output values to use
-the highest quality format your hardware can handle.  Example:
+Sun /dev/audio device driver; supports both playing and
+recording audio.  For example:
 .EX
-	sox infile -t sunau -2 -s /dev/audio
+	sox infile -t sunau /dev/audio
 .EE
 or
 .EX
