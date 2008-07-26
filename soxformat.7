@@ -29,13 +29,15 @@
 .SP
 .fi
 ..
-.TH SoX 7 "July 1, 2008" "soxformat" "Sound eXchange"
+.TH SoX 7 "July 27, 2008" "soxformat" "Sound eXchange"
 .SH NAME
 SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH DESCRIPTION
-SoX supported file formats and audio device types.
+This manual describes SoX supported file formats and audio device types;
+the SoX manual set starts with
+.BR sox (1).
 .SP
-Format types that can be determined by a filename
+Format types that can SoX can determine by a filename
 extension are listed with their names preceded by a dot.
 Format types that are optionally built into SoX
 are marked `(optional)'.
@@ -51,10 +53,10 @@ readers and writers, and there's an external reader or writer for that
 format.
 .SP
 To see if SoX has support for an optional format or device, enter
-.B sox -h
+.B sox \-h
 and look for its name under the list:
 `AUDIO FILE FORMATS' or `AUDIO DEVICE DRIVERS'.
-.PP
+.SS SOX FORMATS & DEVICE DRIVERS
 \&\fB.raw\fR (also with \fB\-t sndfile\fR),
 .br
 \&\fB.f4\fR, \fB.f8\fR,
@@ -275,7 +277,7 @@ compression level.  8 is the default compression level and gives the
 best (but slowest) compression; 0 gives the least (but fastest)
 compression.  The compression level is selected using the
 .B \-C
-option [see 
+option [see
 .BR sox (1)]
 with a whole number from 0 to 8.
 .TP

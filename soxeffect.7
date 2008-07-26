@@ -29,10 +29,13 @@
 .SP
 .fi
 ..
-.TH SoX 7 "July 1, 2008" "soxeffect" "Sound eXchange"
+.TH SoX 7 "July 27, 2008" "soxeffect" "Sound eXchange"
 .SH NAME
 SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH DESCRIPTION
+This manual describes SoX audio effects; the SoX manual set starts with
+.BR sox (1).
+.SP
 In addition to converting and playing audio files, SoX can be used to
 invoke a number of audio `effects'.  Multiple effects may be applied
 by specifying them one after another at the end of the SoX command line.
@@ -42,10 +45,10 @@ may alleviate performance issues should they occur.
 .SP
 Some of the SoX effects are primarily intended to be applied to a single
 instrument or `voice'.  To facilitate this, the \fBremix\fR effect and
-the global SoX option \fB-M\fR can be used to isolate then recombine
+the global SoX option \fB\-M\fR can be used to isolate then recombine
 tracks from a multi-track recording.
 .SP
-In the descriptions that follow, 
+In the descriptions that follow,
 brackets [ ] are used to denote parameters that are optional, braces
 { } to denote those that are both optional and repeatable,
 and angle brackets < > to denote those that are repeatable but not
@@ -86,6 +89,10 @@ q	Q-factor	See [2]
 For each effect that uses this parameter, the default method (i.e. if no
 character is appended) is the one that it listed first in the effect's
 first line of description.
+.PP
+To see if SoX has support for an optional effect, enter
+.B sox \-h
+and look for its name under the list: `EFFECTS'.
 .SS SOX EFFECTS
 .TP
 \fBallpass\fR \fIfrequency\fR[\fBk\fR]\fI width\fR[\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]
@@ -175,10 +182,10 @@ used to extend or reduce the frequency range to be boosted or
 cut.  The default value is 100\ Hz (for \fBbass\fR) or 3\ kHz (for
 \fBtreble\fR).
 .SP
-\fIwidth\fR 
+\fIwidth\fR
 determines how
 steep is the filter's shelf transition.  In addition to the common
-width specification methods described above, 
+width specification methods described above,
 `slope' (the default, or if appended with `\fBs\fR') may be used.
 The useful range of `slope' is
 about 0\*d3, for a gentle slope, to 1 (the maximum), for a steep slope; the
@@ -268,7 +275,7 @@ The point \fB0,0\fR is assumed but may be overridden (by
 If the list is preceded by a
 .I soft-knee-dB
 value, then the points at where adjacent line segments on the
-transfer function meet will be rounded by the amount given. 
+transfer function meet will be rounded by the amount given.
 Typical values for the transfer function are
 .BR 6:\-70,\-60,\-20 .
 .SP
@@ -301,7 +308,7 @@ The following example might be used to make a piece of music with both
 quiet and loud passages suitable for listening to in a noisy environment
 such as a moving vehicle:
 .EX
-	sox asz.flac asz-car.flac compand 0.3,1 6:-70,-60,-20 -5 -90 0.2
+	sox asz.au asz-car.au compand 0.3,1 6:-70,-60,-20 -5 -90 0.2
 .EE
 The transfer function (`6:\-70,...') says that very soft sounds (below
 \-70dB) will remain unchanged.  This will stop the compander from
@@ -322,7 +329,7 @@ See also
 for a multiple-band companding effect.
 .TP
 \fBcontrast [\fIenhancement-amount (75)\fR]
-Comparable with compression, this effect modifies an audio signal to 
+Comparable with compression, this effect modifies an audio signal to
 make it sound louder.
 .I enhancement-amount
 controls the amount of the enhancement and is a number in the range 0\-100.
@@ -399,7 +406,7 @@ affects the audio.
 .TP
 \fBearwax\fR
 Makes audio easier to listen to on headphones.
-Adds `cues' to 44.1kHz stereo (i.e. audio CD format) audio so that
+Adds `cues' to 44\*d1kHz stereo (i.e. audio CD format) audio so that
 when listened to on headphones the stereo image is
 moved from inside
 your head (standard for headphones) to outside and in front of the
@@ -426,20 +433,20 @@ For example:
 This will make it sound as if there are twice as many instruments as are
 actually playing:
 .EX
-	play file.xxx echo 0.8 0.88 60 0.4
+	play lead.aiff echo 0.8 0.88 60 0.4
 .EE
 If the delay is very short, then it sound like a (metallic) robot playing
 music:
 .EX
-	play file.xxx echo 0.8 0.88 6 0.4
+	play lead.aiff echo 0.8 0.88 6 0.4
 .EE
 A longer delay will sound like an open air concert in the mountains:
 .EX
-	play file.xxx echo 0.8 0.9 1000 0.3
+	play lead.aiff echo 0.8 0.9 1000 0.3
 .EE
 One mountain more, and:
 .EX
-	play file.xxx echo 0.8 0.9 1000 0.3 1800 0.25
+	play lead.aiff echo 0.8 0.9 1000 0.3 1800 0.25
 .EE
 .TP
 \fBechos \fIgain-in gain-out\fR <\fIdelay decay\fR>
@@ -458,15 +465,15 @@ has the same effect as a single echo.
 .SP
 The sample will be bounced twice in symmetric echos:
 .EX
-	play file.xxx echos 0.8 0.7 700 0.25 700 0.3
+	play lead.aiff echos 0.8 0.7 700 0.25 700 0.3
 .EE
 The sample will be bounced twice in asymmetric echos:
 .EX
-	play file.xxx echos 0.8 0.7 700 0.25 900 0.3
+	play lead.aiff echos 0.8 0.7 700 0.25 900 0.3
 .EE
 The sample will sound as if played in a garage:
 .EX
-	play file.xxx echos 0.8 0.7 40 0.25 63 0.3
+	play lead.aiff echos 0.8 0.7 40 0.25 63 0.3
 .EE
 .TP
 \fBequalizer \fIfrequency\fR[\fBk\fR]\fI width\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR\^|\^\fBk\fR] \fIgain\fR
@@ -649,7 +656,7 @@ repeated to create multiple bands.
 For example, the following (one long) command shows how multi-band
 companding is typically used in FM radio:
 .EX
-	play file.xxx gain -3 filter 8000- 32 100 mcompand \\
+	play track1.wav gain -3 filter 8000- 32 100 mcompand \\
 	\(dq0.005,0.1 -47,-40,-34,-34,-17,-33\(dq 100 \\
 	\(dq0.003,0.05 -47,-40,-34,-34,-17,-33\(dq 400 \\
 	\(dq0.000625,0.0125 -47,-40,-34,-34,-15,-33\(dq 1600 \\
@@ -671,7 +678,7 @@ Reduce the number of audio channels by mixing or selecting channels,
 or increase the number of channels by duplicating channels.
 Note: this effect operates on the audio
 .I channels
-within the SoX effects processing chain; it should not be confused with the 
+within the SoX effects processing chain; it should not be confused with the
 .B \-m
 global option (where multiple
 .I files
@@ -722,7 +729,7 @@ In Ch	Out Ch	Num	Mappings
 .SP
 See also
 .B remix
-for a similar effect.
+for a mixing effect that handles any number of channels.
 .TP
 \fBnoiseprof\fR [\fIprofile-file\fR]
 Calculate a profile of the audio for use in noise reduction.  See the
@@ -736,7 +743,7 @@ effect on a section of audio that ideally would contain silence but in
 fact contains noise\*msuch sections are typically found at the beginning
 or the end of a recording.  \fBnoiseprof\fR will write out a noise
 profile to \fIprofile-file\fR, or to stdout if no \fIprofile-file\fR or
-if `-' is given.  E.g.
+if `\-' is given.  E.g.
 .EX
 	sox speech.au -n trim 0 1.5 noiseprof speech.noise-profile
 .EE
@@ -747,7 +754,7 @@ will reduce noise according to a noise profile (which was generated by
 .BR noiseprof ),
 from
 .IR profile-file ,
-or from stdin if no \fIprofile-file\fR or if `-' is given.  E.g.
+or from stdin if no \fIprofile-file\fR or if `\-' is given.  E.g.
 .EX
 	sox speech.au cleaned.au noisered speech.noise-profile 0.3
 .EE
@@ -854,7 +861,7 @@ far left and 1 represents far right.  Numbers in between will start the
 pan effect without totally muting the opposite channel.
 .TP
 \fBphaser \fIgain-in gain-out delay decay speed\fR [\fB\-s\fR\^|\^\fB\-t\fR]
-Add a phasing effect to the audio.  
+Add a phasing effect to the audio.
 See [3] for a detailed description of phasing.
 .SP
 delay/decay/speed gives the delay in milliseconds
@@ -864,25 +871,23 @@ The modulation is either sinusoidal (\fB\-s\fR) \*mpreferable for multiple
 instruments, or triangular
 (\fB\-t\fR) \*mgives single instruments a sharper phasing effect.
 The decay should be less than 0\*d5 to avoid
-feedback.  Gain-out is the volume of the output.
+feedback, and usually no less than 0\*d1.  Gain-out is the volume of the output.
 .SP
-A good range is about 0\*d5 to 0\*d1 for the decay.
-.SP
-Examples:
+For example:
 .EX
-	play file.xxx phaser 0.8 0.74 3 0.4 0.5 \-t
+	play snare.flac phaser 0.8 0.74 3 0.4 0.5 -t
 .EE
-Less severe:
+Gentler:
 .EX
-	play file.xxx phaser 0.9 0.85 4 0.23 1.3 \-s
+	play snare.flac phaser 0.9 0.85 4 0.23 1.3 -s
 .EE
 A popular sound:
 .EX
-	play file.xxx phaser 0.89 0.85 1 0.24 2 \-t
+	play snare.flac phaser 0.89 0.85 1 0.24 2 -t
 .EE
-This sounds as if ten springs are in your ears:
+More severe:
 .EX
-	play file.xxx phaser 0.6 0.66 3 0.6 2 \-t
+	play snare.flac phaser 0.6 0.66 3 0.6 2 -t
 .EE
 .TP
 \fBrate\fR [\fB\-q\fR\^|\^\fB\-l\fR\^|\^\fB\-m\fR\^|\^\fB\-h\fR\^|\^\fB\-v\fR] [\fIRATE\fR[\fBk\fR]]
@@ -959,7 +964,7 @@ contributing input channels and volume specifications.
 .SP
 Note that this effect operates on the audio
 .I channels
-within the SoX effects processing chain; it should not be confused with the 
+within the SoX effects processing chain; it should not be confused with the
 .B \-m
 global option (where multiple
 .I files
@@ -1013,7 +1018,8 @@ v	voltage multiplier	T{
 1 = no change, 0\*d5 \(~= 6dB attenuation, 2 \(~= 6dB gain, \-1 = invert
 T}
 .TE
-
+.DT
+.SP
 If an
 .I out-spec
 includes at least one
@@ -1060,6 +1066,7 @@ center;
 c8 c8 c.
 *	*	*
 .TE
+.DT
 .SP
 One typical use of the
 .B remix
@@ -1315,7 +1322,7 @@ frequency resolution (but lower dynamic-range), select a Hamming window;
 for higher dynamic-range (but poorer frequency-resolution), select a
 Kaiser window.  Bartlett and Rectangular windows are also available.
 Selecting a window other than Hann will usually require
-a corresponding 
+a corresponding
 .B \-z
 setting.
 .IP \fB\-s\fR
@@ -1353,6 +1360,11 @@ Name of the spectrogram output PNG file, default `spectrogram.png'.
 .RE
 .TP
 \ 
+For example, let's see what the spectrogram of a swept triangular wave looks
+like:
+.EX
+	sox -n -n synth 6 tri 10k:14k spectrogram -z 100 -w k
+.EE
 For the ability to perform off-line processing of spectral data, see the
 .B stat
 effect.
@@ -1426,6 +1438,7 @@ center;
 c8 c8 c.
 *	*	*
 .TE
+.DT
 .SP
 It is also possible to use this effect to perform general cross-fades, e.g. to
 join two songs.
@@ -1493,6 +1506,10 @@ This is done by repeating an output channel on the command-line.  For example,
 .B swap 2 2
 will overwrite channel 1 with channel 2; creating a stereo
 file with both channels containing the same audio.
+.SP
+See also the
+.B remix
+effect.
 .TP
 \fBsynth\fR [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR] [[\fB%\fR]\fIfreq\fR[\fBk\fR][\fB:\fR\^|\^\fB+\fR\^|\^\fB/\fR\^|\^\fB\-\fR[\fB%\fR]\fIfreq2\fR[\fBk\fR]]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
 This effect can be used to generate fixed or swept frequency audio tones
@@ -1513,7 +1530,7 @@ file' (with the special name \fB\-n\fR) is often given instead (and the
 length specified as a parameter to \fBsynth\fR or by another given
 effect that can has an associated length).
 .SP
-For example, the following produces a 3 second, 44\*d1\ kHz,
+For example, the following produces a 3 second, 48kHz,
 audio file containing a sine-wave swept from 300 to 3300\ Hz:
 .EX
 	sox -n output.au synth 3 sine 300-3300
@@ -1576,7 +1593,7 @@ is given, then
 .I len
 must also have been given and the generated tone will be swept between
 the given frequencies.  The two given frequencies must be separated by
-one of the characters `:', `+', `/', or `-'.  This character is used to
+one of the characters `:', `+', `/', or `\-'.  This character is used to
 specify the sweep function as follows:
 .RS
 .IP \fB:\fR
@@ -1759,7 +1776,7 @@ This effect is equivalent to the
 .B key
 effect with
 .I search
-set to zero, so its results are comparatively poor; 
+set to zero, so its results are comparatively poor;
 it is retained for backwards compatibility only.
 .SP
 Change by cross-fading shifted samples.
@@ -1920,7 +1937,7 @@ This effect is equivalent to the
 .B tempo
 effect with (\fIfactor\fR inverted and)
 .I search
-set to zero, so its results are comparatively poor; 
+set to zero, so its results are comparatively poor;
 it is retained for backwards compatibility only.
 .SP
 .I factor

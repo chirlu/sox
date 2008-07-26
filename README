@@ -103,7 +103,6 @@ The audio effects/tools included in this release are as follows:
     o bandreject	RBJ band-reject biquad IIR filter
     o band		SPKit resonator band-pass IIR filter
     o bass		Tone control: RBJ shelving biquad IIR filter
-    o deemph		ISO 908 CD de-emphasis (shelving) IIR filter
     o equalizer		RBJ peaking equalisation biquad IIR filter
     o filter		JOS low/high/band pass FIR filter with many taps
     o highpass		High-pass filter: Single pole or RBJ biquad IIR
@@ -154,6 +153,7 @@ The audio effects/tools included in this release are as follows:
     o rate		Change audio sampling rate
 
   o Specialised filters/mixers
+    o deemph		ISO 908 CD de-emphasis (shelving) IIR filter
     o earwax		Process CD audio to best effect for headphone use
     o noisered		Filter out noise from the audio
     o oops		Out Of Phase Stereo (or `Karaoke') effect

@@ -29,7 +29,7 @@
 .SP
 .fi
 ..
-.TH SoX 1 "July 1, 2008" "sox" "Sound eXchange"
+.TH SoX 1 "July 27, 2008" "sox" "Sound eXchange"
 .SH NAME
 SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH SYNOPSIS
@@ -56,7 +56,7 @@ however, to simplify playing and recording audio, if SoX is invoked as
 \fBplay\fR the output file is automatically set to be the default sound
 device and if invoked as \fBrec\fR the default sound device is used as an
 input source.
-The
+Additionally, the
 .BR soxi (1)
 command provides a convenient way to just query audio file header information.
 .SP
@@ -120,8 +120,8 @@ records a new track in a multi-track recording.
 .SP
 Detailed explanations of how to use each SoX parameter, file format, and
 effect can be found below in this manual, and in
-.BR soxformat (7),
-&
+.BR soxformat (7)
+and
 .BR soxeffect (7)
 respectively.
 .SS File Formats
@@ -138,7 +138,9 @@ the format of audio data such that it can be processed with SoX:
 sample rate
 The sample rate in samples per second (`Hertz' or `Hz').  For
 example, digital telephony traditionally uses a sample rate of 8000\ Hz
-(8\ kHz); audio Compact Discs use 44100\ Hz (44\*d1\ kHz).
+(8\ kHz); audio Compact Discs use 44100\ Hz (44\*d1\ kHz); Digital Audio
+Tape and many computer systems use 48\ kHz; professional audio systems
+typically use 96 or 192 kHz.
 .TP
 sample size
 The number of bits used to store each sample.  The most popular is 16-bit
@@ -159,6 +161,7 @@ and FLAC.
 channels
 The number of audio channels contained in the file.  One (`mono') and two
 (`stereo') are widely used.
+`Surround sound' audio typically contains six or more channels.
 .PP
 The term `bit-rate' is sometimes used as an overall measure of an audio
 format and may incorporate elements of all of the above.
@@ -281,9 +284,9 @@ meter which can be invoked (before making the actual recording) as follows:
 .EX
 	rec -n
 .EE
-The recording level should be adjusted (using the system mixer program) so
-that the meter is \fIat most occasionally\fR full scale, and never `in the
-red' (an exclamation mark is shown).
+The recording level should be adjusted (using the system-provided mixer
+program, not SoX) so that the meter is \fIat most occasionally\fR full
+scale, and never `in the red' (an exclamation mark is shown).
 .SS Accuracy
 Many file formats that compress audio discard some of the audio signal
 information whilst doing so; converting to such a format then converting
@@ -331,7 +334,7 @@ multiple SoX invocations; hence this is also recommended.
 Clipping is distortion that occurs when an audio signal
 level (or `volume') exceeds the range of the chosen representation.
 It is nearly always undesirable and so should usually be corrected by
-adjusting the volume prior to the point at which clipping occurs.
+adjusting the level prior to the point at which clipping occurs.
 .SP
 In SoX, clipping could occur, as you might expect, when using the
 .B vol
@@ -361,7 +364,7 @@ guarantees that the treble boost will not clip.
 .SP
 If clipping occurs at any point during processing, then
 SoX will display a warning message to that effect.
-.SS Input File Combining 
+.SS Input File Combining
 SoX's input combiner can be configured (see OPTIONS below) to
 combine multiple files using any of the
 following methods: `concatenate', `sequence', `mix', `mix-power', or `merge'.
@@ -386,9 +389,9 @@ The `sequence' combining method is selected automatically for
 It is similar to `concatenate' in that the audio from each input file is
 sent serially to the output file, however here the output file may be
 closed and reopened at the corresponding transition between input
-files\*mthis may be just what is needed when sending audio to an output
-device, but is not generally useful when the output file is a normal
-file.
+files\*mthis may be just what is needed when sending different types of
+audio to an output device, but is not generally useful when the output is a
+normal file.
 .SP
 If either the `mix' or `mix-power' combining method is selected, then two or
 more input files must be given and will be mixed together to form the
@@ -404,7 +407,7 @@ output file.  The number of channels in each input file need not be the
 same.  A merged audio file comprises all of the channels from all of the
 input files; un-merging is possible using multiple
 invocations of SoX with the
-.B mixer
+.B remix
 effect.
 For example, two mono files could be merged to form one stereo file; the
 first and second mono files would become the left and right channels of
@@ -450,7 +453,7 @@ effect.
 .SP
 With the `mix-power' combine method, the
 mixed volume is appropriately equal to that of one of the input signals.
-This is achieved by balancing using a factor of 
+This is achieved by balancing using a factor of
 \(S1/\s-2\(srn\s+2 instead of \(S1/\s-2n\s+2.
 Note that this balancing factor does not guarantee that no clipping will occur,
 however, in many cases, the number of clips will be low and the resultant
@@ -573,7 +576,7 @@ Select the input file combining method;
 .B \-m
 selects `mix',
 .B \-M
-selects `merge',
+selects `merge'.
 .SP
 See \fBInput File Combining\fR above for a description of the different
 combining methods.
@@ -617,13 +620,12 @@ for
 otherwise.
 .TP
 \fB\-S\fR, \fB\-\-show\-progress\fR
-Display input file format/header information and input file(s)
-processing progress in terms of elapsed/remaining time and percentage
-complete.
-Also displays the number of samples written to the output file, a VU meter,
-and an indication if clipping has occurred.
-The VU meter shows up to two channels and is calibrated for digital
-audio as follows:
+Display input file format/header information, and processing progress as
+input file(s) percentage complete, elapsed time, and remaining time (if known;
+shown in brackets), and the number of samples written to the output file.
+Also shown is a VU meter, and an indication if clipping has occurred.  The
+VU meter shows up to two channels and is calibrated for digital audio as
+follows:
 .TS
 center box;
 cI lI lI
@@ -647,6 +649,7 @@ T}
 \-3	======
 \-1	=====!	`In the red'
 .TE
+.DT
 .SP
 A three-second peak-held value of headroom in dBs will be shown to the right
 of the meter if this is below 6dB.
@@ -655,39 +658,39 @@ This option is enabled by default when using
 SoX to play or record audio.
 .TP
 \fB\-\-version\fR
-Show version number and exit.
+Show SoX's version number and exit.
 .IP \fB\-V\fB[\fIlevel\fB]\fP
 Set verbosity.
-SoX prints messages to the console (stderr) according to the following
+SoX displays messages on the console (stderr) according to the following
 verbosity levels:
 .IP
 .RS
 .IP 0
-No messages are printed at all; use the exit status to determine
+No messages are shown at all; use the exit status to determine
 if an error has occurred.
 .IP 1
-Only error messages are printed.  These are generated if
+Only error messages are shown.  These are generated if
 SoX cannot complete the requested commands.
 .IP 2
-Warning messages are also printed.  These are generated if
+Warning messages are also shown.  These are generated if
 SoX can complete the requested commands,
 but not exactly according to the requested command parameters,
 or if clipping occurs.
 .IP 3
 Descriptions of
-SoX's processing phases are also printed.
+SoX's processing phases are also shown.
 Useful for seeing exactly how
-SoX is mangling your audio.
+SoX is processing your audio.
 .IP "4 and above"
 Messages to help with debugging
-SoX are also printed.
+SoX are also shown.
 .RE
 .IP
-By default, the verbosity level is set to 2.  Each occurrence of the \fB\-V\fR
+By default, the verbosity level is set to 2; each occurrence of the \fB\-V\fR
 option increases the verbosity level by 1.  Alternatively, the verbosity
 level can be set to an absolute number by specifying it immediately after
 the
-.B \-V
+.BR \-V ;
 e.g.
 .B \-V0
 sets it to 0.
@@ -715,16 +718,24 @@ working with headerless file formats or when specifying a format
 for the output file that is different to that of the input file.
 .TP
 \fB\-c\fR, \fB\-\-channels\fR \fICHANNELS\fR
-The number of audio channels in the audio file.
-This may be 1, 2, or 4; for mono, stereo, or quad audio.  To cause
-the output file to have a different number of channels than the input
-file, include this option with the output file options.
-If the input and output file have a different number of channels then the
+The number of audio channels in the audio file; this can be any number
+greater than zero.  To cause the output file to have a different number of
+channels than the input file, include this option with the output file
+options.  If the input and output file have a different number of channels
+then the
 .B mixer
 effect must be used.  If the
 .B mixer
 effect is not specified on the
 command line it will be invoked internally with default parameters.
+.SP
+Alternatively, some effects (e.g.
+.BR synth ,
+.BR remix )
+determine what will be the number of output channels; in this case, neither
+this option nor the
+.B mixer
+effect is necessary.
 .TP
 \fB\-r, \fB\-\-rate\fR \fIRATE\fR[\fBk\fR]
 Gives the sample rate in Hz (or kHz if appended with `k') of the file.
@@ -858,7 +869,7 @@ applicable).
 SoX will provide a default comment if this option (or
 .BR \-\-comment\-file )
 is not given; to specify that no comment should be stored in the output file,
-use 
+use
 .B "\-\-comment \(dq\(dq" .
 .TP
 \fB\-\-comment\-file \fIFILENAME\fR
@@ -893,7 +904,8 @@ The SoX web site at http://sox.sourceforge.net
 SoX scripting examples at http://sox.sourceforge.net/Docs/Scripts
 .SH LICENSE
 Copyright 1991 Lance Norskog and Sundry Contributors.
-Copyright 1998\-2008 by Chris Bagwell and SoX Contributors.
+.br
+Copyright 1998\-2008 Chris Bagwell and SoX Contributors.
 .SP
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
