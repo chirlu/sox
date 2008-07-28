@@ -1002,8 +1002,8 @@ static void usage(char const * message)
   static char const * lines[] = {
 "SPECIAL FILENAMES:",
 "-               stdin (infile) or stdout (outfile)",
-"-d              use the default audio device (where applicable)",
-"-n              use the null file handler; for use with e.g. synth & stat",
+"-d              use the default audio device (where available)",
+"-n              use the null file handler; e.g. with synth or stat effect",
 "",
 "GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):",
 "--buffer BYTES  set the size of all processing buffers (default 8192)",
@@ -1029,11 +1029,11 @@ static void usage(char const * message)
 "                  4-6: increasing levels of debug messages",
 "",
 "FORMAT OPTIONS (fopts):",
-"Format options only need to be supplied for input files that are headerless,",
-"otherwise they are obtained automatically.  Output files will default to the",
-"same format options as the input file unless otherwise specified.",
+"Input file format options need only be supplied for files that are headerless.",
+"Output files will have the same format as the input file where possible and not",
+"overriden by any of various means including providing output format options.",
 "",
-"-c, --channels CHANNELS  number of channels in audio data",
+"-c, --channels CHANNELS  number of channels of audio data; e.g. 2 = stereo",
 "-C, --compression FACTOR  compression factor for output format",
 "--add-comment TEXT  Append output file comment",
 "--comment TEXT  Specify comment text for the output file",
@@ -1048,7 +1048,7 @@ static void usage(char const * message)
 "-s/-u/-U/-A/    sample encoding: signed/unsigned/u-law/A-law",
 "  -a/-i/-g/-f   ADPCM/IMA ADPCM/GSM/floating point",
 "-1/-2/-3/-4/-8  sample size in bytes",
-"-v, --volume FACTOR  volume input file volume adjustment factor (real number)",
+"-v, --volume FACTOR  input file volume adjustment factor (real number)",
 ""};
 
   display_SoX_version(stdout);
