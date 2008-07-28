@@ -126,7 +126,7 @@ Description: All SoX format libraries
 Package: libsox-dev
 Architecture: any
 Section: libdevel
-Depends: libsox0 (=${binary:Version}), libsox-fmt-all (=${binary:Version}), ${shlibs:Depends}
+Depends: libsox1 (=${binary:Version}), libsox-fmt-all (=${binary:Version}), ${shlibs:Depends}
 Homepage: http://sox.sourceforge.net
 Description: Development files for the SoX library
  SoX is the swiss army knife of sound processing.
