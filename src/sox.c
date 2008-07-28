@@ -221,7 +221,7 @@ static void play_file_info(sox_format_t * ft, file_t * f, sox_bool full)
   }
   fprintf(output, "\n");
 
-  sprintf(buffer, "Sample rate: %gHz", ft->signal.rate);
+  sprintf(buffer, "Samplerate: %gHz", ft->signal.rate);
   fprintf(output, "%-25s", buffer);
   text = sox_find_comment(f->ft->oob.comments, "Album");
   if (text)
