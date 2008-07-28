@@ -33,10 +33,12 @@ sox (14.0.1+cvs-1) UNRELEASED; urgency=low
     - Bumped Standards-Version to 3.8.0, needed changes were already made.
     - Removed libsox-fmt-gsm and libsox-fmt-sndfile, merged in libsox-fmt-base.
   * [debian/libsox-fmt-gsm.install, debian/libsox-fmt-gsm.dirs,
-     debian/libsox-fmt-libsndfile.install, debian/libsox-fmt-libsndfile.dirs]:
-    - Removed, merged gsm in libsox-fmt-base.
+     debian/libsox-fmt-libsndfile.install, debian/libsox-fmt-libsndfile.dirs,
+     debian/libsox-fmt-flac.install, debian/libsox-fmt-flac.dirs,
+     debian/libsox-fmt-ogg.install, debian/libsox-fmt-ogg.dirs]:
+    - Removed, merged gsm, libsndfile, flac and ogg in libsox-fmt-base.
   
- -- Pascal Giard <evilynux@gmail.com>  Thu, 24 Jul 2008 10:58:34 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Mon, 28 Jul 2008 09:53:17 -0400
 
 sox (14.0.1-2) unstable; urgency=low
 

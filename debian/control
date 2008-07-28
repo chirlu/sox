@@ -21,7 +21,7 @@ Description: Swiss army knife of sound processing
  SoX is able to handle formats like Ogg Vorbis, MP3, WAV, AIFF, VOC, SND, AU,
  GSM and several more.
  Any format support requires at least libsox-fmt-base. Some formats have their
- own package e.g. Ogg Vorbis is provided by libsox-fmt-ogg.
+ own package e.g. mp3 read support is provided by libsox-fmt-mp3.
  .
  SoX supports most common sound architectures i.e. Alsa, Libao and OSS
  (provided by libsox-fmt-alsa, libsox-fmt-ao and libsox-fmt-oss). It also
@@ -89,18 +89,6 @@ Description: SoX ffmpeg format library
  .
  ffmpeg: http://ffmpeg.sourceforge.net
 
-Package: libsox-fmt-flac
-Architecture: any
-Section: sound
-Homepage: http://sox.sourceforge.net
-Depends: ${shlibs:Depends}
-Description: SoX FLAC format library
- SoX is the swiss army knife of sound processing.
- .
- This package contains the SoX FLAC format library.
- .
- FLAC: http://flac.sourceforge.net
-
 Package: libsox-fmt-mp3
 Architecture: any
 Section: sound
@@ -113,18 +101,6 @@ Description: SoX MP3 format library
  Read support by libmad. Write support not available yet.
  .
  libmad: http://www.underbit.com/products/mad/
-
-Package: libsox-fmt-ogg
-Architecture: any
-Section: sound
-Depends: ${shlibs:Depends}
-Homepage: http://sox.sourceforge.net
-Description: SoX OGG Vorbis format library
- SoX is the swiss army knife of sound processing.
- .
- This package contains the SoX OGG Vorbis format library.
- .
- OGG Vorbis: http://www.vorbis.com
 
 Package: libsox-fmt-oss
 Architecture: any
@@ -139,7 +115,7 @@ Description: SoX OSS format I/O library
 Package: libsox-fmt-all
 Architecture: any
 Section: sound
-Depends: libsox-fmt-base, libsox-fmt-ffmpeg, libsox-fmt-flac, libsox-fmt-mp3, libsox-fmt-ogg, libsox-fmt-alsa, libsox-fmt-ao, libsox-fmt-oss
+Depends: libsox-fmt-base, libsox-fmt-ffmpeg, libsox-fmt-mp3, libsox-fmt-alsa, libsox-fmt-ao, libsox-fmt-oss
 Homepage: http://sox.sourceforge.net
 Description: All SoX format libraries
  SoX is the swiss army knife of sound processing.
