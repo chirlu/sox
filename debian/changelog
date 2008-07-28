@@ -32,6 +32,7 @@ sox (14.0.1+cvs-1) UNRELEASED; urgency=low
     - Fixed lintian warning, "meta package" changed to "metapackage".
     - Bumped Standards-Version to 3.8.0, needed changes were already made.
     - Removed libsox-fmt-gsm and libsox-fmt-sndfile, merged in libsox-fmt-base.
+    - Bumped libsox0 to libsox1, new version is binary incompatible.
   * [debian/libsox-fmt-gsm.install, debian/libsox-fmt-gsm.dirs,
      debian/libsox-fmt-libsndfile.install, debian/libsox-fmt-libsndfile.dirs,
      debian/libsox-fmt-flac.install, debian/libsox-fmt-flac.dirs,

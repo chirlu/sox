@@ -27,11 +27,12 @@ Description: Swiss army knife of sound processing
  (provided by libsox-fmt-alsa, libsox-fmt-ao and libsox-fmt-oss). It also
  supports LADSPA plugins.
 
-Package: libsox0
+Package: libsox1
 Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}
 Recommends: libsox-fmt-base, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss
+Conflicts: libsox0
 Suggests: libsox-fmt-all
 Homepage: http://sox.sourceforge.net
 Description: SoX library
