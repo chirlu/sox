@@ -32,6 +32,22 @@ txt: sox.txt soxi.txt soxeffect.txt soxformat.txt libsox.txt
 
 pdf: sox.pdf soxi.pdf soxeffect.pdf soxformat.pdf libsox.pdf
 
+# Rule for making HTML man pages
+#
+# Parts of sed expressions were borrowed from smartmontool's Makefile.am.
+# Get rid of unneeded Content-Type and convert filenames from default
+# cgi-bin format to relative filenames (similar to -r option) but
+# with custom names we prefer.
+#
+FIXHTML = sed '1s,^Content-type.*,,' | \
+	  sed 's,<A HREF="http://[-a-z/]*/man2html?\([1-8]\)+\([.a-z]*\)">,<A HREF="\2.html">,g' | \
+	  sed 's,<A HREF="http://[-a-z/]*/man2html">,<A HREF=".">,g'
+
+.1.html .3.html .7.html:
+	man2html $(srcdir)/$< | $(FIXHTML) > $@
+
+html: sox.html soxi.html soxeffect.html soxformat.html libsox.html
+
 install-data-hook:
 	cd $(DESTDIR)$(mandir)/man1 && $(RM) play.1 && $(LN_S) sox.1 play.1
 	cd $(DESTDIR)$(mandir)/man1 && $(RM) rec.1 && $(LN_S) sox.1 rec.1
