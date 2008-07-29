@@ -24,29 +24,33 @@ play.1 rec.1: sox.1
 .1.txt .3.txt .7.txt:
 	tbl $(srcdir)/$< | nroff -man | col -b > $@
 
-txt: sox.txt soxi.txt soxeffect.txt soxformat.txt libsox.txt
+DOCTXT = sox.txt soxi.txt soxeffect.txt soxformat.txt libsox.txt
+txt: $(DOCTXT)
 
 # Rule for making PDF man pages
 .1.pdf .3.pdf .7.pdf:
 	tbl $(srcdir)/$< | groff -man -Tps | ps2pdf - $@
 
-pdf: sox.pdf soxi.pdf soxeffect.pdf soxformat.pdf libsox.pdf
+DOCPDF = sox.pdf soxi.pdf soxeffect.pdf soxformat.pdf libsox.pdf
+pdf: $(DOCPDF)
 
 # Rule for making HTML man pages
 #
-# Parts of sed expressions were borrowed from smartmontool's Makefile.am.
-# Get rid of unneeded Content-Type and convert filenames from default
-# cgi-bin format to relative filenames (similar to -r option) but
-# with custom names we prefer.
-#
+# Get rid on unneeded Content-Type, man directory and manpage index in extension.
+# e.g. ../man1/soxi.1.html becomes ../soxi.html
+# Return to Main Contents and link to man2html are also modified.
 FIXHTML = sed '1s,^Content-type.*,,' | \
-	  sed 's,<A HREF="http://[-a-z/]*/man2html?\([1-8]\)+\([.a-z]*\)">,<A HREF="\2.html">,g' | \
-	  sed 's,<A HREF="http://[-a-z/]*/man2html">,<A HREF=".">,g'
+	  sed 's,<A HREF="\.\./man[0-9]/\([-a-z]\+\)\.[0-9],<A HREF="\1,g' | \
+	  sed 's,<A HREF="\.\./index\.html">\(Return\ to\ Main\ Contents\),<A HREF=".">\1,' | \
+	  sed 's,<A HREF="/cgi-bin/man/man2html">man2html</A>,<A HREF="http://primates.ximian.com/~flucifredi/man/">man2html</A>,'
 
 .1.html .3.html .7.html:
-	man2html $(srcdir)/$< | $(FIXHTML) > $@
+	man2html -r $(srcdir)/$< | $(FIXHTML) > $@
 
-html: sox.html soxi.html soxeffect.html soxformat.html libsox.html
+DOCHTML = sox.html soxi.html soxeffect.html soxformat.html libsox.html
+html: $(DOCHTML)
+
+DISTCLEANFILES = $(DOCHTML) $(DOCPDF) $(DOCTXT)
 
 install-data-hook:
 	cd $(DESTDIR)$(mandir)/man1 && $(RM) play.1 && $(LN_S) sox.1 play.1
