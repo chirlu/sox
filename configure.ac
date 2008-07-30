@@ -427,7 +427,7 @@ using_png=no
 if test "$with_png" != "no"; then
     using_png=yes
     AC_CHECK_HEADER(png.h,
-        [AC_CHECK_LIB(png, png_set_rows, PNG_LIBS="$PNG_LIBS -lpng -lz" ,using_png=no)],
+        [AC_CHECK_LIB(png, png_set_rows, PNG_LIBS="$PNG_LIBS -lpng -lz" ,using_png=no, -lz)],
         using_png=no)
     if test "$with_png" = "yes" -a "$using_png" = "no"; then
         AC_MSG_FAILURE([cannot find png])
