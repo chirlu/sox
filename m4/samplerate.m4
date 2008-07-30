@@ -11,12 +11,12 @@ dnl
 # Test for libsamplerate, and define SAMPLERATE_CFLAGS and SAMPLERATE_LIBS
 AC_DEFUN([SOX_PATH_SAMPLERATE],
 [dnl
-# Step 1: Use pkg-config if available
+# Step 1: Use PKG_CHECK_MODULES if available
 m4_ifdef([PKG_CHECK_MODULES],
   [# PKG_CHECK_MODULES available
   PKG_CHECK_MODULES(SAMPLERATE, samplerate, have_samplerate="maybe",
                     have_samplerate="no")],
-  [# PKG_CHECK_MODULES is unavailable, search for pkg-config program
+  [# Step 2: Use pkg-config manually if available
   AC_PATH_PROG([PKGCONFIG], [pkg-config], [none])
   if test "$PKGCONFIG" != "none" && `$PKGCONFIG --exists samplerate`
   then
@@ -24,37 +24,32 @@ m4_ifdef([PKG_CHECK_MODULES],
     SAMPLERATE_LIBS=`$PKGCONFIG --libs samplerate`
     have_samplerate="maybe"
   else
-    if test "$PKGCONFIG" != "none"
-    then
-      AC_MSG_NOTICE([$PKGCONFIG couldn't find libsamplerate. Try adjusting PKG_CONFIG_PATH.])
-    fi
-    # libsamplerate doesn't have samplerate-config but other
-    # packages do and so keep around as an example.
-    # Step 2: try samplerate-config
-    #AC_PATH_PROG([SAMPLERATECONFIG], [samplerate-config], [none])
-    #if test "$SAMPLERATECONFIG" != "none" && test `$SAMPLERATECONFIG --package` = "libsamplerate"
-    #then
-    #  SAMPLERATE_CFLAGS=`$SAMPLERATECONFIG --cflags`
-    #  SAMPLERATE_LIBS=`$SAMPLERATECONFIG --libs`
-    #  have_samplerate="maybe"
-    #fi
-  fi
-  ])
+    have_samplerate="no"
+  fi])
 
-m4_ifndef([PKG_CHECK_MODULES],
-  [# PKG_CHECK_MODULES not available
-  # Best guess is that samplerate only needs to link against itself
+# Step 3: Even if pkg-config says its not installed, user may have
+# manually installed libraries with no pkg-config support
+if test "$have_samplerate" = "no"
+then
+  # Some packages distribute a <package>-config which we could check
+  # for but libsamplerate doesn't have that.  We could use AC_PATH_PROG() 
+  # similar to above for finding pkg-config.
+
+  # As a last resort, just hope that header and library can
+  # be found in default paths and that it doesn't need
+  # to link against any other libraries. 
   SAMPLERATE_LIBS="-lsamplerate"
-  ])
+  have_samplerate="maybe"
+fi
 
-# Now try actually using libsamplerate
+# Even if pkg-config or similar told us how to find the library,
+# do a safety check.
 if test "$have_samplerate" != "no"
 then
   ac_save_CFLAGS="$CFLAGS"
   ac_save_LIBS="$LIBS"
   CFLAGS="$CFLAGS $SAMPLERATE_CFLAGS"
   LIBS="$LIBS $SAMPLERATE_LIBS"
-  dnl Must hardcode samplerate library if we can not get it from pkg-config
   AC_CHECK_HEADER([samplerate.h], [
     AC_DEFINE([HAVE_SAMPLERATE_H], 1, [Define if you have <samplerate.h>])
     AC_CHECK_FUNC([src_new], [
