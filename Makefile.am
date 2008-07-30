@@ -10,7 +10,8 @@ RM = rm -f
 # man pages are not considered to be sources, so need to add "dist_"
 # prefix to ensure they are added to the distribution.
 dist_man_MANS = sox.1 soxi.1 soxeffect.7 soxformat.7 libsox.3
-EXTRA_DIST = sox.txt soxi.txt soxeffect.txt soxformat.txt libsox.txt CMakeLists.txt sox.pc.in
+EXTRA_DIST = sox.txt soxi.txt soxeffect.txt soxformat.txt libsox.txt \
+	     CMakeLists.txt sox.pc.in LICENSE.GPL LICENSE.LGPL
 
 if HAVE_PKGCONFIG
 pkgconfigdir = @PKGCONFIGDIR@
