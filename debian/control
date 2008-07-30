@@ -47,6 +47,7 @@ Package: libsox-fmt-base
 Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}
+Replaces: libsox-fmt-flac, libsox-fmt-gsm, libsox-fmt-libsndfile, libsox-fmt-ogg
 Homepage: http://sox.sourceforge.net
 Replaces: libsox-fmt-gsm, libsox-fmt-sndfile
 Description: Minimal set of SoX format libraries
