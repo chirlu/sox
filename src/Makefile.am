@@ -32,8 +32,6 @@ sox_sample_test_SOURCES = sox_sample_test.c sox_sample_test.h
 #############################################
 
 if HAVE_LIBLTDL
-AM_CFLAGS += $(LTDLINCL)
-AM_LDFLAGS = $(LIBLTDL)
 
 # Format modules; listed first so optional ones can be added later
 pkglib_LTLIBRARIES = libsox_fmt_raw.la libsox_fmt_s1.la \
