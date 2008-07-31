@@ -243,6 +243,7 @@ endif
 
 libsfx_la_CFLAGS = @SAMPLERATE_CFLAGS@
 libsfx_la_LIBADD = @PNG_LIBS@ @SAMPLERATE_LIBS@ libsox.la
+libsfx_la_LDFLAGS = -version-info @SHLIB_VERSION@
 
 ############################################
 # libsox - file format and utility library #
@@ -254,8 +255,13 @@ libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
 	  xmalloc.c xmalloc.h getopt.c getopt1.c getopt.h \
 	  soxconfig.h util.c util.h libsox.c libsox_i.c
 libsox_la_CFLAGS = 
+libsox_la_LDFLAGS = -version-info @SHLIB_VERSION@
 
 if HAVE_LIBLTDL
+  libsox_la_CFLAGS += $(LTDLINCL) 
+  libsfx_la_CFLAGS += $(LTDLINCL) 
+  libsox_la_LDFLAGS += $(LIBLTDL) 
+  libsfx_la_LDFLAGS += $(LIBLTDL) 
 else
   libsox_la_SOURCES += raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
     s4-fmt.c u1-fmt.c u2-fmt.c u3-fmt.c u4-fmt.c al-fmt.c la-fmt.c ul-fmt.c \
