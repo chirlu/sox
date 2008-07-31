@@ -1,6 +1,14 @@
-sox (14.0.1+cvs-1) UNRELEASED; urgency=low
+sox (14.1.0+cvs-1) UNRELEASED; urgency=low
 
   * CVS version.
+  * [debian/control]:
+    - libsox1 replaces libsox0a.
+
+ -- Pascal Giard <evilynux@gmail.com>  Thu, 31 Jul 2008 11:21:00 -0400
+
+sox (14.1.0-1) unstable; urgency=medium
+
+  * New upstream release:
     - Adds support for for the 2, 2.6 and 4-bit ADPCM .voc (closes: #103479).
     - Adds pkgconfig support (closes: #462704).
     - Fixes issue with ALSA playback (closes: #474961).
@@ -28,19 +36,19 @@ sox (14.0.1+cvs-1) UNRELEASED; urgency=low
     - Disabled patch system, no more patches.
     - Added -I/usr/include/ffmpeg to CPPFLAGS, required by ffmpeg >= 20080225.
   * [debian/control]:
-    - Added Build-Dep on libavutil-dev and libwavpack-dev.
+    - Added Build-Dep on libavutil-dev, libwavpack-dev and libpng12-dev.
     - Fixed lintian warning, "meta package" changed to "metapackage".
     - Bumped Standards-Version to 3.8.0, needed changes were already made.
     - Removed libsox-fmt-gsm and libsox-fmt-sndfile, merged in libsox-fmt-base.
     - Added merged packages to Replaces field of libsox-fmt-base.
-    - Bumped libsox0 to libsox1, new version is binary incompatible.
+    - Bumped libsox0 to libsox0a, new version is binary incompatible.
   * [debian/libsox-fmt-gsm.install, debian/libsox-fmt-gsm.dirs,
      debian/libsox-fmt-libsndfile.install, debian/libsox-fmt-libsndfile.dirs,
      debian/libsox-fmt-flac.install, debian/libsox-fmt-flac.dirs,
      debian/libsox-fmt-ogg.install, debian/libsox-fmt-ogg.dirs]:
     - Removed, merged gsm, libsndfile, flac and ogg in libsox-fmt-base.
   
- -- Pascal Giard <evilynux@gmail.com>  Mon, 28 Jul 2008 09:53:17 -0400
+ -- Pascal Giard <pascal@debian.org>  Thu, 31 Jul 2008 08:12:08 -0400
 
 sox (14.0.1-2) unstable; urgency=low
 

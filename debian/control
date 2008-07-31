@@ -3,7 +3,7 @@ Section: sound
 Priority: optional
 Maintainer: Pascal Giard <pascal@debian.org>
 Uploaders: Guenter Geiger (Debian/GNU) <geiger@debian.org>
-Build-Depends: debhelper (>= 1.2.64), cdbs, libltdl3-dev, libvorbis-dev, libmad0-dev, libgsm1-dev, libsndfile1-dev (>= 1.0.12), libsamplerate0-dev, libavcodec-dev (>= 0.cvs20070301), libavformat-dev, libavutil-dev, libwavpack-dev, libao-dev, libid3tag0-dev, ladspa-sdk, libasound2-dev [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386]
+Build-Depends: debhelper (>= 1.2.64), cdbs, libltdl3-dev, libvorbis-dev, libmad0-dev, libgsm1-dev, libsndfile1-dev (>= 1.0.12), libsamplerate0-dev, libavcodec-dev (>= 0.cvs20070301), libavformat-dev, libavutil-dev, libwavpack-dev, libao-dev, libid3tag0-dev, ladspa-sdk, libpng12-dev, libasound2-dev [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386]
 Standards-Version: 3.8.0
 
 Package: sox
@@ -32,7 +32,7 @@ Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}
 Recommends: libsox-fmt-base, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss
-Conflicts: libsox0
+Conflicts: libsox0, libsox0a
 Suggests: libsox-fmt-all
 Homepage: http://sox.sourceforge.net
 Description: SoX library
@@ -49,7 +49,6 @@ Section: sound
 Depends: ${shlibs:Depends}
 Replaces: libsox-fmt-flac, libsox-fmt-gsm, libsox-fmt-libsndfile, libsox-fmt-ogg
 Homepage: http://sox.sourceforge.net
-Replaces: libsox-fmt-gsm, libsox-fmt-sndfile
 Description: Minimal set of SoX format libraries
  SoX is the swiss army knife of sound processing.
  .
