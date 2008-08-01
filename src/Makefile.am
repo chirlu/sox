@@ -251,7 +251,7 @@ libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
 	  g711.c g711.h g721.c g723_24.c g723_40.c g72x.c g72x.h vox.c vox.h \
 	  raw.c raw.h formats.c formats.h formats_i.c sox_i.h skelform.c \
 	  xmalloc.c xmalloc.h getopt.c getopt1.c getopt.h \
-	  soxconfig.h util.c util.h libsox.c libsox_i.c
+	  util.c util.h libsox.c libsox_i.c
 libsox_la_CFLAGS = 
 libsox_la_LDFLAGS = -version-info @SHLIB_VERSION@
 
