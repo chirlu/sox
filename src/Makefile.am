@@ -5,6 +5,14 @@ RM = rm -f
 AM_CPPFLAGS = -DLADSPA_PATH="\"@LADSPA_PATH@\"" -DPKGLIBDIR="\"$(pkglibdir)\""
 AM_CFLAGS = -Wconversion #-Werror
 
+# This is being used as a short cut to turn off versioning of ALL dynamic
+# fmt libraries.  If any fmt ever needs to add a specific LDFLAGS
+# then it will need to also add -avoid-version because AM_LDFLAGS
+# is ignored when you specify a more specific one.
+# We want to version libsfx and libsox and we are OK because they
+# have a more specific LDFLAGS that includes -version-info.
+AM_LDFLAGS = -avoid-version
+
 # Pass flags from --enable-silent-libtool
 LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
 
