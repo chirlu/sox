@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Thanks to Reynir H. Stefánsson for the original version of this script.
+
 # In marine radio, a Mayday emergency call is transmitted preceded by a
 # 30-second alert sound.  The alert sound comprises two audio tones at
 # 1300Hz and 2100Hz alternating at a rate of 4Hz.  This script shows how SoX
@@ -41,6 +43,6 @@ while [ $iterations -ge 1 ]; do
 done
 
 $SOX -c 1 -r 8000 alert.ul alert.au    # Add a file header
-rm 2tones.ul alert.ul                 # Tidy up intermediate files
+rm 2tones.ul alert.ul                  # Tidy up intermediate files
 
 $PLAY alert.au
