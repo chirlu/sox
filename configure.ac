@@ -91,7 +91,22 @@ fi
 
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = yes; then
+
+    dnl Detect gcc version.  Convert GCC version number to 
+    dnl something easier to compare.
+    AC_MSG_CHECKING([gcc version])
+    gccver=`$CC -dumpversion`
+    gccnum1=`echo $gccver | cut -d . -f1`
+    gccnum2=`echo $gccver | cut -d . -f2`
+    gccver=`(expr $gccnum1 "*" 100 + $gccnum2) 2>/dev/null`
+    AC_MSG_RESULT($gccver)
+
     CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2 -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic"
+    if test "$gccver" -lt 403; then
+        CFLAGS="$CFLAGS -Wconversion"
+    else
+        CFLAGS="$CFLAGS -Wtraditional-conversion"
+    fi
     dnl Define stricter policy on GNU/Linux, all symbols must be resolved
     case $target in
       *linux*)
