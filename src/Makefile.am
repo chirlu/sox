@@ -3,7 +3,7 @@
 RM = rm -f 
 
 AM_CPPFLAGS = -DLADSPA_PATH="\"@LADSPA_PATH@\""
-AM_CFLAGS = -Wconversion #-Werror
+AM_CFLAGS = #-Werror
 
 if HAVE_LIBLTDL
 # This is being used as a short cut to turn off versioning of ALL dynamic
