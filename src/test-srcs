@@ -11,9 +11,10 @@ SSRC_PATH=/usr/local/bin         # Path to the two ssrc executables
 RANGE=180
 
 # Temporary files
-IN=/tmp/$0-in-$$.wav
-OUT=/tmp/$0-out-$$.wav
-TIME=/tmp/$0-time-$$.wav
+BASE=`basename $0`
+IN=/tmp/$BASE-in-$$.wav
+OUT=/tmp/$BASE-out-$$.wav
+TIME=/tmp/$BASE-time-$$.wav
 
 test_converters () {
   # Create input file
