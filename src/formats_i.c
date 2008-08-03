@@ -219,7 +219,7 @@ int lsx_offset_seek(sox_format_t * ft, off_t byte_offset, sox_size_t to_sample)
   double wide_sample = to_sample - (to_sample % ft->signal.channels);
   double to_d = wide_sample * ft->encoding.bits_per_sample / 8;
   off_t to = to_d;
-  return (to != to_d)? SOX_EOF : lsx_seeki(ft, byte_offset + to, SEEK_SET);
+  return (to != to_d)? SOX_EOF : lsx_seeki(ft, (sox_ssize_t)(byte_offset + to), SEEK_SET);
 }
 
 /* Read and write known datatypes in "machine format".  Swap if indicated.

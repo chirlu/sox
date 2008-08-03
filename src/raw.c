@@ -17,7 +17,7 @@
 
 int lsx_rawseek(sox_format_t * ft, sox_size_t offset)
 {
-  return lsx_offset_seek(ft, ft->data_start, offset);
+  return lsx_offset_seek(ft, (off_t)ft->data_start, offset);
 }
 
 /* Works nicely for starting read and write; lsx_rawstart{read,write}
