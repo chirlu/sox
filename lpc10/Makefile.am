@@ -6,4 +6,7 @@ liblpc10_la_SOURCES = analys.c bsynz.c chanwr.c dcbias.c \
   lpfilt.c median.c mload.c onset.c pitsyn.c placea.c placev.c preemp.c \
   prepro.c random.c rcchk.c synths.c tbdm.c voicin.c vparms.c
 AM_CPPFLAGS=-I../src
+if HAVE_LIBLTDL
+AM_LDFLAGS=-avoid-version -module
+endif
 EXTRA_DIST = CMakeLists.txt
