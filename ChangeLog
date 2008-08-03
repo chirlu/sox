@@ -412,7 +412,7 @@ sox-12.18.2	2006-09-03
     samples to be written out instead of an approximate amount.
   o Fix hangup when attempting to write stereo MP3 files.
     (1512218) Kendrick Shaw
-  o Deemp effect would lose stereo separation. (1479249)
+  o Fix deemph effect would lose stereo separation. (1479249)  robs
   o Adding cross-platform support for getopt_long
   o Make help screens print much more information and add
     new --help-effect option.  (Originally from Dirk).
