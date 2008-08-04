@@ -3,7 +3,7 @@
 RM = rm -f 
 
 AM_CPPFLAGS = -DLADSPA_PATH="\"@LADSPA_PATH@\""
-AM_CFLAGS = #-Werror
+AM_CFLAGS = @WARN_CFLAGS@ #-Werror
 
 if HAVE_LIBLTDL
 # This is being used as a short cut to turn off versioning of ALL dynamic
@@ -158,34 +158,34 @@ pkglib_LTLIBRARIES += libsox_fmt_ffmpeg.la
 endif
 if HAVE_SNDFILE
 libsox_fmt_sndfile_la_SOURCES = sndfile.c
-libsox_fmt_sndfile_la_CFLAGS = @SNDFILE_CFLAGS@
+libsox_fmt_sndfile_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
 libsox_fmt_sndfile_la_LIBADD = libsox.la @SNDFILE_LIBS@
 libsox_fmt_caf_la_SOURCES = caf.c sndfile.c
-libsox_fmt_caf_la_CFLAGS = @SNDFILE_CFLAGS@
+libsox_fmt_caf_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
 libsox_fmt_caf_la_LIBADD = libsox.la @SNDFILE_LIBS@
 libsox_fmt_mat4_la_SOURCES = mat4.c sndfile.c
-libsox_fmt_mat4_la_CFLAGS = @SNDFILE_CFLAGS@
+libsox_fmt_mat4_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
 libsox_fmt_mat4_la_LIBADD = libsox.la @SNDFILE_LIBS@
 libsox_fmt_mat5_la_SOURCES = mat5.c sndfile.c
-libsox_fmt_mat5_la_CFLAGS = @SNDFILE_CFLAGS@
+libsox_fmt_mat5_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
 libsox_fmt_mat5_la_LIBADD = libsox.la @SNDFILE_LIBS@
 libsox_fmt_paf_la_SOURCES = paf.c sndfile.c
-libsox_fmt_paf_la_CFLAGS = @SNDFILE_CFLAGS@
+libsox_fmt_paf_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
 libsox_fmt_paf_la_LIBADD = libsox.la  @SNDFILE_LIBS@
 libsox_fmt_fap_la_SOURCES = fap.c sndfile.c
-libsox_fmt_fap_la_CFLAGS = @SNDFILE_CFLAGS@
+libsox_fmt_fap_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
 libsox_fmt_fap_la_LIBADD = libsox.la @SNDFILE_LIBS@
 libsox_fmt_w64_la_SOURCES = w64.c sndfile.c
-libsox_fmt_w64_la_CFLAGS = @SNDFILE_CFLAGS@
+libsox_fmt_w64_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
 libsox_fmt_w64_la_LIBADD = libsox.la @SNDFILE_LIBS@
 libsox_fmt_xi_la_SOURCES = xi.c sndfile.c
-libsox_fmt_wi_la_CFLAGS = @SNDFILE_CFLAGS@
+libsox_fmt_wi_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
 libsox_fmt_xi_la_LIBADD = libsox.la @SNDFILE_LIBS@
 libsox_fmt_pvf_la_SOURCES = pvf.c sndfile.c
-libsox_fmt_pvf_CFLAGS = @SNDFILE_CFLAGS@
+libsox_fmt_pvf_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
 libsox_fmt_pvf_la_LIBADD = libsox.la @SNDFILE_LIBS@
 libsox_fmt_sd2_la_SOURCES = sd2.c sndfile.c
-libsox_fmt_sd2_CFLAGS = @SNDFILE_CFLAGS@
+libsox_fmt_sd2_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
 libsox_fmt_sd2_la_LIBADD = libsox.la @SNDFILE_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_sndfile.la libsox_fmt_caf.la libsox_fmt_mat4.la libsox_fmt_mat5.la libsox_fmt_paf.la libsox_fmt_fap.la libsox_fmt_w64.la libsox_fmt_xi.la libsox_fmt_pvf.la libsox_fmt_sd2.la
 endif
@@ -259,7 +259,7 @@ if HAVE_PNG
     libsfx_la_SOURCES += spectrogram.c
 endif
 
-libsfx_la_CFLAGS = @SAMPLERATE_CFLAGS@
+libsfx_la_CFLAGS = @WARN_CFLAGS@ @SAMPLERATE_CFLAGS@
 libsfx_la_LIBADD = @PNG_LIBS@ @SAMPLERATE_LIBS@ libsox.la
 libsfx_la_LDFLAGS = -version-info @SHLIB_VERSION@
 
@@ -272,7 +272,7 @@ libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
 	  raw.c raw.h formats.c formats.h formats_i.c sox_i.h skelform.c \
 	  xmalloc.c xmalloc.h getopt.c getopt1.c getopt.h \
 	  util.c util.h libsox.c libsox_i.c
-libsox_la_CFLAGS = 
+libsox_la_CFLAGS = @WARN_CFLAGS@ 
 libsox_la_LDFLAGS = -version-info @SHLIB_VERSION@
 
 if HAVE_LIBLTDL

@@ -103,9 +103,9 @@ if test "$GCC" = yes; then
 
     CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2 -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic"
     if test "$gccver" -lt 403; then
-        CFLAGS="$CFLAGS -Wconversion"
+        WARN_CFLAGS="-Wconversion"
     else
-        CFLAGS="$CFLAGS -Wtraditional-conversion"
+        WARN_CFLAGS="-Wtraditional-conversion"
     fi
     dnl Define stricter policy on GNU/Linux, all symbols must be resolved
     case $target in
@@ -114,6 +114,7 @@ if test "$GCC" = yes; then
         ;;
     esac
 fi
+AC_SUBST(WARN_CFLAGS)
 
 dnl Check for system dependent features.
 AC_C_BIGENDIAN
