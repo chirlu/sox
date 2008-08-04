@@ -367,10 +367,38 @@ filter effect at a frequency of say 10Hz; i.e.
 .EE
 .TP
 \fBdeemph\fR
-Apply a treble attenuation shelving filter to audio in
-audio-CD format.  The frequency response of pre-emphasized
-recordings is rectified.  The filter is defined in the
-standard document ISO 908.
+Apply ISO 908 de-emphasis (a treble attenuation shelving filter) to
+44\*d1kHz (Compact Disc) audio.
+.SP
+Pre-emphasis was applied in the mastering of some CDs issued in the early
+1980s.  These included many classical music albums, as well as now
+sought-after issues of albums by The Beatles, Pink Floyd and others.
+Pre-emphasis should be removed at playback time by a de-emphasis
+filter in the playback device.  However, not all modern CD players have
+this filter, and very few PC CD drives have it; playing pre-emhasised
+audio without the correct de-emphasis filter results in audio that sounds harsh
+and is far from what its creators intended.
+.SP
+With the
+.B deemph
+effect, it is possible to apply the necessary de-emphasis to audio that
+has been extracted from a pre-emphasised CD, and then either burn the
+de-emphasised audio to a new CD (which will then play correctly on any
+CD player), or simply play the correctly de-emphasised audio files on the
+PC.  For example:
+.EX
+	sox track1.wav track1-deemph.wav deemph
+.EE
+and then burn track1-deemph.wav to CD, or
+.EX
+	play track1-deemph.wav
+.EE
+or simply
+.EX
+	play track1.wav deemph
+.EE
+The de-empasis filter is implemented as a biquad; its maximum deviation
+from the ideal response is only 0\*d06dB (up to 20kHz).
 .SP
 This effect supports the \fB\-\-plot\fR global option.
 .SP
