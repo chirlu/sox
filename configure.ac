@@ -221,10 +221,11 @@ fi
 AM_CONDITIONAL(HAVE_SUN_AUDIO, test x$enable_sun_audio = xyes)
 
 dnl Check for libgsm
-AC_CHECK_HEADERS(gsm/gsm.h, found_libgsm=yes,
-    [AC_CHECK_HEADERS(gsm.h, found_libgsm=yes)])
+found_libgsm=yes
+AC_CHECK_HEADERS(gsm/gsm.h, ,
+    [AC_CHECK_HEADERS(gsm.h, ,found_libgsm=no)])
+    AC_CHECK_LIB(gsm, gsm_create, GSM_LIBS="$GSM_LIBS -lgsm", found_libgsm=no)
 if test "$found_libgsm" = yes; then
-    AC_CHECK_LIB(gsm, gsm_create, GSM_LIBS="$GSM_LIBS -lgsm")
     AC_DEFINE(EXTERNAL_GSM, 1, [Define if you are using an external GSM library])
 else
     LIBGSM_LIBADD=../libgsm/libgsm.la
@@ -244,6 +245,9 @@ if test "$with_sndfile" != "no"; then
     if test "$with_sndfile" = "yes" -a "$using_sndfile" = "no"; then
         AC_MSG_FAILURE([cannot find libsndfile])
     fi
+fi
+if test "$using_sndfile" = yes; then
+   AC_DEFINE(HAVE_SNDFILE, 1, [Define to 1 if you have libsndfile.])
 fi
 AM_CONDITIONAL(HAVE_SNDFILE, test x$using_sndfile = xyes)
 AC_SUBST(SNDFILE_CFLAGS)
@@ -370,6 +374,9 @@ if test "$with_lame" != "no"; then
 fi
 
 dnl MP3 library depends on libmad || LAME
+if test "$using_mad" = yes -o "$using_lame" = yes; then
+   AC_DEFINE(HAVE_MP3, 1, [Define to 1 if you have lame or mad support.])
+fi
 AM_CONDITIONAL(HAVE_MP3, test "x$using_mad" = "xyes" -o "x$using_lame" = "xyes")
 AC_SUBST(MP3_LIBS)
 

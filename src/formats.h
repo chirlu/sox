@@ -79,13 +79,13 @@
 #if defined HAVE_FLAC
   FORMAT(flac)
 #endif
-#if defined(HAVE_MAD_H) || defined(HAVE_LAME_LAME_H)
+#if defined(HAVE_MP3)
   FORMAT(mp3)
 #endif
 #if defined(HAVE_SYS_SOUNDCARD_H) || defined(HAVE_MACHINE_SOUNDCARD_H)
   FORMAT(oss)
 #endif
-#if defined HAVE_SNDFILE_H
+#if defined HAVE_SNDFILE
   FORMAT(sndfile)
   #if defined HAVE_SNDFILE_1_0_12
   FORMAT(caf)
