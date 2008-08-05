@@ -55,7 +55,7 @@ Description: Minimal set of SoX format libraries
  This package contains most audio formats libraries supported by SoX.
 
 Package: libsox-fmt-alsa
-Architecture: any
+Architecture: alpha amd64 arm armel hppa i386 ia64 m68k mips mipsel powerpc s390 sparc armeb lpia m32r ppc64 s390x sh3 sh3eb sh4 sh4eb
 Section: sound
 Depends: ${shlibs:Depends}
 Description: SoX alsa format I/O library
