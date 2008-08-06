@@ -117,7 +117,7 @@ libsox_fmt_hcom_la_LIBADD = libsox.la
 libsox_fmt_htk_la_SOURCES = htk.c
 libsox_fmt_htk_la_LIBADD = libsox.la
 libsox_fmt_lpc10_la_SOURCES = lpc10.c
-libsox_fmt_lpc10_la_LIBADD = ../lpc10/liblpc10.la libsox.la
+libsox_fmt_lpc10_la_LIBADD = libsox.la @LPC10_LIBS@ @LIBLPC10_LIBADD@
 libsox_fmt_maud_la_SOURCES = maud.c
 libsox_fmt_maud_la_LIBADD = libsox.la
 libsox_fmt_prc_la_SOURCES = prc.c
@@ -288,10 +288,10 @@ else
     sounder.c soundtool.c sphere.c tx16w.c voc.c vox-fmt.c ima-fmt.c adpcm.c adpcm.h \
     ima_rw.c ima_rw.h wav.c wve.c xa.c nulfile.c f4-fmt.c f8-fmt.c
 libsox_la_LIBADD = @GSM_LIBS@ @LIBGSM_LIBADD@
-libsox_la_LIBADD += ../lpc10/liblpc10.la
+libsox_la_LIBADD += @LPC10_LIBS@ @LIBLPC10_LIBADD@
 
 sox_LDADD += @GSM_LIBS@ @LIBGSM_LIBADD@
-sox_LDADD += ../lpc10/liblpc10.la
+sox_LDADD += @LPC10_LIBS@ @LIBLPC10_LIBADD@
 
 if HAVE_FLAC
     libsox_la_SOURCES += flac.c

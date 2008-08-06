@@ -234,6 +234,19 @@ AC_SUBST(LIBGSM_LIBADD)
 AC_SUBST(GSM_LIBS)
 AM_CONDITIONAL(EXTERNAL_GSM, test x$found_libgsm = xyes)
 
+dnl Check for liblpc10
+AC_CHECK_HEADERS(lpc10.h, found_liblpc10=yes,
+    [AC_CHECK_HEADERS(lpc10.h, found_liblpc10=yes)])
+if test "$found_liblpc10" = yes; then
+    AC_CHECK_LIB(lpc10, create_lpc10_encoder_state, LPC10_LIBS="$LPC10_LIBS -llpc10")
+    AC_DEFINE(EXTERNAL_LPC10, 1, [Define if you are using an external LPC10 library])
+else
+    LIBLPC10_LIBADD=../lpc10/liblpc10.la
+fi
+AC_SUBST(LIBLPC10_LIBADD)
+AC_SUBST(LPC10_LIBS)
+AM_CONDITIONAL(EXTERNAL_LPC10, test x$found_liblpc10 = xyes)
+
 dnl Check for libsndfile
 AC_ARG_WITH(sndfile,
     AC_HELP_STRING([--without-sndfile],
@@ -502,6 +515,12 @@ else
    gsm_option="in-tree"
 fi
 
+if test "$found_liblpc10" = "yes"; then
+   lpc10_option="external"
+else
+   lpc10_option="in-tree"
+fi
+
 if test "$using_pkgconfig" = "no"; then
     pkgconfig_option="disabled"
 else
@@ -518,6 +537,7 @@ echo "OSS driver........................ $enable_oss"
 echo "SUN audio driver.................. $enable_sun_audio"
 echo "play and rec symlinks............. $enable_playrec_symlinks"
 echo "libgsm............................ $gsm_option"
+echo "liblpc10.......................... $lpc10_option"
 echo "libsndfile formats................ $using_sndfile"
 echo "Ogg Vorbis format................. $using_ogg"
 echo "FLAC format....................... $using_flac"

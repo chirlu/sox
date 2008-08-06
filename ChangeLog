@@ -7,16 +7,34 @@ sox-11gamma.
 sox-14.1.1	2008-TBD
 ----------
 
+Previously deprecated features (to be removed in future):
+
+  Deprec-  Feature    [O(ption)]                           Removal
+  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
+  -------  ----------------------  ----------------------  -------
+  14.0.0   E stretch               ~= tempo                2008-09-11
+  14.0.0   E pitch                 ~= key                  2008-09-11
+  14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1         2009-01-29
+  14.1.0   F wve (native)          wve (libsndfile)        2009-07-29
+  14.1.0   E resample              ~= rate                 2009-07-29
+  14.1.0   E polyphase             ~= rate                 2009-07-29
+  14.1.0   E rabbit                ~= rate                 2009-07-29
+  14.1.0   Behaviour whereby       soxi                    2009-07-29
+           sox -V file(s) -n
+           doesn't read to EOF.
+
 Other bug fixes:
 
   o Bump library version because it was not binary compatible with
     SoX 14.0.1 (Pascal Giard)
   o Turn off versioning of special libsox_fmt* libraries since thats
     not really needed.  (kwizart)
-  o Fixed crash when running play with no arguements. (Dan Nelson)
+  o Fixed crash when running play with no arguments. (Dan Nelson)
   o Allow libpng to be found with -static option. (cbagwell)
   o Allow libsamplerate to be found if pkg-config is installed but
     no samplerate.pc exists. (cbagwell)
+  o [2038855] external lpc10 lib patch.  (Oden Eriksson, Mandriva)
+
 
 sox-14.1.0	2008-7-29
 ----------
