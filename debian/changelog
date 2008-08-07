@@ -6,8 +6,9 @@ sox (14.1.0+cvs-1) UNRELEASED; urgency=low
     - Improved libsox1 short and long descriptions (closes: #493483).
     - Moved Homepage field to source.
     - Prevented libsox-fmt-alsa from being packaged where alsa doesn't exist.
+    - Improved libsox-fmt-base description by giving format examples.
 
- -- Pascal Giard <evilynux@gmail.com>  Tue, 05 Aug 2008 09:16:40 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Thu, 07 Aug 2008 09:56:19 -0400
 
 sox (14.1.0-1) unstable; urgency=medium
 

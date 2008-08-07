@@ -53,6 +53,8 @@ Description: Minimal set of SoX format libraries
  SoX is the swiss army knife of sound processing.
  .
  This package contains most audio formats libraries supported by SoX.
+ Among them: Ogg Vorbis, WAV, AIFF, VOC, SND, AU, GSM, WavPack, LPC10, FLAC,
+ MATLAB/GNU Octave, Portable Voice Format and Sound Forge Audio Format.
 
 Package: libsox-fmt-alsa
 Architecture: alpha amd64 arm armel hppa i386 ia64 m68k mips mipsel powerpc s390 sparc armeb lpia m32r ppc64 s390x sh3 sh3eb sh4 sh4eb
