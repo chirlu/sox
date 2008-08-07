@@ -3,7 +3,7 @@ sox (14.1.0+cvs-1) UNRELEASED; urgency=low
   * CVS version.
   * [debian/control]:
     - libsox1 replaces libsox0a.
-    - Improved libsox1 short and long descriptions.
+    - Improved libsox1 short and long descriptions (closes: #493483).
     - Moved Homepage field to source.
     - Prevented libsox-fmt-alsa from being packaged where alsa doesn't exist.
 
