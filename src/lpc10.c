@@ -20,11 +20,7 @@
 #include "sox_i.h"
 
 #ifdef EXTERNAL_LPC10
-
-#ifdef HAVE_LPC10_H
 #include <lpc10.h>
-#endif
-
 #else
 #include "../lpc10/lpc10.h"
 #endif
@@ -52,9 +48,9 @@ typedef struct {
 static void write_bits(sox_format_t * ft, INT32 *bits, int len)
 {
   int i;
-  uint8_t mask;	/* The next bit position within the variable "data" to
+  uint8_t mask; /* The next bit position within the variable "data" to
                    place the next bit. */
-  uint8_t data;	/* The contents of the next byte to place in the
+  uint8_t data; /* The contents of the next byte to place in the
                    output. */
 
   /* Fill in the array bits.

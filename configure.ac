@@ -235,10 +235,11 @@ AC_SUBST(GSM_LIBS)
 AM_CONDITIONAL(EXTERNAL_GSM, test x$found_libgsm = xyes)
 
 dnl Check for liblpc10
-AC_CHECK_HEADERS(lpc10.h, found_liblpc10=yes,
-    [AC_CHECK_HEADERS(lpc10.h, found_liblpc10=yes)])
+found_liblpc10=yes
+AC_CHECK_HEADERS(lpc10.h, ,
+    [AC_CHECK_HEADERS(lpc10.h, ,found_liblpc10=no)])
+    AC_CHECK_LIB(lpc10, create_lpc10_encoder_state, LPC10_LIBS="$LPC10_LIBS -llpc10", found_liblpc10=no)
 if test "$found_liblpc10" = yes; then
-    AC_CHECK_LIB(lpc10, create_lpc10_encoder_state, LPC10_LIBS="$LPC10_LIBS -llpc10")
     AC_DEFINE(EXTERNAL_LPC10, 1, [Define if you are using an external LPC10 library])
 else
     LIBLPC10_LIBADD=../lpc10/liblpc10.la
