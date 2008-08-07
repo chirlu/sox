@@ -34,7 +34,7 @@ Depends: ${shlibs:Depends}
 Recommends: libsox-fmt-base, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss
 Conflicts: libsox0, libsox0a
 Suggests: libsox-fmt-all
-Description: SoX library for sound processing
+Description: SoX library of audio effects and processing
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX library which enables to convert various formats
