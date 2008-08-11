@@ -5,5 +5,5 @@ config.guess config.sub depcomp install-sh missing
 aclocal.m4
 libtool
 sox*.tar.gz
-*.txt *.pdf
+*.txt *.pdf *.html
 sox.pc
