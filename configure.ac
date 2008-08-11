@@ -116,13 +116,24 @@ if test "$GCC" = yes; then
 fi
 AC_SUBST(WARN_CFLAGS)
 
+dnl Get distro name from /etc/issue
+if test -r /etc/issue; then
+  AC_MSG_CHECKING([distro name])
+  DISTRO=`sed -e "s/.[0-9][0-9;]*[mJH]//g" < /etc/issue|tr "\n" " " | sed -e "s/(\\\\?\\\\\\\\.*//" -e "s/  */ /g" -e "s/^ //" -e "s/ $//"`
+  AC_MSG_RESULT("$DISTRO")
+  AC_SUBST(DISTRO)
+  AC_DEFINE(HAVE_DISTRO, 1, [1 if DISTRO is defined])
+  have_distro=yes
+fi
+AM_CONDITIONAL(HAVE_DISTRO, test x$have_distro = xyes)
+
 dnl Check for system dependent features.
 AC_C_BIGENDIAN
 AC_C_INLINE
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(fcntl.h unistd.h byteswap.h sys/time.h sys/timeb.h sys/types.h)
+AC_CHECK_HEADERS(fcntl.h unistd.h byteswap.h sys/time.h sys/timeb.h sys/types.h sys/utsname.h)
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS(strcasecmp strdup popen vsnprintf gettimeofday)

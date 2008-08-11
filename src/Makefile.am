@@ -19,6 +19,10 @@ endif
 # Pass flags from --enable-silent-libtool
 LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
 
+if HAVE_DISTRO
+AM_CPPFLAGS += -DDISTRO="\"@DISTRO@\""
+endif
+
 #########################
 # SoX - the application #
 #########################
@@ -363,7 +367,7 @@ EXTRA_DIST = monkey.au monkey.wav \
 all: sox$(EXEEXT) play rec soxi sox_sample_test$(EXEEXT) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT)
 
 play rec soxi: sox$(EXEEXT)
-	./sox --help > /dev/null
+	./sox -V4 --version
 	test -f .libs/lt-sox && ( $(RM) $@ && $(LN_S) .libs/lt-sox $@ ) || $(LN_S) sox$(EXEEXT) $@
 
 install-exec-hook:

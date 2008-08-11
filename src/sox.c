@@ -47,6 +47,10 @@
   #include <sys/timeb.h>
 #endif
 
+#ifdef HAVE_SYS_UTSNAME_H
+  #include <sys/utsname.h>
+#endif
+
 #ifdef HAVE_UNISTD_H
   #include <unistd.h>
 #endif
@@ -934,7 +938,33 @@ static int process(void)
 
 static void display_SoX_version(FILE * file)
 {
+#if HAVE_SYS_UTSNAME_H
+  struct utsname uts;
+#endif
+
   fprintf(file, "%s: SoX v%s\n", myname, PACKAGE_VERSION);
+
+  if (sox_globals.verbosity > 3) {
+    fprintf(file, "time:  %s %s\n", __DATE__, __TIME__);
+#if 1
+    fprintf(file, "issue: %s\n", DISTRO);
+#endif
+#if HAVE_SYS_UTSNAME_H
+    if (!uname(&uts))
+      fprintf(file, "uname: %s %s %s %s %s\n", uts.sysname, uts.nodename,
+          uts.release, uts.version, uts.machine);
+#endif
+#if defined __GNUC__
+    fprintf(file, "gcc:   %s\n", __VERSION__);
+#elif defined _MSC_VER
+    fprintf(file, "msc:   %u\n", _MSC_VER);
+#elif defined __SUNPRO_C
+    fprintf(file, "sun c: %x\n", __SUNPRO_C);
+#endif
+    fprintf(file, "arch:  %u%u%u%u %u%u %u%u %c\n", sizeof(char), sizeof(short),
+        sizeof(long), sizeof(off_t), sizeof(float), sizeof(double),
+        sizeof(int *), sizeof(int (*)(void)), "LB"[MACHINE_IS_BIGENDIAN]);
+  }
 }
 
 static int strcmp_p(const void *p1, const void *p2)
