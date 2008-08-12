@@ -23,6 +23,10 @@ Previously deprecated features (to be removed in future):
            sox -V file(s) -n
            doesn't read to EOF.
 
+Other new features:
+  o New --output option to write to multiple files in one run.
+    Only useful with certain effects like trim and silence. (cbagwell)
+
 Other bug fixes:
 
   o Bump library version because it was not binary compatible with

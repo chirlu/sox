@@ -76,6 +76,7 @@ static enum {sox_sox, sox_play, sox_rec, sox_soxi} sox_mode;
 
 static enum {sox_sequence, sox_concatenate, sox_mix, sox_mix_power, sox_merge, sox_multiply}
     combine_method = sox_concatenate;
+static enum { sox_single, sox_multiple } output_method = sox_single;
 #define is_serial(m) ((m) <= sox_concatenate)
 #define is_parallel(m) (!is_serial(m))
 static sox_bool interactive = sox_false;
@@ -114,7 +115,7 @@ static file_t * files[MAX_FILES]; /* Array tracking input and output files */
 #define ofile files[file_count - 1]
 static size_t file_count = 0;
 static size_t input_count = 0;
-
+static size_t output_count = 0;
 
 /* Effects */
 
@@ -143,6 +144,8 @@ static size_t current_input = 0;
 static unsigned long input_wide_samples = 0;
 static unsigned long read_wide_samples = 0;
 static unsigned long output_samples = 0;
+static sox_bool input_eof = sox_false;
+static sox_bool output_eof = sox_false;
 static sox_bool user_abort = sox_false;
 static sox_bool user_skip = sox_false;
 static int success = 0;
@@ -473,6 +476,9 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, sox_size_t * 
   read_wide_samples += olen;
   olen *= effp->in_signal.channels;
   *osamp = olen;
+
+  input_eof = olen ? sox_false : sox_true;
+
   return olen? SOX_SUCCESS : SOX_EOF;
 }
 
@@ -519,6 +525,7 @@ static int output_flow(sox_effect_t *effp, sox_sample_t const * ibuf,
   *osamp = 0;
   len = *isamp? sox_write(ofile->ft, ibuf, *isamp) : 0;
   output_samples += len / ofile->ft->signal.channels;
+  output_eof = (len != *isamp) ? sox_true: sox_false;
   if (len != *isamp) {
     if (ofile->ft->sox_errno)
       display_error(ofile->ft);
@@ -735,12 +742,60 @@ static sox_bool overwrite_permitted(char const * filename)
   return c == 'y' || c == 'Y';
 }
 
+static char *fndup_with_count(const char *filename, int count)
+{
+    char *expand_fn, *efn;
+    const char *fn, *ext, *end;
+    sox_bool found_marker = sox_false;
+
+    fn = filename;
+
+    efn = expand_fn = malloc(1024);
+
+    /* Find extension in case user didn't specify a substitution
+     * marker.
+     */
+    end = ext = filename + strlen(filename);
+    while (ext > filename && *ext != '.')
+        ext--;
+
+    /* In case extension not found, point back to end of string to do less
+     * copying later.
+     */
+    if (*ext != '.')
+        ext = end;
+
+    while (fn < end)
+    {
+        /* FIXME: Look for %n and if found replacew with a sprintf of count */
+        *efn++ = *fn++;
+    }
+
+    *efn = 0;
+
+    /* If user didn't tell us what to do then default to putting
+     * the count right before file extension.
+     */
+    if (!found_marker)
+    {
+        efn -= strlen (ext);
+
+        sprintf(efn, "%04d", count);
+        efn = efn + 4;
+        strcat(efn, ext);
+    }
+
+    return expand_fn;
+}
+
 static void open_output_file(void)
 {
   double factor;
   int i;
   sox_comments_t p = ofile->oob.comments;
   sox_oob_t oob = files[0]->ft->oob;
+  char *expand_fn;
+
   oob.comments = sox_copy_comments(files[0]->ft->oob.comments);
 
   if (!oob.comments && !p)
@@ -763,9 +818,14 @@ static void open_output_file(void)
     oob.loops[i].length = oob.loops[i].length * factor;
   }
 
-  ofile->ft = sox_open_write(ofile->filename, &ofile->signal, &ofile->encoding,
+  if (output_method == sox_multiple)
+    expand_fn = fndup_with_count(ofile->filename, ++output_count);
+  else
+    expand_fn = strdup(ofile->filename);
+  ofile->ft = sox_open_write(expand_fn, &ofile->signal, &ofile->encoding,
       ofile->filetype, &oob, overwrite_permitted);
   sox_delete_comments(&oob.comments);
+  free(expand_fn);
 
   if (!ofile->ft)
     /* sox_open_write() will call sox_warn for most errors.
@@ -912,6 +972,7 @@ static void set_combiner_and_output_encoding_parameters(void)
 static int process(void)
 {         /* Input(s) -> Balancing -> Combiner -> Effects -> Output */
   unsigned i;
+  int flow_status;
 
   for (i = 0; i < nuser_effects; ++i)
     *user_efftab[i] = efftab_options[i];
@@ -920,8 +981,6 @@ static int process(void)
   set_combiner_and_output_encoding_parameters();
   open_output_file();
 
-  /* FIXME: For sox_sequence, this needs proper cleanup of effects-chain memory
-   * (including `kill' of auto effects) */
   ofile_effects_chain.length = 0;
 
   ofile_effects_chain.global_info = sox_effects_globals;
@@ -933,7 +992,18 @@ static int process(void)
 
   signal(SIGTERM, sigint); /* Stop gracefully, as soon as we possibly can. */
   signal(SIGINT , sigint); /* Either skip current input or behave as SIGTERM. */
-  return sox_flow_effects(&ofile_effects_chain, update_status);
+  flow_status = sox_flow_effects(&ofile_effects_chain, update_status);
+
+  /* When in sox_multiple mode, changing to a new output file is
+   * based on effects return ST_EOF.  In that case, don't return
+   * SOX_EOF.  Treat input EOF or errors writing to output file as
+   * real error case.
+   */
+  if (output_method == sox_multiple && current_input < input_count && 
+      !(input_eof || output_eof))
+    flow_status = SOX_SUCCESS;
+
+  return flow_status;
 }
 
 static void display_SoX_version(FILE * file)
@@ -1046,6 +1116,8 @@ static void usage(char const * message)
 "--interactive   prompt to overwrite output file",
 "-m, --combine mix  mix multiple input files (instead of concatenating)",
 "-M, --combine merge  merge multiple input files (instead of concatenating)",
+"--output single    write to single output file (default)",
+"--output multiple  write to multiple output file",
 "--plot gnuplot|octave  generate script to plot response of filter effect",
 "-q, --no-show-progress  run in quiet mode; opposite of -S",
 "--replay-gain track|album|off  default: off (sox, rec), track (play)",
@@ -1244,6 +1316,7 @@ static struct option long_options[] =
     {"plot"            , required_argument, NULL, 0},
     {"replay-gain"     , required_argument, NULL, 0},
     {"version"         ,       no_argument, NULL, 0},
+    {"output"          , required_argument, NULL, 0},
 
     {"channels"        , required_argument, NULL, 'c'},
     {"compression"     , required_argument, NULL, 'C'},
@@ -1267,6 +1340,12 @@ static enum_item const combine_methods[] = {
   ENUM_ITEM(sox_,merge)
   ENUM_ITEM(sox_,multiply)
   {0, 0}};
+
+static enum_item const output_methods[] = {
+  ENUM_ITEM(sox_,single)
+  ENUM_ITEM(sox_,multiple)
+  {0, 0}};
+
 
 enum {ENDIAN_little, ENDIAN_big, ENDIAN_swap};
 static enum_item const endian_options[] = {
@@ -1383,6 +1462,10 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       case 12:
         display_SoX_version(stdout);
         exit(0);
+        break;
+
+      case 13:
+        output_method = enum_option(option_index, output_methods);
         break;
       }
       break;
@@ -1831,15 +1914,31 @@ int main(int argc, char **argv)
   }
 
   /* Save things that sox_sequence needs to be reinitialised for each segued
-   * block of input files: */
+   * block of input files.  Also used by sox_multiple output mode. */
   ofile_signal_options = ofile->signal;
   ofile_encoding_options = ofile->encoding;
   for (i = 0; i < nuser_effects; ++i)
     efftab_options[i] = *user_efftab[i];
 
-  if (combine_method == sox_sequence) do {
+  if (combine_method == sox_sequence || output_method == sox_multiple) do {
+    /* If ofile->ft is set then we've called this at least once.
+     * Need to do some cleanup before continueing on.
+     */
     if (ofile->ft)
+    {
+      /* If in sox_multiple mode and something besides input/combiner 
+       * effect stopped the writing then only restart those effects
+       * so that no input samples are lost.
+       * If input reached EOF then restart all effects.
+       */
+      if (output_method == sox_multiple && !input_eof)
+          /* FIXME: Make a function that does that */
+          ;
+      else if (output_method == sox_multiple)
+          sox_delete_effects(&ofile_effects_chain);
       sox_close(ofile->ft);
+      ofile->ft = NULL;
+    }
   } while (process() != SOX_EOF && !user_abort && current_input < input_count);
   else process();
   sox_delete_effects(&ofile_effects_chain);

@@ -458,6 +458,27 @@ This is achieved by balancing using a factor of
 Note that this balancing factor does not guarantee that no clipping will occur,
 however, in many cases, the number of clips will be low and the resultant
 distortion imperceptable.
+.SS Output Files
+SoX's default behavior is to take one or more input files and
+write them to a single output file.  In fact, the command line syntax
+only supports specifying a single filename in all cases.
+
+SoX's output routine can be configured to output multiple files in
+certain cases.  If the output method 'multiple' is specified
+then SoX will create a new file each time the specified effects
+terminate the output early.  Each time a new file is created, the effects
+chain is restarted.  In case multiple effects are in the chain, the
+chain is only restart from the effect that terminated so that no
+input samples are lost.
+
+There are only a few effects that can stop processing input early such
+as the trim and silence effects so the application for multiple files
+is very limited.
+
+If the user specifies 'filename.ext' as the output file then SoX will 
+first use a filename of 'filename0001.ext' and will increment the number 
+for each new file.
+
 .SS Stopping SoX
 Usually SoX will complete its processing and exit automatically, however
 if desired, it can be terminated by pressing the
