@@ -946,7 +946,7 @@ static void display_SoX_version(FILE * file)
 
   if (sox_globals.verbosity > 3) {
     fprintf(file, "time:  %s %s\n", __DATE__, __TIME__);
-#if 1
+#if HAVE_DISTRO
     fprintf(file, "issue: %s\n", DISTRO);
 #endif
 #if HAVE_SYS_UTSNAME_H
