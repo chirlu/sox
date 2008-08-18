@@ -47,6 +47,7 @@ check_include_files("strings.h"          HAVE_STRINGS_H)
 check_include_files("sys/time.h"         HAVE_SYS_TIME_H)
 check_include_files("sys/timeb.h"        HAVE_SYS_TIMEB_H)
 check_include_files("sys/types.h"        HAVE_SYS_TYPES_H)
+check_include_files("sys/utsname.h"      HAVE_SYS_UTSNAME_H)
 check_include_files("unistd.h"           HAVE_UNISTD_H)
 
 check_function_exists("fseeko"           HAVE_FSEEKO)
