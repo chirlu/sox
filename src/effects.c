@@ -384,8 +384,8 @@ static void sox_delete_effect(sox_effect_t *effp)
     unsigned f;
 
     if ((clips = sox_stop_effect(effp)) != 0)
-        sox_warn("%s clipped %u samples; decrease volume?",
-                 effp->handler.name, clips);
+        sox_warn("%s clipped %lu samples; decrease volume?",
+                 effp->handler.name, (unsigned long)clips);
     for (f = 0; f < effp->flows; ++f)
     {
         effp[f].handler.kill(&effp[f]);

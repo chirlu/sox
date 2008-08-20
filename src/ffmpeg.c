@@ -458,7 +458,11 @@ static int stopwrite(sox_format_t * ft)
 
   if (!(ffmpeg->fmt->flags & AVFMT_NOFILE)) {
     /* close the output file */
+#if (LIBAVFORMAT_VERSION_INT < 0x340000)
     url_fclose(&ffmpeg->ctxt->pb);
+#else
+    url_fclose(ffmpeg->ctxt->pb);
+#endif
   }
 
   /* Free the output context */
