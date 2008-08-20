@@ -24,6 +24,7 @@ Previously deprecated features (to be removed in future):
            doesn't read to EOF.
 
 Other new features:
+
   o New --output option to write to multiple files in one run.
     Only useful with certain effects like trim and silence. (cbagwell)
   o Display SoX build environment information with -V -V.  (robs)
@@ -40,6 +41,12 @@ Other bug fixes:
     no samplerate.pc exists. (cbagwell)
   o [2038855] external lpc10 lib patch.  (Oden Eriksson, Mandriva)
   o Fix memory leaks in effects chain when restarting effects.
+  o Fix WAV write on 64-bit arch.  (robs)
+
+Internal improvements:
+
+  o Fixed all compiler warnings (with gcc 4.3.1, 64-bit arch.).  (robs)
+
 
 sox-14.1.0	2008-7-29
 ----------
@@ -168,7 +175,7 @@ Other bug fixes:
 Internal improvements:
 
   o Use FORTIFY_SOURCE with gcc.  (robs)
-  o Fixed all compiler warnings (with gcc 4.2.3).  (robs)
+  o Fixed all compiler warnings (with gcc 4.2.3, 32-bit arch).  (robs)
   o Reimplement (separately) SoundTool & Sounder format handlers.  (robs)
   o Allow formats & effects to have any size of private data.  (robs)
 
