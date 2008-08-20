@@ -303,7 +303,7 @@ if HAVE_FLAC
     sox_LDADD += @FLAC_LIBS@
 endif
 if HAVE_FFMPEG
-    libsox_la_SOURCES += ffmpeg.c
+    libsox_la_SOURCES += ffmpeg.h ffmpeg.c
     libsox_la_LIBADD += @FFMPEG_LIBS@
     sox_LDADD += @FFMPEG_LIBS@
 endif
