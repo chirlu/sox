@@ -362,39 +362,52 @@ sox_size_t sox_effects_clips(sox_effects_chain_t * chain)
   return clips;
 }
 
-sox_size_t sox_stop_effect(sox_effects_chain_t * chain, sox_size_t e)
+sox_size_t sox_stop_effect(sox_effect_t *effp)
 {
   unsigned f;
-  sox_effect_t * effp = &chain->effects[e][0];
   sox_size_t clips = 0;
 
   for (f = 0; f < effp->flows; ++f) {
-    effp->handler.stop(&chain->effects[e][f]);
-    clips += chain->effects[e][f].clips;
+    effp[f].handler.stop(&effp[f]);
+    clips += effp[f].clips;
   }
   return clips;
 }
 
-/* Remove all effects from the chain */
+/* Free resources related to effect.
+ * Note: This currently closes down the effect which might
+ * note be obvious from name.
+ */
+static void sox_delete_effect(sox_effect_t *effp)
+{
+    sox_size_t clips;
+    unsigned f;
+
+    if ((clips = sox_stop_effect(effp)) != 0)
+        sox_warn("%s clipped %u samples; decrease volume?",
+                 effp->handler.name, clips);
+    for (f = 0; f < effp->flows; ++f)
+    {
+        effp[f].handler.kill(&effp[f]);
+        free(effp[f].priv);
+        free(&effp[f]);
+    }
+}
+
+/* Remove all effects from the chain.
+ * Note: This currently closes down the effect which might
+ * note be obvious from name.
+ */
 void sox_delete_effects(sox_effects_chain_t * chain)
 {
-  sox_size_t e, clips;
-  unsigned f;
+  sox_size_t e;
 
   for (e = 0; e < chain->length; ++e) {
-    sox_effect_t * effp = chain->effects[e];
-    if ((clips = sox_stop_effect(chain, e)) != 0)
-      sox_warn("%s clipped %u samples; decrease volume?",
-          chain->effects[e][0].handler.name, clips);
-    effp->handler.kill(effp);
-    for (f = 0; f < effp->flows; ++f)
-      free(chain->effects[e][f].priv);
-    free(effp);
+    sox_delete_effect(chain->effects[e]);
+    chain->effects[e] = NULL;
   }
   chain->length = 0;
 }
-
-
 
 /* Effects library: */
 

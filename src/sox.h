@@ -500,7 +500,7 @@ sox_effects_chain_t * sox_create_effects_chain(
 int sox_add_effect( sox_effects_chain_t * chain, sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out);
 int sox_flow_effects(sox_effects_chain_t *, int (* callback)(sox_bool all_done));
 sox_size_t sox_effects_clips(sox_effects_chain_t *);
-sox_size_t sox_stop_effect(sox_effects_chain_t *, sox_size_t e);
+sox_size_t sox_stop_effect(sox_effect_t *effp);
 void sox_delete_effects(sox_effects_chain_t *);
 
 /* The following routines are unique to the trim effect.

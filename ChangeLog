@@ -39,7 +39,7 @@ Other bug fixes:
   o Allow libsamplerate to be found if pkg-config is installed but
     no samplerate.pc exists. (cbagwell)
   o [2038855] external lpc10 lib patch.  (Oden Eriksson, Mandriva)
-
+  o Fix memory leaks in effects chain when restarting effects.
 
 sox-14.1.0	2008-7-29
 ----------
