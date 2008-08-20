@@ -32,7 +32,7 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
   args[2] = argv[0];
   sprintf(offset, "%g", 100 - depth / 2);
   args[3] = offset;
-  return sox_synth_effect_fn()->getopts(effp, array_length(args), args);
+  return sox_synth_effect_fn()->getopts(effp, (int)array_length(args), args);
 }
 
 sox_effect_handler_t const * sox_tremolo_effect_fn(void)

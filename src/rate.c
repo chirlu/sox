@@ -412,7 +412,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor, quality
       s->pre_post = 2 * (array_length(half_fir_coefs_25) - 1);
       s->preload = s->pre = s->pre_post >> 1;
     }
-    fifo_create(&s->fifo, sizeof(sample_t));
+    fifo_create(&s->fifo, (int)sizeof(sample_t));
     memset(fifo_reserve(&s->fifo, s->preload), 0, sizeof(sample_t)*s->preload);
     if (i < p->output_stage_num)
       sox_debug("stage=%-3ipre_post=%-3ipre=%-3ipreload=%i",
@@ -451,7 +451,7 @@ static void rate_flush(rate_t * p)
 
   if ((int)remaining > 0) {
     while ((size_t)fifo_occupancy(fifo) < remaining) {
-      rate_input(p, buff, 1024);
+      rate_input(p, buff, (size_t) 1024);
       rate_process(p);
     }
     fifo_trim_to(fifo, (int)remaining);
@@ -526,11 +526,10 @@ static int start(sox_effect_t * effp)
 }
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
-                sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+                sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  sox_size_t i;
-  size_t odone = *osamp; /* See comment in tempo.c */
+  size_t i, odone = *osamp;
 
   sample_t const * s = rate_output(&p->rate, NULL, &odone);
   for (i = 0; i < odone; ++i) *obuf++ = TO_SOX(*s++, effp->clips);
@@ -545,10 +544,10 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   return SOX_SUCCESS;
 }
 
-static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
+static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  static sox_size_t isamp = 0;
+  static size_t isamp = 0;
   rate_flush(&p->rate);
   return flow(effp, 0, obuf, &isamp, osamp);
 }

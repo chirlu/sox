@@ -76,14 +76,14 @@ static int sox_dcshift_start(sox_effect_t * effp)
  * Process data.
  */
 static int sox_dcshift_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                    sox_size_t *isamp, sox_size_t *osamp)
+                    size_t *isamp, size_t *osamp)
 {
     priv_t * dcs = (priv_t *) effp->priv;
     double dcshift = dcs->dcshift;
     double limitergain = dcs->limitergain;
     double limiterthreshhold = dcs->limiterthreshhold;
     double sample;
-    sox_size_t len;
+    size_t len;
 
     len = min(*osamp, *isamp);
 

@@ -154,7 +154,7 @@ static void tempo_flush(tempo_t * t)
 
   if ((int)remaining > 0) {
     while (fifo_occupancy(&t->output_fifo) < remaining) {
-      tempo_input(t, buff, 128);
+      tempo_input(t, buff, (size_t) 128);
       tempo_process(t);
     }
     fifo_trim_to(&t->output_fifo, remaining);
@@ -229,19 +229,17 @@ static int start(sox_effect_t * effp)
   if (p->factor == 1)
     return SOX_EFF_NULL;
 
-  p->tempo = tempo_create(effp->in_signal.channels);
+  p->tempo = tempo_create((size_t)effp->in_signal.channels);
   tempo_setup(p->tempo, effp->in_signal.rate, p->quick_search, p->factor,
       p->segment_ms, p->search_ms, p->overlap_ms);
   return SOX_SUCCESS;
 }
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
-                sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+                sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  sox_size_t i;
-  /* odone must be size_t 'cos tempo_output arg. is. (!= sox_size_t on amd64) */
-  size_t odone = *osamp /= effp->in_signal.channels;
+  size_t i, odone = *osamp /= effp->in_signal.channels;
   float const * s = tempo_output(p->tempo, NULL, &odone);
 
   for (i = 0; i < odone * effp->in_signal.channels; ++i)
@@ -259,10 +257,10 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   return SOX_SUCCESS;
 }
 
-static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
+static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  static sox_size_t isamp = 0;
+  static size_t isamp = 0;
   tempo_flush(p->tempo);
   return flow(effp, 0, obuf, &isamp, osamp);
 }

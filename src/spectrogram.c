@@ -130,7 +130,7 @@ static int enum_option(int c, enum_item const * items)
 {
   enum_item const * p = find_enum_text(optarg, items);
   if (p == NULL) {
-    unsigned len = 1;
+    size_t len = 1;
     char * set = lsx_malloc(len);
     *set = 0;
     for (p = items; p->text; ++p) {
@@ -253,10 +253,10 @@ static int do_column(sox_effect_t * effp)
 
 static int flow(sox_effect_t * effp,
     const sox_sample_t * ibuf, sox_sample_t * obuf,
-    sox_size_t * isamp, sox_size_t * osamp)
+    size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  sox_size_t len = min(*isamp, *osamp), dummy = 0; /* No need to clip count */
+  size_t len = min(*isamp, *osamp), dummy = 0; /* No need to clip count */
   int i;
 
   memcpy(obuf, ibuf, len * sizeof(*obuf)); /* Pass on audio unaffected */
@@ -288,14 +288,14 @@ static int flow(sox_effect_t * effp,
   return SOX_SUCCESS;
 }
 
-static int drain(sox_effect_t * effp, sox_sample_t * obuf_, sox_size_t * osamp)
+static int drain(sox_effect_t * effp, sox_sample_t * obuf_, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
 
   if (!p->truncated) {
     sox_sample_t * ibuf = calloc(p->dft_size, sizeof(*ibuf));
     sox_sample_t * obuf = calloc(p->dft_size, sizeof(*obuf));
-    sox_size_t isamp = (p->dft_size - p->step_size) / 2;
+    size_t isamp = (p->dft_size - p->step_size) / 2;
     int left_over = (isamp + p->read) % p->step_size;
 
     if (left_over >= p->step_size >> 1)
@@ -328,15 +328,15 @@ static void make_palette(priv_t const * p, png_color * palette)
   int i;
 
   if (p->light_background) {
-    memcpy(palette++, (p->monochrome)? "\337\337\337":"\335\330\320", 3);
-    memcpy(palette++, "\0\0\0"      , 3);
-    memcpy(palette++, "\077\077\077", 3);
-    memcpy(palette++, "\077\077\077", 3);
+    memcpy(palette++, (p->monochrome)? "\337\337\337":"\335\330\320", (size_t)3);
+    memcpy(palette++, "\0\0\0"      , (size_t)3);
+    memcpy(palette++, "\077\077\077", (size_t)3);
+    memcpy(palette++, "\077\077\077", (size_t)3);
   } else {
-    memcpy(palette++, "\0\0\0"      , 3);
-    memcpy(palette++, "\377\377\377", 3);
-    memcpy(palette++, "\277\277\277", 3);
-    memcpy(palette++, "\177\177\177", 3);
+    memcpy(palette++, "\0\0\0"      , (size_t)3);
+    memcpy(palette++, "\377\377\377", (size_t)3);
+    memcpy(palette++, "\277\277\277", (size_t)3);
+    memcpy(palette++, "\177\177\177", (size_t)3);
   }
   for (i = 0; i < p->spectrum_points; ++i) {
     double c[3], x = (double)i / (p->spectrum_points - 1);

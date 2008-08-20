@@ -97,7 +97,7 @@ static int unpack_input(sox_format_t * ft, unsigned char *code)
   unsigned char           in_byte;
 
   if (p->in_bits < (int)ft->encoding.bits_per_sample) {
-    if (lsx_read_b_buf(ft, &in_byte, 1) != 1) {
+    if (lsx_read_b_buf(ft, &in_byte, (size_t) 1) != 1) {
       *code = 0;
       return -1;
     }
@@ -110,11 +110,11 @@ static int unpack_input(sox_format_t * ft, unsigned char *code)
   return p->in_bits > 0;
 }
 
-static sox_size_t dec_read(sox_format_t *ft, sox_sample_t *buf, sox_size_t samp)
+static size_t dec_read(sox_format_t *ft, sox_sample_t *buf, size_t samp)
 {
   priv_t * p = (priv_t *)ft->priv;
   unsigned char code;
-  sox_size_t done;
+  size_t done;
 
   for (done = 0; samp > 0 && unpack_input(ft, &code) >= 0; ++done, --samp)
     *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE(
@@ -201,8 +201,8 @@ static int write_header(sox_format_t * ft)
   int i = ft->encoding.reverse_bytes == MACHINE_IS_BIGENDIAN? 2 : 0;
   sox_bool error  = sox_false
   ||lsx_writechars(ft, id[i].str, sizeof(id[i].str))
-  ||lsx_writedw(ft, FIXED_HDR + info_len)
-  ||lsx_writedw(ft, size? size*(ft->encoding.bits_per_sample >> 3) : SUN_UNSPEC)
+  ||lsx_writedw(ft, FIXED_HDR + (unsigned)info_len)
+  ||lsx_writedw(ft, (unsigned) (size? size*(ft->encoding.bits_per_sample >> 3) : SUN_UNSPEC))
   ||lsx_writedw(ft, ft_enc(ft->encoding.bits_per_sample, ft->encoding.encoding))
   ||lsx_writedw(ft, (unsigned)(ft->signal.rate + .5))
   ||lsx_writedw(ft, ft->signal.channels)

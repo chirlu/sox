@@ -22,7 +22,7 @@
 #define NAMELEN    30           /* Size of Samplevision name */
 #define COMMENTLEN 60           /* Size of Samplevision comment, not shared */
 #define MIDI_UNITY 60           /* MIDI note number to play sample at unity */
-#define MARKERLEN  10           /* Size of Marker name */
+#define MARKERLEN  (size_t)10           /* Size of Marker name */
 
 /* The header preceeding the sample data */
 struct smpheader {
@@ -61,7 +61,7 @@ struct smptrailer {
 /* Private data for SMP file */
 typedef struct {
   uint32_t NoOfSamps;           /* Sample data count in words */
-  sox_size_t dataStart;
+  size_t dataStart;
   /* comment memory resides in private data because it's small */
   char comment[COMMENTLEN + NAMELEN + 3];
 } priv_t;
@@ -168,9 +168,9 @@ static int writetrailer(sox_format_t * ft, struct smptrailer *trailer)
         return(SOX_SUCCESS);
 }
 
-static int sox_smpseek(sox_format_t * ft, sox_size_t offset)
+static int sox_smpseek(sox_format_t * ft, size_t offset)
 {
-    sox_size_t new_offset, channel_block, alignment;
+    size_t new_offset, channel_block, alignment;
     priv_t * smp = (priv_t *) ft->priv;
 
     new_offset = offset * (ft->encoding.bits_per_sample >> 3);
@@ -185,7 +185,7 @@ static int sox_smpseek(sox_format_t * ft, sox_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += smp->dataStart;
 
-    ft->sox_errno = lsx_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
+    ft->sox_errno = lsx_seeki(ft, (ptrdiff_t)new_offset, SEEK_SET);
 
     if( ft->sox_errno == SOX_SUCCESS )
         smp->NoOfSamps = ft->signal.length - (new_offset / (ft->encoding.bits_per_sample >> 3));
@@ -203,7 +203,7 @@ static int sox_smpstartread(sox_format_t * ft)
 {
         priv_t * smp = (priv_t *) ft->priv;
         int namelen, commentlen;
-        sox_size_t samplestart, i;
+        size_t samplestart, i;
         struct smpheader header;
         struct smptrailer trailer;
 
@@ -220,12 +220,12 @@ static int sox_smpstartread(sox_format_t * ft)
                 lsx_fail_errno(ft,SOX_EHDR,"unexpected EOF in SMP header");
                 return(SOX_EOF);
         }
-        if (strncmp(header.Id, SVmagic, 17) != 0)
+        if (strncmp(header.Id, SVmagic, (size_t)17) != 0)
         {
                 lsx_fail_errno(ft,SOX_EHDR,"SMP header does not begin with magic word %s", SVmagic);
                 return(SOX_EOF);
         }
-        if (strncmp(header.version, SVvers, 4) != 0)
+        if (strncmp(header.version, SVvers, (size_t)4) != 0)
         {
                 lsx_fail_errno(ft,SOX_EHDR,"SMP header is not version %s", SVvers);
                 return(SOX_EOF);
@@ -251,7 +251,7 @@ static int sox_smpstartread(sox_format_t * ft)
 
         /* seek from the current position (the start of sample data) by */
         /* NoOfSamps * sizeof(int16_t) */
-        if (lsx_seeki(ft, (sox_ssize_t)(smp->NoOfSamps * 2), 1) == -1)
+        if (lsx_seeki(ft, (ptrdiff_t)(smp->NoOfSamps * 2), 1) == -1)
         {
                 lsx_fail_errno(ft,errno,"SMP unable to seek to trailer");
                 return(SOX_EOF);
@@ -263,7 +263,7 @@ static int sox_smpstartread(sox_format_t * ft)
         }
 
         /* seek back to the beginning of the data */
-        if (lsx_seeki(ft, (sox_ssize_t)samplestart, 0) == -1)
+        if (lsx_seeki(ft, (ptrdiff_t)samplestart, 0) == -1)
         {
                 lsx_fail_errno(ft,errno,"SMP unable to seek back to start of sample data");
                 return(SOX_EOF);
@@ -278,7 +278,7 @@ static int sox_smpstartread(sox_format_t * ft)
 
         sox_report("SampleVision trailer:");
         for(i = 0; i < 8; i++) if (1 || trailer.loops[i].count) {
-                sox_report("Loop %d: start: %6d", i, trailer.loops[i].start);
+                sox_report("Loop %lu: start: %6d", (unsigned long)i, trailer.loops[i].start);
                 sox_report(" end:   %6d", trailer.loops[i].end);
                 sox_report(" count: %6d", trailer.loops[i].count);
                 switch(trailer.loops[i].type) {
@@ -316,11 +316,11 @@ static int sox_smpstartread(sox_format_t * ft)
  * Place in buf[].
  * Return number of samples read.
  */
-static sox_size_t sox_smpread(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static size_t sox_smpread(sox_format_t * ft, sox_sample_t *buf, size_t len)
 {
         priv_t * smp = (priv_t *) ft->priv;
         unsigned short datum;
-        sox_size_t done = 0;
+        size_t done = 0;
 
         for(; done < len && smp->NoOfSamps; done++, smp->NoOfSamps--) {
                 lsx_readw(ft, &datum);
@@ -361,11 +361,11 @@ static int sox_smpstartwrite(sox_format_t * ft)
         return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_smpwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static size_t sox_smpwrite(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
         priv_t * smp = (priv_t *) ft->priv;
         int datum;
-        sox_size_t done = 0;
+        size_t done = 0;
 
         while(done < len) {
                 datum = (int) SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips);
@@ -385,7 +385,7 @@ static int sox_smpstopwrite(sox_format_t * ft)
         /* Assign the trailer data */
         settrailer(ft, &trailer, ft->signal.rate);
         writetrailer(ft, &trailer);
-        if (lsx_seeki(ft, 112, 0) == -1)
+        if (lsx_seeki(ft, (size_t)112, 0) == -1)
         {
                 lsx_fail_errno(ft,errno,"SMP unable to seek back to save size");
                 return(SOX_EOF);

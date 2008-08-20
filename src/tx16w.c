@@ -41,9 +41,9 @@
 
 /* Private data for TX16 file */
 typedef struct {
-  sox_size_t   samples_out;
-  sox_size_t   bytes_out;
-  sox_size_t   rest;                 /* bytes remaining in sample file */
+  size_t   samples_out;
+  size_t   bytes_out;
+  size_t   rest;                 /* bytes remaining in sample file */
   sox_sample_t odd;
   sox_bool     odd_flag;
 } priv_t;
@@ -76,7 +76,7 @@ static int startread(sox_format_t * ft)
     char filetype[7];
     int8_t format;
     unsigned char sample_rate;
-    sox_size_t num_samp_bytes = 0;
+    size_t num_samp_bytes = 0;
     unsigned char gunk[8];
     int blewIt;
     uint8_t trash;
@@ -90,10 +90,10 @@ static int startread(sox_format_t * ft)
     }
 
     /* This is dumb but portable, just count the bytes til EOF */
-    while (lsx_read_b_buf(ft, &trash, 1) == 1)
+    while (lsx_read_b_buf(ft, &trash, (size_t) 1) == 1)
         num_samp_bytes++;
     num_samp_bytes -= 32;         /* calculate num samples by sub header size */
-    lsx_seeki(ft, 0, 0);           /* rewind file */
+    lsx_seeki(ft, (size_t)0, 0);           /* rewind file */
     sk->rest = num_samp_bytes;    /* set how many sample bytes to read */
 
     /* first 6 bytes are file type ID LM8953 */
@@ -177,10 +177,10 @@ static int startread(sox_format_t * ft)
  * Return number of samples read.
  */
 
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
 {
     priv_t * sk = (priv_t *) ft->priv;
-    sox_size_t done = 0;
+    size_t done = 0;
     unsigned char uc1,uc2,uc3;
     unsigned short s1,s2;
 
@@ -246,15 +246,15 @@ static int startwrite(sox_format_t * ft)
     /* dummy numbers, just for place holder, real header is written
        at end of processing, since byte count is needed */
 
-    lsx_writebuf(ft, &WH, 32);
+    lsx_writebuf(ft, &WH, (size_t) 32);
     sk->bytes_out = 32;
     return(SOX_SUCCESS);
 }
 
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len0)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t len0)
 {
   priv_t * sk = (priv_t *) ft->priv;
-  sox_size_t last_i, i = 0, len = min(len0, TXMAXLEN - sk->samples_out);
+  size_t last_i, i = 0, len = min(len0, TXMAXLEN - sk->samples_out);
   sox_sample_t w1, w2;
 
   while (i < len) {
@@ -292,7 +292,7 @@ static int stopwrite(sox_format_t * ft)
 
     if (sk->odd_flag) {
       sox_sample_t pad = 0;
-      write_samples(ft, &pad, 1);
+      write_samples(ft, &pad, (size_t) 1);
     }
 
     /* All samples are already written out. */
@@ -302,7 +302,7 @@ static int stopwrite(sox_format_t * ft)
     sox_debug("tx16w:output finished");
 
     memset(&WH, 0, sizeof(struct WaveHeader_));
-    strncpy(WH.filetype,"LM8953",6);
+    strncpy(WH.filetype,"LM8953",(size_t)6);
     for (i=0;i<10;i++) WH.nulls[i]=0;
     for (i=0;i<6;i++)  WH.dummy_aeg[i]=0;
     for (i=0;i<2;i++)  WH.unused[i]=0;
@@ -362,7 +362,7 @@ static int stopwrite(sox_format_t * ft)
         magic2[WH.sample_rate];
 
     lsx_rewind(ft);
-    lsx_writebuf(ft, &WH, 32);
+    lsx_writebuf(ft, &WH, (size_t) 32);
 
     return(SOX_SUCCESS);
 }

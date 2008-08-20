@@ -13,7 +13,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
   else(${ver} LESS 403)
     add_definitions(-Wtraditional-conversion)
   endif(${ver} LESS 403)
-  add_definitions(-Werror)
+  #add_definitions(-Werror)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 if (NOT EXTERNAL_GSM)

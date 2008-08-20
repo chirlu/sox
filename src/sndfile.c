@@ -57,10 +57,10 @@ static void drain_log_buffer(sox_format_t * ft)
     if (!strncmp(sf->log_buffer_ptr, warning_prefix, strlen(warning_prefix))) {
       sf->log_buffer_ptr += strlen(warning_prefix);
       sox_warn("`%s': %.*s",
-          ft->filename, end - sf->log_buffer_ptr, sf->log_buffer_ptr);
+          ft->filename, (int)(end - sf->log_buffer_ptr), sf->log_buffer_ptr);
     } else
       sox_debug("`%s': %.*s",
-          ft->filename, end - sf->log_buffer_ptr, sf->log_buffer_ptr);
+          ft->filename, (int)(end - sf->log_buffer_ptr), sf->log_buffer_ptr);
     sf->log_buffer_ptr = end;
     if (*sf->log_buffer_ptr == '\n')
       ++sf->log_buffer_ptr;
@@ -185,7 +185,7 @@ static struct {
 static int name_to_format(const char *name)
 {
   int k;
-#define FILE_TYPE_BUFLEN 15
+#define FILE_TYPE_BUFLEN (size_t)15
   char buffer[FILE_TYPE_BUFLEN + 1], *cptr;
 
   if ((cptr = strrchr(name, '.')) != NULL) {
@@ -209,7 +209,7 @@ static void start(sox_format_t * ft)
 {
   priv_t * sf = (priv_t *)ft->priv;
   int subtype = ft_enc(ft->encoding.bits_per_sample? ft->encoding.bits_per_sample : ft->signal.precision, ft->encoding.encoding);
-  sf->log_buffer_ptr = sf->log_buffer = lsx_malloc(LOG_MAX);
+  sf->log_buffer_ptr = sf->log_buffer = lsx_malloc((size_t)LOG_MAX);
   sf->sf_info = lsx_calloc(1, sizeof(SF_INFO));
 
   /* Copy format info */
@@ -299,11 +299,11 @@ static int startread(sox_format_t * ft)
  * Read up to len samples of type sox_sample_t from file into buf[].
  * Return number of samples read.
  */
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
 {
   priv_t * sf = (priv_t *)ft->priv;
   /* FIXME: We assume int == sox_sample_t here */
-  return (sox_size_t)sf_read_int(sf->sf_file, (int *)buf, (sf_count_t)len);
+  return (size_t)sf_read_int(sf->sf_file, (int *)buf, (sf_count_t)len);
 }
 
 /*
@@ -327,10 +327,10 @@ static int startwrite(sox_format_t * ft)
     SF_FORMAT_INFO format_info;
     int i, count;
 
-    sf_command(sf->sf_file, SFC_GET_SIMPLE_FORMAT_COUNT, &count, sizeof(int));
+    sf_command(sf->sf_file, SFC_GET_SIMPLE_FORMAT_COUNT, &count, (int) sizeof(int));
     for (i = 0; i < count; i++) {
       format_info.format = i;
-      sf_command(sf->sf_file, SFC_GET_SIMPLE_FORMAT, &format_info, sizeof(format_info));
+      sf_command(sf->sf_file, SFC_GET_SIMPLE_FORMAT, &format_info, (int) sizeof(format_info));
       if ((format_info.format & SF_FORMAT_TYPEMASK) == (sf->sf_info->format & SF_FORMAT_TYPEMASK)) {
         sf->sf_info->format = format_info.format;
         /* FIXME: Print out exactly what we chose, needs sndfile ->
@@ -365,11 +365,11 @@ static int startwrite(sox_format_t * ft)
  * Write len samples of type sox_sample_t from buf[] to file.
  * Return number of samples written.
  */
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
   priv_t * sf = (priv_t *)ft->priv;
   /* FIXME: We assume int == sox_sample_t here */
-  return (sox_size_t)sf_write_int(sf->sf_file, (int *)buf, (sf_count_t)len);
+  return (size_t)sf_write_int(sf->sf_file, (int *)buf, (sf_count_t)len);
 }
 
 /*
@@ -384,7 +384,7 @@ static int stopwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static int seek(sox_format_t * ft, sox_size_t offset)
+static int seek(sox_format_t * ft, size_t offset)
 {
   priv_t * sf = (priv_t *)ft->priv;
   sf_seek(sf->sf_file, (sf_count_t)(offset / ft->signal.channels), SEEK_CUR);

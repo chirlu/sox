@@ -25,8 +25,8 @@ static int start(sox_format_t * ft)
 
 static int stopwrite(sox_format_t * ft)
 {
-  sox_size_t const sector_num_samples = 588 * ft->signal.channels;
-  sox_size_t i = ft->olength % sector_num_samples;
+  size_t const sector_num_samples = 588 * ft->signal.channels;
+  size_t i = ft->olength % sector_num_samples;
 
   if (i) while (i++ < sector_num_samples)    /* Pad with silence to multiple */
     lsx_writew(ft, 0);                       /* of 1/75th of a second. */

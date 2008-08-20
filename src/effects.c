@@ -42,7 +42,7 @@ static int default_function(sox_effect_t * effp UNUSED)
 }
 
 /* Pass through samples verbatim */
-static int default_flow(sox_effect_t * effp UNUSED, const sox_sample_t *ibuf UNUSED, sox_sample_t *obuf UNUSED, sox_size_t *isamp, sox_size_t *osamp)
+static int default_flow(sox_effect_t * effp UNUSED, const sox_sample_t *ibuf UNUSED, sox_sample_t *obuf UNUSED, size_t *isamp, size_t *osamp)
 {
   *isamp = *osamp = min(*isamp, *osamp);
   memcpy(obuf, ibuf, *isamp * sizeof(*obuf));
@@ -50,7 +50,7 @@ static int default_flow(sox_effect_t * effp UNUSED, const sox_sample_t *ibuf UNU
 }
 
 /* Inform no more samples to drain */
-static int default_drain(sox_effect_t * effp UNUSED, sox_sample_t *obuf UNUSED, sox_size_t *osamp)
+static int default_drain(sox_effect_t * effp UNUSED, sox_sample_t *obuf UNUSED, size_t *osamp)
 {
   *osamp = 0;
   return SOX_EOF;
@@ -95,7 +95,7 @@ sox_effects_chain_t * sox_create_effects_chain(
 }
 
 /* Effect can call in start() or flow() to set minimum input size to flow() */
-int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin)
+int sox_effect_set_imin(sox_effect_t * effp, size_t imin)
 {
   if (imin > sox_globals.bufsiz / effp->flows) {
     sox_fail("sox_bufsiz not big enough");
@@ -177,18 +177,18 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
   return SOX_SUCCESS;
 }
 
-static int flow_effect(sox_effects_chain_t * chain, unsigned n)
+static int flow_effect(sox_effects_chain_t * chain, size_t n)
 {
   sox_effect_t * effp1 = &chain->effects[n - 1][0];
   sox_effect_t * effp = &chain->effects[n][0];
   int effstatus = SOX_SUCCESS;
-  sox_size_t i, f;
+  size_t i, f;
   const sox_sample_t *ibuf;
-  sox_size_t idone = effp1->oend - effp1->obeg;
-  sox_size_t obeg = sox_globals.bufsiz - effp->oend;
+  size_t idone = effp1->oend - effp1->obeg;
+  size_t obeg = sox_globals.bufsiz - effp->oend;
 #if DEBUG_EFFECTS_CHAIN
-  sox_size_t pre_idone = idone;
-  sox_size_t pre_odone = obeg;
+  size_t pre_idone = idone;
+  size_t pre_odone = obeg;
 #endif
 
   if (effp->flows == 1)       /* Run effect on all channels at once */
@@ -196,7 +196,7 @@ static int flow_effect(sox_effects_chain_t * chain, unsigned n)
                                    &effp->obuf[effp->oend], &idone, &obeg);
   else {                 /* Run effect on each channel individually */
     sox_sample_t *obuf = &effp->obuf[effp->oend];
-    sox_size_t idone_last = 0, odone_last = 0; /* Initialised to prevent warning */
+    size_t idone_last = 0, odone_last = 0; /* Initialised to prevent warning */
 
     ibuf = &effp1->obuf[effp1->obeg];
     for (i = 0; i < idone; i += effp->flows)
@@ -204,8 +204,8 @@ static int flow_effect(sox_effects_chain_t * chain, unsigned n)
         chain->ibufc[f][i / effp->flows] = *ibuf++;
 
     for (f = 0; f < effp->flows; ++f) {
-      sox_size_t idonec = idone / effp->flows;
-      sox_size_t odonec = obeg / effp->flows;
+      size_t idonec = idone / effp->flows;
+      size_t odonec = obeg / effp->flows;
       int eff_status_c = effp->handler.flow(&chain->effects[n][f],
           chain->ibufc[f], chain->obufc[f], &idonec, &odonec);
       if (f && (idonec != idone_last || odonec != odone_last)) {
@@ -244,24 +244,24 @@ static int flow_effect(sox_effects_chain_t * chain, unsigned n)
 }
 
 /* The same as flow_effect but with no input */
-static int drain_effect(sox_effects_chain_t * chain, unsigned n)
+static int drain_effect(sox_effects_chain_t * chain, size_t n)
 {
   sox_effect_t * effp = &chain->effects[n][0];
   int effstatus = SOX_SUCCESS;
-  sox_size_t i, f;
-  sox_size_t obeg = sox_globals.bufsiz - effp->oend;
+  size_t i, f;
+  size_t obeg = sox_globals.bufsiz - effp->oend;
 #if DEBUG_EFFECTS_CHAIN
-  sox_size_t pre_odone = obeg;
+  size_t pre_odone = obeg;
 #endif
 
   if (effp->flows == 1)   /* Run effect on all channels at once */
     effstatus = effp->handler.drain(effp, &effp->obuf[effp->oend], &obeg);
   else {                         /* Run effect on each channel individually */
     sox_sample_t *obuf = &effp->obuf[effp->oend];
-    sox_size_t odone_last = 0; /* Initialised to prevent warning */
+    size_t odone_last = 0; /* Initialised to prevent warning */
 
     for (f = 0; f < effp->flows; ++f) {
-      sox_size_t odonec = obeg / effp->flows;
+      size_t odonec = obeg / effp->flows;
       int eff_status_c = effp->handler.drain(&chain->effects[n][f], chain->obufc[f], &odonec);
       if (f && (odonec != odone_last)) {
         sox_fail("drained asymmetrically!");
@@ -293,8 +293,8 @@ static int drain_effect(sox_effects_chain_t * chain, unsigned n)
 int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_done))
 {
   int flow_status = SOX_SUCCESS;
-  sox_size_t e, source_e = 0;               /* effect indices */
-  sox_size_t f, max_flows = 0;
+  size_t e, source_e = 0;               /* effect indices */
+  size_t f, max_flows = 0;
   sox_bool draining = sox_true;
 
   for (e = 0; e < chain->length; ++e) {
@@ -352,20 +352,20 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
   return flow_status;
 }
 
-sox_size_t sox_effects_clips(sox_effects_chain_t * chain)
+size_t sox_effects_clips(sox_effects_chain_t * chain)
 {
   unsigned i, f;
-  sox_size_t clips = 0;
+  size_t clips = 0;
   for (i = 1; i < chain->length - 1; ++i)
     for (f = 0; f < chain->effects[i][0].flows; ++f)
       clips += chain->effects[i][f].clips;
   return clips;
 }
 
-sox_size_t sox_stop_effect(sox_effect_t *effp)
+size_t sox_stop_effect(sox_effect_t *effp)
 {
   unsigned f;
-  sox_size_t clips = 0;
+  size_t clips = 0;
 
   for (f = 0; f < effp->flows; ++f) {
     effp[f].handler.stop(&effp[f]);
@@ -380,7 +380,7 @@ sox_size_t sox_stop_effect(sox_effect_t *effp)
  */
 static void sox_delete_effect(sox_effect_t *effp)
 {
-    sox_size_t clips;
+    size_t clips;
     unsigned f;
 
     if ((clips = sox_stop_effect(effp)) != 0)
@@ -400,7 +400,7 @@ static void sox_delete_effect(sox_effect_t *effp)
  */
 void sox_delete_effects(sox_effects_chain_t * chain)
 {
-  sox_size_t e;
+  size_t e;
 
   for (e = 0; e < chain->length; ++e) {
     sox_delete_effect(chain->effects[e]);

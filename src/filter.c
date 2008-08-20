@@ -248,7 +248,7 @@ static int sox_filter_start(sox_effect_t * effp)
         Fp0 = lsx_malloc(sizeof(double) * (Xh + 2));
         ++Fp0;
         if (f->freq0 > (sox_sample_t)f->rate/200) {
-                Xh0 = lsx_makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, 1, 0);
+                Xh0 = lsx_makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, (size_t) 1, 0);
                 if (Xh0 <= 1)
                 {
                         sox_fail("filter: Unable to make low filter");
@@ -261,7 +261,7 @@ static int sox_filter_start(sox_effect_t * effp)
         ++Fp1;
         /* need Fp[-1] and Fp[Xh] for lsx_makeFilter */
         if (f->freq1 < (sox_sample_t)f->rate/2) {
-                Xh1 = lsx_makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, 1, 0);
+                Xh1 = lsx_makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, (size_t) 1, 0);
                 if (Xh1 <= 1)
                 {
                         sox_fail("filter: Unable to make high filter");
@@ -305,10 +305,10 @@ static int sox_filter_start(sox_effect_t * effp)
  * Return number of samples processed.
  */
 static int sox_filter_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                   sox_size_t *isamp, sox_size_t *osamp)
+                   size_t *isamp, size_t *osamp)
 {
         priv_t * f = (priv_t *) effp->priv;
-        sox_size_t Nx;
+        size_t Nx;
         long i, Nproc;
 
         /* constrain amount we actually process */
@@ -357,7 +357,7 @@ static int sox_filter_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
 /*
  * Process tail of input samples.
  */
-static int sox_filter_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_filter_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
         priv_t * f = (priv_t *) effp->priv;
         long isamp_res, osamp_res;
@@ -370,7 +370,7 @@ static int sox_filter_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t 
         osamp_res = *osamp;
         Obuf = obuf;
         while (isamp_res>0 && osamp_res>0) {
-                sox_size_t Isamp, Osamp;
+                size_t Isamp, Osamp;
                 Isamp = isamp_res;
                 Osamp = osamp_res;
                 sox_filter_flow(effp, NULL, Obuf, &Isamp, &Osamp);

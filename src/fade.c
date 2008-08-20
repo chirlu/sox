@@ -24,7 +24,7 @@
 
 /* Private data for fade file */
 typedef struct { /* These are measured as samples */
-    sox_size_t in_start, in_stop, out_start, out_stop, samplesdone;
+    size_t in_start, in_stop, out_start, out_stop, samplesdone;
     char *in_stop_str, *out_start_str, *out_stop_str;
     char in_fadetype, out_fadetype;
     char do_out;
@@ -32,7 +32,7 @@ typedef struct { /* These are measured as samples */
 } priv_t;
 
 /* prototypes */
-static double fade_gain(sox_size_t index, sox_size_t range, int fadetype);
+static double fade_gain(size_t index, size_t range, int fadetype);
 
 /*
  * Process options
@@ -170,7 +170,7 @@ static int sox_fade_start(sox_effect_t * effp)
     fade->samplesdone = fade->in_start;
     fade->endpadwarned = 0;
 
-    sox_debug("fade: in_start = %d in_stop = %d out_start = %d out_stop = %d", fade->in_start, fade->in_stop, fade->out_start, fade->out_stop);
+    sox_debug("fade: in_start = %lu in_stop = %lu out_start = %lu out_stop = %lu", (unsigned long)fade->in_start, (unsigned long)fade->in_stop, (unsigned long)fade->out_start, (unsigned long)fade->out_stop);
 
     if (fade->in_start == fade->in_stop && fade->out_start == fade->out_stop)
       return SOX_EFF_NULL;
@@ -183,13 +183,13 @@ static int sox_fade_start(sox_effect_t * effp)
  * Return number of samples processed.
  */
 static int sox_fade_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                 sox_size_t *isamp, sox_size_t *osamp)
+                 size_t *isamp, size_t *osamp)
 {
     priv_t * fade = (priv_t *) effp->priv;
     /* len is total samples, chcnt counts channels */
     int len = 0, t_output = 1, more_output = 1;
     sox_sample_t t_ibuf;
-    sox_size_t chcnt = 0;
+    size_t chcnt = 0;
 
     len = ((*isamp > *osamp) ? *osamp : *isamp);
 
@@ -263,11 +263,11 @@ static int sox_fade_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
 /*
  * Drain out remaining samples if the effect generates any.
  */
-static int sox_fade_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_fade_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
     priv_t * fade = (priv_t *) effp->priv;
     int len;
-    sox_size_t t_chan = 0;
+    size_t t_chan = 0;
 
     len = *osamp;
     *osamp = 0;
@@ -317,7 +317,7 @@ static int kill(sox_effect_t * effp)
 /* Function returns gain value 0.0 - 1.0 according index / range ratio
 * and -1.0 if  type is invalid
 * todo: to optimize performance calculate gain every now and then and interpolate */
-static double fade_gain(sox_size_t index, sox_size_t range, int type)
+static double fade_gain(size_t index, size_t range, int type)
 {
     double retval = 0.0, findex = 0.0;
 

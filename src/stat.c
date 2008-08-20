@@ -26,7 +26,7 @@ typedef struct {
   double dsum1, dsum2;          /* deltas */
   double scale;                 /* scale-factor */
   double last;                  /* previous sample */
-  sox_size_t read;               /* samples processed */
+  size_t read;               /* samples processed */
   int volume;
   int srms;
   int fft;
@@ -129,7 +129,7 @@ static void print_power_spectrum(unsigned samples, double rate, float *re_in, fl
  * Return number of samples processed.
  */
 static int sox_stat_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                        sox_size_t *isamp, sox_size_t *osamp)
+                        size_t *isamp, size_t *osamp)
 {
   priv_t * stat = (priv_t *) effp->priv;
   int done, x, len = min(*isamp, *osamp);
@@ -145,7 +145,7 @@ static int sox_stat_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
 
         if (stat->fft_offset >= stat->fft_size) {
           stat->fft_offset = 0;
-          print_power_spectrum(stat->fft_size, effp->in_signal.rate, stat->re_in, stat->re_out);
+          print_power_spectrum((unsigned) stat->fft_size, effp->in_signal.rate, stat->re_in, stat->re_out);
         }
 
       }
@@ -200,7 +200,7 @@ static int sox_stat_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
 /*
  * Process tail of input samples.
  */
-static int sox_stat_drain(sox_effect_t * effp, sox_sample_t *obuf UNUSED, sox_size_t *osamp)
+static int sox_stat_drain(sox_effect_t * effp, sox_sample_t *obuf UNUSED, size_t *osamp)
 {
   priv_t * stat = (priv_t *) effp->priv;
 
@@ -214,7 +214,7 @@ static int sox_stat_drain(sox_effect_t * effp, sox_sample_t *obuf UNUSED, sox_si
     for (x = stat->fft_offset; x < stat->fft_size; x++)
       stat->re_in[x] = 0;
 
-    print_power_spectrum(stat->fft_size, effp->in_signal.rate, stat->re_in, stat->re_out);
+    print_power_spectrum((unsigned) stat->fft_size, effp->in_signal.rate, stat->re_in, stat->re_out);
   }
 
   *osamp = 0;
@@ -264,7 +264,7 @@ static int sox_stat_stop(sox_effect_t * effp)
   if (stat->volume == 2)
     fprintf(stderr, "\n\n");
   /* print out the info */
-  fprintf(stderr, "Samples read:      %12u\n", stat->read);
+  fprintf(stderr, "Samples read:      %12lu\n", (unsigned long)stat->read);
   fprintf(stderr, "Length (seconds):  %12.6f\n", (double)stat->read/effp->in_signal.rate/effp->in_signal.channels);
   if (stat->srms)
     fprintf(stderr, "Scaled by rms:     %12.6f\n", rms);

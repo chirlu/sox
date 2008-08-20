@@ -15,7 +15,7 @@
 #define SOX_SAMPLE_TO_ULAW_BYTE(d,c) sox_14linear2ulaw(SOX_SAMPLE_TO_SIGNED_16BIT(d,c) >> 2)
 #define SOX_SAMPLE_TO_ALAW_BYTE(d,c) sox_13linear2alaw(SOX_SAMPLE_TO_SIGNED_16BIT(d,c) >> 3)
 
-int lsx_rawseek(sox_format_t * ft, sox_size_t offset)
+int lsx_rawseek(sox_format_t * ft, size_t offset)
 {
   return lsx_offset_seek(ft, (off_t)ft->data_start, offset);
 }
@@ -63,10 +63,10 @@ int lsx_rawstart(sox_format_t * ft, sox_bool default_rate,
 }
 
 #define READ_SAMPLES_FUNC(type, size, sign, ctype, uctype, cast) \
-  static sox_size_t sox_read_ ## sign ## type ## _samples( \
-      sox_format_t * ft, sox_sample_t *buf, sox_size_t len) \
+  static size_t sox_read_ ## sign ## type ## _samples( \
+      sox_format_t * ft, sox_sample_t *buf, size_t len) \
   { \
-    sox_size_t n, nread; \
+    size_t n, nread; \
     ctype *data = lsx_malloc(sizeof(ctype) * len); \
     nread = lsx_read_ ## type ## _buf(ft, (uctype *)data, len); \
     for (n = 0; n < nread; n++) \
@@ -89,10 +89,10 @@ READ_SAMPLES_FUNC(f, sizeof(float), su, float, float, SOX_FLOAT_32BIT_TO_SAMPLE)
 READ_SAMPLES_FUNC(df, sizeof(double), su, double, double, SOX_FLOAT_64BIT_TO_SAMPLE)
 
 #define WRITE_SAMPLES_FUNC(type, size, sign, ctype, uctype, cast) \
-  static sox_size_t sox_write_ ## sign ## type ## _samples( \
-      sox_format_t * ft, sox_sample_t const * buf, sox_size_t len) \
+  static size_t sox_write_ ## sign ## type ## _samples( \
+      sox_format_t * ft, sox_sample_t const * buf, size_t len) \
   { \
-    sox_size_t n, nwritten; \
+    size_t n, nwritten; \
     ctype *data = lsx_malloc(sizeof(ctype) * len); \
     for (n = 0; n < len; n++) \
       data[n] = cast(buf[n], ft->clips); \
@@ -156,13 +156,13 @@ static ft_##type##_fn * type##_fn(sox_format_t * ft) { \
   lsx_fail_errno(ft, SOX_EFMT, "this encoding is not supported for this data size"); \
   return NULL; }
 
-typedef sox_size_t(ft_read_fn)
-  (sox_format_t * ft, sox_sample_t * buf, sox_size_t len);
+typedef size_t(ft_read_fn)
+  (sox_format_t * ft, sox_sample_t * buf, size_t len);
 
 GET_FORMAT(read)
 
 /* Read a stream of some type into SoX's internal buffer format. */
-sox_size_t lsx_rawread(sox_format_t * ft, sox_sample_t * buf, sox_size_t nsamp)
+size_t lsx_rawread(sox_format_t * ft, sox_sample_t * buf, size_t nsamp)
 {
   ft_read_fn * read_buf = read_fn(ft);
 
@@ -171,14 +171,14 @@ sox_size_t lsx_rawread(sox_format_t * ft, sox_sample_t * buf, sox_size_t nsamp)
   return 0;
 }
 
-typedef sox_size_t(ft_write_fn)
-  (sox_format_t * ft, sox_sample_t const * buf, sox_size_t len);
+typedef size_t(ft_write_fn)
+  (sox_format_t * ft, sox_sample_t const * buf, size_t len);
 
 GET_FORMAT(write)
 
 /* Writes SoX's internal buffer format to buffer of various data types. */
-sox_size_t lsx_rawwrite(
-    sox_format_t * ft, sox_sample_t const * buf, sox_size_t nsamp)
+size_t lsx_rawwrite(
+    sox_format_t * ft, sox_sample_t const * buf, size_t nsamp)
 {
   ft_write_fn * write_buf = write_fn(ft);
 

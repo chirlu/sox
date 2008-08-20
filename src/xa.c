@@ -88,10 +88,10 @@ static int startread(sox_format_t * ft)
     char *magic = xa->header.magic;
 
     /* Check for the magic value */
-    if (lsx_readbuf(ft, xa->header.magic, 4) != 4 ||
-        (memcmp("XA\0\0", xa->header.magic, 4) != 0 &&
-         memcmp("XAI\0", xa->header.magic, 4) != 0 &&
-         memcmp("XAJ\0", xa->header.magic, 4) != 0))
+    if (lsx_readbuf(ft, xa->header.magic, (size_t)4) != 4 ||
+        (memcmp("XA\0\0", xa->header.magic, (size_t)4) != 0 &&
+         memcmp("XAI\0", xa->header.magic, (size_t)4) != 0 &&
+         memcmp("XAJ\0", xa->header.magic, (size_t)4) != 0))
     {
         lsx_fail_errno(ft, SOX_EHDR, "XA: Header not found");
         return SOX_EOF;
@@ -172,7 +172,7 @@ static int startread(sox_format_t * ft)
     xa->bufPos = xa->blockSize;
 
     /* Allocate memory for the block buffer */
-    xa->buf = lsx_calloc(1, xa->blockSize);
+    xa->buf = lsx_calloc(1, (size_t)xa->blockSize);
 
     /* Allocate memory for the state */
     xa->state = lsx_calloc(sizeof(xa_state_t), ft->signal.channels);
@@ -187,7 +187,7 @@ static int startread(sox_format_t * ft)
  * Read up to len samples from a file, converted to signed longs.
  * Return the number of samples read.
  */
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
 {
     priv_t * xa = (priv_t *) ft->priv;
     int32_t sample;
@@ -199,7 +199,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
     while (done < len) {
         if (xa->bufPos >= xa->blockSize) {
             /* Read the next block */
-            bytes = lsx_readbuf(ft, xa->buf, xa->blockSize);
+            bytes = lsx_readbuf(ft, xa->buf, (size_t) xa->blockSize);
             if (bytes < xa->blockSize) {
                 if (lsx_eof(ft)) {
                     if (done > 0) {

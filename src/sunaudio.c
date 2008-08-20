@@ -45,7 +45,7 @@ typedef sox_fileinfo_t priv_t;
 static int sox_sunstartread(sox_format_t * ft)
 {
     priv_t *file = (priv_t *)ft->priv;
-    sox_size_t samplesize, encoding;
+    size_t samplesize, encoding;
     audio_info_t audio_if;
 #ifdef __SVR4
     audio_device_t audio_dev;
@@ -181,7 +181,7 @@ static int sox_sunstartread(sox_format_t * ft)
 static int sox_sunstartwrite(sox_format_t * ft)
 {
     priv_t *file = (priv_t *)ft->priv;
-    sox_size_t samplesize, encoding;
+    size_t samplesize, encoding;
     audio_info_t audio_if;
 #ifdef __SVR4
     audio_device_t audio_dev;

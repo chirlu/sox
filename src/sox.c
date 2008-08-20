@@ -105,7 +105,7 @@ typedef struct {
   sox_oob_t oob;
 
   sox_format_t * ft;  /* libSoX file descriptor */
-  sox_size_t volume_clips;
+  size_t volume_clips;
   rg_mode replay_gain_mode;
 } file_t;
 
@@ -139,7 +139,7 @@ static sox_effects_chain_t ofile_effects_chain;
 
 static sox_signalinfo_t combiner_signal, ofile_signal_options;
 static sox_encodinginfo_t combiner_encoding, ofile_encoding_options;
-static sox_size_t mixing_clips = 0;
+static size_t mixing_clips = 0;
 static size_t current_input = 0;
 static unsigned long input_wide_samples = 0;
 static unsigned long read_wide_samples = 0;
@@ -196,7 +196,7 @@ static void play_file_info(sox_format_t * ft, file_t * f, sox_bool full)
   FILE * const output = sox_mode == sox_soxi? stdout : stderr;
   char const * text;
   char buffer[30];
-  sox_size_t ws = ft->signal.length / ft->signal.channels;
+  size_t ws = ft->signal.length / ft->signal.channels;
   (void)full;
 
   fprintf(output, "\n");
@@ -278,12 +278,12 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
     ft->signal.precision);
 
   if (ft->signal.length && ft->signal.channels && ft->signal.rate) {
-    sox_size_t ws = ft->signal.length / ft->signal.channels;
+    size_t ws = ft->signal.length / ft->signal.channels;
     fprintf(output,
-      "Duration       : %s = %u samples %c %g CDDA sectors\n",
+      "Duration       : %s = %lu samples %c %g CDDA sectors\n",
       str_time((double)ws / ft->signal.rate),
-      ws, "~="[ft->signal.rate == 44100],
-      (double)ws/ ft->signal.rate * 44100 / 588);
+      (unsigned long)ws, "~="[ft->signal.rate == 44100],
+      (double)ws / ft->signal.rate * 44100 / 588);
   }
   if (ft->encoding.encoding) {
     char buffer[20] = {'\0'};
@@ -367,18 +367,18 @@ static void progress_to_next_input_file(file_t * f)
 
 /* Read up to max `wide' samples.  A wide sample contains one sample per channel
  * from the input audio. */
-static sox_size_t sox_read_wide(sox_format_t * ft, sox_sample_t * buf, sox_size_t max)
+static size_t sox_read_wide(sox_format_t * ft, sox_sample_t * buf, size_t max)
 {
-  sox_size_t len = max / combiner_signal.channels;
+  size_t len = max / combiner_signal.channels;
   len = sox_read(ft, buf, len * ft->signal.channels) / ft->signal.channels;
   if (!len && ft->sox_errno)
     display_error(ft);
   return len;
 }
 
-static void balance_input(sox_sample_t * buf, sox_size_t ws, file_t * f)
+static void balance_input(sox_sample_t * buf, size_t ws, file_t * f)
 {
-  sox_size_t s = ws * f->ft->signal.channels;
+  size_t s = ws * f->ft->signal.channels;
 
   if (f->volume != 1)
     while (s--) {
@@ -396,7 +396,7 @@ typedef struct {
 static int combiner_start(sox_effect_t *effp)
 {
   input_combiner_t * z = (input_combiner_t *) effp->priv;
-  sox_size_t ws, i;
+  size_t ws, i;
 
   if (is_serial(combine_method))
     progress_to_next_input_file(files[current_input]);
@@ -412,19 +412,19 @@ static int combiner_start(sox_effect_t *effp)
   return SOX_SUCCESS;
 }
 
-static sox_bool can_segue(sox_size_t i)
+static sox_bool can_segue(size_t i)
 {
   return
     files[i]->ft->signal.channels == files[i - 1]->ft->signal.channels &&
     files[i]->ft->signal.rate     == files[i - 1]->ft->signal.rate;
 }
 
-static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, sox_size_t * osamp)
+static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, size_t * osamp)
 {
   input_combiner_t * z = (input_combiner_t *) effp->priv;
-  sox_size_t ws, s, i;
-  sox_size_t ilen[MAX_INPUT_FILES];
-  sox_size_t olen = 0;
+  size_t ws, s, i;
+  size_t ilen[MAX_INPUT_FILES];
+  size_t olen = 0;
 
   if (is_serial(combine_method)) while (sox_true) {
     if (!user_skip)
@@ -485,7 +485,7 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, sox_size_t * 
 static int combiner_stop(sox_effect_t *effp)
 {
   input_combiner_t * z = (input_combiner_t *) effp->priv;
-  sox_size_t i;
+  size_t i;
 
   if (is_parallel(combine_method))
     /* Free input buffers now that they are not used */
@@ -505,7 +505,7 @@ static sox_effect_handler_t const * input_combiner_effect_fn(void)
 }
 
 static int output_flow(sox_effect_t *effp, sox_sample_t const * ibuf,
-    sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+    sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   size_t len;
 
@@ -610,10 +610,10 @@ static void add_effects(sox_effects_chain_t * chain)
   }
 }
 
-static sox_size_t total_clips(void)
+static size_t total_clips(void)
 {
   unsigned i;
-  sox_size_t clips = 0;
+  size_t clips = 0;
   for (i = 0; i < file_count; ++i)
     clips += files[i]->ft->clips + files[i]->volume_clips;
   return clips + mixing_clips + sox_effects_clips(&ofile_effects_chain);
@@ -713,7 +713,7 @@ static void optimize_trim(void)
    * managable chunks.  */
   if (input_count == 1 && ofile_effects_chain.length > 1 && strcmp(ofile_effects_chain.effects[1][0].handler.name, "trim") == 0) {
     if (files[0]->ft->handler.seek && files[0]->ft->seekable){
-      sox_size_t offset = sox_trim_get_start(&ofile_effects_chain.effects[1][0]);
+      size_t offset = sox_trim_get_start(&ofile_effects_chain.effects[1][0]);
       if (offset && sox_seek(files[0]->ft, offset, SOX_SEEK_SET) == SOX_SUCCESS) {
         read_wide_samples = offset / files[0]->ft->signal.channels;
         /* Assuming a failed seek stayed where it was.  If the seek worked then
@@ -742,7 +742,7 @@ static sox_bool overwrite_permitted(char const * filename)
   return c == 'y' || c == 'Y';
 }
 
-static char *fndup_with_count(const char *filename, int count)
+static char *fndup_with_count(const char *filename, size_t count)
 {
     char *expand_fn, *efn;
     const char *fn, *ext, *end;
@@ -750,7 +750,7 @@ static char *fndup_with_count(const char *filename, int count)
 
     fn = filename;
 
-    efn = expand_fn = malloc(1024);
+    efn = expand_fn = malloc((size_t)1024);
 
     /* Find extension in case user didn't specify a substitution
      * marker.
@@ -780,7 +780,7 @@ static char *fndup_with_count(const char *filename, int count)
     {
         efn -= strlen (ext);
 
-        sprintf(efn, "%04d", count);
+        sprintf(efn, "%04lu", (unsigned long)count);
         efn = efn + 4;
         strcat(efn, ext);
     }
@@ -854,7 +854,7 @@ static void sigint(int s)
 static void calculate_combiner_and_output_signal_parameters(void)
 {
   sox_bool known_length = combine_method != sox_sequence;
-  sox_size_t i, olen = 0;
+  size_t i, olen = 0;
 
   /* Set the combiner output signal attributes to those of the 1st/next input
    * file.  If we are in sox_sequence mode then we don't need to check the
@@ -869,11 +869,11 @@ static void calculate_combiner_and_output_signal_parameters(void)
     if (!current_input) for (i = 0; i < input_count; i++)
       report_file_info(files[i]);
   } else {
-    sox_size_t total_channels = 0;
-    sox_size_t min_channels = SOX_SIZE_MAX;
-    sox_size_t max_channels = 0;
-    sox_size_t min_rate = SOX_SIZE_MAX;
-    sox_size_t max_rate = 0;
+    size_t total_channels = 0;
+    size_t min_channels = SOX_SIZE_MAX;
+    size_t max_channels = 0;
+    size_t min_rate = SOX_SIZE_MAX;
+    size_t max_rate = 0;
 
     /* Report all input files and gather info on differing rates & numbers of
      * channels, and on the resulting output audio length: */
@@ -941,7 +941,7 @@ static void calculate_combiner_and_output_signal_parameters(void)
 
   if (!known_length)
     olen = 0;
-  ofile->signal.length = (sox_size_t)(olen * ofile->signal.channels * ofile->signal.rate / combiner_signal.rate + .5);
+  ofile->signal.length = (size_t)(olen * ofile->signal.channels * ofile->signal.rate / combiner_signal.rate + .5);
 }
 
 static void set_combiner_and_output_encoding_parameters(void)
@@ -1031,9 +1031,12 @@ static void display_SoX_version(FILE * file)
 #elif defined __SUNPRO_C
     fprintf(file, "sun c: %x\n", __SUNPRO_C);
 #endif
-    fprintf(file, "arch:  %u%u%u%u %u%u %u%u %c\n", sizeof(char), sizeof(short),
-        sizeof(long), sizeof(off_t), sizeof(float), sizeof(double),
-        sizeof(int *), sizeof(int (*)(void)), "LB"[MACHINE_IS_BIGENDIAN]);
+    fprintf(file, "arch:  %lu%lu%lu%lu %lu%lu %lu%lu %c\n",
+        (unsigned long)sizeof(char), (unsigned long)sizeof(short),
+        (unsigned long)sizeof(long), (unsigned long)sizeof(off_t),
+        (unsigned long)sizeof(float), (unsigned long)sizeof(double),
+        (unsigned long)sizeof(int *), (unsigned long)sizeof(int (*)(void)),
+        "LB"[MACHINE_IS_BIGENDIAN]);
   }
 }
 
@@ -1364,7 +1367,7 @@ static int enum_option(int option_index, enum_item const * items)
 {
   enum_item const * p = find_enum_text(optarg, items);
   if (p == NULL) {
-    unsigned len = 1;
+    size_t len = 1;
     char * set = lsx_malloc(len);
     *set = 0;
     for (p = items; p->text; ++p) {
@@ -1699,7 +1702,7 @@ typedef enum {
 
 static int soxi1(soxi_t * type, char * filename)
 {
-  sox_size_t ws;
+  size_t ws;
   sox_format_t * ft = sox_open_read(filename, NULL, NULL, NULL);
 
   if (!ft)
@@ -1708,7 +1711,7 @@ static int soxi1(soxi_t * type, char * filename)
   switch (*type) {
     case rate: printf("%g\n", ft->signal.rate); break;
     case channels: printf("%u\n", ft->signal.channels); break;
-    case samples: printf("%u\n", ws); break;
+    case samples: printf("%lu\n", (unsigned long)ws); break;
     case duration: printf("%s\n", str_time((double)ws / max(ft->signal.rate, 1))); break;
     case bits: printf("%u\n", ft->encoding.bits_per_sample); break;
     case encoding: printf("%s\n", sox_encodings_info[ft->encoding.encoding].desc); break;
@@ -1945,19 +1948,19 @@ int main(int argc, char **argv)
 
   for (i = 0; i < file_count; ++i)
     if (files[i]->ft->clips != 0)
-      sox_warn(i < input_count?"%s: input clipped %u samples" :
-                              "%s: output clipped %u samples; decrease volume?",
+      sox_warn(i < input_count?"%s: input clipped %lu samples" :
+                              "%s: output clipped %lu samples; decrease volume?",
           (files[i]->ft->handler.flags & SOX_FILE_DEVICE)?
                        files[i]->ft->handler.names[0] : files[i]->ft->filename,
-          files[i]->ft->clips);
+          (unsigned long)files[i]->ft->clips);
 
   if (mixing_clips > 0)
-    sox_warn("mix-combining clipped %u samples; decrease volume?", mixing_clips);
+    sox_warn("mix-combining clipped %lu samples; decrease volume?", (unsigned long)mixing_clips);
 
   for (i = 0; i < file_count; i++)
     if (files[i]->volume_clips > 0)
-      sox_warn("%s: balancing clipped %u samples; decrease volume?",
-          files[i]->filename, files[i]->volume_clips);
+      sox_warn("%s: balancing clipped %lu samples; decrease volume?",
+          files[i]->filename, (unsigned long)files[i]->volume_clips);
 
   if (show_progress) {
     if (user_abort)

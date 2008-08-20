@@ -46,11 +46,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#if HAVE_LIBAVFORMAT_AVFORMAT_H
-#include <libavformat/avformat.h>
-#else
-#include <ffmpeg/avformat.h>
-#endif
+#include "ffmpeg.h"
 
 /* Private data for ffmpeg files */
 typedef struct {
@@ -154,7 +150,7 @@ static int startread(sox_format_t * ft)
   int ret;
   int i;
 
-  ffmpeg->audio_buf = lsx_calloc(1, AVCODEC_MAX_AUDIO_FRAME_SIZE);
+  ffmpeg->audio_buf = lsx_calloc(1, (size_t)AVCODEC_MAX_AUDIO_FRAME_SIZE);
 
   /* Signal audio stream not found */
   ffmpeg->audio_index = -1;
@@ -211,12 +207,12 @@ static int startread(sox_format_t * ft)
  * Read up to len samples of type sox_sample_t from file into buf[].
  * Return number of samples read.
  */
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
 {
   priv_t * ffmpeg = (priv_t *)ft->priv;
   AVPacket *pkt = &ffmpeg->audio_pkt;
   int ret;
-  sox_size_t nsamp = 0, nextra;
+  size_t nsamp = 0, nextra;
 
   /* Read data repeatedly until buf is full or no more can be read */
   do {
@@ -301,7 +297,7 @@ static int open_audio(priv_t * ffmpeg, AVStream *st)
     return SOX_EOF;
   }
 
-  ffmpeg->audio_buf = lsx_malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE);
+  ffmpeg->audio_buf = lsx_malloc((size_t)AVCODEC_MAX_AUDIO_FRAME_SIZE);
 
   /* ugly hack for PCM codecs (will be removed ASAP with new PCM
      support to compute the input frame size in samples */
@@ -396,10 +392,10 @@ static int startwrite(sox_format_t * ft)
  * Write up to len samples of type sox_sample_t from buf[] into file.
  * Return number of samples written.
  */
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
   priv_t * ffmpeg = (priv_t *)ft->priv;
-  sox_size_t nread = 0, nwritten = 0;
+  size_t nread = 0, nwritten = 0;
 
   /* Write data repeatedly until buf is empty */
   do {

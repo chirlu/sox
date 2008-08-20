@@ -47,7 +47,7 @@ typedef struct {
   unsigned inskip, outskip;     /* LCM increments for I & O rates */
   double Factor;                 /* out_rate/in_rate               */
   unsigned long total;           /* number of filter stages        */
-  sox_size_t oskip;               /* output samples to skip at start*/
+  size_t oskip;               /* output samples to skip at start*/
   double inpipe;                 /* output samples 'in the pipe'   */
   polystage *stage[MF];          /* array of pointers to polystage structs */
   int win_type;
@@ -349,8 +349,8 @@ static int sox_poly_start(sox_effect_t * effp)
 
     effp->out_signal.channels = effp->in_signal.channels;
 
-    rate->lcmrate = lsx_lcm((sox_sample_t)effp->in_signal.rate,
-                           (sox_sample_t)effp->out_signal.rate);
+    rate->lcmrate = lsx_lcm((unsigned)effp->in_signal.rate,
+                           (unsigned)effp->out_signal.rate);
 
     /* Cursory check for LCM overflow.
      * If both rates are below 65k, there should be no problem.
@@ -427,7 +427,7 @@ static int sox_poly_start(sox_effect_t * effp)
       s->filt_array = NULL;
       s->window = lsx_malloc(sizeof(Float) * size);
     }
-    sox_debug("Poly:  output samples %d, oskip %d",size, rate->oskip);
+    sox_debug("Poly:  output samples %d, oskip %lu",size, (unsigned long)rate->oskip);
     return (SOX_SUCCESS);
 }
 
@@ -487,7 +487,7 @@ static void update_hist(Float *hist, int hist_size, int in_size)
 }
 
 static int sox_poly_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                 sox_size_t *isamp, sox_size_t *osamp)
+                 size_t *isamp, size_t *osamp)
 {
   priv_t * rate = (priv_t *) effp->priv;
   polystage *s0,*s1;
@@ -497,7 +497,7 @@ static int sox_poly_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
   s0 = rate->stage[0];            /* the first stage */
   s1 = rate->stage[rate->total];  /* the 'last' stage is output buffer */
   {
-    sox_size_t in_size, gap, k;
+    size_t in_size, gap, k;
 
     in_size = *isamp;
     gap = s0->size - s0->held; /* space available in this 'input' buffer */
@@ -521,7 +521,7 @@ static int sox_poly_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
   }
 
   if (s0->held == s0->size && s1->held == 0) {
-    sox_size_t k;
+    size_t k;
     /* input buffer full, output buffer empty, so do process */
 
     for(k=0; k<rate->total; k++) {
@@ -547,10 +547,10 @@ static int sox_poly_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
 
   {
     sox_sample_t *q;
-    sox_size_t out_size;
-    sox_size_t oskip;
+    size_t out_size;
+    size_t oskip;
     Float *out_buf;
-    sox_size_t k;
+    size_t k;
 
     oskip = rate->oskip;
                 out_size = s1->held;
@@ -589,9 +589,9 @@ static int sox_poly_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
 /*
  * Process tail of input samples.
  */
-static int sox_poly_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_poly_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
-  sox_size_t in_size;
+  size_t in_size;
   /* Call "flow" with NULL input. */
   sox_poly_flow(effp, NULL, obuf, &in_size, osamp);
   return (SOX_SUCCESS);
@@ -604,7 +604,7 @@ static int sox_poly_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *o
 static int sox_poly_stop(sox_effect_t * effp)
 {
     priv_t * rate = (priv_t *)effp->priv;
-    sox_size_t k;
+    size_t k;
 
     for (k = 0; k <= rate->total; k++) {
       free(rate->stage[k]->window);

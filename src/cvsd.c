@@ -182,15 +182,15 @@ int sox_cvsdstopread(sox_format_t * ft)
 
 /* ---------------------------------------------------------------------- */
 
-sox_size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
+size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, size_t nsamp)
 {
         priv_t *p = (priv_t *) ft->priv;
-        sox_size_t done = 0;
+        size_t done = 0;
         float oval;
 
         while (done < nsamp) {
                 if (!p->bit.cnt) {
-                        if (lsx_read_b_buf(ft, &(p->bit.shreg), 1) != 1)
+                        if (lsx_read_b_buf(ft, &(p->bit.shreg), (size_t) 1) != 1)
                                 return done;
                         p->bit.cnt = 8;
                         p->bit.mask = 1;
@@ -238,10 +238,10 @@ sox_size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
 
 /* ---------------------------------------------------------------------- */
 
-sox_size_t sox_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
+size_t sox_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp)
 {
         priv_t *p = (priv_t *) ft->priv;
-        sox_size_t done = 0;
+        size_t done = 0;
         float inval;
 
         for(;;) {
@@ -338,7 +338,7 @@ struct dvms_header {
         time_t        Unixtime;
         unsigned      Usender;
         unsigned      Ureceiver;
-        sox_size_t     Length;
+        size_t     Length;
         unsigned      Srate;
         unsigned      Days;
         unsigned      Custom1;
@@ -412,7 +412,7 @@ static int dvms_write_header(sox_format_t * ft, struct dvms_header *hdr)
         put32_le(&pch, (unsigned)hdr->Unixtime);
         put16_le(&pch, hdr->Usender);
         put16_le(&pch, hdr->Ureceiver);
-        put32_le(&pch, hdr->Length);
+        put32_le(&pch, (unsigned) hdr->Length);
         put16_le(&pch, hdr->Srate);
         put16_le(&pch, hdr->Days);
         put16_le(&pch, hdr->Custom1);
@@ -425,7 +425,7 @@ static int dvms_write_header(sox_format_t * ft, struct dvms_header *hdr)
                 sum += *pchs++;
         hdr->Crc = sum;
         put16_le(&pch, hdr->Crc);
-        if (lsx_seeki(ft, 0, SEEK_SET) < 0)
+        if (lsx_seeki(ft, (size_t)0, SEEK_SET) < 0)
         {
                 sox_report("seek failed\n: %s",strerror(errno));
                 return (SOX_EOF);
@@ -486,7 +486,7 @@ int sox_dvmsstartread(sox_format_t * ft)
         sox_debug("  time      %s", ctime(&hdr.Unixtime)); /* ctime generates lf */
         sox_debug("  usender   %u", hdr.Usender);
         sox_debug("  ureceiver %u", hdr.Ureceiver);
-        sox_debug("  length    %u", hdr.Length);
+        sox_debug("  length    %lu", (unsigned long)hdr.Length);
         sox_debug("  srate     %u", hdr.Srate);
         sox_debug("  days      %u", hdr.Days);
         sox_debug("  custom1   %u", hdr.Custom1);
@@ -540,7 +540,7 @@ int sox_dvmsstopwrite(sox_format_t * ft)
             sox_warn("File not seekable");
             return (SOX_EOF);
         }
-        if (lsx_seeki(ft, 0, 0) != 0)
+        if (lsx_seeki(ft, (size_t)0, 0) != 0)
         {
                 lsx_fail_errno(ft,errno,"Can't rewind output file to rewrite DVMS header.");
                 return(SOX_EOF);

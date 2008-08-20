@@ -15,12 +15,12 @@ typedef struct {
     char *length_str;
 
     /* options converted to values */
-    sox_size_t start;
-    sox_size_t length;
+    size_t start;
+    size_t length;
 
     /* internal stuff */
-    sox_size_t index;
-    sox_size_t trimmed;
+    size_t index;
+    size_t trimmed;
 } priv_t;
 
 /*
@@ -92,7 +92,7 @@ static int sox_trim_start(sox_effect_t * effp)
  * Return number of samples read.
  */
 static int sox_trim_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                 sox_size_t *isamp, sox_size_t *osamp)
+                 size_t *isamp, size_t *osamp)
 {
     int result = SOX_SUCCESS;
     int start_trim = 0;
@@ -156,7 +156,7 @@ static int kill(sox_effect_t * effp)
     return (SOX_SUCCESS);
 }
 
-sox_size_t sox_trim_get_start(sox_effect_t * effp)
+size_t sox_trim_get_start(sox_effect_t * effp)
 {
     priv_t * trim = (priv_t *)effp->priv;
     return trim->start;

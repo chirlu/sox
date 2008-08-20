@@ -166,7 +166,7 @@ typedef struct {
   long rate;                    /* rate code (byte) of this chunk */
   int silent;                   /* sound or silence? */
   long srate;                   /* rate code (byte) of silence */
-  sox_size_t blockseek;         /* start of current output block */
+  size_t blockseek;         /* start of current output block */
   long samples;                 /* number of samples output */
   uint16_t format;              /* VOC audio format */
   int size;                     /* word length of data */
@@ -220,11 +220,11 @@ static int startread(sox_format_t * ft)
   int ii;                       /* for getting rid of lseek */
   unsigned char uc;
 
-  if (lsx_readbuf(ft, header, 20) != 20) {
+  if (lsx_readbuf(ft, header, (size_t)20) != 20) {
     lsx_fail_errno(ft, SOX_EHDR, "unexpected EOF in VOC header");
     return (SOX_EOF);
   }
-  if (strncmp(header, "Creative Voice File\032", 19)) {
+  if (strncmp(header, "Creative Voice File\032", (size_t)19)) {
     lsx_fail_errno(ft, SOX_EHDR, "VOC file header incorrect");
     return (SOX_EOF);
   }
@@ -309,11 +309,11 @@ static int startread(sox_format_t * ft)
  * ANN:  Major changes here to support multi-part files and files
  *       that do not have audio in block 9's.
  *-----------------------------------------------------------------*/
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
-                               sox_size_t len)
+static size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
+                               size_t len)
 {
   priv_t * v = (priv_t *) ft->priv;
-  sox_size_t done = 0;
+  size_t done = 0;
   int rc = 0;
   int16_t sw;
   unsigned char uc;
@@ -331,7 +331,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
     for (; v->block_remaining && (done < len); v->block_remaining--, done++)
       *buf++ = 0;       /* Fill in silence */
   } else {      /* not silence; read len samples of audio from the file */
-    sox_size_t per = max(1, 9 / v->size);
+    size_t per = max(1, 9 / v->size);
 
     for (; (done + per <= len); done += per) {
       if (v->block_remaining == 0) {    /* IF no more in this block, get another */
@@ -474,13 +474,13 @@ static int startwrite(sox_format_t * ft)
 /*-----------------------------------------------------------------
  * write() -- write a VOC file
  *-----------------------------------------------------------------*/
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t * buf,
-                                sox_size_t len)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t * buf,
+                                size_t len)
 {
   priv_t * v = (priv_t *) ft->priv;
   unsigned char uc;
   int16_t sw;
-  sox_size_t done = 0;
+  size_t done = 0;
 
   if (len && v->samples == 0) {
     /* No silence packing yet. */
@@ -511,14 +511,14 @@ static void blockstop(sox_format_t * ft)
   sox_sample_t datum;
 
   lsx_writeb(ft, 0);    /* End of file block code */
-  lsx_seeki(ft, (sox_ssize_t) v->blockseek, 0); /* seek back to block length */
-  lsx_seeki(ft, 1, 1);  /* seek forward one */
+  lsx_seeki(ft, (ptrdiff_t) v->blockseek, 0); /* seek back to block length */
+  lsx_seeki(ft, (size_t)1, 1);  /* seek forward one */
   if (v->silent) {
-    lsx_writesw(ft, v->samples);
+    lsx_writesw(ft, (signed)v->samples);
   } else {
     if (ft->encoding.bits_per_sample == 8) {
       if (ft->signal.channels > 1) {
-        lsx_seeki(ft, 8, 1);    /* forward 7 + 1 for new block header */
+        lsx_seeki(ft, (size_t)8, 1);    /* forward 7 + 1 for new block header */
       }
     }
     v->samples += 2;    /* adjustment: SBDK pp. 3-5 */
@@ -617,7 +617,7 @@ static int getblock(sox_format_t * ft)
         v->size = uc;
         lsx_readb(ft, &(v->channels));
         lsx_readw(ft, &(v->format));    /* ANN: added format */
-        lsx_skipbytes(ft, 4);
+        lsx_skipbytes(ft, (size_t) 4);
         v->block_remaining = sblen - 12;
         return (SOX_SUCCESS);
       case VOC_CONT:
@@ -677,7 +677,7 @@ static int getblock(sox_format_t * ft)
       case VOC_LOOP:
       case VOC_LOOPEND:
         sox_debug("skipping repeat loop");
-        lsx_skipbytes(ft, sblen);
+        lsx_skipbytes(ft, (size_t) sblen);
         break;
       case VOC_EXTENDED:
         /* An Extended block is followed by a data block */
@@ -708,7 +708,7 @@ static int getblock(sox_format_t * ft)
         continue;
       default:
         sox_debug("skipping unknown block code %d", block);
-        lsx_skipbytes(ft, sblen);
+        lsx_skipbytes(ft, (size_t) sblen);
     }
   }
   return SOX_SUCCESS;
@@ -726,7 +726,7 @@ static void blockstart(sox_format_t * ft)
     lsx_writeb(ft, VOC_SILENCE);        /* Silence block code */
     lsx_writeb(ft, 0);  /* Period length */
     lsx_writeb(ft, 0);  /* Period length */
-    lsx_writesb(ft, v->rate);   /* Rate code */
+    lsx_writesb(ft, (signed)v->rate);   /* Rate code */
   } else {
     if (ft->encoding.bits_per_sample == 8) {
       /* 8-bit sample section.  By always setting the correct     */
@@ -741,7 +741,7 @@ static void blockstart(sox_format_t * ft)
         lsx_writeb(ft, 0);      /* block length = 4 */
         lsx_writeb(ft, 0);      /* block length = 4 */
         v->rate = 65536 - (256000000.0 / (2 * ft->signal.rate)) + .5;
-        lsx_writesw(ft, v->rate);       /* Rate code */
+        lsx_writesw(ft, (signed) v->rate);       /* Rate code */
         lsx_writeb(ft, 0);      /* File is not packed */
         lsx_writeb(ft, 1);      /* samples are in stereo */
       }
@@ -750,7 +750,7 @@ static void blockstart(sox_format_t * ft)
       lsx_writeb(ft, 0);        /* block length (for now) */
       lsx_writeb(ft, 0);        /* block length (for now) */
       v->rate = 256 - (1000000.0 / ft->signal.rate) + .5;
-      lsx_writesb(ft, v->rate); /* Rate code */
+      lsx_writesb(ft, (signed) v->rate); /* Rate code */
       lsx_writeb(ft, 0);        /* 8-bit raw data */
     } else {
       lsx_writeb(ft, VOC_DATA_16);      /* Voice Data block code */

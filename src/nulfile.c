@@ -31,7 +31,7 @@ static int startread(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
+static size_t read_samples(sox_format_t * ft, sox_sample_t * buf, size_t len)
 {
   /* Reading from null generates silence i.e. (sox_sample_t)0. */
   (void)ft;
@@ -39,8 +39,8 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf, sox_size_t
   return len; /* Return number of samples "read". */
 }
 
-static sox_size_t write_samples(
-    sox_format_t * ft, sox_sample_t const * buf, sox_size_t len)
+static size_t write_samples(
+    sox_format_t * ft, sox_sample_t const * buf, size_t len)
 {
   /* Writing to null just discards the samples */
   (void)ft, (void)buf;

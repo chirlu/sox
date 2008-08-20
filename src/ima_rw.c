@@ -318,14 +318,14 @@ void lsx_ima_block_mash_i(
  *  samplesPerBlock which would go into a block of size blockAlign
  *  Yes, it is confusing.
  */
-sox_size_t lsx_ima_samples_in(
-  sox_size_t dataLen,
-  sox_size_t chans,
-  sox_size_t blockAlign,
-  sox_size_t samplesPerBlock
+size_t lsx_ima_samples_in(
+  size_t dataLen,
+  size_t chans,
+  size_t blockAlign,
+  size_t samplesPerBlock
 )
 {
-  sox_size_t m, n;
+  size_t m, n;
 
   if (samplesPerBlock) {
     n = (dataLen / blockAlign) * samplesPerBlock;
@@ -334,7 +334,7 @@ sox_size_t lsx_ima_samples_in(
     n = 0;
     m = blockAlign;
   }
-  if (m >= (sox_size_t)4*chans) {
+  if (m >= (size_t)4*chans) {
     m -= 4*chans;    /* number of bytes beyond block-header */
     m /= 4*chans;    /* number of 4-byte blocks/channel beyond header */
     m = 8*m + 1;     /* samples/chan beyond header + 1 in header */
@@ -346,21 +346,21 @@ sox_size_t lsx_ima_samples_in(
 }
 
 /*
- * sox_size_t lsx_ima_bytes_per_block(chans, samplesPerBlock)
+ * size_t lsx_ima_bytes_per_block(chans, samplesPerBlock)
  *   return minimum blocksize which would be required
  *   to encode number of chans with given samplesPerBlock
  */
-sox_size_t lsx_ima_bytes_per_block(
-  sox_size_t chans,
-  sox_size_t samplesPerBlock
+size_t lsx_ima_bytes_per_block(
+  size_t chans,
+  size_t samplesPerBlock
 )
 {
-  sox_size_t n;
+  size_t n;
   /* per channel, ima has blocks of len 4, the 1st has 1st sample, the others
    * up to 8 samples per block,
    * so number of later blocks is (nsamp-1 + 7)/8, total blocks/chan is
    * (nsamp-1+7)/8 + 1 = (nsamp+14)/8
    */
-  n = ((sox_size_t)samplesPerBlock + 14)/8 * 4 * chans;
+  n = ((size_t)samplesPerBlock + 14)/8 * 4 * chans;
   return n;
 }

@@ -193,7 +193,7 @@ static int start(sox_effect_t * effp)
 
   r->Factor = effp->out_signal.rate / effp->in_signal.rate;
 
-  gcdrate = lsx_gcd((long) effp->in_signal.rate, (long) effp->out_signal.rate);
+  gcdrate = lsx_gcd((unsigned) effp->in_signal.rate, (unsigned) effp->out_signal.rate);
   r->a = effp->in_signal.rate / gcdrate;
   r->b = effp->out_signal.rate / gcdrate;
 
@@ -266,12 +266,12 @@ static int start(sox_effect_t * effp)
  * Return number of samples processed.
  */
 static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                     sox_size_t *isamp, sox_size_t *osamp)
+                     size_t *isamp, size_t *osamp)
 {
         priv_t * r = (priv_t *) effp->priv;
         long i, last, Nout, Nx, Nproc;
 
-        sox_debug_more("Xp %li, Xread %li, isamp %d, ",r->Xp, r->Xread,*isamp);
+        sox_debug_more("Xp %li, Xread %li, isamp %lu, ",r->Xp, r->Xread,(unsigned long)*isamp);
 
         /* constrain amount we actually process */
         Nproc = r->Xsize - r->Xp;
@@ -370,7 +370,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
 /*
  * Process tail of input samples.
  */
-static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
         priv_t * r = (priv_t *) effp->priv;
         long isamp_res, osamp_res;
@@ -384,20 +384,20 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
         osamp_res = *osamp;
         Obuf = obuf;
         while (isamp_res>0 && osamp_res>0) {
-                sox_size_t Isamp, Osamp;
+                size_t Isamp, Osamp;
                 Isamp = isamp_res;
                 Osamp = osamp_res;
                 rc = flow(effp, NULL, Obuf, &Isamp, &Osamp);
                 if (rc)
                     return rc;
-                sox_debug("DRAIN isamp,osamp  (%li,%li) -> (%d,%d)",
-                         isamp_res,osamp_res,Isamp,Osamp);
+                sox_debug("DRAIN isamp,osamp  (%li,%li) -> (%lu,%lu)",
+                         isamp_res,osamp_res,(unsigned long)Isamp,(unsigned long)Osamp);
                 Obuf += Osamp;
                 osamp_res -= Osamp;
                 isamp_res -= Isamp;
         }
         *osamp -= osamp_res;
-        sox_debug("DRAIN osamp %d", *osamp);
+        sox_debug("DRAIN osamp %lu", (unsigned long)*osamp);
         if (isamp_res)
                 sox_warn("drain overran obuf by %li", isamp_res);
         /* FIXME: This is very picky.  IF obuf is not big enough to
@@ -512,9 +512,9 @@ static long SrcUD(priv_t * r, long Nx)
       Xp = r->X + (long)time;      /* Ptr to current input sample */
 
       /* Past  inner product: */
-      v = (*prodUD)(r->Imp, Xp, -1, T, r->dhb, r->Xh); /* needs Np*Nmult in 31 bits */
+      v = (*prodUD)(r->Imp, Xp, -1L, T, r->dhb, r->Xh); /* needs Np*Nmult in 31 bits */
       /* Future inner product: */
-      v += (*prodUD)(r->Imp, Xp+1, 1, (1.0-T), r->dhb, r->Xh); /* prefer even total */
+      v += (*prodUD)(r->Imp, Xp+1, 1L, (1.0-T), r->dhb, r->Xh); /* prefer even total */
 
       if (Factor < 1) v *= Factor;
       *Y++ = v;              /* Deposit output */
@@ -566,9 +566,9 @@ static long SrcEX(priv_t * r, long Nx)
         Xp = r->X + (time/b);      /* Ptr to current input sample */
 
         /* Past  inner product: */
-        v = prodEX(r->Imp, Xp, -1, T, b, r->Xh);
+        v = prodEX(r->Imp, Xp, -1L, T, b, r->Xh);
         /* Future inner product: */
-        v += prodEX(r->Imp, Xp+1, 1, b-T, b, r->Xh);
+        v += prodEX(r->Imp, Xp+1, 1L, b-T, b, r->Xh);
 
         if (Factor < 1) v *= Factor;
         *Y++ = v;             /* Deposit output */

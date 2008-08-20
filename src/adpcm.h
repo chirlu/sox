@@ -58,19 +58,19 @@ extern void lsx_ms_adpcm_block_mash_i(
  *  samplesPerBlock which would go into a block of size blockAlign
  *  Yes, it is confusing usage.
  */
-extern sox_size_t lsx_ms_adpcm_samples_in(
-	sox_size_t dataLen,
-	sox_size_t chans,
-	sox_size_t blockAlign,
-	sox_size_t samplesPerBlock
+extern size_t lsx_ms_adpcm_samples_in(
+	size_t dataLen,
+	size_t chans,
+	size_t blockAlign,
+	size_t samplesPerBlock
 );
 
 /*
- * sox_size_t lsx_ms_adpcm_bytes_per_block(chans, samplesPerBlock)
+ * size_t lsx_ms_adpcm_bytes_per_block(chans, samplesPerBlock)
  *   return minimum blocksize which would be required
  *   to encode number of chans with given samplesPerBlock
  */
-extern sox_size_t lsx_ms_adpcm_bytes_per_block(
-	sox_size_t chans,
-	sox_size_t samplesPerBlock
+extern size_t lsx_ms_adpcm_bytes_per_block(
+	size_t chans,
+	size_t samplesPerBlock
 );

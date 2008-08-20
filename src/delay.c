@@ -21,7 +21,7 @@
 typedef struct {
   size_t argc;
   char * * argv, * max_arg;
-  sox_size_t delay, pad, buffer_size, buffer_index;
+  size_t delay, pad, buffer_size, buffer_index;
   sox_sample_t * buffer;
 } priv_t;
 
@@ -39,7 +39,7 @@ static int kill(sox_effect_t * effp)
 static int create(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
-  sox_size_t delay, max_samples = 0;
+  size_t delay, max_samples = 0;
   unsigned i;
 
   p->argv = lsx_calloc(p->argc = argc, sizeof(*p->argv));
@@ -67,7 +67,7 @@ static int stop(sox_effect_t * effp)
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  sox_size_t max_delay;
+  size_t max_delay;
 
   if (!p->max_arg)
     return SOX_EFF_NULL;
@@ -81,10 +81,10 @@ static int start(sox_effect_t * effp)
 }
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
-    sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+    sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  sox_size_t len = *isamp = *osamp = min(*isamp, *osamp);
+  size_t len = *isamp = *osamp = min(*isamp, *osamp);
 
   if (!p->buffer_size)
     memcpy(obuf, ibuf, len * sizeof(*obuf));
@@ -101,10 +101,10 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   return SOX_SUCCESS;
 }
 
-static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
+static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  sox_size_t len = *osamp = min(p->delay + p->pad, *osamp);
+  size_t len = *osamp = min(p->delay + p->pad, *osamp);
 
   for (; p->delay && len; --p->delay, --len) {
     *obuf++ = p->buffer[p->buffer_index++];

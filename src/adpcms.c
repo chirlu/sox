@@ -181,9 +181,9 @@ int sox_adpcm_ima_start(sox_format_t * ft, adpcm_io_t * state)
  * Notes      :
  ******************************************************************************/
 
-sox_size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t * state, sox_sample_t * buffer, sox_size_t len)
+size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t * state, sox_sample_t * buffer, size_t len)
 {
-  sox_size_t n = 0;
+  size_t n = 0;
   uint8_t byte;
   int16_t word;
 
@@ -193,7 +193,7 @@ sox_size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t * state, sox_sample_t * 
     state->store.flag = 0;
     ++n;
   }
-  while (n < len && lsx_read_b_buf(ft, &byte, 1) == 1) {
+  while (n < len && lsx_read_b_buf(ft, &byte, (size_t) 1) == 1) {
     word = lsx_adpcm_decode(byte >> 4, &state->encoder);
     *buffer++ = SOX_SIGNED_16BIT_TO_SAMPLE(word, ft->clips);
 
@@ -243,9 +243,9 @@ int sox_adpcm_stopread(sox_format_t * ft UNUSED, adpcm_io_t * state)
  * Notes      :
  ******************************************************************************/
 
-sox_size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t * state, const sox_sample_t * buffer, sox_size_t length)
+size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t * state, const sox_sample_t * buffer, size_t length)
 {
-  sox_size_t count = 0;
+  size_t count = 0;
   uint8_t byte = state->store.byte;
   uint8_t flag = state->store.flag;
   short word;

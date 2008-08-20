@@ -40,7 +40,7 @@ int main(int argc, char * argv[])
   static const double block_period = 0.025; /* seconds */
   double start_secs = 0, period = 2;
   char dummy;
-  sox_size_t seek;
+  size_t seek;
 
   /* All libSoX applications must start by initialising the SoX library */
   assert(sox_format_init() == SOX_SUCCESS);

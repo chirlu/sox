@@ -29,10 +29,10 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
 }
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
-    sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+    sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  sox_size_t len = *isamp = *osamp = min(*isamp, *osamp);
+  size_t len = *isamp = *osamp = min(*isamp, *osamp);
   while (len--) {
     double d = *ibuf++ * (-M_PI_2 / SOX_SAMPLE_MIN);
     *obuf++ = sin(d + p->contrast * sin(d * 4)) * SOX_SAMPLE_MAX;

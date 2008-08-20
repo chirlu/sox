@@ -70,9 +70,9 @@ typedef struct {
         float   in_gain, out_gain;
         float   delay, decay;
         float   speed;
-        sox_size_t length;
+        size_t length;
         int     *lookup_tab;
-        sox_size_t maxsamples, fade_out;
+        size_t maxsamples, fade_out;
 } priv_t;
 
 /*
@@ -155,10 +155,10 @@ static int sox_phaser_start(sox_effect_t * effp)
         phaser->lookup_tab = lsx_malloc(sizeof (int) * phaser->length);
 
         if (phaser->modulation == MOD_SINE)
-          lsx_generate_wave_table(SOX_WAVE_SINE, SOX_INT, phaser->lookup_tab,
+          lsx_generate_wave_table(SOX_WAVE_SINE, SOX_INT, phaser->lookup_tab, (size_t)
               phaser->length, 0., (double)(phaser->maxsamples - 1), 0.);
         else
-          lsx_generate_wave_table(SOX_WAVE_TRIANGLE, SOX_INT, phaser->lookup_tab,
+          lsx_generate_wave_table(SOX_WAVE_TRIANGLE, SOX_INT, phaser->lookup_tab, (size_t)
               phaser->length, 0., (double)(2 * (phaser->maxsamples - 1)), 3 * M_PI_2);
         phaser->counter = 0;
         phaser->phase = 0;
@@ -171,12 +171,12 @@ static int sox_phaser_start(sox_effect_t * effp)
  * Return number of samples processed.
  */
 static int sox_phaser_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                   sox_size_t *isamp, sox_size_t *osamp)
+                   size_t *isamp, size_t *osamp)
 {
         priv_t * phaser = (priv_t *) effp->priv;
         double d_in, d_out;
         sox_sample_t out;
-        sox_size_t len = min(*isamp, *osamp);
+        size_t len = min(*isamp, *osamp);
         *isamp = *osamp = len;
 
         while (len--) {
@@ -204,10 +204,10 @@ static int sox_phaser_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
 /*
  * Drain out reverb lines.
  */
-static int sox_phaser_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_phaser_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
         priv_t * phaser = (priv_t *) effp->priv;
-        sox_size_t done;
+        size_t done;
 
         double d_in, d_out;
         sox_sample_t out;

@@ -76,14 +76,14 @@ typedef struct {
 
   /* Delay buffers */
   double *   delay_bufs[MAX_CHANNELS];
-  sox_size_t  delay_buf_length;
-  sox_size_t  delay_buf_pos;
+  size_t  delay_buf_length;
+  size_t  delay_buf_pos;
   double     delay_last[MAX_CHANNELS];
 
   /* Low Frequency Oscillator */
   float *    lfo;
-  sox_size_t  lfo_length;
-  sox_size_t  lfo_pos;
+  size_t  lfo_length;
+  size_t  lfo_pos;
 
   /* Balancing */
   double     in_gain;
@@ -186,12 +186,12 @@ static int sox_flanger_start(sox_effect_t * effp)
       SOX_FLOAT,
       f->lfo,
       f->lfo_length,
-      (double)(sox_size_t)(f->delay_min / 1000 * effp->in_signal.rate + .5),
+      (double)(size_t)(f->delay_min / 1000 * effp->in_signal.rate + .5),
       (double)(f->delay_buf_length - 2),
       3 * M_PI_2);  /* Start the sweep at minimum delay (for mono at least) */
 
-  sox_debug("delay_buf_length=%u lfo_length=%u\n",
-      f->delay_buf_length, f->lfo_length);
+  sox_debug("delay_buf_length=%lu lfo_length=%lu\n",
+      (unsigned long)f->delay_buf_length, (unsigned long)f->lfo_length);
 
   return SOX_SUCCESS;
 }
@@ -199,11 +199,11 @@ static int sox_flanger_start(sox_effect_t * effp)
 
 
 static int sox_flanger_flow(sox_effect_t * effp, sox_sample_t const * ibuf,
-    sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+    sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * f = (priv_t *) effp->priv;
   int c, channels = effp->in_signal.channels;
-  sox_size_t len = (*isamp > *osamp ? *osamp : *isamp) / channels;
+  size_t len = (*isamp > *osamp ? *osamp : *isamp) / channels;
 
   *isamp = *osamp = len * channels;
 
@@ -214,10 +214,10 @@ static int sox_flanger_flow(sox_effect_t * effp, sox_sample_t const * ibuf,
       double delayed_0, delayed_1;
       double delayed;
       double in, out;
-      sox_size_t channel_phase = c * f->lfo_length * f->channel_phase + .5;
+      size_t channel_phase = c * f->lfo_length * f->channel_phase + .5;
       double delay = f->lfo[(f->lfo_pos + channel_phase) % f->lfo_length];
       double frac_delay = modf(delay, &delay);
-      sox_size_t int_delay = (size_t)delay;
+      size_t int_delay = (size_t)delay;
 
       in = *ibuf++;
       f->delay_bufs[c][f->delay_buf_pos] = in + f->delay_last[c] * f->feedback_gain;

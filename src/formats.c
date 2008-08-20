@@ -38,7 +38,7 @@ static char const * detect_magic(sox_format_t * ft, char const * ext)
   char data[256];
   size_t len = lsx_readbuf(ft, data, sizeof(data));
   #define MAGIC(type, p2, l2, d2, p1, l1, d1) if (len >= p1 + l1 && \
-      !memcmp(data + p1, d1, l1) && !memcmp(data + p2, d2, l2)) return #type;
+      !memcmp(data + p1, d1, (size_t)l1) && !memcmp(data + p2, d2, (size_t)l2)) return #type;
   MAGIC(voc   , 0, 0, ""     , 0, 20, "Creative Voice File\x1a")
   MAGIC(smp   , 0, 0, ""     , 0, 17, "SOUND SAMPLE DATA")
   MAGIC(wve   , 0, 0, ""     , 0, 15, "ALawSoundFile**")
@@ -387,7 +387,7 @@ sox_format_t * sox_open_read(
   }
 
   if (!(ft->handler.flags & SOX_FILE_NOSTDIO)) {
-    sox_size_t   input_bufsiz = sox_globals.input_bufsiz?
+    size_t   input_bufsiz = sox_globals.input_bufsiz?
         sox_globals.input_bufsiz : sox_globals.bufsiz;
 
     if (!strcmp(path, "-")) { /* Use stdin if the filename is "-" */
@@ -783,15 +783,15 @@ error:
   return NULL;
 }
 
-sox_size_t sox_read(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
+size_t sox_read(sox_format_t * ft, sox_sample_t * buf, size_t len)
 {
-  sox_size_t actual = ft->handler.read? (*ft->handler.read)(ft, buf, len) : 0;
+  size_t actual = ft->handler.read? (*ft->handler.read)(ft, buf, len) : 0;
   return (actual > len? 0 : actual);
 }
 
-sox_size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
-  sox_size_t ret = ft->handler.write? (*ft->handler.write)(ft, buf, len) : 0;
+  size_t ret = ft->handler.write? (*ft->handler.write)(ft, buf, len) : 0;
   ft->olength += ret;
   return ret;
 }
@@ -805,7 +805,7 @@ int sox_close(sox_format_t * ft)
   else {
     if (ft->handler.flags & SOX_FILE_REWIND) {
       if (ft->olength != ft->signal.length && ft->seekable) {
-        rc = lsx_seeki(ft, 0, 0);
+        rc = lsx_seeki(ft, (size_t)0, 0);
         if (rc == SOX_SUCCESS)
           rc = ft->handler.stopwrite? (*ft->handler.stopwrite)(ft)
              : ft->handler.startwrite?(*ft->handler.startwrite)(ft) : SOX_SUCCESS;
@@ -824,7 +824,7 @@ int sox_close(sox_format_t * ft)
   return rc;
 }
 
-int sox_seek(sox_format_t * ft, sox_size_t offset, int whence)
+int sox_seek(sox_format_t * ft, size_t offset, int whence)
 {
     /* FIXME: Implement SOX_SEEK_CUR and SOX_SEEK_END. */
     if (whence != SOX_SEEK_SET)
@@ -898,7 +898,7 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
       text[end] = '\0';
       if (is_pls) {
         char dummy;
-        if (!strncasecmp(text, "file", 4) && sscanf(text + 4, "%*u=%c", &dummy) == 1)
+        if (!strncasecmp(text, "file", (size_t) 4) && sscanf(text + 4, "%*u=%c", &dummy) == 1)
           begin = strchr(text + 5, '=') - text + 1;
         else end = 0;
       }
@@ -934,7 +934,7 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
 
 #include <ltdl.h>
 #define MAX_FORMATS 256 /* FIXME: Use a vector, not a fixed-size array */
-#define MAX_NAME_LEN 1024 /* FIXME: Use vasprintf */
+#define MAX_NAME_LEN (size_t)1024 /* FIXME: Use vasprintf */
 
 static sox_bool plugins_initted = sox_false;
 
@@ -952,8 +952,8 @@ static int init_format(const char *file, lt_ptr data)
 
   (void)data;
   if (start && (start += sizeof(prefix) - 1) < end) {
-    int ret = snprintf(fnname, MAX_NAME_LEN, "sox_%.*s_format_fn", end - start, start);
-    if (ret > 0 && ret < MAX_NAME_LEN) {
+    int ret = snprintf(fnname, MAX_NAME_LEN, "sox_%.*s_format_fn", (int)(end - start), start);
+    if (ret > 0 && ret < (int)MAX_NAME_LEN) {
       union {sox_format_fn_t fn; lt_ptr ptr;} ltptr;
       ltptr.ptr = lt_dlsym(lth, fnname);
       sox_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, (void *)lth, ltptr.ptr);
@@ -1016,7 +1016,7 @@ void sox_format_quit(void) {}
  */
 sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev)
 {
-  sox_size_t f, n;
+  size_t f, n;
 
   if (name) for (f = 0; sox_format_fns[f].fn; ++f) {
     sox_format_handler_t const * handler = sox_format_fns[f].fn();

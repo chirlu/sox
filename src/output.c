@@ -28,7 +28,7 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
 }
 
 static int flow(sox_effect_t *effp, sox_sample_t const * ibuf,
-    sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+    sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
   /* Write out *isamp samples */

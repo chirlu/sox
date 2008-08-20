@@ -55,7 +55,7 @@ void sox_output_message(FILE *file, const char *filename, const char *fmt, va_li
   char const * slash_pos = LAST_SLASH(filename);
   char const * base_name = slash_pos? slash_pos + 1 : filename;
   char const * dot_pos   = strrchr(base_name, '.');
-  fprintf(file, "%.*s: ", dot_pos? dot_pos - base_name : -1, base_name);
+  fprintf(file, "%.*s: ", dot_pos? (int)(dot_pos - base_name) : -1, base_name);
   vfprintf(file, fmt, ap);
 }
 

@@ -94,14 +94,14 @@ static void mad_timer_mult(mad_timer_t * t, double d)
   t->fraction = (d - t->seconds) * MAD_TIMER_RESOLUTION + .5;
 }
 
-static sox_size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
+static size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
 {
   struct mad_stream   mad_stream;
   struct mad_header   mad_header;
   struct mad_frame    mad_frame;
   mad_timer_t         time = mad_timer_zero;
-  sox_size_t          initial_bitrate = 0; /* Initialised to prevent warning */
-  sox_size_t          tagsize = 0, consumed = 0, frames = 0;
+  size_t          initial_bitrate = 0; /* Initialised to prevent warning */
+  size_t          tagsize = 0, consumed = 0, frames = 0;
   sox_bool            vbr = sox_false, depadded = sox_false;
 
   mad_stream_init(&mad_stream);
@@ -113,9 +113,9 @@ static sox_size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
     size_t leftover = mad_stream.bufend - mad_stream.next_frame;
 
     memcpy(buffer, mad_stream.this_frame, leftover);
-    read = fread(buffer + leftover, 1, INPUT_BUFFER_SIZE - leftover, fp);
+    read = fread(buffer + leftover, (size_t) 1, INPUT_BUFFER_SIZE - leftover, fp);
     if (read <= 0) {
-      sox_debug("got exact duration by scan to EOF (frames=%u leftover=%u)", frames, leftover);
+      sox_debug("got exact duration by scan to EOF (frames=%lu leftover=%lu)", (unsigned long)frames, (unsigned long)leftover);
       break;
     }
     for (; !depadded && padding < read && !buffer[padding]; ++padding);
@@ -133,7 +133,7 @@ static sox_size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
         }
         if (mad_stream.error == MAD_ERROR_LOSTSYNC) {
           unsigned available = (mad_stream.bufend - mad_stream.this_frame);
-          tagsize = tagtype(mad_stream.this_frame, available);
+          tagsize = tagtype(mad_stream.this_frame, (size_t) available);
           if (tagsize) {   /* It's some ID3 tags, so just skip */
             if (tagsize >= available) {
               fseeko(fp, (off_t)(tagsize - available), SEEK_CUR);
@@ -162,7 +162,7 @@ static sox_size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
           }
         if ((frames = xing_frames(mad_stream.anc_ptr, mad_stream.anc_bitlen))) {
           mad_timer_multiply(&time, (signed long)frames);
-          sox_debug("got exact duration from XING frame count (%u)", frames);
+          sox_debug("got exact duration from XING frame count (%lu)", (unsigned long)frames);
           break;
         }
       }

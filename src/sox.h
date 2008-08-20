@@ -166,9 +166,7 @@ static double sox_macro_temp_double UNUSED;
 
 
 #include <stddef.h>
-#define sox_size_t size_t
-#define SOX_SIZE_MAX (sox_size_t)(-sizeof(char))
-#define sox_ssize_t ptrdiff_t
+#define SOX_SIZE_MAX (size_t)(-sizeof(char))
 
 typedef void (*sox_output_message_handler_t)(unsigned level, const char *filename, const char *fmt, va_list ap);
 
@@ -181,7 +179,7 @@ typedef struct { /* Global parameters (for effects & formats) */
  * to perform file I/O.  It can be useful to pass in similar sized
  * data to get max performance.
  */
-  sox_size_t   bufsiz, input_bufsiz;
+  size_t   bufsiz, input_bufsiz;
 
 /* private: */
   char const * stdin_in_use_by;
@@ -196,7 +194,7 @@ typedef struct { /* Signal parameters; 0 if unknown */
   sox_rate_t       rate;         /* sampling rate */
   unsigned         channels;     /* number of sound channels */
   unsigned         precision;    /* in bits */
-  sox_size_t       length;       /* samples * chans in file; 0 if unknown */
+  size_t       length;       /* samples * chans in file; 0 if unknown */
 } sox_signalinfo_t;
 
 typedef enum {
@@ -273,8 +271,8 @@ unsigned sox_precision(sox_encoding_t encoding, unsigned pcm_size);
 /* Loop parameters */
 
 typedef struct {
-  sox_size_t    start;          /* first sample */
-  sox_size_t    length;         /* length */
+  size_t    start;          /* first sample */
+  size_t    length;         /* length */
   unsigned int  count;          /* number of repeats, 0=forever */
   unsigned char type;           /* 0=no, 1=forward, 2=forward/back */
 } sox_loopinfo_t;
@@ -320,12 +318,12 @@ typedef struct {
   char         const * const * names;
   unsigned int flags;
   int          (*startread)(sox_format_t * ft);
-  sox_size_t   (*read)(sox_format_t * ft, sox_sample_t *buf, sox_size_t len);
+  size_t   (*read)(sox_format_t * ft, sox_sample_t *buf, size_t len);
   int          (*stopread)(sox_format_t * ft);
   int          (*startwrite)(sox_format_t * ft);
-  sox_size_t   (*write)(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len);
+  size_t   (*write)(sox_format_t * ft, const sox_sample_t *buf, size_t len);
   int          (*stopwrite)(sox_format_t * ft);
-  int          (*seek)(sox_format_t * ft, sox_size_t offset);
+  int          (*seek)(sox_format_t * ft, size_t offset);
   unsigned     const * write_formats;
   sox_rate_t   const * write_rates;
   size_t       priv_size;
@@ -364,8 +362,8 @@ struct sox_format {
   sox_oob_t        oob;             /* Out Of Band data */
   sox_bool         seekable;        /* Can seek on this file */
   char             mode;            /* Read or write mode ('r' or 'w') */
-  sox_size_t       olength;         /* Samples * chans written to file */
-  sox_size_t       clips;           /* Incremented if clipping occurs */
+  size_t       olength;         /* Samples * chans written to file */
+  size_t       clips;           /* Incremented if clipping occurs */
   int              sox_errno;       /* Failure error code */
   char             sox_errstr[256]; /* Failure error text */
   FILE             * fp;            /* File stream pointer */
@@ -410,12 +408,12 @@ sox_format_t * sox_open_write(
     char               const * filetype,
     sox_oob_t          const * oob,
     sox_bool           (*overwrite_permitted)(const char *filename));
-sox_size_t sox_read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len);
-sox_size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len);
+size_t sox_read(sox_format_t * ft, sox_sample_t *buf, size_t len);
+size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, size_t len);
 int sox_close(sox_format_t * ft);
 
 #define SOX_SEEK_SET 0
-int sox_seek(sox_format_t * ft, sox_size_t offset, int whence);
+int sox_seek(sox_format_t * ft, size_t offset, int whence);
 
 sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev);
 int sox_gettype(sox_format_t *, sox_bool);
@@ -453,8 +451,8 @@ typedef struct {
   int (*getopts)(sox_effect_t * effp, int argc, char *argv[]);
   int (*start)(sox_effect_t * effp);
   int (*flow)(sox_effect_t * effp, const sox_sample_t *ibuf,
-      sox_sample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);
-  int (*drain)(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp);
+      sox_sample_t *obuf, size_t *isamp, size_t *osamp);
+  int (*drain)(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp);
   int (*stop)(sox_effect_t * effp);
   int (*kill)(sox_effect_t * effp);
   size_t       priv_size;
@@ -468,11 +466,11 @@ struct sox_effect {
   sox_encodinginfo_t       const * out_encoding;
   sox_effect_handler_t     handler;
   sox_sample_t             * obuf;        /* output buffer */
-  sox_size_t               obeg, oend;    /* consumed, total length */
-  sox_size_t               imin;          /* minimum input buffer size */
-  sox_size_t               clips;         /* increment if clipping occurs */
-  sox_size_t               flows;         /* 1 if MCHAN, # chans otherwise */
-  sox_size_t               flow;          /* flow # */
+  size_t               obeg, oend;    /* consumed, total length */
+  size_t               imin;          /* minimum input buffer size */
+  size_t               clips;         /* increment if clipping occurs */
+  size_t               flows;         /* 1 if MCHAN, # chans otherwise */
+  size_t               flow;          /* flow # */
   void                     * priv;        /* Effect's private data area */
 };
 
@@ -483,7 +481,7 @@ sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh);
 
 typedef const sox_effect_handler_t *(*sox_effect_fn_t)(void);
 extern sox_effect_fn_t sox_effect_fns[];
-int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin);
+int sox_effect_set_imin(sox_effect_t * effp, size_t imin);
 
 struct sox_effects_chain {
   sox_effect_t * effects[SOX_MAX_EFFECTS];
@@ -499,8 +497,8 @@ sox_effects_chain_t * sox_create_effects_chain(
     sox_encodinginfo_t const * out_enc);
 int sox_add_effect( sox_effects_chain_t * chain, sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out);
 int sox_flow_effects(sox_effects_chain_t *, int (* callback)(sox_bool all_done));
-sox_size_t sox_effects_clips(sox_effects_chain_t *);
-sox_size_t sox_stop_effect(sox_effect_t *effp);
+size_t sox_effects_clips(sox_effects_chain_t *);
+size_t sox_stop_effect(sox_effect_t *effp);
 void sox_delete_effects(sox_effects_chain_t *);
 
 /* The following routines are unique to the trim effect.
@@ -512,7 +510,7 @@ void sox_delete_effects(sox_effects_chain_t *);
  * wants to trim and use a sox_seek() operation instead.  After
  * sox_seek()'ing, you should set the trim option to 0.
  */
-sox_size_t sox_trim_get_start(sox_effect_t * effp);
+size_t sox_trim_get_start(sox_effect_t * effp);
 void sox_trim_clear_start(sox_effect_t * effp);
 
 typedef int (* sox_playlist_callback_t)(void *, char *);

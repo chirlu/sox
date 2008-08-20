@@ -52,8 +52,8 @@ static int write_header(sox_format_t * ft)
 
   if (!ft->olength && floor(period_100ns) != period_100ns)
     sox_warn("rounding sample period %f (x 100ns) to nearest integer", period_100ns);
-  return lsx_writedw(ft, ft->olength? ft->olength:ft->signal.length)
-      || lsx_writedw(ft, (uint32_t)(period_100ns + .5))
+  return lsx_writedw(ft, (unsigned)(ft->olength? ft->olength:ft->signal.length))
+      || lsx_writedw(ft, (unsigned)(period_100ns + .5))
       || lsx_writew(ft, ft->encoding.bits_per_sample >> 3)
       || lsx_writew(ft, Waveform) ? SOX_EOF : SOX_SUCCESS;
 }

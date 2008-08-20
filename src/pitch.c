@@ -110,7 +110,7 @@ typedef struct {
 
     unsigned int iacc;   /* part of acc already output */
 
-    sox_size_t size;      /* size of buffer for processing chunks. */
+    size_t size;      /* size of buffer for processing chunks. */
     unsigned int index;  /* index of next empty input item. */
     sox_sample_t *buf;    /* bufferize input */
 
@@ -177,8 +177,8 @@ static double cub(
  */
 static void interpolation(
   priv_t * pitch,
-  const sox_sample_t *ibuf, sox_size_t ilen,
-  double * out, sox_size_t olen,
+  const sox_sample_t *ibuf, size_t ilen,
+  double * out, size_t olen,
   double rate) /* signed */
 {
     register int i, size;
@@ -234,8 +234,8 @@ static void process_intput_buffer(priv_t * pitch)
 
     /* forwards sweep */
     interpolation(pitch,
-                  pitch->buf+pitch->overlap, pitch->step+pitch->overlap,
-                  pitch->tmp, pitch->step,
+                  pitch->buf+pitch->overlap, (size_t)(pitch->step+pitch->overlap),
+                  pitch->tmp, (size_t)pitch->step,
                   pitch->rate);
 
     for (i=0; i<len; i++)
@@ -243,8 +243,8 @@ static void process_intput_buffer(priv_t * pitch)
 
     /* backwards sweep */
     interpolation(pitch,
-                  pitch->buf, pitch->step+pitch->overlap,
-                  pitch->tmp, pitch->step,
+                  pitch->buf, (size_t)(pitch->step+pitch->overlap),
+                  pitch->tmp, (size_t)pitch->step,
                   -pitch->rate);
 
     for (i=0; i<len; i++)
@@ -423,11 +423,11 @@ static int sox_pitch_start(sox_effect_t * effp)
 /* Processes input.
  */
 static int sox_pitch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                sox_size_t *isamp, sox_size_t *osamp)
+                size_t *isamp, size_t *osamp)
 {
     priv_t * pitch = (priv_t *) effp->priv;
     int i, size;
-    sox_size_t len, iindex, oindex;
+    size_t len, iindex, oindex;
 
     size = pitch->size;
     /* size to process */
@@ -499,10 +499,10 @@ static int sox_pitch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sam
 
 /* at the end...
  */
-static int sox_pitch_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_pitch_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
     priv_t * pitch = (priv_t *) effp->priv;
-    sox_size_t i;
+    size_t i;
 
     if (pitch->state == pi_input)
     {

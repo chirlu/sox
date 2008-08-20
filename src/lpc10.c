@@ -108,7 +108,7 @@ static int read_bits(sox_format_t * ft, INT32 *bits, int len)
   /* Unpack the array bits into coded_frame. */
   for (i = 0; i < len; i++) {
     if (i % 8 == 0) {
-      lsx_read_b_buf(ft, &c, 1);
+      lsx_read_b_buf(ft, &c, (size_t) 1);
       if (lsx_eof(ft)) {
         return (i);
       }
@@ -147,10 +147,10 @@ static int startwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
 {
   priv_t * lpc = (priv_t *)ft->priv;
-  sox_size_t nread = 0;
+  size_t nread = 0;
 
   while (nread < len) {
     /* Read more data if buffer is empty */
@@ -171,10 +171,10 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
   return nread;
 }
 
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
   priv_t * lpc = (priv_t *)ft->priv;
-  sox_size_t nwritten = 0;
+  size_t nwritten = 0;
 
   while (len > 0) {
     while (len > 0 && lpc->samples < LPC10_SAMPLES_PER_FRAME) {

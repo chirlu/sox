@@ -12,7 +12,7 @@
 #include "sox_i.h"
 #include <string.h>
 
-#define LINEWIDTH 256
+#define LINEWIDTH (size_t)256
 
 /* Private data for dat file */
 typedef struct {
@@ -41,7 +41,7 @@ static int sox_datstartread(sox_format_t * ft)
     }
     /* Hold a copy of the last line we read (first non-comment) */
     if (status != SOX_EOF) {
-      strncpy(((priv_t *)ft->priv)->prevline, inpstr, LINEWIDTH);
+      strncpy(((priv_t *)ft->priv)->prevline, inpstr, (size_t)LINEWIDTH);
       ((priv_t *)ft->priv)->buffered = 1;
     } else {
       ((priv_t *)ft->priv)->buffered = 0;
@@ -72,7 +72,7 @@ static int sox_datstartwrite(sox_format_t * ft)
     return (SOX_SUCCESS);
 }
 
-static sox_size_t sox_datread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
+static size_t sox_datread(sox_format_t * ft, sox_sample_t *buf, size_t nsamp)
 {
     char inpstr[LINEWIDTH];
     int  inpPtr = 0;
@@ -80,8 +80,8 @@ static sox_size_t sox_datread(sox_format_t * ft, sox_sample_t *buf, sox_size_t n
     double sampval = 0.0;
     int retc = 0;
     char sc = 0;
-    sox_size_t done = 0;
-    sox_size_t i=0;
+    size_t done = 0;
+    size_t i=0;
 
     /* Always read a complete set of channels */
     nsamp -= (nsamp % ft->signal.channels);
@@ -90,7 +90,7 @@ static sox_size_t sox_datread(sox_format_t * ft, sox_sample_t *buf, sox_size_t n
 
       /* Read a line or grab the buffered first line */
       if (((priv_t *)ft->priv)->buffered) {
-        strncpy(inpstr, ((priv_t *)ft->priv)->prevline, LINEWIDTH);
+        strncpy(inpstr, ((priv_t *)ft->priv)->prevline, (size_t)LINEWIDTH);
         ((priv_t *)ft->priv)->buffered=0;
       } else {
         lsx_reads(ft, inpstr, LINEWIDTH-1);
@@ -119,13 +119,13 @@ static sox_size_t sox_datread(sox_format_t * ft, sox_sample_t *buf, sox_size_t n
     return (done);
 }
 
-static sox_size_t sox_datwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
+static size_t sox_datwrite(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp)
 {
     priv_t * dat = (priv_t *) ft->priv;
-    sox_size_t done = 0;
+    size_t done = 0;
     double sampval=0.0;
     char s[LINEWIDTH];
-    sox_size_t i=0;
+    size_t i=0;
 
     /* Always write a complete set of channels */
     nsamp -= (nsamp % ft->signal.channels);

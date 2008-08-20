@@ -112,10 +112,10 @@ int sox_biquad_start(sox_effect_t * effp)
 
 
 int sox_biquad_flow(sox_effect_t * effp, const sox_sample_t *ibuf,
-    sox_sample_t *obuf, sox_size_t *isamp, sox_size_t *osamp)
+    sox_sample_t *obuf, size_t *isamp, size_t *osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  sox_size_t len = *isamp = *osamp = min(*isamp, *osamp);
+  size_t len = *isamp = *osamp = min(*isamp, *osamp);
   while (len--) {
     double o0 = *ibuf*p->b0 + p->i1*p->b1 + p->i2*p->b2 - p->o1*p->a1 - p->o2*p->a2;
     p->i2 = p->i1, p->i1 = *ibuf++;

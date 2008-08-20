@@ -52,7 +52,7 @@ static int startread(sox_format_t * ft)
             return rc;
 
         /* read FORM chunk */
-        if (lsx_reads(ft, buf, 4) == SOX_EOF || strncmp(buf, "FORM", 4) != 0)
+        if (lsx_reads(ft, buf, (size_t)4) == SOX_EOF || strncmp(buf, "FORM", (size_t)4) != 0)
         {
                 lsx_fail_errno(ft,SOX_EHDR,"MAUD: header does not begin with magic word 'FORM'");
                 return (SOX_EOF);
@@ -60,7 +60,7 @@ static int startread(sox_format_t * ft)
 
         lsx_readdw(ft, &trash32); /* totalsize */
 
-        if (lsx_reads(ft, buf, 4) == SOX_EOF || strncmp(buf, "MAUD", 4) != 0)
+        if (lsx_reads(ft, buf, (size_t)4) == SOX_EOF || strncmp(buf, "MAUD", (size_t)4) != 0)
         {
                 lsx_fail_errno(ft,SOX_EHDR,"MAUD: 'FORM' chunk does not specify 'MAUD' as type");
                 return(SOX_EOF);
@@ -68,14 +68,14 @@ static int startread(sox_format_t * ft)
 
         /* read chunks until 'BODY' (or end) */
 
-        while (lsx_reads(ft, buf, 4) == SOX_SUCCESS && strncmp(buf,"MDAT",4) != 0) {
+        while (lsx_reads(ft, buf, (size_t)4) == SOX_SUCCESS && strncmp(buf,"MDAT",(size_t)4) != 0) {
 
                 /*
                 buf[4] = 0;
                 sox_debug("chunk %s",buf);
                 */
 
-                if (strncmp(buf,"MHDR",4) == 0) {
+                if (strncmp(buf,"MHDR",(size_t)4) == 0) {
 
                         lsx_readdw(ft, &chunksize);
                         if (chunksize != 8*4)
@@ -156,12 +156,12 @@ static int startread(sox_format_t * ft)
                         continue;
                 }
 
-                if (strncmp(buf,"ANNO",4) == 0) {
+                if (strncmp(buf,"ANNO",(size_t)4) == 0) {
                         lsx_readdw(ft, &chunksize);
                         if (chunksize & 1)
                                 chunksize++;
-                        chunk_buf = lsx_malloc(chunksize + 1);
-                        if (lsx_readbuf(ft, chunk_buf, chunksize)
+                        chunk_buf = lsx_malloc(chunksize + (size_t)1);
+                        if (lsx_readbuf(ft, chunk_buf, (size_t)chunksize)
                             != chunksize)
                         {
                                 lsx_fail_errno(ft,SOX_EOF,"MAUD: Unexpected EOF in ANNO header");
@@ -178,12 +178,12 @@ static int startread(sox_format_t * ft)
                 lsx_readdw(ft, &chunksize);
                 if (chunksize & 1)
                         chunksize++;
-                lsx_seeki(ft, (sox_ssize_t)chunksize, SEEK_CUR);
+                lsx_seeki(ft, (ptrdiff_t)chunksize, SEEK_CUR);
                 continue;
 
         }
 
-        if (strncmp(buf,"MDAT",4) != 0)
+        if (strncmp(buf,"MDAT",(size_t)4) != 0)
         {
             lsx_fail_errno(ft,SOX_EFMT,"MAUD: MDAT chunk not found");
             return(SOX_EOF);
@@ -214,7 +214,7 @@ static int startwrite(sox_format_t * ft)
         return (SOX_SUCCESS);
 }
 
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
         priv_t * p = (priv_t *) ft->priv;
 
@@ -227,7 +227,7 @@ static int stopwrite(sox_format_t * ft)
 {
         /* All samples are already written out. */
 
-        if (lsx_seeki(ft, 0, 0) != 0)
+        if (lsx_seeki(ft, (size_t)0, 0) != 0)
         {
             lsx_fail_errno(ft,errno,"can't rewind output file to rewrite MAUD header");
             return(SOX_EOF);

@@ -54,9 +54,9 @@ typedef struct {
                                individually when = 1 and input not mono */
   double delay;             /* Delay to apply before companding */
   sox_sample_t *delay_buf;   /* Old samples, used for delay processing */
-  sox_ssize_t delay_buf_size;/* Size of delay_buf in samples */
-  sox_ssize_t delay_buf_index; /* Index into delay_buf */
-  sox_ssize_t delay_buf_cnt; /* No. of active entries in delay_buf */
+  ptrdiff_t delay_buf_size;/* Size of delay_buf in samples */
+  ptrdiff_t delay_buf_index; /* Index into delay_buf */
+  ptrdiff_t delay_buf_cnt; /* No. of active entries in delay_buf */
   int delay_buf_full;       /* Shows buffer situation (important for drain) */
 } priv_t;
 
@@ -150,7 +150,7 @@ static int start(sox_effect_t * effp)
   /* Allocate the delay buffer */
   l->delay_buf_size = l->delay * effp->out_signal.rate * effp->out_signal.channels;
   if (l->delay_buf_size > 0)
-    l->delay_buf = lsx_calloc((sox_size_t)l->delay_buf_size, sizeof(*l->delay_buf));
+    l->delay_buf = lsx_calloc((size_t)l->delay_buf_size, sizeof(*l->delay_buf));
   l->delay_buf_index = 0;
   l->delay_buf_cnt = 0;
   l->delay_buf_full= 0;
@@ -174,7 +174,7 @@ static void doVolume(double *v, double samp, priv_t * l, int chan)
 }
 
 static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                    sox_size_t *isamp, sox_size_t *osamp)
+                    size_t *isamp, size_t *osamp)
 {
   priv_t * l = (priv_t *) effp->priv;
   int len =  (*isamp > *osamp) ? *osamp : *isamp;
@@ -234,10 +234,10 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
   return (SOX_SUCCESS);
 }
 
-static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
   priv_t * l = (priv_t *) effp->priv;
-  sox_size_t chan, done = 0;
+  size_t chan, done = 0;
 
   if (l->delay_buf_full == 0)
     l->delay_buf_index = 0;

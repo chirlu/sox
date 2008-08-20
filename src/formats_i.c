@@ -95,9 +95,9 @@ sox_sample_t lsx_sample_max(sox_encodinginfo_t const * encoding)
 /* Read in a buffer of data of length len bytes.
  * Returns number of bytes read.
  */
-size_t lsx_readbuf(sox_format_t * ft, void *buf, sox_size_t len)
+size_t lsx_readbuf(sox_format_t * ft, void *buf, size_t len)
 {
-  size_t ret = fread(buf, 1, len, ft->fp);
+  size_t ret = fread(buf, (size_t) 1, len, ft->fp);
   if (ret != len && ferror(ft->fp))
     lsx_fail_errno(ft, errno, "lsx_readbuf");
   ft->tell_off += ret;
@@ -105,7 +105,7 @@ size_t lsx_readbuf(sox_format_t * ft, void *buf, sox_size_t len)
 }
 
 /* Skip input without seeking. */
-int lsx_skipbytes(sox_format_t * ft, sox_size_t n)
+int lsx_skipbytes(sox_format_t * ft, size_t n)
 {
   unsigned char trash;
 
@@ -117,7 +117,7 @@ int lsx_skipbytes(sox_format_t * ft, sox_size_t n)
 }
 
 /* Pad output. */
-int lsx_padbytes(sox_format_t * ft, sox_size_t n)
+int lsx_padbytes(sox_format_t * ft, size_t n)
 {
   while (n--)
     if (lsx_writeb(ft, '\0') == SOX_EOF)
@@ -129,9 +129,9 @@ int lsx_padbytes(sox_format_t * ft, sox_size_t n)
 /* Write a buffer of data of length bytes.
  * Returns number of bytes written.
  */
-size_t lsx_writebuf(sox_format_t * ft, void const * buf, sox_size_t len)
+size_t lsx_writebuf(sox_format_t * ft, void const * buf, size_t len)
 {
-  size_t ret = fwrite(buf, 1, len, ft->fp);
+  size_t ret = fwrite(buf, (size_t) 1, len, ft->fp);
   if (ret != len) {
     lsx_fail_errno(ft, errno, "error writing output file");
     clearerr(ft->fp); /* Allows us to seek back to write header */
@@ -140,12 +140,12 @@ size_t lsx_writebuf(sox_format_t * ft, void const * buf, sox_size_t len)
   return ret;
 }
 
-sox_size_t lsx_filelength(sox_format_t * ft)
+size_t lsx_filelength(sox_format_t * ft)
 {
   struct stat st;
   int ret = fstat(fileno(ft->fp), &st);
 
-  return ret? 0 : (sox_size_t)st.st_size;
+  return ret? 0 : (size_t)st.st_size;
 }
 
 int lsx_flush(sox_format_t * ft)
@@ -153,9 +153,9 @@ int lsx_flush(sox_format_t * ft)
   return fflush(ft->fp);
 }
 
-sox_ssize_t lsx_tell(sox_format_t * ft)
+ptrdiff_t lsx_tell(sox_format_t * ft)
 {
-  return ft->seekable? (sox_ssize_t)ftello(ft->fp) : ft->tell_off;
+  return ft->seekable? (ptrdiff_t)ftello(ft->fp) : ft->tell_off;
 }
 
 int lsx_eof(sox_format_t * ft)
@@ -189,7 +189,7 @@ int lsx_unreadb(sox_format_t * ft, unsigned b)
  *
  * N.B. Can only seek forwards on non-seekable streams!
  */
-int lsx_seeki(sox_format_t * ft, sox_ssize_t offset, int whence)
+int lsx_seeki(sox_format_t * ft, ptrdiff_t offset, int whence)
 {
     if (ft->seekable == 0) {
         /* If a stream peel off chars else EPERM */
@@ -214,12 +214,12 @@ int lsx_seeki(sox_format_t * ft, sox_ssize_t offset, int whence)
     return ft->sox_errno;
 }
 
-int lsx_offset_seek(sox_format_t * ft, off_t byte_offset, sox_size_t to_sample)
+int lsx_offset_seek(sox_format_t * ft, off_t byte_offset, size_t to_sample)
 {
   double wide_sample = to_sample - (to_sample % ft->signal.channels);
   double to_d = wide_sample * ft->encoding.bits_per_sample / 8;
   off_t to = to_d;
-  return (to != to_d)? SOX_EOF : lsx_seeki(ft, (sox_ssize_t)(byte_offset + to), SEEK_SET);
+  return (to != to_d)? SOX_EOF : lsx_seeki(ft, (ptrdiff_t)(byte_offset + to), SEEK_SET);
 }
 
 /* Read and write known datatypes in "machine format".  Swap if indicated.
@@ -228,7 +228,7 @@ int lsx_offset_seek(sox_format_t * ft, off_t byte_offset, sox_size_t to_sample)
 /* Read n-char string (and possibly null-terminating).
  * Stop reading and null-terminate string if either a 0 or \n is reached.
  */
-int lsx_reads(sox_format_t * ft, char *c, sox_size_t len)
+int lsx_reads(sox_format_t * ft, char *c, size_t len)
 {
     char *sc;
     char in;
@@ -236,7 +236,7 @@ int lsx_reads(sox_format_t * ft, char *c, sox_size_t len)
     sc = c;
     do
     {
-        if (lsx_readbuf(ft, &in, 1) != 1)
+        if (lsx_readbuf(ft, &in, (size_t)1) != 1)
         {
             *sc = 0;
             return (SOX_EOF);
@@ -273,9 +273,9 @@ static void lsx_swapf(float * f)
 }
 
 /* generic swap routine. Swap l and place in to f (datatype length = n) */
-static void swap(char const * l, char * f, int n)
+static void swap(char const * l, char * f, size_t n)
 {
-    register int i;
+    size_t i;
 
     for (i= 0; i< n; i++)
         f[i]= l[n-i-1];
@@ -284,7 +284,7 @@ static void swap(char const * l, char * f, int n)
 static double lsx_swapdf(double df)
 {
     double sdf;
-    swap((char *)&df, (char *)&sdf, sizeof(double));
+    swap((char *)&df, (char *)&sdf, (size_t) sizeof(double));
     return (sdf);
 }
 
@@ -334,10 +334,10 @@ static uint8_t const cswap[256] = {
 /* N.B. This macro doesn't work for unaligned types (e.g. 3-byte
    types). */
 #define READ_FUNC(type, size, ctype, twiddle) \
-  sox_size_t lsx_read_ ## type ## _buf( \
-      sox_format_t * ft, ctype *buf, sox_size_t len) \
+  size_t lsx_read_ ## type ## _buf( \
+      sox_format_t * ft, ctype *buf, size_t len) \
   { \
-    sox_size_t n, nread; \
+    size_t n, nread; \
     nread = lsx_readbuf(ft, buf, len * size) / size; \
     for (n = 0; n < nread; n++) \
       twiddle(buf[n], type); \
@@ -352,10 +352,10 @@ static uint8_t const cswap[256] = {
 /* This (slower) macro works for unaligned types (e.g. 3-byte types)
    that need to be unpacked. */
 #define READ_FUNC_UNPACK(type, size, ctype, twiddle) \
-  sox_size_t lsx_read_ ## type ## _buf( \
-      sox_format_t * ft, ctype *buf, sox_size_t len) \
+  size_t lsx_read_ ## type ## _buf( \
+      sox_format_t * ft, ctype *buf, size_t len) \
   { \
-    sox_size_t n, nread; \
+    size_t n, nread; \
     uint8_t *data = lsx_malloc(size * len); \
     nread = lsx_readbuf(ft, data, len * size) / size; \
     for (n = 0; n < nread; n++) \
@@ -373,7 +373,7 @@ READ_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
 
 #define READ1_FUNC(type, ctype) \
 int lsx_read ## type(sox_format_t * ft, ctype * datum) { \
-  if (lsx_read_ ## type ## _buf(ft, datum, 1) == 1) \
+  if (lsx_read_ ## type ## _buf(ft, datum, (size_t)1) == 1) \
     return SOX_SUCCESS; \
   if (!lsx_error(ft)) \
     lsx_fail_errno(ft, errno, premature_eof); \
@@ -389,7 +389,7 @@ READ1_FUNC(dw, uint32_t)
 READ1_FUNC(f,  float)
 READ1_FUNC(df, double)
 
-int lsx_readchars(sox_format_t * ft, char * chars, sox_size_t len)
+int lsx_readchars(sox_format_t * ft, char * chars, size_t len)
 {
   size_t ret = lsx_readbuf(ft, chars, len);
   if (ret == len)
@@ -402,10 +402,10 @@ int lsx_readchars(sox_format_t * ft, char * chars, sox_size_t len)
 /* N.B. This macro doesn't work for unaligned types (e.g. 3-byte
    types). */
 #define WRITE_FUNC(type, size, ctype, twiddle) \
-  sox_size_t lsx_write_ ## type ## _buf( \
-      sox_format_t * ft, ctype *buf, sox_size_t len) \
+  size_t lsx_write_ ## type ## _buf( \
+      sox_format_t * ft, ctype *buf, size_t len) \
   { \
-    sox_size_t n, nwritten; \
+    size_t n, nwritten; \
     for (n = 0; n < len; n++) \
       twiddle(buf[n], type); \
     nwritten = lsx_writebuf(ft, buf, len * size); \
@@ -421,10 +421,10 @@ int lsx_readchars(sox_format_t * ft, char * chars, sox_size_t len)
 /* This (slower) macro works for unaligned types (e.g. 3-byte types)
    that need to be packed. */
 #define WRITE_FUNC_PACK(type, size, ctype, twiddle) \
-  sox_size_t lsx_write_ ## type ## _buf( \
-      sox_format_t * ft, ctype *buf, sox_size_t len) \
+  size_t lsx_write_ ## type ## _buf( \
+      sox_format_t * ft, ctype *buf, size_t len) \
   { \
-    sox_size_t n, nwritten; \
+    size_t n, nwritten; \
     uint8_t *data = lsx_malloc(size * len); \
     for (n = 0; n < len; n++) \
       sox_pack ## size(data + n * size, buf[n]); \
@@ -443,19 +443,19 @@ WRITE_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
 #define WRITE1U_FUNC(type, ctype) \
   int lsx_write ## type(sox_format_t * ft, unsigned d) \
   { ctype datum = (ctype)d; \
-    return lsx_write_ ## type ## _buf(ft, &datum, 1) == 1 ? SOX_SUCCESS : SOX_EOF; \
+    return lsx_write_ ## type ## _buf(ft, &datum, (size_t)1) == 1 ? SOX_SUCCESS : SOX_EOF; \
   }
 
 #define WRITE1S_FUNC(type, ctype) \
   int lsx_writes ## type(sox_format_t * ft, signed d) \
   { ctype datum = (ctype)d; \
-    return lsx_write_ ## type ## _buf(ft, &datum, 1) == 1 ? SOX_SUCCESS : SOX_EOF; \
+    return lsx_write_ ## type ## _buf(ft, &datum, (size_t)1) == 1 ? SOX_SUCCESS : SOX_EOF; \
   }
 
 #define WRITE1_FUNC(type, ctype) \
   int lsx_write ## type(sox_format_t * ft, ctype datum) \
   { \
-    return lsx_write_ ## type ## _buf(ft, &datum, 1) == 1 ? SOX_SUCCESS : SOX_EOF; \
+    return lsx_write_ ## type ## _buf(ft, &datum, (size_t)1) == 1 ? SOX_SUCCESS : SOX_EOF; \
   }
 
 WRITE1U_FUNC(b, uint8_t)
@@ -469,5 +469,5 @@ WRITE1_FUNC(df, double)
 int lsx_writef(sox_format_t * ft, double datum)
 {
   float f = datum;
-  return lsx_write_f_buf(ft, &f, 1) == 1 ? SOX_SUCCESS : SOX_EOF;
+  return lsx_write_f_buf(ft, &f, (size_t) 1) == 1 ? SOX_SUCCESS : SOX_EOF;
 }

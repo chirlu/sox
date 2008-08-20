@@ -38,8 +38,8 @@ typedef struct {
         struct mad_synth        Synth;
         mad_timer_t             Timer;
         unsigned char           *InputBuffer;
-        sox_ssize_t             cursamp;
-        sox_size_t              FrameCount;
+        ptrdiff_t             cursamp;
+        size_t              FrameCount;
 #endif /*HAVE_MAD_H*/
 #ifdef HAVE_LAME_LAME_H
         lame_global_flags       *gfp;
@@ -258,15 +258,16 @@ static int startread(sox_format_t * ft)
  * Place in buf[].
  * Return number of samples read.
  */
-static sox_size_t sox_mp3read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static size_t sox_mp3read(sox_format_t * ft, sox_sample_t *buf, size_t len)
 {
     priv_t *p = (priv_t *) ft->priv;
-    sox_size_t donow,i,done=0;
+    size_t donow,i,done=0;
     mad_fixed_t sample;
     size_t chan;
 
     do {
-        donow=min(len,(p->Synth.pcm.length - p->cursamp)*ft->signal.channels);
+        size_t x = (p->Synth.pcm.length - p->cursamp)*ft->signal.channels;
+        donow=min(len, x);
         i=0;
         while(i<donow){
             for(chan=0;chan<ft->signal.channels;chan++){
@@ -397,16 +398,16 @@ static int startwrite(sox_format_t * ft)
   return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t samp)
+static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t samp)
 {
     priv_t *p = (priv_t *)ft->priv;
     unsigned char *mp3buffer;
-    sox_size_t mp3buffer_size;
+    size_t mp3buffer_size;
     short signed int *buffer_l, *buffer_r = NULL;
     int nsamples = samp/ft->signal.channels;
     int i,j;
-    sox_ssize_t done = 0;
-    sox_size_t written;
+    ptrdiff_t done = 0;
+    size_t written;
 
     /* NOTE: This logic assumes that "short int" is 16-bits
      * on all platforms.  It happens to be for all that I know

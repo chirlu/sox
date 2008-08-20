@@ -31,7 +31,7 @@ typedef struct {
   double out_rate;
   SRC_STATE *state;             /* SRC state struct */
   SRC_DATA *data;               /* SRC_DATA control struct */
-  sox_size_t i_alloc, o_alloc;  /* Samples allocated in data->data_{in,out} */
+  size_t i_alloc, o_alloc;  /* Samples allocated in data->data_{in,out} */
 } priv_t;
 
 /*
@@ -105,15 +105,15 @@ static int start(sox_effect_t * effp)
  * Read, convert, return data.
  */
 static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf UNUSED,
-                   sox_size_t *isamp, sox_size_t *osamp)
+                   size_t *isamp, size_t *osamp)
 {
   priv_t * r = (priv_t *) effp->priv;
   SRC_DATA *d = r->data;
   unsigned int channels = effp->in_signal.channels;
-  sox_size_t i;
-  sox_size_t isamples0 = d->input_frames * channels;
-  sox_size_t isamples = isamples0 + *isamp;
-  sox_size_t osamples = isamples * (d->src_ratio + 0.01) + 8;
+  size_t i;
+  size_t isamples0 = d->input_frames * channels;
+  size_t isamples = isamples0 + *isamp;
+  size_t osamples = isamples * (d->src_ratio + 0.01) + 8;
 
   if (osamples > *osamp) {
     osamples = *osamp;
@@ -147,7 +147,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
        memmove(d->data_in, d->data_in + d->input_frames_used * sizeof(float),
            d->input_frames * sizeof(float));
 
-    for (i = 0; i < (sox_size_t)d->output_frames_gen * channels; i++)
+    for (i = 0; i < (size_t)d->output_frames_gen * channels; i++)
       obuf[i] = SOX_FLOAT_32BIT_TO_SAMPLE(d->data_out[i], effp->clips);
     *osamp += i;
 
@@ -161,10 +161,10 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
 /*
  * Process samples and write output.
  */
-static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
   priv_t * r = (priv_t *) effp->priv;
-  static sox_size_t isamp = 0;
+  static size_t isamp = 0;
   r->data->end_of_input = 1;
   return flow(effp, NULL, obuf, &isamp, osamp);
 }

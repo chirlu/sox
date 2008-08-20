@@ -31,7 +31,7 @@ static int start(sox_effect_t * effp)
 }
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
-    sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+    sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
   if (fwrite(ibuf, sizeof(*ibuf), *isamp, p->tmp_file) != *isamp) {
@@ -42,7 +42,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   return SOX_SUCCESS;
 }
 
-static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
   size_t i, j;

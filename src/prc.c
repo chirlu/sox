@@ -68,7 +68,7 @@ typedef struct {
 
 static void prcwriteheader(sox_format_t * ft);
 
-static int seek(sox_format_t * ft, sox_size_t offset)
+static int seek(sox_format_t * ft, size_t offset)
 {
   priv_t * p = (priv_t *)ft->priv;
   if (ft->encoding.encoding == SOX_ENCODING_ALAW)
@@ -145,8 +145,8 @@ static int startread(sox_format_t * ft)
 
   byte >>= 2;
   assert(byte < 64);
-  lsx_reads(ft, appname, byte);
-  if (strncasecmp(appname, "record.app", byte) != 0) {
+  lsx_reads(ft, appname, (size_t)byte);
+  if (strncasecmp(appname, "record.app", (size_t) byte) != 0) {
     lsx_fail_errno(ft, SOX_EHDR, "Invalid application name string %.63s", appname);
     return SOX_EOF;
   }
@@ -243,14 +243,14 @@ static unsigned read_cardinal(sox_format_t * ft)
   return a;
 }
 
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t samp)
+static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t samp)
 {
   priv_t * p = (priv_t *)ft->priv;
 
   sox_debug_more("length now = %d", p->nsamp);
 
   if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) {
-    sox_size_t nsamp, read;
+    size_t nsamp, read;
 
     if (p->frame_samp == 0) {
       unsigned framelen = read_cardinal(ft);
@@ -357,21 +357,21 @@ static void write_cardinal(sox_format_t * ft, unsigned a)
   }
 }
 
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp)
 {
   priv_t * p = (priv_t *)ft->priv;
   /* Psion Record seems not to be able to handle frames > 800 samples */
-  sox_size_t written = 0;
+  size_t written = 0;
   sox_debug_more("length now = %d", p->nsamp);
   if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) while (written < nsamp) {
-    sox_size_t written1, samp = min(nsamp - written, 800);
+    size_t written1, samp = min(nsamp - written, 800);
 
-    write_cardinal(ft, samp);
+    write_cardinal(ft, (unsigned) samp);
     /* Write compressed length */
-    write_cardinal(ft, (samp / 2) + (samp % 2) + 4);
+    write_cardinal(ft, (unsigned) ((samp / 2) + (samp % 2) + 4));
     /* Write length again (seems to be a BListL) */
-    sox_debug_more("list length %d", samp);
-    lsx_writedw(ft, samp);
+    sox_debug_more("list length %lu", (unsigned long)samp);
+    lsx_writedw(ft, (unsigned) samp);
     sox_adpcm_reset(&p->adpcm, ft->encoding.encoding);
     written1 = sox_adpcm_write(ft, &p->adpcm, buf, samp);
     if (written1 != samp)
@@ -395,7 +395,7 @@ static int stopwrite(sox_format_t * ft)
       return SOX_SUCCESS;
   }
 
-  if (lsx_seeki(ft, 0, 0) != 0) {
+  if (lsx_seeki(ft, (size_t)0, 0) != 0) {
       lsx_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
       return(SOX_EOF);
   }

@@ -201,10 +201,10 @@ static int sox_chorus_start(sox_effect_t * effp)
 
                 if (chorus->modulation[i] == MOD_SINE)
                   lsx_generate_wave_table(SOX_WAVE_SINE, SOX_INT, chorus->lookup_tab[i],
-                                         (unsigned)chorus->length[i], 0., (double)chorus->depth_samples[i], 0.);
+                                         (size_t)chorus->length[i], 0., (double)chorus->depth_samples[i], 0.);
                 else
                   lsx_generate_wave_table(SOX_WAVE_TRIANGLE, SOX_INT, chorus->lookup_tab[i],
-                                         (unsigned)chorus->length[i],
+                                         (size_t)chorus->length[i],
                                          (double)(chorus->samples[i] - 1 - 2 * chorus->depth_samples[i]),
                                          (double)(chorus->samples[i] - 1), 3 * M_PI_2);
                 chorus->phase[i] = 0;
@@ -235,13 +235,13 @@ static int sox_chorus_start(sox_effect_t * effp)
  * Return number of samples processed.
  */
 static int sox_chorus_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                   sox_size_t *isamp, sox_size_t *osamp)
+                   size_t *isamp, size_t *osamp)
 {
         priv_t * chorus = (priv_t *) effp->priv;
         int i;
         float d_in, d_out;
         sox_sample_t out;
-        sox_size_t len = min(*isamp, *osamp);
+        size_t len = min(*isamp, *osamp);
         *isamp = *osamp = len;
 
         while (len--) {
@@ -272,10 +272,10 @@ static int sox_chorus_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
 /*
  * Drain out reverb lines.
  */
-static int sox_chorus_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_chorus_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
         priv_t * chorus = (priv_t *) effp->priv;
-        sox_size_t done;
+        size_t done;
         int i;
 
         float d_in, d_out;

@@ -20,7 +20,7 @@
 #include <string.h>
 
 static char const ID1[6] = "SOUND\x1a";
-#define text_field_len 96  /* Includes null-terminator */
+#define text_field_len (size_t)96  /* Includes null-terminator */
 
 static int start_read(sox_format_t * ft)
 {
@@ -29,8 +29,8 @@ static int start_read(sox_format_t * ft)
   uint16_t rate;
 
   if (lsx_readchars(ft, id1, sizeof(ID1)) ||
-      lsx_skipbytes(ft, 10) || lsx_readdw(ft, &nsamples) ||
-      lsx_readw(ft, &rate) || lsx_skipbytes(ft, 6) ||
+      lsx_skipbytes(ft, (size_t) 10) || lsx_readdw(ft, &nsamples) ||
+      lsx_readw(ft, &rate) || lsx_skipbytes(ft, (size_t) 6) ||
       lsx_readchars(ft, comments, text_field_len))
     return SOX_EOF;
   if (memcmp(ID1, id1, sizeof(id1))) {
@@ -46,16 +46,16 @@ static int write_header(sox_format_t * ft)
 {
   char * comment = sox_cat_comments(ft->oob.comments);
   char text_buf[text_field_len];
-  sox_size_t length = ft->olength? ft->olength:ft->signal.length;
+  size_t length = ft->olength? ft->olength:ft->signal.length;
 
   memset(text_buf, 0, sizeof(text_buf));
   strncpy(text_buf, comment, text_field_len - 1);
   free(comment);
   return lsx_writechars(ft, ID1, sizeof(ID1))
       || lsx_writew  (ft, 0)      /* GSound: not used */
-      || lsx_writedw (ft, length) /* length of complete sample */
+      || lsx_writedw (ft, (unsigned) length) /* length of complete sample */
       || lsx_writedw (ft, 0)      /* first byte to play from sample */
-      || lsx_writedw (ft, length) /* first byte NOT to play from sample */
+      || lsx_writedw (ft, (unsigned) length) /* first byte NOT to play from sample */
       || lsx_writew  (ft, min(65535, (unsigned)(ft->signal.rate + .5)))
       || lsx_writew  (ft, 0)      /* sample size/type */
       || lsx_writew  (ft, 10)     /* speaker driver volume */

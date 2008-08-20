@@ -36,6 +36,14 @@ extern enum_item const lsx_wave_enum[];
 assert_static(sizeof(off_t) == _FILE_OFFSET_BITS >> 3, OFF_T_BUILD_PROBLEM);
 #endif
 
+#if defined __GNUC__
+#define FMT_size_t "zu"
+#elif defined _MSC_VER
+#define FMT_size_t "Iu"
+#else
+#define FMT_size_t "lu"
+#endif
+
 /* Digitise one cycle of a wave and store it as
  * a table of samples of a specified data-type.
  */
@@ -43,15 +51,15 @@ void lsx_generate_wave_table(
     lsx_wave_t wave_type,
     sox_data_t data_type,
     void * table,       /* Really of type indicated by data_type. */
-    uint32_t table_size,/* Number of points on the x-axis. */
+    size_t table_size,  /* Number of points on the x-axis. */
     double min,         /* Minimum value on the y-axis. (e.g. -1) */
     double max,         /* Maximum value on the y-axis. (e.g. +1) */
     double phase);      /* Phase at 1st point; 0..2pi. (e.g. pi/2 for cosine) */
-char const * lsx_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samples, int def);
+char const * lsx_parsesamples(sox_rate_t rate, const char *str, size_t *samples, int def);
 double lsx_parse_frequency(char const * text, char * * end_ptr);
 
-sox_sample_t lsx_gcd(sox_sample_t a, sox_sample_t b);
-sox_sample_t lsx_lcm(sox_sample_t a, sox_sample_t b);
+unsigned lsx_gcd(unsigned a, unsigned b);
+unsigned lsx_lcm(unsigned a, unsigned b);
 
 double bessel_I_0(double x);
 
@@ -74,32 +82,32 @@ int strncasecmp(char const * s1, char const * s2, size_t n);
 /*------------------------ Implemented in libsoxio.c -------------------------*/
 
 /* Read and write basic data types from "ft" stream. */
-size_t lsx_readbuf(sox_format_t * ft, void *buf, sox_size_t len);
-int lsx_skipbytes(sox_format_t * ft, sox_size_t n);
-int lsx_padbytes(sox_format_t * ft, sox_size_t n);
-size_t lsx_writebuf(sox_format_t * ft, void const *buf, sox_size_t len);
-int lsx_reads(sox_format_t * ft, char *c, sox_size_t len);
+size_t lsx_readbuf(sox_format_t * ft, void *buf, size_t len);
+int lsx_skipbytes(sox_format_t * ft, size_t n);
+int lsx_padbytes(sox_format_t * ft, size_t n);
+size_t lsx_writebuf(sox_format_t * ft, void const *buf, size_t len);
+int lsx_reads(sox_format_t * ft, char *c, size_t len);
 int lsx_writes(sox_format_t * ft, char const * c);
 void lsx_set_signal_defaults(sox_signalinfo_t * signal);
 #define lsx_writechars(ft, chars, len) (lsx_writebuf(ft, chars, len) == len? SOX_SUCCESS : SOX_EOF)
 
-sox_size_t lsx_read_3_buf(sox_format_t * ft, uint24_t *buf, sox_size_t len);
-sox_size_t lsx_read_b_buf(sox_format_t * ft, uint8_t *buf, sox_size_t len);
-sox_size_t lsx_read_df_buf(sox_format_t * ft, double *buf, sox_size_t len);
-sox_size_t lsx_read_dw_buf(sox_format_t * ft, uint32_t *buf, sox_size_t len);
-sox_size_t lsx_read_f_buf(sox_format_t * ft, float *buf, sox_size_t len);
-sox_size_t lsx_read_w_buf(sox_format_t * ft, uint16_t *buf, sox_size_t len);
+size_t lsx_read_3_buf(sox_format_t * ft, uint24_t *buf, size_t len);
+size_t lsx_read_b_buf(sox_format_t * ft, uint8_t *buf, size_t len);
+size_t lsx_read_df_buf(sox_format_t * ft, double *buf, size_t len);
+size_t lsx_read_dw_buf(sox_format_t * ft, uint32_t *buf, size_t len);
+size_t lsx_read_f_buf(sox_format_t * ft, float *buf, size_t len);
+size_t lsx_read_w_buf(sox_format_t * ft, uint16_t *buf, size_t len);
 
-sox_size_t lsx_write_3_buf(sox_format_t * ft, uint24_t *buf, sox_size_t len);
-sox_size_t lsx_write_b_buf(sox_format_t * ft, uint8_t *buf, sox_size_t len);
-sox_size_t lsx_write_df_buf(sox_format_t * ft, double *buf, sox_size_t len);
-sox_size_t lsx_write_dw_buf(sox_format_t * ft, uint32_t *buf, sox_size_t len);
-sox_size_t lsx_write_f_buf(sox_format_t * ft, float *buf, sox_size_t len);
-sox_size_t lsx_write_w_buf(sox_format_t * ft, uint16_t *buf, sox_size_t len);
+size_t lsx_write_3_buf(sox_format_t * ft, uint24_t *buf, size_t len);
+size_t lsx_write_b_buf(sox_format_t * ft, uint8_t *buf, size_t len);
+size_t lsx_write_df_buf(sox_format_t * ft, double *buf, size_t len);
+size_t lsx_write_dw_buf(sox_format_t * ft, uint32_t *buf, size_t len);
+size_t lsx_write_f_buf(sox_format_t * ft, float *buf, size_t len);
+size_t lsx_write_w_buf(sox_format_t * ft, uint16_t *buf, size_t len);
 
 int lsx_read3(sox_format_t * ft, uint24_t * u3);
 int lsx_readb(sox_format_t * ft, uint8_t * ub);
-int lsx_readchars(sox_format_t * ft, char * chars, sox_size_t len);
+int lsx_readchars(sox_format_t * ft, char * chars, size_t len);
 int lsx_readdf(sox_format_t * ft, double * d);
 int lsx_readdw(sox_format_t * ft, uint32_t * udw);
 int lsx_readf(sox_format_t * ft, float * f);
@@ -123,14 +131,14 @@ int lsx_writesw(sox_format_t * ft, signed);
 int lsx_eof(sox_format_t * ft);
 int lsx_error(sox_format_t * ft);
 int lsx_flush(sox_format_t * ft);
-int lsx_seeki(sox_format_t * ft, sox_ssize_t offset, int whence);
+int lsx_seeki(sox_format_t * ft, ptrdiff_t offset, int whence);
 int lsx_unreadb(sox_format_t * ft, unsigned ub);
-sox_size_t lsx_filelength(sox_format_t * ft);
-sox_ssize_t lsx_tell(sox_format_t * ft);
+size_t lsx_filelength(sox_format_t * ft);
+ptrdiff_t lsx_tell(sox_format_t * ft);
 void lsx_clearerr(sox_format_t * ft);
 void lsx_rewind(sox_format_t * ft);
 
-int lsx_offset_seek(sox_format_t * ft, off_t byte_offset, sox_size_t to_sample);
+int lsx_offset_seek(sox_format_t * ft, off_t byte_offset, size_t to_sample);
 
 void lsx_fail_errno(sox_format_t *, int, const char *, ...)
 #ifdef __GNUC__
@@ -158,11 +166,11 @@ sox_format_handler_t const * sox_##name##_format_fn(void)
 
 /* Raw I/O */
 int lsx_rawstartread(sox_format_t * ft);
-sox_size_t lsx_rawread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp);
+size_t lsx_rawread(sox_format_t * ft, sox_sample_t *buf, size_t nsamp);
 int lsx_rawstopread(sox_format_t * ft);
 int lsx_rawstartwrite(sox_format_t * ft);
-sox_size_t lsx_rawwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp);
-int lsx_rawseek(sox_format_t * ft, sox_size_t offset);
+size_t lsx_rawwrite(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp);
+int lsx_rawseek(sox_format_t * ft, size_t offset);
 int lsx_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_bool default_length, sox_encoding_t encoding, unsigned size);
 #define lsx_rawstartread(ft) lsx_rawstart(ft, sox_false, sox_false, sox_false, SOX_ENCODING_UNKNOWN, 0)
 #define lsx_rawstartwrite lsx_rawstartread

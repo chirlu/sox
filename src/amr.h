@@ -22,16 +22,16 @@ typedef struct {
   void * state;
   unsigned mode;
   short pcm[AMR_FRAME];
-  sox_size_t pcm_index;
+  size_t pcm_index;
 } priv_t;
 
-static sox_size_t decode_1_frame(sox_format_t * ft)
+static size_t decode_1_frame(sox_format_t * ft)
 {
   priv_t * p = (priv_t *)ft->priv;
   size_t n_1;
   UWord8 coded[AMR_CODED_MAX];
 
-  if (lsx_readbuf(ft, &coded[0], 1) != 1)
+  if (lsx_readbuf(ft, &coded[0], (size_t)1) != 1)
     return AMR_FRAME;
   n_1 = block_size[(coded[0] >> 3) & 0x0F] - 1;
   if (lsx_readbuf(ft, &coded[1], n_1) != n_1)
@@ -45,7 +45,7 @@ static sox_bool encode_1_frame(sox_format_t * ft)
   priv_t * p = (priv_t *)ft->priv;
   UWord8 coded[AMR_CODED_MAX];
 #include "amr1.h"
-  sox_bool result = lsx_writebuf(ft, coded, (unsigned)n) == (unsigned)n;
+  sox_bool result = lsx_writebuf(ft, coded, (size_t) (size_t) (unsigned)n) == (unsigned)n;
   if (!result)
     lsx_fail_errno(ft, errno, "write error");
   return result;
@@ -71,10 +71,10 @@ static int startread(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
+static size_t read_samples(sox_format_t * ft, sox_sample_t * buf, size_t len)
 {
   priv_t * p = (priv_t *)ft->priv;
-  sox_size_t done;
+  size_t done;
 
   for (done = 0; done < len; done++) {
     if (p->pcm_index >= AMR_FRAME)
@@ -111,10 +111,10 @@ static int startwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t * buf, sox_size_t len)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t * buf, size_t len)
 {
   priv_t * p = (priv_t *)ft->priv;
-  sox_size_t done;
+  size_t done;
 
   for (done = 0; done < len; ++done) {
     p->pcm[p->pcm_index++] = SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips);

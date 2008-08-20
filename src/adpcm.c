@@ -326,13 +326,13 @@ void lsx_ms_adpcm_block_mash_i(
  *  samplesPerBlock which would go into a block of size blockAlign
  *  Yes, it is confusing usage.
  */
-sox_size_t lsx_ms_adpcm_samples_in(
-        sox_size_t dataLen,
-        sox_size_t chans,
-        sox_size_t blockAlign,
-        sox_size_t samplesPerBlock
+size_t lsx_ms_adpcm_samples_in(
+        size_t dataLen,
+        size_t chans,
+        size_t blockAlign,
+        size_t samplesPerBlock
 ){
-        sox_size_t m, n;
+        size_t m, n;
 
         if (samplesPerBlock) {
                 n = (dataLen / blockAlign) * samplesPerBlock;
@@ -350,15 +350,15 @@ sox_size_t lsx_ms_adpcm_samples_in(
         return n;
 }
 
-sox_size_t lsx_ms_adpcm_bytes_per_block(
-        sox_size_t chans,
-        sox_size_t samplesPerBlock
+size_t lsx_ms_adpcm_bytes_per_block(
+        size_t chans,
+        size_t samplesPerBlock
 )
 {
-        sox_size_t n;
+        size_t n;
         n = 7*chans;  /* header */
         if (samplesPerBlock > 2)
-                n += (((sox_size_t)samplesPerBlock-2)*chans + 1)/2;
+                n += (((size_t)samplesPerBlock-2)*chans + 1)/2;
         return n;
 }
 

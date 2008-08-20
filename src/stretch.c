@@ -51,16 +51,16 @@ typedef struct {
   /* internal stuff */
   stretch_status_t state; /* automaton status */
 
-  sox_size_t size;         /* buffer size */
-  sox_size_t index;        /* next available element */
+  size_t size;         /* buffer size */
+  size_t index;        /* next available element */
   sox_sample_t *ibuf;      /* input buffer */
-  sox_size_t ishift;       /* input shift */
+  size_t ishift;       /* input shift */
 
-  sox_size_t oindex;       /* next evailable element */
+  size_t oindex;       /* next evailable element */
   double * obuf;   /* output buffer */
-  sox_size_t oshift;       /* output shift */
+  size_t oshift;       /* output shift */
 
-  sox_size_t fsize;        /* fading size */
+  size_t fsize;        /* fading size */
   double * fbuf;   /* fading, 1.0 -> 0.0 */
 
 } priv_t;
@@ -141,7 +141,7 @@ static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
 static int sox_stretch_start(sox_effect_t * effp)
 {
   priv_t * stretch = (priv_t *)effp->priv;
-  sox_size_t i;
+  size_t i;
 
   if (stretch->factor == 1)
     return SOX_EFF_NULL;
@@ -187,10 +187,11 @@ static int sox_stretch_start(sox_effect_t * effp)
     stretch->fbuf[0] = 1.0;
 
   sox_debug("start: (f=%.2f w=%.2f r=%.2f f=%.2f)"
-           " st=%d s=%d ii=%d is=%d oi=%d os=%d fs=%d\n",
-           stretch->factor, stretch->window, stretch->shift, stretch->fading,
-           stretch->state, stretch->size, stretch->index, stretch->ishift,
-           stretch->oindex, stretch->oshift, stretch->fsize);
+           " st=%d s=%lu ii=%lu is=%lu oi=%lu os=%lu fs=%lu\n", stretch->factor,
+      stretch->window, stretch->shift, stretch->fading, stretch->state,
+      (unsigned long)stretch->size, (unsigned long)stretch->index,
+      (unsigned long)stretch->ishift, (unsigned long)stretch->oindex,
+      (unsigned long)stretch->oshift, (unsigned long)stretch->fsize);
 
   return SOX_SUCCESS;
 }
@@ -220,15 +221,15 @@ static void combine(priv_t * stretch)
  * Processes flow.
  */
 static int sox_stretch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                    sox_size_t *isamp, sox_size_t *osamp)
+                    size_t *isamp, size_t *osamp)
 {
   priv_t * stretch = (priv_t *) effp->priv;
-  sox_size_t iindex = 0, oindex = 0;
-  sox_size_t i;
+  size_t iindex = 0, oindex = 0;
+  size_t i;
 
   while (iindex<*isamp && oindex<*osamp) {
     if (stretch->state == input_state) {
-      sox_size_t tocopy = min(*isamp-iindex,
+      size_t tocopy = min(*isamp-iindex,
                              stretch->size-stretch->index);
 
       memcpy(stretch->ibuf + stretch->index, ibuf + iindex, tocopy * sizeof(sox_sample_t));
@@ -286,11 +287,11 @@ static int sox_stretch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_s
  * Drain buffer at the end
  * maybe not correct ? end might be artificially faded?
  */
-static int sox_stretch_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_stretch_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
   priv_t * stretch = (priv_t *) effp->priv;
-  sox_size_t i;
-  sox_size_t oindex = 0;
+  size_t i;
+  size_t oindex = 0;
 
   if (stretch->state == input_state) {
     for (i=stretch->index; i<stretch->size; i++)

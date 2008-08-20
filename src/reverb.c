@@ -215,10 +215,10 @@ static int start(sox_effect_t * effp)
 }
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
-                sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+                sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  sox_size_t c, i, w, len = min(*isamp / p->ichannels, *osamp / p->ochannels);
+  size_t c, i, w, len = min(*isamp / p->ichannels, *osamp / p->ochannels);
 
   *isamp = len * p->ichannels, *osamp = len * p->ochannels;
   for (c = 0; c < p->ichannels; ++c)

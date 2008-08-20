@@ -51,9 +51,9 @@ typedef struct {
   /* Decoding data */
   OggVorbis_File *vf;
   char *buf;
-  sox_size_t buf_len;
-  sox_size_t start;
-  sox_size_t end;     /* Unsent data samples in buf[start] through buf[end-1] */
+  size_t buf_len;
+  size_t start;
+  size_t end;     /* Unsent data samples in buf[start] through buf[end-1] */
   int current_section;
   int eof;
 
@@ -104,7 +104,7 @@ static int startread(sox_format_t * ft)
   vb->vf = lsx_malloc(sizeof(OggVorbis_File));
 
   /* Init the decoder */
-  if (ov_open_callbacks(ft->fp, vb->vf, NULL, 0, callbacks) < 0) {
+  if (ov_open_callbacks(ft->fp, vb->vf, NULL, (size_t) 0, callbacks) < 0) {
     lsx_fail_errno(ft, SOX_EHDR, "Input not an Ogg Vorbis audio stream");
     return (SOX_EOF);
   }
@@ -175,10 +175,10 @@ static int refill_buffer(priv_t * vb)
  * Return number of samples read.
  */
 
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
+static size_t read_samples(sox_format_t * ft, sox_sample_t * buf, size_t len)
 {
   priv_t * vb = (priv_t *) ft->priv;
-  sox_size_t i;
+  size_t i;
   int ret;
   sox_sample_t l;
 
@@ -223,8 +223,8 @@ static int oe_write_page(ogg_page * page, sox_format_t * ft)
 {
   int written;
 
-  written = lsx_writebuf(ft, page->header, (sox_size_t) page->header_len);
-  written += lsx_writebuf(ft, page->body, (sox_size_t) page->body_len);
+  written = lsx_writebuf(ft, page->header, (size_t) page->header_len);
+  written += lsx_writebuf(ft, page->body, (size_t) page->body_len);
 
   return written;
 }
@@ -316,14 +316,14 @@ static int startwrite(sox_format_t * ft)
   return (SOX_SUCCESS);
 }
 
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t * buf,
-                        sox_size_t len)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t * buf,
+                        size_t len)
 {
   priv_t * vb = (priv_t *) ft->priv;
   vorbis_enc_t *ve = vb->vorbis_enc_data;
-  sox_size_t samples = len / ft->signal.channels;
+  size_t samples = len / ft->signal.channels;
   float **buffer = vorbis_analysis_buffer(&ve->vd, (int) samples);
-  sox_size_t i, j;
+  size_t i, j;
   int ret;
   int eos = 0;
 
@@ -373,7 +373,7 @@ static int stopwrite(sox_format_t * ft)
   vorbis_enc_t *ve = vb->vorbis_enc_data;
 
   /* Close out the remaining data */
-  write_samples(ft, NULL, 0);
+  write_samples(ft, NULL, (size_t) 0);
 
   ogg_stream_clear(&ve->os);
   vorbis_block_clear(&ve->vb);
@@ -383,7 +383,7 @@ static int stopwrite(sox_format_t * ft)
   return (SOX_SUCCESS);
 }
 
-static int seek(sox_format_t * ft, sox_size_t offset)
+static int seek(sox_format_t * ft, size_t offset)
 {
   priv_t * vb = (priv_t *) ft->priv;
 

@@ -158,7 +158,7 @@ int main()
   int24_t int24_2;
 
   sox_sample_t sample;
-  sox_size_t clips = 0;
+  size_t clips = 0;
 
   double d;
 

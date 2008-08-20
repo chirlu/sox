@@ -54,8 +54,8 @@ typedef struct {
 
 int sox_cvsdstartread(sox_format_t * ft);
 int sox_cvsdstartwrite(sox_format_t * ft);
-sox_size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp);
-sox_size_t sox_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp);
+size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, size_t nsamp);
+size_t sox_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp);
 int sox_cvsdstopread(sox_format_t * ft);
 int sox_cvsdstopwrite(sox_format_t * ft);
 

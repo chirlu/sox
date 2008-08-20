@@ -15,17 +15,17 @@
  */
 
 typedef struct {
-    sox_size_t nsamples;  /* number of 1-channel samples read or written */
+    size_t nsamples;  /* number of 1-channel samples read or written */
                          /* Decrements for read increments for write */
-    sox_size_t dataStart; /* need to for seeking */
+    size_t dataStart; /* need to for seeking */
 } aiff_priv_t;
 
-int sox_aiffseek(sox_format_t * ft, sox_size_t offset);
+int sox_aiffseek(sox_format_t * ft, size_t offset);
 int sox_aiffstartread(sox_format_t * ft);
-sox_size_t sox_aiffread(sox_format_t * ft, sox_sample_t *buf, sox_size_t len);
+size_t sox_aiffread(sox_format_t * ft, sox_sample_t *buf, size_t len);
 int sox_aiffstopread(sox_format_t * ft);
 int sox_aiffstartwrite(sox_format_t * ft);
-sox_size_t sox_aiffwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len);
+size_t sox_aiffwrite(sox_format_t * ft, const sox_sample_t *buf, size_t len);
 int sox_aiffstopwrite(sox_format_t * ft);
 int sox_aifcstartwrite(sox_format_t * ft);
 int sox_aifcstopwrite(sox_format_t * ft);

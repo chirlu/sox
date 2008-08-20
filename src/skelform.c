@@ -23,7 +23,7 @@
 
 /* Private data for SKEL file */
 typedef struct {
-  sox_size_t remaining_samples;
+  size_t remaining_samples;
 } priv_t;
 
 /* Note that if any of your methods doesn't need to do anything, you
@@ -39,7 +39,7 @@ typedef struct {
 static int startread(sox_format_t * ft)
 {
   priv_t * sk = (priv_t *)ft->priv;
-  sox_size_t samples_in_file;
+  size_t samples_in_file;
 
   /* If you need to seek around the input file. */
   if (!ft->seekable) {
@@ -75,10 +75,10 @@ static int startread(sox_format_t * ft)
  * Read up to len samples of type sox_sample_t from file into buf[].
  * Return number of samples read, or 0 if at end of file.
  */
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
 {
   priv_t * UNUSED sk = (priv_t *)ft->priv;
-  sox_size_t done;
+  size_t done;
   unsigned char sample;
 
   for (done = 0; done < len; done++) {
@@ -150,10 +150,10 @@ static int startwrite(sox_format_t * ft)
  * Write len samples of type sox_sample_t from buf[] to file.
  * Return number of samples written.
  */
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
   priv_t * sk = (priv_t *)ft->priv;
-  sox_size_t done = 0;
+  size_t done = 0;
 
   (void)sk;
   switch (ft->encoding.bits_per_sample) {
@@ -183,7 +183,7 @@ static int stopwrite(sox_format_t UNUSED * ft)
   return SOX_SUCCESS;
 }
 
-static int seek(sox_format_t UNUSED * ft, sox_size_t UNUSED offset)
+static int seek(sox_format_t UNUSED * ft, size_t UNUSED offset)
 {
   /* Seek relative to current position. */
   return SOX_SUCCESS;

@@ -28,7 +28,7 @@ typedef struct {
     float threshold;
 
     chandata_t *chandata;
-    sox_size_t bufdata;
+    size_t bufdata;
 } priv_t;
 
 /*
@@ -60,9 +60,9 @@ static int sox_noisered_getopts(sox_effect_t * effp, int argc, char **argv)
 static int sox_noisered_start(sox_effect_t * effp)
 {
     priv_t * data = (priv_t *) effp->priv;
-    sox_size_t fchannels = 0;
-    sox_size_t channels = effp->in_signal.channels;
-    sox_size_t i;
+    size_t fchannels = 0;
+    size_t channels = effp->in_signal.channels;
+    size_t i;
     FILE* ifp;
 
     data->chandata = lsx_calloc(channels, sizeof(*(data->chandata)));
@@ -89,21 +89,23 @@ static int sox_noisered_start(sox_effect_t * effp)
     }
 
     while (1) {
-        sox_size_t i1;
+        unsigned long i1_ul;
+        size_t i1;
         float f1;
-        if (2 != fscanf(ifp, " Channel %u: %f", &i1, &f1))
+        if (2 != fscanf(ifp, " Channel %lu: %f", &i1_ul, &f1))
             break;
+        i1 = i1_ul;
         if (i1 != fchannels) {
-            sox_fail("noisered: Got channel %d, expected channel %d.",
-                    i1, fchannels);
+            sox_fail("noisered: Got channel %lu, expected channel %lu.",
+                    (unsigned long)i1, (unsigned long)fchannels);
             return SOX_EOF;
         }
 
         data->chandata[fchannels].noisegate[0] = f1;
         for (i = 1; i < FREQCOUNT; i ++) {
             if (1 != fscanf(ifp, ", %f", &f1)) {
-                sox_fail("noisered: Not enough datums for channel %d "
-                        "(expected %d, got %d)", fchannels, FREQCOUNT, i);
+                sox_fail("noisered: Not enough datums for channel %lu "
+                        "(expected %d, got %lu)", (unsigned long)fchannels, FREQCOUNT, (unsigned long)i);
                 return SOX_EOF;
             }
             data->chandata[fchannels].noisegate[i] = f1;
@@ -111,8 +113,8 @@ static int sox_noisered_start(sox_effect_t * effp)
         fchannels ++;
     }
     if (fchannels != channels) {
-        sox_fail("noisered: channel mismatch: %d in input, %d in profile.",
-                channels, fchannels);
+        sox_fail("noisered: channel mismatch: %lu in input, %lu in profile.",
+                (unsigned long)channels, (unsigned long)fchannels);
         return SOX_EOF;
     }
     if (ifp != stdin)
@@ -238,16 +240,16 @@ static int process_window(sox_effect_t * effp, priv_t * data, unsigned chan_num,
  * Read in windows, and call process_window once we get a whole one.
  */
 static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                    sox_size_t *isamp, sox_size_t *osamp)
+                    size_t *isamp, size_t *osamp)
 {
     priv_t * data = (priv_t *) effp->priv;
-    sox_size_t samp = min(*isamp, *osamp);
-    sox_size_t tracks = effp->in_signal.channels;
-    sox_size_t track_samples = samp / tracks;
-    sox_size_t ncopy = min(track_samples, WINDOWSIZE-data->bufdata);
-    sox_size_t whole_window = (ncopy + data->bufdata == WINDOWSIZE);
+    size_t samp = min(*isamp, *osamp);
+    size_t tracks = effp->in_signal.channels;
+    size_t track_samples = samp / tracks;
+    size_t ncopy = min(track_samples, WINDOWSIZE-data->bufdata);
+    size_t whole_window = (ncopy + data->bufdata == WINDOWSIZE);
     int oldbuf = data->bufdata;
-    sox_size_t i;
+    size_t i;
 
     /* FIXME: Make this automatic for all effects */
     assert(effp->in_signal.channels == effp->out_signal.channels);
@@ -260,7 +262,7 @@ static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_
     /* Reduce noise on every channel. */
     for (i = 0; i < tracks; i ++) {
         chandata_t* chan = &(data->chandata[i]);
-        sox_size_t j;
+        size_t j;
 
         if (chan->window == NULL)
             chan->window = lsx_calloc(WINDOWSIZE, sizeof(float));
@@ -272,7 +274,7 @@ static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_
         if (!whole_window)
             continue;
         else
-            process_window(effp, data, i, tracks, obuf, oldbuf + ncopy);
+            process_window(effp, data, (unsigned) i, (unsigned) tracks, obuf, (unsigned) (oldbuf + ncopy));
     }
 
     *isamp = tracks*ncopy;
@@ -288,13 +290,13 @@ static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_
  * We have up to half a window left to dump.
  */
 
-static int sox_noisered_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_noisered_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
     priv_t * data = (priv_t *)effp->priv;
     unsigned i;
     unsigned tracks = effp->in_signal.channels;
     for (i = 0; i < tracks; i ++)
-        *osamp = process_window(effp, data, i, tracks, obuf, data->bufdata);
+        *osamp = process_window(effp, data, i, tracks, obuf, (unsigned) data->bufdata);
 
     /* FIXME: This is very picky.  osamp needs to be big enough to get all
      * remaining data or it will be discarded.
@@ -308,7 +310,7 @@ static int sox_noisered_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_
 static int sox_noisered_stop(sox_effect_t * effp)
 {
     priv_t * data = (priv_t *) effp->priv;
-    sox_size_t i;
+    size_t i;
 
     for (i = 0; i < effp->in_signal.channels; i ++) {
         chandata_t* chan = &(data->chandata[i]);

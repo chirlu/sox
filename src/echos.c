@@ -53,8 +53,8 @@ typedef struct {
         double  *delay_buf;
         float   in_gain, out_gain;
         float   delay[MAX_ECHOS], decay[MAX_ECHOS];
-        sox_ssize_t samples[MAX_ECHOS], pointer[MAX_ECHOS];
-        sox_size_t sumsamples;
+        ptrdiff_t samples[MAX_ECHOS], pointer[MAX_ECHOS];
+        size_t sumsamples;
 } priv_t;
 
 /* Private data for SKEL file */
@@ -123,7 +123,7 @@ static int sox_echos_start(sox_effect_t * effp)
                     sox_fail("echos: delay must be positive!");
                     return (SOX_EOF);
                 }
-                if ( echos->samples[i] > (sox_ssize_t)DELAY_BUFSIZ )
+                if ( echos->samples[i] > (ptrdiff_t)DELAY_BUFSIZ )
                 {
                         sox_fail("echos: delay must be less than %g seconds!",
                                 DELAY_BUFSIZ / effp->in_signal.rate );
@@ -160,13 +160,13 @@ static int sox_echos_start(sox_effect_t * effp)
  * Return number of samples processed.
  */
 static int sox_echos_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                sox_size_t *isamp, sox_size_t *osamp)
+                size_t *isamp, size_t *osamp)
 {
         priv_t * echos = (priv_t *) effp->priv;
         int j;
         double d_in, d_out;
         sox_sample_t out;
-        sox_size_t len = min(*isamp, *osamp);
+        size_t len = min(*isamp, *osamp);
         *isamp = *osamp = len;
 
         while (len--) {
@@ -201,13 +201,13 @@ static int sox_echos_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sam
 /*
  * Drain out reverb lines.
  */
-static int sox_echos_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_echos_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
         priv_t * echos = (priv_t *) effp->priv;
         double d_in, d_out;
         sox_sample_t out;
         int j;
-        sox_size_t done;
+        size_t done;
 
         done = 0;
         /* drain out delay samples */

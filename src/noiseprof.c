@@ -36,7 +36,7 @@ typedef struct {
     FILE* output_file;
 
     chandata_t *chandata;
-    sox_size_t bufdata;
+    size_t bufdata;
 } priv_t;
 
 /*
@@ -112,14 +112,14 @@ static void collect_data(chandata_t* chan) {
  * Grab what we can from ibuf, and process if we have a whole window.
  */
 static int sox_noiseprof_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                    sox_size_t *isamp, sox_size_t *osamp)
+                    size_t *isamp, size_t *osamp)
 {
     priv_t * data = (priv_t *) effp->priv;
-    sox_size_t samp = min(*isamp, *osamp);
-    sox_size_t tracks = effp->in_signal.channels;
-    sox_size_t track_samples = samp / tracks;
+    size_t samp = min(*isamp, *osamp);
+    size_t tracks = effp->in_signal.channels;
+    size_t track_samples = samp / tracks;
     int ncopy = 0;
-    sox_size_t i;
+    size_t i;
 
     /* FIXME: Make this automatic for all effects */
     assert(effp->in_signal.channels == effp->out_signal.channels);
@@ -154,7 +154,7 @@ static int sox_noiseprof_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox
  * Finish off the last window.
  */
 
-static int sox_noiseprof_drain(sox_effect_t * effp, sox_sample_t *obuf UNUSED, sox_size_t *osamp)
+static int sox_noiseprof_drain(sox_effect_t * effp, sox_sample_t *obuf UNUSED, size_t *osamp)
 {
     priv_t * data = (priv_t *) effp->priv;
     int tracks = effp->in_signal.channels;
@@ -186,13 +186,13 @@ static int sox_noiseprof_drain(sox_effect_t * effp, sox_sample_t *obuf UNUSED, s
 static int sox_noiseprof_stop(sox_effect_t * effp)
 {
     priv_t * data = (priv_t *) effp->priv;
-    sox_size_t i;
+    size_t i;
 
     for (i = 0; i < effp->in_signal.channels; i ++) {
         int j;
         chandata_t* chan = &(data->chandata[i]);
 
-        fprintf(data->output_file, "Channel %d: ", i);
+        fprintf(data->output_file, "Channel %lu: ", (unsigned long)i);
 
         for (j = 0; j < FREQCOUNT; j ++) {
             double r = chan->profilecount[j] != 0 ?

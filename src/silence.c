@@ -29,32 +29,32 @@ typedef struct {
     char        start;
     int         start_periods;
     char        *start_duration_str;
-    sox_size_t   start_duration;
+    size_t   start_duration;
     double      start_threshold;
     char        start_unit; /* "d" for decibels or "%" for percent. */
     int         restart;
 
     sox_sample_t *start_holdoff;
-    sox_size_t   start_holdoff_offset;
-    sox_size_t   start_holdoff_end;
+    size_t   start_holdoff_offset;
+    size_t   start_holdoff_end;
     int         start_found_periods;
 
     char        stop;
     int         stop_periods;
     char        *stop_duration_str;
-    sox_size_t   stop_duration;
+    size_t   stop_duration;
     double      stop_threshold;
     char        stop_unit;
 
     sox_sample_t *stop_holdoff;
-    sox_size_t   stop_holdoff_offset;
-    sox_size_t   stop_holdoff_end;
+    size_t   stop_holdoff_offset;
+    size_t   stop_holdoff_end;
     int         stop_found_periods;
 
     double      *window;
     double      *window_current;
     double      *window_end;
-    sox_size_t   window_size;
+    size_t   window_size;
     double      rms_sum;
 
     char        leave_silence;
@@ -288,7 +288,7 @@ static int aboveThreshold(sox_effect_t * effp, sox_sample_t value, double thresh
             break;
         case 32:
             value = SOX_SAMPLE_TO_SIGNED_32BIT(value,);
-            ratio = (double)labs(value) / (double)SOX_INT32_MAX;
+            ratio = (double)abs(value) / (double)SOX_INT32_MAX;
             break;
         default:
             ratio = 0;
@@ -334,12 +334,12 @@ static void update_rms(sox_effect_t * effp, sox_sample_t sample)
 /* Process signed long samples from ibuf to obuf. */
 /* Return number of samples processed in isamp and osamp. */
 static int sox_silence_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                    sox_size_t *isamp, sox_size_t *osamp)
+                    size_t *isamp, size_t *osamp)
 {
     priv_t * silence = (priv_t *) effp->priv;
     int threshold;
-    sox_size_t i, j;
-    sox_size_t nrOfTicks, nrOfInSamplesRead, nrOfOutSamplesWritten;
+    size_t i, j;
+    size_t nrOfTicks, nrOfInSamplesRead, nrOfOutSamplesWritten;
 
     nrOfInSamplesRead = 0;
     nrOfOutSamplesWritten = 0;
@@ -620,11 +620,11 @@ silence_copy_flush:
         return (SOX_SUCCESS);
 }
 
-static int sox_silence_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_silence_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
     priv_t * silence = (priv_t *) effp->priv;
-    sox_size_t i;
-    sox_size_t nrOfTicks, nrOfOutSamplesWritten = 0;
+    size_t i;
+    size_t nrOfTicks, nrOfOutSamplesWritten = 0;
 
     /* Only if in flush mode will there be possible samples to write
      * out during drain() call.

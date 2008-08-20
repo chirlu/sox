@@ -34,7 +34,7 @@ int lsx_usage(sox_effect_t * effp)
 }
 
 /* here for linear interp.  might be useful for other things */
-sox_sample_t lsx_gcd(sox_sample_t a, sox_sample_t b)
+unsigned lsx_gcd(unsigned a, unsigned b)
 {
   if (b == 0)
     return a;
@@ -42,9 +42,9 @@ sox_sample_t lsx_gcd(sox_sample_t a, sox_sample_t b)
     return lsx_gcd(b, a % b);
 }
 
-sox_sample_t lsx_lcm(sox_sample_t a, sox_sample_t b)
+unsigned lsx_lcm(unsigned a, unsigned b)
 {
-  /* parenthesize this way to avoid sox_sample_t overflow in product term */
+  /* parenthesize this way to avoid unsigned overflow in product term */
   return a * (b / lsx_gcd(a, b));
 }
 
@@ -57,7 +57,7 @@ void lsx_generate_wave_table(
     lsx_wave_t wave_type,
     sox_data_t data_type,
     void *table,
-    uint32_t table_size,
+    size_t table_size,
     double min,
     double max,
     double phase)
@@ -141,7 +141,7 @@ void lsx_generate_wave_table(
  * # of samples.
  * Returns NULL on error, pointer to next char to parse otherwise.
  */
-char const * lsx_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samples, int def)
+char const * lsx_parsesamples(sox_rate_t rate, const char *str, size_t *samples, int def)
 {
     int found_samples = 0, found_time = 0;
     int time = 0;

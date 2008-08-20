@@ -500,10 +500,10 @@ static int start(sox_effect_t * effp)
  */
 
 static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                sox_size_t *isamp, sox_size_t *osamp)
+                size_t *isamp, size_t *osamp)
 {
     priv_t * mixer = (priv_t *) effp->priv;
-    sox_size_t len, done;
+    size_t len, done;
     int ichan, ochan;
     int i, j;
     double samp;
@@ -541,7 +541,7 @@ sox_effect_handler_t const * sox_mixer_effect_fn(void)
 static int oops_getopts(sox_effect_t * effp, int argc, char * * argv UNUSED)
 {
   char * args[] = {"1,1,-1,-1"};
-  return argc? lsx_usage(effp) : sox_mixer_effect_fn()->getopts(effp, array_length(args), args);
+  return argc? lsx_usage(effp) : sox_mixer_effect_fn()->getopts(effp, (int)array_length(args), args);
 }
 
 sox_effect_handler_t const * sox_oops_effect_fn(void)

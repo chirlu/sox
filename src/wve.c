@@ -41,7 +41,7 @@ static int start_read(sox_format_t * ft)
 static int write_header(sox_format_t * ft)
 {
   return lsx_writechars(ft, ID1, sizeof(ID1))
-      || lsx_writedw(ft, ft->olength? ft->olength:ft->signal.length)
+      || lsx_writedw(ft, (unsigned)(ft->olength? ft->olength:ft->signal.length))
       || lsx_writechars(ft, ID2, sizeof(ID2))? SOX_EOF:SOX_SUCCESS;
 }
 

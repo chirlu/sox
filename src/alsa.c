@@ -14,7 +14,7 @@
 typedef struct {
   snd_pcm_t *pcm_handle;
   char *buf;
-  sox_size_t buf_size;
+  size_t buf_size;
   snd_pcm_uframes_t period_size;
   snd_pcm_uframes_t frames_this_period;
 } priv_t;
@@ -428,19 +428,19 @@ static int startread(sox_format_t * ft)
     return setup(ft, SND_PCM_STREAM_CAPTURE);
 }
 
-static void ub_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips UNUSED)
+static void ub_read_buf(sox_sample_t *buf1, char const * buf2, size_t len, sox_bool swap UNUSED, size_t * clips UNUSED)
 {
     while (len--)
         *buf1++ = SOX_UNSIGNED_8BIT_TO_SAMPLE(*((unsigned char *)buf2++),);
 }
 
-static void sb_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips UNUSED)
+static void sb_read_buf(sox_sample_t *buf1, char const * buf2, size_t len, sox_bool swap UNUSED, size_t * clips UNUSED)
 {
     while (len--)
         *buf1++ = SOX_SIGNED_8BIT_TO_SAMPLE(*((int8_t *)buf2++),);
 }
 
-static void uw_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips UNUSED)
+static void uw_read_buf(sox_sample_t *buf1, char const * buf2, size_t len, sox_bool swap, size_t * clips UNUSED)
 {
     while (len--)
     {
@@ -453,7 +453,7 @@ static void uw_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, s
     }
 }
 
-static void sw_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips UNUSED)
+static void sw_read_buf(sox_sample_t *buf1, char const * buf2, size_t len, sox_bool swap, size_t * clips UNUSED)
 {
     while (len--)
     {
@@ -466,11 +466,11 @@ static void sw_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, s
     }
 }
 
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
+static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t nsamp)
 {
     priv_t * alsa = (priv_t *)ft->priv;
-    void (*read_buf)(sox_sample_t *, char const *, sox_size_t, sox_bool, sox_size_t *) = 0;
-    sox_size_t len;
+    void (*read_buf)(sox_sample_t *, char const *, size_t, sox_bool, size_t *) = 0;
+    size_t len;
 
     switch(ft->encoding.bits_per_sample) {
       case 8:
@@ -502,7 +502,7 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
 
     len = 0;
     while (len < nsamp) {
-      sox_size_t n = snd_pcm_readi(alsa->pcm_handle, alsa->buf,
+      size_t n = snd_pcm_readi(alsa->pcm_handle, alsa->buf,
           (nsamp - len)/ft->signal.channels); /* ALSA takes "frame" counts. */
       if ((int)n < 0) {
         if (xrun_recovery(alsa->pcm_handle, (int)n) < 0) {
@@ -534,19 +534,19 @@ static int startwrite(sox_format_t * ft)
     return setup(ft, SND_PCM_STREAM_PLAYBACK);
 }
 
-static void sox_ub_write_buf(char* buf1, sox_sample_t const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips)
+static void sox_ub_write_buf(char* buf1, sox_sample_t const * buf2, size_t len, sox_bool swap UNUSED, size_t * clips)
 {
     while (len--)
         *(uint8_t *)buf1++ = SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf2++, *clips);
 }
 
-static void sox_sb_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips)
+static void sox_sb_write_buf(char *buf1, sox_sample_t const * buf2, size_t len, sox_bool swap UNUSED, size_t * clips)
 {
     while (len--)
         *(int8_t *)buf1++ = SOX_SAMPLE_TO_SIGNED_8BIT(*buf2++, *clips);
 }
 
-static void sox_uw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips)
+static void sox_uw_write_buf(char *buf1, sox_sample_t const * buf2, size_t len, sox_bool swap, size_t * clips)
 {
     while (len--)
     {
@@ -558,7 +558,7 @@ static void sox_uw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t l
     }
 }
 
-static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips)
+static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, size_t len, sox_bool swap, size_t * clips)
 {
     while (len--)
     {
@@ -570,11 +570,11 @@ static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t l
     }
 }
 
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp)
 {
-    sox_size_t osamp, done;
+    size_t osamp, done;
     priv_t * alsa = (priv_t *)ft->priv;
-    void (*write_buf)(char *, const sox_sample_t *, sox_size_t, sox_bool, sox_size_t *) = 0;
+    void (*write_buf)(char *, const sox_sample_t *, size_t, sox_bool, size_t *) = 0;
 
     switch(ft->encoding.bits_per_sample) {
         case 8:
@@ -612,7 +612,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
 
     for (done = 0; done < nsamp; done += osamp) {
       int err;
-      sox_size_t len;
+      size_t len;
 
       osamp = min(nsamp - done, alsa->buf_size / (ft->encoding.bits_per_sample >> 3));
       write_buf(alsa->buf, buf, osamp, ft->encoding.reverse_bytes, &ft->clips);
@@ -646,7 +646,7 @@ static int stopwrite(sox_format_t * ft)
   priv_t * alsa = (priv_t *)ft->priv;
 
   /* Pad to hardware period: */
-  sox_size_t npad = (alsa->period_size - alsa->frames_this_period) * ft->signal.channels;
+  size_t npad = (alsa->period_size - alsa->frames_this_period) * ft->signal.channels;
   sox_sample_t * buf = lsx_calloc(npad, sizeof(*buf)); /* silent samples */
   write_samples(ft, buf, npad);
   free(buf);

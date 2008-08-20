@@ -189,7 +189,7 @@ static int start_read(sox_format_t * const ft)
 }
 
 
-static sox_size_t read_samples(sox_format_t * const ft, sox_sample_t * sampleBuffer, sox_size_t const requested)
+static size_t read_samples(sox_format_t * const ft, sox_sample_t * sampleBuffer, size_t const requested)
 {
   priv_t * p = (priv_t *)ft->priv;
   size_t actual = 0;
@@ -254,7 +254,7 @@ static FLAC__StreamEncoderSeekStatus flac_stream_encoder_seek_callback(FLAC__Str
   (void) encoder;
   if (!ft->seekable)
     return FLAC__STREAM_ENCODER_SEEK_STATUS_UNSUPPORTED;
-  else if (lsx_seeki(ft, (sox_ssize_t)absolute_byte_offset, SEEK_SET) != SOX_SUCCESS)
+  else if (lsx_seeki(ft, (ptrdiff_t)absolute_byte_offset, SEEK_SET) != SOX_SUCCESS)
     return FLAC__STREAM_ENCODER_SEEK_STATUS_ERROR;
   else
     return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
@@ -377,8 +377,8 @@ static int start_write(sox_format_t * const ft)
 #if FLAC_API_VERSION_CURRENT >= 8
       if (!FLAC__metadata_object_seektable_template_append_spaced_points_by_samples(p->metadata[p->num_metadata], (unsigned)(10 * ft->signal.rate + .5), (FLAC__uint64)(ft->signal.length/ft->signal.channels))) {
 #else
-      sox_size_t samples = 10 * ft->signal.rate;
-      sox_size_t total_samples = ft->signal.length/ft->signal.channels;
+      size_t samples = 10 * ft->signal.rate;
+      size_t total_samples = ft->signal.length/ft->signal.channels;
       if (!FLAC__metadata_object_seektable_template_append_spaced_points(p->metadata[p->num_metadata], total_samples / samples + (total_samples % samples != 0), (FLAC__uint64)total_samples)) {
 #endif
         lsx_fail_errno(ft, SOX_ENOMEM, "FLAC ERROR creating the encoder seek table points");
@@ -430,7 +430,7 @@ static int start_write(sox_format_t * const ft)
 
 
 
-static sox_size_t write_samples(sox_format_t * const ft, sox_sample_t const * const sampleBuffer, sox_size_t const len)
+static size_t write_samples(sox_format_t * const ft, sox_sample_t const * const sampleBuffer, size_t const len)
 {
   priv_t * p = (priv_t *)ft->priv;
   unsigned i;
@@ -454,7 +454,7 @@ static sox_size_t write_samples(sox_format_t * const ft, sox_sample_t const * co
         break;
     }
   }
-  FLAC__stream_encoder_process_interleaved(p->encoder, p->decoded_samples, len / ft->signal.channels);
+  FLAC__stream_encoder_process_interleaved(p->encoder, p->decoded_samples, (unsigned) len / ft->signal.channels);
   return FLAC__stream_encoder_get_state(p->encoder) == FLAC__STREAM_ENCODER_OK ? len : 0;
 }
 
@@ -484,7 +484,7 @@ static int stop_write(sox_format_t * const ft)
  * N.B.  Do not call this function with offset=0 when file-pointer
  * is already 0 or a block of decoded FLAC data will be discarded.
  */
-static int seek(sox_format_t * ft, sox_size_t offset)
+static int seek(sox_format_t * ft, size_t offset)
 {
   priv_t * p = (priv_t *)ft->priv;
   int result = ft->mode == 'r' && FLAC__stream_decoder_seek_absolute(p->decoder, (FLAC__uint64)(offset / ft->signal.channels)) ?  SOX_SUCCESS : SOX_EOF;

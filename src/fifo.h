@@ -101,7 +101,7 @@ UNUSED static void * fifo_read(fifo_t * f, FIFO_SIZE_T n, void * data)
   return ret;
 }
 
-#define fifo_read_ptr(f) fifo_read(f, 0, NULL)
+#define fifo_read_ptr(f) fifo_read(f, (FIFO_SIZE_T)0, NULL)
 
 UNUSED static void fifo_delete(fifo_t * f)
 {

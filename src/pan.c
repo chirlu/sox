@@ -70,10 +70,10 @@ static int sox_pan_start(sox_effect_t * effp)
  * Process either isamp or osamp samples, whichever is smaller.
  */
 static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                sox_size_t *isamp, sox_size_t *osamp)
+                size_t *isamp, size_t *osamp)
 {
     priv_t * pan = (priv_t *) effp->priv;
-    sox_size_t len, done;
+    size_t len, done;
     sox_sample_t *ibuf_copy;
     char ich, och;
     double left, right, direction, hdir;

@@ -69,8 +69,8 @@ typedef struct {
 
   /* Private data used by writer */
   unsigned char *data;          /* Buffer allocated with lsx_malloc */
-  sox_size_t size;               /* Size of allocated buffer */
-  sox_size_t pos;                /* Where next byte goes */
+  size_t size;               /* Size of allocated buffer */
+  size_t pos;                /* Where next byte goes */
 } priv_t;
 
 static int startread(sox_format_t * ft)
@@ -85,19 +85,19 @@ static int startread(sox_format_t * ft)
 
 
         /* Skip first 65 bytes of header */
-        rc = lsx_skipbytes(ft, 65);
+        rc = lsx_skipbytes(ft, (size_t) 65);
         if (rc)
             return rc;
 
         /* Check the file type (bytes 65-68) */
-        if (lsx_reads(ft, buf, 4) == SOX_EOF || strncmp(buf, "FSSD", 4) != 0)
+        if (lsx_reads(ft, buf, (size_t)4) == SOX_EOF || strncmp(buf, "FSSD", (size_t)4) != 0)
         {
                 lsx_fail_errno(ft,SOX_EHDR,"Mac header type is not FSSD");
                 return (SOX_EOF);
         }
 
         /* Skip to byte 83 */
-        rc = lsx_skipbytes(ft, 83-69);
+        rc = lsx_skipbytes(ft, (size_t) 83-69);
         if (rc)
             return rc;
 
@@ -106,12 +106,12 @@ static int startread(sox_format_t * ft)
         lsx_readdw(ft, &rsrcsize); /* bytes 87-90 */
 
         /* Skip the rest of the header (total 128 bytes) */
-        rc = lsx_skipbytes(ft, 128-91);
+        rc = lsx_skipbytes(ft, (size_t) 128-91);
         if (rc != 0)
             return rc;
 
         /* The data fork must contain a "HCOM" header */
-        if (lsx_reads(ft, buf, 4) == SOX_EOF || strncmp(buf, "HCOM", 4) != 0)
+        if (lsx_reads(ft, buf, (size_t)4) == SOX_EOF || strncmp(buf, "HCOM", (size_t)4) != 0)
         {
                 lsx_fail_errno(ft,SOX_EHDR,"Mac data fork is not HCOM");
                 return (SOX_EOF);
@@ -151,7 +151,7 @@ static int startread(sox_format_t * ft)
                        p->dictionary[i].dict_leftson,
                        p->dictionary[i].dict_rightson);
         }
-        rc = lsx_skipbytes(ft, 1); /* skip pad byte */
+        rc = lsx_skipbytes(ft, (size_t) 1); /* skip pad byte */
         if (rc)
             return rc;
 
@@ -168,7 +168,7 @@ static int startread(sox_format_t * ft)
         return (SOX_SUCCESS);
 }
 
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
 {
         register priv_t *p = (priv_t *) ft->priv;
         int done = 0;
@@ -262,11 +262,11 @@ static int startwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
   priv_t *p = (priv_t *) ft->priv;
   sox_sample_t datum;
-  sox_size_t i;
+  size_t i;
 
   if (len == 0)
     return 0;
@@ -391,7 +391,7 @@ static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl)
   l = (((l + 31) >> 5) << 2) + 24 + dictsize * 4;
   sox_debug("  Original size: %6d bytes", *dl);
   sox_debug("Compressed size: %6d bytes", l);
-  datafork = lsx_malloc((unsigned)l);
+  datafork = lsx_malloc((size_t)l);
   ddf = datafork + 22;
   for(i = 0; i < dictsize; i++) {
     put16_be(&ddf, newdict[i].dict_leftson);
@@ -409,7 +409,7 @@ static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl)
     codesize[0] = 32 - p->nbits;
     putcode(ft, codes, codesize, 0, &ddf);
   }
-  memcpy(datafork, "HCOM", 4);
+  memcpy(datafork, "HCOM", (size_t)4);
   dfp = datafork + 4;
   put32_be(&dfp, *dl);
   put32_be(&dfp, p->new_checksum);
@@ -427,7 +427,7 @@ static int stopwrite(sox_format_t * ft)
 {
   priv_t *p = (priv_t *) ft->priv;
   unsigned char *compressed_data = p->data;
-  sox_size_t compressed_len = p->pos;
+  size_t compressed_len = p->pos;
   int rc = SOX_SUCCESS;
 
   /* Compress it all at once */
@@ -436,13 +436,13 @@ static int stopwrite(sox_format_t * ft)
   free(p->data);
 
   /* Write the header */
-  lsx_writebuf(ft, "\000\001A", 3); /* Dummy file name "A" */
-  lsx_padbytes(ft, 65-3);
+  lsx_writebuf(ft, "\000\001A", (size_t) 3); /* Dummy file name "A" */
+  lsx_padbytes(ft, (size_t) 65-3);
   lsx_writes(ft, "FSSD");
-  lsx_padbytes(ft, 83-69);
-  lsx_writedw(ft, compressed_len); /* compressed_data size */
+  lsx_padbytes(ft, (size_t) 83-69);
+  lsx_writedw(ft, (unsigned) compressed_len); /* compressed_data size */
   lsx_writedw(ft, 0); /* rsrc size */
-  lsx_padbytes(ft, 128 - 91);
+  lsx_padbytes(ft, (size_t) 128 - 91);
   if (lsx_error(ft)) {
     lsx_fail_errno(ft, errno, "write error in HCOM header");
     rc = SOX_EOF;

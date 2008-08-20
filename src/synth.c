@@ -168,12 +168,12 @@ typedef struct {
 typedef struct {
   char *        length_str;
   channel_t     getopts_channels;
-  sox_size_t    getopts_nchannels;
+  size_t    getopts_nchannels;
   sox_sample_t  max;
-  sox_size_t    samples_done;
-  sox_size_t    samples_to_do;
+  size_t    samples_done;
+  size_t    samples_to_do;
   channel_t     channels;
-  sox_size_t    number_of_channels;
+  size_t    number_of_channels;
 } priv_t;
 
 
@@ -387,11 +387,11 @@ static int start(sox_effect_t * effp)
           (log(chan->freq2) - log(chan->freq)) / synth->samples_to_do : 1;
         break;
     }
-    sox_debug("type=%s, combine=%s, samples_to_do=%u, f1=%g, f2=%g, "
+    sox_debug("type=%s, combine=%s, samples_to_do=%lu, f1=%g, f2=%g, "
               "offset=%g, phase=%g, p1=%g, p2=%g, p3=%g mult=%g",
         find_enum_value(chan->type, synth_type)->text,
         find_enum_value(chan->combine, combine_type)->text,
-        synth->samples_to_do, chan->freq, chan->freq2,
+        (unsigned long)synth->samples_to_do, chan->freq, chan->freq2,
         chan->offset, chan->phase, chan->p1, chan->p2, chan->p3, chan->mult);
   }
   return SOX_SUCCESS;
@@ -403,7 +403,7 @@ static int start(sox_effect_t * effp)
 #define elapsed_time_s synth->samples_done / effp->in_signal.rate
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * obuf,
-    sox_size_t * isamp, sox_size_t * osamp)
+    size_t * isamp, size_t * osamp)
 {
   priv_t * synth = (priv_t *) effp->priv;
   unsigned len = min(*isamp, *osamp) / effp->in_signal.channels;

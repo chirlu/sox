@@ -21,13 +21,13 @@ typedef struct {
   unsigned npads;     /* Number of pads requested */
   struct {
     char * str;       /* Command-line argument to parse for this pad */
-    sox_size_t start; /* Start padding when in_pos equals this */
-    sox_size_t pad;   /* Number of samples to pad */
+    size_t start; /* Start padding when in_pos equals this */
+    size_t pad;   /* Number of samples to pad */
   } * pads;
 
-  sox_size_t in_pos;  /* Number of samples read from the input stream */
+  size_t in_pos;  /* Number of samples read from the input stream */
   unsigned pads_pos;  /* Number of pads completed so far */
-  sox_size_t pad_pos; /* Number of samples through the current pad */
+  size_t pad_pos; /* Number of samples through the current pad */
 } priv_t;
 
 static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
@@ -76,10 +76,10 @@ static int start(sox_effect_t * effp)
 }
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
-    sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+    sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  sox_size_t c, idone = 0, odone = 0;
+  size_t c, idone = 0, odone = 0;
   *isamp /= effp->in_signal.channels;
   *osamp /= effp->in_signal.channels;
 
@@ -104,10 +104,10 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   return SOX_SUCCESS;
 }
 
-static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
+static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  static sox_size_t isamp = 0;
+  static size_t isamp = 0;
   if (p->pads_pos != p->npads && p->in_pos != p->pads[p->pads_pos].start)
     p->in_pos = SOX_SIZE_MAX;  /* Invoke the final pad (with no given start) */
   return flow(effp, 0, obuf, &isamp, osamp);

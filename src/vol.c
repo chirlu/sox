@@ -107,13 +107,13 @@ static int start(sox_effect_t * effp)
  * Process data.
  */
 static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                sox_size_t *isamp, sox_size_t *osamp)
+                size_t *isamp, size_t *osamp)
 {
     priv_t * vol = (priv_t *) effp->priv;
     register double gain = vol->gain;
     register double limiterthreshhold = vol->limiterthreshhold;
     register double sample;
-    register sox_size_t len;
+    register size_t len;
 
     len = min(*osamp, *isamp);
 
@@ -189,7 +189,7 @@ static int gain_getopts(sox_effect_t * effp, int argc, char * * argv)
   if (argc != 1)
     return lsx_usage(effp);
   args[0] = argv[0];
-  return sox_vol_effect_fn()->getopts(effp, array_length(args), args);
+  return sox_vol_effect_fn()->getopts(effp, (int)array_length(args), args);
 }
 
 sox_effect_handler_t const * sox_gain_effect_fn(void)

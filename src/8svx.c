@@ -13,7 +13,7 @@ typedef struct{
   FILE * ch[4];
 } priv_t;
 
-static void svxwriteheader(sox_format_t *, sox_size_t);
+static void svxwriteheader(sox_format_t *, size_t);
 
 /*======================================================================*/
 /*                         8SVXSTARTREAD                                */
@@ -43,45 +43,45 @@ static int startread(sox_format_t * ft)
         channels = 1;
 
         /* read FORM chunk */
-        if (lsx_reads(ft, buf, 4) == SOX_EOF || strncmp(buf, "FORM", 4) != 0)
+        if (lsx_reads(ft, buf, (size_t)4) == SOX_EOF || strncmp(buf, "FORM", (size_t)4) != 0)
         {
                 lsx_fail_errno(ft, SOX_EHDR, "Header did not begin with magic word 'FORM'");
                 return(SOX_EOF);
         }
         lsx_readdw(ft, &totalsize);
-        if (lsx_reads(ft, buf, 4) == SOX_EOF || strncmp(buf, "8SVX", 4) != 0)
+        if (lsx_reads(ft, buf, (size_t)4) == SOX_EOF || strncmp(buf, "8SVX", (size_t)4) != 0)
         {
                 lsx_fail_errno(ft, SOX_EHDR, "'FORM' chunk does not specify '8SVX' as type");
                 return(SOX_EOF);
         }
 
         /* read chunks until 'BODY' (or end) */
-        while (lsx_reads(ft, buf, 4) == SOX_SUCCESS && strncmp(buf,"BODY",4) != 0) {
-                if (strncmp(buf,"VHDR",4) == 0) {
+        while (lsx_reads(ft, buf, (size_t)4) == SOX_SUCCESS && strncmp(buf,"BODY",(size_t)4) != 0) {
+                if (strncmp(buf,"VHDR",(size_t)4) == 0) {
                         lsx_readdw(ft, &chunksize);
                         if (chunksize != 20)
                         {
                                 lsx_fail_errno(ft, SOX_EHDR, "VHDR chunk has bad size");
                                 return(SOX_EOF);
                         }
-                        lsx_seeki(ft,12,SEEK_CUR);
+                        lsx_seeki(ft,(size_t)12,SEEK_CUR);
                         lsx_readw(ft, &rate);
-                        lsx_seeki(ft,1,SEEK_CUR);
-                        lsx_readbuf(ft, buf,1);
+                        lsx_seeki(ft,(size_t)1,SEEK_CUR);
+                        lsx_readbuf(ft, buf,(size_t)1);
                         if (buf[0] != 0)
                         {
                                 lsx_fail_errno(ft, SOX_EFMT, "Unsupported data compression");
                                 return(SOX_EOF);
                         }
-                        lsx_seeki(ft,4,SEEK_CUR);
+                        lsx_seeki(ft,(size_t)4,SEEK_CUR);
                         continue;
                 }
 
-                if (strncmp(buf,"ANNO",4) == 0) {
+                if (strncmp(buf,"ANNO",(size_t)4) == 0) {
                         lsx_readdw(ft, &chunksize);
                         if (chunksize & 1)
                                 chunksize++;
-                        chunk_buf = lsx_malloc(chunksize + 2);
+                        chunk_buf = lsx_malloc(chunksize + (size_t)2);
                         if (lsx_readbuf(ft, chunk_buf,(size_t)chunksize)
                                         != chunksize)
                         {
@@ -95,11 +95,11 @@ static int startread(sox_format_t * ft)
                         continue;
                 }
 
-                if (strncmp(buf,"NAME",4) == 0) {
+                if (strncmp(buf,"NAME",(size_t)4) == 0) {
                         lsx_readdw(ft, &chunksize);
                         if (chunksize & 1)
                                 chunksize++;
-                        chunk_buf = lsx_malloc(chunksize + 1);
+                        chunk_buf = lsx_malloc(chunksize + (size_t)1);
                         if (lsx_readbuf(ft, chunk_buf,(size_t)chunksize)
                                         != chunksize)
                         {
@@ -113,7 +113,7 @@ static int startread(sox_format_t * ft)
                         continue;
                 }
 
-                if (strncmp(buf,"CHAN",4) == 0) {
+                if (strncmp(buf,"CHAN",(size_t)4) == 0) {
                         lsx_readdw(ft, &chunksize);
                         if (chunksize != 4)
                         {
@@ -133,7 +133,7 @@ static int startread(sox_format_t * ft)
                 lsx_readdw(ft, &chunksize);
                 if (chunksize & 1)
                         chunksize++;
-                lsx_seeki(ft,(int32_t)chunksize,SEEK_CUR);
+                lsx_seeki(ft,(ptrdiff_t)chunksize,SEEK_CUR);
                 continue;
 
         }
@@ -143,7 +143,7 @@ static int startread(sox_format_t * ft)
                 lsx_fail_errno(ft, SOX_ERATE, "Invalid sample rate");
                 return(SOX_EOF);
         }
-        if (strncmp(buf,"BODY",4) != 0)
+        if (strncmp(buf,"BODY",(size_t)4) != 0)
         {
                 lsx_fail_errno(ft, SOX_EHDR, "BODY chunk not found");
                 return(SOX_EOF);
@@ -186,7 +186,7 @@ static int startread(sox_format_t * ft)
 /*======================================================================*/
 /*                         8SVXREAD                                     */
 /*======================================================================*/
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
+static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t nsamp)
 {
         unsigned char datum;
         size_t done = 0, i;
@@ -243,7 +243,7 @@ static int startwrite(sox_format_t * ft)
 
         /* write header (channel 0) */
         p->nsamples = 0;
-        svxwriteheader(ft, p->nsamples);
+        svxwriteheader(ft, (size_t) p->nsamples);
         return(SOX_SUCCESS);
 }
 
@@ -251,7 +251,7 @@ static int startwrite(sox_format_t * ft)
 /*                         8SVXWRITE                                    */
 /*======================================================================*/
 
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
         priv_t * p = (priv_t * ) ft->priv;
 
@@ -287,13 +287,13 @@ static int stopwrite(sox_format_t * ft)
         for (i = 1; i < ft->signal.channels; i++) {
                 if (fseeko(p->ch[i], (off_t)0, 0))
                 {
-                        lsx_fail_errno (ft,errno,"Can't rewind channel output file %d",i);
+                        lsx_fail_errno (ft,errno,"Can't rewind channel output file %lu",(unsigned long)i);
                         return(SOX_EOF);
                 }
                 while (!feof(p->ch[i])) {
-                        len = fread(svxbuf, 1, 512, p->ch[i]);
-                        if (fwrite (svxbuf, 1, len, p->ch[0]) != len) {
-                          lsx_fail_errno (ft,errno,"Can't write channel output file %d",i);
+                        len = fread(svxbuf, (size_t) 1, (size_t) 512, p->ch[i]);
+                        if (fwrite (svxbuf, (size_t) 1, len, p->ch[0]) != len) {
+                          lsx_fail_errno (ft,errno,"Can't write channel output file %lu",(unsigned long)i);
                           return SOX_EOF;
                         }
                 }
@@ -305,12 +305,12 @@ static int stopwrite(sox_format_t * ft)
             lsx_writeb(ft, '\0');
 
         /* fixup file sizes in header */
-        if (lsx_seeki(ft, 0, 0) != 0)
+        if (lsx_seeki(ft, (size_t)0, 0) != 0)
         {
                 lsx_fail_errno(ft,errno,"can't rewind output file to rewrite 8SVX header");
                 return(SOX_EOF);
         }
-        svxwriteheader(ft, p->nsamples);
+        svxwriteheader(ft, (size_t) p->nsamples);
         return(SOX_SUCCESS);
 }
 
@@ -318,20 +318,20 @@ static int stopwrite(sox_format_t * ft)
 /*                         8SVXWRITEHEADER                              */
 /*======================================================================*/
 #define SVXHEADERSIZE 100
-static void svxwriteheader(sox_format_t * ft, sox_size_t nsamples)
+static void svxwriteheader(sox_format_t * ft, size_t nsamples)
 {
-        sox_size_t formsize =  nsamples + SVXHEADERSIZE - 8;
+        size_t formsize =  nsamples + SVXHEADERSIZE - 8;
 
         /* FORM size must be even */
         if(formsize % 2 != 0) formsize++;
 
         lsx_writes(ft, "FORM");
-        lsx_writedw(ft, formsize);  /* size of file */
+        lsx_writedw(ft, (unsigned) formsize);  /* size of file */
         lsx_writes(ft, "8SVX"); /* File type */
 
         lsx_writes(ft, "VHDR");
         lsx_writedw(ft, 20); /* number of bytes to follow */
-        lsx_writedw(ft, nsamples/ft->signal.channels);  /* samples, 1-shot */
+        lsx_writedw(ft, (unsigned) nsamples/ft->signal.channels);  /* samples, 1-shot */
         lsx_writedw(ft, 0);  /* samples, repeat */
         lsx_writedw(ft, 0);  /* samples per repeat cycle */
         lsx_writew(ft, min(65535, (unsigned)(ft->signal.rate + .5)));
@@ -349,7 +349,7 @@ static void svxwriteheader(sox_format_t * ft, sox_size_t nsamples)
                    (ft->signal.channels == 4) ? 15u : 2u);
 
         lsx_writes(ft, "BODY");
-        lsx_writedw(ft, nsamples); /* samples in file */
+        lsx_writedw(ft, (unsigned) nsamples); /* samples in file */
 }
 
 SOX_FORMAT_HANDLER(svx)

@@ -31,7 +31,7 @@ static float difference(const float * a, const float * b, size_t length)
 
 /* Find where the two segments are most alike over the overlap period. */
 static size_t best_overlap_position(float const * f1, float const * f2,
-    sox_size_t overlap, sox_size_t search, sox_size_t channels)
+    size_t overlap, size_t search, size_t channels)
 {
   size_t i, best_pos = 0;
   float diff, least_diff = difference(f2, f1, channels * overlap);
@@ -45,7 +45,7 @@ static size_t best_overlap_position(float const * f1, float const * f2,
 }
 
 static void splice(const float * in1, const float * in2,
-    float * output, sox_size_t overlap, sox_size_t channels)
+    float * output, size_t overlap, size_t channels)
 {
   size_t i, j, k = 0;
   float fade_step = 1.0f / (float) overlap;
@@ -58,7 +58,7 @@ static void splice(const float * in1, const float * in2,
   }
 }
 
-static sox_size_t do_splice(float * f, sox_size_t overlap, sox_size_t search, sox_size_t channels)
+static size_t do_splice(float * f, size_t overlap, size_t search, size_t channels)
 {
   size_t offset = search? best_overlap_position(
       f, f + overlap * channels, overlap, search, channels) : 0;
@@ -71,15 +71,15 @@ typedef struct {
   unsigned nsplices;     /* Number of splices requested */
   struct {
     char * str;          /* Command-line argument to parse for this splice */
-    sox_size_t overlap;  /* Number of samples to overlap */
-    sox_size_t search;   /* Number of samples to search */
-    sox_size_t start;    /* Start splicing when in_pos equals this */
+    size_t overlap;  /* Number of samples to overlap */
+    size_t search;   /* Number of samples to search */
+    size_t start;    /* Start splicing when in_pos equals this */
   } * splices;
 
-  sox_size_t in_pos;     /* Number of samples read from the input stream */
+  size_t in_pos;     /* Number of samples read from the input stream */
   unsigned splices_pos;  /* Number of splices completed so far */
-  sox_size_t buffer_pos; /* Number of samples through the current splice */
-  sox_size_t max_buffer_size;
+  size_t buffer_pos; /* Number of samples through the current splice */
+  size_t max_buffer_size;
   float * buffer;
   unsigned state;
 } priv_t;
@@ -88,7 +88,7 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
 {
   priv_t * p = (priv_t *)effp->priv;
   char const * next;
-  sox_size_t i, buffer_size;
+  size_t i, buffer_size;
 
   p->max_buffer_size = 0;
   for (i = 0; i < p->nsplices; ++i) {
@@ -148,10 +148,10 @@ static int start(sox_effect_t * effp)
 }
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
-    sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+    sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  sox_size_t c, idone = 0, odone = 0;
+  size_t c, idone = 0, odone = 0;
   *isamp /= effp->in_signal.channels;
   *osamp /= effp->in_signal.channels;
 
@@ -171,13 +171,13 @@ copying:
 
 buffering:
     if (p->state == 1) {
-      sox_size_t buffer_size = (2 * p->splices[p->splices_pos].overlap + p->splices[p->splices_pos].search) * effp->in_signal.channels;
+      size_t buffer_size = (2 * p->splices[p->splices_pos].overlap + p->splices[p->splices_pos].search) * effp->in_signal.channels;
       for (; idone < *isamp; ++idone, ++p->in_pos) {
         if (p->buffer_pos == buffer_size) {
           p->buffer_pos = do_splice(p->buffer,
               p->splices[p->splices_pos].overlap,
               p->splices[p->splices_pos].search,
-              effp->in_signal.channels) * effp->in_signal.channels;
+              (size_t)effp->in_signal.channels) * effp->in_signal.channels;
           p->state = 2;
           goto flushing;
           break;
@@ -190,7 +190,7 @@ buffering:
 
 flushing:
     if (p->state == 2) {
-      sox_size_t buffer_size = (2 * p->splices[p->splices_pos].overlap + p->splices[p->splices_pos].search) * effp->in_signal.channels;
+      size_t buffer_size = (2 * p->splices[p->splices_pos].overlap + p->splices[p->splices_pos].search) * effp->in_signal.channels;
       for (; odone < *osamp; ++odone) {
         if (p->buffer_pos == buffer_size) {
           p->buffer_pos = 0;
@@ -210,9 +210,9 @@ flushing:
   return SOX_SUCCESS;
 }
 
-static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
+static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
 {
-  sox_size_t isamp = 0;
+  size_t isamp = 0;
   return flow(effp, 0, obuf, &isamp, osamp);
 }
 

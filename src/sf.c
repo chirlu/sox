@@ -99,17 +99,17 @@ static int startread(sox_format_t * ft)
       return SOX_EOF;
     if (code == SF_COMMENT) {
       char * buf = lsx_calloc(1, (size_t)size + 1); /* +1 ensures null-terminated */
-      if (lsx_readchars(ft, buf, size) != SOX_SUCCESS) {
+      if (lsx_readchars(ft, buf, (size_t) size) != SOX_SUCCESS) {
         free(buf);
         return SOX_EOF;
       }
       sox_append_comments(&ft->oob.comments, buf);
       free(buf);
     }
-    else if (lsx_skipbytes(ft, size))
+    else if (lsx_skipbytes(ft, (size_t) size))
       return SOX_EOF;
   } while (code);
-  if (lsx_skipbytes(ft, FIXED_HDR - (sox_size_t)lsx_tell(ft)))
+  if (lsx_skipbytes(ft, FIXED_HDR - (size_t)lsx_tell(ft)))
     return SOX_EOF;
 
   return lsx_check_read_params(ft, channels, rate, encoding, bits_per_sample, (off_t)0);
@@ -127,7 +127,7 @@ static int write_header(sox_format_t * ft)
   ||lsx_writedw(ft, ft->signal.channels)
   ||lsx_writedw(ft, ft_enc(ft->encoding.bits_per_sample, ft->encoding.encoding))
   ||lsx_writew(ft, SF_COMMENT)
-  ||lsx_writew(ft, info_len)
+  ||lsx_writew(ft, (unsigned) info_len)
   ||lsx_writechars(ft, comment, len)
   ||lsx_padbytes(ft, FIXED_HDR - 20 - len);
   free(comment);

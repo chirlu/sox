@@ -115,18 +115,18 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
   }
 
   /* If no plugins in this module, complain */
-  if (ltptr.fn(0) == NULL) {
+  if (ltptr.fn(0UL) == NULL) {
     sox_fail("no plugins found");
     return SOX_EOF;
   }
 
   /* Get first plugin descriptor */
-  l_st->desc = ltptr.fn(0);
+  l_st->desc = ltptr.fn(0UL);
   assert(l_st->desc);           /* We already know this will work */
 
   /* If more than one plugin, or first argument is not a number, try
      to use first argument as plugin label. */
-  if (n > 0 && (ltptr.fn(1) != NULL || !sscanf(argv[0], "%lf", &arg))) {
+  if (n > 0 && (ltptr.fn(1UL) != NULL || !sscanf(argv[0], "%lf", &arg))) {
     while (l_st->desc && strcmp(l_st->desc->Label, argv[0]) != 0)
       l_st->desc = ltptr.fn(++index);
     if (l_st->desc == NULL) {
@@ -221,10 +221,10 @@ static int sox_ladspa_start(sox_effect_t * effp)
  * Process one bufferful of data.
  */
 static int sox_ladspa_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                           sox_size_t *isamp, sox_size_t *osamp)
+                           size_t *isamp, size_t *osamp)
 {
   priv_t * l_st = (priv_t *)effp->priv;
-  sox_size_t i, len = min(*isamp, *osamp);
+  size_t i, len = min(*isamp, *osamp);
 
   *osamp = *isamp = len;
 
@@ -264,7 +264,7 @@ static int sox_ladspa_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
 /*
  * Nothing to do.
  */
-static int sox_ladspa_drain(sox_effect_t * effp UNUSED, sox_sample_t *obuf UNUSED, sox_size_t *osamp)
+static int sox_ladspa_drain(sox_effect_t * effp UNUSED, sox_sample_t *obuf UNUSED, size_t *osamp)
 {
   *osamp = 0;
 

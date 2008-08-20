@@ -53,17 +53,17 @@
 #define WAVE_FORMAT_EXTENSIBLE          (0xfffeU)
 
 /* To allow padding to samplesPerBlock. Works, but currently never true. */
-static sox_size_t pad_nsamps = sox_false;
+static size_t pad_nsamps = sox_false;
 
 /* Private data for .wav file */
 typedef struct {
-    sox_size_t      numSamples;     /* samples/channel reading: starts at total count and decremented  */
+    size_t      numSamples;     /* samples/channel reading: starts at total count and decremented  */
                                     /* writing: starts at 0 and counts samples written */
-    sox_size_t      dataLength;     /* needed for ADPCM writing */
+    size_t      dataLength;     /* needed for ADPCM writing */
     unsigned short formatTag;       /* What type of encoding file is using */
     unsigned short samplesPerBlock;
     unsigned short blockAlign;
-    sox_size_t dataStart;           /* need to for seeking */
+    size_t dataStart;           /* need to for seeking */
     char           * comment;
     int ignoreSize;                 /* ignoreSize allows us to process 32-bit WAV files that are
                                      * greater then 2 Gb and can't be represented by the
@@ -84,7 +84,7 @@ typedef struct {
     gsm            gsmhandle;
     gsm_signal     *gsmsample;
     int            gsmindex;
-    sox_size_t      gsmbytecount;    /* counts bytes written to data block */
+    size_t      gsmbytecount;    /* counts bytes written to data block */
 } priv_t;
 
 static char *wav_format_str(unsigned wFormatTag);
@@ -108,14 +108,14 @@ static unsigned short  ImaAdpcmReadBlock(sox_format_t * ft)
     int samplesThisBlock;
 
     /* Pull in the packet and check the header */
-    bytesRead = lsx_readbuf(ft, wav->packet, wav->blockAlign);
+    bytesRead = lsx_readbuf(ft, wav->packet, (size_t)wav->blockAlign);
     samplesThisBlock = wav->samplesPerBlock;
     if (bytesRead < wav->blockAlign)
     {
         /* If it looks like a valid header is around then try and */
         /* work with partial blocks.  Specs say it should be null */
         /* padded but I guess this is better than trailing quiet. */
-        samplesThisBlock = lsx_ima_samples_in(0, ft->signal.channels, bytesRead, 0);
+        samplesThisBlock = lsx_ima_samples_in((size_t)0, (size_t)ft->signal.channels, bytesRead, (size_t) 0);
         if (samplesThisBlock == 0)
         {
             sox_warn("Premature EOF on .wav input file");
@@ -149,14 +149,14 @@ static unsigned short  AdpcmReadBlock(sox_format_t * ft)
     const char *errmsg;
 
     /* Pull in the packet and check the header */
-    bytesRead = lsx_readbuf(ft, wav->packet, wav->blockAlign);
+    bytesRead = lsx_readbuf(ft, wav->packet, (size_t) wav->blockAlign);
     samplesThisBlock = wav->samplesPerBlock;
     if (bytesRead < wav->blockAlign)
     {
         /* If it looks like a valid header is around then try and */
         /* work with partial blocks.  Specs say it should be null */
         /* padded but I guess this is better than trailing quiet. */
-        samplesThisBlock = lsx_ms_adpcm_samples_in(0, ft->signal.channels, bytesRead, 0);
+        samplesThisBlock = lsx_ms_adpcm_samples_in((size_t)0, (size_t)ft->signal.channels, bytesRead, (size_t)0);
         if (samplesThisBlock == 0)
         {
             sox_warn("Premature EOF on .wav input file");
@@ -179,7 +179,7 @@ static unsigned short  AdpcmReadBlock(sox_format_t * ft)
 static int xxxAdpcmWriteBlock(sox_format_t * ft)
 {
     priv_t * wav = (priv_t *) ft->priv;
-    sox_size_t chans, ct;
+    size_t chans, ct;
     short *p;
 
     chans = ft->signal.channels;
@@ -190,12 +190,12 @@ static int xxxAdpcmWriteBlock(sox_format_t * ft)
         for (p = wav->samplePtr; p < wav->sampleTop; p++) *p=0;
         /* compress the samples to wav->packet */
         if (wav->formatTag == WAVE_FORMAT_ADPCM) {
-            lsx_ms_adpcm_block_mash_i(chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, wav->blockAlign);
+            lsx_ms_adpcm_block_mash_i((unsigned) chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, wav->blockAlign);
         }else{ /* WAVE_FORMAT_IMA_ADPCM */
-            lsx_ima_block_mash_i(chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, 9);
+            lsx_ima_block_mash_i((unsigned) chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, 9);
         }
         /* write the compressed packet */
-        if (lsx_writebuf(ft, wav->packet, wav->blockAlign) != wav->blockAlign)
+        if (lsx_writebuf(ft, wav->packet, (size_t) wav->blockAlign) != wav->blockAlign)
         {
             lsx_fail_errno(ft,SOX_EOF,"write error");
             return (SOX_EOF);
@@ -245,7 +245,7 @@ static void wavgsmdestroy(sox_format_t * ft)
     free(wav->gsmsample);
 }
 
-static sox_size_t wavgsmread(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static size_t wavgsmread(sox_format_t * ft, sox_sample_t *buf, size_t len)
 {
     priv_t *       wav = (priv_t *) ft->priv;
     size_t done=0;
@@ -261,7 +261,7 @@ static sox_size_t wavgsmread(sox_format_t * ft, sox_sample_t *buf, sox_size_t le
   /* read and decode loop, possibly leaving some samples in wav->gsmsample */
     while (done < len) {
         wav->gsmindex=0;
-        bytes = lsx_readbuf(ft, frame, 65);
+        bytes = lsx_readbuf(ft, frame, (size_t)65);
         if (bytes <=0)
             return done;
         if (bytes<65) {
@@ -302,7 +302,7 @@ static int wavgsmflush(sox_format_t * ft)
     gsm_encode(wav->gsmhandle, wav->gsmsample, frame);
     /*encode the odd half long (33 byte) frame */
     gsm_encode(wav->gsmhandle, wav->gsmsample+160, frame+32);
-    if (lsx_writebuf(ft, frame, 65) != 65)
+    if (lsx_writebuf(ft, frame, (size_t) 65) != 65)
     {
         lsx_fail_errno(ft,SOX_EOF,"write error");
         return (SOX_EOF);
@@ -313,7 +313,7 @@ static int wavgsmflush(sox_format_t * ft)
     return (SOX_SUCCESS);
 }
 
-static sox_size_t wavgsmwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static size_t wavgsmwrite(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
     priv_t * wav = (priv_t *) ft->priv;
     size_t done = 0;
@@ -360,12 +360,12 @@ static void wavgsmstopwrite(sox_format_t * ft)
 /****************************************************************************/
 /* General Sox WAV file code                                                */
 /****************************************************************************/
-static int findChunk(sox_format_t * ft, const char *Label, sox_size_t *len)
+static int findChunk(sox_format_t * ft, const char *Label, uint32_t *len)
 {
     char magic[5];
     for (;;)
     {
-        if (lsx_reads(ft, magic, 4) == SOX_EOF)
+        if (lsx_reads(ft, magic, (size_t)4) == SOX_EOF)
         {
             lsx_fail_errno(ft, SOX_EHDR, "WAVE file has missing %s chunk",
                           Label);
@@ -379,11 +379,11 @@ static int findChunk(sox_format_t * ft, const char *Label, sox_size_t *len)
             return SOX_EOF;
         }
 
-        if (strncmp(Label, magic, 4) == 0)
+        if (strncmp(Label, magic, (size_t)4) == 0)
             break; /* Found the given chunk */
 
         /* skip to next chunk */
-        if (*len == 0 || lsx_seeki(ft, (sox_ssize_t)(*len), SEEK_CUR) != SOX_SUCCESS)
+        if (*len == 0 || lsx_seeki(ft, (ptrdiff_t)(*len), SEEK_CUR) != SOX_SUCCESS)
         {
             lsx_fail_errno(ft,SOX_EHDR,
                           "WAV chunk appears to have invalid size %d.", *len);
@@ -423,7 +423,7 @@ static int startread(sox_format_t * ft)
     uint16_t wExtSize = 0;    /* extended field for non-PCM */
 
     uint32_t      dwDataLength;    /* length of sound data in bytes */
-    sox_size_t    bytesPerBlock = 0;
+    size_t    bytesPerBlock = 0;
     int    bytespersample;          /* bytes per sample (per channel */
     char text[256];
     uint32_t      dwLoopPos;
@@ -431,15 +431,15 @@ static int startread(sox_format_t * ft)
     ft->sox_errno = SOX_SUCCESS;
     wav->ignoreSize = 0;
 
-    if (lsx_reads(ft, magic, 4) == SOX_EOF || (strncmp("RIFF", magic, 4) != 0 &&
-                                             strncmp("RIFX", magic, 4) != 0))
+    if (lsx_reads(ft, magic, (size_t)4) == SOX_EOF || (strncmp("RIFF", magic, (size_t)4) != 0 &&
+                                             strncmp("RIFX", magic, (size_t)4) != 0))
     {
         lsx_fail_errno(ft,SOX_EHDR,"WAVE: RIFF header not found");
         return SOX_EOF;
     }
 
     /* RIFX is a Big-endian RIFF */
-    if (strncmp("RIFX", magic, 4) == 0)
+    if (strncmp("RIFX", magic, (size_t)4) == 0)
     {
         sox_debug("Found RIFX header");
         ft->encoding.reverse_bytes = MACHINE_IS_LITTLEENDIAN;
@@ -448,7 +448,7 @@ static int startread(sox_format_t * ft)
 
     lsx_readdw(ft, &dwRiffLength);
 
-    if (lsx_reads(ft, magic, 4) == SOX_EOF || strncmp("WAVE", magic, 4))
+    if (lsx_reads(ft, magic, (size_t)4) == SOX_EOF || strncmp("WAVE", magic, (size_t)4))
     {
         lsx_fail_errno(ft,SOX_EHDR,"WAVE header not found");
         return SOX_EOF;
@@ -646,7 +646,7 @@ static int startread(sox_format_t * ft)
         }
 
         lsx_readw(ft, &(wav->samplesPerBlock));
-        bytesPerBlock = lsx_ms_adpcm_bytes_per_block(ft->signal.channels, wav->samplesPerBlock);
+        bytesPerBlock = lsx_ms_adpcm_bytes_per_block((size_t) ft->signal.channels, (size_t) wav->samplesPerBlock);
         if (bytesPerBlock > wav->blockAlign)
         {
             lsx_fail_errno(ft,SOX_EOF,"format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
@@ -659,7 +659,7 @@ static int startread(sox_format_t * ft)
             lsx_fail_errno(ft,SOX_EOF,"ADPCM file nCoefs (%.4hx) makes no sense", wav->nCoefs);
             return SOX_EOF;
         }
-        wav->packet = lsx_malloc(wav->blockAlign);
+        wav->packet = lsx_malloc((size_t)wav->blockAlign);
 
         len -= 4;
 
@@ -702,7 +702,7 @@ static int startread(sox_format_t * ft)
         }
 
         lsx_readw(ft, &(wav->samplesPerBlock));
-        bytesPerBlock = lsx_ima_bytes_per_block(ft->signal.channels, wav->samplesPerBlock);
+        bytesPerBlock = lsx_ima_bytes_per_block((size_t) ft->signal.channels, (size_t) wav->samplesPerBlock);
         if (bytesPerBlock > wav->blockAlign || wav->samplesPerBlock%8 != 1)
         {
             lsx_fail_errno(ft,SOX_EOF,"format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
@@ -710,7 +710,7 @@ static int startread(sox_format_t * ft)
             return SOX_EOF;
         }
 
-        wav->packet = lsx_malloc(wav->blockAlign);
+        wav->packet = lsx_malloc((size_t)wav->blockAlign);
         len -= 2;
 
         wav->samples = lsx_malloc(wChannels*wav->samplesPerBlock*sizeof(short));
@@ -774,7 +774,7 @@ static int startread(sox_format_t * ft)
     }
 
     /* Skip anything left over from fmt chunk */
-    lsx_seeki(ft, (sox_ssize_t)len, SEEK_CUR);
+    lsx_seeki(ft, (ptrdiff_t)len, SEEK_CUR);
 
     /* for non-PCM formats, there's a 'fact' chunk before
      * the upcoming 'data' chunk */
@@ -795,9 +795,9 @@ static int startread(sox_format_t * ft)
 
     case WAVE_FORMAT_ADPCM:
         wav->numSamples =
-            lsx_ms_adpcm_samples_in(dwDataLength, ft->signal.channels,
-                           wav->blockAlign, wav->samplesPerBlock);
-        sox_debug_more("datalen %d, numSamples %d",dwDataLength, wav->numSamples);
+            lsx_ms_adpcm_samples_in((size_t)dwDataLength, (size_t)ft->signal.channels,
+                           (size_t)wav->blockAlign, (size_t)wav->samplesPerBlock);
+        sox_debug_more("datalen %d, numSamples %lu",dwDataLength, (unsigned long)wav->numSamples);
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
         ft->signal.length = wav->numSamples*ft->signal.channels;
         break;
@@ -806,9 +806,9 @@ static int startread(sox_format_t * ft)
         /* Compute easiest part of number of samples.  For every block, there
            are samplesPerBlock samples to read. */
         wav->numSamples =
-            lsx_ima_samples_in(dwDataLength, ft->signal.channels,
-                         wav->blockAlign, wav->samplesPerBlock);
-        sox_debug_more("datalen %d, numSamples %d",dwDataLength, wav->numSamples);
+            lsx_ima_samples_in((size_t)dwDataLength, (size_t)ft->signal.channels,
+                         (size_t)wav->blockAlign, (size_t)wav->samplesPerBlock);
+        sox_debug_more("datalen %d, numSamples %lu",dwDataLength, (unsigned long)wav->numSamples);
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
         lsx_ima_init_table();
         ft->signal.length = wav->numSamples*ft->signal.channels;
@@ -835,24 +835,24 @@ static int startread(sox_format_t * ft)
     switch (wav->formatTag)
     {
         case WAVE_FORMAT_ADPCM:
-            sox_debug("        %d Extsize, %d Samps/block, %d bytes/block %d Num Coefs, %d Samps/chan",
-                      wExtSize,wav->samplesPerBlock,bytesPerBlock,wav->nCoefs,
-                      wav->numSamples);
+            sox_debug("        %d Extsize, %d Samps/block, %lu bytes/block %d Num Coefs, %lu Samps/chan",
+                      wExtSize,wav->samplesPerBlock,(unsigned long)bytesPerBlock,wav->nCoefs,
+                      (unsigned long)wav->numSamples);
             break;
 
         case WAVE_FORMAT_IMA_ADPCM:
-            sox_debug("        %d Extsize, %d Samps/block, %d bytes/block %d Samps/chan",
-                      wExtSize, wav->samplesPerBlock, bytesPerBlock,
-                      wav->numSamples);
+            sox_debug("        %d Extsize, %d Samps/block, %lu bytes/block %lu Samps/chan",
+                      wExtSize, wav->samplesPerBlock, (unsigned long)bytesPerBlock,
+                      (unsigned long)wav->numSamples);
             break;
 
         case WAVE_FORMAT_GSM610:
-            sox_debug("GSM .wav: %d Extsize, %d Samps/block, %d Samples/chan",
-                      wExtSize, wav->samplesPerBlock, wav->numSamples);
+            sox_debug("GSM .wav: %d Extsize, %d Samps/block, %lu Samples/chan",
+                      wExtSize, wav->samplesPerBlock, (unsigned long)wav->numSamples);
             break;
 
         default:
-            sox_debug("        %d Samps/chans", wav->numSamples);
+            sox_debug("        %lu Samps/chans", (unsigned long)wav->numSamples);
     }
 
     /* Horrible way to find Cool Edit marker points. Taken from Quake source*/
@@ -862,15 +862,15 @@ static int startread(sox_format_t * ft)
          * doubt any machine writing Cool Edit Chunks writes them at an odd
          * offset */
         len = (len + 1) & ~1u;
-        if (lsx_seeki(ft, (sox_ssize_t)len, SEEK_CUR) == SOX_SUCCESS &&
+        if (lsx_seeki(ft, (ptrdiff_t)len, SEEK_CUR) == SOX_SUCCESS &&
             findChunk(ft, "LIST", &len) != SOX_EOF)
         {
-            wav->comment = lsx_malloc(256);
+            wav->comment = lsx_malloc((size_t)256);
             /* Initialize comment to a NULL string */
             wav->comment[0] = 0;
             while(!lsx_eof(ft))
             {
-                if (lsx_reads(ft,magic,4) == SOX_EOF)
+                if (lsx_reads(ft,magic,(size_t)4) == SOX_EOF)
                     break;
 
                 /* First look for type fields for LIST Chunk and
@@ -878,12 +878,12 @@ static int startread(sox_format_t * ft)
                  * of Chunks, treat the remaining data as Chunks
                  * again.
                  */
-                if (strncmp(magic, "INFO", 4) == 0)
+                if (strncmp(magic, "INFO", (size_t)4) == 0)
                 {
                     /*Skip*/
                     sox_debug("Type INFO");
                 }
-                else if (strncmp(magic, "adtl", 4) == 0)
+                else if (strncmp(magic, "adtl", (size_t)4) == 0)
                 {
                     /* Skip */
                     sox_debug("Type adtl");
@@ -892,7 +892,7 @@ static int startread(sox_format_t * ft)
                 {
                     if (lsx_readdw(ft,&len) == SOX_EOF)
                         break;
-                    if (strncmp(magic,"ICRD",4) == 0)
+                    if (strncmp(magic,"ICRD",(size_t)4) == 0)
                     {
                         sox_debug("Chunk ICRD");
                         if (len > 254)
@@ -900,7 +900,7 @@ static int startread(sox_format_t * ft)
                             sox_warn("Possible buffer overflow hack attack (ICRD)!");
                             break;
                         }
-                        lsx_reads(ft,text,len);
+                        lsx_reads(ft,text, (size_t)len);
                         if (strlen(wav->comment) + strlen(text) < 254)
                         {
                             if (wav->comment[0] != 0)
@@ -909,9 +909,9 @@ static int startread(sox_format_t * ft)
                             strcat(wav->comment,text);
                         }
                         if (strlen(text) < len)
-                           lsx_seeki(ft, (sox_ssize_t)(len - strlen(text)), SEEK_CUR);
+                           lsx_seeki(ft, (ptrdiff_t)(len - strlen(text)), SEEK_CUR);
                     }
-                    else if (strncmp(magic,"ISFT",4) == 0)
+                    else if (strncmp(magic,"ISFT",(size_t)4) == 0)
                     {
                         sox_debug("Chunk ISFT");
                         if (len > 254)
@@ -919,7 +919,7 @@ static int startread(sox_format_t * ft)
                             sox_warn("Possible buffer overflow hack attack (ISFT)!");
                             break;
                         }
-                        lsx_reads(ft,text,len);
+                        lsx_reads(ft,text, (size_t)len);
                         if (strlen(wav->comment) + strlen(text) < 254)
                         {
                             if (wav->comment[0] != 0)
@@ -928,34 +928,34 @@ static int startread(sox_format_t * ft)
                             strcat(wav->comment,text);
                         }
                         if (strlen(text) < len)
-                           lsx_seeki(ft, (sox_ssize_t)(len - strlen(text)), SEEK_CUR);
+                           lsx_seeki(ft, (ptrdiff_t)(len - strlen(text)), SEEK_CUR);
                     }
-                    else if (strncmp(magic,"cue ",4) == 0)
+                    else if (strncmp(magic,"cue ",(size_t)4) == 0)
                     {
                         sox_debug("Chunk cue ");
-                        lsx_seeki(ft,(sox_ssize_t)(len-4),SEEK_CUR);
+                        lsx_seeki(ft,(ptrdiff_t)(len-4),SEEK_CUR);
                         lsx_readdw(ft,&dwLoopPos);
                         ft->oob.loops[0].start = dwLoopPos;
                     }
-                    else if (strncmp(magic,"ltxt",4) == 0)
+                    else if (strncmp(magic,"ltxt",(size_t)4) == 0)
                     {
                         sox_debug("Chunk ltxt");
                         lsx_readdw(ft,&dwLoopPos);
                         ft->oob.loops[0].length = dwLoopPos - ft->oob.loops[0].start;
                         if (len > 4)
-                           lsx_seeki(ft, (sox_ssize_t)(len - 4), SEEK_CUR);
+                           lsx_seeki(ft, (ptrdiff_t)(len - 4), SEEK_CUR);
                     }
                     else
                     {
                         sox_debug("Attempting to seek beyond unsupported chunk '%c%c%c%c' of length %d bytes", magic[0], magic[1], magic[2], magic[3], len);
                         len = (len + 1) & ~1u;
-                        lsx_seeki(ft, (sox_ssize_t)len, SEEK_CUR);
+                        lsx_seeki(ft, (ptrdiff_t)len, SEEK_CUR);
                     }
                 }
             }
         }
         lsx_clearerr(ft);
-        lsx_seeki(ft,(sox_ssize_t)wav->dataStart,SEEK_SET);
+        lsx_seeki(ft,(ptrdiff_t)wav->dataStart,SEEK_SET);
     }
     return lsx_rawstartread(ft);
 }
@@ -968,10 +968,10 @@ static int startread(sox_format_t * ft)
  * Return number of samples read.
  */
 
-static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
 {
         priv_t *   wav = (priv_t *) ft->priv;
-        sox_size_t done;
+        size_t done;
 
         ft->sox_errno = SOX_SUCCESS;
 
@@ -1130,7 +1130,7 @@ static int startwrite(sox_format_t * ft)
             for (ch=0; ch<ft->signal.channels; ch++)
                 wav->state[ch] = 0;
             sbsize = ft->signal.channels * wav->samplesPerBlock;
-            wav->packet = lsx_malloc(wav->blockAlign);
+            wav->packet = lsx_malloc((size_t)wav->blockAlign);
             wav->samples = lsx_malloc(sbsize*sizeof(short));
             wav->sampleTop = wav->samples + sbsize;
             wav->samplePtr = wav->samples;
@@ -1272,7 +1272,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
             wBlockAlign = wChannels * 256; /* reasonable default */
             wBitsPerSample = 4;
             wExtSize = 2;
-            wSamplesPerBlock = lsx_ima_samples_in(0, wChannels, wBlockAlign, 0);
+            wSamplesPerBlock = lsx_ima_samples_in((size_t) 0, (size_t) wChannels, (size_t) wBlockAlign, (size_t) 0);
             break;
         case SOX_ENCODING_MS_ADPCM:
             if (wChannels>16)
@@ -1285,7 +1285,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
             wBlockAlign = max(wBlockAlign, 1) * wChannels * 256;
             wBitsPerSample = 4;
             wExtSize = 4+4*7;      /* Ext fmt data length */
-            wSamplesPerBlock = lsx_ms_adpcm_samples_in(0, wChannels, wBlockAlign, 0);
+            wSamplesPerBlock = lsx_ms_adpcm_samples_in((size_t) 0, (size_t) wChannels, (size_t) wBlockAlign, (size_t) 0);
             break;
         case SOX_ENCODING_GSM:
             if (wChannels!=1)
@@ -1369,7 +1369,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
       lsx_writew(ft, wBitsPerSample); /* No padding in container */
       lsx_writedw(ft, 0);             /* Speaker mapping not specified */
       lsx_writew(ft, wFormatTag);
-      lsx_writebuf(ft, guids[!strcmp(ft->filetype, "amb")], 14);
+      lsx_writebuf(ft, guids[!strcmp(ft->filetype, "amb")], (size_t)14);
     }
     else
     /* if not PCM, we need to write out wExtSize even if wExtSize=0 */
@@ -1414,24 +1414,24 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
         sox_debug("        %d byte/sec, %d block align, %d bits/samp",
                 dwAvgBytesPerSec, wBlockAlign, wBitsPerSample);
     } else {
-        sox_debug("Finished writing Wave file, %u data bytes %u samples",
-                dwDataLength,wav->numSamples);
+        sox_debug("Finished writing Wave file, %u data bytes %lu samples",
+                dwDataLength,(unsigned long)wav->numSamples);
         if (wFormatTag == WAVE_FORMAT_GSM610){
             sox_debug("GSM6.10 format: %li blocks %u padded samples %u padded data bytes",
                     blocksWritten, dwSamplesWritten, dwDataLength);
             if (wav->gsmbytecount != dwDataLength)
-                sox_warn("help ! internal inconsistency - data_written %u gsmbytecount %u",
-                        dwDataLength, wav->gsmbytecount);
+                sox_warn("help ! internal inconsistency - data_written %u gsmbytecount %lu",
+                        dwDataLength, (unsigned long)wav->gsmbytecount);
 
         }
     }
     return SOX_SUCCESS;
 }
 
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
         priv_t *   wav = (priv_t *) ft->priv;
-        sox_ssize_t total_len = len;
+        ptrdiff_t total_len = len;
 
         ft->sox_errno = SOX_SUCCESS;
 
@@ -1499,7 +1499,7 @@ static int stopwrite(sox_format_t * ft)
         if (!ft->seekable)
           return SOX_EOF;
 
-        if (lsx_seeki(ft, 0, SEEK_SET) != 0)
+        if (lsx_seeki(ft, (ptrdiff_t)0, SEEK_SET) != 0)
         {
                 lsx_fail_errno(ft,SOX_EOF,"Can't rewind output file to rewrite .wav header.");
                 return SOX_EOF;
@@ -1560,7 +1560,7 @@ static char *wav_format_str(unsigned wFormatTag)
         }
 }
 
-static int seek(sox_format_t * ft, sox_size_t offset)
+static int seek(sox_format_t * ft, size_t offset)
 {
   priv_t *   wav = (priv_t *) ft->priv;
 
@@ -1568,7 +1568,7 @@ static int seek(sox_format_t * ft, sox_size_t offset)
     lsx_fail_errno(ft, SOX_ENOTSUP, "seeking not supported with this encoding");
   else if (wav->formatTag == WAVE_FORMAT_GSM610) {
     int new_offset, alignment;
-    sox_size_t gsmoff;
+    size_t gsmoff;
 
     /* rounding bytes to blockAlign so that we
      * don't have to decode partial block. */
@@ -1576,7 +1576,7 @@ static int seek(sox_format_t * ft, sox_size_t offset)
              wav->blockAlign * ft->signal.channels / 2;
     gsmoff -= gsmoff % (wav->blockAlign * ft->signal.channels);
 
-    ft->sox_errno = lsx_seeki(ft, (sox_ssize_t)(gsmoff + wav->dataStart), SEEK_SET);
+    ft->sox_errno = lsx_seeki(ft, (ptrdiff_t)(gsmoff + wav->dataStart), SEEK_SET);
     if (ft->sox_errno == SOX_SUCCESS) {
       /* offset is in samples */
       new_offset = offset;
@@ -1589,9 +1589,9 @@ static int seek(sox_format_t * ft, sox_size_t offset)
     double wide_sample = offset - (offset % ft->signal.channels);
     double to_d = wide_sample * ft->encoding.bits_per_sample / 8;
     off_t to = to_d;
-    ft->sox_errno = (to != to_d)? SOX_EOF : lsx_seeki(ft, (sox_ssize_t)wav->dataStart + (sox_ssize_t)to, SEEK_SET);
+    ft->sox_errno = (to != to_d)? SOX_EOF : lsx_seeki(ft, (ptrdiff_t)wav->dataStart + (ptrdiff_t)to, SEEK_SET);
     if (ft->sox_errno == SOX_SUCCESS)
-      wav->numSamples -= (sox_size_t)wide_sample / ft->signal.channels;
+      wav->numSamples -= (size_t)wide_sample / ft->signal.channels;
   }
 
   return ft->sox_errno;

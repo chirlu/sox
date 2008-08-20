@@ -28,7 +28,7 @@ typedef struct {
   ao_device *device;
   ao_sample_format format;
   char *buf;
-  sox_size_t buf_size;
+  size_t buf_size;
 } priv_t;
 
 static int startwrite(sox_format_t * ft)
@@ -75,7 +75,7 @@ static int startwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips)
+static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, size_t len, sox_bool swap, size_t * clips)
 {
     while (len--)
     {
@@ -87,10 +87,10 @@ static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t l
     }
 }
 
-static sox_size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, sox_size_t len)
+static size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, size_t len)
 {
   priv_t * ao = (priv_t *)ft->priv;
-  sox_size_t aobuf_size;
+  uint_32 aobuf_size;
 
   if (len > ao->buf_size / (ft->encoding.bits_per_sample >> 3))
       len = ao->buf_size / (ft->encoding.bits_per_sample >> 3);

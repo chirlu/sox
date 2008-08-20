@@ -65,9 +65,9 @@ static int startread(sox_format_t * ft)
   priv_t * avr = (priv_t *)ft->priv;
   int rc;
 
-  lsx_reads(ft, avr->magic, 4);
+  lsx_reads(ft, avr->magic, (size_t)4);
 
-  if (strncmp (avr->magic, AVR_MAGIC, 4)) {
+  if (strncmp (avr->magic, AVR_MAGIC, (size_t)4)) {
     lsx_fail_errno(ft,SOX_EHDR,"AVR: unknown header");
     return(SOX_EOF);
   }
@@ -243,7 +243,7 @@ static int startwrite(sox_format_t * ft)
   return(SOX_SUCCESS);
 }
 
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
+static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp)
 {
   priv_t * avr = (priv_t *)ft->priv;
 
@@ -259,11 +259,11 @@ static int stopwrite(sox_format_t * ft)
   unsigned size = avr->size / ft->signal.channels;
 
   /* Fix size */
-  lsx_seeki(ft, 26, SEEK_SET);
+  lsx_seeki(ft, (size_t)26, SEEK_SET);
   lsx_writedw (ft, size);
 
   /* Fix lend */
-  lsx_seeki(ft, 34, SEEK_SET);
+  lsx_seeki(ft, (size_t)34, SEEK_SET);
   lsx_writedw (ft, size);
 
   return(SOX_SUCCESS);

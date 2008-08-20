@@ -58,10 +58,10 @@ static int start(sox_effect_t * effp)
  * Return number of samples processed.
  */
 static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
-                           sox_size_t *isamp, sox_size_t *osamp)
+                           size_t *isamp, size_t *osamp)
 {
   priv_t * UNUSED p = (priv_t *)effp->priv;
-  sox_size_t len, done;
+  size_t len, done;
 
   switch (effp->out_signal.channels) {
   case 2:
@@ -90,7 +90,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
 /*
  * Drain out remaining samples if the effect generates any.
  */
-static int drain(sox_effect_t UNUSED * effp, sox_sample_t UNUSED *obuf, sox_size_t *osamp)
+static int drain(sox_effect_t UNUSED * effp, sox_sample_t UNUSED *obuf, size_t *osamp)
 {
   *osamp = 0;
   /* Return SOX_EOF when drain

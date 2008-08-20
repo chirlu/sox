@@ -28,7 +28,7 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
 }
 
 static int drain(
-    sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
+    sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
 

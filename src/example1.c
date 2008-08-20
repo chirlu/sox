@@ -31,7 +31,7 @@ static sox_format_t * in, * out; /* input and output files */
  * In a different application, they might be generated or come from a different
  * part of the application. */
 static int input_drain(
-    sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
+    sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
 {
   (void)effp;   /* This parameter is not needed in this example */
 
@@ -55,7 +55,7 @@ static int input_drain(
  * In a different application, they might perhaps be analysed in some way,
  * or displayed as a wave-form */
 static int output_flow(sox_effect_t *effp UNUSED, sox_sample_t const * ibuf,
-    sox_sample_t * obuf UNUSED, sox_size_t * isamp, sox_size_t * osamp)
+    sox_sample_t * obuf UNUSED, size_t * isamp, size_t * osamp)
 {
   /* Write out *isamp samples */
   size_t len = sox_write(out, ibuf, *isamp);
