@@ -390,8 +390,9 @@ static void sox_delete_effect(sox_effect_t *effp)
     {
         effp[f].handler.kill(&effp[f]);
         free(effp[f].priv);
-        free(&effp[f]);
     }
+    free(effp);
+
 }
 
 /* Remove all effects from the chain.
