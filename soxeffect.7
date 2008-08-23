@@ -919,7 +919,7 @@ More severe:
 	play snare.flac phaser 0.6 0.66 3 0.6 2 -t
 .EE
 .TP
-\fBrate\fR [\fB\-q\fR\^|\^\fB\-l\fR\^|\^\fB\-m\fR\^|\^\fB\-h\fR\^|\^\fB\-v\fR] [\fIRATE\fR[\fBk\fR]]
+\fBrate\fR [\fB\-q\fR\^|\^\fB\-l\fR\^|\^\fB\-m\fR\^|\^\fB\-h\fR\^|\^\fB\-v\fR] [\fB\-p\fR] [\fIRATE\fR[\fBk\fR]]
 Change the audio sampling rate (i.e. resample the audio)
 using a quality level as follows:
 .TS
@@ -955,6 +955,12 @@ is the level of noise rejection.
 The default quality level is `high' (\fB\-h\fR).
 The \-q algorithm uses cubic interpolation; the others use linear-phase
 bandwidth-limited interpolation.
+.SP
+If the
+.B
+\-p
+option is given\*mvalid only with quality = medium or above\*mthen the algorithm
+used is minimum-phase instead of linear-phase.
 .SP
 This effect is invoked automatically if SoX's \fB\-r\fR option specifies a
 rate that is different to that of the input file(s).  Alternatively, this

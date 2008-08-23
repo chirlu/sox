@@ -68,7 +68,7 @@ static sample_t * prepare_coefs(raw_coef_t const * coefs, int num_coefs,
 }
 
 typedef struct {
-  int        dft_length, num_taps;
+  int        dft_length, num_taps, post_peak;
   sample_t   * coefs;
 } half_band_t;      /* Note: not half-band as in symmetric about Fn/2 (Fs/4) */
 
@@ -229,6 +229,42 @@ static double * design_lpf(
   return make_lpf(*num_taps, (Fc - tr_bw) / k, beta, (double)k);
 }
 
+static void to_minimum_phase(double * h, int len, rate_shared_t * p)
+{
+  double * work;
+  int work_len, n = len, i;
+  for (work_len = 32; n > 1; work_len <<= 1, n >>= 1);
+
+  if (!p->bit_rev_table) {
+    p->bit_rev_table = calloc(dft_br_len(2*work_len),sizeof(*p->bit_rev_table));
+    p->sin_cos_table = calloc(dft_sc_len(2*work_len),sizeof(*p->sin_cos_table));
+  }
+  work = calloc(2 * work_len, sizeof(*work));
+  for (i = 0; i < len; ++i) work[2 * i] = h[i];
+
+  cdft(2 * work_len, 1, work, p->bit_rev_table, p->sin_cos_table);
+  for (i = 0; i < work_len; ++i) {
+    work[2 * i] = log(sqrt(sqr(work[2 * i]) + sqr(work[2 * i + 1])));
+    work[2 * i + 1] = 0;
+  }
+  cdft(2 * work_len, -1, work, p->bit_rev_table, p->sin_cos_table);
+  for (i = 0; i < 2 * work_len; ++i) work[i] *= 1. / work_len;
+
+  for (i = 2; i < work_len; ++i)
+    work[i] *= 2;
+  memset(work + work_len + 2, 0, (work_len - 2) * sizeof(*work));
+
+  cdft(2 * work_len, 1, work, p->bit_rev_table, p->sin_cos_table);
+  for (i = 0; i < work_len; ++i) {
+    double x = exp(work[2 * i]);
+    work[2 * i] = x * cos(work[2 * i + 1]);
+    work[2 * i + 1] = x * sin(work[2 * i + 1]);
+  }
+  cdft(2 * work_len, -1, work, p->bit_rev_table, p->sin_cos_table);
+  for (i = 0; i < len; ++i) h[i] = work[2 * i] * 1. / work_len;
+  free(work);
+}
+
 static int set_dft_length(int num_taps) /* Set to 4 x nearest power of 2 */
 {
   int result, n = num_taps;
@@ -239,7 +275,8 @@ static int set_dft_length(int num_taps) /* Set to 4 x nearest power of 2 */
 }
 
 static void half_band_filter_init(rate_shared_t * p, unsigned which,
-    int num_taps, sample_t const h[], double Fp, double atten, int multiplier)
+    int num_taps, sample_t const h[], double Fp, double atten, int multiplier,
+    sox_bool minimum_phase)
 {
   half_band_t * f = &p->half_band[which];
   int dft_length, i;
@@ -252,14 +289,18 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
     for (i = 0; i < num_taps; ++i)
       f->coefs[(i + dft_length - num_taps + 1) & (dft_length - 1)]
           = h[abs(num_taps / 2 - i)] / dft_length * 2 * multiplier;
+    f->post_peak = num_taps / 2;
   }
   else {
     double * h = design_lpf(Fp, 1., 2., atten, &num_taps, 0);
+    if (minimum_phase)
+      to_minimum_phase(h, num_taps, p);
     dft_length = set_dft_length(num_taps);
     f->coefs = calloc(dft_length, sizeof(*f->coefs));
     for (i = 0; i < num_taps; ++i)
       f->coefs[(i + dft_length - num_taps + 1) & (dft_length - 1)]
           = h[i] / dft_length * 2 * multiplier;
+    f->post_peak = minimum_phase? (int)(num_taps * 0.997 + .5) : num_taps / 2;
     free(h);
   }
   assert(num_taps & 1);
@@ -290,7 +331,8 @@ typedef struct {
 
 typedef enum {Default = -1, Quick, Low, Medium, High, Very, Ultra} quality_t;
 
-static void rate_init(rate_t * p, rate_shared_t * shared, double factor, quality_t quality, int interp_order)
+static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
+    quality_t quality, int interp_order, sox_bool minimum_phase)
 {
   int i, mult, divisor = 1;
 
@@ -374,22 +416,22 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor, quality
     };
     filter_t const * f = &filters[quality - Low];
     assert((size_t)(quality - Low) < array_length(filters));
-    half_band_filter_init(shared, p->upsample, f->len, f->h, f->bw, f->a, mult);
+    half_band_filter_init(shared, p->upsample, f->len, f->h, f->bw, f->a, mult, minimum_phase);
     if (p->upsample) {
       pre_stage.fn = double_sample; /* Finish off setting up pre-stage */
-      pre_stage .preload = shared->half_band[1].num_taps >> 2;
+      pre_stage.preload = shared->half_band[1].post_peak >> 1;
        /* Start setting up post-stage; TODO don't use dft for short filters */
       if ((1 - p->factor) / (1 - f->bw) > 2)
-        half_band_filter_init(shared, 0, 0, NULL, max(p->factor, .64), f->a, 1);
+        half_band_filter_init(shared, 0, 0, NULL, max(p->factor, .64), f->a, 1, sox_false);
       else shared->half_band[0] = shared->half_band[1];
     }
     else if (p->level > 0 && p->output_stage_num > p->level) {
       double pass = f->bw * divisor / factor / 2;
       if ((1 - pass) / (1 - f->bw) > 2)
-        half_band_filter_init(shared, 1, 0, NULL, max(pass, .64), f->a, 1);
+        half_band_filter_init(shared, 1, 0, NULL, max(pass, .64), f->a, 1, sox_false);
     }
     post_stage.fn = half_sample;
-    post_stage.preload = shared->half_band[0].num_taps >> 1;
+    post_stage.preload = shared->half_band[0].post_peak;
   }
   else if (quality == Low && !p->upsample) {    /* dft is slower here, so */
     post_stage.fn = half_sample_low;            /* use normal convolution */
@@ -400,7 +442,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor, quality
     stage_t * s = & p->stages[p->level - 1];
     if (shared->half_band[1].num_taps) {
       s->fn = half_sample;
-      s->preload = shared->half_band[1].num_taps >> 1;
+      s->preload = shared->half_band[1].post_peak;
       s->which = 1;
     }
     else *s = post_stage;
@@ -482,6 +524,7 @@ static void rate_close(rate_t * p)
 typedef struct {
   sox_rate_t      out_rate;
   int             quality, coef_interp;
+  sox_bool        minimum_phase;
   rate_t          rate;
   rate_shared_t   shared, * shared_ptr;
 } priv_t;
@@ -498,6 +541,7 @@ static int create(sox_effect_t * effp, int argc, char **argv)
     while ((c = *q++)) {
       if      ((found_at = strchr(bws+1, c))) p->quality = found_at - bws -1;
       else if ((found_at = strchr(nums, c))) p->coef_interp = found_at - nums;
+      else if (c == 'p') p->minimum_phase = sox_true;
       else return lsx_usage(effp);
     }
     argc--; argv++;
@@ -521,7 +565,7 @@ static int start(sox_effect_t * effp)
 
   effp->out_signal.channels = effp->in_signal.channels;
   effp->out_signal.rate = out_rate;
-  rate_init(&p->rate, p->shared_ptr, effp->in_signal.rate / out_rate, p->quality, p->coef_interp);
+  rate_init(&p->rate, p->shared_ptr, effp->in_signal.rate / out_rate, p->quality, p->coef_interp, p->minimum_phase);
   return SOX_SUCCESS;
 }
 
@@ -562,7 +606,7 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_rate_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "rate", "[-q|-l|-m|-h|-v] [RATE[k]]"
+    "rate", "[-q|-l|-m|-h|-v] [-p] [RATE[k]]"
     "\n\tQuality        BW %    Rej dB    Typical Use"
     "\n -q\tquick & dirty  n/a   ~30 @ Fs/4  playback on ancient hardware"
     "\n -l\tlow            80       100      playback on old hardware"
@@ -570,6 +614,7 @@ sox_effect_handler_t const * sox_rate_effect_fn(void)
     "\n -h\thigh           99       125      16-bit mastering (use with dither)"
     "\n -v\tvery high      99       175      24-bit mastering"
     /* "\n -u\tultra high     99.7     175      " */
+    "\n\n -p\tminimum phase"
     , SOX_EFF_RATE, create, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
   return &handler;
