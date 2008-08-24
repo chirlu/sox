@@ -73,8 +73,8 @@ Input(s) \*(RA Balancing \*(RA Combiner \*(RA Effects \*(RA Output
 .TE
 .DT
 .SP
-To show how this works in practise, here are some examples of how
-SoX might be used.  The simple
+To show how this works in practise, here is a selection of examples of
+how SoX might be used.  The simple
 .EX
 	sox recital.au recital.wav
 .EE
@@ -88,7 +88,7 @@ the \fBvol\fR and \fBdither\fR effects.
 .EX
 	sox -r 8k -u -1 -c 1 voice-memo.raw voice-memo.wav
 .EE
-adds a header to a raw audio file,
+converts `raw' (a.k.a. `headerless') audio to a self-descibing file format,
 .EX
 	sox slow.aiff fixed.aiff speed 1.027
 .EE
@@ -118,8 +118,8 @@ records 10 seconds of stereo audio, and
 .EE
 records a new track in a multi-track recording.
 .SP
-Detailed explanations of how to use each SoX parameter, file format, and
-effect can be found below in this manual, and in
+N.B.  Detailed explanations of how to use \fIall\fR SoX parameters, file
+formats, and effects can be found below in this manual, and in
 .BR soxformat (7)
 and
 .BR soxeffect (7)
