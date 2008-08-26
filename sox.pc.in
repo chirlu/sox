@@ -9,4 +9,4 @@ Version: @VERSION@
 URL: http://sox.sourceforge.net
 Libs: -L${libdir} -lsox -lsfx
 Libs.private: @LIBS@
-Cflags: -I${includedir}/sox
+Cflags: -I${includedir}

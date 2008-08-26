@@ -43,6 +43,7 @@ Other bug fixes:
   o [2038855] external lpc10 lib patch.  (Oden Eriksson, Mandriva)
   o Fix memory leaks in effects chain when restarting effects.
   o Fix WAV write on 64-bit arch.  (robs)
+  o Fixed pkg-config CFLAGS. (evilynux)
 
 Internal improvements:
 
