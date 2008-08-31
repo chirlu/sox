@@ -1483,34 +1483,72 @@ would typically be an number of seconds, and
 .I leeway
 should be set to zero.
 .TP
-\fBstat\fR [\fB\-s \fIn\fR] [\fB\-rms\fR] [\fB\-freq\fR] [\fB\-v\fR] [\fB\-d\fR]
-Do a statistical check on the input file,
-and print results on the standard error file.  Audio is passed
-unmodified through the SoX processing chain.
+\fBstat\fR [\fB\-s \fIscale\fR] [\fB\-rms\fR] [\fB\-freq\fR] [\fB\-v\fR] [\fB\-d\fR]
+Display time and frequency domain statistical information about the audio.
+Audio is passed unmodified through the SoX processing chain.
 .SP
-The `Volume Adjustment:' field in the statistics
-gives you the parameter to the
-.B \-v
-.I number
-which will make the audio as loud as possible without clipping.
+The information is output to the `standard error' (stderr) stream and is
+calculated, where
+.I n
+is the duration of the audio in samples,
+.I c
+is the number of audio channels,
+.I r
+is the audio sample rate, and
+.I x\s-2\dk\u\s0
+represents the PCM value (in the range \-1 to +1 by default) of each successive
+sample in the audio,
+as follows:
+.TS
+center;
+lI l l.
+Samples read	\fIn\fR\^\(mu\^\fIc\fR	\ 
+Length (seconds)	\fIn\fR\^\(di\^\fIr\fR
+Scaled by	\ 	See \-s below.
+Maximum amplitude	max(\fIx\s-2\dk\u\s0\fR)	T{
+The maximum sample value in the audio; usually this will be a positive number.
+T}
+Minimum amplitude	min(\fIx\s-2\dk\u\s0\fR)	T{
+The minimum sample value in the audio; usually this will be a negative number.
+T}
+Midline amplitude	\(12\^min(\fIx\s-2\dk\u\s0\fR)\^+\^\(12\^max(\fIx\s-2\dk\u\s0\fR)
+Mean norm	\(S1/\s-2n\s+2\^\(*S\^\^\(br\^\fIx\s-2\dk\u\s0\fR\^\(br\^	T{
+The average of the absolute value of each sample in the audio.
+T}
+Mean amplitude	\(S1/\s-2n\s+2\^\(*S\^\fIx\s-2\dk\u\s0\fR	T{
+The average of each sample in the audio.  If this figure is non-zero, then it indicates the
+presence of a D.C. offset (which could be removed using the
+.B dcshift
+effect).
+T}
+RMS amplitude	\(sr(\(S1/\s-2n\s+2\^\(*S\^\fIx\s-2\dk\u\s0\fR\(S2)	T{
+The level of a D.C. signal that would have the same power
+as the audio's average power.
+T}
+Maximum delta	max(\^\(br\^\fIx\s-2\dk\u\s0\fR\^\-\^\fIx\s-2\dk\-1\u\s0\fR\^\(br\^)
+Minimum delta	min(\^\(br\^\fIx\s-2\dk\u\s0\fR\^\-\^\fIx\s-2\dk\-1\u\s0\fR\^\(br\^)
+Mean delta	\(S1/\s-2n\-1\s+2\^\(*S\^\^\(br\^\fIx\s-2\dk\u\s0\fR\^\-\^\fIx\s-2\dk\-1\u\s0\fR\^\(br\^
+RMS delta	\(sr(\(S1/\s-2n\-1\s+2\^\(*S\^(\fIx\s-2\dk\u\s0\fR\^\-\^\fIx\s-2\dk\-1\u\s0\fR)\(S2)
+Rough frequency	\ 	In Hz.
+Volume Adjustment	\ 	T{
+The parameter to the
+.B vol
+effect which would make the audio as loud as possible without clipping.
 Note: See the discussion on
 .B Clipping
 in
 .BR sox (1)
-for reasons why it is rarely a good idea to actually do this.
-.SP
-The option
-.B \-v
-will print out the `Volume Adjustment:' field's value only and
-return.  This could be of use in scripts to auto convert the
-volume.
+for reasons why it is rarely a good idea actually to do this.
+T}
+.TE
+.DT
 .SP
 The
 .B \-s
-option is used to scale the input data by a given factor.  The default value
-of
-.I n
-is the maximum value of a signed long integer (7fffffff in hexadecimal).
+option can be used to scale the input data by a given factor.
+The default value of
+.I scale
+is 2147483647 (i.e. the maximum value of a 32-bit signed integer).
 Internal effects
 always work with signed long PCM data and so the value should relate to this
 fact.
@@ -1521,15 +1559,21 @@ option will convert all output average values to `root mean square'
 format.
 .SP
 The
-.B \-freq
-option calculates the input's power spectrum and prints it to standard error.
+.B \-v
+option displays only the `Volume Adjustment' value.
 .SP
-There is also an optional parameter
+The
+.B \-freq
+option calculates the input's power spectrum (4096 point DFT) instead of the
+statistics listed above.
+.SP
+The
 .B \-d
-that will print out a hex dump of the
-audio from the internal buffer that is in 32-bit signed PCM data.
-This is mainly only of use in tracking down endian problems that
-creep in to SoX on cross-platform versions.
+option
+displays a hex dump of the 32-bit signed PCM data
+audio in SoX's internal buffer.
+This is mainly used to help track down endian problems that
+sometimes occur in cross-platform versions of SoX.
 .TP
 \fBswap\fR [\fI1 2\fR | \fI1 2 3 4\fR]
 Swap channels in multi-channel audio files.  Optionally, you may
