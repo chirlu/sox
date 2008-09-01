@@ -130,9 +130,10 @@ static size_t output_count = 0;
  * a resampling effect, a channel mixing effect, the input, and the output.
  */
 #define MAX_USER_EFF (SOX_MAX_EFFECTS - 4)
-static sox_effect_t * user_efftab[MAX_USER_EFF], efftab_options[MAX_USER_EFF];
+static struct { char *name; int argc; char *argv[256]; } user_effargs[MAX_USER_EFF];
+static sox_effect_t *user_efftab[MAX_USER_EFF];
 static unsigned nuser_effects;
-static sox_effects_chain_t ofile_effects_chain;
+static sox_effects_chain_t *effects_chain = NULL;
 
 
 /* Flowing */
@@ -542,26 +543,78 @@ static sox_effect_handler_t const * output_effect_fn(void)
   return &handler;
 }
 
-static void add_auto_effect(sox_effects_chain_t * chain, char const * name, char * arg, sox_signalinfo_t * signal)
+static void add_effect(sox_effects_chain_t *chain, char const *name, 
+                       int argc, char *argv[], sox_signalinfo_t *signal)
 {
   sox_effect_t * effp;
-  char * * argv = & arg;
 
   effp = sox_create_effect(sox_find_effect(name)); /* Should always succeed. */
 
-  if (effp->handler.getopts(effp, arg != NULL, argv) == SOX_EOF)
+  if (!effp)
+    sox_fail("Failed creating effect.  Out of Memory?\n");
+
+  if (effp->handler.flags & SOX_EFF_DEPRECATED)
+    sox_warn("effect `%s' is deprecated; see soxeffect(7) for an alternative", 
+             effp->handler.name);
+
+  if (sox_effect_options(effp, argc, argv) == SOX_EOF)
     exit(1); /* The failing effect should have displayed an error message */
   
   if (sox_add_effect(chain, effp, signal, &ofile->ft->signal) != SOX_SUCCESS)
     exit(2); /* The effects chain should have displayed an error message */
 }
 
-/* If needed effects are not given, auto-add at (performance) optimal point. */
-static void add_effects(sox_effects_chain_t * chain)
+/* Creates users effects and passes in user specified options.
+ * This is done without putting anything into the effects chain
+ * because an effect may set the effp->in_format and we may want
+ * to copy that back into the input/combiner before opening and 
+ * inserting it.  
+ * Similarly, we may want to use effp->out_format to override the 
+ * default values of output file before we open it.
+ * To keep things simple, we create all user effects.  Later, when
+ * we add them, some may already be in the chain and we will need to free
+ * them.
+ */
+static void create_user_effects(void)
+{
+  unsigned i;
+  sox_effect_t *effp;
+
+  for (i = 0; i < nuser_effects; i++) 
+  {
+      effp = sox_create_effect(sox_find_effect(user_effargs[i].name));
+
+      if (!effp)
+        sox_fail("Failed creating effect.  Out of Memory?\n");
+
+      if (effp->handler.flags & SOX_EFF_DEPRECATED)
+        sox_warn("effect `%s' is deprecated; see soxeffect(7) for an alternative", 
+                 effp->handler.name);
+
+      /* The failing effect should have displayed an error message */
+      if (sox_effect_options(effp, user_effargs[i].argc, 
+                             user_effargs[i].argv) == SOX_EOF)
+        exit(1);
+
+      user_efftab[i] = effp;
+  }
+}
+
+/* Add all user effects to the chain.  If the output effect's rate or
+ * channel count do not match the end of the effects chain then
+ * insert effects to correct this.
+ *
+ * This can also be called on pre-existing effect chains so that it
+ * will only add effects that are missing off the END of the chain.
+ * This is useful if an effect went into drain mode and you
+ * wish to restart it and any effects after it.
+ */
+static void add_effects(sox_effects_chain_t *chain)
 {
   sox_signalinfo_t signal = combiner_signal;
   unsigned i, min_chan = 0, min_rate = 0;
   sox_effect_t * effp;
+  unsigned effects_added = 0;
   char * rate_arg = sox_mode != sox_play? NULL :
     (rate_arg = getenv("PLAY_RATE_ARG"))? rate_arg : "-l";
 
@@ -572,35 +625,54 @@ static void add_effects(sox_effects_chain_t * chain)
     if (user_efftab[i]->handler.flags & SOX_EFF_RATE)
       min_rate = i + 1;
   }
-  /* 1st `effect' in the chain is the input combiner_signal */
-  effp = sox_create_effect(input_combiner_effect_fn());
-  sox_add_effect(chain, effp, &signal, &ofile->ft->signal);
+
+  effects_added++;
+  if (effects_added > chain->length)
+  {
+    /* 1st `effect' in the chain is the input combiner_signal */
+    effp = sox_create_effect(input_combiner_effect_fn());
+    sox_add_effect(chain, effp, &signal, &ofile->ft->signal);
+  }
 
   /* Add auto effects if appropriate; add user specified effects */
-  for (i = 0; i <= nuser_effects; i++) {
-    /* If reducing channels, it's faster to do so before all other effects: */
-    if (signal.channels > ofile->ft->signal.channels && i >= min_chan)
-      add_auto_effect(chain, "mixer", NULL, &signal);
-
-    /* If reducing rate, it's faster to do so before all other effects
-     * (except reducing channels): */
-    if (signal.rate > ofile->ft->signal.rate && i >= min_rate)
-      add_auto_effect(chain, "rate", rate_arg, &signal);
-
-    if (i < nuser_effects)
-      if (sox_add_effect(chain, user_efftab[i], &signal, &ofile->ft->signal) != SOX_SUCCESS)
+  for (i = 0; i < nuser_effects; i++) {
+    effects_added++;
+    if (effects_added > chain->length)
+    {
+      /* Effects chain should have displayed an error message */
+      if (sox_add_effect(chain, user_efftab[i], 
+                         &signal, &ofile->ft->signal) != SOX_SUCCESS)
         exit(2);
+    }
+    else
+      /* Since already added from previous pass, free the extra copy
+       * created this pass.
+       */
+      sox_delete_effect(user_efftab[i]);
   }
+
   /* Add auto effects if still needed at this point */
   if (signal.rate != ofile->ft->signal.rate)
-    add_auto_effect(chain, "rate", rate_arg, &signal); /* Must be up-sampling */
+  {
+    effects_added++;
+    if (effects_added > chain->length)
+      add_effect(chain, "rate", rate_arg != NULL, &rate_arg, &signal); /* Must be up-sampling */
+  }
   if (signal.channels != ofile->ft->signal.channels)
-    add_auto_effect(chain, "mixer", NULL, &signal); /* Must be increasing channels */
-
-  /* Last `effect' in the chain is the output file */
-  effp = sox_create_effect(output_effect_fn());
-  if (sox_add_effect(chain, effp, &signal, &ofile->ft->signal) != SOX_SUCCESS)
-    exit(2);
+  {
+    effects_added++;
+    if (effects_added > chain->length)
+      add_effect(chain, "mixer", 0, NULL, &signal); /* Must be increasing channels */
+  }
+    
+  effects_added++;
+  if (effects_added > chain->length)
+  {
+    /* Last `effect' in the chain is the output file */
+    effp = sox_create_effect(output_effect_fn());
+    if (sox_add_effect(chain, effp, &signal, &ofile->ft->signal) != SOX_SUCCESS)
+      exit(2);
+  }
 
   for (i = 0; i < chain->length; ++i) {
     sox_effect_t const * effp = &chain->effects[i][0];
@@ -616,7 +688,7 @@ static size_t total_clips(void)
   size_t clips = 0;
   for (i = 0; i < file_count; ++i)
     clips += files[i]->ft->clips + files[i]->volume_clips;
-  return clips + mixing_clips + sox_effects_clips(&ofile_effects_chain);
+  return clips + mixing_clips + sox_effects_clips(effects_chain);
 }
 
 static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
@@ -711,15 +783,15 @@ static void optimize_trim(void)
    * to do it for multiple files is complex and problably never used.  This
    * hack is a huge time savings when trimming gigs of audio data into
    * managable chunks.  */
-  if (input_count == 1 && ofile_effects_chain.length > 1 && strcmp(ofile_effects_chain.effects[1][0].handler.name, "trim") == 0) {
+  if (input_count == 1 && effects_chain->length > 1 && strcmp(effects_chain->effects[1][0].handler.name, "trim") == 0) {
     if (files[0]->ft->handler.seek && files[0]->ft->seekable){
-      size_t offset = sox_trim_get_start(&ofile_effects_chain.effects[1][0]);
+      size_t offset = sox_trim_get_start(&effects_chain->effects[1][0]);
       if (offset && sox_seek(files[0]->ft, offset, SOX_SEEK_SET) == SOX_SUCCESS) {
         read_wide_samples = offset / files[0]->ft->signal.channels;
         /* Assuming a failed seek stayed where it was.  If the seek worked then
          * reset the start location of trim so that it thinks user didn't
          * request a skip.  */
-        sox_trim_clear_start(&ofile_effects_chain.effects[1][0]);
+        sox_trim_clear_start(&effects_chain->effects[1][0]);
         sox_debug("optimize_trim successful");
       }
     }
@@ -851,10 +923,24 @@ static void sigint(int s)
   else user_abort = sox_true;
 }
 
-static void calculate_combiner_and_output_signal_parameters(void)
+static void calculate_combiner_signal_parameters(void)
 {
-  sox_bool known_length = combine_method != sox_sequence;
-  size_t i, olen = 0;
+  size_t i;
+
+  /* If user didn't specify # of channels then see if an effect
+   * is specifying them.  This is of most use currently with the
+   * synth effect were user can use null input handler and specify
+   * channel counts directly in effect.  Forcing to use -c with
+   * -n isn't as convenient.
+   */
+  for (i = 0; i < input_count; i++) {
+    unsigned j;
+    for (j =0; j < nuser_effects && !files[i]->ft->signal.channels; ++j)
+      files[i]->ft->signal.channels = user_efftab[j]->in_signal.channels;
+    /* For historical reasons, default to one channel if not specified. */
+    if (!files[i]->ft->signal.channels)
+      files[i]->ft->signal.channels = 1;
+  }
 
   /* Set the combiner output signal attributes to those of the 1st/next input
    * file.  If we are in sox_sequence mode then we don't need to check the
@@ -884,11 +970,6 @@ static void calculate_combiner_and_output_signal_parameters(void)
       max_channels = max(max_channels, files[i]->ft->signal.channels);
       min_rate     = min(min_rate    , files[i]->ft->signal.rate);
       max_rate     = max(max_rate    , files[i]->ft->signal.rate);
-      known_length = known_length && files[i]->ft->signal.length != 0;
-      if (combine_method == sox_concatenate)
-        olen += files[i]->ft->signal.length / files[i]->ft->signal.channels;
-      else
-        olen = max(olen, files[i]->ft->signal.length / files[i]->ft->signal.channels);
     }
 
     /* Check for invalid/unusual rate or channel combinations: */
@@ -910,6 +991,27 @@ static void calculate_combiner_and_output_signal_parameters(void)
       combine_method == sox_merge? total_channels : max_channels;
   }
 
+  /* Now take account of any net speed change specified by user effects by
+   * adjusting the nominal sample rate at the output of the combiner: */
+  combiner_signal.rate *= sox_effects_globals.speed;
+
+} /* calculate_combiner_signal_parameters */
+
+static void calculate_output_signal_parameters(void)
+{
+  sox_bool known_length = combine_method != sox_sequence;
+  size_t i, olen = 0;
+
+  /* Report all input files and gather info on differing rates & numbers of
+   * channels, and on the resulting output audio length: */
+  for (i = 0; i < input_count; i++) {
+    known_length = known_length && files[i]->ft->signal.length != 0;
+    if (combine_method == sox_concatenate)
+      olen += files[i]->ft->signal.length / files[i]->ft->signal.channels;
+    else
+      olen = max(olen, files[i]->ft->signal.length / files[i]->ft->signal.channels);
+  }
+
   /* Determine the output file signal attributes; set from user options
    * if given: */
   ofile->signal = ofile_signal_options;
@@ -927,10 +1029,6 @@ static void calculate_combiner_and_output_signal_parameters(void)
 
   /* FIXME: comment this: */
   ofile->signal.precision = combiner_signal.precision;
-
-  /* Now take account of any net speed change specified by user effects by
-   * adjusting the nominal sample rate at the output of the combiner: */
-  combiner_signal.rate *= sox_effects_globals.speed;
 
   /* If any given user effect modifies the audio length, then we assume that
    * we don't know what the output length will be.  FIXME: in most cases,
@@ -971,28 +1069,26 @@ static void set_combiner_and_output_encoding_parameters(void)
 
 static int process(void)
 {         /* Input(s) -> Balancing -> Combiner -> Effects -> Output */
-  unsigned i;
   int flow_status;
 
-  for (i = 0; i < nuser_effects; ++i)
-    *user_efftab[i] = efftab_options[i];
+  create_user_effects();
 
-  calculate_combiner_and_output_signal_parameters();
+  calculate_combiner_signal_parameters();
   set_combiner_and_output_encoding_parameters();
+
+  calculate_output_signal_parameters();
   open_output_file();
 
-  ofile_effects_chain.length = 0;
-
-  ofile_effects_chain.global_info = sox_effects_globals;
-  ofile_effects_chain.in_enc = &combiner_encoding;
-  ofile_effects_chain.out_enc = &ofile->ft->encoding;
-  add_effects(&ofile_effects_chain);
+  if (!effects_chain)
+    effects_chain = sox_create_effects_chain(&combiner_encoding, 
+                                             &ofile->ft->encoding);
+  add_effects(effects_chain);
 
   optimize_trim();
 
   signal(SIGTERM, sigint); /* Stop gracefully, as soon as we possibly can. */
   signal(SIGINT , sigint); /* Either skip current input or behave as SIGTERM. */
-  flow_status = sox_flow_effects(&ofile_effects_chain, update_status);
+  flow_status = sox_flow_effects(effects_chain, update_status);
 
   /* When in sox_multiple mode, changing to a new output file is
    * based on effects return ST_EOF.  In that case, don't return
@@ -1674,7 +1770,6 @@ static void parse_options_and_filenames(int argc, char **argv)
 static void parse_effects(int argc, char **argv)
 {
   for (nuser_effects = 0; optind < argc; ++nuser_effects) {
-    sox_effect_t * e;
     int i;
 
     if (nuser_effects >= MAX_USER_EFF) {
@@ -1683,17 +1778,12 @@ static void parse_effects(int argc, char **argv)
     }
 
     /* Name should always be correct! */
-    e = sox_create_effect(sox_find_effect(argv[optind++]));
-
-    for (i = 0; i < argc - optind && !sox_find_effect(argv[optind + i]); ++i);
-    if (e->handler.getopts(e, i, &argv[optind]) == SOX_EOF)
-      exit(1); /* The failing effect should have displayed an error message */
+    user_effargs[nuser_effects].name = strdup(argv[optind++]);
+    for (i = 0; i < argc - optind && !sox_find_effect(argv[optind + i]); ++i)
+      user_effargs[nuser_effects].argv[i] = strdup(argv[optind + i]);
+    user_effargs[nuser_effects].argc = i;
 
     optind += i; /* Skip past the effect arguments */
-
-    if (e->handler.flags & SOX_EFF_DEPRECATED)
-      sox_warn("effect `%s' is deprecated; see soxeffect(7) for an alternative", e->handler.name);
-    user_efftab[nuser_effects] = e;
   }
 }
 
@@ -1898,15 +1988,6 @@ int main(int argc, char **argv)
     exit(0);
   }
 
-  /* Bit of a hack: input files can get # of chans from an effect */
-  for (i = 0; i < input_count; i++) {
-    unsigned j;
-    for (j =0; j < nuser_effects && !files[i]->ft->signal.channels; ++j)
-      files[i]->ft->signal.channels = user_efftab[j]->in_signal.channels;
-    if (!files[i]->ft->signal.channels)
-      ++files[i]->ft->signal.channels;
-  }
-
   if (sox_globals.repeatable)
     sox_debug("Not reseeding PRNG; randomness is repeatable");
   else {
@@ -1920,8 +2001,6 @@ int main(int argc, char **argv)
    * block of input files.  Also used by sox_multiple output mode. */
   ofile_signal_options = ofile->signal;
   ofile_encoding_options = ofile->encoding;
-  for (i = 0; i < nuser_effects; ++i)
-    efftab_options[i] = *user_efftab[i];
 
   if (combine_method == sox_sequence || output_method == sox_multiple) do {
     /* If ofile->ft is set then we've called this at least once.
@@ -1935,16 +2014,29 @@ int main(int argc, char **argv)
        * If input reached EOF then restart all effects.
        */
       if (output_method == sox_multiple && !input_eof)
-          /* FIXME: Make a function that does that */
-          ;
-      else if (output_method == sox_multiple)
-          sox_delete_effects(&ofile_effects_chain);
+      {
+        size_t e;
+
+        /* Scan backwards until data is found and do not free input effect */
+        for (e = effects_chain->length-1; e > 0; --e)
+        {
+          if (effects_chain->effects[e]->obeg != 
+              effects_chain->effects[e]->oend)
+            break;
+          sox_delete_effect(effects_chain->effects[e]);
+          effects_chain->effects[e] = NULL;
+          effects_chain->length--;
+        }
+      }
+      else 
+        sox_delete_effects(effects_chain);
       sox_close(ofile->ft);
       ofile->ft = NULL;
     }
   } while (process() != SOX_EOF && !user_abort && current_input < input_count);
   else process();
-  sox_delete_effects(&ofile_effects_chain);
+
+  sox_delete_effects_chain(effects_chain);
 
   for (i = 0; i < file_count; ++i)
     if (files[i]->ft->clips != 0)

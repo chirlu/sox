@@ -83,10 +83,9 @@ int main(int argc, char * argv[])
   sox_flow_effects(chain, NULL);
 
   /* All done; tidy up: */
-  sox_delete_effects(chain);
+  sox_delete_effects_chain(chain);
   sox_close(out);
   sox_close(in);
   sox_format_quit();
-  free(chain);
   return 0;
 }

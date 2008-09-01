@@ -51,7 +51,7 @@ static int input_drain(
 }
 
 /* The function that will be called to output samples from the effects chain.
- * In this example, we store the samples in a SoX-openned audio file.
+ * In this example, we store the samples in a SoX-opened audio file.
  * In a different application, they might perhaps be analysed in some way,
  * or displayed as a wave-form */
 static int output_flow(sox_effect_t *effp UNUSED, sox_sample_t const * ibuf,
@@ -153,10 +153,9 @@ int main(int argc, char * argv[])
   sox_flow_effects(chain, NULL);
 
   /* All done; tidy up: */
-  sox_delete_effects(chain);
+  sox_delete_effects_chain(chain);
   sox_close(out);
   sox_close(in);
   sox_format_quit();
-  free(chain);
   return 0;
 }

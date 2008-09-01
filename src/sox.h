@@ -476,6 +476,7 @@ struct sox_effect {
 
 sox_effect_handler_t const * sox_find_effect(char const * name);
 sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh);
+int sox_effect_options(sox_effect_t *effp, int argc, char * const argv[]);
 
 /* Effects chain */
 
@@ -493,13 +494,14 @@ struct sox_effects_chain {
 };
 typedef struct sox_effects_chain sox_effects_chain_t;
 sox_effects_chain_t * sox_create_effects_chain(
-    sox_encodinginfo_t const * in_enc,
-    sox_encodinginfo_t const * out_enc);
+    sox_encodinginfo_t const * in_enc, sox_encodinginfo_t const * out_enc);
+void sox_delete_effects_chain(sox_effects_chain_t *ecp);
 int sox_add_effect( sox_effects_chain_t * chain, sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out);
 int sox_flow_effects(sox_effects_chain_t *, int (* callback)(sox_bool all_done));
 size_t sox_effects_clips(sox_effects_chain_t *);
 size_t sox_stop_effect(sox_effect_t *effp);
-void sox_delete_effects(sox_effects_chain_t *);
+void sox_delete_effect(sox_effect_t *effp);
+void sox_delete_effects(sox_effects_chain_t *chain);
 
 /* The following routines are unique to the trim effect.
  * sox_trim_get_start can be used to find what is the start

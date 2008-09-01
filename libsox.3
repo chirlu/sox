@@ -38,6 +38,8 @@ libsox \- SoX, an audio file-format and effect library
 .P
 .B int sox_format_init(void);
 .P
+.B void sox_format_quit(void);
+.P
 .B sox_format_t sox_open_read(const char *\fIpath\fB, const sox_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB);
 .P
 .B sox_format_t sox_open_write(sox_bool (*\fIoverwrite_permitted\fB)(const char *\fIfilename\fB), const char *\fIpath\fB, const sox_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB, const char *\fIcomment\fB, sox_size_t \fIlength\fB, const sox_instrinfo_t *\fIinstr\fB, const sox_loopinfo_t *\fIloops\fB);
@@ -52,7 +54,15 @@ libsox \- SoX, an audio file-format and effect library
 .P
 .B sox_effect_handler_t const *sox_find_effect(char const *\fIname\fB);
 .P
-.B void sox_create_effect(sox_effect_t \fIeffp\fB, sox_effect_handler_t const *\fIe\fB);
+.B sox_effect_t *sox_create_effect(sox_effect_handler_t const *\fIeh\fB);
+.P
+.B int sox_effect_options(sox_effect_t *\fIeffp\fB, int \fIargc\fB, char * const \fIargv[]\fB);
+.P
+.B sox_effects_chain_t *sox_create_effects_chain(sox_encodinginfo_t const *\fIin_enc\fB, sox_encodinginfo_t const *\fIout_enc\fB);
+.P
+.B void sox_delete_effects_chain(sox_effects_chain_t *\fIecp\fB);
+.P
+.B int sox_add_effect(sox_effects_chaint_t *\fIchain\fB, sox_effect_t*\fIeffp\fB, sox_signalinfo_t *\fIin\fB, sox_signalinfo-t const *\fIout\fB);
 .P
 .B cc \fIfile.c\fB -o \fIfile \f-lsox
 .fi
@@ -67,6 +77,9 @@ related to all file format handlers.  If compiled with dynamic
 library support then this will detect and initialize all external
 libraries.  This should be called before any other file operations
 are performed.
+.P
+\fBsox_format_quit\fR function performs some required cleanup
+related to all file format handlers.
 .P
 \fBsox_open_input\fR function opens the file for reading whose name is
 the string pointed to by \fIpath\fR and associates an sox_format_t with it. If
@@ -109,9 +122,6 @@ The \fBsox_close\fR function dissociates the named \fIsox_format_t\fR from its
 underlying file or set of functions. If the format handler was being
 used for output, any buffered data is written first.
 .P
-\fBsox_format_quite\fR function performs some required cleanup
-related to all file format handlers.
-.P
 The function \fBsox_find_effect\fR finds effect \fIname\fR, returning
 a pointer to its \fIsox_effect_handler_t\fR if it exists, and NULL
 otherwise.
@@ -121,16 +131,40 @@ The function \fBsox_create_effect\fR instantiates an effect into a
 methods are automatically set to the corresponding \fBnothing\fR
 method.
 .P
-The \fBsox_update_effect\fR function copies input and output signal
-info into effect structures. The \fIeffect_mask\fR parameter is the
-return value of the previous call to this function; for the first
-call, pass 0. The function returns the updated effect mask.
+The function \fBsox_effect_options\fR allows passing options into the effect to control its behavior.  It will return SOX_EOF if there were any invalid options passed in.  On success, the \fIeffp->in_signal\fR will optional contain the rate and channel count it requires input data from and \fIeffp->out_signal\fR will optionally contain the rate and channel count it outputs in.  When present, this information should be used to make sure appropriate effects are placed in the effects chain to handle any needed conversions.
+.P
+Passing in options is currently only supported when they are passed in before the effect is ever started.  The behavior is undefined if its called once the effect is started.
+.P
+\fBsox_create_effects_chain\fR will instantiate an effects chain that
+effects can be added to.  \fIin_enc\fR and \fIout_enc\fR are the 
+signal encoding of the input and output of the chain respectively.
+The pointers to \fIin_enc\fR and \fIout_enc\fR
+are stored internally and so their memory should not be freed.  Also,
+it is OK if their values change over time to reflect new input or
+output encodings as they are referenced only as effects
+start up or are restarted.
+.P
+\fBsox_delete_effects_chain\fR will release any resources reserved during
+the creation of the chain.  This will also call \fBsox_delete_effects\fR
+if any effects are still in the chain.
+.P
+\fBsox_add_effect\fR adds an effect to the chain.  \fIin\fR specifies the input
+signal info for this effect.  \fIout\fR is a suggestion
+as to what the output signal should be but depending on the effects
+given options and on \fIin\fR the effect can choose to do differently.
+Whatever output rate and channels the effect does produce are written
+back to \fIin\fR.  It is meant that \fIin\fR be stored and passed to each
+new call to \fBsox_add_effect\fR so that changes will be propagated to each new effect.
 .P
 SoX includes skeleton C files to assist you in writing new
-formats (skelform.c) and effects (skeleff.c). sox.c itself is a good
-starting point for new programs. Note that new formats can often just
-deal with the header and then use raw.c's routines for reading and
-writing.
+formats (skelform.c) and effects (skeleff.c). Note that new formats 
+can often just deal with the header and then use raw.c's routines 
+for reading and writing.
+
+example0.c and example1.c are a good starting point to see how
+to write applications using libsox.  sox.c itself is also a good
+reference.
+
 .SH RETURN VALUE
 Upon successful completion \fBsox_open_input\fR and
 \fBsox_open_output\fR return an \fIsox_format_t\fR (which is a pointer).

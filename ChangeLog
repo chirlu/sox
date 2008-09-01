@@ -49,6 +49,7 @@ Other bug fixes:
 Internal improvements:
 
   o Fixed all compiler warnings (with gcc 4.3.1, 64-bit arch.).  (robs)
+  o Updates to internal effects chain API.
 
 
 sox-14.1.0	2008-7-29

@@ -30,7 +30,7 @@
 
 #define DEBUG_EFFECTS_CHAIN 0
 
-
+/* FIXME: Not thread safe using globals */
 sox_effects_globals_t sox_effects_globals =
     {sox_plot_off, 1, &sox_globals};
 
@@ -66,7 +66,9 @@ static int default_getopts(sox_effect_t * effp, int argc, char **argv UNUSED)
 sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh)
 {
   sox_effect_t * effp = lsx_calloc(1, sizeof(*effp));
-  assert(eh);
+
+  if (!effp) return NULL;
+
   effp->global_info = &sox_effects_globals;
   effp->handler = *eh;
   if (!effp->handler.getopts) effp->handler.getopts = default_getopts;
@@ -75,24 +77,40 @@ sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh)
   if (!effp->handler.drain  ) effp->handler.drain   = default_drain;
   if (!effp->handler.stop   ) effp->handler.stop    = default_function;
   if (!effp->handler.kill   ) effp->handler.kill    = default_function;
+
   effp->priv = lsx_calloc(1, effp->handler.priv_size);
+  if (effp->handler.priv_size && !effp->priv)
+  {
+    free(effp);
+    return NULL;
+  }
+
   return effp;
-}
+} /* sox_create_effect */
 
-
+int sox_effect_options(sox_effect_t *effp, int argc, char * const argv[])
+{
+    return effp->handler.getopts(effp, argc, argv);
+} /* sox_effect_options */
 
 /* Effects chain: */
 
 sox_effects_chain_t * sox_create_effects_chain(
-    sox_encodinginfo_t const * in_enc,
-    sox_encodinginfo_t const * out_enc)
+    sox_encodinginfo_t const * in_enc, sox_encodinginfo_t const * out_enc)
 {
   sox_effects_chain_t * result = lsx_calloc(1, sizeof(sox_effects_chain_t));
   result->global_info = sox_effects_globals;
   result->in_enc = in_enc;
   result->out_enc = out_enc;
   return result;
-}
+} /* sox_create_effects_chain */
+
+void sox_delete_effects_chain(sox_effects_chain_t *ecp)
+{
+    if (ecp && ecp->length)
+        sox_delete_effects(ecp);
+    free(ecp);
+} /* sox_delete_effects_chain */
 
 /* Effect can call in start() or flow() to set minimum input size to flow() */
 int sox_effect_set_imin(sox_effect_t * effp, size_t imin)
@@ -378,7 +396,7 @@ size_t sox_stop_effect(sox_effect_t *effp)
  * Note: This currently closes down the effect which might
  * note be obvious from name.
  */
-static void sox_delete_effect(sox_effect_t *effp)
+void sox_delete_effect(sox_effect_t *effp)
 {
     size_t clips;
     unsigned f;
