@@ -99,6 +99,10 @@ optional3(HAVE_OGG_VORBIS vorbis/codec.h vorbis vorbis_analysis_headerout vorbis
 optional3(HAVE_FFMPEG ffmpeg/avformat.h avformat av_open_input_file avutil av_rescale_q avcodec avcodec_decode_audio2 ffmpeg)
 optional(HAVE_WAVPACK wavpack/wavpack.h wavpack WavpackGetSampleRate wavpack)
 
+if (HAVE_LAME_LAME_H OR HAVE_MAD_H)
+  set(HAVE_MP3 1)
+endif (HAVE_LAME_LAME_H OR HAVE_MAD_H)
+
 configure_file(sox.pc.in sox.pc @ONLY)
 install_files(/lib/pkgconfig FILES sox.pc)
 

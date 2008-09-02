@@ -17,6 +17,7 @@
 #cmakedefine HAVE_LTDL_H              1
 #cmakedefine HAVE_MACHINE_SOUNDCARD_H 1
 #cmakedefine HAVE_MAD_H               1
+#cmakedefine HAVE_MP3                 1
 #cmakedefine HAVE_OGG_VORBIS          1
 #cmakedefine HAVE_POPEN               1
 #cmakedefine HAVE_PNG                 1
