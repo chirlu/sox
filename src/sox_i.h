@@ -213,4 +213,15 @@ int lsx_usage(sox_effect_t * effp);
   } \
 }
 
+#define GETOPT_NUMERIC(ch, name, min, max) case ch:{ \
+  char * end_ptr; \
+  double d = strtod(optarg, &end_ptr); \
+  if (end_ptr == optarg || d < min || d > max || *end_ptr != '\0') {\
+    sox_fail("parameter `%s' must be between %g and %g", #name, (double)min, (double)max); \
+    return lsx_usage(effp); \
+  } \
+  p->name = d; \
+  break; \
+}
+
 #endif

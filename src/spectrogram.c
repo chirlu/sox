@@ -115,17 +115,6 @@ typedef struct {
 #define secs(cols) \
   ((double)(cols) * p->step_size * p->block_steps / effp->in_signal.rate)
 
-#define GETOPT_NUMERIC(ch, name, min, max) case ch:{ \
-  char * end_ptr; \
-  double d = strtod(optarg, &end_ptr); \
-  if (end_ptr == optarg || d < min || d > max || *end_ptr != '\0') {\
-    sox_fail("parameter `%s' must be between %g and %g", #name, (double)min, (double)max); \
-    return lsx_usage(effp); \
-  } \
-  p->name = d; \
-  break; \
-}
-
 static int enum_option(int c, enum_item const * items)
 {
   enum_item const * p = find_enum_text(optarg, items);
@@ -578,7 +567,7 @@ sox_effect_handler_t const * sox_spectrogram_effect_fn(void)
       "\t-p num\tPermute colours\n"
       "\t-t text\tTitle text\n"
       "\t-c text\tComment text\n"
-      "\t-o text\tOutput file name, default `spectrogram.png'\n",
+      "\t-o text\tOutput file name, default `spectrogram.png'",
     0, getopts, start, flow, drain, stop, NULL, sizeof(priv_t)};
   return &handler;
 }
