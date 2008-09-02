@@ -612,19 +612,11 @@ static void create_user_effects(void)
 static void add_effects(sox_effects_chain_t *chain)
 {
   sox_signalinfo_t signal = combiner_signal;
-  unsigned i, min_chan = 0, min_rate = 0;
+  unsigned i;
   sox_effect_t * effp;
   unsigned effects_added = 0;
   char * rate_arg = sox_mode != sox_play? NULL :
     (rate_arg = getenv("PLAY_RATE_ARG"))? rate_arg : "-l";
-
-  /* Find points after which we might add effects to change rate/chans */
-  for (i = 0; i < nuser_effects; i++) {
-    if (user_efftab[i]->handler.flags & (SOX_EFF_CHAN | SOX_EFF_MCHAN))
-      min_chan = i + 1;
-    if (user_efftab[i]->handler.flags & SOX_EFF_RATE)
-      min_rate = i + 1;
-  }
 
   effects_added++;
   if (effects_added > chain->length)
