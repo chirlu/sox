@@ -67,8 +67,6 @@ sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh)
 {
   sox_effect_t * effp = lsx_calloc(1, sizeof(*effp));
 
-  if (!effp) return NULL;
-
   effp->global_info = &sox_effects_globals;
   effp->handler = *eh;
   if (!effp->handler.getopts) effp->handler.getopts = default_getopts;
@@ -79,11 +77,6 @@ sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh)
   if (!effp->handler.kill   ) effp->handler.kill    = default_function;
 
   effp->priv = lsx_calloc(1, effp->handler.priv_size);
-  if (effp->handler.priv_size && !effp->priv)
-  {
-    free(effp);
-    return NULL;
-  }
 
   return effp;
 } /* sox_create_effect */
