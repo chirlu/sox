@@ -38,6 +38,7 @@
 #define ftime _ftime
 #define inline __inline
 #define isatty _isatty
+#define off_t _off_t
 #define popen _popen
 #define stat _stat
 #define strdup _strdup
