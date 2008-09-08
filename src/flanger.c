@@ -16,9 +16,9 @@
  */
 
 #define sox_flanger_usage \
-  "[delay depth regen width speed shape phase interp]\n"
+  "[delay depth regen width speed shape phase interp]"
 /*
-  "                  .\n" \
+  "\n                  .\n" \
   "                 /|regen\n" \
   "                / |\n" \
   "            +--(  |------------+\n" \
