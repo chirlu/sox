@@ -640,12 +640,6 @@ These effects support the \fB\-\-plot\fR global option.
 .SP
 See also \fBfilter\fR for filters with a steeper roll-off.
 .TP
-\fBkey \fR[\fB\-q\fR] \fIshift\fR [\fIsegment\fR [\fIsearch\fR [\fIoverlap\fR]]]
-Change the audio key (i.e. pitch but not tempo).
-This is just an alias for the
-.B pitch
-effect.
-.TP
 \fBladspa\fR \fBmodule\fR [\fBplugin\fR] [\fBargument\fR...]
 Apply a LADSPA [5] (Linux Audio Developer's Simple Plugin API) plugin.
 Despite the name, LADSPA is not Linux-specific, and a wide range of
@@ -878,19 +872,6 @@ adds 1\*d5 seconds of silence padding at each end of the audio, whilst
 inserts 4000 samples of silence 3 minutes into the audio.
 If silence is wanted only at the end of the audio, specify either the end
 position or specify a zero-length pad at the start.
-.TP
-\fBpan \fIdirection\fR
-Pan the audio from one channel to another.  This is done by
-changing the volume of the input channels so that it fades out on one
-channel and fades-in on another.  If the number of input channels is
-different then the number of output channels then this effect tries to
-intelligently handle this.  For instance, if the input contains 1 channel
-and the output contains 2 channels, then it will create the missing channel
-itself.  The
-.I direction
-is a value from \-1 to 1.  \-1 represents
-far left and 1 represents far right.  Numbers in between will start the
-pan effect without totally muting the opposite channel.
 .TP
 \fBphaser \fIgain-in gain-out delay decay speed\fR [\fB\-s\fR\^|\^\fB\-t\fR]
 Add a phasing effect to the audio.
@@ -1941,6 +1922,25 @@ for a dynamic-range compression/expansion/limiting effect.
 The following effects have been renamed or have their functionality
 included in another effect; they continue to work in this version of
 SoX but may be removed in future.
+.TP
+\fBkey \fR[\fB\-q\fR] \fIshift\fR [\fIsegment\fR [\fIsearch\fR [\fIoverlap\fR]]]
+Change the audio key (i.e. pitch but not tempo).
+This is just an alias for the
+.B pitch
+effect.
+.TP
+\fBpan \fIdirection\fR
+Pan the audio from one channel to another.  This is done by
+changing the volume of the input channels so that it fades out on one
+channel and fades-in on another.  If the number of input channels is
+different then the number of output channels then this effect tries to
+intelligently handle this.  For instance, if the input contains 1 channel
+and the output contains 2 channels, then it will create the missing channel
+itself.  The
+.I direction
+is a value from \-1 to 1.  \-1 represents
+far left and 1 represents far right.  Numbers in between will start the
+pan effect without totally muting the opposite channel.
 .TP
 \fBpolyphase\fR [\fB\-w nut\fR\^|\^\fBham\fR] [\fB\-width \fIn\fR] [\fB\-cut-off \fIc\fR]
 Change the sampling rate using `polyphase interpolation', a DSP algorithm.

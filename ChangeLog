@@ -35,6 +35,7 @@ Newly deprecated features (to be removed in future):
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
   -------  ----------------------  ----------------------  -------
   14.1.1   E key                   pitch                   14.1.1 + 6 months
+  14.1.1   E pan                   ~= mixer/remix          14.1.1 + 6 months
 
 Other new features:
 

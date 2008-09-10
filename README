@@ -139,7 +139,6 @@ The audio effects/tools included in this release are as follows:
 
   o Mixing effects
     o mixer		Mix up to 4 channels in certain ways
-    o pan		Fade from one channel to another
     o remix		Produce arbirarily mixed output channels
     o swap		Swap stereo channels
 

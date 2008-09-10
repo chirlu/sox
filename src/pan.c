@@ -410,7 +410,7 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sampl
 static sox_effect_handler_t sox_pan_effect = {
   "pan",
   "direction (in [-1.0 .. 1.0])",
-  SOX_EFF_MCHAN | SOX_EFF_CHAN,
+  SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_DEPRECATED,
   sox_pan_getopts,
   sox_pan_start,
   sox_pan_flow,
