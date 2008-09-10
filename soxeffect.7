@@ -804,8 +804,9 @@ using a pipe, e.g.
 	sox noisy.au -n trim 0 1 noiseprof | play noisy.au noisered
 .EE
 .TP
-\fBnorm\fR [\fB\-i\fR] [\fIlevel\fR]
-Normalise audio to 0dB FSD or to a given level relative to 0dB.
+\fBnorm\fR [\fB\-i\fR\^|\^\fB\-b\fR] [\fIlevel\fR]
+Normalise audio to 0dB FSD, to a given level relative to 0dB, or normalise
+the balance of multi-channel audio.
 Requires temporary file space to store the audio to be normalised.
 .SP
 To create a normalised copy of an audio file,
@@ -836,6 +837,15 @@ the normalised level.  If the
 .B \-i
 option is given, then each channel is treated individually and
 will attain the normalised level.
+.SP
+If the
+.B \-b
+option is given (with a multi-channel audio file), then the audio
+channels will be balanced; i.e. the RMS level of each channel will be
+normalised to that of the channel with the highest RMS level.  This can
+be used, for example, to correct stereo imbalance.  Note that
+.B \-b
+can cause clipping.
 .SP
 In most cases,
 .B norm \-3
