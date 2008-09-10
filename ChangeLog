@@ -7,13 +7,19 @@ sox-11gamma.
 sox-14.1.1	2008-TBD
 ----------
 
+Previously deprecated features that have been removed in this release:
+
+  Deprec-  Feature    [O(ption)]
+  ated in  [F(ormat)] [E(ffect)]   Replacement
+  -------  ----------------------  ----------------------
+  14.0.0   E stretch               ~= tempo
+  14.0.0   E pitch                 new pitch = old key
+
 Previously deprecated features (to be removed in future):
 
   Deprec-  Feature    [O(ption)]                           Removal
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
   -------  ----------------------  ----------------------  -------
-  14.0.0   E stretch               ~= tempo                2008-09-11
-  14.0.0   E pitch                 ~= key                  2008-09-11
   14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1         2009-01-29
   14.1.0   F wve (native)          wve (libsndfile)        2009-07-29
   14.1.0   E resample              ~= rate                 2009-07-29
@@ -23,13 +29,22 @@ Previously deprecated features (to be removed in future):
            sox -V file(s) -n
            doesn't read to EOF.
 
+Newly deprecated features (to be removed in future):
+
+  Deprec-  Feature    [O(ption)]                           Removal
+  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
+  -------  ----------------------  ----------------------  -------
+  14.1.1   E key                   pitch                   14.1.1 + 6 months
+
 Other new features:
 
   o New --output option to write to multiple files in one run.
     Only useful with certain effects like trim and silence. (cbagwell)
   o Display SoX build environment information with -V -V.  (robs)
-  o Change to intermediate phase for `rate' effect; phase, band-width
-    and aliasing now configurable.  (robs)
+  o For `rate' effect, change default phase to intermediate; phase,
+    band-width and aliasing now configurable.  (robs)
+  o New -b option for the norm effect; can be used to fix stereo
+    imbalance.  (robs)
 
 Other bug fixes:
 

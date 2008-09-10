@@ -641,17 +641,10 @@ These effects support the \fB\-\-plot\fR global option.
 See also \fBfilter\fR for filters with a steeper roll-off.
 .TP
 \fBkey \fR[\fB\-q\fR] \fIshift\fR [\fIsegment\fR [\fIsearch\fR [\fIoverlap\fR]]]
-Change the audio key (i.e. pitch but not tempo) using a WSOLA algorithm.
-.SP
-.I shift
-gives the key shift as positive or negative `cents' (i.e. 100ths of a
-semitone).  See the
-.B tempo
-effect for a description of the other parameters.
-.SP
-See also
+Change the audio key (i.e. pitch but not tempo).
+This is just an alias for the
 .B pitch
-for a similar effect.
+effect.
 .TP
 \fBladspa\fR \fBmodule\fR [\fBplugin\fR] [\fBargument\fR...]
 Apply a LADSPA [5] (Linux Audio Developer's Simple Plugin API) plugin.
@@ -928,6 +921,15 @@ More severe:
 .EX
 	play snare.flac phaser 0.6 0.66 3 0.6 2 -t
 .EE
+.TP
+\fBpitch \fR[\fB\-q\fR] \fIshift\fR [\fIsegment\fR [\fIsearch\fR [\fIoverlap\fR]]]
+Change the audio pitch (but not tempo).
+.SP
+.I shift
+gives the pitch shift as positive or negative `cents' (i.e. 100ths of a
+semitone).  See the
+.B tempo
+effect for a description of the other parameters.
 .TP
 \fBrate\fR [\fB\-q\fR\^|\^\fB\-l\fR\^|\^\fB\-m\fR\^|\^\fB\-h\fR\^|\^\fB\-v\fR] [\fB\-p\fR \fIPHASE\fR\^|\^\fB\-M\fR\^|\^\fB\-I\fR\^|\^\fB\-L\fR] [\fB\-b\fR \fIBANDWIDTH\fR] [\fB\-a\fR] [\fIRATE\fR[\fBk\fR]]
 Change the audio sampling rate (i.e. resample the audio) to the given
@@ -1798,7 +1800,7 @@ begins; default=50. exp: the amplitude in percent; default=100.
 ends; default=60.
 .TP
 \fBtempo \fR[\fB\-q\fR] \fIfactor\fR [\fIsegment\fR [\fIsearch\fR [\fIoverlap\fR]]]
-Change the audio tempo (but not its pitch) using a `WSOLA' algorithm.
+Change the audio tempo (but not its pitch).
 The audio is chopped up into segments which are then shifted in the time
 domain and overlapped (cross-faded) at points where their waveforms are
 most similar (as determined by measurement of `least squares').
@@ -1832,12 +1834,10 @@ The optional
 parameter gives the segment overlap length in milliseconds (default 12).
 .SP
 See also
-.B stretch
-for a similar effect,
 .B speed
-for an effect that changes tempo and key together, and
-.B key
-for an effect that changes key without changing tempo.
+for an effect that changes tempo and pitch together, and
+.B pitch
+for an effect that changes pitch without changing tempo.
 .TP
 \fBtreble \fIgain\fR [\fIfrequency\fR[\fBk\fR]\fR [\fIwidth\fR[\fBs\fR\^|\^\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]]]
 Apply a treble tone-control effect.
@@ -1941,28 +1941,6 @@ for a dynamic-range compression/expansion/limiting effect.
 The following effects have been renamed or have their functionality
 included in another effect; they continue to work in this version of
 SoX but may be removed in future.
-.TP
-\fBpitch \fIshift\fR [\fIwidth interpolate fade\fR]
-Change the audio pitch (but not its duration).
-This effect is equivalent to the
-.B key
-effect with
-.I search
-set to zero, so its results are comparatively poor;
-it is retained for backwards compatibility only.
-.SP
-Change by cross-fading shifted samples.
-.I shift
-is given in cents.  Use a positive value to shift to treble, negative value to shift to bass.
-Default shift is 0.
-.I width
-of window is in ms.  Default width is 20ms.  Try 30ms to lower pitch,
-and 10ms to raise pitch.
-.I interpolate
-option, can be \fBcubic\fR or \fBlinear\fR.  Default is \fBcubic\fR.  The
-.I fade
-option, can be \fBcos\fR, \fBhamming\fR, \fBlinear\fR or
-\fBtrapezoid\fR; the default is \fBcos\fR.
 .TP
 \fBpolyphase\fR [\fB\-w nut\fR\^|\^\fBham\fR] [\fB\-width \fIn\fR] [\fB\-cut-off \fIc\fR]
 Change the sampling rate using `polyphase interpolation', a DSP algorithm.
@@ -2102,29 +2080,6 @@ There is a detailed analysis of
 \fBresample\fR and \fBpolyphase\fR at
 http://leute.server.de/wilde/resample.html; see \fBrabbit\fR for a
 pointer to its own documentation.
-.TP
-\fBstretch \fIfactor\fR [\fIwindow fade shift fading\fR]
-Change the audio duration (but not its pitch).
-This effect is equivalent to the
-.B tempo
-effect with (\fIfactor\fR inverted and)
-.I search
-set to zero, so its results are comparatively poor;
-it is retained for backwards compatibility only.
-.SP
-.I factor
-of stretching: >1 lengthen, <1 shorten duration.
-.I window
-size is in ms.  Default is 20ms.  The
-.I fade
-option, can be `lin'.
-.I shift
-ratio, in [0 1].  Default depends on stretch factor. 1
-to shorten, 0\*d8 to lengthen.  The
-.I fading
-ratio, in [0 0\*d5].  The amount of a fade's default depends on
-.I factor
-and \fIshift\fR.
 .SH SEE ALSO
 .BR sox (1),
 .BR soxi (1),

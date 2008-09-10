@@ -128,7 +128,7 @@ The audio effects/tools included in this release are as follows:
     o fade		Apply a fade-in and/or fade-out to the audio
     o gain		Apply gain or attenuation
     o mcompand		Multi-band compression/expansion/limiting
-    o norm		Normalise the audio to 0dB or to a specified value
+    o norm		Normalise to 0dB (or other), or fix imbalance
     o vol		Adjust audio volume
 
   o Editting effects
@@ -143,10 +143,10 @@ The audio effects/tools included in this release are as follows:
     o remix		Produce arbirarily mixed output channels
     o swap		Swap stereo channels
 
-  o Key/tempo effects
-    o key		Adjust key (= pitch) without changing tempo
-    o speed		Adjust key & tempo together
-    o tempo		Adjust tempo without changing key
+  o Pitch/tempo effects
+    o pitch		Adjust pitch (= key) without changing tempo
+    o speed		Adjust pitch & tempo together
+    o tempo		Adjust tempo without changing pitch
 
   o Mastering effects
     o dither		Add dither noise to increase SNR of <= 16-bit audio
