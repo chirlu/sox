@@ -139,6 +139,26 @@ static int deemph_getopts(sox_effect_t * effp, int n, char **argv) {
 }
 
 
+static int riaa_getopts(sox_effect_t * effp, int argc, char **argv) {
+  priv_t * p = (priv_t *)effp->priv;
+  p->filter_type = filter_riaa;
+  (void)argv;
+  return argc? lsx_usage(effp) : SOX_SUCCESS;
+}
+
+
+static void make_poly_from_roots(
+    double const * roots, size_t num_roots, double * poly)
+{
+  size_t i, j;
+  poly[0] = 1;
+  poly[1] = -roots[0];
+  memset(poly + 2, 0, (num_roots + 1 - 2) * sizeof(*poly));
+  for (i = 1; i < num_roots; ++i)
+    for (j = num_roots; j > 0; --j)
+      poly[j] -= poly[j - 1] * roots[i];
+}
+
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
@@ -309,6 +329,40 @@ static int start(sox_effect_t * effp)
       p->a1 = -2 * cos(w0);
       p->a2 = 1 - sin(w0);
       break;
+
+    case filter_riaa: /* http://www.dsprelated.com/showmessage/73300/3.php */
+      if (effp->in_signal.rate == 44100) {
+        static const double zeros[] = {-0.2014898, 0.9233820};
+        static const double poles[] = {0.7083149, 0.9924091};
+        make_poly_from_roots(zeros, 2, &p->b0);
+        make_poly_from_roots(poles, 2, &p->a0);
+      }
+      else if (effp->in_signal.rate == 48000) {
+        static const double zeros[] = {-0.1766069, 0.9321590};
+        static const double poles[] = {0.7396325, 0.9931330};
+        make_poly_from_roots(zeros, 2, &p->b0);
+        make_poly_from_roots(poles, 2, &p->a0);
+      }
+      else if (effp->in_signal.rate == 88200) {
+        static const double zeros[] = {-0.1168735, 0.9648312};
+        static const double poles[] = {0.8590646, 0.9964002};
+        make_poly_from_roots(zeros, 2, &p->b0);
+        make_poly_from_roots(poles, 2, &p->a0);
+      }
+      else if (effp->in_signal.rate == 96000) {
+        static const double zeros[] = {-0.1141486, 0.9676817};
+        static const double poles[] = {0.8699137, 0.9966946};
+        make_poly_from_roots(zeros, 2, &p->b0);
+        make_poly_from_roots(poles, 2, &p->a0);
+      }
+      else {
+        sox_fail("Sample rate must be 44.1k, 48k, 88.2k, or 96k");
+        return SOX_EOF;
+      }
+      {double g = dB_to_linear(19.9 - linear_to_dB(
+            (p->b0 + p->b1 + p->b2) / (p->a0 + p->a1 + p->a2)));
+      p->b0 *= g; p->b1 *= g; p->b2 *= g;}
+      break;
   }
   return sox_biquad_start(effp);
 }
@@ -333,3 +387,4 @@ BIQUAD_EFFECT(treble,    tone,     "gain [frequency(3000) [width[s|h|k|q|o]](0.5
 BIQUAD_EFFECT(equalizer, equalizer,"frequency width[q|o|h|k] gain", 0)
 BIQUAD_EFFECT(band,      band,     "[-n] center [width[h|k|q|o]]", 0)
 BIQUAD_EFFECT(deemph,    deemph,   NULL, 0)
+BIQUAD_EFFECT(riaa,      riaa,     NULL, 0)

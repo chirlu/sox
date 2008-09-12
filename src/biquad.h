@@ -36,7 +36,8 @@ typedef enum {
   filter_BPF_SPK_N,
   filter_AP1,
   filter_AP2,
-  filter_deemph
+  filter_deemph,
+  filter_riaa
 } filter_t;
 
 typedef enum {
@@ -59,8 +60,8 @@ typedef struct {
 
   filter_t filter_type;
 
-  double b2, b1, b0;       /* Filter coefficients */
-  double a2, a1, a0;       /* Filter coefficients */
+  double b0, b1, b2;       /* Filter coefficients */
+  double a0, a1, a2;       /* Filter coefficients */
 
   sox_sample_t i1, i2;     /* Filter memory */
   double      o1, o2;      /* Filter memory */

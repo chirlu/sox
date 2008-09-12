@@ -63,6 +63,7 @@
   EFFECT(resample)
   EFFECT(reverb)
   EFFECT(reverse)
+  EFFECT(riaa)
   EFFECT(silence)
 #ifdef HAVE_PNG
   EFFECT(spectrogram)

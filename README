@@ -156,6 +156,7 @@ The audio effects/tools included in this release are as follows:
     o earwax		Process CD audio to best effect for headphone use
     o noisered		Filter out noise from the audio
     o oops		Out Of Phase Stereo (or `Karaoke') effect
+    o riaa		RIAA vinyl playback equalisation
 
   o Analysis `effects'
     o noiseprof		Produce a DFT profile of the audio (use with noisered)

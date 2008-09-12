@@ -14,10 +14,10 @@ Mantainers:
                 FORMATS: M3U, PLS, FLAC, AMR, HTK, WavPack, VOX/IMA/VOC ADPCM
                 support, 24bit support for popular formats, MP3 tags & duration
                 support.
-		EFFECTS: key, tempo, pad, bass, treble, delay, new reverb, new
+		EFFECTS: tempo, pad, bass, treble, delay, new reverb, new
 		flanger, soft-knee companding, speed via resampling, filters
 		makeover inc. gnuplot & octave plotting, splice, remix, norm,
-		contrast, new rate, spectrogram;
+		contrast, new rate, spectrogram, new pitch, riaa;
                 new effects chain with buffering and any # channels.
                 OTHERS: open input files via URL, file merge, play
                 multiple files with mixed format types, play with replay-gain,

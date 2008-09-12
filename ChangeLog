@@ -37,15 +37,19 @@ Newly deprecated features (to be removed in future):
   14.1.1   E key                   pitch                   14.1.1 + 6 months
   14.1.1   E pan                   ~= mixer/remix          14.1.1 + 6 months
 
+Effects:
+
+  o New `riaa' effect; RIAA vinyl playback EQ.  (robs)
+  o For `rate' effect, change default phase to intermediate; phase,
+    band-width and aliasing now configurable.  (robs)
+  o New -b option for the norm effect; can be used to fix stereo
+    imbalance.  (robs)
+
 Other new features:
 
   o New --output option to write to multiple files in one run.
     Only useful with certain effects like trim and silence. (cbagwell)
   o Display SoX build environment information with -V -V.  (robs)
-  o For `rate' effect, change default phase to intermediate; phase,
-    band-width and aliasing now configurable.  (robs)
-  o New -b option for the norm effect; can be used to fix stereo
-    imbalance.  (robs)
 
 Other bug fixes:
 
