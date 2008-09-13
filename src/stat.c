@@ -15,7 +15,6 @@
 #include "sox_i.h"
 
 #include <string.h>
-#include "FFT.h"
 
 /* Private data for stat effect */
 typedef struct {
@@ -105,7 +104,7 @@ static int sox_stat_start(sox_effect_t * effp)
   if (stat->fft) {
     stat->fft_offset = 0;
     stat->re_in = lsx_malloc(sizeof(float) * stat->fft_size);
-    stat->re_out = lsx_malloc(sizeof(float) * (stat->fft_size / 2));
+    stat->re_out = lsx_malloc(sizeof(float) * (stat->fft_size / 2 + 1));
   }
 
   return SOX_SUCCESS;
@@ -119,8 +118,8 @@ static void print_power_spectrum(unsigned samples, double rate, float *re_in, fl
   float ffa = rate / samples;
   unsigned i;
 
-  PowerSpectrum(samples, re_in, re_out);
-  for (i = 0; i < samples / 2; i++)
+  lsx_power_spectrum_f((int)samples, re_in, re_out);
+  for (i = 0; i < samples / 2; i++) /* FIXME: should be <= samples / 2 */
     fprintf(stderr, "%f  %f\n", ffa * i, re_out[i]);
 }
 

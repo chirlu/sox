@@ -248,7 +248,7 @@ double lsx_parse_frequency(char const * text, char * * end_ptr)
   return result < 0 ? -1 : result;
 }
 
-double bessel_I_0(double x)
+double lsx_bessel_I_0(double x)
 {
   double term = 1, sum = 1, last_sum, x2 = x / 2;
   int i = 1;
@@ -258,3 +258,126 @@ double bessel_I_0(double x)
   } while (sum != last_sum);
   return sum;
 }
+
+#include "fft4g.h"
+int * lsx_fft_br;
+double * lsx_fft_sc;
+
+static void update_fft_cache(int len)
+{
+  static int n;
+
+  if (!len) {
+    free(lsx_fft_br);
+    free(lsx_fft_sc);
+    lsx_fft_sc = NULL;
+    lsx_fft_br = NULL;
+    n = 0;
+    return;
+  }
+  if (len > n) {
+    int old_n = n;
+    n = len;
+    lsx_fft_br = lsx_realloc(lsx_fft_br, dft_br_len(n) * sizeof(*lsx_fft_br));
+    lsx_fft_sc = lsx_realloc(lsx_fft_sc, dft_sc_len(n) * sizeof(*lsx_fft_sc));
+    if (!old_n)
+      lsx_fft_br[0] = 0;
+  }
+}
+
+static sox_bool is_power_of_2(int x)
+{
+  return !(x < 2 || (x & (x - 1)));
+}
+
+void lsx_safe_rdft(int len, int type, double * d)
+{
+  assert(is_power_of_2(len));
+  update_fft_cache(len);
+  lsx_rdft(len, type, d, lsx_fft_br, lsx_fft_sc);
+}
+
+void lsx_safe_cdft(int len, int type, double * d)
+{
+  assert(is_power_of_2(len));
+  update_fft_cache(len);
+  lsx_cdft(len, type, d, lsx_fft_br, lsx_fft_sc);
+}
+
+void lsx_power_spectrum(int n, double const * in, double * out)
+{
+  int i;
+  double * work = lsx_memdup(in, n * sizeof(*work));
+  lsx_safe_rdft(n, 1, work);
+  out[0] = sqr(work[0]);
+  for (i = 2; i < n; i += 2)
+    out[i >> 1] = sqr(work[i]) + sqr(work[i + 1]);
+  out[i >> 1] = sqr(work[1]);
+  free(work);
+}
+
+void lsx_power_spectrum_f(int n, float const * in, float * out)
+{
+  int i;
+  double * work = lsx_malloc(n * sizeof(*work));
+  for (i = 0; i< n; ++i) work[i] = in[i];
+  lsx_safe_rdft(n, 1, work);
+  out[0] = sqr(work[0]);
+  for (i = 2; i < n; i += 2)
+    out[i >> 1] = sqr(work[i]) + sqr(work[i + 1]);
+  out[i >> 1] = sqr(work[1]);
+  free(work);
+}
+
+void lsx_apply_hann_f(float h[], const int num_points)
+{
+  int i, m = num_points - 1;
+  for (i = 0; i < num_points; ++i) {
+    double x = 2 * M_PI * i / m;
+    h[i] *= .5 - .5 * cos(x);
+  }
+}
+
+void lsx_apply_hann(double h[], const int num_points)
+{
+  int i, m = num_points - 1;
+  for (i = 0; i < num_points; ++i) {
+    double x = 2 * M_PI * i / m;
+    h[i] *= .5 - .5 * cos(x);
+  }
+}
+
+void lsx_apply_hamming(double h[], const int num_points)
+{
+  int i, m = num_points - 1;
+  for (i = 0; i < num_points; ++i) {
+    double x = 2 * M_PI * i / m;
+    h[i] *= .53836 - .46164 * cos(x);
+  }
+}
+
+void lsx_apply_bartlett(double h[], const int num_points)
+{
+  int i, m = num_points - 1;
+  for (i = 0; i < num_points; ++i) {
+    h[i] *= 2. / m * (m / 2. - fabs(i - m / 2.));
+  }
+}
+
+double lsx_kaiser_beta(double att)
+{
+  if (att > 100  ) return .1117 * att - 1.11;
+  if (att > 50   ) return .1102 * (att - 8.7);
+  if (att > 20.96) return .58417 * pow(att -20.96, .4) + .07886 * (att - 20.96);
+  return 0;
+}
+
+void lsx_apply_kaiser(double h[], const int num_points, double beta)
+{
+  int i, m = num_points - 1;
+  for (i = 0; i <= m; ++i) {
+    double x = 2. * i / m - 1;
+    h[i] *= lsx_bessel_I_0(beta * sqrt(1 - x * x)) / lsx_bessel_I_0(beta);
+  }
+}
+

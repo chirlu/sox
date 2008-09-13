@@ -19,8 +19,6 @@
  */
 
 #include "sox_i.h"
-#include "FFT.h"
-
 #include <math.h>
 
 #define WINDOWSIZE 2048

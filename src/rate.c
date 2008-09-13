@@ -143,7 +143,7 @@ static void half_sample(stage_t * p, fifo_t * output_fifo)
     fifo_trim_by(output_fifo, (f->dft_length + overlap) >> 1);
     memcpy(output, input, f->dft_length * sizeof(*output));
 
-    rdft(f->dft_length, 1, output, s->bit_rev_table, s->sin_cos_table);
+    lsx_rdft(f->dft_length, 1, output, s->bit_rev_table, s->sin_cos_table);
     output[0] *= f->coefs[0];
     output[1] *= f->coefs[1];
     for (i = 2; i < f->dft_length; i += 2) {
@@ -151,7 +151,7 @@ static void half_sample(stage_t * p, fifo_t * output_fifo)
       output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
       output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
     }
-    rdft(f->dft_length, -1, output, s->bit_rev_table, s->sin_cos_table);
+    lsx_rdft(f->dft_length, -1, output, s->bit_rev_table, s->sin_cos_table);
 
     for (j = 1, i = 2; i < f->dft_length - overlap; ++j, i += 2)
       output[j] = output[i];
@@ -176,7 +176,7 @@ static void double_sample(stage_t * p, fifo_t * output_fifo)
     for (j = i = 0; i < f->dft_length; ++j, i += 2)
       output[i] = input[j], output[i+1] = 0;
 
-    rdft(f->dft_length, 1, output, s->bit_rev_table, s->sin_cos_table);
+    lsx_rdft(f->dft_length, 1, output, s->bit_rev_table, s->sin_cos_table);
     output[0] *= f->coefs[0];
     output[1] *= f->coefs[1];
     for (i = 2; i < f->dft_length; i += 2) {
@@ -184,7 +184,7 @@ static void double_sample(stage_t * p, fifo_t * output_fifo)
       output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
       output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
     }
-    rdft(f->dft_length, -1, output, s->bit_rev_table, s->sin_cos_table);
+    lsx_rdft(f->dft_length, -1, output, s->bit_rev_table, s->sin_cos_table);
   }
 }
 
@@ -196,7 +196,7 @@ static double * make_lpf(int num_taps, double Fc, double beta, double scale)
   for (i = 0; i <= m / 2; ++i) {
     double x = M_PI * (i - .5 * m), y = 2. * i / m - 1;
     h[i] = x? sin(Fc * x) / x : Fc;
-    sum += h[i] *= bessel_I_0(beta * sqrt(1 - y * y));
+    sum += h[i] *= lsx_bessel_I_0(beta * sqrt(1 - y * y));
     if (m - i != i)
       sum += h[m - i] = h[i];
   }
@@ -254,19 +254,19 @@ static void fir_to_phase(rate_shared_t * p, double * * h, int * len,
   work = calloc(work_len, sizeof(*work));
   for (i = 0; i < *len; ++i) work[i] = (*h)[i];
 
-  rdft(work_len, 1, work, p->bit_rev_table, p->sin_cos_table); /* Cepstrum: */
+  lsx_rdft(work_len, 1, work, p->bit_rev_table, p->sin_cos_table); /* Cepstrum: */
   work[0] = log(fabs(work[0])), work[1] = log(fabs(work[1]));
   for (i = 2; i < work_len; i += 2) {
     work[i] = log(sqrt(sqr(work[i]) + sqr(work[i + 1])));
     work[i + 1] = 0;
   }
-  rdft(work_len, -1, work, p->bit_rev_table, p->sin_cos_table);
+  lsx_rdft(work_len, -1, work, p->bit_rev_table, p->sin_cos_table);
   for (i = 0; i < work_len; ++i) work[i] *= 2. / work_len;
   for (i = 1; i < work_len / 2; ++i) { /* Window to reject acausal components */
     work[i] *= 2;
     work[i + work_len / 2] = 0;
   }
-  rdft(work_len, 1, work, p->bit_rev_table, p->sin_cos_table);
+  lsx_rdft(work_len, 1, work, p->bit_rev_table, p->sin_cos_table);
   /* Some DFTs require phase unwrapping here, but rdft seems not to. */
 
   for (i = 2; i < work_len; i += 2) /* Interpolate between linear & min phase */
@@ -278,7 +278,7 @@ static void fir_to_phase(rate_shared_t * p, double * * h, int * len,
     work[i    ] = x * cos(work[i + 1]);
     work[i + 1] = x * sin(work[i + 1]);
   }
-  rdft(work_len, -1, work, p->bit_rev_table, p->sin_cos_table);
+  lsx_rdft(work_len, -1, work, p->bit_rev_table, p->sin_cos_table);
   for (i = 0; i < work_len; ++i) work[i] *= 2. / work_len;
 
   for (i = 1; i < work_len; ++i) if (work[i] > work[peak])   /* Find peak. */
@@ -359,7 +359,7 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
     p->bit_rev_table = calloc(dft_br_len(dft_length),sizeof(*p->bit_rev_table));
     p->sin_cos_table = calloc(dft_sc_len(dft_length),sizeof(*p->sin_cos_table));
   }
-  rdft(dft_length, 1, f->coefs, p->bit_rev_table, p->sin_cos_table);
+  lsx_rdft(dft_length, 1, f->coefs, p->bit_rev_table, p->sin_cos_table);
 }
 
 #include "rate_filters.h"

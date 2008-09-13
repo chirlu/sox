@@ -83,7 +83,7 @@ sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh)
 
 int sox_effect_options(sox_effect_t *effp, int argc, char * const argv[])
 {
-    return effp->handler.getopts(effp, argc, argv);
+    return effp->handler.getopts(effp, argc, (char * *)argv);
 } /* sox_effect_options */
 
 /* Effects chain: */

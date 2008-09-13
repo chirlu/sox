@@ -31,6 +31,28 @@ typedef struct {
     size_t bufdata;
 } priv_t;
 
+static void FFT(unsigned NumSamples,
+         int InverseTransform,
+         const float *RealIn, float *ImagIn, float *RealOut, float *ImagOut)
+{
+  unsigned i;
+  double * work = malloc(2 * NumSamples * sizeof(*work));
+  for (i = 0; i < 2 * NumSamples; i += 2) {
+    work[i] = RealIn[i >> 1];
+    work[i + 1] = ImagIn? ImagIn[i >> 1] : 0;
+  }
+  lsx_safe_cdft(2 * (int)NumSamples, InverseTransform? -1 : 1, work);
+  if (InverseTransform) for (i = 0; i < 2 * NumSamples; i += 2) {
+    RealOut[i >> 1] = work[i] / NumSamples;
+    ImagOut[i >> 1] = work[i + 1] / NumSamples;
+  }
+  else for (i = 0; i < 2 * NumSamples; i += 2) {
+    RealOut[i >> 1] = work[i];
+    ImagOut[i >> 1] = work[i + 1];
+  }
+  free(work);
+}
+
 /*
  * Get the options. Default file is stdin (if the audio
  * input file isn't coming from there, of course!)
@@ -146,8 +168,8 @@ static void reduce_noise(chandata_t* chan, float* window, double level)
     FFT(WINDOWSIZE, 0, inr, NULL, outr, outi);
 
     memcpy(inr, window, WINDOWSIZE*sizeof(float));
-    WindowFunc(HANNING, WINDOWSIZE, inr);
-    PowerSpectrum(WINDOWSIZE, inr, power);
+    lsx_apply_hann_f(inr, WINDOWSIZE);
+    lsx_power_spectrum_f(WINDOWSIZE, inr, power);
 
     for (i = 0; i < FREQCOUNT; i ++) {
         float smooth;
@@ -189,7 +211,7 @@ static void reduce_noise(chandata_t* chan, float* window, double level)
     }
 
     FFT(WINDOWSIZE, 1, outr, outi, inr, ini);
-    WindowFunc(HANNING, WINDOWSIZE, inr);
+    lsx_apply_hann_f(inr, WINDOWSIZE);
 
     memcpy(window, inr, WINDOWSIZE*sizeof(float));
 

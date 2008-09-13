@@ -13,19 +13,19 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-void cdft(int, int, double *, int *, double *);
-void rdft(int, int, double *, int *, double *);
-void ddct(int, int, double *, int *, double *);
-void ddst(int, int, double *, int *, double *);
-void dfct(int, double *, double *, int *, double *);
-void dfst(int, double *, double *, int *, double *);
+void lsx_cdft(int, int, double *, int *, double *);
+void lsx_rdft(int, int, double *, int *, double *);
+void lsx_ddct(int, int, double *, int *, double *);
+void lsx_ddst(int, int, double *, int *, double *);
+void lsx_dfct(int, double *, double *, int *, double *);
+void lsx_dfst(int, double *, double *, int *, double *);
 
-void cdft_f(int, int, float *, int *, float *);
-void rdft_f(int, int, float *, int *, float *);
-void ddct_f(int, int, float *, int *, float *);
-void ddst_f(int, int, float *, int *, float *);
-void dfct_f(int, float *, float *, int *, float *);
-void dfst_f(int, float *, float *, int *, float *);
+void lsx_cdft_f(int, int, float *, int *, float *);
+void lsx_rdft_f(int, int, float *, int *, float *);
+void lsx_ddct_f(int, int, float *, int *, float *);
+void lsx_ddst_f(int, int, float *, int *, float *);
+void lsx_dfct_f(int, float *, float *, int *, float *);
+void lsx_dfst_f(int, float *, float *, int *, float *);
 
 #define dft_br_len(l) (2 + (1 << (int)(log(l / 2 + .5) / log(2.)) / 2))
 #define dft_sc_len(l) (l / 2)

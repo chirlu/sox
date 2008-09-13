@@ -95,7 +95,7 @@ static void collect_data(chandata_t* chan) {
     float *out = lsx_calloc(FREQCOUNT, sizeof(float));
     int i;
 
-    PowerSpectrum(WINDOWSIZE, chan->window, out);
+    lsx_power_spectrum_f(WINDOWSIZE, chan->window, out);
 
     for (i = 0; i < FREQCOUNT; i ++) {
         if (out[i] > 0) {

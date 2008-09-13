@@ -61,7 +61,19 @@ double lsx_parse_frequency(char const * text, char * * end_ptr);
 unsigned lsx_gcd(unsigned a, unsigned b);
 unsigned lsx_lcm(unsigned a, unsigned b);
 
-double bessel_I_0(double x);
+double lsx_bessel_I_0(double x);
+extern int * lsx_fft_br;
+extern double * lsx_fft_sc;
+void lsx_safe_rdft(int len, int type, double * d);
+void lsx_safe_cdft(int len, int type, double * d);
+void lsx_power_spectrum(int n, double const * in, double * out);
+void lsx_power_spectrum_f(int n, float const * in, float * out);
+void lsx_apply_hann_f(float h[], const int num_points);
+void lsx_apply_hann(double h[], const int num_points);
+void lsx_apply_hamming(double h[], const int num_points);
+void lsx_apply_bartlett(double h[], const int num_points);
+double lsx_kaiser_beta(double att);
+void lsx_apply_kaiser(double h[], const int num_points, double beta);
 
 #ifndef HAVE_STRCASECMP
 int strcasecmp(const char *s1, const char *s2);

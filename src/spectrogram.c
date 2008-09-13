@@ -40,49 +40,6 @@
 #define MAX_DFT_SIZE        (DFT_BASE_SIZE << MAX_DFT_SIZE_SHIFT)
 #define MAX_COLS            999 /* Also max seconds */
 
-static void apply_hann(double h[], const int num_points)
-{
-  int i, m = num_points - 1;
-  for (i = 0; i < num_points; ++i) {
-    double x = 2 * M_PI * i / m;
-    h[i] *= .5 - .5 * cos(x);
-  }
-}
-
-static void apply_hamming(double h[], const int num_points)
-{
-  int i, m = num_points - 1;
-  for (i = 0; i < num_points; ++i) {
-    double x = 2 * M_PI * i / m;
-    h[i] *= .53836 - .46164 * cos(x);
-  }
-}
-
-static void apply_bartlett(double h[], const int num_points)
-{
-  int i, m = num_points - 1;
-  for (i = 0; i < num_points; ++i) {
-    h[i] *= 2. / m * (m / 2. - fabs(i - m / 2.));
-  }
-}
-
-static double kaiser_beta(double att)
-{
-  if (att > 100  ) return .1117 * att - 1.11;
-  if (att > 50   ) return .1102 * (att - 8.7);
-  if (att > 20.96) return .58417 * pow(att -20.96, .4) + .07886 * (att - 20.96);
-  return 0;
-}
-
-static void apply_kaiser(double h[], const int num_points, double beta)
-{
-  int i, m = num_points - 1;
-  for (i = 0; i <= m; ++i) {
-    double x = 2. * i / m - 1;
-    h[i] *= bessel_I_0(beta * sqrt(1 - x * x)) / bessel_I_0(beta);
-  }
-}
-
 typedef enum {Window_Hann, Window_Hamming, Window_Bartlett, Window_Rectangular, Window_Kaiser} win_type_t;
 static enum_item const window_options[] = {
   ENUM_ITEM(Window_,Hann)
@@ -178,11 +135,11 @@ static double make_window(priv_t * p, int end)
   if (end) memset(p->window, 0, sizeof(p->window));
   for (i = 0; i < n; ++i) w[i] = 1;
   switch (p->win_type) {
-    case Window_Hann: apply_hann(w, n); break;
-    case Window_Hamming: apply_hamming(w, n); break;
-    case Window_Bartlett: apply_bartlett(w, n); break;
+    case Window_Hann: lsx_apply_hann(w, n); break;
+    case Window_Hamming: lsx_apply_hamming(w, n); break;
+    case Window_Bartlett: lsx_apply_bartlett(w, n); break;
     case Window_Rectangular: break;
-    default: apply_kaiser(w, n, kaiser_beta(p->dB_range + 20.));
+    default: lsx_apply_kaiser(w, n, lsx_kaiser_beta(p->dB_range + 20.));
   }
   for (i = 0; i < p->dft_size; ++i) sum += p->window[i];
   for (i = 0; i < p->dft_size; ++i) p->window[i] *= 2 / sum
@@ -265,7 +222,7 @@ static int flow(sox_effect_t * effp,
     if ((p->end = max(p->end, p->end_min)) != p->last_end)
       make_window(p, p->last_end = p->end);
     for (i = 0; i < p->dft_size; ++i) p->dft_buf[i] = p->buf[i] * p->window[i];
-    rdft(p->dft_size, 1, p->dft_buf, p->bit_rev_table, p->sin_cos_table);
+    lsx_rdft(p->dft_size, 1, p->dft_buf, p->bit_rev_table, p->sin_cos_table);
     p->magnitudes[0] += sqr(p->dft_buf[0]);
     for (i = 1; i < p->dft_size >> 1; ++i)
       p->magnitudes[i] += sqr(p->dft_buf[2*i]) + sqr(p->dft_buf[2*i+1]);
