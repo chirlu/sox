@@ -18,7 +18,12 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef NDEBUG /* Enable assert always. */
+#undef NDEBUG /* Must undef above assert.h or other that might include it. */
+#endif
+
 #include "sox_i.h"
+#include <assert.h>
 #include <string.h>
 
 #undef sox_fail

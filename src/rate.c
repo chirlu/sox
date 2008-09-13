@@ -76,8 +76,6 @@ typedef struct {
 typedef struct {    /* Data that are shared between channels and filters */
   sample_t   * poly_fir_coefs;
   half_band_t half_band[2];    /* [0]: halve; [1]: down/up: halve/double */
-  sample_t   * sin_cos_table;  /* For Ooura fft */
-  int        * bit_rev_table;  /* ditto */
 } rate_shared_t;
 
 struct stage;
@@ -143,7 +141,7 @@ static void half_sample(stage_t * p, fifo_t * output_fifo)
     fifo_trim_by(output_fifo, (f->dft_length + overlap) >> 1);
     memcpy(output, input, f->dft_length * sizeof(*output));
 
-    lsx_rdft(f->dft_length, 1, output, s->bit_rev_table, s->sin_cos_table);
+    lsx_rdft(f->dft_length, 1, output, lsx_fft_br, lsx_fft_sc);
     output[0] *= f->coefs[0];
     output[1] *= f->coefs[1];
     for (i = 2; i < f->dft_length; i += 2) {
@@ -151,7 +149,7 @@ static void half_sample(stage_t * p, fifo_t * output_fifo)
       output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
       output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
     }
-    lsx_rdft(f->dft_length, -1, output, s->bit_rev_table, s->sin_cos_table);
+    lsx_rdft(f->dft_length, -1, output, lsx_fft_br, lsx_fft_sc);
 
     for (j = 1, i = 2; i < f->dft_length - overlap; ++j, i += 2)
       output[j] = output[i];
@@ -176,7 +174,7 @@ static void double_sample(stage_t * p, fifo_t * output_fifo)
     for (j = i = 0; i < f->dft_length; ++j, i += 2)
       output[i] = input[j], output[i+1] = 0;
 
-    lsx_rdft(f->dft_length, 1, output, s->bit_rev_table, s->sin_cos_table);
+    lsx_rdft(f->dft_length, 1, output, lsx_fft_br, lsx_fft_sc);
     output[0] *= f->coefs[0];
     output[1] *= f->coefs[1];
     for (i = 2; i < f->dft_length; i += 2) {
@@ -184,7 +182,7 @@ static void double_sample(stage_t * p, fifo_t * output_fifo)
       output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
       output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
     }
-    lsx_rdft(f->dft_length, -1, output, s->bit_rev_table, s->sin_cos_table);
+    lsx_rdft(f->dft_length, -1, output, lsx_fft_br, lsx_fft_sc);
   }
 }
 
@@ -240,33 +238,29 @@ static double * design_lpf(
   return make_lpf(*num_taps, (Fc - tr_bw) / k, beta, (double)k);
 }
 
-static void fir_to_phase(rate_shared_t * p, double * * h, int * len,
+static void fir_to_phase(double * * h, int * len,
     int * post_len, double phase0)
 {
   double * work, phase = (phase0 > 50 ? 100 - phase0 : phase0) / 50;
   int work_len, begin, end, peak = 0, i = *len;
 
   for (work_len = 32; i > 1; work_len <<= 1, i >>= 1);
-  if (!p->bit_rev_table) {
-    p->bit_rev_table = calloc(dft_br_len(2*work_len),sizeof(*p->bit_rev_table));
-    p->sin_cos_table = calloc(dft_sc_len(2*work_len),sizeof(*p->sin_cos_table));
-  }
   work = calloc(work_len, sizeof(*work));
   for (i = 0; i < *len; ++i) work[i] = (*h)[i];
 
-  lsx_rdft(work_len, 1, work, p->bit_rev_table, p->sin_cos_table); /* Cepstrum: */
+  lsx_safe_rdft(work_len, 1, work); /* Cepstrum: */
   work[0] = log(fabs(work[0])), work[1] = log(fabs(work[1]));
   for (i = 2; i < work_len; i += 2) {
     work[i] = log(sqrt(sqr(work[i]) + sqr(work[i + 1])));
     work[i + 1] = 0;
   }
-  lsx_rdft(work_len, -1, work, p->bit_rev_table, p->sin_cos_table);
+  lsx_safe_rdft(work_len, -1, work);
   for (i = 0; i < work_len; ++i) work[i] *= 2. / work_len;
   for (i = 1; i < work_len / 2; ++i) { /* Window to reject acausal components */
     work[i] *= 2;
     work[i + work_len / 2] = 0;
   }
-  lsx_rdft(work_len, 1, work, p->bit_rev_table, p->sin_cos_table);
+  lsx_safe_rdft(work_len, 1, work);
   /* Some DFTs require phase unwrapping here, but rdft seems not to. */
 
   for (i = 2; i < work_len; i += 2) /* Interpolate between linear & min phase */
@@ -278,7 +272,7 @@ static void fir_to_phase(rate_shared_t * p, double * * h, int * len,
     work[i    ] = x * cos(work[i + 1]);
     work[i + 1] = x * sin(work[i + 1]);
   }
-  lsx_rdft(work_len, -1, work, p->bit_rev_table, p->sin_cos_table);
+  lsx_safe_rdft(work_len, -1, work);
   for (i = 0; i < work_len; ++i) work[i] *= 2. / work_len;
 
   for (i = 1; i < work_len; ++i) if (work[i] > work[peak])   /* Find peak. */
@@ -340,7 +334,7 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
     double * h = design_lpf(Fp, 1., 2., allow_aliasing, att, &num_taps, 0);
 
     if (phase != 50)
-      fir_to_phase(p, &h, &num_taps, &f->post_peak, phase);
+      fir_to_phase(&h, &num_taps, &f->post_peak, phase);
     else f->post_peak = num_taps / 2;
 
     dft_length = set_dft_length(num_taps);
@@ -355,11 +349,7 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
   f->dft_length = dft_length;
   sox_debug("fir_len=%i dft_length=%i Fp=%g atten=%g mult=%i",
       num_taps, dft_length, Fp, atten, multiplier);
-  if (!p->bit_rev_table) {
-    p->bit_rev_table = calloc(dft_br_len(dft_length),sizeof(*p->bit_rev_table));
-    p->sin_cos_table = calloc(dft_sc_len(dft_length),sizeof(*p->sin_cos_table));
-  }
-  lsx_rdft(dft_length, 1, f->coefs, p->bit_rev_table, p->sin_cos_table);
+  lsx_safe_rdft(dft_length, 1, f->coefs);
 }
 
 #include "rate_filters.h"
@@ -560,8 +550,6 @@ static void rate_close(rate_t * p)
 
   for (i = p->input_stage_num; i <= p->output_stage_num; ++i)
     fifo_delete(&p->stages[i].fifo);
-  free(shared->bit_rev_table);
-  free(shared->sin_cos_table);
   free(shared->half_band[0].coefs);
   if (shared->half_band[1].coefs != shared->half_band[0].coefs)
     free(shared->half_band[1].coefs);
