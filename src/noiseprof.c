@@ -114,40 +114,30 @@ static void collect_data(chandata_t* chan) {
 static int sox_noiseprof_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                     size_t *isamp, size_t *osamp)
 {
-    priv_t * data = (priv_t *) effp->priv;
-    size_t samp = min(*isamp, *osamp);
-    size_t tracks = effp->in_signal.channels;
-    size_t track_samples = samp / tracks;
-    int ncopy = 0;
-    size_t i;
+  priv_t * p = (priv_t *) effp->priv;
+  size_t samp = min(*isamp, *osamp), dummy = 0; /* No need to clip count */
+  size_t chans = effp->in_signal.channels;
+  size_t i, j, n = min(samp / chans, WINDOWSIZE - p->bufdata);
 
-    /* FIXME: Make this automatic for all effects */
-    assert(effp->in_signal.channels == effp->out_signal.channels);
+  memcpy(obuf, ibuf, n * chans); /* Pass on audio unaffected */
+  *isamp = *osamp = n * chans;
 
-    /* How many samples per track to analyze? */
-    ncopy = min(track_samples, WINDOWSIZE-data->bufdata);
+  /* Collect data for every channel. */
+  for (i = 0; i < chans; i ++) {
+    chandata_t * chan = &(p->chandata[i]);
+    for (j = 0; j < n; j ++)
+      chan->window[j + p->bufdata] =
+        SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i + j * chans], dummy);
+    if (n + p->bufdata == WINDOWSIZE)
+      collect_data(chan);
+  }
 
-    /* Collect data for every channel. */
-    for (i = 0; i < tracks; i ++) {
-        chandata_t* chan = &(data->chandata[i]);
-        int j;
-        for (j = 0; j < ncopy; j ++) {
-            chan->window[j+data->bufdata] =
-                SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i+j*tracks], effp->clips);
-        }
-        if (ncopy + data->bufdata == WINDOWSIZE)
-            collect_data(chan);
-    }
+  p->bufdata += n;
+  assert(p->bufdata <= WINDOWSIZE);
+  if (p->bufdata == WINDOWSIZE)
+    p->bufdata = 0;
 
-    data->bufdata += ncopy;
-    assert(data->bufdata <= WINDOWSIZE);
-    if (data->bufdata == WINDOWSIZE)
-        data->bufdata = 0;
-
-    memcpy(obuf, ibuf, ncopy*tracks);
-    *isamp = *osamp = ncopy*tracks;
-
-    return (SOX_SUCCESS);
+  return SOX_SUCCESS;
 }
 
 /*

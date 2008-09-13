@@ -44,6 +44,7 @@ Effects:
     band-width and aliasing now configurable.  (robs)
   o New -b option for the norm effect; can be used to fix stereo
     imbalance.  (robs)
+  o Fix broken audio pass-through with noiseprof effect.  (robs)
 
 Other new features:
 
@@ -70,7 +71,8 @@ Other bug fixes:
 Internal improvements:
 
   o Fixed all compiler warnings (with gcc 4.3.1, 64-bit arch.).  (robs)
-  o Updates to internal effects chain API.
+  o Updates to internal effects chain API.  (cbagwell)
+  o Retire old FFT routines (speeds up noisered effect).  (robs)
 
 
 sox-14.1.0	2008-7-29
