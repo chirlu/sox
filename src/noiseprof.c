@@ -119,7 +119,7 @@ static int sox_noiseprof_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox
   size_t chans = effp->in_signal.channels;
   size_t i, j, n = min(samp / chans, WINDOWSIZE - p->bufdata);
 
-  memcpy(obuf, ibuf, n * chans); /* Pass on audio unaffected */
+  memcpy(obuf, ibuf, n * chans * sizeof(*obuf)); /* Pass on audio unaffected */
   *isamp = *osamp = n * chans;
 
   /* Collect data for every channel. */
