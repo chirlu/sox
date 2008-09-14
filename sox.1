@@ -560,6 +560,26 @@ Show usage information on the specified effect.  The name
 Show information about the specified file format.  The name
 \fBall\fR can be used to show information on all formats.
 .TP
+\fB\-\-buffer\fR \fBBYTES\fR, \fB\-\-input\-buffer\fR \fBBYTES\fR
+Set the size in bytes of the buffers used for processing audio (default 8192).
+.B \-\-buffer
+applies to input, effects, and output processing;
+.B \-\-input\-buffer
+applies only to input processing (for which it overrides
+.B \-\-buffer
+if both are given).
+.SP
+Be aware that large values for
+.B \-\-buffer
+will cause SoX to be become slow to respond to requests to terminate or to skip
+the current input file.
+.TP
+\fB\-\--effects\-file=\fIFILENAME\fR
+Specify a file containing the effects and their arguments to be used.
+Only the first line of the file is read and its format should be the same as when specifying effects on the command line.
+Each time a new input or output file is opened, the effects file
+is reread for latest values.
+.TP
 \fB\-\-interactive\fR
 Prompt before overwriting an existing file with the same name as that
 given for the output file.
@@ -578,20 +598,6 @@ then, without this option, file2 will be overwritten.  Hence, using this
 option is strongly recommended; a `shell' alias, script, or batch file
 may be an appropriate way of permanently enabling it.
 .TP
-\fB\-\-buffer\fR \fBBYTES\fR, \fB\-\-input\-buffer\fR \fBBYTES\fR
-Set the size in bytes of the buffers used for processing audio (default 8192).
-.B \-\-buffer
-applies to input, effects, and output processing;
-.B \-\-input\-buffer
-applies only to input processing (for which it overrides
-.B \-\-buffer
-if both are given).
-.SP
-Be aware that large values for
-.B \-\-buffer
-will cause SoX to be become slow to respond to requests to terminate or to skip
-the current input file.
-.TP
 \fB\-m\fR\^|\^\fB\-M\fR\^|\^\fB\-\-combine concatenate\fR\^|\^\fBmerge\fR\^|\^\fBmix\fR\^|\^\fBmix\-power\fR\^|\^\fBsequence\fR
 Select the input file combining method;
 .B \-m
@@ -601,6 +607,11 @@ selects `merge'.
 .SP
 See \fBInput File Combining\fR above for a description of the different
 combining methods.
+.TP
+\fB\-\-output single\fR\^|\^\fBmultiple\fR
+Select single or multiple output file mode.
+See \fBOutput Files\fR above for a description of the different
+output modes.
 .TP
 \fB\-\-plot gnuplot\fR\^|\^\fBoctave\fR\^|\^\fBoff\fR
 If not set to

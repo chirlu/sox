@@ -134,7 +134,8 @@ static struct { char *name; int argc; char *argv[256]; } user_effargs[MAX_USER_E
 static sox_effect_t *user_efftab[MAX_USER_EFF];
 static unsigned nuser_effects;
 static sox_effects_chain_t *effects_chain = NULL;
-
+static char *effects_filename = NULL;
+static void parse_effects(int argc, char **argv);
 
 /* Flowing */
 
@@ -564,6 +565,122 @@ static void add_effect(sox_effects_chain_t *chain, char const *name,
     exit(2); /* The effects chain should have displayed an error message */
 }
 
+static void delete_user_effects(void)
+{
+  unsigned i;
+  int j;
+
+  for (i = 0; i < nuser_effects; i++) 
+  {
+    if (user_effargs[i].name)
+      free(user_effargs[i].name);
+    user_effargs[i].name = NULL;
+    for (j = 0; j < user_effargs[i].argc; j++)
+    {
+      if (user_effargs[i].argv[j])
+        free(user_effargs[i].argv[j]);
+      user_effargs[i].argv[i] = NULL;
+    }
+    user_effargs[i].argc = 0;
+  }
+  nuser_effects = 0;
+} /* delete_user_effects */
+
+static int strtoargv(char *s, char *(*argv)[])
+{
+    int argc = 0;
+
+    if (!s) return 0;
+
+    while (*s)
+    {
+        int quote_mode;
+
+        /* Skip past any white space */
+        while (*s == ' ' || *s == '\t')
+            s++;
+
+        /* Stop processing if no more data */
+        if (!*s)
+            break;
+
+        /* If starts with quote then start quote mode.  This
+         * will ignore seperators until a final quote is seen.
+         * Don't put quote into the argument.
+         */
+        if (*s == '"')
+        {
+            quote_mode = 1;
+            s++;
+        }
+        else
+            quote_mode = 0;
+
+        (*argv)[argc] = s;
+
+        /* Scan for seperator and when overwrite with 0 */
+        while (*s)
+        {
+            /* Treat quote as final seperator; even if there is
+             * more data right after it.
+             * TODO: Process \" and \\ so that user can
+             * have quotes inside quotes.  Tricky to do though.
+             */
+            if (quote_mode && *s == '"')
+                break;
+
+            if (!quote_mode && (*s == ' ' || *s == '\t'))
+                break;
+            s++;
+        }
+        *s = 0;
+        s++;
+        argc += 1;
+    }
+
+    return argc;
+} /* strtoargv */
+
+static void read_user_effects(char *filename)
+{
+    FILE *file = fopen(filename, "rt");
+    char s[1025];
+    int argc;
+    char *argv[256];
+    int len;
+
+    delete_user_effects();
+
+    if (file == NULL)
+    {
+        sox_fail("Cannot open effects file %s", filename);
+        exit(1);
+    }
+
+    sox_report("Reading effects from file %s", filename);
+
+    if (fgets(s, 1024, file) == NULL)
+    {
+        sox_fail("Error reading effects file %s", filename);
+        exit(2);
+    }
+    len = strlen(s);
+    if (s[len-1] == '\n')
+        s[len-1] = 0;
+
+    argc = strtoargv(s, &argv);
+
+    /* parse_effects normally parses options from command line.
+     * Reset opt index so it thinks its back at beginning of
+     * main()'s argv[].
+     */
+    optind = 0;
+    parse_effects(argc, argv);
+
+    fclose(file);
+
+} /* read_user_effects */
+
 /* Creates users effects and passes in user specified options.
  * This is done without putting anything into the effects chain
  * because an effect may set the effp->in_format and we may want
@@ -579,6 +696,16 @@ static void create_user_effects(void)
 {
   unsigned i;
   sox_effect_t *effp;
+
+  /* If user specified an effects filename then use that file
+   * to load user effects.  Free any previously specified options
+   * from the command line.  This also means that effects will
+   * be reloaded each time a new input or output file is opened.
+   */
+  if (effects_filename)
+  {
+    read_user_effects(effects_filename);
+  }
 
   for (i = 0; i < nuser_effects; i++) 
   {
@@ -1200,6 +1327,7 @@ static void usage(char const * message)
 "--buffer BYTES  set the size of all processing buffers (default 8192)",
 "--combine concatenate  concatenate multiple input files (default for sox, rec)",
 "--combine sequence  sequence multiple input files (default for play)",
+"--effects-file FILENAME  file containing effects and options",
 "-h, --help      display version number and usage information",
 "--help-effect NAME  display usage of specified effect; use `all' to display all",
 "--help-format NAME  display info on specified format; use `all' to display all",
@@ -1408,6 +1536,7 @@ static struct option long_options[] =
     {"replay-gain"     , required_argument, NULL, 0},
     {"version"         ,       no_argument, NULL, 0},
     {"output"          , required_argument, NULL, 0},
+    {"effects-file"    , required_argument, NULL, 0},
 
     {"channels"        , required_argument, NULL, 'c'},
     {"compression"     , required_argument, NULL, 'C'},
@@ -1558,6 +1687,11 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       case 13:
         output_method = enum_option(option_index, output_methods);
         break;
+
+      case 14:
+        effects_filename = strdup(optarg);
+        break;
+
       }
       break;
 
@@ -2029,6 +2163,7 @@ int main(int argc, char **argv)
   else process();
 
   sox_delete_effects_chain(effects_chain);
+  delete_user_effects();
 
   for (i = 0; i < file_count; ++i)
     if (files[i]->ft->clips != 0)

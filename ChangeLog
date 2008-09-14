@@ -45,6 +45,8 @@ Effects:
   o New -b option for the norm effect; can be used to fix stereo
     imbalance.  (robs)
   o Fix broken audio pass-through with noiseprof effect.  (robs)
+  o New --effects-file option to read effects and arguments from
+    a file instead of command line. (cbagwell)
 
 Other new features:
 
