@@ -363,21 +363,23 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t n
   /* Psion Record seems not to be able to handle frames > 800 samples */
   size_t written = 0;
   sox_debug_more("length now = %d", p->nsamp);
-  if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) while (written < nsamp) {
-    size_t written1, samp = min(nsamp - written, 800);
+  if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) {
+    while (written < nsamp) {
+      size_t written1, samp = min(nsamp - written, 800);
 
-    write_cardinal(ft, (unsigned) samp);
-    /* Write compressed length */
-    write_cardinal(ft, (unsigned) ((samp / 2) + (samp % 2) + 4));
-    /* Write length again (seems to be a BListL) */
-    sox_debug_more("list length %lu", (unsigned long)samp);
-    lsx_writedw(ft, (unsigned) samp);
-    sox_adpcm_reset(&p->adpcm, ft->encoding.encoding);
-    written1 = sox_adpcm_write(ft, &p->adpcm, buf, samp);
-    if (written1 != samp)
-      break;
-    sox_adpcm_flush(ft, &p->adpcm);
-    written += written1;
+      write_cardinal(ft, (unsigned) samp);
+      /* Write compressed length */
+      write_cardinal(ft, (unsigned) ((samp / 2) + (samp % 2) + 4));
+      /* Write length again (seems to be a BListL) */
+      sox_debug_more("list length %lu", (unsigned long)samp);
+      lsx_writedw(ft, (unsigned) samp);
+      sox_adpcm_reset(&p->adpcm, ft->encoding.encoding);
+      written1 = sox_adpcm_write(ft, &p->adpcm, buf + written, samp);
+      if (written1 != samp)
+        break;
+      sox_adpcm_flush(ft, &p->adpcm);
+      written += written1;
+    }
   } else
     written = lsx_rawwrite(ft, buf, nsamp);
   p->nsamp += written;
