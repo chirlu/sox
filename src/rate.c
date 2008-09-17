@@ -366,7 +366,7 @@ typedef struct {
 #define last_stage p->stages[p->level]
 #define post_stage p->stages[p->level + 1]
 
-typedef enum {Default = -1, Quick, Low, Medium, High, Very, Ultra} quality_t;
+typedef enum {Default = -1, Quick, Low, Medium, High, Very} quality_t;
 
 static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     quality_t quality, int interp_order, double phase, double bandwidth,
@@ -376,7 +376,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
 
   assert(factor > 0);
   p->factor = factor;
-  if (quality < Quick || quality > Ultra)
+  if (quality < Quick || quality > Very)
     quality = High;
   if (quality != Quick) {
     const int max_divisor = 2048;      /* Keep coef table size ~< 500kb */
@@ -449,9 +449,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     typedef struct {int len; sample_t const * h; double bw, a;} filter_t;
     static filter_t const filters[] = {
       {2 * array_length(half_fir_coefs_low) - 1, half_fir_coefs_low, 0,0},
-      {0, NULL, .986, 110}, {0, NULL, .986, 125},
-      {0, NULL, .986, 170}, {0, NULL, .996, 170},
-    };
+      {0, NULL, .931, 110}, {0, NULL, .931, 125}, {0, NULL, .931, 170}};
     filter_t const * f = &filters[quality - Low];
     double att = allow_aliasing? (34./33)* f->a : f->a;
     double bw = bandwidth? 1 - (1 - bandwidth / 100) / TO_3dB : f->bw;
@@ -572,14 +570,13 @@ typedef struct {
 static int create(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *) effp->priv;
-  int c, callers_optind = optind, callers_opterr = opterr;
-  char * dummy_p, * found_at, * opts = "+i:b:p:MILaqlmhvu", * qopts = opts +11;
+  int c;
+  char * dummy_p, * found_at, * opts = "+i:b:p:MILasqlmhv", * qopts = opts +12;
 
   p->quality = -1;
   p->phase = 25;
   p->shared_ptr = &p->shared;
 
-  --argv, ++argc, optind = 1, opterr = 0;                /* re-jig for getopt */
   while ((c = getopt(argc, argv, opts)) != -1) switch (c) {
     GETOPT_NUMERIC('i', coef_interp, 1 , 3)
     GETOPT_NUMERIC('p', phase,  0 , 100)
@@ -587,11 +584,12 @@ static int create(sox_effect_t * effp, int argc, char **argv)
     case 'M': p->phase =  0; break;
     case 'I': p->phase = 25; break;
     case 'L': p->phase = 50; break;
+    case 's': p->bandwidth = 99; break;
     case 'a': p->allow_aliasing = sox_true; break;
     default: if ((found_at = strchr(qopts, c))) p->quality = found_at - qopts;
       else {sox_fail("unknown option `-%c'", optopt); return lsx_usage(effp);}
   }
-  argc-=optind, argv+=optind, optind = callers_optind, opterr = callers_opterr;
+  argc -= optind, argv += optind;
 
   if ((unsigned)p->quality < 2 && (p->bandwidth || p->phase != 25 || p->allow_aliasing)) {
     sox_fail("override options not allowed with this quality level");
@@ -664,19 +662,27 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_rate_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "rate", "[-q|-l|-m|-h|-v] [-p PHASE|-M|-I|-L] [-b BANDWIDTH] [-a] [RATE[k]]"
-    "\n\n\tQuality\t\tPhase\tBW %   Rej dB\tTypical Use"
-    "\n -q\tquick & dirty\tLin.\tn/a  ~30 @ Fs/4\tplayback on ancient hardware"
-    "\n -l\tlow\t\t\"\t80\t100\tplayback on old hardware"
-    "\n -m\tmedium\t\tInt.\t99\t100\taudio playback"
-    "\n -h\thigh\t\t\"\t99\t125\t16-bit master (use with dither)"
-    "\n -v\tvery high\t\"\t99\t175\t24-bit master"
-    "\n\nOverrides (for -m, -h, -v):"
-    "\n -p 0-100\t0=minimum, 25=intermediate, 50=linear, 100=maximum"
-    "\n -M/I/L\t\tphase=min./int./lin."
-    "\n -b 74-99.7\t%"
-    "\n -a\t\tallow aliasing"
-    , SOX_EFF_RATE, create, start, flow, drain, stop, NULL, sizeof(priv_t)
+    "rate", 0, SOX_EFF_RATE | SOX_EFF_GETOPT,
+    create, start, flow, drain, stop, 0, sizeof(priv_t)
   };
+  static char const * lines[] = {
+    "[-q|-l|-m|-h|-v] [override-options] RATE[k]",
+    "                    PHASE    BAND-",
+    "     QUALITY       RESPONSE  WIDTH  REJ dB   TYPICAL USE",
+    " -q  quick          linear   n/a  ~30 @ Fs/4 playback on ancient hardware",
+    " -l  low            linear   80%     100     playback on old hardware",
+    " -m  medium         interm.  95%     100     audio playback",
+    " -h  high (default) interm.  95%     125     16-bit mastering (use with dither)",
+    " -v  very high      interm.  95%     175     24-bit mastering",
+    "              OVERRIDE OPTIONS (only with -m, -h, -v)",
+    " -M/-I/-L     Phase response = minimum/intermediate/linear",
+    " -p 0-100     Any phase response (0 = minimum, 25 = intermediate,",
+    "              50 = linear, 100 = maximum)",
+    " -s           Steep filter (band-width = 99%)",
+    " -b 74-99.7   Any band-width %",
+    " -a           Allow aliasing above the pass-band",
+  };
+  static char * usage;
+  handler.usage = lsx_usage_lines(&usage, lines, array_length(lines));
   return &handler;
 }

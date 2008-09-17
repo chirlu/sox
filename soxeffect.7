@@ -29,7 +29,7 @@
 .SP
 .fi
 ..
-.TH SoX 7 "August 5, 2008" "soxeffect" "Sound eXchange"
+.TH SoX 7 "September 16, 2008" "soxeffect" "Sound eXchange"
 .SH NAME
 SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH DESCRIPTION
@@ -912,64 +912,76 @@ semitone).  See the
 .B tempo
 effect for a description of the other parameters.
 .TP
-\fBrate\fR [\fB\-q\fR\^|\^\fB\-l\fR\^|\^\fB\-m\fR\^|\^\fB\-h\fR\^|\^\fB\-v\fR] [\fB\-p\fR \fIPHASE\fR\^|\^\fB\-M\fR\^|\^\fB\-I\fR\^|\^\fB\-L\fR] [\fB\-b\fR \fIBANDWIDTH\fR] [\fB\-a\fR] [\fIRATE\fR[\fBk\fR]]
-Change the audio sampling rate (i.e. resample the audio) to the given
+\fBrate\fR [\fB\-q\fR\^|\^\fB\-l\fR\^|\^\fB\-m\fR\^|\^\fB\-h\fR\^|\^\fB\-v\fR] [override-options] \fIRATE\fR[\fBk\fR]
+Change the audio sampling rate (i.e. resample the audio) to any given
 .I RATE
-using a quality level as follows:
+(even non-integer if this is supported by the output file format)
+using a quality level defined as follows:
 .TS
 center box;
-cI cI cI cI cI lI
+cI cI2w9 cI cI2w6 cIw6 lIw17
 cB c c c c l.
-\ 	Quality	Phase	BW %	Rej dB	Typical Use
+\ 	Quality	T{
+\ Phase Response
+T}	T{
+Band-width
+T}	Rej dB	T{
+.na
+Typical Use
+T}
 \-q	T{
 .na
-quick & dirty
-T}	Lin.	n/a	\(~=30 @ Fs/4	T{
+quick
+T}	linear	n/a	T{
+.na
+\(~=30 @ \ Fs/4
+T}	T{
 .na
 playback on ancient hardware
 T}
-\-l	low	Lin.	80	100	T{
+\-l	low	linear	80%	100	T{
 .na
 playback on old hardware
 T}
-\-m	medium	Int.	99	100	audio playback
-\-h	high	Int.	99	125	T{
+\-m	medium	intermediate	95%	100	T{
+.na
+audio playback
+T}
+\-h	high	intermediate	95%	125	T{
 .na
 16-bit mastering (use with dither)
 T}
-\-v	very high	Int.	99	175	24-bit mastering\ 
+\-v	T{
+.na
+very high
+T}	intermediate	95%	175	24-bit mastering
 .TE
 .DT
 .SP
 where
-.B BW %
-is the percentage of the audio band that is preserved (based on the 3dB
-point) during sample rate conversion, and
-.B Rej dB
-is the level of noise rejection.  The default quality level is `high'
-(\fB\-h\fR).
+.I Band-width
+is the percentage of the audio frequency band that is preserved and
+.I Rej dB
+is the level of noise rejection.  Increasing levels of resampling
+quality come at the expense of increasing amounts of time to process the
+audio.  If no quality option is given, the quality level used is `high'.
+.SP
+The `quick' algorithm uses cubic interpolation; all others use
+band-width limited interpolation.  The `quick' and `low' quality
+algorithms have a `linear' phase response; for `medium', `high' and
+`very high', the phase response is configurable (see below), but
+defaults to `intermediate'.
 .SP
 The
-.B \-q
-algorithm uses cubic interpolation; the others use bandwidth-limited
-interpolation.
-The
-.B \-q
-and
-.B \-l
-algorithms have a `linear' phase response; for the others, the phase
-response is configurable, but defaults to `intermediate' (see below for
-more details).
-.SP
-This effect is invoked automatically if SoX's \fB\-r\fR option specifies
-a rate that is different to that of the input file(s).  Alternatively,
-this effect may be invoked with the output rate parameter
-.I RATE
-and SoX's
+.B rate
+effect is invoked automatically if SoX's \fB\-r\fR option specifies a
+rate that is different to that of the input file(s).  Alternatively, if
+this effect is given explicitly, then SoX's
 .B \-r
 option need not be given.  For example, the following two commands are
 equivalent:
 .EX
+.ne 2
 	sox input.au -r 48k output.au bass -3
 	sox input.au        output.au bass -3 rate 48k
 .EE
@@ -983,69 +995,104 @@ c8 c8 c.
 .TE
 .DT
 .SP
-The following, advanced options apply only to the
-.BR \-m ,
-.B \-h
-and
-.B \-v
-algorithms and are used primarily to control the resampling filter's
-`ringing' (see
-http://ccrma.stanford.edu/~jos/filters/Linear_Phase_Really_Ideal.html
-for a description of this phenomenon).  Note that ringing control is a
-compromise: reducing it comes at the expense of reducing band-width
-and/or increasing aliasing.
-.SP
-The
-.B \-p
-.IR PHASE ,
-.BR \-M ,
-.B \-I
-and
-.B \-L
-options control the phase response of the filter that is used in the
-resampling process.  Any phase value from 0 to 100 may be given with
-.BR \-p ,
-though values greater than 50 are rarely useful.  The following specific
-values are noteworthy:
+The simple quality selection described above provides settings that
+satisfy the needs of the vast majority of resampling tasks.
+Occasionally, however, it may be desirable to fine-tune the resampler's
+filter response; this can be achieved using
+.IR override\ options ,
+as detailed in the following table:
 .TS
 center box;
-cB cI cI cI
-cB c cB c.
--p \fIvalue\fR	T{
-Phase response
-T}	Short form	T{
-Ratio of pre- to post- ringing
+lB lw52.
+\-M/\-I/\-L	Phase response = minimum/intermediate/linear
+\-p\ 0\-100	T{
+.na
+Any phase response (0 = minimum, 25 = intermediate, 50 = linear, 100 = maximum)
 T}
-0	minimum	\-M	0:1
-25	intermediate	\-I	0\*d2:0\*d8
-50	linear	\-L	0\*d5:0\*d5
-100	maximum	\ 	1:0
+\-s	Steep filter (band-width = 99%)
+\-b\ 74\-99.7	Any band-width %
+\-a	Allow aliasing above the pass-band
 .TE
 .DT
 .SP
+N.B.  Override options can not be used with the `quick' or `low'
+quality algorithms.
+.SP
+All resamplers use filters that can sometimes create `echo' (a.k.a.
+`ringing') artefacts with transient signals such as those that occur
+with `finger snaps' or other highly percussive sounds.  Such artefacts are
+much more noticable to the human ear if they occur before the transient
+(`pre-echo') than if they occur after it (`post-echo').  The phase
+response setting controls the distribution of any transient echo between
+`pre' and `post': with minimum phase, there is no pre-echo but the
+longest post-echo; with linear phase, pre and post echo are in equal
+amounts (in signal terms, but not audibility terms); the intermediate
+phase setting attempts to find the best compromise by selecting a small
+length (and level) of pre-echo and a medium lengthed post-echo.
+.SP
+Minimum, intermediate, or linear phase response is selected using the
+.BR \-M ,
+.BR \-I ,
+or
+.B \-L
+option; a custom phase response can be created with the
+.B \-p
+option.  Note that phase responses between `linear' and `maximum'
+(greater than 50) are rarely useful.
+.SP
+A resampler's band-width setting determines how much of the frequency
+content of the original signal (w.r.t. the orignal sample rate when
+up-sampling, or the new sample rate when down-sampling) is preserved
+during conversion.  The term `pass-band' is used to refer to all frequencies
+up to the band-width point (e.g. for 44\*d1kHz sampling rate, and a
+resampling band-width of 95%, the pass-band represents frequencies from
+0Hz (D.C.) to circa 21kHz).  Increasing the resampler's band-width
+results in a slower conversion and can increase transient echo
+artefacts (and vice versa).
+.SP
 The
+.B \-s
+`steep filter' option changes resampling band-width from the default 95%
+(based on the 3dB point), to 99%.  The
 .B \-b
-.I BANDWIDTH
-(74\-99\*d7 %) option allows the preserved audio bandwidth to be reduced
-from the default (99%) and thus also reduce ringing.  For example,
-changing the bandwidth to 95% (which, at 44100Hz sampling rate,
-still preserves frequencies up to 21kHz) reduces pre- and post- ringing
-by 80%.
+option allows the band-width to be set to any value in the range
+74\-99\*d7 %, but note that band-width values greater than 99% are not
+recommended for normal use as they can cause excessive transient echo.
 .SP
 If the
 .B \-a
-option is given aliasing above the pass-band is allowed; this reduces
-pre- and post- ringing by 42%.  Note that if this option is given, then
+option is given, then aliasing above the pass-band is allowed.  For
+example, with 44\*d1kHz sampling rate, and a
+resampling band-width of 95%, this means that frequency content above
+21kHz can be distorted; however, since this is above the pass-band (i.e.
+above the highest frequency of interest/audibility), this may not be a
+problem.  The benefits of allowing aliasing are reduced processing time,
+and reduced (by almost half) transient echo artefacts.
+Note that if this option is given, then
 the minimum band-width allowable with
 .B \-b
 increases to 85%.
 .SP
-For example, using both \fB\-b 95\fR and \fB\-a\fR reduces all ringing
-by
+Examples:
+.EX
+	sox input.wav -2 output.wav rate -s -a 44100 dither
+.EE
+default (high) quality resampling; overrides: steep filter, allow
+aliasing; to 44\*d1kHz sample rate; dither output to 2-byte (16-bit) WAV
+file.
+.EX
+	sox input.wav -3 output.aiff rate -v -L -b 90 48k
+.EE
+very high quality resampling; overrides: linear phase, band-width 90%;
+to 48k sample rate; store output to 3-byte (24-bit) AIFF file. 
+.TS
+center;
+c8 c8 c.
+*	*	*
+.TE
+.DT
 .SP
-	100 \- (100 \- 80) \(mu (100 \- 42)% = 88\*d4%
-.SP
-Note that the
+The
 .BR key ,
 .B speed
 and
