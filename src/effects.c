@@ -16,6 +16,7 @@
  */
 
 #include "sox_i.h"
+#include "getopt.h"
 #include <assert.h>
 #include <string.h>
 #ifdef HAVE_STRINGS_H
@@ -83,7 +84,14 @@ sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh)
 
 int sox_effect_options(sox_effect_t *effp, int argc, char * const argv[])
 {
-    return effp->handler.getopts(effp, argc, (char * *)argv);
+  int result, callers_optind = optind, callers_opterr = opterr;
+
+  if (effp->handler.flags & SOX_EFF_GETOPT)
+    --argv, ++argc; /* FIXME: push this processing back up the stack */
+  optind = 1, opterr = 0;
+  result = effp->handler.getopts(effp, argc, (char * *)argv);
+  optind = callers_optind, opterr = callers_opterr;
+  return result;
 } /* sox_effect_options */
 
 /* Effects chain: */

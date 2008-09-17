@@ -93,11 +93,10 @@ static int enum_option(int c, enum_item const * items)
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *)effp->priv;
-  int c, callers_optind = optind, callers_opterr = opterr;
+  int c;
 
   assert(array_length(p->bit_rev_table) >= (size_t)dft_br_len(MAX_DFT_SIZE));
 
-  --argv, ++argc, optind = 1, opterr = 0;                /* re-jig for getopt */
   p->pixels_per_sec = 100, p->y_size = 2, p->dB_range = 120;/* non-0 defaults */
   p->spectrum_points = 249, p->perm = 1;
   p->out_name = "spectrogram.png", p->comment = "Created by SoX";
@@ -123,8 +122,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   p->gain = -p->gain;
   --p->y_size, --p->perm;
   p->spectrum_points += 2;
-  argc -= optind, optind = callers_optind, opterr = callers_opterr;
-  return argc || p->win_type == INT_MAX? lsx_usage(effp) : SOX_SUCCESS;
+  return optind !=argc || p->win_type == INT_MAX? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static double make_window(priv_t * p, int end)
@@ -509,7 +507,8 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_spectrogram_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "spectrogram", 0, 0, getopts, start, flow, drain, stop, 0, sizeof(priv_t)};
+    "spectrogram", NULL, SOX_EFF_GETOPT,
+    getopts, start, flow, drain, stop, NULL, sizeof(priv_t)};
   static char const * lines[] = {
     "[options]",
     "\t-x num\tX-axis pixels/second, default 100",

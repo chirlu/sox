@@ -37,14 +37,21 @@ Newly deprecated features (to be removed in future):
   14.1.1   E key                   pitch                   14.1.1 + 6 months
   14.1.1   E pan                   ~= mixer/remix          14.1.1 + 6 months
 
+File formats:
+
+  o Fix WAV write on 64-bit arch.  (robs)
+  o Fix writing PRC ADPCM files.  (Silas Brown)
+
 Effects:
 
   o New `riaa' effect; RIAA vinyl playback EQ.  (robs)
-  o For `rate' effect, change default phase to intermediate; phase,
-    band-width and aliasing now configurable.  (robs)
   o New -b option for the norm effect; can be used to fix stereo
     imbalance.  (robs)
+  o Change default settings for `rate' effect; add -s -L options to
+    be compatible with SoX v14.1.0; phase response, band-width and
+    aliasing now configurable; see man page for details.  (robs)
   o Fix broken audio pass-through with noiseprof effect.  (robs)
+  o Improved documentation for the `stat' effect.  (robs)
   o New --effects-file option to read effects and arguments from
     a file instead of command line. (cbagwell)
 
@@ -66,16 +73,14 @@ Other bug fixes:
     no samplerate.pc exists. (cbagwell)
   o [2038855] external lpc10 lib patch.  (Oden Eriksson, Mandriva)
   o Fix memory leaks in effects chain when restarting effects.
-  o Fix WAV write on 64-bit arch.  (robs)
   o Fixed pkg-config CFLAGS. (evilynux)
-  o Improved documentation for the `stat' effect.  (robs)
-  o Fix writing PRC ADPCM files.  (Silas Brown)
 
 Internal improvements:
 
   o Fixed all compiler warnings (with gcc 4.3.1, 64-bit arch.).  (robs)
   o Updates to internal effects chain API.  (cbagwell)
   o Retire old FFT routines (speeds up noisered effect).  (robs)
+  o Allow effects to use getopt.  (robs)
 
 
 sox-14.1.0	2008-7-29
