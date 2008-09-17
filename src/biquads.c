@@ -1,4 +1,4 @@
-/* libSoX Biquad filter effects   (c) 2006-7 robs@users.sourceforge.net
+/* libSoX Biquad filter effects   (c) 2006-8 robs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by

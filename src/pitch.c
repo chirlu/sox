@@ -27,16 +27,19 @@
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   double d;
-  char dummy, arg[100];
-  int pos = (argc && !strcmp(*argv, "-q"))? 1 : 0;
+  char dummy, arg[100], **argv2 = malloc(argc * sizeof(*argv2));
+  int ret, pos = (argc && !strcmp(*argv, "-q"))? 1 : 0;
 
   if (argc <= pos || sscanf(argv[pos], "%lf %c", &d, &dummy) != 1)
     return lsx_usage(effp);
 
   effp->global_info->speed *= d = pow(2., d / 1200);  /* cents --> factor */
   sprintf(arg, "%g", 1 / d);
-  argv[pos] = arg;
-  return sox_tempo_effect_fn()->getopts(effp, argc, argv);
+  memcpy(argv2, argv, argc * sizeof(*argv2));
+  argv2[pos] = arg;
+  ret = sox_tempo_effect_fn()->getopts(effp, argc, argv2);
+  free(argv2);
+  return ret;
 }
 
 sox_effect_handler_t const * sox_pitch_effect_fn(void)

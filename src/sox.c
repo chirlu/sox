@@ -1384,7 +1384,7 @@ static void usage(char const * message)
     puts(lines[i]);
   display_supported_formats();
   display_supported_effects();
-  printf("effopts: depends on effect\n");
+  printf("effopts: effect dependent; see --help-effect\n");
   exit(message != NULL);
 }
 
