@@ -38,6 +38,21 @@ int lsx_usage(sox_effect_t * effp)
   return SOX_EOF;
 }
 
+char * lsx_usage_lines(char * * usage, char const * const * lines, size_t n)
+{
+  if (!*usage) {
+    size_t i, len;
+    for (len = i = 0; i < n; len += strlen(lines[i++]) + 1);
+    *usage = lsx_malloc(len);
+    strcpy(*usage, lines[0]);
+    for (i = 1; i < n; ++i) {
+      strcat(*usage, "\n");
+      strcat(*usage, lines[i]);
+    }
+  }
+  return *usage;
+}
+
 /* here for linear interp.  might be useful for other things */
 unsigned lsx_gcd(unsigned a, unsigned b)
 {

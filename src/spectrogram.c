@@ -509,22 +509,26 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_spectrogram_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "spectrogram", "[options]\n"
-      "\t-x num\tX-axis pixels/second, default 100\n"
-      "\t-y num\tY-axis resolution (1 - 4), default 2\n"
-      "\t-z num\tZ-axis range in dB, default 120\n"
-      "\t-Z num\tZ-axis maximum in dBFS, default 0\n"
-      "\t-q num\tZ-axis quantisation, default 249\n"
-      "\t-w name\tWindow: Hann (default), Hamming, Bartlett, Rectangular, Kaiser\n"
-      "\t-s\tSlack overlap\n"
-      "\t-a\tSuppress axis lines\n"
-      "\t-l\tLight background\n"
-      "\t-m\tMonochrome\n"
-      "\t-h\tHigh colour\n"
-      "\t-p num\tPermute colours\n"
-      "\t-t text\tTitle text\n"
-      "\t-c text\tComment text\n"
-      "\t-o text\tOutput file name, default `spectrogram.png'",
-    0, getopts, start, flow, drain, stop, NULL, sizeof(priv_t)};
+    "spectrogram", 0, 0, getopts, start, flow, drain, stop, 0, sizeof(priv_t)};
+  static char const * lines[] = {
+    "[options]",
+    "\t-x num\tX-axis pixels/second, default 100",
+    "\t-y num\tY-axis resolution (1 - 4), default 2",
+    "\t-z num\tZ-axis range in dB, default 120",
+    "\t-Z num\tZ-axis maximum in dBFS, default 0",
+    "\t-q num\tZ-axis quantisation (0 - 249), default 249",
+    "\t-w name\tWindow: Hann (default), Hamming, Bartlett, Rectangular, Kaiser",
+    "\t-s\tSlack overlap of windows",
+    "\t-a\tSuppress axis lines",
+    "\t-l\tLight background",
+    "\t-m\tMonochrome",
+    "\t-h\tHigh colour",
+    "\t-p num\tPermute colours (1 - 6)",
+    "\t-t text\tTitle text",
+    "\t-c text\tComment text",
+    "\t-o text\tOutput file name, default `spectrogram.png'",
+  };
+  static char * usage;
+  handler.usage = lsx_usage_lines(&usage, lines, array_length(lines));
   return &handler;
 }

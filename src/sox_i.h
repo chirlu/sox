@@ -196,6 +196,7 @@ extern sox_format_handler_t const * sox_sndfile_format_fn(void);
 /*--------------------------------- Effects ----------------------------------*/
 
 int lsx_usage(sox_effect_t * effp);
+char * lsx_usage_lines(char * * usage, char const * const * lines, size_t n);
 #define EFFECT(f) extern sox_effect_handler_t const * sox_##f##_effect_fn(void);
 #include "effects.h"
 #undef EFFECT
