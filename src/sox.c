@@ -368,6 +368,7 @@ static void progress_to_next_input_file(file_t * f)
 }
 
 /* Read up to max `wide' samples.  A wide sample contains one sample per channel
+            printf("effect %d obeg = %d oend = %d\n", e, effects_chain->effects[e]->obeg, effects_chain->effects[e]->oend);
  * from the input audio. */
 static size_t sox_read_wide(sox_format_t * ft, sox_sample_t * buf, size_t max)
 {
@@ -941,7 +942,7 @@ static char *fndup_with_count(const char *filename, size_t count)
 
     fn = filename;
 
-    efn = expand_fn = malloc((size_t)1024);
+    efn = expand_fn = malloc((size_t)FILENAME_MAX);
 
     /* Find extension in case user didn't specify a substitution
      * marker.
@@ -974,7 +975,7 @@ static char *fndup_with_count(const char *filename, size_t count)
                 char num[10];
                 char format[5];
 
-                found_marker = 1;
+                found_marker = sox_true;
 
                 strcpy(format, "%");
                 if (width)
@@ -1010,7 +1011,7 @@ static char *fndup_with_count(const char *filename, size_t count)
         efn -= strlen (ext);
 
         sprintf(efn, "%03lu", (unsigned long)count);
-        efn = efn + 4;
+        efn = efn + 3;
         strcat(efn, ext);
     }
 
