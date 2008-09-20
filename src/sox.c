@@ -579,7 +579,7 @@ static void delete_user_effects(void)
     {
       if (user_effargs[i].argv[j])
         free(user_effargs[i].argv[j]);
-      user_effargs[i].argv[i] = NULL;
+      user_effargs[i].argv[j] = NULL;
     }
     user_effargs[i].argc = 0;
   }
@@ -958,8 +958,46 @@ static char *fndup_with_count(const char *filename, size_t count)
 
     while (fn < end)
     {
-        /* FIXME: Look for %n and if found replacew with a sprintf of count */
-        *efn++ = *fn++;
+        /* Look for %n. If found, replace with count.  Can specify an
+         * option width of 1-9.
+         */
+        if (*fn == '%')
+        {
+            int width = 0;
+            fn++;
+            if (*fn >= '1' || *fn <= '9')
+            {
+                width = *fn++;
+            }
+            if (*fn == 'n')
+            {
+                char num[10];
+                char format[5];
+
+                found_marker = 1;
+
+                strcpy(format, "%");
+                if (width)
+                {
+                    char tmps[2];
+                    tmps[0] = width;
+                    tmps[1] = 0;
+                    strcat(format, "0");
+                    strcat(format, tmps);
+                }
+                strcat(format, "d");
+                strcpy(format, "%02d");
+                sprintf(num, format, count);
+                *efn = 0;
+                strcat(efn, num);
+                efn += strlen(num);
+                fn++;
+            }
+            else
+                *efn++ = *fn++;
+        }
+        else
+            *efn++ = *fn++;
     }
 
     *efn = 0;
@@ -971,7 +1009,7 @@ static char *fndup_with_count(const char *filename, size_t count)
     {
         efn -= strlen (ext);
 
-        sprintf(efn, "%04lu", (unsigned long)count);
+        sprintf(efn, "%03lu", (unsigned long)count);
         efn = efn + 4;
         strcat(efn, ext);
     }

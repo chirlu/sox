@@ -475,9 +475,12 @@ There are only a few effects that can stop processing input early such
 as the trim and silence effects so the application for multiple files
 is very limited.
 
-If the user specifies 'filename.ext' as the output file then SoX will 
-first use a filename of 'filename0001.ext' and will increment the number 
-for each new file.
+In multiple output mode, a unique number will automatically be appended
+to the end of the filename.  If the filename has an extension 
+then the number is inserted before the extension.  This behavior can
+be customized by placing a %n anywhere in the filename where the
+number should be substituted.  An optional number can be placed after
+the % to indicate a minimum fixed width for the number.
 
 .SS Stopping SoX
 Usually SoX will complete its processing and exit automatically, however
