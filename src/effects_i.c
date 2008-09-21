@@ -68,6 +68,56 @@ unsigned lsx_lcm(unsigned a, unsigned b)
   return a * (b / lsx_gcd(a, b));
 }
 
+/* Numerical Recipes cubic spline */
+
+void lsx_prepare_spline3(double const * x, double const * y, int n,
+    double start_1d, double end_1d, double * y_2d)
+{
+  double p, qn, sig, un, * u = lsx_malloc((n - 1) * sizeof(*u));
+  int i;
+
+  if (start_1d == HUGE_VAL)
+    y_2d[0] = u[0] = 0;      /* Start with natural spline or */
+  else {                     /* set the start first derivative */
+    y_2d[0] = -.5;
+    u[0] = (3 / (x[1] - x[0])) * ((y[1] - y[0]) / (x[1] - x[0]) - start_1d);
+  }
+
+  for (i = 1; i < n - 1; ++i) {
+    sig = (x[i] - x[i - 1]) / (x[i + 1] - x[i - 1]);
+    p = sig * y_2d[i - 1] + 2;
+    y_2d[i] = (sig - 1) / p;
+    u[i] = (y[i + 1] - y[i]) / (x[i + 1] - x[i]) -
+           (y[i] - y[i - 1]) / (x[i] - x[i - 1]);
+    u[i] = (6 * u[i] / (x[i + 1] - x[i - 1]) - sig * u[i - 1]) / p;
+  }
+  if (end_1d == HUGE_VAL)
+    qn = un = 0;             /* End with natural spline or */
+  else {                     /* set the end first derivative */
+    qn = .5;
+    un = 3 / (x[n - 1] - x[n - 2]) * (end_1d - (y[n - 1] - y[n - 2]) / (x[n - 1] - x[n - 2]));
+  }
+  y_2d[n - 1] = (un - qn * u[n - 2]) / (qn * y_2d[n - 2] + 1);
+  for (i = n - 2; i >= 0; --i)
+    y_2d[i] = y_2d[i] * y_2d[i + 1] + u[i];
+  free(u);
+}
+
+double lsx_spline3(double const * x, double const * y, double const * y_2d,
+    int n, double x1)
+{
+  int     t, i[2] = {0, 0};
+  double  d, a, b;
+
+  for (i[1] = n - 1; i[1] - i[0] > 1; t = (i[1] + i[0]) >> 1, i[x[t] > x1] = t);
+  d = x[i[1]] - x[i[0]];
+  assert(d != 0);
+  a = (x[i[1]] - x1) / d;
+  b = (x1 - x[i[0]]) / d;
+  return a * y[i[0]] + b * y[i[1]] +
+    ((a * a * a - a) * y_2d[i[0]] + (b * b * b - b) * y_2d[i[1]]) * d * d / 6;
+}
+
 enum_item const lsx_wave_enum[] = {
   ENUM_ITEM(SOX_WAVE_,SINE)
   ENUM_ITEM(SOX_WAVE_,TRIANGLE)
@@ -279,6 +329,15 @@ double lsx_bessel_I_0(double x)
   return sum;
 }
 
+int lsx_set_dft_length(int num_taps) /* Set to 4 x nearest power of 2 */
+{
+  int result, n = num_taps;
+  for (result = 8; n > 2; result <<= 1, n >>= 1);
+  result = range_limit(result, 4096, 131072);
+  assert(num_taps * 2 < result);
+  return result;
+}
+
 #include "fft4g.h"
 int * lsx_fft_br;
 double * lsx_fft_sc;
@@ -381,6 +440,24 @@ void lsx_apply_bartlett(double h[], const int num_points)
   int i, m = num_points - 1;
   for (i = 0; i < num_points; ++i) {
     h[i] *= 2. / m * (m / 2. - fabs(i - m / 2.));
+  }
+}
+
+void lsx_apply_blackman(double h[], const int num_points, double alpha)
+{
+  int i, m = num_points - 1;
+  for (i = 0; i < num_points; ++i) {
+    double x = 2 * M_PI * i / m;
+    h[i] *= (1 - alpha) *.5 - .5 * cos(x) + alpha * .5 * cos(2 * x);
+  }
+}
+
+void lsx_apply_blackman_nutall(double h[], const int num_points)
+{
+  int i, m = num_points - 1;
+  for (i = 0; i < num_points; ++i) {
+    double x = 2 * M_PI * i / m;
+    h[i] *= .3635819 - .4891775 * cos(x) + .1365995 * cos(2 * x) - .0106411 * cos(3 * x);
   }
 }
 

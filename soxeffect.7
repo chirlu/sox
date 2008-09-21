@@ -652,6 +652,23 @@ default values if possible. Only plugins with at most one audio input
 and one audio output port can be used.  If found, the environment varible
 LADSPA_PATH will be used as search path for plugins.
 .TP
+\fBloudness [\fIgain\fR [\fIreference\fR]]
+Loudness control\*msimilar to the
+.B gain
+effect, but provides equalisation for the human auditory system.  See
+http://en.wikipedia.org/wiki/Loudness for a detailed description of
+loudness.  The gain is adjusted by the given
+.I gain
+parameter (usually negative) and the signal equalised according to ISO
+226 w.r.t. a reference level of 65dB, though an alternative
+.I reference
+level may be given if the original audio has been equalised for some
+other optimal level.
+.SP
+See also the
+.B gain
+effect.
+.TP
 \fBlowpass\fR [\fB\-1\fR|\fB\-2\fR] \fIfrequency\fR[\fBk\fR]\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR\^|\^\fBk\fR]]
 Apply a low-pass filter.
 See the description of the \fBhighpass\fR effect for details.
@@ -967,7 +984,7 @@ quality come at the expense of increasing amounts of time to process the
 audio.  If no quality option is given, the quality level used is `high'.
 .SP
 The `quick' algorithm uses cubic interpolation; all others use
-band-width limited interpolation.  The `quick' and `low' quality
+band-limited interpolation.  The `quick' and `low' quality
 algorithms have a `linear' phase response; for `medium', `high' and
 `very high', the phase response is configurable (see below), but
 defaults to `intermediate'.
@@ -1010,7 +1027,7 @@ lB lw52.
 Any phase response (0 = minimum, 25 = intermediate, 50 = linear, 100 = maximum)
 T}
 \-s	Steep filter (band-width = 99%)
-\-b\ 74\-99.7	Any band-width %
+\-b\ 74\-99\*d7	Any band-width %
 \-a	Allow aliasing above the pass-band
 .TE
 .DT

@@ -17,7 +17,7 @@ Mantainers:
 		EFFECTS: tempo, pad, bass, treble, delay, new reverb, new
 		flanger, soft-knee companding, speed via resampling, filters
 		makeover inc. gnuplot & octave plotting, splice, remix, norm,
-		contrast, new rate, spectrogram, new pitch, riaa;
+		contrast, new rate, spectrogram, new pitch, riaa, loudness;
                 new effects chain with buffering and any # channels.
                 OTHERS: open input files via URL, file merge, play
                 multiple files with mixed format types, play with replay-gain,

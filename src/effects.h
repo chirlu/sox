@@ -41,6 +41,7 @@
 #ifdef HAVE_LADSPA_H
   EFFECT(ladspa)
 #endif
+  EFFECT(loudness)
   EFFECT(lowpass)
   EFFECT(mcompand)
   EFFECT(mixer)

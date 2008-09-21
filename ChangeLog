@@ -44,7 +44,9 @@ File formats:
 
 Effects:
 
-  o New `riaa' effect; RIAA vinyl playback EQ.  (robs)
+  o New `riaa' effect: RIAA vinyl playback EQ.  (robs)
+  o New `loudness' effect: gain control with ISO 226 loudness
+    compensation.  (robs)
   o New -b option for the norm effect; can be used to fix stereo
     imbalance.  (robs)
   o Change default settings for `rate' effect; add -s -L options to

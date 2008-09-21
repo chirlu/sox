@@ -127,6 +127,7 @@ The audio effects/tools included in this release are as follows:
     o dcshift		Apply or remove DC offset
     o fade		Apply a fade-in and/or fade-out to the audio
     o gain		Apply gain or attenuation
+    o loudness		Gain control with ISO 226 loudness compensation
     o mcompand		Multi-band compression/expansion/limiting
     o norm		Normalise to 0dB (or other), or fix imbalance
     o vol		Adjust audio volume

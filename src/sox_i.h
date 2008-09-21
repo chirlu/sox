@@ -61,7 +61,13 @@ double lsx_parse_frequency(char const * text, char * * end_ptr);
 unsigned lsx_gcd(unsigned a, unsigned b);
 unsigned lsx_lcm(unsigned a, unsigned b);
 
+void lsx_prepare_spline3(double const * x, double const * y, int n,
+    double start_1d, double end_1d, double * y_2d);
+double lsx_spline3(double const * x, double const * y, double const * y_2d,
+    int n, double x1);
+
 double lsx_bessel_I_0(double x);
+int lsx_set_dft_length(int num_taps);
 extern int * lsx_fft_br;
 extern double * lsx_fft_sc;
 void lsx_safe_rdft(int len, int type, double * d);
@@ -72,6 +78,8 @@ void lsx_apply_hann_f(float h[], const int num_points);
 void lsx_apply_hann(double h[], const int num_points);
 void lsx_apply_hamming(double h[], const int num_points);
 void lsx_apply_bartlett(double h[], const int num_points);
+void lsx_apply_blackman(double h[], const int num_points, double alpha);
+void lsx_apply_blackman_nutall(double h[], const int num_points);
 double lsx_kaiser_beta(double att);
 void lsx_apply_kaiser(double h[], const int num_points, double beta);
 

@@ -301,15 +301,6 @@ static void fir_to_phase(double * * h, int * len,
   free(work);
 }
 
-static int set_dft_length(int num_taps) /* Set to 4 x nearest power of 2 */
-{
-  int result, n = num_taps;
-  for (result = 8; n > 2; result <<= 1, n >>= 1);
-  result = range_limit(result, 4096, 131072);
-  assert(num_taps * 2 < result);
-  return result;
-}
-
 static void half_band_filter_init(rate_shared_t * p, unsigned which,
     int num_taps, sample_t const h[], double Fp, double atten, int multiplier,
     double phase, sox_bool allow_aliasing)
@@ -320,7 +311,7 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
   if (f->num_taps)
     return;
   if (h) {
-    dft_length = set_dft_length(num_taps);
+    dft_length = lsx_set_dft_length(num_taps);
     f->coefs = calloc(dft_length, sizeof(*f->coefs));
     for (i = 0; i < num_taps; ++i)
       f->coefs[(i + dft_length - num_taps + 1) & (dft_length - 1)]
@@ -337,7 +328,7 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
       fir_to_phase(&h, &num_taps, &f->post_peak, phase);
     else f->post_peak = num_taps / 2;
 
-    dft_length = set_dft_length(num_taps);
+    dft_length = lsx_set_dft_length(num_taps);
     f->coefs = calloc(dft_length, sizeof(*f->coefs));
     for (i = 0; i < num_taps; ++i)
       f->coefs[(i + dft_length - num_taps + 1) & (dft_length - 1)]

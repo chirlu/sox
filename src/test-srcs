@@ -20,15 +20,7 @@ test_converters () {
   # Create input file
   $SOX -r $1 -n -twavpcm $IN synth 20 sin 0:`expr $1 / 2` gain -2 
   for src in \
-      "polyphase" \
-      "rabbit -c0" \
-      "rabbit -c1" \
-      "rate -h" \
-      "rate -v" \
-      "resample -q" \
-      "resample -ql" \
-      "ssrc" \
-      "ssrc_hp" \
+      "rate -vsL" \
       ; do
     echo $src
     case "$src" in
