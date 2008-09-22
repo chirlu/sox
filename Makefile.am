@@ -56,10 +56,12 @@ DISTCLEANFILES = $(DOCHTML) $(DOCPDF) $(DOCTXT)
 install-data-hook:
 	cd $(DESTDIR)$(mandir)/man1 && $(RM) play.1 && $(LN_S) sox.1 play.1
 	cd $(DESTDIR)$(mandir)/man1 && $(RM) rec.1 && $(LN_S) sox.1 rec.1
+	cd $(DESTDIR)$(mandir)/man7 && $(RM) soxeffect.7 && $(LN_S) ../man1/sox.1 soxeffect.7
 
 uninstall-hook:
 	$(RM) $(DESTDIR)$(mandir)/man1/play.1
 	$(RM) $(DESTDIR)$(mandir)/man1/rec.1
+	$(RM) $(DESTDIR)$(mandir)/man7/soxeffect.7
 
 # Automatically update libtool script if it gets out-of-date
 libtool: $(LIBTOOL_DEPS)
