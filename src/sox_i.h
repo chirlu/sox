@@ -30,7 +30,9 @@ extern enum_item const lsx_wave_enum[];
 #ifndef HAVE_FSEEKO
 #define fseeko fseek
 #define ftello ftell
+#ifndef _MSC_VER
 #define off_t long
+#endif
 #endif
 #ifdef _FILE_OFFSET_BITS
 assert_static(sizeof(off_t) == _FILE_OFFSET_BITS >> 3, OFF_T_BUILD_PROBLEM);
