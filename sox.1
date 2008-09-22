@@ -467,9 +467,9 @@ SoX's output routine can be configured to output multiple files in
 certain cases.  If the output method 'multiple' is specified
 then SoX will create a new file each time the specified effects
 terminate the output early.  Each time a new file is created, the effects
-chain is restarted.  In case multiple effects are in the chain, the
-chain is only restart from the effect that terminated so that no
-input samples are lost.
+chain is restarted.  It is important to place the effect that
+stops processing at the front of the chain because all samples
+in the pipeline before it will be discarded.
 
 There are only a few effects that can stop processing input early such
 as the trim and silence effects so the application for multiple files

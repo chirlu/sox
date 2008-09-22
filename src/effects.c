@@ -414,6 +414,16 @@ void sox_delete_effect(sox_effect_t *effp)
 
 }
 
+void sox_delete_effect_last(sox_effects_chain_t *chain)
+{
+  if (chain->length > 0)
+  {
+    chain->length--;
+    sox_delete_effect(chain->effects[chain->length]);
+    chain->effects[chain->length] = NULL;
+  }
+} /* sox_delete_effect_last */
+
 /* Remove all effects from the chain.
  * Note: This currently closes down the effect which might
  * note be obvious from name.

@@ -120,22 +120,25 @@ static size_t output_count = 0;
 /* Effects */
 
 /* We parse effects into a temporary effects table and then place into
- * the real effects table.  This makes it easier to auto-add some effects
- * as appropriate.  For instance, we can run a resampling effect before
- * converting a mono file to stereo.  This allows the resampling to work
- * on half the data.
+ * the real effects chain.  This allows scanning all effects to give
+ * hints to what input effect options should be as well as determining
+ * when mixer or resample effects need to be auto-inserted as well.
  *
  * User effects table must be 4 entries smaller then the real
  * effects table.  This is because at most we will need to add
- * a resampling effect, a channel mixing effect, the input, and the output.
+ * the input effect, an optional resample effect, an optional mixer
+ * effect, and the output effect.
  */
 #define MAX_USER_EFF (SOX_MAX_EFFECTS - 4)
-static struct { char *name; int argc; char *argv[256]; } user_effargs[MAX_USER_EFF];
 static sox_effect_t *user_efftab[MAX_USER_EFF];
-static unsigned nuser_effects;
 static sox_effects_chain_t *effects_chain = NULL;
+
+#define MAX_USER_EFF_LOOPS 256
+static struct { char *name; int argc; char *argv[FILENAME_MAX]; } user_effargs[MAX_USER_EFF_LOOPS][MAX_USER_EFF];
+static unsigned nuser_effects[MAX_USER_EFF_LOOPS];
+static int current_eff_loop = 0;
+static int eff_loop_count = 0;
 static char *effects_filename = NULL;
-static void parse_effects(int argc, char **argv);
 
 /* Flowing */
 
@@ -429,27 +432,29 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, size_t * osam
   size_t ilen[MAX_INPUT_FILES];
   size_t olen = 0;
 
-  if (is_serial(combine_method)) while (sox_true) {
-    if (!user_skip)
-      olen = sox_read_wide(files[current_input]->ft, obuf, *osamp);
-    if (olen == 0) {   /* If EOF, go to the next input file. */
-      if (++current_input < input_count) {
-        if (combine_method == sox_sequence && !can_segue(current_input))
-          break;
-        progress_to_next_input_file(files[current_input]);
-        continue;
+  if (is_serial(combine_method)) {
+    while (sox_true) {
+      if (!user_skip)
+        olen = sox_read_wide(files[current_input]->ft, obuf, *osamp);
+      if (olen == 0) {   /* If EOF, go to the next input file. */
+        if (++current_input < input_count) {
+          if (combine_method == sox_sequence && !can_segue(current_input))
+            break;
+          progress_to_next_input_file(files[current_input]);
+          continue;
+        }
       }
-    }
-    balance_input(obuf, olen, files[current_input]);
-    break;
-  } else {
+      balance_input(obuf, olen, files[current_input]);
+      break;
+    } /* while */
+  } /* is_serial */ else { /* else is_parallel() */
     sox_sample_t * p = obuf;
     for (i = 0; i < input_count; ++i) {
       ilen[i] = sox_read_wide(files[i]->ft, z->ibuf[i], *osamp);
       balance_input(z->ibuf[i], ilen[i], files[i]);
       olen = max(olen, ilen[i]);
     }
-    for (ws = 0; ws < olen; ++ws) /* wide samples */
+    for (ws = 0; ws < olen; ++ws) { /* wide samples */
       if (combine_method == sox_mix || combine_method == sox_mix_power) {
         for (s = 0; s < effp->in_signal.channels; ++s, ++p) { /* sum samples */
           *p = 0;
@@ -458,10 +463,10 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, size_t * osam
               /* Cast to double prevents integer overflow */
               double sample = *p + (double)z->ibuf[i][ws * files[i]->ft->signal.channels + s];
               *p = SOX_ROUND_CLIP_COUNT(sample, mixing_clips);
-          }
+            }
         }
-      } else if (combine_method == sox_multiply) {    /* multiply samples */
-        for (s = 0; s < effp->in_signal.channels; ++s, ++p) {
+      } /* sox_mix */ else if (combine_method == sox_multiply)  {
+        for (s = 0; s < effp->in_signal.channels; ++s, ++p) { /* multiple samples */
           i = 0;
           *p = ws < ilen[i] && s < files[i]->ft->signal.channels?
             z->ibuf[i][ws * files[i]->ft->signal.channels + s] : 0;
@@ -470,12 +475,14 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, size_t * osam
             *p = SOX_ROUND_CLIP_COUNT(sample, mixing_clips);
           }
         }
-      } else { /* sox_merge: like a multi-track recorder */
+      } /* sox_multiply */ else { /* sox_merge: like a multi-track recorder */
         for (i = 0; i < input_count; ++i)
           for (s = 0; s < files[i]->ft->signal.channels; ++s)
             *p++ = (ws < ilen[i]) * z->ibuf[i][ws * files[i]->ft->signal.channels + s];
-    }
-  }
+      } /* sox_merge */
+    } /* wide samples */
+    current_input += input_count;
+  } /* is_parallel */
   read_wide_samples += olen;
   olen *= effp->in_signal.channels;
   *osamp = olen;
@@ -566,26 +573,56 @@ static void add_effect(sox_effects_chain_t *chain, char const *name,
     exit(2); /* The effects chain should have displayed an error message */
 }
 
-static void delete_user_effects(void)
+static void delete_user_effargs(void)
+{
+  unsigned j;
+  int i, k;
+
+  for (i = 0; i < eff_loop_count; i++) 
+  {
+    for (j = 0; j < nuser_effects[i]; j++) 
+    {
+      if (user_effargs[i][j].name)
+        free(user_effargs[i][j].name);
+      user_effargs[i][j].name = NULL;
+      for (k = 0; k < user_effargs[i][j].argc; k++)
+      {
+        if (user_effargs[i][j].argv[k])
+          free(user_effargs[i][j].argv[k]);
+        user_effargs[i][j].argv[k] = NULL;
+      }
+      user_effargs[i][j].argc = 0;
+    }
+    nuser_effects[i] = 0;
+  }
+  eff_loop_count = 0;
+} /* delete_user_effargs */
+
+static void parse_effects(int argc, char **argv)
 {
   unsigned i;
-  int j;
 
-  for (i = 0; i < nuser_effects; i++) 
-  {
-    if (user_effargs[i].name)
-      free(user_effargs[i].name);
-    user_effargs[i].name = NULL;
-    for (j = 0; j < user_effargs[i].argc; j++)
-    {
-      if (user_effargs[i].argv[j])
-        free(user_effargs[i].argv[j]);
-      user_effargs[i].argv[j] = NULL;
+  nuser_effects[eff_loop_count] = 0;
+  for (i = 0; optind < argc; i++) {
+    unsigned eff_offset;
+    int j;
+
+    eff_offset = nuser_effects[eff_loop_count];
+    if (eff_offset >= MAX_USER_EFF) {
+      sox_fail("too many effects specified (at most %i allowed)", MAX_USER_EFF);
+      exit(1);
     }
-    user_effargs[i].argc = 0;
+
+    /* Name should always be correct! */
+    user_effargs[eff_loop_count][eff_offset].name = strdup(argv[optind++]);
+    for (j = 0; j < argc - optind && !sox_find_effect(argv[optind + j]); ++j)
+      user_effargs[eff_loop_count][eff_offset].argv[j] = strdup(argv[optind + j]);
+    user_effargs[eff_loop_count][eff_offset].argc = j;
+
+    optind += j; /* Skip past the effect arguments */
+    nuser_effects[eff_loop_count]++;
   }
-  nuser_effects = 0;
-} /* delete_user_effects */
+} /* parse_effects */
 
 static int strtoargv(char *s, char *(*argv)[])
 {
@@ -645,12 +682,13 @@ static int strtoargv(char *s, char *(*argv)[])
 static void read_user_effects(char *filename)
 {
     FILE *file = fopen(filename, "rt");
-    char s[1025];
+    char s[FILENAME_MAX];
     int argc;
-    char *argv[256];
+    char *argv[FILENAME_MAX];
     int len;
 
-    delete_user_effects();
+    delete_user_effargs();
+    current_eff_loop = 0;
 
     if (file == NULL)
     {
@@ -660,23 +698,29 @@ static void read_user_effects(char *filename)
 
     sox_report("Reading effects from file %s", filename);
 
-    if (fgets(s, 1024, file) == NULL)
+    while (fgets(s, FILENAME_MAX, file))
     {
-        sox_fail("Error reading effects file %s", filename);
-        exit(2);
-    }
-    len = strlen(s);
-    if (s[len-1] == '\n')
+      len = strlen(s);
+      if (s[len-1] == '\n')
         s[len-1] = 0;
 
-    argc = strtoargv(s, &argv);
+      argc = strtoargv(s, &argv);
 
-    /* parse_effects normally parses options from command line.
-     * Reset opt index so it thinks its back at beginning of
-     * main()'s argv[].
+      /* parse_effects normally parses options from command line.
+       * Reset opt index so it thinks its back at beginning of
+       * main()'s argv[].
+       */
+      optind = 0;
+      parse_effects(argc, argv);
+      eff_loop_count++;
+    }
+
+    /* More then 1 user effect in loop currently means multiple
+     * output mode or else it will simply keep overwriting the
+     * same file each loop.
      */
-    optind = 0;
-    parse_effects(argc, argv);
+    if (eff_loop_count > 1)
+      output_method = sox_multiple;
 
     fclose(file);
 
@@ -698,19 +742,9 @@ static void create_user_effects(void)
   unsigned i;
   sox_effect_t *effp;
 
-  /* If user specified an effects filename then use that file
-   * to load user effects.  Free any previously specified options
-   * from the command line.  This also means that effects will
-   * be reloaded each time a new input or output file is opened.
-   */
-  if (effects_filename)
+  for (i = 0; i < nuser_effects[current_eff_loop]; i++) 
   {
-    read_user_effects(effects_filename);
-  }
-
-  for (i = 0; i < nuser_effects; i++) 
-  {
-      effp = sox_create_effect(sox_find_effect(user_effargs[i].name));
+      effp = sox_create_effect(sox_find_effect(user_effargs[current_eff_loop][i].name));
 
       if (!effp)
         sox_fail("Failed creating effect.  Out of Memory?\n");
@@ -720,8 +754,8 @@ static void create_user_effects(void)
                  effp->handler.name);
 
       /* The failing effect should have displayed an error message */
-      if (sox_effect_options(effp, user_effargs[i].argc, 
-                             user_effargs[i].argv) == SOX_EOF)
+      if (sox_effect_options(effp, user_effargs[current_eff_loop][i].argc, 
+                             user_effargs[current_eff_loop][i].argv) == SOX_EOF)
         exit(1);
 
       user_efftab[i] = effp;
@@ -755,7 +789,7 @@ static void add_effects(sox_effects_chain_t *chain)
   }
 
   /* Add auto effects if appropriate; add user specified effects */
-  for (i = 0; i < nuser_effects; i++) {
+  for (i = 0; i < nuser_effects[current_eff_loop]; i++) {
     effects_added++;
     if (effects_added > chain->length)
     {
@@ -942,7 +976,7 @@ static char *fndup_with_count(const char *filename, size_t count)
 
     fn = filename;
 
-    efn = expand_fn = malloc((size_t)FILENAME_MAX);
+    efn = expand_fn = lsx_malloc((size_t)FILENAME_MAX);
 
     /* Find extension in case user didn't specify a substitution
      * marker.
@@ -1093,7 +1127,8 @@ static void calculate_combiner_signal_parameters(void)
    */
   for (i = 0; i < input_count; i++) {
     unsigned j;
-    for (j =0; j < nuser_effects && !files[i]->ft->signal.channels; ++j)
+    for (j =0; j < nuser_effects[current_eff_loop] && 
+               !files[i]->ft->signal.channels; ++j)
       files[i]->ft->signal.channels = user_efftab[j]->in_signal.channels;
     /* For historical reasons, default to one channel if not specified. */
     if (!files[i]->ft->signal.channels)
@@ -1176,10 +1211,10 @@ static void calculate_output_signal_parameters(void)
 
   /* If no user option for output rate or # of channels, set from the last
    * effect that sets these, or from the input combiner if there is none such */
-  for (i = 0; i < nuser_effects && !ofile->signal.rate; ++i)
-    ofile->signal.rate = user_efftab[nuser_effects - 1 - i]->out_signal.rate;
-  for (i = 0; i < nuser_effects && !ofile->signal.channels; ++i)
-    ofile->signal.channels = user_efftab[nuser_effects - 1 - i]->out_signal.channels;
+  for (i = 0; i < nuser_effects[current_eff_loop] && !ofile->signal.rate; ++i)
+    ofile->signal.rate = user_efftab[nuser_effects[current_eff_loop] - 1 - i]->out_signal.rate;
+  for (i = 0; i < nuser_effects[current_eff_loop] && !ofile->signal.channels; ++i)
+    ofile->signal.channels = user_efftab[nuser_effects[current_eff_loop] - 1 - i]->out_signal.channels;
   if (!ofile->signal.rate)
     ofile->signal.rate = combiner_signal.rate;
   if (!ofile->signal.channels)
@@ -1192,7 +1227,7 @@ static void calculate_output_signal_parameters(void)
    * we don't know what the output length will be.  FIXME: in most cases,
    * an effect that modifies length will be able to determine by how much from
    * its getopts parameters, so olen should be calculable. */
-  for (i = 0; i < nuser_effects; i++)
+  for (i = 0; i < nuser_effects[current_eff_loop]; i++)
     known_length = known_length && !(user_efftab[i]->handler.flags & SOX_EFF_LENGTH);
 
   if (!known_length)
@@ -1932,26 +1967,6 @@ static void parse_options_and_filenames(int argc, char **argv)
     add_file(&opts, device_name(opts.filetype));
 }
 
-static void parse_effects(int argc, char **argv)
-{
-  for (nuser_effects = 0; optind < argc; ++nuser_effects) {
-    int i;
-
-    if (nuser_effects >= MAX_USER_EFF) {
-      sox_fail("too many effects specified (at most %i allowed)", MAX_USER_EFF);
-      exit(1);
-    }
-
-    /* Name should always be correct! */
-    user_effargs[nuser_effects].name = strdup(argv[optind++]);
-    for (i = 0; i < argc - optind && !sox_find_effect(argv[optind + i]); ++i)
-      user_effargs[nuser_effects].argv[i] = strdup(argv[optind + i]);
-    user_effargs[nuser_effects].argc = i;
-
-    optind += i; /* Skip past the effect arguments */
-  }
-}
-
 typedef enum {
   full, rate, channels, samples, duration, bits, encoding, annotation} soxi_t;
 
@@ -2145,9 +2160,11 @@ int main(int argc, char **argv)
 
   /* Loop through the rest of the arguments looking for effects */
   parse_effects(argc, argv);
+  eff_loop_count++;
 
   /* Not the best way for users to do this; now deprecated in favour of soxi. */
-  if (!show_progress && !nuser_effects && ofile->filetype && !strcmp(ofile->filetype, "null")) {
+  if (!show_progress && !nuser_effects[current_eff_loop] && 
+      ofile->filetype && !strcmp(ofile->filetype, "null")) {
     for (i = 0; i < input_count; i++)
       report_file_info(files[i]);
     exit(0);
@@ -2158,7 +2175,7 @@ int main(int argc, char **argv)
   else {
     time_t t;
 
-    time(&t);
+    time(&t); 
     srand((unsigned)t);
   }
 
@@ -2167,42 +2184,42 @@ int main(int argc, char **argv)
   ofile_signal_options = ofile->signal;
   ofile_encoding_options = ofile->encoding;
 
-  if (combine_method == sox_sequence || output_method == sox_multiple) do {
-    /* If ofile->ft is set then we've called this at least once.
-     * Need to do some cleanup before continueing on.
-     */
-    if (ofile->ft)
-    {
-      /* If in sox_multiple mode and something besides input/combiner 
-       * effect stopped the writing then only restart those effects
-       * so that no input samples are lost.
-       * If input reached EOF then restart all effects.
-       */
-      if (output_method == sox_multiple && !input_eof)
-      {
-        size_t e;
+  /* If user specified an effects filename then use that file
+   * to load user effects.  Free any previously specified options
+   * from the command line.  
+   */
+  if (effects_filename)
+  {
+    read_user_effects(effects_filename);
+  }
 
-        /* Scan backwards until data is found and do not free input effect */
-        for (e = effects_chain->length-1; e > 0; --e)
-        {
-          if (effects_chain->effects[e]->obeg != 
-              effects_chain->effects[e]->oend)
-            break;
-          sox_delete_effect(effects_chain->effects[e]);
-          effects_chain->effects[e] = NULL;
-          effects_chain->length--;
-        }
+  while (process() != SOX_EOF && !user_abort && current_input < input_count)
+  {
+    if (input_eof)
+      sox_delete_effects(effects_chain);
+    else
+    {
+      /* if input hasn't reached EOF, delete all effects except for
+       * input effect.
+       */
+      /* TODO: Warn user when an effect is deleted that still
+       * had unprocessed samples.
+       */
+      while (effects_chain->length > 1)
+      {
+        sox_delete_effect_last(effects_chain);
       }
-      else 
-        sox_delete_effects(effects_chain);
-      sox_close(ofile->ft);
-      ofile->ft = NULL;
     }
-  } while (process() != SOX_EOF && !user_abort && current_input < input_count);
-  else process();
+
+    /* Advance to next effect loop; with rollover */
+    current_eff_loop++;
+    if (current_eff_loop >= eff_loop_count) current_eff_loop = 0;
+    sox_close(ofile->ft);
+    ofile->ft = NULL;
+  }
 
   sox_delete_effects_chain(effects_chain);
-  delete_user_effects();
+  delete_user_effargs();
 
   for (i = 0; i < file_count; ++i)
     if (files[i]->ft->clips != 0)
