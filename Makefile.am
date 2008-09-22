@@ -9,8 +9,8 @@ RM = rm -f
 
 # man pages are not considered to be sources, so need to add "dist_"
 # prefix to ensure they are added to the distribution.
-dist_man_MANS = sox.1 soxi.1 soxeffect.7 soxformat.7 libsox.3
-EXTRA_DIST = sox.txt soxi.txt soxeffect.txt soxformat.txt libsox.txt \
+dist_man_MANS = sox.1 soxi.1 soxformat.7 libsox.3
+EXTRA_DIST = sox.txt soxi.txt soxformat.txt libsox.txt \
 	     CMakeLists.txt sox.pc.in LICENSE.GPL LICENSE.LGPL
 
 if HAVE_PKGCONFIG
@@ -25,14 +25,14 @@ play.1 rec.1: sox.1
 .1.txt .3.txt .7.txt:
 	tbl $(srcdir)/$< | nroff -man | col -b > $@
 
-DOCTXT = sox.txt soxi.txt soxeffect.txt soxformat.txt libsox.txt
+DOCTXT = sox.txt soxi.txt soxformat.txt libsox.txt
 txt: $(DOCTXT)
 
 # Rule for making PDF man pages
 .1.pdf .3.pdf .7.pdf:
 	tbl $(srcdir)/$< | groff -man -Tps | ps2pdf - $@
 
-DOCPDF = sox.pdf soxi.pdf soxeffect.pdf soxformat.pdf libsox.pdf
+DOCPDF = sox.pdf soxi.pdf soxformat.pdf libsox.pdf
 pdf: $(DOCPDF)
 
 # Rule for making HTML man pages
@@ -48,7 +48,7 @@ FIXHTML = sed '1s,^Content-type.*,,' | \
 .1.html .3.html .7.html:
 	man2html -r $(srcdir)/$< | $(FIXHTML) > $@
 
-DOCHTML = sox.html soxi.html soxeffect.html soxformat.html libsox.html
+DOCHTML = sox.html soxi.html soxformat.html libsox.html
 html: $(DOCHTML)
 
 DISTCLEANFILES = $(DOCHTML) $(DOCPDF) $(DOCTXT)

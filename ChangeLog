@@ -62,6 +62,9 @@ Other new features:
   o New --output option to write to multiple files in one run.
     Only useful with certain effects like trim and silence. (cbagwell)
   o Display SoX build environment information with -V -V.  (robs)
+  o Display (with -V) the detected file-type if it differs from the 
+    file extension.  (robs)
+  o New -t option for soxi; to display the detected file type.  (robs)
 
 Other bug fixes:
 

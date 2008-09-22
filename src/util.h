@@ -99,6 +99,8 @@
 #define MACHINE_IS_LITTLEENDIAN 1
 #endif
 
+char const * find_file_extension(char const * pathname);
+
 typedef struct {char const *text; unsigned value;} enum_item;
 #define ENUM_ITEM(prefix, item) {#item, prefix##item},
 

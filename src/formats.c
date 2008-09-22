@@ -312,21 +312,6 @@ static int sox_checkformat(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static char const * find_file_extension(char const * pathname)
-{
-  /* First, chop off any path portions of filename.  This
-   * prevents the next search from considering that part. */
-  char const * result = LAST_SLASH(pathname);
-  if (!result)
-    result = pathname;
-
-  /* Now look for an filename extension */
-  result = strrchr(result, '.');
-  if (result)
-    ++result;
-  return result;
-}
-
 static sox_bool is_uri(char const * text)
 {
   if (!isalpha((int)*text))

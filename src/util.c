@@ -36,6 +36,21 @@ int strncasecmp(char const * s1, char const * s2, size_t n)
 }
 #endif
 
+char const * find_file_extension(char const * pathname)
+{
+  /* First, chop off any path portions of filename.  This
+   * prevents the next search from considering that part. */
+  char const * result = LAST_SLASH(pathname);
+  if (!result)
+    result = pathname;
+
+  /* Now look for an filename extension */
+  result = strrchr(result, '.');
+  if (result)
+    ++result;
+  return result;
+}
+
 enum_item const * find_enum_text(char const * text, enum_item const * enum_items)
 {
   enum_item const * result = NULL; /* Assume not found */

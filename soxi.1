@@ -29,11 +29,11 @@
 .SP
 .fi
 ..
-.TH SoXI 1 "July 27, 2008" "soxi" "Sound eXchange"
+.TH SoXI 1 "September 22, 2008" "soxi" "Sound eXchange"
 .SH NAME
 SoXI \- Sound eXchange Information, display sound file metadata
 .SH SYNOPSIS
-\fBsoxi\fR [\fB\-r\fR\^|\^\fB\-c\fR\^|\^\fB\-s\fR\^|\^\fB\-d\fR\^|\^\fB\-b\fR\^|\^\fB\-e\fR\^|\^\fB\-a\fR] \fIinfile1\fR ...
+\fBsoxi\fR [\fB\-V\fR[\fIlevel\fR]] [\fB\-t\fR\^|\^\fB\-r\fR\^|\^\fB\-c\fR\^|\^\fB\-s\fR\^|\^\fB\-d\fR\^|\^\fB\-b\fR\^|\^\fB\-e\fR\^|\^\fB\-a\fR] \fIinfile1\fR ...
 .SH DESCRIPTION
 Displays information from the header of a given audio file or files.
 Supported audio file types are listed and described in
@@ -43,8 +43,16 @@ Note however, that
 is intended for use only with audio files with a self-describing header.
 .SP
 By default, as much information as is available is shown.
-The options below may be used to select a single piece of information to show.
+An option may be given to select a single piece of information to show.
 .SH OPTIONS
+.TP
+\fB\-V\fR
+Set verbosity. See
+.BR sox (1)
+for details.
+.TP
+\fB\-t\fR
+Show detected file-type.
 .TP
 \fB\-r\fR
 Show sample-rate.
@@ -73,7 +81,6 @@ Please report any bugs found in this version of SoX to the mailing list
 .SH SEE ALSO
 .BR sox (1),
 .BR soxformat (7),
-.BR soxeffect (7),
 .BR libsox (3)
 .SP
 The SoX web site at http://sox.sourceforge.net

@@ -262,6 +262,7 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
 {
   static char const * const no_yes[] = {"no", "yes"};
   FILE * const output = sox_mode == sox_soxi? stdout : stderr;
+  char const * filetype = find_file_extension(ft->filename);
 
   if (sox_mode == sox_play && sox_globals.verbosity < 3) {
     play_file_info(ft, f, full);
@@ -270,7 +271,7 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
 
   fprintf(output, "\n%s: '%s'",
     ft->mode == 'r'? "Input File     " : "Output File    ", ft->filename);
-  if (strcmp(ft->filename, "-") == 0 || (ft->handler.flags & SOX_FILE_DEVICE))
+  if (!filetype || strcasecmp(filetype, ft->filetype))
     fprintf(output, " (%s)", ft->handler.names[0]);
   fprintf(output, "\n");
 
@@ -563,7 +564,7 @@ static void add_effect(sox_effects_chain_t *chain, char const *name,
     sox_fail("Failed creating effect.  Out of Memory?\n");
 
   if (effp->handler.flags & SOX_EFF_DEPRECATED)
-    sox_warn("effect `%s' is deprecated; see soxeffect(7) for an alternative", 
+    sox_warn("effect `%s' is deprecated; see sox(1) for an alternative", 
              effp->handler.name);
 
   if (sox_effect_options(effp, argc, argv) == SOX_EOF)
@@ -750,7 +751,7 @@ static void create_user_effects(void)
         sox_fail("Failed creating effect.  Out of Memory?\n");
 
       if (effp->handler.flags & SOX_EFF_DEPRECATED)
-        sox_warn("effect `%s' is deprecated; see soxeffect(7) for an alternative", 
+        sox_warn("effect `%s' is deprecated; see sox(1) for an alternative", 
                  effp->handler.name);
 
       /* The failing effect should have displayed an error message */
@@ -1967,8 +1968,8 @@ static void parse_options_and_filenames(int argc, char **argv)
     add_file(&opts, device_name(opts.filetype));
 }
 
-typedef enum {
-  full, rate, channels, samples, duration, bits, encoding, annotation} soxi_t;
+typedef enum {Full,
+  Type, Rate, Channels, Samples, Duration, Bits, Encoding, Annotation} soxi_t;
 
 static int soxi1(soxi_t * type, char * filename)
 {
@@ -1979,26 +1980,27 @@ static int soxi1(soxi_t * type, char * filename)
     return 1;
   ws = ft->signal.length / max(ft->signal.channels, 1);
   switch (*type) {
-    case rate: printf("%g\n", ft->signal.rate); break;
-    case channels: printf("%u\n", ft->signal.channels); break;
-    case samples: printf("%lu\n", (unsigned long)ws); break;
-    case duration: printf("%s\n", str_time((double)ws / max(ft->signal.rate, 1))); break;
-    case bits: printf("%u\n", ft->encoding.bits_per_sample); break;
-    case encoding: printf("%s\n", sox_encodings_info[ft->encoding.encoding].desc); break;
-    case annotation: if (ft->oob.comments) {
+    case Type: printf("%s\n", ft->filetype); break;
+    case Rate: printf("%g\n", ft->signal.rate); break;
+    case Channels: printf("%u\n", ft->signal.channels); break;
+    case Samples: printf("%lu\n", (unsigned long)ws); break;
+    case Duration: printf("%s\n", str_time((double)ws / max(ft->signal.rate, 1))); break;
+    case Bits: printf("%u\n", ft->encoding.bits_per_sample); break;
+    case Encoding: printf("%s\n", sox_encodings_info[ft->encoding.encoding].desc); break;
+    case Annotation: if (ft->oob.comments) {
       sox_comments_t p = ft->oob.comments;
       do printf("%s\n", *p); while (*++p);
     }
     break;
-    case full: display_file_info(ft, NULL, sox_false); break;
+    case Full: display_file_info(ft, NULL, sox_false); break;
   }
   return !!sox_close(ft);
 }
 
 static int soxi(int argc, char * const * argv)
 {
-  static char const opts[] = "rcsdbea?V::";
-  soxi_t type = full;
+  static char const opts[] = "trcsdbea?V::";
+  soxi_t type = Full;
   int opt, num_errors = 0;
 
   while ((opt = getopt(argc, argv, opts)) > 0) /* act only on last option */
@@ -2016,8 +2018,8 @@ static int soxi(int argc, char * const * argv)
         sox_globals.verbosity = (unsigned)i;
       }
     } else type = 1 + (strchr(opts, opt) - opts);
-  if (type > annotation)
-    printf("Usage: soxi [-V] [-r|-c|-s|-d|-b|-e|-a] infile1 ...\n");
+  if (type > Annotation)
+    printf("Usage: soxi [-V[level]] [-t|-r|-c|-s|-d|-b|-e|-a] infile1 ...\n");
   else for (; optind < argc; ++optind) {
     if (sox_is_playlist(argv[optind]))
       num_errors += (sox_parse_playlist((sox_playlist_callback_t)soxi1, &type, argv[optind]) != SOX_SUCCESS);
