@@ -399,19 +399,16 @@ size_t sox_stop_effect(sox_effect_t *effp)
  */
 void sox_delete_effect(sox_effect_t *effp)
 {
-    size_t clips;
-    unsigned f;
+  size_t clips;
+  unsigned f;
 
-    if ((clips = sox_stop_effect(effp)) != 0)
-        sox_warn("%s clipped %lu samples; decrease volume?",
-                 effp->handler.name, (unsigned long)clips);
-    for (f = 0; f < effp->flows; ++f)
-    {
-        effp[f].handler.kill(&effp[f]);
-        free(effp[f].priv);
-    }
-    free(effp);
-
+  if ((clips = sox_stop_effect(effp)) != 0)
+    sox_warn("%s clipped %lu samples; decrease volume?",
+        effp->handler.name, (unsigned long)clips);
+  effp->handler.kill(effp); /* N.B. only one kill; not one per flow */
+  for (f = 0; f < effp->flows; ++f)
+    free(effp[f].priv);
+  free(effp);
 }
 
 void sox_delete_effect_last(sox_effects_chain_t *chain)
