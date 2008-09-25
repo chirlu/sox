@@ -109,9 +109,7 @@ typedef struct {
   rg_mode replay_gain_mode;
 } file_t;
 
-#define MAX_INPUT_FILES 32
-#define MAX_FILES MAX_INPUT_FILES + 2 /* 1 output file plus record input */
-static file_t * files[MAX_FILES]; /* Array tracking input and output files */
+static file_t * * files; /* Array tracking input and output files */
 #define ofile files[file_count - 1]
 static size_t file_count = 0;
 static size_t input_count = 0;
@@ -397,7 +395,8 @@ static void balance_input(sox_sample_t * buf, size_t ws, file_t * f)
 /* The input combiner: contains one sample buffer per input file, but only
  * needed if is_parallel(combine_method) */
 typedef struct {
-  sox_sample_t *ibuf[MAX_INPUT_FILES];
+  sox_sample_t * * ibuf;
+  size_t *         ilen;
 } input_combiner_t;
 
 static int combiner_start(sox_effect_t *effp)
@@ -409,6 +408,7 @@ static int combiner_start(sox_effect_t *effp)
     progress_to_next_input_file(files[current_input]);
   else {
     ws = 0;
+    z->ibuf = lsx_malloc(input_count * sizeof(*z->ibuf));
     for (i = 0; i < input_count; i++) {
       z->ibuf[i] = lsx_malloc(sox_globals.bufsiz * sizeof(sox_sample_t));
       progress_to_next_input_file(files[i]);
@@ -416,6 +416,7 @@ static int combiner_start(sox_effect_t *effp)
     }
     input_wide_samples = ws; /* Output length is that of longest input file. */
   }
+  z->ilen = lsx_malloc(input_count * sizeof(*z->ilen));
   return SOX_SUCCESS;
 }
 
@@ -430,7 +431,6 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, size_t * osam
 {
   input_combiner_t * z = (input_combiner_t *) effp->priv;
   size_t ws, s, i;
-  size_t ilen[MAX_INPUT_FILES];
   size_t olen = 0;
 
   if (is_serial(combine_method)) {
@@ -451,16 +451,16 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, size_t * osam
   } /* is_serial */ else { /* else is_parallel() */
     sox_sample_t * p = obuf;
     for (i = 0; i < input_count; ++i) {
-      ilen[i] = sox_read_wide(files[i]->ft, z->ibuf[i], *osamp);
-      balance_input(z->ibuf[i], ilen[i], files[i]);
-      olen = max(olen, ilen[i]);
+      z->ilen[i] = sox_read_wide(files[i]->ft, z->ibuf[i], *osamp);
+      balance_input(z->ibuf[i], z->ilen[i], files[i]);
+      olen = max(olen, z->ilen[i]);
     }
     for (ws = 0; ws < olen; ++ws) { /* wide samples */
       if (combine_method == sox_mix || combine_method == sox_mix_power) {
         for (s = 0; s < effp->in_signal.channels; ++s, ++p) { /* sum samples */
           *p = 0;
           for (i = 0; i < input_count; ++i)
-            if (ws < ilen[i] && s < files[i]->ft->signal.channels) {
+            if (ws < z->ilen[i] && s < files[i]->ft->signal.channels) {
               /* Cast to double prevents integer overflow */
               double sample = *p + (double)z->ibuf[i][ws * files[i]->ft->signal.channels + s];
               *p = SOX_ROUND_CLIP_COUNT(sample, mixing_clips);
@@ -469,17 +469,17 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, size_t * osam
       } /* sox_mix */ else if (combine_method == sox_multiply)  {
         for (s = 0; s < effp->in_signal.channels; ++s, ++p) { /* multiple samples */
           i = 0;
-          *p = ws < ilen[i] && s < files[i]->ft->signal.channels?
+          *p = ws < z->ilen[i] && s < files[i]->ft->signal.channels?
             z->ibuf[i][ws * files[i]->ft->signal.channels + s] : 0;
           for (++i; i < input_count; ++i) {
-            double sample = *p * (-1. / SOX_SAMPLE_MIN) * (ws < ilen[i] && s < files[i]->ft->signal.channels? z->ibuf[i][ws * files[i]->ft->signal.channels + s] : 0);
+            double sample = *p * (-1. / SOX_SAMPLE_MIN) * (ws < z->ilen[i] && s < files[i]->ft->signal.channels? z->ibuf[i][ws * files[i]->ft->signal.channels + s] : 0);
             *p = SOX_ROUND_CLIP_COUNT(sample, mixing_clips);
           }
         }
       } /* sox_multiply */ else { /* sox_merge: like a multi-track recorder */
         for (i = 0; i < input_count; ++i)
           for (s = 0; s < files[i]->ft->signal.channels; ++s)
-            *p++ = (ws < ilen[i]) * z->ibuf[i][ws * files[i]->ft->signal.channels + s];
+            *p++ = (ws < z->ilen[i]) * z->ibuf[i][ws * files[i]->ft->signal.channels + s];
       } /* sox_merge */
     } /* wide samples */
     current_input += input_count;
@@ -1974,14 +1974,11 @@ static int add_file(file_t const * const opts, char const * const filename)
 {
   file_t * f = lsx_malloc(sizeof(*f));
 
-  if (file_count >= MAX_FILES) {
-    sox_fail("too many files; maximum is %d input files (and 1 output file)", MAX_INPUT_FILES);
-    exit(1);
-  }
   *f = *opts;
   if (!filename)
     usage("missing filename"); /* No return */
   f->filename = lsx_strdup(filename);
+  files = lsx_realloc(files, (file_count + 1) * sizeof(*files));
   files[file_count++] = f;
   return 0;
 }
