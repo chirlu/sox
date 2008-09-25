@@ -24,6 +24,7 @@
   FORMAT(avr)
   FORMAT(cdr)
   FORMAT(cvsd)
+  FORMAT(cvu)
   FORMAT(dat)
   FORMAT(dvms)
   FORMAT(f4)

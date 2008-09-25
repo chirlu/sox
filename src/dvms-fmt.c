@@ -22,7 +22,7 @@ SOX_FORMAT_HANDLER(dvms)
   static char const * const names[] = {"dvms", "vms", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_CVSD, 1, 0, 0};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
-    "Continuously Variable Slope Delta modulation with header",
+    "MIL Std 188 113 Continuously Variable Slope Delta modulation with header",
     names, SOX_FILE_MONO,
     sox_dvmsstartread, sox_cvsdread, sox_cvsdstopread,
     sox_dvmsstartwrite, sox_cvsdwrite, sox_dvmsstopwrite,
