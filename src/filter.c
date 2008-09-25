@@ -195,11 +195,11 @@ static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
                 char *p;
                 p = argv[0];
                 if (*p != '-') {
-                        f->freq1 = strtol(p, &p, 10);
+                        f->freq1 = lsx_parse_frequency(p, &p);
                 }
                 if (*p == '-') {
                         f->freq0 = f->freq1;
-                        f->freq1 = strtol(p+1, &p, 10);
+                        f->freq1 = lsx_parse_frequency(p+1, &p);
                 }
                 if (*p) f->freq1 = f->freq0 = 0;
         }
