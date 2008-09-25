@@ -41,6 +41,7 @@ File formats:
 
   o Fix WAV write on 64-bit arch.  (robs)
   o Fix writing PRC ADPCM files.  (Silas Brown)
+  o Unfiltered CVSD; supports any bit-rate.  (robs)
 
 Effects:
 

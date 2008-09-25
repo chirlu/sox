@@ -224,6 +224,15 @@ This format is sometimes used with bit-reversed samples\*mthe
 .B \-X
 format option can be used to set the bit-order.
 .TP
+\&\fB.cvu\fR
+Continuously Variable Slope Delta modulation (unfiltered).
+This is an alternative handler for CVSD that is unfiltered but can
+be used with any bit-rate.  E.g.
+.EX
+	sox infile outfile.cvu rate 28k
+	play -r 28k outfile.cvu filter -4k
+.EX
+.TP
 .B .dat
 Text Data files.
 These files contain a textual representation of the
