@@ -81,13 +81,13 @@ how SoX might be used.  The simple
 .EE
 translates an audio file in Sun AU format to a Microsoft WAV file, whilst
 .EX
-	sox recital.au -r 12k -1 -c 1 recital.wav vol 0.7 dither
+	sox recital.au -r 12k -b 8 -c 1 recital.wav vol 0.7 dither
 .EE
 performs the same format translation, but also changes the audio
 sampling rate & sample size, down-mixes to mono, and applies
 the \fBvol\fR and \fBdither\fR effects.
 .EX
-	sox -r 8k -u -1 -c 1 voice-memo.raw voice-memo.wav
+	sox -r 8k -u -b 8 -c 1 voice-memo.raw voice-memo.wav
 .EE
 converts `raw' (a.k.a. `headerless') audio to a self-descibing file format,
 .EX
@@ -141,11 +141,11 @@ Tape and many computer systems use 48\ kHz; professional audio systems
 typically use 96 or 192 kHz.
 .TP
 sample size
-The number of bits used to store each sample.  The most popular is 16-bit
-(two bytes); 8-bit (one byte) was popular in the early days of computer
-audio, and is still used in telephony; 24-bit (three bytes) is used,
-primarily as an intermediate format, in the professional audio arena.  Other
-sizes are also used.
+The number of bits used to store each sample.  The most popular is
+16-bit (two bytes); 8-bit (one byte) was popular in the early days of
+computer audio, and is still used in telephony; 24-bit (three bytes) is
+used, primarily as an intermediate format, in the professional audio
+arena.  Other sizes are also used.
 .TP
 data encoding
 The way in which each audio sample is represented (or `encoded').  Some
@@ -153,8 +153,8 @@ encodings have variants with different byte-orderings or bit-orderings;
 some `compress' the audio data, i.e. the stored audio data takes up less
 space (i.e. disk-space or transmission band-width) than the other format
 parameters and the number of samples would imply.  Commonly-used
-encoding types include floating-point, \(*m-law, ADPCM, signed linear,
-and FLAC.
+encoding types include floating-point, \(*m-law, ADPCM, signed-integer
+PCM, and FLAC.
 .TP
 channels
 The number of audio channels contained in the file.  One (`mono') and two
@@ -755,7 +755,18 @@ immediately precede on the command line and are used mainly when
 working with headerless file formats or when specifying a format
 for the output file that is different to that of the input file.
 .TP
-\fB\-c\fR, \fB\-\-channels\fR \fICHANNELS\fR
+\fB\-b\fR \fIBITS\fR, \fB\-\-bits\fR \fIBITS\fR
+The number of bits in each encoded sample.
+Not applicable to complex encodings, e.g. MP3, FLAC.
+Not necessary with encodings that have a fixed number of bits, e.g.
+A/\(*m-law, ADPCM.
+.TP
+\fB\-1\fR\^/\fB\-2\fR\^/\fB\-3\fR\^/\fB\-4\fR\^/\fB\-8\fR
+The number of bytes in each encoded sample.  Aliases for
+\fB\-b 8\fR/\fB\-b 16\fR/\fB\-b 24\fR/\fB\-b 32\fR/\fB\-b 64\fR
+respectively.
+.TP
+\fB\-c\fR \fICHANNELS\fR, \fB\-\-channels\fR \fICHANNELS\fR
 The number of audio channels in the audio file; this can be any number
 greater than zero.  To cause the output file to have a different number of
 channels than the input file, include this option with the output file
@@ -774,6 +785,68 @@ determine what will be the number of output channels; in this case, neither
 this option nor the
 .B mixer
 effect is necessary.
+.TP
+\fB\-e \fIENCODING\fR, \fB\-\-encoding\fR \fIENCODING\fR
+The audio encoding type.
+.RS
+.IP \fBsigned-integer\fR
+PCM data stored as signed (`two's complement') integers.  Commonly used
+with a 16 or 24 -bit encoding size.
+A value of 0 represents minimum signal power.
+.IP \fBunsigned-integer\fR
+PCM data stored as signed (`two's complement') integers.  Commonly used
+with an 8-bit encoding size.  A value of 0 represents maximum signal
+power.
+.IP \fBfloating-point\fR
+PCM data stored as IEEE 753 single precision (32-bit) or double
+precision (64-bit) floating-point ('real') numbers.
+A value of 0 represents minimum signal power.
+.IP \fBa-law\fR
+International telephony standard for logarithmic encoding to 8 bits per
+sample.  It has a precision equivalent to roughly 13-bit PCM and is
+sometimes encoded with reversed bit-ordering (see the
+.B \-X
+option).
+.IP \fBu-law,\ mu-law\fR
+North American telephony standard for logarithmic encoding to 8 bits per
+sample.  A.k.a \(*m-law.  It has a precision equivalent to roughly
+14-bit PCM and is
+sometimes encoded with reversed bit-ordering (see the
+.B \-X
+option).
+.IP \fBoki-adpcm\fR
+OKI (a.k.a. VOX, Dialogic, or Intel) 4-bit ADPCM;
+it has a precision equivalent to roughly 12-bit PCM.
+ADPCM is a form of audio compression that has a good
+compromise between audio quality and encoding/decoding speed.
+.IP \fBima-adpcm\fR
+IMA (a.k.a. DVI) 4-bit ADPCM;
+it has a precision equivalent to roughly 13-bit PCM.
+.IP \fBms-adpcm\fR
+Microsoft 4-bit ADPCM; it has a precision equivalent to roughly 14-bit
+PCM.
+.IP \fBgsm-full-rate\fR
+GSM is currently used for the vast majority of the world's digital
+wireless telephone calls.  It utilises several audio
+formats with different bit-rates and associated speech quality.
+SoX has support for GSM's original 13kbps `Full Rate' audio format.
+It is usually CPU intensive to work with GSM audio.
+.RE
+.TP
+\ 
+Encoding names can be abbreviated where this would not be ambiguous;
+e.g. 'unsigned-integer' can be given as 'un', but not 'u' (ambiguous
+with 'u-law').  For reasons of forward compatibility, using
+abbreviations in scripts is not recommended.
+.SP
+Note that explicitly specifying other encoding types (e.g. MP3, FLAC)
+is not necessary since they can be inferred from the file type or
+header.
+.TP
+\fB\-s\fR\^/\fB\-u\fR\^/\fB\-f\fR\^/\fB\-A\fR\^/\fB\-U\fR\^/\fB\-o\fR\^/\fB\-i\fR\^/\fB\-a\fR\^/\fB\-g\fR
+Aliases for specifying the encoding types
+\fBsigned-integer\fR/\fBunsigned-integer\fR/\fBfloating-point\fR/\fBmu-law\fR/\fBa-law\fR/\fBoki-adpcm\fR/\fBima-adpcm\fR/\fBms-adpcm\fR/\fBgsm-full-rate\fR
+respectively.
 .TP
 \fB\-r, \fB\-\-rate\fR \fIRATE\fR[\fBk\fR]
 Gives the sample rate in Hz (or kHz if appended with `k') of the file.
@@ -855,44 +928,6 @@ sometimes useful with a few (mostly headerless) formats.
 See also N.B. in section on
 .B \-x
 above.
-.TP
-\fB\-s\fR\^/\fB\-u\fR\^/\fB\-U\fR\^/\fB\-A\fR\^/\fB\-a\fR\^/\fB\-i\fR\^/\fB\-g\fR\^/\fB\-f\fR
-The audio data encoding is signed linear (2's complement),
-unsigned linear, \(*m-law (logarithmic), A-law (logarithmic),
-ADPCM, IMA-ADPCM, GSM, or floating-point.
-.SP
-\(*m-law (or mu-law) and A-law are the U.S. and
-international standards for logarithmic telephone audio compression.
-When uncompressed \(*m-law has roughly the precision of 14-bit PCM audio
-and A-law has roughly the precision of 13-bit PCM audio.
-.SP
-A-law and \(*m-law are sometimes encoded using reversed bit-ordering
-(i.e. MSB becomes LSB).  If you need this support then you can use the
-.B \-X
-option or the pseudo
-file types of `.la' and `.lu' to inform SoX of the encoding.  See
-supported file types for more information.
-.SP
-ADPCM is a form of audio compression that has a good
-compromise between good audio quality and fast encoding/decoding
-time.  It is used for telephone audio compression and places were
-full fidelity is not as important.  When uncompressed it has roughly
-the precision of 16-bit PCM audio.  Popular version of ADPCM include
-G.726, MS ADPCM, and IMA ADPCM.  The \fB\-a\fR flag has different meanings
-in different file handlers.  In \fB.wav\fR files it represents MS ADPCM
-files, in all others it means G.726 ADPCM.
-IMA ADPCM is a specific form of ADPCM compression, slightly simpler
-and slightly lower fidelity than Microsoft's flavor of ADPCM.
-IMA ADPCM is also called DVI ADPCM.
-.SP
-GSM is currently used for the vast majority of the world's digital
-wireless telephone calls.  It utilises several audio
-formats with different bit-rates and associated speech quality.
-SoX has support for GSM's original 13kbps `Full Rate' audio format.
-It is usually CPU intensive to work with GSM audio.
-.TP
-\fB\-1\fR\^/\fB\-2\fR\^/\fB\-3\fR\^/\fB\-4\fR\^/\fB\-8\fR
-The sample datum size is 1, 2, 3, 4, or 8 bytes; i.e. 8, 16, 24, 32, or 64 bits.
 .SS Output File Format Options
 These options apply only to the output file and may precede only the output
 filename on the command line.
@@ -1296,6 +1331,7 @@ See also the \fBbass\fR and \fBtreble\fR shelving equalisation effects.
 Delay one or more audio channels.
 .I length
 can specify a time or, if appended with an `s', a number of samples.
+Do not specify both time and samples delays in the same command.
 For example,
 .B delay 1\*d5 0 0\*d5
 delays the first channel by 1\*d5 seconds, the third channel by 0\*d5
@@ -1506,10 +1542,13 @@ T}
 .DT
 .TP
 \fBgain \fIdB-gain\fR
-Apply an amplification or an attenuation to the audio signal.
-This is an alias for the
+Apply an amplification or an attenuation to the audio signal.  The
+signal level is adjusted by the given number of dB\*mpositive amplifies
+(beware of Clipping), negative attenuates.
+.SP
+See also the
 .B vol
-effect\*mhandy for those who prefer to work in dBs by default.
+effect.
 .TP
 \fBhighpass\fR\^|\^\fBlowpass\fR [\fB\-1\fR|\fB\-2\fR] \fIfrequency\fR[\fBk\fR]\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR\^|\^\fBk\fR]]
 Apply a high-pass or low-pass filter with 3dB point \fIfrequency\fR.
@@ -1979,16 +2018,16 @@ increases to 85%.
 .SP
 Examples:
 .EX
-	sox input.wav -2 output.wav rate -s -a 44100 dither
+	sox input.wav -b 16 output.wav rate -s -a 44100 dither
 .EE
 default (high) quality resampling; overrides: steep filter, allow
-aliasing; to 44\*d1kHz sample rate; dither output to 2-byte (16-bit) WAV
+aliasing; to 44\*d1kHz sample rate; dither output to 16-bit WAV
 file.
 .EX
-	sox input.wav -3 output.aiff rate -v -L -b 90 48k
+	sox input.wav -b 24 output.aiff rate -v -L -b 90 48k
 .EE
 very high quality resampling; overrides: linear phase, band-width 90%;
-to 48k sample rate; store output to 3-byte (24-bit) AIFF file. 
+to 48k sample rate; store output to 24-bit AIFF file. 
 .TS
 center;
 c8 c8 c.
@@ -2884,17 +2923,17 @@ This is just an alias for the
 effect.
 .TP
 \fBpan \fIdirection\fR
-Pan the audio from one channel to another.  This is done by
-changing the volume of the input channels so that it fades out on one
-channel and fades-in on another.  If the number of input channels is
-different then the number of output channels then this effect tries to
-intelligently handle this.  For instance, if the input contains 1 channel
-and the output contains 2 channels, then it will create the missing channel
-itself.  The
+Mix the audio from one channel to another.
+Use
+.B mixer
+or
+.B remix
+instead of this effect.
+.SP
+The
 .I direction
 is a value from \-1 to 1.  \-1 represents
-far left and 1 represents far right.  Numbers in between will start the
-pan effect without totally muting the opposite channel.
+far left and 1 represents far right.
 .TP
 \fBpolyphase\fR [\fB\-w nut\fR\^|\^\fBham\fR] [\fB\-width \fIn\fR] [\fB\-cut-off \fIc\fR]
 Change the sampling rate using `polyphase interpolation', a DSP algorithm.

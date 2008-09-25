@@ -1393,58 +1393,59 @@ static void usage(char const * message)
 {
   size_t i;
   static char const * lines[] = {
-"SPECIAL FILENAMES:",
-"-               stdin (infile) or stdout (outfile)",
-"-d              use the default audio device (where available)",
-"-n              use the null file handler; e.g. with synth or stat effect",
+"SPECIAL FILENAMES (infile, outfile):",
+"-                        Pipe/redirect input/output (stdin/stdout); use with -t",
+"-d                       Use the default audio device (where available)",
+"-n                       Use the `null' file handler; e.g. with synth effect",
+"http://server/file       Use the given URL as input file (where supported)",
 "",
 "GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):",
-"--buffer BYTES  set the size of all processing buffers (default 8192)",
-"--combine concatenate  concatenate multiple input files (default for sox, rec)",
-"--combine sequence  sequence multiple input files (default for play)",
-"--effects-file FILENAME  file containing effects and options",
-"-h, --help      display version number and usage information",
-"--help-effect NAME  display usage of specified effect; use `all' to display all",
-"--help-format NAME  display info on specified format; use `all' to display all",
-"--input-buffer BYTES  override the input buffer size (default: as --buffer)",
-"--interactive   prompt to overwrite output file",
-"-m, --combine mix  mix multiple input files (instead of concatenating)",
-"-M, --combine merge  merge multiple input files (instead of concatenating)",
-"--output single    write to single output file (default)",
-"--output multiple  write to multiple output file",
-"--plot gnuplot|octave  generate script to plot response of filter effect",
-"-q, --no-show-progress  run in quiet mode; opposite of -S",
-"--replay-gain track|album|off  default: off (sox, rec), track (play)",
-"-R              use default random numbers (same on each run of SoX)",
-"-S, --show-progress  display progress while processing audio data",
-"--version       display version number of SoX and exit",
-"-V[LEVEL]       increment or set verbosity level (default 2); levels are:",
-"                  1: failure messages",
-"                  2: warnings",
-"                  3: details of processing",
-"                  4-6: increasing levels of debug messages",
-"",
+"--buffer BYTES           Set the size of all processing buffers (default 8192)",
+"--combine concatenate    Concatenate multiple input files (default for sox, rec)",
+"--combine sequence       Sequence multiple input files (default for play)",
+"--effects-file FILENAME  File containing effects and options",
+"-h, --help               Display version number and usage information",
+"--help-effect NAME       Show usage of effect NAME, or NAME=all for all",
+"--help-format NAME       Show info on format NAME, or NAME=all for all",
+"--input-buffer BYTES     Override the input buffer size (default: as --buffer)",
+"--interactive            Prompt to overwrite output file",
+"-m, --combine mix        Mix multiple input files (instead of concatenating)",
+"-M, --combine merge      Merge multiple input files (instead of concatenating)",
+"--output single          Write to single output file (default)",
+"--output multiple        Write to multiple output file",
+"--plot gnuplot|octave    Generate script to plot response of filter effect",
+"-q, --no-show-progress   Run in quiet mode; opposite of -S",
+"--replay-gain track|album|off  Default: off (sox, rec), track (play)",
+"-R                       Use default random numbers (same on each run of SoX)",
+"-S, --show-progress      Display progress while processing audio data",
+"--version                Display version number of SoX and exit",
+"-V[LEVEL]                Increment or set verbosity level (default 2); levels:",
+"                           1: failure messages",
+"                           2: warnings",
+"                           3: details of processing",
+"                           4-6: increasing levels of debug messages",
 "FORMAT OPTIONS (fopts):",
 "Input file format options need only be supplied for files that are headerless.",
 "Output files will have the same format as the input file where possible and not",
 "overriden by any of various means including providing output format options.",
 "",
-"-c, --channels CHANNELS  number of channels of audio data; e.g. 2 = stereo",
-"-C, --compression FACTOR  compression factor for output format",
-"--add-comment TEXT  Append output file comment",
-"--comment TEXT  Specify comment text for the output file",
-"--comment-file FILENAME  file containing comment text for the output file",
-"--endian little|big|swap  set endianness; swap means opposite to default",
-"-r, --rate RATE  sample rate of audio",
-"-t, --type FILETYPE  file type of audio",
-"-x              invert auto-detected endianness",
-"-N, --reverse-nibbles  nibble-order",
-"-X, --reverse-bits  bit-order of data",
-"-B/-L           force endianness to big/little",
-"-s/-u/-U/-A/    sample encoding: signed/unsigned/u-law/A-law",
-"  -a/-i/-g/-f   ADPCM/IMA ADPCM/GSM/floating point",
-"-1/-2/-3/-4/-8  sample size in bytes",
-"-v, --volume FACTOR  input file volume adjustment factor (real number)",
+"-v|--volume FACTOR       Input file volume adjustment factor (real number)",
+"-t|--type FILETYPE       File type of audio",
+"-s/-u/-f/-U/-A/-i/-a/-g  Encoding type=signed-integer/unsigned-integer/floating-",
+"                         point/mu-law/a-law/ima-adpcm/ms-adpcm/gsm-full-rate",
+"-e|--encoding ENCODING   Set encoding (ENCODING in above list)",
+"-b|--bits BITS           Encoded sample size in bits",
+"-1/-2/-3/-4/-8           Encoded sample size in bytes",
+"-N|--reverse-nibbles     Encoded nibble-order",
+"-X|--reverse-bits        Encoded bit-order",
+"--endian little|big|swap Encoded byte-order; swap means opposite to default",
+"-L/-B/-x                 Short options for the above",
+"-c|--channels CHANNELS   Number of channels of audio data; e.g. 2 = stereo",
+"-r|--rate RATE           Sample rate of audio",
+"-C|--compression FACTOR  Compression factor for output format",
+"--add-comment TEXT       Append output file comment",
+"--comment TEXT           Specify comment text for the output file",
+"--comment-file FILENAME  File containing comment text for the output file",
 ""};
 
   display_SoX_version(stdout);
@@ -1459,7 +1460,7 @@ static void usage(char const * message)
     puts(lines[i]);
   display_supported_formats();
   display_supported_effects();
-  printf("effopts: effect dependent; see --help-effect\n");
+  printf("EFFECT OPTIONS (effopts): effect dependent; see --help-effect\n");
   exit(message != NULL);
 }
 
@@ -1593,7 +1594,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
   free(text);
 }
 
-static char *getoptstr = "+ac:dfghimnoqr:st:uv:xABC:LMNRSTUV::X12348";
+static char *getoptstr = "+ab:c:de:fghimnoqr:st:uv:xABC:LMNRSTUV::X12348";
 
 static struct option long_options[] =
   {
@@ -1613,8 +1614,10 @@ static struct option long_options[] =
     {"output"          , required_argument, NULL, 0},
     {"effects-file"    , required_argument, NULL, 0},
 
+    {"bits"            , required_argument, NULL, 'b'},
     {"channels"        , required_argument, NULL, 'c'},
     {"compression"     , required_argument, NULL, 'C'},
+    {"encoding"        , required_argument, NULL, 'e'},
     {"help"            ,       no_argument, NULL, 'h'},
     {"no-show-progress",       no_argument, NULL, 'q'},
     {"rate"            , required_argument, NULL, 'r'},
@@ -1626,6 +1629,15 @@ static struct option long_options[] =
 
     {NULL, 0, NULL, 0}
   };
+
+static int opt_index(int val)
+{
+  int i;
+  for (i = 0; long_options[i].name; ++i)
+    if (long_options[i].val == val)
+      return i;
+  return -1;
+}
 
 static enum_item const combine_methods[] = {
   ENUM_ITEM(sox_,sequence)
@@ -1653,6 +1665,24 @@ static enum_item const plot_methods[] = {
   ENUM_ITEM(sox_plot_,off)
   ENUM_ITEM(sox_plot_,octave)
   ENUM_ITEM(sox_plot_,gnuplot)
+  {0, 0}};
+
+enum {
+  encoding_signed_integer, encoding_unsigned_integer, encoding_floating_point,
+  encoding_ms_adpcm, encoding_ima_adpcm, encoding_oki_adpcm,
+  encoding_gsm_full_rate, encoding_u_law, encoding_a_law};
+
+static enum_item const encodings[] = {
+  {"signed-integer", encoding_signed_integer},
+  {"unsigned-integer", encoding_unsigned_integer},
+  {"floating-point", encoding_floating_point},
+  {"ms-adpcm", encoding_ms_adpcm},
+  {"ima-adpcm", encoding_ima_adpcm},
+  {"oki-adpcm", encoding_oki_adpcm},
+  {"gsm-full-rate", encoding_gsm_full_rate},
+  {"u-law", encoding_u_law},
+  {"mu-law", encoding_u_law},
+  {"a-law", encoding_a_law},
   {0, 0}};
 
 static int enum_option(int option_index, enum_item const * items)
@@ -1826,6 +1856,33 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       if (sscanf(optarg, "%lf %c", &f->encoding.compression, &dummy) != 1) {
         sox_fail("Compression value `%s' is not a number", optarg);
         exit(1);
+      }
+      break;
+
+    case 'b':
+      if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
+        sox_fail("Bits value `%s' is not a positive integer", optarg);
+        exit(1);
+      }
+      f->encoding.bits_per_sample = i;
+      break;
+
+    case 'e': switch (enum_option(opt_index('e'), encodings)) {
+      case encoding_signed_integer:   f->encoding.encoding = SOX_ENCODING_SIGN2;     break;
+      case encoding_unsigned_integer: f->encoding.encoding = SOX_ENCODING_UNSIGNED;  break;
+      case encoding_floating_point:   f->encoding.encoding = SOX_ENCODING_FLOAT;     break;
+      case encoding_ms_adpcm:         f->encoding.encoding = SOX_ENCODING_MS_ADPCM;  break;
+      case encoding_ima_adpcm:        f->encoding.encoding = SOX_ENCODING_IMA_ADPCM; break;
+      case encoding_oki_adpcm:        f->encoding.encoding = SOX_ENCODING_OKI_ADPCM; break;
+      case encoding_gsm_full_rate:           f->encoding.encoding = SOX_ENCODING_GSM;       break;
+      case encoding_u_law: f->encoding.encoding = SOX_ENCODING_ULAW;
+        if (f->encoding.bits_per_sample == 0)
+          f->encoding.bits_per_sample = 8;
+        break;
+      case encoding_a_law: f->encoding.encoding = SOX_ENCODING_ALAW;
+        if (f->encoding.bits_per_sample == 0)
+          f->encoding.bits_per_sample = 8;
+        break;
       }
       break;
 
