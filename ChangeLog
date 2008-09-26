@@ -56,7 +56,7 @@ Effects:
     imbalance.  (robs)
   o New --effects-file option to read effects and arguments from
     a file instead of command line. (cbagwell)
-  o `filter' effect now supports --plot octave.  (robs)
+  o `filter' effect now supports --plot.  (robs)
   o Improved documentation for the `stat' effect.  (robs)
   o Fix broken audio pass-through with noiseprof effect.  (robs)
   o Fix graph legend display when using --plot octave.  (robs)
