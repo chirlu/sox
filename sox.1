@@ -757,7 +757,7 @@ for the output file that is different to that of the input file.
 .TP
 \fB\-b\fR \fIBITS\fR, \fB\-\-bits\fR \fIBITS\fR
 The number of bits in each encoded sample.
-Not applicable to complex encodings, e.g. MP3, FLAC.
+Not applicable to complex encodings, e.g. MP3, GSM.
 Not necessary with encodings that have a fixed number of bits, e.g.
 A/\(*m-law, ADPCM.
 .TP
@@ -2479,6 +2479,12 @@ For example, let's see what the spectrogram of a swept triangular wave looks
 like:
 .EX
 	sox -n -n synth 6 tri 10k:14k spectrogram -z 100 -w k
+.EE
+Append the following to the `chime' example in the
+.B delay
+effect to see its spectrogram:
+.EX
+	rate 2k spectrogram -x 200 -Z -15 -w k
 .EE
 For the ability to perform off-line processing of spectral data, see the
 .B stat
