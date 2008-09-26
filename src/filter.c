@@ -199,6 +199,13 @@ static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
         return (SOX_SUCCESS);
 }
 
+static int p2(int n)
+{
+  int N;
+  for (N = 1; n; n >>= 1, N <<= 1);
+  return max(N, 1024);
+}
+
 /*
  * Prepare processing.
  */
@@ -268,6 +275,34 @@ static int sox_filter_start(sox_effect_t * effp)
         f->Nwin = 2*Xh + 1;  /* not really used afterwards */
         f->Xh = Xh;
         f->Xt = Xh;
+
+   if (effp->global_info->plot == sox_plot_gnuplot) {
+     int N = p2(2 * Xh + 1);
+     double * h = lsx_calloc(N, sizeof(*h));
+     double * H = lsx_malloc((N / 2 + 1) * sizeof(*H));
+     for (i = 1; i < Xh + 1; ++i)
+       h[i - 1] = f->Fp[Xh + 1 - i];
+     for (i = 0; i < Xh + 1; ++i)
+       h[Xh + i] = f->Fp[i];
+     lsx_power_spectrum(N, h, H);
+     free(h);
+     printf(
+       "# gnuplot file\n"
+       "set title 'SoX effect: filter frequency=%g-%g'\n"
+       "set xlabel 'Frequency (Hz)'\n"
+       "set ylabel 'Amplitude Response (dB)'\n"
+       "set grid xtics ytics\n"
+       "set key off\n"
+       "plot '-' with lines\n"
+       , f->freq0, f->freq1);
+     for (i = 0; i <= N/2; ++i)
+       printf("%g %g\n", i * effp->in_signal.rate / N, 10 * log10(H[i]));
+     printf(
+       "e\n"
+       "pause -1 'Hit return to continue'\n");
+     free(H);
+     return SOX_EOF;
+   }
 
    if (effp->global_info->plot == sox_plot_octave) {
      printf("%% GNU Octave file (may also work with MATLAB(R) )\nb=[");
