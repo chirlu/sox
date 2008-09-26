@@ -35,8 +35,8 @@
 /* Private data for Lerp via LCM file */
 typedef struct {
         sox_rate_t rate;
-        sox_sample_t freq0;/* low  corner freq */
-        sox_sample_t freq1;/* high corner freq */
+        double freq0;/* low  corner freq */
+        double freq1;/* high corner freq */
         double beta;/* >2 is kaiser window beta, <=2 selects nuttall window */
         long Nwin;
         double *Fp;/* [Xh+1] Filter coefficients */
@@ -52,9 +52,6 @@ int lsx_makeFilter(double Fp[], long Nwing, double Froll, double Beta, long Num,
  *
  * reference: "Digital Filters, 2nd edition"
  *            R.W. Hamming, pp. 178-179
- *
- * Izero() computes the 0th order modified bessel function of the first kind.
- *    (Needed to compute Kaiser window).
  *
  * LpFilter() computes the coeffs of a Kaiser-windowed low pass filter with
  *    the following characteristics:
@@ -86,25 +83,6 @@ int lsx_makeFilter(double Fp[], long Nwing, double Froll, double Beta, long Num,
  */
 
 
-#define IzeroEPSILON 1E-21               /* Max error acceptable in Izero */
-
-static double Izero(double x)
-{
-   double sum, u, halfx, temp;
-   long n;
-
-   sum = u = n = 1;
-   halfx = x/2.0;
-   do {
-      temp = halfx/(double)n;
-      n += 1;
-      temp *= temp;
-      u *= temp;
-      sum += u;
-   } while (u >= IzeroEPSILON*sum);
-   return(sum);
-}
-
 static void LpFilter(double *c, long N, double frq, double Beta, long Num)
 {
    long i;
@@ -117,15 +95,15 @@ static void LpFilter(double *c, long N, double frq, double Beta, long Num)
    }
 
    if (Beta>2) { /* Apply Kaiser window to filter coeffs: */
-      double IBeta = 1.0/Izero(Beta);
+      double IBeta = 1.0/lsx_bessel_I_0(Beta);
       for (i=1; i<N; i++) {
          double x = (double)i / (double)(N);
-         c[i] *= Izero(Beta*sqrt(1.0-x*x)) * IBeta;
+         c[i] *= lsx_bessel_I_0(Beta*sqrt(1.0-x*x)) * IBeta;
       }
    } else { /* Apply Nuttall window: */
       for(i = 0; i < N; i++) {
          double x = M_PI*i / N;
-         c[i] *= 0.36335819 + 0.4891775*cos(x) + 0.1365995*cos(2*x) + 0.0106411*cos(3*x);
+         c[i] *= 0.3635819 + 0.4891775*cos(x) + 0.1365995*cos(2*x) + 0.0106411*cos(3*x);
       }
    }
 }
@@ -203,7 +181,7 @@ static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
                 }
                 if (*p) f->freq1 = f->freq0 = 0;
         }
-        sox_debug("freq: %d-%d", f->freq0, f->freq1);
+        sox_debug("freq: %g-%g", f->freq0, f->freq1);
         if (f->freq0 == 0 && f->freq1 == 0)
           return lsx_usage(effp);
 
@@ -217,7 +195,7 @@ static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
         if ((n >= 3) && !sscanf(argv[2], "%lf", &f->beta))
           return lsx_usage(effp);
 
-        sox_debug("filter opts: %d-%d, window-len %ld, beta %f", f->freq0, f->freq1, f->Nwin, f->beta);
+        sox_debug("filter opts: %g-%g, window-len %ld, beta %f", f->freq0, f->freq1, f->Nwin, f->beta);
         return (SOX_SUCCESS);
 }
 
@@ -239,7 +217,7 @@ static int sox_filter_start(sox_effect_t * effp)
 
         if ((f->freq0 < 0) || (f->freq0 > f->freq1))
         {
-                sox_fail("filter: low(%d),high(%d) parameters must satisfy 0 <= low <= high <= %g",
+                sox_fail("filter: low(%g),high(%g) parameters must satisfy 0 <= low <= high <= %g",
                                         f->freq0, f->freq1, f->rate/2);
                 return (SOX_EOF);
         }
@@ -285,11 +263,30 @@ static int sox_filter_start(sox_effect_t * effp)
 
         Xh -= 1;       /* Xh = 0 can only happen if filter was identity 0-Nyquist */
         if (Xh<=0)
-                sox_warn("filter: adjusted freq %d-%d is identity", f->freq0, f->freq1);
+                sox_warn("filter: adjusted freq %g-%g is identity", f->freq0, f->freq1);
 
         f->Nwin = 2*Xh + 1;  /* not really used afterwards */
         f->Xh = Xh;
         f->Xt = Xh;
+
+   if (effp->global_info->plot == sox_plot_octave) {
+     printf("%% GNU Octave file (may also work with MATLAB(R) )\nb=[");
+     for (i = 1; i < Xh + 1; ++i)
+       printf("%24.16e\n", f->Fp[Xh + 1 - i]);
+     for (i = 0; i < Xh + 1; ++i)
+       printf("%24.16e\n", f->Fp[i]);
+     printf("];\n"
+       "[h,w]=freqz(b);\n"
+       "plot(%g*w/pi,20*log10(h))\n"
+       "title('SoX effect: filter frequency=%g-%g')\n"
+       "xlabel('Frequency (Hz)')\n"
+       "ylabel('Amplitude Response (dB)')\n"
+       "grid on\n"
+       "disp('Hit return to continue')\n"
+       "pause\n"
+       , effp->in_signal.rate / 2, f->freq0, f->freq1);
+     return SOX_EOF;
+   }
 
         f->X = lsx_malloc(sizeof(double) * (2*BUFFSIZE + 2*Xh));
         f->Y = f->X + BUFFSIZE + 2*Xh;

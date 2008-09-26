@@ -36,11 +36,7 @@ sox_bool sox_compandt_show(sox_compandt_t * t, sox_plot_t plot)
   if (plot == sox_plot_octave) {
     printf(
       "%% GNU Octave file (may also work with MATLAB(R) )\n"
-      "title('SoX effect: compand')\n"
-      "xlabel('Input level (dB)')\n"
-      "ylabel('Output level (dB)')\n"
       "in=linspace(-99.5,0,200);\n"
-      "grid on\n"
       "out=[");
     for (i = -199; i <= 0; ++i) {
       double in = i/2.;
@@ -49,8 +45,12 @@ sox_bool sox_compandt_show(sox_compandt_t * t, sox_plot_t plot)
     }
     printf(
       "];\n"
-      "%%plot(in,out) %% hmm.. doesn't work :(\n"
-      "semilogx(exp(in),out)\n"
+      "plot(in,out)\n"
+      "title('SoX effect: compand')\n"
+      "xlabel('Input level (dB)')\n"
+      "ylabel('Output level (dB)')\n"
+      "grid on\n"
+      "disp('Hit return to continue')\n"
       "pause\n");
     return sox_false;
   }

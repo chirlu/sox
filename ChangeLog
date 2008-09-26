@@ -39,9 +39,9 @@ Newly deprecated features (to be removed in future):
 
 File formats:
 
+  o New unfiltered CVSD; supports any bit-rate.  (robs)
   o Fix WAV write on 64-bit arch.  (robs)
   o Fix writing PRC ADPCM files.  (Silas Brown)
-  o Unfiltered CVSD; supports any bit-rate.  (robs)
 
 Effects:
 
@@ -54,10 +54,12 @@ Effects:
     compensation.  (robs)
   o New -b option for the norm effect; can be used to fix stereo
     imbalance.  (robs)
-  o Fix broken audio pass-through with noiseprof effect.  (robs)
-  o Improved documentation for the `stat' effect.  (robs)
   o New --effects-file option to read effects and arguments from
     a file instead of command line. (cbagwell)
+  o `filter' effect now supports --plot octave.  (robs)
+  o Improved documentation for the `stat' effect.  (robs)
+  o Fix broken audio pass-through with noiseprof effect.  (robs)
+  o Fix graph legend display when using --plot octave.  (robs)
 
 Other new features:
 
@@ -69,6 +71,7 @@ Other new features:
   o New -t option for soxi; to display the detected file type.  (robs)
   o New -b/--bits, -e/--encoding alternative options for specifying
     audio encoding parameters.  (robs)
+  o [FR 1958680] Support more than 32 input files.  (robs)
 
 Other bug fixes:
 
@@ -88,7 +91,7 @@ Internal improvements:
 
   o Fixed all compiler warnings (with gcc 4.3.1, 64-bit arch.).  (robs)
   o Updates to internal effects chain API.  (cbagwell)
-  o Retire old FFT routines (speeds up noisered effect).  (robs)
+  o Retire old FFT routines (speeds up `noisered' effect).  (robs)
   o Allow effects to use getopt.  (robs)
 
 

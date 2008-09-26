@@ -1223,8 +1223,12 @@ effectively operate in a `predictive' rather than a reactive mode.
 A typical value is
 .B 0\*d2
 seconds.
-.SP
-This effect supports the \fB\-\-plot\fR global option (for the transfer function).
+.TS
+center;
+c8 c8 c.
+*	*	*
+.TE
+.DT
 .SP
 The following example might be used to make a piece of music with both
 quiet and loud passages suitable for listening to in a noisy environment
@@ -1245,6 +1249,8 @@ inexact, and was derived by experimentation).
 The \-90 (dB) for the initial volume will work fine for a clip that starts
 with near silence, and the delay of 0\*d2 (seconds) has the effect of causing
 the compander to react a bit more quickly to sudden volume changes.
+.SP
+This effect supports the \fB\-\-plot\fR global option (for the transfer function).
 .SP
 See also
 .B mcompand
@@ -1494,18 +1500,20 @@ Longer windows give a sharper cut-off, smaller windows a more gradual cut-off.
 .SP
 The \fIbeta\fR parameter
 determines the type of filter window used.  Any value greater than 2 is
-the beta for a Kaiser window.  Beta \(<= 2 selects a Nuttall window.
+the beta for a Kaiser window.  Beta \(<= 2 selects a Blackman-Nuttall window.
 If unspecified, the default is a Kaiser window with beta 16.
 .SP
 In the case of Kaiser window (beta > 2), lower betas produce a
 somewhat faster transition from pass-band to stop-band, at the cost of
 noticeable artifacts. A beta of 16 is the default, beta less than 10
 is not recommended. If you want a sharper cut-off, don't use low
-beta's, use a longer sample window. A Nuttall window is selected by
-specifying any `beta' \(<= 2, and the Nuttall window has somewhat
+beta's, use a longer sample window. A Blackman-Nuttall window is selected by
+specifying any `beta' \(<= 2, and the Blackman-Nuttall window has somewhat
 steeper cut-off than the default Kaiser window. You will probably not
 need to use the beta parameter at all, unless you are just curious
-about comparing the effects of Nuttall vs. Kaiser windows.
+about comparing the effects of Blackman-Nuttall vs. Kaiser windows.
+.SP
+This effect supports the \fB\-\-plot octave\fR global option.
 .TP
 \fBflanger\fR [\fIdelay depth regen width speed shape phase interp\fR]
 Apply a flanging effect to the audio.
@@ -2941,9 +2949,9 @@ Change the sampling rate using `polyphase interpolation', a DSP algorithm.
 and, compared with the \fBrate\fR effect, is generally slow, memory intensive,
 and has poorer stop-band rejection.
 .SP
-If the \fB\-w\fR parameter is \fBnut\fR, then a Nuttall (~90 dB
+If the \fB\-w\fR parameter is \fBnut\fR, then a Blackman-Nuttall (~90 dB
 stop-band) window will be used; \fBham\fR selects a Hamming (~43
-dB stop-band) window.  The default is Nuttall.
+dB stop-band) window.  The default is Blackman-Nuttall.
 .SP
 The \fB\-width\fR parameter specifies the (approximate) width of the filter. The default is 1024 samples, which produces reasonable results.
 .SP
@@ -3049,7 +3057,7 @@ to the original Nyquist frequency to use a highpass filter to remove
 these artifacts, with closer also being better.
 .SP
 The \fIbeta\fR, if unspecified, defaults to 16.  This selects a Kaiser window.
-You can select a Nuttall window by specifying anything \(<= 2 here.
+You can select a Blackman-Nuttall window by specifying anything \(<= 2 here.
 For more discussion of beta, look under the \fBfilter\fR effect.
 .SP
 Default parameters are, as indicated above, Kaiser window of length 45,
