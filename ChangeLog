@@ -52,6 +52,7 @@ Effects:
   o New `riaa' effect: RIAA vinyl playback EQ.  (robs)
   o New `loudness' effect: gain control with ISO 226 loudness
     compensation.  (robs)
+  o New `bend' effect; pitch bending; W.I.P., subject to change.  (robs)
   o New -b option for the norm effect; can be used to fix stereo
     imbalance.  (robs)
   o New --effects-file option to read effects and arguments from

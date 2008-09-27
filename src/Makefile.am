@@ -249,7 +249,7 @@ endif
 ############################
 
 libsfx_la_SOURCES = \
-	band.h biquad.c biquad.h biquads.c chorus.c compand.c compandt.c \
+	band.h bend.c biquad.c biquad.h biquads.c chorus.c compand.c compandt.c \
 	compandt.h contrast.c dcshift.c delay.c dither.c earwax.c echo.c \
 	echos.c effects.c effects.h effects_i.c fade.c fft4g.c fft4g.h \
 	fifo.h filter.c flanger.c input.c ladspa.c loudness.c mcompand.c \

@@ -1119,6 +1119,14 @@ These effects support the \fB\-\-plot\fR global option.
 .SP
 See also \fBequalizer\fR for a peaking equalisation effect.
 .TP
+\fBbend\fR [\fB\-f \fIframe-rate\fR(25)] [\fB\-o \fIoversample\fR(16)] { \fIdelay\fB,\fIcents\fB,\fIduration\fR }
+Pitch bending. Work in progress\*msubject to change.
+.SP
+For example:
+.EX
+  play -n synth 2.5 sin 667 bend .35,180,.25 .15,740,.53 0,-520,.3
+.EE
+.TP
 \fBchorus \fIgain-in gain-out\fR <\fIdelay decay speed depth \fB\-s\fR\^|\^\fB\-t\fR>
 Add a chorus effect to the audio.  This can make a single vocal sound
 like a chorus, but can also be applied to instrumentation.
@@ -1586,7 +1594,7 @@ default values if possible. Only plugins with at most one audio input
 and one audio output port can be used.  If found, the environment varible
 LADSPA_PATH will be used as search path for plugins.
 .TP
-\fBloudness [\fIgain\fR [\fIreference\fR]]
+\fBloudness\fR [\fIgain\fR [\fIreference\fR]]
 Loudness control\*msimilar to the
 .B gain
 effect, but provides equalisation for the human auditory system.  See
@@ -1598,6 +1606,9 @@ parameter (usually negative) and the signal equalised according to ISO
 .I reference
 level may be given if the original audio has been equalised for some
 other optimal level.
+A default gain of \-10dB is used if a
+.I gain
+value is not given.
 .SP
 See also the
 .B gain

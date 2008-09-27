@@ -20,6 +20,7 @@
   EFFECT(bandpass)
   EFFECT(bandreject)
   EFFECT(bass)
+  EFFECT(bend)
   EFFECT(chorus)
   EFFECT(compand)
   EFFECT(contrast)
