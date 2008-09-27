@@ -1124,8 +1124,14 @@ Pitch bending. Work in progress\*msubject to change.
 .SP
 For example:
 .EX
-  play -n synth 2.5 sin 667 bend .35,180,.25 .15,740,.53 0,-520,.3
+	play -n synth 2.5 sin 667 gain 1 \\
+		bend .35,180,.25 .15,740,.53 0,-520,.3
 .EE
+Note that the clipping that is produced in this example is deliberate;
+to remove it, use
+.B gain\ \-5
+in place of
+.BR gain\ \1 .
 .TP
 \fBchorus \fIgain-in gain-out\fR <\fIdelay decay speed depth \fB\-s\fR\^|\^\fB\-t\fR>
 Add a chorus effect to the audio.  This can make a single vocal sound
