@@ -49,7 +49,7 @@ static sample_t * prepare_coefs(raw_coef_t const * coefs, int num_coefs,
     for (j = num_phases - 1; j >= 0; --j) {
       double f0 = fm1, b = 0, c = 0, d = 0; /* = 0 to kill compiler warning */
       int pos = i * num_phases + j - 1;
-      fm1 = (pos ? coefs[pos - 1] : 0) * multiplier;
+      fm1 = (pos > 0 ? coefs[pos - 1] : 0) * multiplier;
       switch (interp_order) {
         case 1: b = f1 - f0; break;
         case 2: b = f1 - (.5 * (f2+f0) - f1) - f0; c = .5 * (f2+f0) - f1; break;
