@@ -61,6 +61,7 @@ Effects:
   o Improved documentation for the `stat' effect.  (robs)
   o Fix broken audio pass-through with noiseprof effect.  (robs)
   o Fix graph legend display when using --plot octave.  (robs)
+  o Fix rare crash with `rate' effect.  (robs)
 
 Other new features:
 
@@ -89,6 +90,7 @@ Other bug fixes:
   o [2038855] external lpc10 lib patch.  (Oden Eriksson, Mandriva)
   o Fix memory leaks in effects chain when restarting effects. (cbagwell)
   o Fixed pkg-config CFLAGS. (evilynux)
+  o Fix sndfile inclusion in build in some circumstances.  (robs)
 
 Internal improvements:
 
