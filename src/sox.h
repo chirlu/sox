@@ -501,6 +501,8 @@ int sox_add_effect( sox_effects_chain_t * chain, sox_effect_t * effp, sox_signal
 int sox_flow_effects(sox_effects_chain_t *, int (* callback)(sox_bool all_done));
 size_t sox_effects_clips(sox_effects_chain_t *);
 size_t sox_stop_effect(sox_effect_t *effp);
+void sox_push_effect_last(sox_effects_chain_t *chain, sox_effect_t *effp);
+sox_effect_t *sox_pop_effect_last(sox_effects_chain_t *chain);
 void sox_delete_effect(sox_effect_t *effp);
 void sox_delete_effect_last(sox_effects_chain_t *chain);
 void sox_delete_effects(sox_effects_chain_t *chain);

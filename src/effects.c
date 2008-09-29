@@ -393,6 +393,25 @@ size_t sox_stop_effect(sox_effect_t *effp)
   return clips;
 }
 
+void sox_push_effect_last(sox_effects_chain_t *chain, sox_effect_t *effp)
+{
+  chain->effects[chain->length++] = effp;;
+} /* sox_push_effect_last */
+
+sox_effect_t *sox_pop_effect_last(sox_effects_chain_t *chain)
+{
+  if (chain->length > 0)
+  {
+    sox_effect_t *effp;
+    chain->length--;
+    effp = chain->effects[chain->length];
+    chain->effects[chain->length] = NULL;
+    return effp;
+  }
+  else
+    return NULL;
+} /* sox_pop_effect_last */
+
 /* Free resources related to effect.
  * Note: This currently closes down the effect which might
  * note be obvious from name.

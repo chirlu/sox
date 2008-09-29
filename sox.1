@@ -459,19 +459,12 @@ distortion imperceptable.
 .SS Output Files
 SoX's default behavior is to take one or more input files and
 write them to a single output file.  In fact, the command line syntax
-only supports specifying a single filename in all cases.
+only supports specifying a single filename.
 
 SoX's output routine can be configured to output multiple files in
-certain cases.  If the output method 'multiple' is specified
-then SoX will create a new file each time the specified effects
-terminate the output early.  Each time a new file is created, the effects
-chain is restarted.  It is important to place the effect that
-stops processing at the front of the chain because all samples
-in the pipeline before it will be discarded.
-
-There are only a few effects that can stop processing input early such
-as the trim and silence effects so the application for multiple files
-is very limited.
+certain cases.  If the psuedo-effect 'newfile' is specified
+then SoX will create a new file once the specified effects
+chain stops the output early.
 
 In multiple output mode, a unique number will automatically be appended
 to the end of the filename.  If the filename has an extension 
@@ -613,11 +606,6 @@ selects `merge'.
 .SP
 See \fBInput File Combining\fR above for a description of the different
 combining methods.
-.TP
-\fB\-\-output single\fR\^|\^\fBmultiple\fR
-Select single or multiple output file mode.
-See \fBOutput Files\fR above for a description of the different
-output modes.
 .TP
 \fB\-\-plot gnuplot\fR\^|\^\fBoctave\fR\^|\^\fBoff\fR
 If not set to
