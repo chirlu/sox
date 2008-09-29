@@ -20,7 +20,7 @@
 
 #include "sox_i.h"
 
-#ifdef HAVE_SNDFILE_H
+#ifdef HAVE_SNDFILE
 
 #include <assert.h>
 #include <stdio.h>
@@ -287,6 +287,11 @@ static int startread(sox_format_t * ft)
   }
   else rate = sf->sf_info->samplerate;
 
+#if 0
+  if ((sf->sf_info->format & SF_FORMAT_SUBMASK) == SF_FORMAT_FLOAT)
+    sf_command(sf->sf_file, SFC_SET_SCALE_FLOAT_INT_READ, NULL, SF_TRUE);
+#endif
+
 #if 0 /* FIXME */
     sox_append_comments(&ft->oob.comments, buf);
 #endif
@@ -358,6 +363,11 @@ static int startwrite(sox_format_t * ft)
     return SOX_EOF;
   }
 
+#if 0
+  if ((sf->sf_info->format & SF_FORMAT_SUBMASK) == SF_FORMAT_FLOAT)
+    sf_command(sf->sf_file, SFC_SET_SCALE_INT_FLOAT_WRITE, NULL, SF_TRUE);
+#endif
+           
   return SOX_SUCCESS;
 }
 

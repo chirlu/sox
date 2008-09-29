@@ -17,7 +17,7 @@
 
 #include "sox_i.h"
 
-#if defined HAVE_SNDFILE_H
+#if defined HAVE_SNDFILE
 
 SOX_FORMAT_HANDLER(mat4)
 {
