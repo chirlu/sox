@@ -82,7 +82,12 @@ static int stream_component_open(priv_t * ffmpeg, int stream_index)
 
   codec = avcodec_find_decoder(enc->codec_id);
   enc->workaround_bugs = 1;
+#if LIBAVCODEC_VERSION_INT < ((52<<16)+(0<<8)+0)
   enc->error_resilience = 1;
+#else
+  enc->error_recognition = 1;
+#endif
+
   if (!codec || avcodec_open(enc, codec) < 0)
     return -1;
   if (enc->codec_type != CODEC_TYPE_AUDIO) {
