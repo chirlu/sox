@@ -262,6 +262,8 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
   static char const * const no_yes[] = {"no", "yes"};
   FILE * const output = sox_mode == sox_soxi? stdout : stderr;
   char const * filetype = find_file_extension(ft->filename);
+  sox_bool show_type = sox_true;
+  size_t i;
 
   if (sox_mode == sox_play && sox_globals.verbosity < 3) {
     play_file_info(ft, f, full);
@@ -270,7 +272,10 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
 
   fprintf(output, "\n%s: '%s'",
     ft->mode == 'r'? "Input File     " : "Output File    ", ft->filename);
-  if (!filetype || strcasecmp(filetype, ft->filetype))
+  if (filetype) for (i = 0; ft->handler.names[i] && show_type; ++i)
+    if (!strcasecmp(filetype, ft->handler.names[i]))
+      show_type = sox_false;
+  if (show_type)
     fprintf(output, " (%s)", ft->handler.names[0]);
   fprintf(output, "\n");
 
@@ -1432,7 +1437,8 @@ static void display_supported_formats(void)
     sox_format_handler_t const * handler = sox_format_fns[i].fn();
     if (!(handler->flags & SOX_FILE_DEVICE))
       for (names = handler->names; *names; ++names)
-        format_list[formats++] = *names;
+        if (!strchr(*names, '/'))
+          format_list[formats++] = *names;
   }
   qsort(format_list, formats, sizeof(*format_list), strcmp_p);
   for (i = 0; i < formats; i++)

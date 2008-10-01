@@ -349,6 +349,26 @@ fi
 AM_CONDITIONAL(HAVE_FFMPEG, test x$using_ffmpeg = xyes)
 AC_SUBST(FFMPEG_LIBS)
 
+dnl Check for magic libraries
+AC_ARG_WITH(magic,
+    AC_HELP_STRING([--without-magic],
+        [Don't try to use magic]))
+using_magic=no
+if test "$with_magic" != "no"; then
+    using_magic=yes
+    AC_CHECK_HEADER(magic.h,
+        [AC_CHECK_LIB(magic, magic_open, MAGIC_LIBS="-lmagic",using_magic=no)],
+        using_magic=no)
+    if test "$with_magic" = "yes" -a "$using_magic" = "no"; then
+        AC_MSG_FAILURE([cannot find magic])
+    fi
+fi
+if test "$using_magic" = yes; then
+   AC_DEFINE(HAVE_MAGIC, 1, [Define to 1 if you have magic.])
+fi
+AM_CONDITIONAL(HAVE_MAGIC, test x$using_magic = xyes)
+AC_SUBST(MAGIC_LIBS)
+
 dnl Check for MAD libraries
 AC_ARG_WITH(mad,
     AC_HELP_STRING([--without-mad],
@@ -554,6 +574,7 @@ echo "libsndfile formats................ $using_sndfile"
 echo "Ogg Vorbis format................. $using_ogg"
 echo "FLAC format....................... $using_flac"
 echo "ffmpeg formats.................... $using_ffmpeg"
+echo "magic library..................... $using_magic"
 echo "MAD MP3 reader.................... $using_mad"
 echo "id3tag library.................... $using_id3tag"
 echo "LAME MP3 writer................... $using_lame"

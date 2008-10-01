@@ -33,6 +33,10 @@
   #include <io.h>
 #endif
 
+#if HAVE_MAGIC
+  #include <magic.h>
+#endif
+
 static char const * detect_magic(sox_format_t * ft, char const * ext)
 {
   char data[256];
@@ -399,6 +403,22 @@ sox_format_t * sox_open_read(
     if (ft->seekable) {
       filetype = detect_magic(ft, find_file_extension(path));
       lsx_rewind(ft);
+#if HAVE_MAGIC
+      if (!filetype) {
+        static magic_t magic;
+        if (!magic) {
+          magic = magic_open(MAGIC_MIME | MAGIC_SYMLINK);
+          if (magic)
+            magic_load(magic, NULL);
+        }
+        if (magic)
+          filetype = magic_file(magic, path);
+        if (filetype && (
+              !strcmp(filetype, "application/octet-stream") ||
+              !strncmp(filetype, "text/plain", 10) ))
+          filetype = NULL;
+      }
+#endif
     }
     if (filetype) {
       sox_report("detected file format type `%s'", filetype);

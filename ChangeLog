@@ -98,6 +98,7 @@ Internal improvements:
   o Updates to internal effects chain API.  (cbagwell)
   o Retire old FFT routines (speeds up `noisered' effect).  (robs)
   o Allow effects to use getopt.  (robs)
+  o Use libmagic for mp3.  (robs)
 
 
 sox-14.1.0	2008-7-29

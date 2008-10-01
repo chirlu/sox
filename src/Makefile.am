@@ -307,6 +307,10 @@ if HAVE_FFMPEG
     libsox_la_LIBADD += @FFMPEG_LIBS@
     sox_LDADD += @FFMPEG_LIBS@
 endif
+if HAVE_MAGIC
+    libsox_la_LIBADD += @MAGIC_LIBS@
+    sox_LDADD += @MAGIC_LIBS@
+endif
 if HAVE_SNDFILE
     libsox_la_SOURCES += sndfile.c caf.c mat4.c mat5.c paf.c fap.c w64.c xi.c pvf.c sd2.c
     libsox_la_CFLAGS += @SNDFILE_CFLAGS@

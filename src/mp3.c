@@ -506,7 +506,7 @@ static int startwrite(sox_format_t * ft UNUSED)
 
 SOX_FORMAT_HANDLER(mp3)
 {
-  static char const * const names[] = {"mp3", "mp2", NULL};
+  static char const * const names[] = {"mp3", "mp2", "audio/mpeg", NULL};
   static unsigned const write_encodings[] = {
     SOX_ENCODING_GSM, 0, 0};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
