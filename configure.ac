@@ -147,6 +147,18 @@ fi
 dnl Large File Support
 AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
+if test "$ac_cv_sys_file_offset_bits" = "64"; then
+  # This is either a 64-bit platform or a 32-bit platform
+  # that supports large files.
+  # There are to many broken glibc+kernel's out there that
+  # detect 64-bit off_t on 32-bit system and require
+  # _LARGEFILE_SOURCE to make fseeko() go into 64-bit mode.
+  # Force defining _LARGEFILE_SOURCE always.  My assumption
+  # is its harmlessly ignored on 64-bit platforms and platforms
+  # that chose other solutions.
+  AC_MSG_NOTICE(Forcing _LARGEFILE_SOURCE to be safe since off_t is 64 bits)
+  AC_DEFINE(_LARGEFILE_SOURCE, 1)
+fi
 
 dnl Allow libtool to be silenced
 AC_MSG_CHECKING([whether libtool should be silenced])
