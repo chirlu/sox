@@ -15,9 +15,9 @@
 #define SOX_SAMPLE_TO_ULAW_BYTE(d,c) sox_14linear2ulaw(SOX_SAMPLE_TO_SIGNED_16BIT(d,c) >> 2)
 #define SOX_SAMPLE_TO_ALAW_BYTE(d,c) sox_13linear2alaw(SOX_SAMPLE_TO_SIGNED_16BIT(d,c) >> 3)
 
-int lsx_rawseek(sox_format_t * ft, size_t offset)
+int lsx_rawseek(sox_format_t * ft, uint64_t offset)
 {
-  return lsx_offset_seek(ft, (off_t)ft->data_start, offset);
+  return lsx_offset_seek(ft, (off_t)ft->data_start, (off_t)offset);
 }
 
 /* Works nicely for starting read and write; lsx_rawstart{read,write}

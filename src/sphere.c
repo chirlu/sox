@@ -122,7 +122,7 @@ static int start_read(sox_format_t * ft)
 
     if (lsx_readchars(ft, shorten_check, sizeof(shorten_check)))
       return SOX_EOF;
-    lsx_seeki(ft, -(ptrdiff_t)sizeof(shorten_check), SEEK_CUR);
+    lsx_seeki(ft, -(off_t)sizeof(shorten_check), SEEK_CUR);
 
     if (!memcmp(shorten_check, "ajkg", sizeof(shorten_check))) {
       lsx_fail_errno(ft, SOX_EFMT,

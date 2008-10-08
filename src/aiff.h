@@ -20,7 +20,7 @@ typedef struct {
     size_t dataStart; /* need to for seeking */
 } aiff_priv_t;
 
-int sox_aiffseek(sox_format_t * ft, size_t offset);
+int sox_aiffseek(sox_format_t * ft, uint64_t offset);
 int sox_aiffstartread(sox_format_t * ft);
 size_t sox_aiffread(sox_format_t * ft, sox_sample_t *buf, size_t len);
 int sox_aiffstopread(sox_format_t * ft);

@@ -183,7 +183,7 @@ static int stopwrite(sox_format_t UNUSED * ft)
   return SOX_SUCCESS;
 }
 
-static int seek(sox_format_t UNUSED * ft, size_t UNUSED offset)
+static int seek(sox_format_t UNUSED * ft, uint64_t UNUSED offset)
 {
   /* Seek relative to current position. */
   return SOX_SUCCESS;

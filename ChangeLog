@@ -62,6 +62,7 @@ Effects:
   o Fix broken audio pass-through with noiseprof effect.  (robs)
   o Fix graph legend display when using --plot octave.  (robs)
   o Fix rare crash with `rate' effect.  (robs)
+  o Trim will now skip past 2G point correctly. (cbagwell)
 
 Other new features:
 
@@ -99,6 +100,7 @@ Internal improvements:
   o Retire old FFT routines (speeds up `noisered' effect).  (robs)
   o Allow effects to use getopt.  (robs)
   o Use libmagic for mp3.  (robs)
+  o Change sox_seek() offset to 64-bit to work with > 2G files (cbagwell)
 
 
 sox-14.1.0	2008-7-29

@@ -810,7 +810,7 @@ int sox_close(sox_format_t * ft)
   else {
     if (ft->handler.flags & SOX_FILE_REWIND) {
       if (ft->olength != ft->signal.length && ft->seekable) {
-        rc = lsx_seeki(ft, (size_t)0, 0);
+        rc = lsx_seeki(ft, (off_t)0, 0);
         if (rc == SOX_SUCCESS)
           rc = ft->handler.stopwrite? (*ft->handler.stopwrite)(ft)
              : ft->handler.startwrite?(*ft->handler.startwrite)(ft) : SOX_SUCCESS;
@@ -829,7 +829,7 @@ int sox_close(sox_format_t * ft)
   return rc;
 }
 
-int sox_seek(sox_format_t * ft, size_t offset, int whence)
+int sox_seek(sox_format_t * ft, uint64_t offset, int whence)
 {
     /* FIXME: Implement SOX_SEEK_CUR and SOX_SEEK_END. */
     if (whence != SOX_SEEK_SET)

@@ -64,16 +64,16 @@ static int startread(sox_format_t * ft)
                                 lsx_fail_errno(ft, SOX_EHDR, "VHDR chunk has bad size");
                                 return(SOX_EOF);
                         }
-                        lsx_seeki(ft,(size_t)12,SEEK_CUR);
+                        lsx_seeki(ft,(off_t)12,SEEK_CUR);
                         lsx_readw(ft, &rate);
-                        lsx_seeki(ft,(size_t)1,SEEK_CUR);
+                        lsx_seeki(ft,(off_t)1,SEEK_CUR);
                         lsx_readbuf(ft, buf,(size_t)1);
                         if (buf[0] != 0)
                         {
                                 lsx_fail_errno(ft, SOX_EFMT, "Unsupported data compression");
                                 return(SOX_EOF);
                         }
-                        lsx_seeki(ft,(size_t)4,SEEK_CUR);
+                        lsx_seeki(ft,(off_t)4,SEEK_CUR);
                         continue;
                 }
 
@@ -133,7 +133,7 @@ static int startread(sox_format_t * ft)
                 lsx_readdw(ft, &chunksize);
                 if (chunksize & 1)
                         chunksize++;
-                lsx_seeki(ft,(ptrdiff_t)chunksize,SEEK_CUR);
+                lsx_seeki(ft,(off_t)chunksize,SEEK_CUR);
                 continue;
 
         }
@@ -305,7 +305,7 @@ static int stopwrite(sox_format_t * ft)
             lsx_writeb(ft, '\0');
 
         /* fixup file sizes in header */
-        if (lsx_seeki(ft, (size_t)0, 0) != 0)
+        if (lsx_seeki(ft, (off_t)0, 0) != 0)
         {
                 lsx_fail_errno(ft,errno,"can't rewind output file to rewrite 8SVX header");
                 return(SOX_EOF);

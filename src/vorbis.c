@@ -383,7 +383,7 @@ static int stopwrite(sox_format_t * ft)
   return (SOX_SUCCESS);
 }
 
-static int seek(sox_format_t * ft, size_t offset)
+static int seek(sox_format_t * ft, uint64_t offset)
 {
   priv_t * vb = (priv_t *) ft->priv;
 

@@ -259,11 +259,11 @@ static int stopwrite(sox_format_t * ft)
   unsigned size = avr->size / ft->signal.channels;
 
   /* Fix size */
-  lsx_seeki(ft, (size_t)26, SEEK_SET);
+  lsx_seeki(ft, (off_t)26, SEEK_SET);
   lsx_writedw (ft, size);
 
   /* Fix lend */
-  lsx_seeki(ft, (size_t)34, SEEK_SET);
+  lsx_seeki(ft, (off_t)34, SEEK_SET);
   lsx_writedw (ft, size);
 
   return(SOX_SUCCESS);

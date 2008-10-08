@@ -178,7 +178,7 @@ static int startread(sox_format_t * ft)
                 lsx_readdw(ft, &chunksize);
                 if (chunksize & 1)
                         chunksize++;
-                lsx_seeki(ft, (ptrdiff_t)chunksize, SEEK_CUR);
+                lsx_seeki(ft, (off_t)chunksize, SEEK_CUR);
                 continue;
 
         }
@@ -227,7 +227,7 @@ static int stopwrite(sox_format_t * ft)
 {
         /* All samples are already written out. */
 
-        if (lsx_seeki(ft, (size_t)0, 0) != 0)
+        if (lsx_seeki(ft, (off_t)0, 0) != 0)
         {
             lsx_fail_errno(ft,errno,"can't rewind output file to rewrite MAUD header");
             return(SOX_EOF);

@@ -168,7 +168,7 @@ static int writetrailer(sox_format_t * ft, struct smptrailer *trailer)
         return(SOX_SUCCESS);
 }
 
-static int sox_smpseek(sox_format_t * ft, size_t offset)
+static int sox_smpseek(sox_format_t * ft, uint64_t offset)
 {
     size_t new_offset, channel_block, alignment;
     priv_t * smp = (priv_t *) ft->priv;
@@ -185,7 +185,7 @@ static int sox_smpseek(sox_format_t * ft, size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += smp->dataStart;
 
-    ft->sox_errno = lsx_seeki(ft, (ptrdiff_t)new_offset, SEEK_SET);
+    ft->sox_errno = lsx_seeki(ft, (off_t)new_offset, SEEK_SET);
 
     if( ft->sox_errno == SOX_SUCCESS )
         smp->NoOfSamps = ft->signal.length - (new_offset / (ft->encoding.bits_per_sample >> 3));
@@ -251,7 +251,7 @@ static int sox_smpstartread(sox_format_t * ft)
 
         /* seek from the current position (the start of sample data) by */
         /* NoOfSamps * sizeof(int16_t) */
-        if (lsx_seeki(ft, (ptrdiff_t)(smp->NoOfSamps * 2), 1) == -1)
+        if (lsx_seeki(ft, (off_t)(smp->NoOfSamps * 2), 1) == -1)
         {
                 lsx_fail_errno(ft,errno,"SMP unable to seek to trailer");
                 return(SOX_EOF);
@@ -263,7 +263,7 @@ static int sox_smpstartread(sox_format_t * ft)
         }
 
         /* seek back to the beginning of the data */
-        if (lsx_seeki(ft, (ptrdiff_t)samplestart, 0) == -1)
+        if (lsx_seeki(ft, (off_t)samplestart, 0) == -1)
         {
                 lsx_fail_errno(ft,errno,"SMP unable to seek back to start of sample data");
                 return(SOX_EOF);
@@ -385,7 +385,7 @@ static int sox_smpstopwrite(sox_format_t * ft)
         /* Assign the trailer data */
         settrailer(ft, &trailer, ft->signal.rate);
         writetrailer(ft, &trailer);
-        if (lsx_seeki(ft, (size_t)112, 0) == -1)
+        if (lsx_seeki(ft, (off_t)112, 0) == -1)
         {
                 lsx_fail_errno(ft,errno,"SMP unable to seek back to save size");
                 return(SOX_EOF);

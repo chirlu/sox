@@ -38,7 +38,7 @@ static void reportInstrument(sox_format_t * ft);
 /* Private data used by writer */
 typedef aiff_priv_t priv_t;
 
-int sox_aiffseek(sox_format_t * ft, size_t offset)
+int sox_aiffseek(sox_format_t * ft, uint64_t offset)
 {
     priv_t * aiff = (priv_t *) ft->priv;
     size_t new_offset, channel_block, alignment;
@@ -56,7 +56,7 @@ int sox_aiffseek(sox_format_t * ft, size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += aiff->dataStart;
 
-    ft->sox_errno = lsx_seeki(ft, (ptrdiff_t)new_offset, SEEK_SET);
+    ft->sox_errno = lsx_seeki(ft, (off_t)new_offset, SEEK_SET);
 
     if (ft->sox_errno == SOX_SUCCESS)
         aiff->nsamples = ft->signal.length - (new_offset / size);
@@ -87,7 +87,7 @@ int sox_aiffstartread(sox_format_t * ft)
         unsigned short nmarks = 0;
         unsigned short sustainLoopBegin = 0, sustainLoopEnd = 0,
                        releaseLoopBegin = 0, releaseLoopEnd = 0;
-        ptrdiff_t seekto = 0;
+        off_t seekto = 0;
         size_t ssndsize = 0;
         char *annotation;
         char *author;
@@ -176,7 +176,7 @@ int sox_aiffstartread(sox_format_t * ft)
                                 break;
                         /* else, seek to end of sound and hunt for more */
                         seekto = lsx_tell(ft);
-                        lsx_seeki(ft, (ptrdiff_t)chunksize, SEEK_CUR);
+                        lsx_seeki(ft, (off_t)chunksize, SEEK_CUR);
                 }
                 else if (strncmp(buf, "MARK", (size_t)4) == 0) {
                         /* MARK chunk */
@@ -593,7 +593,7 @@ static int commentChunk(char **text, char *chunkDescription, sox_format_t * ft)
 size_t sox_aiffread(sox_format_t * ft, sox_sample_t *buf, size_t len)
 {
         priv_t * aiff = (priv_t *) ft->priv;
-        ptrdiff_t done;
+        off_t done;
 
         if ((size_t)len > aiff->nsamples)
                 len = aiff->nsamples;
@@ -691,7 +691,7 @@ int sox_aiffstopwrite(sox_format_t * ft)
             lsx_fail_errno(ft,SOX_EOF,"Non-seekable file.");
             return(SOX_EOF);
         }
-        if (lsx_seeki(ft, (size_t)0, SEEK_SET) != 0)
+        if (lsx_seeki(ft, (off_t)0, SEEK_SET) != 0)
         {
                 lsx_fail_errno(ft,errno,"can't rewind output file to rewrite AIFF header");
                 return(SOX_EOF);
@@ -880,7 +880,7 @@ int sox_aifcstopwrite(sox_format_t * ft)
             lsx_fail_errno(ft,SOX_EOF,"Non-seekable file.");
             return(SOX_EOF);
         }
-        if (lsx_seeki(ft, (size_t)0, SEEK_SET) != 0)
+        if (lsx_seeki(ft, (off_t)0, SEEK_SET) != 0)
         {
                 lsx_fail_errno(ft,errno,"can't rewind output file to rewrite AIFC header");
                 return(SOX_EOF);

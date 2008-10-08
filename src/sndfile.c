@@ -146,39 +146,39 @@ static struct {
   int format;
 } format_map[] =
 {
-  { "aif",	SF_FORMAT_AIFF },
-  { "aiff",	SF_FORMAT_AIFF },
-  { "wav",	SF_FORMAT_WAV },
-  { "au",	SF_FORMAT_AU },
-  { "snd",	SF_FORMAT_AU },
+  { "aif",      SF_FORMAT_AIFF },
+  { "aiff",     SF_FORMAT_AIFF },
+  { "wav",      SF_FORMAT_WAV },
+  { "au",       SF_FORMAT_AU },
+  { "snd",      SF_FORMAT_AU },
 #ifdef HAVE_SNDFILE_1_0_12
-  { "caf",	SF_FORMAT_CAF },
-  { "flac",	SF_FORMAT_FLAC },
+  { "caf",      SF_FORMAT_CAF },
+  { "flac",     SF_FORMAT_FLAC },
 #endif
 #ifdef HAVE_SNDFILE_1_0_18
-  { "wve",	SF_FORMAT_WVE },
-  { "ogg",	SF_FORMAT_OGG },
+  { "wve",      SF_FORMAT_WVE },
+  { "ogg",      SF_FORMAT_OGG },
 #endif
-  { "svx",	SF_FORMAT_SVX },
+  { "svx",      SF_FORMAT_SVX },
   { "8svx",     SF_FORMAT_SVX },
-  { "paf",	SF_ENDIAN_BIG | SF_FORMAT_PAF },
-  { "fap",	SF_ENDIAN_LITTLE | SF_FORMAT_PAF },
-  { "gsm",	SF_FORMAT_RAW | SF_FORMAT_GSM610 },
-  { "nist", 	SF_FORMAT_NIST },
+  { "paf",      SF_ENDIAN_BIG | SF_FORMAT_PAF },
+  { "fap",      SF_ENDIAN_LITTLE | SF_FORMAT_PAF },
+  { "gsm",      SF_FORMAT_RAW | SF_FORMAT_GSM610 },
+  { "nist",     SF_FORMAT_NIST },
   { "sph",      SF_FORMAT_NIST },
-  { "ircam",	SF_FORMAT_IRCAM },
-  { "sf",	SF_FORMAT_IRCAM },
-  { "voc",	SF_FORMAT_VOC },
-  { "w64", 	SF_FORMAT_W64 },
-  { "raw",	SF_FORMAT_RAW },
-  { "mat4", 	SF_FORMAT_MAT4 },
-  { "mat5", 	SF_FORMAT_MAT5 },
-  { "mat",	SF_FORMAT_MAT4 },
-  { "pvf",	SF_FORMAT_PVF },
-  { "sds",	SF_FORMAT_SDS },
-  { "sd2",	SF_FORMAT_SD2 },
-  { "vox",	SF_FORMAT_RAW | SF_FORMAT_VOX_ADPCM },
-  { "xi",	SF_FORMAT_XI }
+  { "ircam",    SF_FORMAT_IRCAM },
+  { "sf",       SF_FORMAT_IRCAM },
+  { "voc",      SF_FORMAT_VOC },
+  { "w64",      SF_FORMAT_W64 },
+  { "raw",      SF_FORMAT_RAW },
+  { "mat4",     SF_FORMAT_MAT4 },
+  { "mat5",     SF_FORMAT_MAT5 },
+  { "mat",      SF_FORMAT_MAT4 },
+  { "pvf",      SF_FORMAT_PVF },
+  { "sds",      SF_FORMAT_SDS },
+  { "sd2",      SF_FORMAT_SD2 },
+  { "vox",      SF_FORMAT_RAW | SF_FORMAT_VOX_ADPCM },
+  { "xi",       SF_FORMAT_XI }
 };
 
 /* Convert file name or type to libsndfile format */
@@ -394,7 +394,7 @@ static int stopwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static int seek(sox_format_t * ft, size_t offset)
+static int seek(sox_format_t * ft, uint64_t offset)
 {
   priv_t * sf = (priv_t *)ft->priv;
   sf_seek(sf->sf_file, (sf_count_t)(offset / ft->signal.channels), SEEK_CUR);

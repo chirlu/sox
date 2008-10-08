@@ -511,14 +511,14 @@ static void blockstop(sox_format_t * ft)
   sox_sample_t datum;
 
   lsx_writeb(ft, 0);    /* End of file block code */
-  lsx_seeki(ft, (ptrdiff_t) v->blockseek, 0); /* seek back to block length */
-  lsx_seeki(ft, (size_t)1, 1);  /* seek forward one */
+  lsx_seeki(ft, (off_t) v->blockseek, 0); /* seek back to block length */
+  lsx_seeki(ft, (off_t)1, 1);  /* seek forward one */
   if (v->silent) {
     lsx_writesw(ft, (signed)v->samples);
   } else {
     if (ft->encoding.bits_per_sample == 8) {
       if (ft->signal.channels > 1) {
-        lsx_seeki(ft, (size_t)8, 1);    /* forward 7 + 1 for new block header */
+        lsx_seeki(ft, (off_t)8, 1);    /* forward 7 + 1 for new block header */
       }
     }
     v->samples += 2;    /* adjustment: SBDK pp. 3-5 */

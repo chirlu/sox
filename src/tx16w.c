@@ -93,7 +93,7 @@ static int startread(sox_format_t * ft)
     while (lsx_read_b_buf(ft, &trash, (size_t) 1) == 1)
         num_samp_bytes++;
     num_samp_bytes -= 32;         /* calculate num samples by sub header size */
-    lsx_seeki(ft, (size_t)0, 0);           /* rewind file */
+    lsx_seeki(ft, (off_t)0, 0);   /* rewind file */
     sk->rest = num_samp_bytes;    /* set how many sample bytes to read */
 
     /* first 6 bytes are file type ID LM8953 */

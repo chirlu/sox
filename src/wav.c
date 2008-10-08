@@ -383,7 +383,7 @@ static int findChunk(sox_format_t * ft, const char *Label, uint32_t *len)
             break; /* Found the given chunk */
 
         /* skip to next chunk */
-        if (*len == 0 || lsx_seeki(ft, (ptrdiff_t)(*len), SEEK_CUR) != SOX_SUCCESS)
+        if (*len == 0 || lsx_seeki(ft, (off_t)(*len), SEEK_CUR) != SOX_SUCCESS)
         {
             lsx_fail_errno(ft,SOX_EHDR,
                           "WAV chunk appears to have invalid size %d.", *len);
@@ -774,7 +774,7 @@ static int startread(sox_format_t * ft)
     }
 
     /* Skip anything left over from fmt chunk */
-    lsx_seeki(ft, (ptrdiff_t)len, SEEK_CUR);
+    lsx_seeki(ft, (off_t)len, SEEK_CUR);
 
     /* for non-PCM formats, there's a 'fact' chunk before
      * the upcoming 'data' chunk */
@@ -862,7 +862,7 @@ static int startread(sox_format_t * ft)
          * doubt any machine writing Cool Edit Chunks writes them at an odd
          * offset */
         len = (len + 1) & ~1u;
-        if (lsx_seeki(ft, (ptrdiff_t)len, SEEK_CUR) == SOX_SUCCESS &&
+        if (lsx_seeki(ft, (off_t)len, SEEK_CUR) == SOX_SUCCESS &&
             findChunk(ft, "LIST", &len) != SOX_EOF)
         {
             wav->comment = lsx_malloc((size_t)256);
@@ -909,7 +909,7 @@ static int startread(sox_format_t * ft)
                             strcat(wav->comment,text);
                         }
                         if (strlen(text) < len)
-                           lsx_seeki(ft, (ptrdiff_t)(len - strlen(text)), SEEK_CUR);
+                           lsx_seeki(ft, (off_t)(len - strlen(text)), SEEK_CUR);
                     }
                     else if (strncmp(magic,"ISFT",(size_t)4) == 0)
                     {
@@ -928,12 +928,12 @@ static int startread(sox_format_t * ft)
                             strcat(wav->comment,text);
                         }
                         if (strlen(text) < len)
-                           lsx_seeki(ft, (ptrdiff_t)(len - strlen(text)), SEEK_CUR);
+                           lsx_seeki(ft, (off_t)(len - strlen(text)), SEEK_CUR);
                     }
                     else if (strncmp(magic,"cue ",(size_t)4) == 0)
                     {
                         sox_debug("Chunk cue ");
-                        lsx_seeki(ft,(ptrdiff_t)(len-4),SEEK_CUR);
+                        lsx_seeki(ft,(off_t)(len-4),SEEK_CUR);
                         lsx_readdw(ft,&dwLoopPos);
                         ft->oob.loops[0].start = dwLoopPos;
                     }
@@ -943,19 +943,19 @@ static int startread(sox_format_t * ft)
                         lsx_readdw(ft,&dwLoopPos);
                         ft->oob.loops[0].length = dwLoopPos - ft->oob.loops[0].start;
                         if (len > 4)
-                           lsx_seeki(ft, (ptrdiff_t)(len - 4), SEEK_CUR);
+                           lsx_seeki(ft, (off_t)(len - 4), SEEK_CUR);
                     }
                     else
                     {
                         sox_debug("Attempting to seek beyond unsupported chunk '%c%c%c%c' of length %d bytes", magic[0], magic[1], magic[2], magic[3], len);
                         len = (len + 1) & ~1u;
-                        lsx_seeki(ft, (ptrdiff_t)len, SEEK_CUR);
+                        lsx_seeki(ft, (off_t)len, SEEK_CUR);
                     }
                 }
             }
         }
         lsx_clearerr(ft);
-        lsx_seeki(ft,(ptrdiff_t)wav->dataStart,SEEK_SET);
+        lsx_seeki(ft,(off_t)wav->dataStart,SEEK_SET);
     }
     return lsx_rawstartread(ft);
 }
@@ -1499,7 +1499,7 @@ static int stopwrite(sox_format_t * ft)
         if (!ft->seekable)
           return SOX_EOF;
 
-        if (lsx_seeki(ft, (ptrdiff_t)0, SEEK_SET) != 0)
+        if (lsx_seeki(ft, (off_t)0, SEEK_SET) != 0)
         {
                 lsx_fail_errno(ft,SOX_EOF,"Can't rewind output file to rewrite .wav header.");
                 return SOX_EOF;
@@ -1560,7 +1560,7 @@ static char *wav_format_str(unsigned wFormatTag)
         }
 }
 
-static int seek(sox_format_t * ft, size_t offset)
+static int seek(sox_format_t * ft, uint64_t offset)
 {
   priv_t *   wav = (priv_t *) ft->priv;
 
@@ -1576,7 +1576,7 @@ static int seek(sox_format_t * ft, size_t offset)
              wav->blockAlign * ft->signal.channels / 2;
     gsmoff -= gsmoff % (wav->blockAlign * ft->signal.channels);
 
-    ft->sox_errno = lsx_seeki(ft, (ptrdiff_t)(gsmoff + wav->dataStart), SEEK_SET);
+    ft->sox_errno = lsx_seeki(ft, (off_t)(gsmoff + wav->dataStart), SEEK_SET);
     if (ft->sox_errno == SOX_SUCCESS) {
       /* offset is in samples */
       new_offset = offset;
@@ -1589,7 +1589,7 @@ static int seek(sox_format_t * ft, size_t offset)
     double wide_sample = offset - (offset % ft->signal.channels);
     double to_d = wide_sample * ft->encoding.bits_per_sample / 8;
     off_t to = to_d;
-    ft->sox_errno = (to != to_d)? SOX_EOF : lsx_seeki(ft, (ptrdiff_t)wav->dataStart + (ptrdiff_t)to, SEEK_SET);
+    ft->sox_errno = (to != to_d)? SOX_EOF : lsx_seeki(ft, (off_t)wav->dataStart + (off_t)to, SEEK_SET);
     if (ft->sox_errno == SOX_SUCCESS)
       wav->numSamples -= (size_t)wide_sample / ft->signal.channels;
   }

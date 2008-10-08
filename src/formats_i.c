@@ -153,7 +153,7 @@ int lsx_flush(sox_format_t * ft)
   return fflush(ft->fp);
 }
 
-ptrdiff_t lsx_tell(sox_format_t * ft)
+off_t lsx_tell(sox_format_t * ft)
 {
   return ft->seekable? (ptrdiff_t)ftello(ft->fp) : ft->tell_off;
 }
@@ -189,7 +189,7 @@ int lsx_unreadb(sox_format_t * ft, unsigned b)
  *
  * N.B. Can only seek forwards on non-seekable streams!
  */
-int lsx_seeki(sox_format_t * ft, ptrdiff_t offset, int whence)
+int lsx_seeki(sox_format_t * ft, off_t offset, int whence)
 {
     if (ft->seekable == 0) {
         /* If a stream peel off chars else EPERM */
@@ -206,7 +206,7 @@ int lsx_seeki(sox_format_t * ft, ptrdiff_t offset, int whence)
         } else
             lsx_fail_errno(ft,SOX_EPERM, "file not seekable");
     } else {
-        if (fseeko(ft->fp, (off_t)offset, whence) == -1)
+        if (fseeko(ft->fp, offset, whence) == -1)
             lsx_fail_errno(ft,errno,strerror(errno));
         else
             ft->sox_errno = SOX_SUCCESS;
@@ -214,12 +214,12 @@ int lsx_seeki(sox_format_t * ft, ptrdiff_t offset, int whence)
     return ft->sox_errno;
 }
 
-int lsx_offset_seek(sox_format_t * ft, off_t byte_offset, size_t to_sample)
+int lsx_offset_seek(sox_format_t * ft, off_t byte_offset, off_t to_sample)
 {
   double wide_sample = to_sample - (to_sample % ft->signal.channels);
   double to_d = wide_sample * ft->encoding.bits_per_sample / 8;
   off_t to = to_d;
-  return (to != to_d)? SOX_EOF : lsx_seeki(ft, (ptrdiff_t)(byte_offset + to), SEEK_SET);
+  return (to != to_d)? SOX_EOF : lsx_seeki(ft, (byte_offset + to), SEEK_SET);
 }
 
 /* Read and write known datatypes in "machine format".  Swap if indicated.

@@ -1019,7 +1019,7 @@ static void optimize_trim(void)
    * managable chunks.  */
   if (input_count == 1 && effects_chain->length > 1 && strcmp(effects_chain->effects[1][0].handler.name, "trim") == 0) {
     if (files[0]->ft->handler.seek && files[0]->ft->seekable){
-      size_t offset = sox_trim_get_start(&effects_chain->effects[1][0]);
+      uint64_t offset = sox_trim_get_start(&effects_chain->effects[1][0]);
       if (offset && sox_seek(files[0]->ft, offset, SOX_SEEK_SET) == SOX_SUCCESS) {
         read_wide_samples = offset / files[0]->ft->signal.channels;
         /* Assuming a failed seek stayed where it was.  If the seek worked then

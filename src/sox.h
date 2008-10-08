@@ -323,7 +323,7 @@ typedef struct {
   int          (*startwrite)(sox_format_t * ft);
   size_t   (*write)(sox_format_t * ft, const sox_sample_t *buf, size_t len);
   int          (*stopwrite)(sox_format_t * ft);
-  int          (*seek)(sox_format_t * ft, size_t offset);
+  int          (*seek)(sox_format_t * ft, uint64_t offset);
   unsigned     const * write_formats;
   sox_rate_t   const * write_rates;
   size_t       priv_size;
@@ -413,7 +413,7 @@ size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, size_t len);
 int sox_close(sox_format_t * ft);
 
 #define SOX_SEEK_SET 0
-int sox_seek(sox_format_t * ft, size_t offset, int whence);
+int sox_seek(sox_format_t * ft, uint64_t offset, int whence);
 
 sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev);
 int sox_gettype(sox_format_t *, sox_bool);

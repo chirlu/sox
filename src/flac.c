@@ -254,7 +254,7 @@ static FLAC__StreamEncoderSeekStatus flac_stream_encoder_seek_callback(FLAC__Str
   (void) encoder;
   if (!ft->seekable)
     return FLAC__STREAM_ENCODER_SEEK_STATUS_UNSUPPORTED;
-  else if (lsx_seeki(ft, (ptrdiff_t)absolute_byte_offset, SEEK_SET) != SOX_SUCCESS)
+  else if (lsx_seeki(ft, (off_t)absolute_byte_offset, SEEK_SET) != SOX_SUCCESS)
     return FLAC__STREAM_ENCODER_SEEK_STATUS_ERROR;
   else
     return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
@@ -484,7 +484,7 @@ static int stop_write(sox_format_t * const ft)
  * N.B.  Do not call this function with offset=0 when file-pointer
  * is already 0 or a block of decoded FLAC data will be discarded.
  */
-static int seek(sox_format_t * ft, size_t offset)
+static int seek(sox_format_t * ft, uint64_t offset)
 {
   priv_t * p = (priv_t *)ft->priv;
   int result = ft->mode == 'r' && FLAC__stream_decoder_seek_absolute(p->decoder, (FLAC__uint64)(offset / ft->signal.channels)) ?  SOX_SUCCESS : SOX_EOF;

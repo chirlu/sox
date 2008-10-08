@@ -68,11 +68,11 @@ typedef struct {
 
 static void prcwriteheader(sox_format_t * ft);
 
-static int seek(sox_format_t * ft, size_t offset)
+static int seek(sox_format_t * ft, uint64_t offset)
 {
   priv_t * p = (priv_t *)ft->priv;
   if (ft->encoding.encoding == SOX_ENCODING_ALAW)
-    return lsx_offset_seek(ft, p->data_start, offset);
+    return lsx_offset_seek(ft, (off_t)p->data_start, (off_t)offset);
   return SOX_EOF;
 }
 
@@ -397,7 +397,7 @@ static int stopwrite(sox_format_t * ft)
       return SOX_SUCCESS;
   }
 
-  if (lsx_seeki(ft, (size_t)0, 0) != 0) {
+  if (lsx_seeki(ft, (off_t)0, 0) != 0) {
       lsx_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
       return(SOX_EOF);
   }

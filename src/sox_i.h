@@ -34,6 +34,7 @@ extern enum_item const lsx_wave_enum[];
 #define off_t long
 #endif
 #endif
+
 #ifdef _FILE_OFFSET_BITS
 assert_static(sizeof(off_t) == _FILE_OFFSET_BITS >> 3, OFF_T_BUILD_PROBLEM);
 #endif
@@ -153,14 +154,14 @@ int lsx_writesw(sox_format_t * ft, signed);
 int lsx_eof(sox_format_t * ft);
 int lsx_error(sox_format_t * ft);
 int lsx_flush(sox_format_t * ft);
-int lsx_seeki(sox_format_t * ft, ptrdiff_t offset, int whence);
+int lsx_seeki(sox_format_t * ft, off_t offset, int whence);
 int lsx_unreadb(sox_format_t * ft, unsigned ub);
 size_t lsx_filelength(sox_format_t * ft);
-ptrdiff_t lsx_tell(sox_format_t * ft);
+off_t lsx_tell(sox_format_t * ft);
 void lsx_clearerr(sox_format_t * ft);
 void lsx_rewind(sox_format_t * ft);
 
-int lsx_offset_seek(sox_format_t * ft, off_t byte_offset, size_t to_sample);
+int lsx_offset_seek(sox_format_t * ft, off_t byte_offset, off_t to_sample);
 
 void lsx_fail_errno(sox_format_t *, int, const char *, ...)
 #ifdef __GNUC__
@@ -192,7 +193,7 @@ size_t lsx_rawread(sox_format_t * ft, sox_sample_t *buf, size_t nsamp);
 int lsx_rawstopread(sox_format_t * ft);
 int lsx_rawstartwrite(sox_format_t * ft);
 size_t lsx_rawwrite(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp);
-int lsx_rawseek(sox_format_t * ft, size_t offset);
+int lsx_rawseek(sox_format_t * ft, uint64_t offset);
 int lsx_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_bool default_length, sox_encoding_t encoding, unsigned size);
 #define lsx_rawstartread(ft) lsx_rawstart(ft, sox_false, sox_false, sox_false, SOX_ENCODING_UNKNOWN, 0)
 #define lsx_rawstartwrite lsx_rawstartread

@@ -425,7 +425,7 @@ static int dvms_write_header(sox_format_t * ft, struct dvms_header *hdr)
                 sum += *pchs++;
         hdr->Crc = sum;
         put16_le(&pch, hdr->Crc);
-        if (lsx_seeki(ft, (size_t)0, SEEK_SET) < 0)
+        if (lsx_seeki(ft, (off_t)0, SEEK_SET) < 0)
         {
                 sox_report("seek failed\n: %s",strerror(errno));
                 return (SOX_EOF);
@@ -540,7 +540,7 @@ int sox_dvmsstopwrite(sox_format_t * ft)
             sox_warn("File not seekable");
             return (SOX_EOF);
         }
-        if (lsx_seeki(ft, (size_t)0, 0) != 0)
+        if (lsx_seeki(ft, (off_t)0, 0) != 0)
         {
                 lsx_fail_errno(ft,errno,"Can't rewind output file to rewrite DVMS header.");
                 return(SOX_EOF);
