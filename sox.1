@@ -50,7 +50,8 @@ SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 SoX reads and writes audio files in most popular formats and can
 optionally apply effects to them; it can combine multiple input
 sources, synthesise audio, and, on many systems, act as a general
-purpose audio player or a multi-track audio recorder.
+purpose audio player or a multi-track audio recorder. It also has
+limited ability to split the input in to multiple output files.
 .SP
 Almost all SoX functionality is available using just the \fBsox\fR command,
 however, to simplify playing and recording audio, if SoX is invoked as
@@ -469,29 +470,49 @@ however, in many cases, the number of clips will be low and the resultant
 distortion imperceptable.
 .SS Output Files
 SoX's default behavior is to take one or more input files and
-write them to a single output file.  In fact, the command line syntax
-only supports specifying a single filename.
+write them to a single output file.
 
-SoX's output routine can be configured to output multiple files in
-certain cases.  If the psuedo-effect 'newfile' is specified
-then SoX will create a new file once the specified effects
-chain stops the output early.
+This behavior can be changed by specifying the pseudo-effect 'newfile'
+within the effects list.  SoX will then enter multiple output mode.
+
+In multiple output mode, a new file is created when the effects
+prior to the 'newfile' indicate they are done.  
+The effects chain listed after 'newfile'
+is then started up and its output is saved to the new file.
 
 In multiple output mode, a unique number will automatically be appended
-to the end of the filename.  If the filename has an extension 
+to the end of all filenames.  If the filename has an extension 
 then the number is inserted before the extension.  This behavior can
 be customized by placing a %n anywhere in the filename where the
 number should be substituted.  An optional number can be placed after
 the % to indicate a minimum fixed width for the number.
 
+Multiple output mode is not very useful unless an effect that will
+stop the effects chain early is
+specified before the 'newfile'. If end of file is
+reached before the effects chain stops itself then no new file
+will be created as it would be empty.
+
+The following is an example of splitting the first 60 seconds of an input 
+file in to two 30 second files and ignoring the rest.
+.EX
+	sox song.wav ringtone%1n.wav trim 0 30 : newfile : trim 0 30
 .SS Stopping SoX
-Usually SoX will complete its processing and exit automatically, however
-if desired, it can be terminated by pressing the
-keyboard interrupt key (usually Ctrl-C).  This is a natural requirement
+Usually SoX will complete its processing and exit automatically once
+it has read all available audio data from the input files.
+.SP
+If desired, it can be terminated earlier by sending an
+interrupt signal to the process (usually by pressing the
+keyboard interrupt key which is usually Ctrl-C).  This is a natural requirement
 in some circumstances, e.g. when using SoX to make a recording.  Note
 that when using SoX to play multiple files, Ctrl-C behaves slightly
 differently: pressing it once causes SoX to skip to the next file;
 pressing it twice in quick succession causes SoX to exit.
+.SP
+Another option to stop processing early is to use an effect that
+has a time period or sample count to determine the stopping
+point. The trim effect is an example of this.  Once all
+effects chains have stopped then SoX will also stop.
 .SH FILENAMES
 Filenames can be simple file names, absolute or relative path names,
 or URLs (input files only).  Note that URL support requires that
@@ -585,10 +606,11 @@ will cause SoX to be become slow to respond to requests to terminate or to skip
 the current input file.
 .TP
 \fB\-\--effects\-file=\fIFILENAME\fR
-Specify a file containing the effects and their arguments to be used.
-Only the first line of the file is read and its format should be the same as when specifying effects on the command line.
-Each time a new input or output file is opened, the effects file
-is reread for latest values.
+Use FILENAME to obtain all effects and their arguments.
+The file is parsed as if the values were specified on the
+command line.  A new line can be used in place of the special ":" marker 
+to separate effect chains.  This option causes any effects specified on 
+the command line to be discarded.
 .TP
 \fB\-\-interactive\fR
 Prompt before overwriting an existing file with the same name as that
