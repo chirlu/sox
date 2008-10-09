@@ -32,7 +32,7 @@
  * Please do not count on these numbers being in sync.
  */
 #define SOX_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
-#define SOX_LIB_VERSION_CODE SOX_LIB_VERSION(14, 1, 0)
+#define SOX_LIB_VERSION_CODE SOX_LIB_VERSION(14, 1, 1)
 
 const char *sox_version(void);   /* Returns version number */
 
@@ -547,5 +547,13 @@ typedef struct {
 } sox_format_tab_t;
 
 extern sox_format_tab_t sox_format_fns[];
+
+typedef struct {char const *text; unsigned value;} sox_enum_item;
+#define ENUM_ITEM(prefix, item) {#item, prefix##item},
+
+sox_enum_item const * sox_find_enum_text(char const * text, sox_enum_item const * sox_enum_items);
+sox_enum_item const * sox_find_enum_value(unsigned value, sox_enum_item const * sox_enum_items);
+char const * sox_sigfigs3(size_t number);
+char const * sox_sigfigs3p(double percentage);
 
 #endif

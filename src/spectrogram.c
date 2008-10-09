@@ -41,7 +41,7 @@
 #define MAX_COLS            999 /* Also max seconds */
 
 typedef enum {Window_Hann, Window_Hamming, Window_Bartlett, Window_Rectangular, Window_Kaiser} win_type_t;
-static enum_item const window_options[] = {
+static sox_enum_item const window_options[] = {
   ENUM_ITEM(Window_,Hann)
   ENUM_ITEM(Window_,Hamming)
   ENUM_ITEM(Window_,Bartlett)
@@ -72,9 +72,9 @@ typedef struct {
 #define secs(cols) \
   ((double)(cols) * p->step_size * p->block_steps / effp->in_signal.rate)
 
-static int enum_option(int c, enum_item const * items)
+static int enum_option(int c, sox_enum_item const * items)
 {
-  enum_item const * p = find_enum_text(optarg, items);
+  sox_enum_item const * p = sox_find_enum_text(optarg, items);
   if (p == NULL) {
     size_t len = 1;
     char * set = lsx_malloc(len);

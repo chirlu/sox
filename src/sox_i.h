@@ -20,7 +20,7 @@
 #include <errno.h>
 typedef enum {SOX_SHORT, SOX_INT, SOX_FLOAT, SOX_DOUBLE} sox_data_t;
 typedef enum {SOX_WAVE_SINE, SOX_WAVE_TRIANGLE} lsx_wave_t;
-extern enum_item const lsx_wave_enum[];
+extern sox_enum_item const lsx_wave_enum[];
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h> /* For off_t not found in stdio.h */
@@ -228,9 +228,9 @@ char * lsx_usage_lines(char * * usage, char const * const * lines, size_t n);
 }
 
 #define TEXTUAL_PARAMETER(name, enum_table) { \
-  enum_item const * e; \
+  sox_enum_item const * e; \
   if (argc == 0) break; \
-  e = find_enum_text(*argv, enum_table); \
+  e = sox_find_enum_text(*argv, enum_table); \
   if (e != NULL) { \
     p->name = e->value; \
     --argc, ++argv; \

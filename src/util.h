@@ -100,11 +100,3 @@
 #endif
 
 char const * find_file_extension(char const * pathname);
-
-typedef struct {char const *text; unsigned value;} enum_item;
-#define ENUM_ITEM(prefix, item) {#item, prefix##item},
-
-enum_item const * find_enum_text(char const * text, enum_item const * enum_items);
-enum_item const * find_enum_value(unsigned value, enum_item const * enum_items);
-char const * sigfigs3(size_t number);
-char const * sigfigs3p(double percentage);

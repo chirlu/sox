@@ -28,7 +28,7 @@ typedef enum {
   synth_brownnoise
 } type_t;
 
-static enum_item const synth_type[] = {
+static sox_enum_item const synth_type[] = {
   ENUM_ITEM(synth_, sine)
   ENUM_ITEM(synth_, square)
   ENUM_ITEM(synth_, sawtooth)
@@ -45,7 +45,7 @@ static enum_item const synth_type[] = {
 
 typedef enum {synth_create, synth_mix, synth_amod, synth_fmod} combine_t;
 
-static enum_item const combine_type[] = {
+static sox_enum_item const combine_type[] = {
   ENUM_ITEM(synth_, create)
   ENUM_ITEM(synth_, mix)
   ENUM_ITEM(synth_, amod)
@@ -258,7 +258,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   while (argn < argc) { /* type [combine] [f1[-f2] [p1 [p2 [p3 [p3 [p4]]]]]] */
     channel_t chan;
     char * end_ptr;
-    enum_item const *p = find_enum_text(argv[argn], synth_type);
+    sox_enum_item const *p = sox_find_enum_text(argv[argn], synth_type);
 
     if (p == NULL) {
       sox_fail("no type given");
@@ -272,7 +272,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
       break;
 
     /* maybe there is a combine-type in next arg */
-    p = find_enum_text(argv[argn], combine_type);
+    p = sox_find_enum_text(argv[argn], combine_type);
     if (p != NULL) {
       chan->combine = p->value;
       if (++argn == argc)
@@ -389,8 +389,8 @@ static int start(sox_effect_t * effp)
     }
     sox_debug("type=%s, combine=%s, samples_to_do=%lu, f1=%g, f2=%g, "
               "offset=%g, phase=%g, p1=%g, p2=%g, p3=%g mult=%g",
-        find_enum_value(chan->type, synth_type)->text,
-        find_enum_value(chan->combine, combine_type)->text,
+        sox_find_enum_value(chan->type, synth_type)->text,
+        sox_find_enum_value(chan->combine, combine_type)->text,
         (unsigned long)synth->samples_to_do, chan->freq, chan->freq2,
         chan->offset, chan->phase, chan->p1, chan->p2, chan->p3, chan->mult);
   }

@@ -26,7 +26,7 @@ typedef struct {
 
 enum {vol_amplitude, vol_dB, vol_power};
 
-static enum_item const vol_types[] = {
+static sox_enum_item const vol_types[] = {
   ENUM_ITEM(vol_,amplitude)
   ENUM_ITEM(vol_,dB)
   ENUM_ITEM(vol_,power)
@@ -59,7 +59,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   }
 
   if (have_type) {
-    enum_item const * p = find_enum_text(type_ptr, vol_types);
+    sox_enum_item const * p = sox_find_enum_text(type_ptr, vol_types);
     if (!p)
       return lsx_usage(effp);
     switch (p->value) {

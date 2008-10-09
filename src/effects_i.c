@@ -118,7 +118,7 @@ double lsx_spline3(double const * x, double const * y, double const * y_2d,
     ((a * a * a - a) * y_2d[i[0]] + (b * b * b - b) * y_2d[i[1]]) * d * d / 6;
 }
 
-enum_item const lsx_wave_enum[] = {
+sox_enum_item const lsx_wave_enum[] = {
   ENUM_ITEM(SOX_WAVE_,SINE)
   ENUM_ITEM(SOX_WAVE_,TRIANGLE)
   {0, 0}};

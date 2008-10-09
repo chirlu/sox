@@ -91,7 +91,7 @@ typedef struct {
 
 
 
-static enum_item const interp_enum[] = {
+static sox_enum_item const interp_enum[] = {
   ENUM_ITEM(INTERP_,LINEAR)
   ENUM_ITEM(INTERP_,QUADRATIC)
   {0, 0}};

@@ -82,7 +82,7 @@ static enum { sox_single, sox_multiple } output_method = sox_single;
 static sox_bool interactive = sox_false;
 static sox_bool uservolume = sox_false;
 typedef enum {RG_off, RG_track, RG_album} rg_mode;
-static enum_item const rg_modes[] = {
+static sox_enum_item const rg_modes[] = {
   ENUM_ITEM(RG_,off)
   ENUM_ITEM(RG_,track)
   ENUM_ITEM(RG_,album)
@@ -240,7 +240,7 @@ static void play_file_info(sox_format_t * ft, file_t * f, sox_bool full)
   fprintf(output, "\n");
 
   if (f && f->replay_gain != HUGE_VAL){
-    sprintf(buffer, "%s gain: %+.1fdB", find_enum_value(f->replay_gain_mode, rg_modes)->text, f->replay_gain);
+    sprintf(buffer, "%s gain: %+.1fdB", sox_find_enum_value(f->replay_gain_mode, rg_modes)->text, f->replay_gain);
     buffer[0] += 'A' - 'a';
     fprintf(output, "%-24s", buffer);
   } else
@@ -318,7 +318,7 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
 
   if (f && f->replay_gain != HUGE_VAL)
     fprintf(output, "Replay gain    : %+g dB (%s)\n" , f->replay_gain,
-        find_enum_value(f->replay_gain_mode, rg_modes)->text);
+        sox_find_enum_value(f->replay_gain_mode, rg_modes)->text);
   if (f && f->volume != HUGE_VAL)
     fprintf(output, "Level adjust   : %g (linear gain)\n" , f->volume);
 
@@ -994,9 +994,9 @@ static void display_status(sox_bool all_done)
       percentage = max(100. * read_wide_samples / input_wide_samples, 0);
     }
     fprintf(stderr, "\r%-5s %s [%s] of %s Out:%-5s [%6s|%-6s]%s Clip:%-5s",
-      sigfigs3p(percentage), str_time(read_time), str_time(left_time),
-      str_time(in_time), sigfigs3(output_samples),
-      vu(0), vu(1), headroom(), sigfigs3(total_clips()));
+      sox_sigfigs3p(percentage), str_time(read_time), str_time(left_time),
+      str_time(in_time), sox_sigfigs3(output_samples),
+      vu(0), vu(1), headroom(), sox_sigfigs3(total_clips()));
   }
   if (all_done)
     fputc('\n', stderr);
@@ -1722,7 +1722,7 @@ static int opt_index(int val)
   return -1;
 }
 
-static enum_item const combine_methods[] = {
+static sox_enum_item const combine_methods[] = {
   ENUM_ITEM(sox_,sequence)
   ENUM_ITEM(sox_,concatenate)
   ENUM_ITEM(sox_,mix)
@@ -1732,13 +1732,13 @@ static enum_item const combine_methods[] = {
   {0, 0}};
 
 enum {ENDIAN_little, ENDIAN_big, ENDIAN_swap};
-static enum_item const endian_options[] = {
+static sox_enum_item const endian_options[] = {
   ENUM_ITEM(ENDIAN_,little)
   ENUM_ITEM(ENDIAN_,big)
   ENUM_ITEM(ENDIAN_,swap)
   {0, 0}};
 
-static enum_item const plot_methods[] = {
+static sox_enum_item const plot_methods[] = {
   ENUM_ITEM(sox_plot_,off)
   ENUM_ITEM(sox_plot_,octave)
   ENUM_ITEM(sox_plot_,gnuplot)
@@ -1749,7 +1749,7 @@ enum {
   encoding_ms_adpcm, encoding_ima_adpcm, encoding_oki_adpcm,
   encoding_gsm_full_rate, encoding_u_law, encoding_a_law};
 
-static enum_item const encodings[] = {
+static sox_enum_item const encodings[] = {
   {"signed-integer", encoding_signed_integer},
   {"unsigned-integer", encoding_unsigned_integer},
   {"floating-point", encoding_floating_point},
@@ -1762,9 +1762,9 @@ static enum_item const encodings[] = {
   {"a-law", encoding_a_law},
   {0, 0}};
 
-static int enum_option(int option_index, enum_item const * items)
+static int enum_option(int option_index, sox_enum_item const * items)
 {
-  enum_item const * p = find_enum_text(optarg, items);
+  sox_enum_item const * p = sox_find_enum_text(optarg, items);
   if (p == NULL) {
     size_t len = 1;
     char * set = lsx_malloc(len);

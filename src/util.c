@@ -51,9 +51,9 @@ char const * find_file_extension(char const * pathname)
   return result;
 }
 
-enum_item const * find_enum_text(char const * text, enum_item const * enum_items)
+sox_enum_item const * sox_find_enum_text(char const * text, sox_enum_item const * enum_items)
 {
-  enum_item const * result = NULL; /* Assume not found */
+  sox_enum_item const * result = NULL; /* Assume not found */
 
   while (enum_items->text) {
     if (strcasecmp(text, enum_items->text) == 0)
@@ -68,7 +68,7 @@ enum_item const * find_enum_text(char const * text, enum_item const * enum_items
   return result;
 }
 
-enum_item const * find_enum_value(unsigned value, enum_item const * enum_items)
+sox_enum_item const * sox_find_enum_value(unsigned value, sox_enum_item const * enum_items)
 {
   for (;enum_items->text; ++enum_items)
     if (value == enum_items->value)
@@ -76,7 +76,7 @@ enum_item const * find_enum_value(unsigned value, enum_item const * enum_items)
   return NULL;
 }
 
-char const * sigfigs3(size_t number)
+char const * sox_sigfigs3(size_t number)
 {
   static char string[16][10];
   static unsigned n;
@@ -92,7 +92,7 @@ char const * sigfigs3(size_t number)
   return string[n];
 }
 
-char const * sigfigs3p(double percentage)
+char const * sox_sigfigs3p(double percentage)
 {
   static char string[16][10];
   static unsigned n;
