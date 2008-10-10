@@ -169,17 +169,9 @@ if test "$enable_silent_libtool" = "yes"; then
     LIBTOOLFLAGS=--silent
 fi
 AC_SUBST(LIBTOOLFLAGS)
-     
-dnl Check if we want play/rec links
-AC_MSG_CHECKING([whether to make play and rec symlinks])
-AC_ARG_ENABLE(playrec-symlinks,
-    AC_HELP_STRING([--disable-playrec-symlinks], [Don't make play and rec symlinks to sox.]),,enable_playrec_symlinks=yes)
-AC_MSG_RESULT($enable_playrec_symlinks)
-if test "$enable_playrec_symlinks" = "yes"; then
-    PLAYRECLINKS=yes
-fi
-AC_SUBST(PLAYRECLINKS)
-     
+   
+audio_driver_found=no  
+    
 dnl Check for ALSA
 AC_MSG_CHECKING([whether to try building ALSA sound driver])
 AC_ARG_ENABLE(alsa,
@@ -192,6 +184,7 @@ if test "$enable_alsa" = "yes"; then
 fi
 if test "$enable_alsa" = yes; then
    AC_DEFINE(HAVE_ALSA, 1, [Define to 1 if you have ALSA.])
+   audio_driver_found=yes
 fi
 AM_CONDITIONAL(HAVE_ALSA, test x$enable_alsa = xyes)
 AC_SUBST(ALSA_LIBS)
@@ -208,6 +201,7 @@ if test "$enable_libao" = "yes"; then
 fi
 if test "$enable_libao" = yes; then
    AC_DEFINE(HAVE_LIBAO, 1, [Define to 1 if you have libao.])
+   audio_driver_found=yes
 fi
 AM_CONDITIONAL(HAVE_LIBAO, test x$enable_libao = xyes)
 AC_SUBST(AO_LIBS)
@@ -225,6 +219,7 @@ if test "$enable_oss" = "yes"; then
 fi
 if test "$enable_oss" = yes; then
    AC_DEFINE(HAVE_OSS, 1, [Define to 1 if you have OSS.])
+   audio_driver_found=yes
 fi
 AM_CONDITIONAL(HAVE_OSS, test x$enable_oss = xyes)
 AC_SUBST(OSS_LIBS)
@@ -240,9 +235,24 @@ if test "$enable_sun_audio" = "yes"; then
 fi
 if test "$enable_sun_audio" = yes; then
    AC_DEFINE(HAVE_SUN_AUDIO, 1, [Define to 1 if you have Sun audio.])
+   audio_driver_found=yes
 fi
 AM_CONDITIONAL(HAVE_SUN_AUDIO, test x$enable_sun_audio = xyes)
 
+dnl Check if we want play/rec links
+AC_MSG_CHECKING([whether to make play and rec symlinks])
+AC_ARG_ENABLE(playrec-symlinks,
+    AC_HELP_STRING([--disable-playrec-symlinks], [Don't make play and rec symlinks to sox.]),,enable_playrec_symlinks=yes)
+AC_MSG_RESULT($enable_playrec_symlinks)
+if test "$enable_playrec_symlinks" = "yes"; then
+    if test "$audio_driver_found" = "yes"; then
+        PLAYRECLINKS=yes
+    else
+        enable_playrec_symlinks=no
+    fi
+fi
+AC_SUBST(PLAYRECLINKS)
+ 
 dnl Check for libgsm
 found_libgsm=yes
 AC_CHECK_HEADERS(gsm/gsm.h, ,
