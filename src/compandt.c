@@ -22,7 +22,7 @@
 
 #define LOG_TO_LOG10(x) ((x) * 20 / M_LN10)
 
-sox_bool sox_compandt_show(sox_compandt_t * t, sox_plot_t plot)
+sox_bool lsx_compandt_show(sox_compandt_t * t, sox_plot_t plot)
 {
   int i;
 
@@ -41,7 +41,7 @@ sox_bool sox_compandt_show(sox_compandt_t * t, sox_plot_t plot)
     for (i = -199; i <= 0; ++i) {
       double in = i/2.;
       double in_lin = pow(10., in/20);
-      printf("%g ", in + 20 * log10(sox_compandt(t, in_lin)));
+      printf("%g ", in + 20 * log10(lsx_compandt(t, in_lin)));
     }
     printf(
       "];\n"
@@ -66,7 +66,7 @@ sox_bool sox_compandt_show(sox_compandt_t * t, sox_plot_t plot)
     for (i = -199; i <= 0; ++i) {
       double in = i/2.;
       double in_lin = pow(10., in/20);
-      printf("%g %g\n", in, in + 20 * log10(sox_compandt(t, in_lin)));
+      printf("%g %g\n", in, in + 20 * log10(lsx_compandt(t, in_lin)));
     }
     printf(
       "e\n"
@@ -153,7 +153,7 @@ static sox_bool parse_transfer_value(char const * text, double * value)
   return sox_true;
 }
 
-sox_bool sox_compandt_parse(sox_compandt_t * t, char * points, char * gain)
+sox_bool lsx_compandt_parse(sox_compandt_t * t, char * points, char * gain)
 {
   char const * text = points;
   unsigned i, j, num, pairs, commas = 0;
@@ -218,7 +218,7 @@ sox_bool sox_compandt_parse(sox_compandt_t * t, char * points, char * gain)
   return sox_true;
 }
 
-void sox_compandt_kill(sox_compandt_t * p)
+void lsx_compandt_kill(sox_compandt_t * p)
 {
   free(p->segments);
 }

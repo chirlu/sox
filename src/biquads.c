@@ -66,7 +66,7 @@ typedef biquad_t priv_t;
 
 
 static int hilo1_getopts(sox_effect_t * effp, int n, char **argv) {
-  return sox_biquad_getopts(effp, n, argv, 1, 1, 0, 1, 2, "",
+  return lsx_biquad_getopts(effp, n, argv, 1, 1, 0, 1, 2, "",
       *effp->handler.name == 'l'? filter_LPF_1 : filter_HPF_1);
 }
 
@@ -78,7 +78,7 @@ static int hilo2_getopts(sox_effect_t * effp, int n, char **argv) {
   if (n != 0 && strcmp(argv[0], "-2") == 0)
     ++argv, --n;
   p->width = sqrt(0.5); /* Default to Butterworth */
-  return sox_biquad_getopts(effp, n, argv, 1, 2, 0, 1, 2, "qohk",
+  return lsx_biquad_getopts(effp, n, argv, 1, 2, 0, 1, 2, "qohk",
       *effp->handler.name == 'l'? filter_LPF : filter_HPF);
 }
 
@@ -87,12 +87,12 @@ static int bandpass_getopts(sox_effect_t * effp, int n, char **argv) {
   filter_t type = filter_BPF;
   if (n != 0 && strcmp(argv[0], "-c") == 0)
     ++argv, --n, type = filter_BPF_CSG;
-  return sox_biquad_getopts(effp, n, argv, 2, 2, 0, 1, 2, "hkqob", type);
+  return lsx_biquad_getopts(effp, n, argv, 2, 2, 0, 1, 2, "hkqob", type);
 }
 
 
 static int bandrej_getopts(sox_effect_t * effp, int n, char **argv) {
-  return sox_biquad_getopts(effp, n, argv, 2, 2, 0, 1, 2, "hkqob", filter_notch);
+  return lsx_biquad_getopts(effp, n, argv, 2, 2, 0, 1, 2, "hkqob", filter_notch);
 }
 
 
@@ -104,7 +104,7 @@ static int allpass_getopts(sox_effect_t * effp, int n, char **argv) {
   else if (n != 0 && strcmp(argv[0], "-2") == 0)
     ++argv, --n, type = filter_AP2;
   m = 1 + (type == filter_APF);
-  return sox_biquad_getopts(effp, n, argv, m, m, 0, 1, 2, "hkqo", type);
+  return lsx_biquad_getopts(effp, n, argv, m, m, 0, 1, 2, "hkqo", type);
 }
 
 
@@ -112,13 +112,13 @@ static int tone_getopts(sox_effect_t * effp, int n, char **argv) {
   priv_t * p = (priv_t *)effp->priv;
   p->width = 0.5;
   p->fc = *effp->handler.name == 'b'? 100 : 3000;
-  return sox_biquad_getopts(effp, n, argv, 1, 3, 1, 2, 0, "shkqo",
+  return lsx_biquad_getopts(effp, n, argv, 1, 3, 1, 2, 0, "shkqo",
       *effp->handler.name == 'b'?  filter_lowShelf: filter_highShelf);
 }
 
 
 static int equalizer_getopts(sox_effect_t * effp, int n, char **argv) {
-  return sox_biquad_getopts(effp, n, argv, 3, 3, 0, 1, 2, "qohk", filter_peakingEQ);
+  return lsx_biquad_getopts(effp, n, argv, 3, 3, 0, 1, 2, "qohk", filter_peakingEQ);
 }
 
 
@@ -126,7 +126,7 @@ static int band_getopts(sox_effect_t * effp, int n, char **argv) {
   filter_t type = filter_BPF_SPK;
   if (n != 0 && strcmp(argv[0], "-n") == 0)
     ++argv, --n, type = filter_BPF_SPK_N;
-  return sox_biquad_getopts(effp, n, argv, 1, 2, 0, 1, 2, "hkqo", type);
+  return lsx_biquad_getopts(effp, n, argv, 1, 2, 0, 1, 2, "hkqo", type);
 }
 
 
@@ -135,7 +135,7 @@ static int deemph_getopts(sox_effect_t * effp, int n, char **argv) {
   p->fc    = 5283;
   p->width = 0.4845;
   p->gain  = -9.477;
-  return sox_biquad_getopts(effp, n, argv, 0, 0, 0, 1, 2, "s", filter_deemph);
+  return lsx_biquad_getopts(effp, n, argv, 0, 0, 0, 1, 2, "s", filter_deemph);
 }
 
 
@@ -364,7 +364,7 @@ static int start(sox_effect_t * effp)
       p->b0 *= g; p->b1 *= g; p->b2 *= g;}
       break;
   }
-  return sox_biquad_start(effp);
+  return lsx_biquad_start(effp);
 }
 
 
@@ -372,7 +372,7 @@ static int start(sox_effect_t * effp)
 sox_effect_handler_t const * sox_##name##_effect_fn(void) { \
   static sox_effect_handler_t handler = { \
     #name, usage, flags, \
-    group##_getopts, start, sox_biquad_flow, 0, 0, 0, sizeof(biquad_t)\
+    group##_getopts, start, lsx_biquad_flow, 0, 0, 0, sizeof(biquad_t)\
   }; \
   return &handler; \
 }

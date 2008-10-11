@@ -95,7 +95,7 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
     }
   }
 
-  if (!sox_compandt_parse(&l->transfer_fn, argv[1], n>2 ? argv[2] : 0))
+  if (!lsx_compandt_parse(&l->transfer_fn, argv[1], n>2 ? argv[2] : 0))
     return SOX_EOF;
 
   /* Set the initial "volume" to be attibuted to the input channels.
@@ -135,7 +135,7 @@ static int start(sox_effect_t * effp)
   for (i = 0; i < l->expectedChannels; ++i)
     sox_debug("Channel %i: attack = %g decay = %g", i,
         l->channels[i].attack_times[0], l->channels[i].attack_times[1]);
-  if (!sox_compandt_show(&l->transfer_fn, effp->global_info->plot))
+  if (!lsx_compandt_show(&l->transfer_fn, effp->global_info->plot))
     return SOX_EOF;
 
   /* Convert attack and decay rates using number of samples */
@@ -204,7 +204,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
     for (chan = 0; chan < filechans; ++chan) {
       int ch = l->expectedChannels > 1 ? chan : 0;
       double level_in_lin = l->channels[ch].volume;
-      double level_out_lin = sox_compandt(&l->transfer_fn, level_in_lin);
+      double level_out_lin = lsx_compandt(&l->transfer_fn, level_in_lin);
       double checkbuf;
 
       if (l->delay_buf_size <= 0) {
@@ -245,7 +245,7 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
     for (chan = 0; chan < effp->out_signal.channels; ++chan) {
       int c = l->expectedChannels > 1 ? chan : 0;
       double level_in_lin = l->channels[c].volume;
-      double level_out_lin = sox_compandt(&l->transfer_fn, level_in_lin);
+      double level_out_lin = lsx_compandt(&l->transfer_fn, level_in_lin);
       obuf[done++] = l->delay_buf[l->delay_buf_index++] * level_out_lin;
       l->delay_buf_index %= l->delay_buf_size;
       l->delay_buf_cnt--;
@@ -266,7 +266,7 @@ static int kill(sox_effect_t * effp)
 {
   priv_t * l = (priv_t *) effp->priv;
 
-  sox_compandt_kill(&l->transfer_fn);
+  lsx_compandt_kill(&l->transfer_fn);
   free(l->channels);
   return SOX_SUCCESS;
 }

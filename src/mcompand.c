@@ -255,7 +255,7 @@ static int sox_mcompand_getopts_1(comp_band_t * l, size_t n, char **argv)
         ++i;
       } while (s != NULL);
 
-      if (!sox_compandt_parse(&l->transfer_fn, argv[1], n>2 ? argv[2] : 0))
+      if (!lsx_compandt_parse(&l->transfer_fn, argv[1], n>2 ? argv[2] : 0))
         return SOX_EOF;
 
       /* Set the initial "volume" to be attibuted to the input channels.
@@ -434,7 +434,7 @@ static int sox_mcompand_flow_1(sox_effect_t * effp, priv_t * c, comp_band_t * l,
     for (chan = 0; chan < filechans; ++chan) {
       int ch = l->expectedChannels > 1 ? chan : 0;
       double level_in_lin = l->volume[ch];
-      double level_out_lin = sox_compandt(&l->transfer_fn, level_in_lin);
+      double level_out_lin = lsx_compandt(&l->transfer_fn, level_in_lin);
       double checkbuf;
 
       if (c->delay_buf_size <= 0) {
@@ -612,7 +612,7 @@ static int kill(sox_effect_t * effp)
 
   for (band = 0; band < c->nBands; band++) {
     l = &c->bands[band];
-    sox_compandt_kill(&l->transfer_fn);
+    lsx_compandt_kill(&l->transfer_fn);
     free(l->decayRate);
     free(l->attackRate);
     free(l->volume);

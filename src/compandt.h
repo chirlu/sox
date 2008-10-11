@@ -28,12 +28,12 @@ typedef struct {
   double curve_dB;
 } sox_compandt_t;
 
-sox_bool sox_compandt_parse(sox_compandt_t * t, char * points, char * gain);
-sox_bool sox_compandt_show(sox_compandt_t * t, sox_plot_t plot);
-void    sox_compandt_kill(sox_compandt_t * p);
+sox_bool lsx_compandt_parse(sox_compandt_t * t, char * points, char * gain);
+sox_bool lsx_compandt_show(sox_compandt_t * t, sox_plot_t plot);
+void    lsx_compandt_kill(sox_compandt_t * p);
 
 /* Place in header to allow in-lining */
-static double sox_compandt(sox_compandt_t * t, double in_lin)
+static double lsx_compandt(sox_compandt_t * t, double in_lin)
 {
   struct sox_compandt_segment * s;
   double in_log, out_log;
