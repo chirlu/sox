@@ -261,7 +261,7 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
 {
   static char const * const no_yes[] = {"no", "yes"};
   FILE * const output = sox_mode == sox_soxi? stdout : stderr;
-  char const * filetype = find_file_extension(ft->filename);
+  char const * filetype = sox_find_file_extension(ft->filename);
   sox_bool show_type = sox_true;
   size_t i;
 

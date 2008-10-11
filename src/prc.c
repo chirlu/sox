@@ -199,7 +199,7 @@ static int startread(sox_format_t * ft)
       return SOX_EOF;
   } else if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) {
     p->frame_samp = 0;
-    if (sox_adpcm_ima_start(ft, &p->adpcm))
+    if (lsx_adpcm_ima_start(ft, &p->adpcm))
       return SOX_EOF;
   }
 
@@ -269,11 +269,11 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t samp)
       sox_debug_more("list length %d", trash);
 
       /* Reset CODEC for start of frame */
-      sox_adpcm_reset(&p->adpcm, ft->encoding.encoding);
+      lsx_adpcm_reset(&p->adpcm, ft->encoding.encoding);
     }
     nsamp = min(p->frame_samp, samp);
     p->nsamp += nsamp;
-    read = sox_adpcm_read(ft, &p->adpcm, buf, nsamp);
+    read = lsx_adpcm_read(ft, &p->adpcm, buf, nsamp);
     p->frame_samp -= read;
     sox_debug_more("samples left in this frame: %d", p->frame_samp);
     return read;
@@ -288,7 +288,7 @@ static int stopread(sox_format_t * ft)
   priv_t * p = (priv_t *)ft->priv;
 
   if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM)
-    return sox_adpcm_stopread(ft, &p->adpcm);
+    return lsx_adpcm_stopread(ft, &p->adpcm);
   else
     return SOX_SUCCESS;
 }
@@ -310,7 +310,7 @@ static int startwrite(sox_format_t * ft)
     if (lsx_rawstartwrite(ft))
       return SOX_EOF;
   } else if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) {
-    if (sox_adpcm_ima_start(ft, &p->adpcm))
+    if (lsx_adpcm_ima_start(ft, &p->adpcm))
       return SOX_EOF;
   }
 
@@ -373,11 +373,11 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t n
       /* Write length again (seems to be a BListL) */
       sox_debug_more("list length %lu", (unsigned long)samp);
       lsx_writedw(ft, (unsigned) samp);
-      sox_adpcm_reset(&p->adpcm, ft->encoding.encoding);
-      written1 = sox_adpcm_write(ft, &p->adpcm, buf + written, samp);
+      lsx_adpcm_reset(&p->adpcm, ft->encoding.encoding);
+      written1 = lsx_adpcm_write(ft, &p->adpcm, buf + written, samp);
       if (written1 != samp)
         break;
-      sox_adpcm_flush(ft, &p->adpcm);
+      lsx_adpcm_flush(ft, &p->adpcm);
       written += written1;
     }
   } else

@@ -25,9 +25,9 @@ SOX_FORMAT_HANDLER(aiff)
     SOX_ENCODING_SIGN2, 32, 24, 16, 8, 0, 0};
   static sox_format_handler_t const sox_aiff_format = {SOX_LIB_VERSION_CODE,
     "AIFF files used on Apple IIc/IIgs and SGI", names, SOX_FILE_BIG_END,
-    sox_aiffstartread, sox_aiffread, sox_aiffstopread,
-    sox_aiffstartwrite, sox_aiffwrite, sox_aiffstopwrite,
-    sox_aiffseek, write_encodings, NULL, sizeof(aiff_priv_t)
+    lsx_aiffstartread, lsx_aiffread, lsx_aiffstopread,
+    lsx_aiffstartwrite, lsx_aiffwrite, lsx_aiffstopwrite,
+    lsx_aiffseek, write_encodings, NULL, sizeof(aiff_priv_t)
   };
   return &sox_aiff_format;
 }

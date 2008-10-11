@@ -553,6 +553,7 @@ typedef struct {char const *text; unsigned value;} sox_enum_item;
 
 sox_enum_item const * sox_find_enum_text(char const * text, sox_enum_item const * sox_enum_items);
 sox_enum_item const * sox_find_enum_value(unsigned value, sox_enum_item const * sox_enum_items);
+char const * sox_find_file_extension(char const * pathname);
 char const * sox_sigfigs3(size_t number);
 char const * sox_sigfigs3p(double percentage);
 

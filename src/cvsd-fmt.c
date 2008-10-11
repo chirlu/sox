@@ -24,8 +24,8 @@ SOX_FORMAT_HANDLER(cvsd)
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "Headerless MIL Std 188 113 Continuously Variable Slope Delta modulation",
     names, SOX_FILE_MONO,
-    sox_cvsdstartread, sox_cvsdread, sox_cvsdstopread,
-    sox_cvsdstartwrite, sox_cvsdwrite, sox_cvsdstopwrite,
+    lsx_cvsdstartread, lsx_cvsdread, lsx_cvsdstopread,
+    lsx_cvsdstartwrite, lsx_cvsdwrite, lsx_cvsdstopwrite,
     lsx_rawseek, write_encodings, NULL, sizeof(cvsd_priv_t)
   };
   return &handler;

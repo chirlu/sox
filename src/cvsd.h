@@ -52,13 +52,13 @@ typedef struct {
   unsigned cvsd_rate;
 } cvsd_priv_t;
 
-int sox_cvsdstartread(sox_format_t * ft);
-int sox_cvsdstartwrite(sox_format_t * ft);
-size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, size_t nsamp);
-size_t sox_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp);
-int sox_cvsdstopread(sox_format_t * ft);
-int sox_cvsdstopwrite(sox_format_t * ft);
+int lsx_cvsdstartread(sox_format_t * ft);
+int lsx_cvsdstartwrite(sox_format_t * ft);
+size_t lsx_cvsdread(sox_format_t * ft, sox_sample_t *buf, size_t nsamp);
+size_t lsx_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp);
+int lsx_cvsdstopread(sox_format_t * ft);
+int lsx_cvsdstopwrite(sox_format_t * ft);
 
-int sox_dvmsstartread(sox_format_t * ft);
-int sox_dvmsstartwrite(sox_format_t * ft);
-int sox_dvmsstopwrite(sox_format_t * ft);
+int lsx_dvmsstartread(sox_format_t * ft);
+int lsx_dvmsstartwrite(sox_format_t * ft);
+int lsx_dvmsstopwrite(sox_format_t * ft);

@@ -401,7 +401,7 @@ sox_format_t * sox_open_read(
 
   if (!filetype) {
     if (ft->seekable) {
-      filetype = detect_magic(ft, find_file_extension(path));
+      filetype = detect_magic(ft, sox_find_file_extension(path));
       lsx_rewind(ft);
 #if HAVE_MAGIC
       if (!filetype) {
@@ -428,7 +428,7 @@ sox_format_t * sox_open_read(
       }
     }
     else {
-      if (!(filetype = find_file_extension(path))) {
+      if (!(filetype = sox_find_file_extension(path))) {
         sox_fail("can't determine type of `%s'", path);
         goto error;
       }
@@ -500,7 +500,7 @@ sox_bool sox_format_supports_encoding(
   assert(path);
   assert(encoding);
   if (!filetype)
-    filetype = find_file_extension(path);
+    filetype = sox_find_file_extension(path);
 
   if (!filetype || !(handler = sox_find_format(filetype, is_file_extension)) ||
       !handler->write_formats)
@@ -693,7 +693,7 @@ sox_format_t * sox_open_write(
     ft->handler = *handler;
   }
   else {
-    if (!(filetype = find_file_extension(path))) {
+    if (!(filetype = sox_find_file_extension(path))) {
       sox_fail("can't determine type of `%s'", path);
       goto error;
     }

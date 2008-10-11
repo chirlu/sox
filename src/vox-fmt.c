@@ -25,8 +25,8 @@ SOX_FORMAT_HANDLER(vox)
   static unsigned const write_encodings[] = {SOX_ENCODING_OKI_ADPCM, 4, 0, 0};
   static sox_format_handler_t handler = {SOX_LIB_VERSION_CODE,
     "Raw OKI/Dialogic ADPCM", names, SOX_FILE_MONO,
-    sox_vox_start, sox_vox_read, sox_vox_stopread,
-    sox_vox_start, sox_vox_write, sox_vox_stopwrite,
+    lsx_vox_start, lsx_vox_read, lsx_vox_stopread,
+    lsx_vox_start, lsx_vox_write, lsx_vox_stopwrite,
     lsx_rawseek, write_encodings, NULL, sizeof(adpcm_io_t)
   };
   return &handler;

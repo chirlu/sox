@@ -109,7 +109,7 @@ int lsx_adpcm_encode(int sample, adpcm_t * p)
  */
 
 /******************************************************************************
- * Function   : sox_adpcm_reset
+ * Function   : lsx_adpcm_reset
  * Description: Resets the ADPCM codec state.
  * Parameters : state - ADPCM state structure
  *              type - SOX_ENCODING_OKI_ADPCM or SOX_ENCODING_IMA_ADPCM
@@ -119,7 +119,7 @@ int lsx_adpcm_encode(int sample, adpcm_t * p)
  *                 the decoder between frames.
  ******************************************************************************/
 
-void sox_adpcm_reset(adpcm_io_t * state, sox_encoding_t type)
+void lsx_adpcm_reset(adpcm_io_t * state, sox_encoding_t type)
 {
   state->file.count = 0;
   state->file.pos = 0;
@@ -130,7 +130,7 @@ void sox_adpcm_reset(adpcm_io_t * state, sox_encoding_t type)
 }
 
 /******************************************************************************
- * Function   : adpcm_start
+ * Function   : lsx_adpcm_start
  * Description: Initialises the file parameters and ADPCM codec state.
  * Parameters : ft  - file info structure
  *              state - ADPCM state structure
@@ -153,23 +153,23 @@ static int adpcm_start(sox_format_t * ft, adpcm_io_t * state, sox_encoding_t typ
   state->file.size = sox_globals.bufsiz;
   ft->signal.channels = 1;
 
-  sox_adpcm_reset(state, type);
+  lsx_adpcm_reset(state, type);
 
   return lsx_rawstart(ft, sox_true, sox_false, sox_true, type, 4);
 }
 
-int sox_adpcm_oki_start(sox_format_t * ft, adpcm_io_t * state)
+int lsx_adpcm_oki_start(sox_format_t * ft, adpcm_io_t * state)
 {
   return adpcm_start(ft, state, SOX_ENCODING_OKI_ADPCM);
 }
 
-int sox_adpcm_ima_start(sox_format_t * ft, adpcm_io_t * state)
+int lsx_adpcm_ima_start(sox_format_t * ft, adpcm_io_t * state)
 {
   return adpcm_start(ft, state, SOX_ENCODING_IMA_ADPCM);
 }
 
 /******************************************************************************
- * Function   : sox_adpcm_read
+ * Function   : lsx_adpcm_read
  * Description: Converts the OKI ADPCM 4-bit samples to 16-bit signed PCM and
  *              then scales the samples to full sox_sample_t range.
  * Parameters : ft     - file info structure
@@ -181,7 +181,7 @@ int sox_adpcm_ima_start(sox_format_t * ft, adpcm_io_t * state)
  * Notes      :
  ******************************************************************************/
 
-size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t * state, sox_sample_t * buffer, size_t len)
+size_t lsx_adpcm_read(sox_format_t * ft, adpcm_io_t * state, sox_sample_t * buffer, size_t len)
 {
   size_t n = 0;
   uint8_t byte;
@@ -219,7 +219,7 @@ size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t * state, sox_sample_t * buff
  * Notes      :
  ******************************************************************************/
 
-int sox_adpcm_stopread(sox_format_t * ft UNUSED, adpcm_io_t * state)
+int lsx_adpcm_stopread(sox_format_t * ft UNUSED, adpcm_io_t * state)
 {
   if (state->encoder.errors)
     sox_warn("%s: ADPCM state errors: %u", ft->filename, state->encoder.errors);
@@ -243,7 +243,7 @@ int sox_adpcm_stopread(sox_format_t * ft UNUSED, adpcm_io_t * state)
  * Notes      :
  ******************************************************************************/
 
-size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t * state, const sox_sample_t * buffer, size_t length)
+size_t lsx_adpcm_write(sox_format_t * ft, adpcm_io_t * state, const sox_sample_t * buffer, size_t length)
 {
   size_t count = 0;
   uint8_t byte = state->store.byte;
@@ -278,7 +278,7 @@ size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t * state, const sox_sample_t
 }
 
 /******************************************************************************
- * Function   : sox_adpcm_flush
+ * Function   : lsx_adpcm_flush
  * Description: Flushes any leftover samples.
  * Parameters : ft   - file info structure
  *              state  - ADPCM state structure
@@ -287,7 +287,7 @@ size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t * state, const sox_sample_t
  * Notes      : 1. Called directly for writing framed formats
  ******************************************************************************/
 
-void sox_adpcm_flush(sox_format_t * ft, adpcm_io_t * state)
+void lsx_adpcm_flush(sox_format_t * ft, adpcm_io_t * state)
 {
   uint8_t byte = state->store.byte;
   uint8_t flag = state->store.flag;
@@ -303,7 +303,7 @@ void sox_adpcm_flush(sox_format_t * ft, adpcm_io_t * state)
 }
 
 /******************************************************************************
- * Function   : sox_adpcm_stopwrite
+ * Function   : lsx_adpcm_stopwrite
  * Description: Flushes any leftover samples and frees the internal buffer
  *              allocated in voxstart/imastart.
  * Parameters : ft   - file info structure
@@ -313,9 +313,9 @@ void sox_adpcm_flush(sox_format_t * ft, adpcm_io_t * state)
  * Notes      :
  ******************************************************************************/
 
-int sox_adpcm_stopwrite(sox_format_t * ft, adpcm_io_t * state)
+int lsx_adpcm_stopwrite(sox_format_t * ft, adpcm_io_t * state)
 {
-  sox_adpcm_flush(ft, state);
+  lsx_adpcm_flush(ft, state);
   free(state->file.buf);
   return (SOX_SUCCESS);
 }

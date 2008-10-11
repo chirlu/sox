@@ -15,9 +15,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-int sox_vox_start(sox_format_t * ft);
-int sox_ima_start(sox_format_t * ft);
-size_t sox_vox_read(sox_format_t * ft, sox_sample_t *buffer, size_t len);
-int sox_vox_stopread(sox_format_t * ft);
-size_t sox_vox_write(sox_format_t * ft, const sox_sample_t *buffer, size_t length);
-int sox_vox_stopwrite(sox_format_t * ft);
+int lsx_vox_start(sox_format_t * ft);
+int lsx_ima_start(sox_format_t * ft);
+size_t lsx_vox_read(sox_format_t * ft, sox_sample_t *buffer, size_t len);
+int lsx_vox_stopread(sox_format_t * ft);
+size_t lsx_vox_write(sox_format_t * ft, const sox_sample_t *buffer, size_t length);
+int lsx_vox_stopwrite(sox_format_t * ft);

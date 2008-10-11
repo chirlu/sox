@@ -38,7 +38,7 @@ static void reportInstrument(sox_format_t * ft);
 /* Private data used by writer */
 typedef aiff_priv_t priv_t;
 
-int sox_aiffseek(sox_format_t * ft, uint64_t offset)
+int lsx_aiffseek(sox_format_t * ft, uint64_t offset)
 {
     priv_t * aiff = (priv_t *) ft->priv;
     size_t new_offset, channel_block, alignment;
@@ -64,7 +64,7 @@ int sox_aiffseek(sox_format_t * ft, uint64_t offset)
     return(ft->sox_errno);
 }
 
-int sox_aiffstartread(sox_format_t * ft)
+int lsx_aiffstartread(sox_format_t * ft)
 {
         priv_t * aiff = (priv_t *) ft->priv;
         char buf[5];
@@ -590,7 +590,7 @@ static int commentChunk(char **text, char *chunkDescription, sox_format_t * ft)
   return(SOX_SUCCESS);
 }
 
-size_t sox_aiffread(sox_format_t * ft, sox_sample_t *buf, size_t len)
+size_t lsx_aiffread(sox_format_t * ft, sox_sample_t *buf, size_t len)
 {
         priv_t * aiff = (priv_t *) ft->priv;
         off_t done;
@@ -604,7 +604,7 @@ size_t sox_aiffread(sox_format_t * ft, sox_sample_t *buf, size_t len)
         return done;
 }
 
-int sox_aiffstopread(sox_format_t * ft)
+int lsx_aiffstopread(sox_format_t * ft)
 {
         char buf[5];
         uint32_t chunksize;
@@ -645,7 +645,7 @@ int sox_aiffstopread(sox_format_t * ft)
    Strictly spoken this is not legal, but the playaiff utility
    will still be able to play the resulting file. */
 
-int sox_aiffstartwrite(sox_format_t * ft)
+int lsx_aiffstartwrite(sox_format_t * ft)
 {
         priv_t * aiff = (priv_t *) ft->priv;
         int rc;
@@ -666,7 +666,7 @@ int sox_aiffstartwrite(sox_format_t * ft)
         return(aiffwriteheader(ft, (size_t) 0x7f000000 / ((ft->encoding.bits_per_sample>>3)*ft->signal.channels)));
 }
 
-size_t sox_aiffwrite(sox_format_t * ft, const sox_sample_t *buf, size_t len)
+size_t lsx_aiffwrite(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
         priv_t * aiff = (priv_t *) ft->priv;
         aiff->nsamples += len;
@@ -674,7 +674,7 @@ size_t sox_aiffwrite(sox_format_t * ft, const sox_sample_t *buf, size_t len)
         return(len);
 }
 
-int sox_aiffstopwrite(sox_format_t * ft)
+int lsx_aiffstopwrite(sox_format_t * ft)
 {
         priv_t * aiff = (priv_t *) ft->priv;
 
@@ -842,7 +842,7 @@ static int aiffwriteheader(sox_format_t * ft, size_t nframes)
         return(SOX_SUCCESS);
 }
 
-int sox_aifcstartwrite(sox_format_t * ft)
+int lsx_aifcstartwrite(sox_format_t * ft)
 {
         priv_t * aiff = (priv_t *) ft->priv;
         int rc;
@@ -863,7 +863,7 @@ int sox_aifcstartwrite(sox_format_t * ft)
         return(aifcwriteheader(ft, (size_t) 0x7f000000 / ((ft->encoding.bits_per_sample >> 3)*ft->signal.channels)));
 }
 
-int sox_aifcstopwrite(sox_format_t * ft)
+int lsx_aifcstopwrite(sox_format_t * ft)
 {
         priv_t * aiff = (priv_t *) ft->priv;
 

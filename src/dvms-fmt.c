@@ -24,8 +24,8 @@ SOX_FORMAT_HANDLER(dvms)
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "MIL Std 188 113 Continuously Variable Slope Delta modulation with header",
     names, SOX_FILE_MONO,
-    sox_dvmsstartread, sox_cvsdread, sox_cvsdstopread,
-    sox_dvmsstartwrite, sox_cvsdwrite, sox_dvmsstopwrite,
+    lsx_dvmsstartread, lsx_cvsdread, lsx_cvsdstopread,
+    lsx_dvmsstartwrite, lsx_cvsdwrite, lsx_dvmsstopwrite,
     NULL, write_encodings, NULL, sizeof(cvsd_priv_t)
   };
   return &handler;

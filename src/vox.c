@@ -16,32 +16,32 @@
 /* .vox doesn't need any private state over and above adpcm_io_t *, so
    just have simple wrappers that pass it on directly. */
 
-int sox_vox_start(sox_format_t * ft)
+int lsx_vox_start(sox_format_t * ft)
 {
-  return sox_adpcm_oki_start(ft, (adpcm_io_t *)ft->priv);
+  return lsx_adpcm_oki_start(ft, (adpcm_io_t *)ft->priv);
 }
 
-int sox_ima_start(sox_format_t * ft)
+int lsx_ima_start(sox_format_t * ft)
 {
-  return sox_adpcm_ima_start(ft, (adpcm_io_t *)ft->priv);
+  return lsx_adpcm_ima_start(ft, (adpcm_io_t *)ft->priv);
 }
 
-size_t sox_vox_read(sox_format_t * ft, sox_sample_t *buffer, size_t len)
+size_t lsx_vox_read(sox_format_t * ft, sox_sample_t *buffer, size_t len)
 {
-  return sox_adpcm_read(ft, (adpcm_io_t *)ft->priv, buffer, len);
+  return lsx_adpcm_read(ft, (adpcm_io_t *)ft->priv, buffer, len);
 }
 
-int sox_vox_stopread(sox_format_t * ft)
+int lsx_vox_stopread(sox_format_t * ft)
 {
-  return sox_adpcm_stopread(ft, (adpcm_io_t *)ft->priv);
+  return lsx_adpcm_stopread(ft, (adpcm_io_t *)ft->priv);
 }
 
-size_t sox_vox_write(sox_format_t * ft, const sox_sample_t *buffer, size_t length)
+size_t lsx_vox_write(sox_format_t * ft, const sox_sample_t *buffer, size_t length)
 {
-  return sox_adpcm_write(ft, (adpcm_io_t *)ft->priv, buffer, length);
+  return lsx_adpcm_write(ft, (adpcm_io_t *)ft->priv, buffer, length);
 }
 
-int sox_vox_stopwrite(sox_format_t * ft)
+int lsx_vox_stopwrite(sox_format_t * ft)
 {
-  return sox_adpcm_stopwrite(ft, (adpcm_io_t *)ft->priv);
+  return lsx_adpcm_stopwrite(ft, (adpcm_io_t *)ft->priv);
 }

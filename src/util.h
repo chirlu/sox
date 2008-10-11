@@ -98,5 +98,3 @@
 #define MACHINE_IS_BIGENDIAN 0
 #define MACHINE_IS_LITTLEENDIAN 1
 #endif
-
-char const * find_file_extension(char const * pathname);

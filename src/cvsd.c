@@ -106,7 +106,7 @@ static void cvsdstartcommon(sox_format_t * ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_cvsdstartread(sox_format_t * ft)
+int lsx_cvsdstartread(sox_format_t * ft)
 {
         priv_t *p = (priv_t *) ft->priv;
         float *fp1;
@@ -132,7 +132,7 @@ int sox_cvsdstartread(sox_format_t * ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_cvsdstartwrite(sox_format_t * ft)
+int lsx_cvsdstartwrite(sox_format_t * ft)
 {
         priv_t *p = (priv_t *) ft->priv;
         float *fp1;
@@ -154,7 +154,7 @@ int sox_cvsdstartwrite(sox_format_t * ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_cvsdstopwrite(sox_format_t * ft)
+int lsx_cvsdstopwrite(sox_format_t * ft)
 {
         priv_t *p = (priv_t *) ft->priv;
 
@@ -170,7 +170,7 @@ int sox_cvsdstopwrite(sox_format_t * ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_cvsdstopread(sox_format_t * ft)
+int lsx_cvsdstopread(sox_format_t * ft)
 {
         priv_t *p = (priv_t *) ft->priv;
 
@@ -182,7 +182,7 @@ int sox_cvsdstopread(sox_format_t * ft)
 
 /* ---------------------------------------------------------------------- */
 
-size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, size_t nsamp)
+size_t lsx_cvsdread(sox_format_t * ft, sox_sample_t *buf, size_t nsamp)
 {
         priv_t *p = (priv_t *) ft->priv;
         size_t done = 0;
@@ -238,7 +238,7 @@ size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, size_t nsamp)
 
 /* ---------------------------------------------------------------------- */
 
-size_t sox_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp)
+size_t lsx_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp)
 {
         priv_t *p = (priv_t *) ft->priv;
         size_t done = 0;
@@ -468,7 +468,7 @@ static void make_dvms_hdr(sox_format_t * ft, struct dvms_header *hdr)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_dvmsstartread(sox_format_t * ft)
+int lsx_dvmsstartread(sox_format_t * ft)
 {
         struct dvms_header hdr;
         int rc;
@@ -496,7 +496,7 @@ int sox_dvmsstartread(sox_format_t * ft)
         sox_debug("DVMS rate %dbit/s using %gbit/s deviation %g%%",
                hdr.Srate*100, ft->signal.rate,
                ((ft->signal.rate - hdr.Srate*100) * 100) / ft->signal.rate);
-        rc = sox_cvsdstartread(ft);
+        rc = lsx_cvsdstartread(ft);
         if (rc)
             return rc;
 
@@ -505,12 +505,12 @@ int sox_dvmsstartread(sox_format_t * ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_dvmsstartwrite(sox_format_t * ft)
+int lsx_dvmsstartwrite(sox_format_t * ft)
 {
         struct dvms_header hdr;
         int rc;
 
-        rc = sox_cvsdstartwrite(ft);
+        rc = lsx_cvsdstartwrite(ft);
         if (rc)
             return rc;
 
@@ -529,12 +529,12 @@ int sox_dvmsstartwrite(sox_format_t * ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_dvmsstopwrite(sox_format_t * ft)
+int lsx_dvmsstopwrite(sox_format_t * ft)
 {
         struct dvms_header hdr;
         int rc;
 
-        sox_cvsdstopwrite(ft);
+        lsx_cvsdstopwrite(ft);
         if (!ft->seekable)
         {
             sox_warn("File not seekable");

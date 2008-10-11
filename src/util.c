@@ -36,7 +36,7 @@ int strncasecmp(char const * s1, char const * s2, size_t n)
 }
 #endif
 
-char const * find_file_extension(char const * pathname)
+char const * sox_find_file_extension(char const * pathname)
 {
   /* First, chop off any path portions of filename.  This
    * prevents the next search from considering that part. */
