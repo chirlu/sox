@@ -59,7 +59,7 @@ then
   ])
   CFLAGS="$ac_save_CFLAGS"
   LIBS="$ac_save_LIBS"
-  if test "$have_samplereate" != "yes"
+  if test "$have_samplerate" != "yes"
   then
     SAMPLERATE_LIBS=""
     SAMPLERATE_CFLAGS=""
