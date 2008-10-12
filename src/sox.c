@@ -605,13 +605,23 @@ static void delete_user_effargs(void)
   eff_chain_count = 0;
 } /* delete_user_effargs */
 
+static sox_bool is_pseudo_effect(char *s)
+{
+  if (strcmp("newfile", s) == 0 || 
+      strcmp("restart", s) == 0 ||
+      strcmp(":", s) == 0)
+    return sox_true;
+  else
+    return sox_false;
+} /* is_pseudo_effect */
+
 static void parse_effects(int argc, char **argv)
 {
   nuser_effects[eff_chain_count] = 0;
   while (optind < argc) {
     unsigned eff_offset;
     int j;
-    int newfile_mode = 0;
+    int newline_mode = 0;
 
     if (eff_chain_count >= MAX_USER_EFF_CHAINS) {
       sox_fail("too many effects chains specified (at most %i allowed)", MAX_USER_EFF_CHAINS);
@@ -647,20 +657,32 @@ static void parse_effects(int argc, char **argv)
         nuser_effects[++eff_chain_count] = 0;
         continue;
       }
-      newfile_mode = 1;
+      newline_mode = 1;
+    }
+    else if (strcmp(argv[optind], "restart") == 0)
+    {
+      /* Start a new effect chain for restart if user doesn't
+       * manually do it.  Restart loop without advancing
+       * optind to do error checking.
+       */
+      if (nuser_effects[eff_chain_count] != 0)
+      {
+        nuser_effects[++eff_chain_count] = 0;
+        continue;
+      }
+      newline_mode = 1;
     }
 
     /* Name should always be correct! */
     user_effargs[eff_chain_count][eff_offset].name = strdup(argv[optind++]);
     for (j = 0; j < argc - optind && !sox_find_effect(argv[optind + j]) &&
-         strcmp(":", argv[optind + j]) && strcmp("newfile", argv[optind + j]); 
-         ++j)
+         !is_pseudo_effect(argv[optind + j]); ++j)
       user_effargs[eff_chain_count][eff_offset].argv[j] = strdup(argv[optind + j]);
     user_effargs[eff_chain_count][eff_offset].argc = j;
 
     optind += j; /* Skip past the effect arguments */
     nuser_effects[eff_chain_count]++;
-    if (newfile_mode) 
+    if (newline_mode) 
     {
       output_method = sox_multiple;
       nuser_effects[++eff_chain_count] = 0;
@@ -751,8 +773,7 @@ static void read_user_effects(char *filename)
       argc = strtoargv(s, &argv);
 
       /* Make sure first option is an effect name. */
-      if (!sox_find_effect(argv[0]) && !strcmp("newfile", argv[0]) &&
-          !strcmp(":", argv[0]))
+      if (!sox_find_effect(argv[0]) && !is_pseudo_effect(argv[0]))
       {
         printf("Cannot find an effect called `%s'.\n", argv[0]);
         exit(1);
@@ -877,6 +898,8 @@ static void add_effects(sox_effects_chain_t *chain)
 
 static int advance_eff_chain(void)
 {
+  sox_bool reuse_output = sox_true;
+
   /* If input file reached EOF then delete all effects in current
    * chain and restart the current chain.
    *
@@ -893,16 +916,20 @@ static int advance_eff_chain(void)
     if (++current_eff_chain >= eff_chain_count) 
       return SOX_EOF;
 
-    /* Save off the output effect handler to be reused except
-     * when pseudo-effect "newfile" is spcified.
-     */
-    if (nuser_effects[current_eff_chain] == 1 &&
-        strcmp("newfile", user_effargs[current_eff_chain][0].name) == 0)
+    while (nuser_effects[current_eff_chain] == 1 && 
+           is_pseudo_effect(user_effargs[current_eff_chain][0].name))
     {
-      if (++current_eff_chain >= eff_chain_count) 
-        return SOX_EOF;
+      if (strcmp("newfile", user_effargs[current_eff_chain][0].name) == 0)
+      {
+        if (++current_eff_chain >= eff_chain_count) 
+          return SOX_EOF;
+        reuse_output = sox_false;
+      }
+      else if (strcmp("restart", user_effargs[current_eff_chain][0].name) == 0)
+        current_eff_chain = 0;
     }
-    else
+
+    if (reuse_output)
       save_output_eff = sox_pop_effect_last(effects_chain);
 
     /* TODO: Warn user when an effect is deleted that still
