@@ -185,13 +185,16 @@ static void cleanup(void)
   sox_format_quit();
 }
 
-static char const * str_time(double duration)
+static char const * str_time(double seconds)
 {
   static char string[16][50];
   static int i;
-  int mins = duration / 60;
+  int hours, mins = seconds / 60;
+  seconds -= mins * 60;
+  hours = mins / 60;
+  mins -= hours * 60;
   i = (i+1) & 15;
-  sprintf(string[i], "%02i:%05.2f", mins, duration - mins * 60);
+  sprintf(string[i], "%02i:%02i:%05.2f", hours, mins, seconds);
   return string[i];
 }
 
@@ -1020,9 +1023,9 @@ static void display_status(sox_bool all_done)
       left_time = max(in_time - read_time, 0);
       percentage = max(100. * read_wide_samples / input_wide_samples, 0);
     }
-    fprintf(stderr, "\r%-5s %s [%s] of %s Out:%-5s [%6s|%-6s]%s Clip:%-5s",
+    fprintf(stderr, "\rIn:%-5s %s [%s] Out:%-5s [%6s|%-6s] %s Clip:%-5s",
       sox_sigfigs3p(percentage), str_time(read_time), str_time(left_time),
-      str_time(in_time), sox_sigfigs3(output_samples),
+      sox_sigfigs3(output_samples),
       vu(0), vu(1), headroom(), sox_sigfigs3(total_clips()));
   }
   if (all_done)
