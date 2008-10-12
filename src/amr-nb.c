@@ -44,7 +44,6 @@ static char const magic[] = "#!AMR\n";
 #define AMR_FRAME           160                 /* 20ms @ 8kHz */
 #define AMR_MODE_MAX        7
 #define AMR_NAMES           "amr-nb", "anb"
-#define AMR_PRIV_TOO_BIG    amr_nb_PRIVSIZE_too_big
 #define AMR_RATE            8000
 #define D_IF_decode         Decoder_Interface_Decode
 #define D_IF_exit           Decoder_Interface_exit

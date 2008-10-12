@@ -34,6 +34,5 @@ static char const magic[] = "#!AMR-WB\n";
 #define AMR_FRAME           L_FRAME16k
 #define AMR_MODE_MAX        8
 #define AMR_NAMES           "amr-wb", "awb"
-#define AMR_PRIV_TOO_BIG    amr_wb_PRIVSIZE_too_big
 #define AMR_RATE            16000
 #include "amr.h"
