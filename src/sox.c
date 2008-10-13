@@ -1915,8 +1915,12 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       return c;
       break;
 
-    case 'h': case '?':
-      usage(NULL);              /* No return */
+    case 'h': 
+      usage(NULL);
+      break;
+
+    case '?':
+      usage("invalid option");              /* No return */
       break;
 
     case 't':
