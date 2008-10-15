@@ -19,6 +19,8 @@
 
 #include "sox_i.h"
 #include "fifo.h"
+#include "getopt.h"
+#include <math.h>
 
 typedef struct {
   /* Configuration parameters: */
@@ -43,7 +45,7 @@ typedef struct {
   size_t skip_total;
 } tempo_t;
 
-/* For the Waveform Similarity part of WSOLA */
+/* Waveform Similarity by least squares; works across multi-channels */
 static float difference(const float * a, const float * b, size_t length)
 {
   float diff = 0;
@@ -83,7 +85,6 @@ static size_t tempo_best_overlap_position(tempo_t * t, float const * new_win)
   return best_pos;
 }
 
-/* For the Over-Lap part of WSOLA */
 static void tempo_overlap(
     tempo_t * t, const float * in1, const float * in2, float * output)
 {
@@ -101,22 +102,22 @@ static void tempo_overlap(
 static void tempo_process(tempo_t * t)
 {
   while (fifo_occupancy(&t->input_fifo) >= t->process_size) {
-    size_t skip, offset = 0;
+    size_t skip, offset;
 
     /* Copy or overlap the first bit to the output */
-    if (!t->segments_total)
-      fifo_write(&t->output_fifo, t->overlap, fifo_read_ptr(&t->input_fifo));
-    else {
+    if (!t->segments_total) {
+      offset = t->search / 2;
+      fifo_write(&t->output_fifo, t->overlap, (float *) fifo_read_ptr(&t->input_fifo) + t->channels * offset);
+    } else {
       offset = tempo_best_overlap_position(t, fifo_read_ptr(&t->input_fifo));
       tempo_overlap(t, t->overlap_buf,
           (float *) fifo_read_ptr(&t->input_fifo) + t->channels * offset,
           fifo_write(&t->output_fifo, t->overlap, NULL));
     }
     /* Copy the middle bit to the output */
-    if (t->segment > 2 * t->overlap)
-      fifo_write(&t->output_fifo, t->segment - 2 * t->overlap,
-                 (float *) fifo_read_ptr(&t->input_fifo) +
-                 t->channels * (offset + t->overlap));
+    fifo_write(&t->output_fifo, t->segment - 2 * t->overlap,
+               (float *) fifo_read_ptr(&t->input_fifo) +
+               t->channels * (offset + t->overlap));
 
     /* Copy the end bit to overlap_buf ready to be mixed with
      * the beginning of the next segment. */
@@ -125,9 +126,8 @@ static void tempo_process(tempo_t * t)
            t->channels * (offset + t->segment - t->overlap),
            t->channels * t->overlap * sizeof(*(t->overlap_buf)));
 
-    /* The Advance part of WSOLA */
+    /* Advance through the input stream */
     skip = t->factor * (++t->segments_total * (t->segment - t->overlap)) + 0.5;
-    skip -= (t->search + 1) >> 1; /* So search straddles nominal skip point. */
     t->skip_total += skip -= t->skip_total;
     fifo_read(&t->input_fifo, skip, NULL);
   }
@@ -174,9 +174,12 @@ static void tempo_setup(tempo_t * t,
   t->search  = sample_rate * search_ms / 1000 + .5;
   t->overlap = max(sample_rate * overlap_ms / 1000 + 4.5, 16);
   t->overlap &= ~7; /* Make divisible by 8 for loop optimisation */
+  if (t->overlap * 2 > t->segment)
+    t->overlap -= 8;
   t->overlap_buf = lsx_malloc(t->overlap * t->channels * sizeof(*t->overlap_buf));
   max_skip = ceil(factor * (t->segment - t->overlap));
   t->process_size = max(max_skip + t->overlap, t->segment) + t->search;
+  memset(fifo_reserve(&t->input_fifo, t->search / 2), 0, (t->search / 2) * t->channels * sizeof(float));
 }
 
 static void tempo_delete(tempo_t * t)
@@ -207,20 +210,40 @@ typedef struct {
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *)effp->priv;
-  p->segment_ms = 82; /* Set non-zero defaults: */
-  p->search_ms  = 14;
-  p->overlap_ms = 12;
+  enum {Default, Music, Speech, Linear} profile = Default;
+  static const double segments_ms [] = {   82,82,  35  , 20};
+  static const double segments_pow[] = {    0, 1, .33  , 1};
+  static const double overlaps_div[] = {6.833, 7,  2.5 , 2};
+  static const double searches_div[] = {5.587, 6,  2.14, 2};
+  int c;
 
-  p->quick_search = argc && !strcmp(*argv, "-q") && (--argc, ++argv, sox_true);
+  p->segment_ms = p->search_ms = p->overlap_ms = HUGE_VAL;
+  while ((c = getopt(argc, argv, "+qmls")) != -1) switch (c) {
+    case 'q': p->quick_search  = sox_true;   break;
+    case 'm': profile = Music; break;
+    case 's': profile = Speech; break;
+    case 'l': profile = Linear; p->search_ms = 0; break;
+    default: sox_fail("unknown option `-%c'", optopt); return lsx_usage(effp);
+  }
+  argc -= optind, argv += optind;
   do {                    /* break-able block */
-    NUMERIC_PARAMETER(factor      ,0.25, 4  )
+    NUMERIC_PARAMETER(factor      ,0.1 , 100 )
     NUMERIC_PARAMETER(segment_ms  , 10 , 120)
     NUMERIC_PARAMETER(search_ms   , 0  , 30 )
     NUMERIC_PARAMETER(overlap_ms  , 0  , 30 )
   } while (0);
 
-  return argc || !p->factor || p->overlap_ms + p->search_ms >= p->segment_ms ?
-    lsx_usage(effp) : SOX_SUCCESS;
+  if (p->segment_ms == HUGE_VAL)
+    p->segment_ms = max(10, segments_ms[profile] / max(pow(p->factor, segments_pow[profile]), 1));
+  if (p->overlap_ms == HUGE_VAL)
+    p->overlap_ms = p->segment_ms / overlaps_div[profile];
+  if (p->search_ms == HUGE_VAL)
+    p->search_ms = p->segment_ms / searches_div[profile];
+
+  p->overlap_ms = min(p->overlap_ms, p->segment_ms / 2);
+  sox_report("quick_search=%u factor=%g segment=%g search=%g overlap=%g",
+    p->quick_search, p->factor, p->segment_ms, p->search_ms, p->overlap_ms);
+  return argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static int start(sox_effect_t * effp)
@@ -276,7 +299,8 @@ sox_effect_handler_t const * sox_tempo_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "tempo", "[-q] factor [segment-ms [search-ms [overlap-ms]]]",
-    SOX_EFF_MCHAN | SOX_EFF_LENGTH, getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
+    SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_GETOPT,
+    getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
   return &handler;
 }
