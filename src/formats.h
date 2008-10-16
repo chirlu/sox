@@ -103,6 +103,9 @@
 #if defined(HAVE_SYS_AUDIOIO_H) || defined(HAVE_SUN_AUDIOIO_H)
   FORMAT(sunau)
 #endif
+#if defined(HAVE_COREAUDIO) || defined(HAVE_COREAUDIO)
+  FORMAT(coreaudio)
+#endif
 #if defined HAVE_OGG_VORBIS
   FORMAT(vorbis)
 #endif

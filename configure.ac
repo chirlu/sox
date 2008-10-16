@@ -239,6 +239,21 @@ if test "$enable_sun_audio" = yes; then
 fi
 AM_CONDITIONAL(HAVE_SUN_AUDIO, test x$enable_sun_audio = xyes)
 
+dnl Check for Mac OSX CoreAudio
+AC_MSG_CHECKING([whether to try building CoreAudio driver])
+AC_ARG_ENABLE(coreaudio,
+    AC_HELP_STRING([--disable-coreaudio], [Don't build CoreAudio driver.]),,enable_coreaudio=yes)
+AC_MSG_RESULT($enable_coreaudio)
+if test "$enable_coreaudio" = "yes"; then
+    AC_CHECK_HEADERS(CoreAudio/CoreAudio.h, [COREAUDIO_LIBS="$COREAUDIO_LIBS -Wl,-framework,CoreAudio"], enable_coreaudio=no)
+fi
+if test "$enable_coreaudio" = yes; then
+   AC_DEFINE(HAVE_COREAUDIO, 1, [Define to 1 if you have CoreAudio.])
+   audio_driver_found=yes
+fi
+AM_CONDITIONAL(HAVE_COREAUDIO, test x$enable_coreaudio = xyes)
+AC_SUBST(COREAUDIO_LIBS)
+
 dnl Check if we want play/rec links
 AC_MSG_CHECKING([whether to make play and rec symlinks])
 AC_ARG_ENABLE(playrec-symlinks,
@@ -589,6 +604,7 @@ echo "ALSA driver....................... $enable_alsa"
 echo "libao driver...................... $enable_libao"
 echo "OSS driver........................ $enable_oss"
 echo "SUN audio driver.................. $enable_sun_audio"
+echo "CoreAudio driver.................. $enable_coreaudio"
 echo "play and rec symlinks............. $enable_playrec_symlinks"
 echo "libgsm............................ $gsm_option"
 echo "liblpc10.......................... $lpc10_option"

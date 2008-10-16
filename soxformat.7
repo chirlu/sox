@@ -217,6 +217,18 @@ signed integers at a sample rate of 44\*d1\ kHz.  The number of (stereo)
 samples in each CDDA track is always a multiple of 588 which is why it
 needs its own handler.
 .TP
+\fBcoreaudio\fR (optional)
+Mac OSX CoreAudio device driver: supports both playing and recording
+audio.  Examples:
+.EX
+	sox infile -t coreaudio
+	sox infile -t coreaudio default
+.EE
+See also
+.BR play (1)
+and
+.BR rec (1).
+.TP
 \&\fB.cvsd\fR, \fB.cvs\fR
 Continuously Variable Slope Delta modulation.
 A headerless format used to compress speech audio for applications such as voice mail.

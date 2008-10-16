@@ -77,6 +77,7 @@ Other new features:
   o New -b/--bits, -e/--encoding alternative options for specifying
     audio encoding parameters.  (robs)
   o [FR 1958680] Support more than 32 input files.  (robs)
+  o New native Mac OSX audio handler for playing/recording. (cbagwell)
 
 Other bug fixes:
 

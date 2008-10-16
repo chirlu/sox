@@ -108,6 +108,11 @@ libsox_fmt_avr_la_SOURCES = avr.c
 libsox_fmt_avr_la_LIBADD = libsox.la
 libsox_fmt_cdr_la_SOURCES = cdr.c
 libsox_fmt_cdr_la_LIBADD = libsox.la
+if HAVE_COREAUDIO
+libsox_fmt_coreaudio_la_SOURCES = coreaudio.c
+libsox_fmt_coreaudio_la_LIBADD = libsox.la @COREAUDIO_LIBS@
+pkglib_LTLIBRARIES += libsox_fmt_coreaudio.la
+endif
 libsox_fmt_cvsd_la_SOURCES = cvsd-fmt.c
 libsox_fmt_cvsd_la_LIBADD = libsox.la
 libsox_fmt_dvms_la_SOURCES = dvms-fmt.c
@@ -326,6 +331,11 @@ if HAVE_AMRNB
     libsox_la_SOURCES += amr-nb.c amr.h amr1.h amr2.h
     libsox_la_LIBADD += @AMR_NB_LIBS@
     sox_LDADD += @AMR_NB_LIBS@
+endif
+if HAVE_COREAUDIO
+    libsox_la_SOURCES += coreaudio.c
+    libsox_la_LIBADD += @COREAUDIO_LIBS@
+    sox_LDADD += @COREAUDIO_LIBS@
 endif
 if HAVE_WAVPACK
     libsox_la_SOURCES += wavpack.c
