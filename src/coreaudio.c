@@ -291,8 +291,7 @@ SOX_FORMAT_HANDLER(coreaudio)
 {
   static char const *const names[] = { "coreaudio", NULL };
   static unsigned const write_encodings[] = {
-    SOX_ENCODING_SIGN2, 16, 8, 0,
-    SOX_ENCODING_UNSIGNED, 16, 8, 0,
+    SOX_ENCODING_FLOAT, 32, 0,
     0};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "Mac AudioCore device driver",
