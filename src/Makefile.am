@@ -289,6 +289,9 @@ if HAVE_LIBLTDL
   libsfx_la_CFLAGS += $(LTDLINCL) 
   libsox_la_LDFLAGS += $(LIBLTDL) 
   libsfx_la_LDFLAGS += $(LIBLTDL) 
+if HAVE_MAGIC
+  libsox_la_LIBADD = @MAGIC_LIBS@
+endif
 else
   libsox_la_SOURCES += raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
     s4-fmt.c u1-fmt.c u2-fmt.c u3-fmt.c u4-fmt.c al-fmt.c la-fmt.c ul-fmt.c \
