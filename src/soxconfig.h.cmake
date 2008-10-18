@@ -1,4 +1,4 @@
-#define PACKAGE_VERSION "14.1.0"
+#define PACKAGE_VERSION "14.2.0"
 
 #cmakedefine EXTERNAL_GSM             1
 #cmakedefine HAVE_ALSA                1

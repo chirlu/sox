@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(SoX, 14.1.0, sox-devel@lists.sourceforge.net)
+AC_INIT(SoX, 14.2.0, sox-devel@lists.sourceforge.net)
 
 dnl Find target architecture
 AC_CANONICAL_TARGET
