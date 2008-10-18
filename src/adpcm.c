@@ -231,7 +231,7 @@ static int AdpcmMashS(
                 if (op) {   /* if we want output, put it in proper place */
                         op[ox>>3] |= (ox&4)? c:(c<<4);
                         ox += 4*chans;
-                        sox_debug_more("%.1x",c);
+                        lsx_debug_more("%.1x",c);
 
                 }
 
@@ -240,9 +240,9 @@ static int AdpcmMashS(
                 if (step < 16) step = 16;
 
         }
-        if (op) sox_debug_more("\n");
+        if (op) lsx_debug_more("\n");
         d2 /= n; /* be sure it's non-negative */
-        sox_debug_more("ch%d: st %d->%d, d %.1f\n", ch, *iostep, step, sqrt(d2));
+        lsx_debug_more("ch%d: st %d->%d, d %.1f\n", ch, *iostep, step, sqrt(d2));
         *iostep = step;
         return (int) sqrt(d2);
 }
@@ -277,7 +277,7 @@ static inline void AdpcmMashChannel(
 
                 s1 = s0;
                 AdpcmMashS(ch, chans, v, lsx_ms_adpcm_i_coef[k], ip, n0, &s1, NULL);
-                sox_debug_more(" s32 %d\n",s1);
+                lsx_debug_more(" s32 %d\n",s1);
                 ss = s1 = (3*s0+s1)/4;
                 d1=AdpcmMashS(ch, chans, v, lsx_ms_adpcm_i_coef[k], ip, n, &ss, NULL); /* with step s1 */
                 if (!k || d0<dmin || d1<dmin) {
@@ -292,7 +292,7 @@ static inline void AdpcmMashChannel(
                 }
         }
         *st = smin;
-        sox_debug_more("kmin %d, smin %5d, ",kmin,smin);
+        lsx_debug_more("kmin %d, smin %5d, ",kmin,smin);
         d=AdpcmMashS(ch, chans, v, lsx_ms_adpcm_i_coef[kmin], ip, n, st, obuff);
         obuff[ch] = kmin;
 }
@@ -309,7 +309,7 @@ void lsx_ms_adpcm_block_mash_i(
         unsigned ch;
         unsigned char *p;
 
-        sox_debug_more("AdpcmMashI(chans %d, ip %p, n %d, st %p, obuff %p, bA %d)\n",
+        lsx_debug_more("AdpcmMashI(chans %d, ip %p, n %d, st %p, obuff %p, bA %d)\n",
             chans, (void *)ip, n, (void *)st, obuff, blockAlign);
 
         for (p=obuff+7*chans; p<obuff+blockAlign; p++) *p=0;

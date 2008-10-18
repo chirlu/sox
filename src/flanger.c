@@ -167,7 +167,7 @@ static int sox_flanger_start(sox_effect_t * effp)
   /* Balance feedback loop: */
   f->delay_gain *= 1 - fabs(f->feedback_gain);
 
-  sox_debug("in_gain=%g feedback_gain=%g delay_gain=%g\n",
+  lsx_debug("in_gain=%g feedback_gain=%g delay_gain=%g\n",
       f->in_gain, f->feedback_gain, f->delay_gain);
 
   /* Create the delay buffers, one for each channel: */
@@ -190,7 +190,7 @@ static int sox_flanger_start(sox_effect_t * effp)
       (double)(f->delay_buf_length - 2),
       3 * M_PI_2);  /* Start the sweep at minimum delay (for mono at least) */
 
-  sox_debug("delay_buf_length=%lu lfo_length=%lu\n",
+  lsx_debug("delay_buf_length=%lu lfo_length=%lu\n",
       (unsigned long)f->delay_buf_length, (unsigned long)f->lfo_length);
 
   return SOX_SUCCESS;

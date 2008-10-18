@@ -130,7 +130,7 @@ static int prime(unsigned n, int *q0)
 
   p = primes;
   q = q0;
-  sox_debug("factors(%d) =",n);
+  lsx_debug("factors(%d) =",n);
   while (n > 1) {
     while ((pr = *p) && (n % pr)) p++;
     if (!pr) {
@@ -141,8 +141,8 @@ static int prime(unsigned n, int *q0)
     n /= pr;
   }
   *q = 0;
-  for (pr=0; pr<q-q0; pr++) sox_debug(" %d",q0[pr]);
-  sox_debug(" ");
+  for (pr=0; pr<q-q0; pr++) lsx_debug(" %d",q0[pr]);
+  lsx_debug(" ");
   return (q-q0);
 }
 
@@ -180,8 +180,8 @@ static int permute(int *m, int *l, int ct, int ct1, size_t amalg)
   }
   if (n) *p++=n;
   *p = 0;
-  /*for (k=0; k<p-m; k++) sox_debug(" %d",m[k]);*/
-  /*sox_debug("");*/
+  /*for (k=0; k<p-m; k++) lsx_debug(" %d",m[k]);*/
+  /*lsx_debug("");*/
   return (p-m);
 }
 
@@ -212,9 +212,9 @@ static int optimize_factors(priv_t * rate, unsigned numer, unsigned denom, int *
       cost = 0;
       f = denom;
       u = min(ct1,ct2) + 1;
-      /*sox_debug("pfacts(%d): ", numer);*/
+      /*lsx_debug("pfacts(%d): ", numer);*/
       u1 = permute(rate->m1,l1,ct1,u,amalg);
-      /*sox_debug("pfacts(%d): ", denom);*/
+      /*lsx_debug("pfacts(%d): ", denom);*/
       u2 = permute(rate->m2,l2,ct2,u,amalg);
       u = max(u1,u2);
       for (j=0; j<u; j++) {
@@ -228,10 +228,10 @@ static int optimize_factors(priv_t * rate, unsigned numer, unsigned denom, int *
         c_min = cost;
         u_min = u;
         if (sox_globals.verbosity >= 4) {
-          sox_debug("c_min %d, [%d-%d]:",c_min,numer,denom);
+          lsx_debug("c_min %d, [%d-%d]:",c_min,numer,denom);
           for (j=0; j<u; j++)
-            sox_debug(" (%d,%d)",rate->m1[j],rate->m2[j]);
-          sox_debug(" ");
+            lsx_debug(" (%d,%d)",rate->m1[j],rate->m2[j]);
+          lsx_debug(" ");
         }
         memcpy(rate->b1,rate->m1,u*sizeof(int));
         memcpy(rate->b2,rate->m2,u*sizeof(int));
@@ -318,12 +318,12 @@ static void fir_design(priv_t * rate, Float *buffer, int length, double cutoff)
     else
       hamming(buffer,length);  /* Design Hamming window:  43 dB cutoff */
 
-    /* sox_debug("# fir_design length=%d, cutoff=%8.4f",length,cutoff); */
+    /* lsx_debug("# fir_design length=%d, cutoff=%8.4f",length,cutoff); */
     /* Design filter:  windowed sinc function */
     sum = 0.0;
     for(j=0;j<length;j++) {
       buffer[j] *= sinc(M_PI*cutoff*(j-length/2)); /* center at length/2 */
-      /* sox_debug("%.1f %.6f",(float)j,buffer[j]); */
+      /* lsx_debug("%.1f %.6f",(float)j,buffer[j]); */
       sum += buffer[j];
     }
     sum = (double)1.0/sum;
@@ -331,7 +331,7 @@ static void fir_design(priv_t * rate, Float *buffer, int length, double cutoff)
     for(j=0;j<length;j++) {
       buffer[j] *= sum;
     }
-    /* sox_debug("# end"); */
+    /* lsx_debug("# end"); */
 }
 
 #define RIBLEN 2048
@@ -372,9 +372,9 @@ static int sox_poly_start(sox_effect_t * effp)
     rate->total = total;
     /* l1 and l2 are now lists of the up/down factors for conversion */
 
-    sox_debug("Poly:  input rate %g, output rate %g.  %d stages.",
+    lsx_debug("Poly:  input rate %g, output rate %g.  %d stages.",
             effp->in_signal.rate, effp->out_signal.rate,total);
-    sox_debug("Poly:  window: %s  size: %d  cutoff: %f.",
+    lsx_debug("Poly:  window: %s  size: %d  cutoff: %f.",
             (rate->win_type == 0) ? ("nut") : ("ham"), rate->win_width, rate->cutoff);
 
     /* Create an array of filters and past history */
@@ -394,7 +394,7 @@ static int sox_poly_start(sox_effect_t * effp)
       s->size = size;
       s->hsize = f_len/s->up; /* this much of window is past-history */
       s->held = 0;
-      sox_debug("Poly:  stage %d:  Up by %d, down by %d,  i_samps %d, hsize %d",
+      lsx_debug("Poly:  stage %d:  Up by %d, down by %d,  i_samps %d, hsize %d",
               k+1,s->up,s->down,size, s->hsize);
       s->filt_len = f_len;
       s->filt_array = lsx_malloc(sizeof(Float) * f_len);
@@ -404,7 +404,7 @@ static int sox_poly_start(sox_effect_t * effp)
         s->window[j] = 0.0;
 
       uprate *= s->up;
-      sox_debug("Poly:         :  filt_len %d, cutoff freq %.1f",
+      lsx_debug("Poly:         :  filt_len %d, cutoff freq %.1f",
               f_len, uprate * rate->cutoff / f_cutoff);
       uprate /= s->down;
       fir_design(rate, s->filt_array, f_len, rate->cutoff / f_cutoff);
@@ -427,7 +427,7 @@ static int sox_poly_start(sox_effect_t * effp)
       s->filt_array = NULL;
       s->window = lsx_malloc(sizeof(Float) * size);
     }
-    sox_debug("Poly:  output samples %d, oskip %lu",size, (unsigned long)rate->oskip);
+    lsx_debug("Poly:  output samples %d, oskip %lu",size, (unsigned long)rate->oskip);
     return (SOX_SUCCESS);
 }
 
@@ -461,10 +461,10 @@ static void polyphase(Float *output, polystage *s)
   Float *o_top;
 
   in = s->window + s->hsize;
-  /*for (mm=0; mm<s->filt_len; mm++) sox_debug("cf_%d %f",mm,s->filt_array[mm]);*/
+  /*for (mm=0; mm<s->filt_len; mm++) lsx_debug("cf_%d %f",mm,s->filt_array[mm]);*/
   /* assumes s->size divisible by down (now true) */
   o_top = output + (s->size * up) / down;
-  /*sox_debug(" isize %d, osize %d, up %d, down %d, N %d", s->size, o_top-output, up, down, f_len);*/
+  /*lsx_debug(" isize %d, osize %d, up %d, down %d, N %d", s->size, o_top-output, up, down, f_len);*/
   for (mm=0, o=output; o < o_top; mm+=down, o++) {
     double sum;
     const Float *p, *q;
@@ -493,7 +493,7 @@ static int sox_poly_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
   polystage *s0,*s1;
 
   /* Sanity check:  how much can we tolerate? */
-  /* sox_debug("*isamp=%d *osamp=%d",*isamp,*osamp); */
+  /* lsx_debug("*isamp=%d *osamp=%d",*isamp,*osamp); */
   s0 = rate->stage[0];            /* the first stage */
   s1 = rate->stage[rate->total];  /* the 'last' stage is output buffer */
   {
@@ -532,7 +532,7 @@ static int sox_poly_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
 
       out = rate->stage[k+1]->window + rate->stage[k+1]->hsize;
 
-      /* sox_debug("k=%d  insize=%d",k,in_size); */
+      /* lsx_debug("k=%d  insize=%d",k,in_size); */
       polyphase(out, s);
 
       /* copy input history into lower portion of rate->window[k] */

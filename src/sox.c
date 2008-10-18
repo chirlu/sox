@@ -1056,7 +1056,7 @@ static void optimize_trim(void)
          * reset the start location of trim so that it thinks user didn't
          * request a skip.  */
         sox_trim_clear_start(&effects_chain->effects[1][0]);
-        sox_debug("optimize_trim successful");
+        lsx_debug("optimize_trim successful");
       }
     }
   }
@@ -2336,7 +2336,7 @@ int main(int argc, char **argv)
   }
 
   if (sox_globals.repeatable)
-    sox_debug("Not reseeding PRNG; randomness is repeatable");
+    lsx_debug("Not reseeding PRNG; randomness is repeatable");
   else {
     time_t t;
 

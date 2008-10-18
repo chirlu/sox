@@ -135,7 +135,7 @@ static FLAC__StreamDecoderWriteStatus FLAC__frame_decode_callback(FLAC__StreamDe
 static int start_read(sox_format_t * const ft)
 {
   priv_t * p = (priv_t *)ft->priv;
-  sox_debug("API version %u", FLAC_API_VERSION_CURRENT);
+  lsx_debug("API version %u", FLAC_API_VERSION_CURRENT);
   p->decoder = FLAC__stream_decoder_new();
   if (p->decoder == NULL) {
     lsx_fail_errno(ft, SOX_ENOMEM, "FLAC ERROR creating the decoder instance");

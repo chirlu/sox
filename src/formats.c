@@ -229,7 +229,7 @@ void sox_delete_comments(sox_comments_t * comments)
   *comments = 0;
 }
 
-char * sox_cat_comments(sox_comments_t comments)
+char * lsx_cat_comments(sox_comments_t comments)
 {
   sox_comments_t p = comments;
   size_t len = 0;
@@ -961,7 +961,7 @@ static int init_format(const char *file, lt_ptr data)
     if (ret > 0 && ret < (int)MAX_NAME_LEN) {
       union {sox_format_fn_t fn; lt_ptr ptr;} ltptr;
       ltptr.ptr = lt_dlsym(lth, fnname);
-      sox_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, (void *)lth, ltptr.ptr);
+      lsx_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, (void *)lth, ltptr.ptr);
       if (nformats < MAX_FORMATS && ltptr.fn && (ltptr.fn()->sox_lib_version_code & ~255) == (SOX_LIB_VERSION_CODE & ~255))
         sox_format_fns[nformats++].fn = ltptr.fn;
     }

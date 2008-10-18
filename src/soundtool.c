@@ -44,7 +44,7 @@ static int start_read(sox_format_t * ft)
 
 static int write_header(sox_format_t * ft)
 {
-  char * comment = sox_cat_comments(ft->oob.comments);
+  char * comment = lsx_cat_comments(ft->oob.comments);
   char text_buf[text_field_len];
   size_t length = ft->olength? ft->olength:ft->signal.length;
 

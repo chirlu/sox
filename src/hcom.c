@@ -147,7 +147,7 @@ static int startread(sox_format_t * ft)
         for(i = 0; i < dictsize; i++) {
                 lsx_readsw(ft, &(p->dictionary[i].dict_leftson));
                 lsx_readsw(ft, &(p->dictionary[i].dict_rightson));
-                sox_debug("%d %d",
+                lsx_debug("%d %d",
                        p->dictionary[i].dict_leftson,
                        p->dictionary[i].dict_rightson);
         }
@@ -159,7 +159,7 @@ static int startread(sox_format_t * ft)
         p->checksum = checksum;
         p->deltacompression = compresstype;
         if (!p->deltacompression)
-                sox_debug("HCOM data using value compression");
+                lsx_debug("HCOM data using value compression");
         p->huffcount = huffcount;
         p->cksum = 0;
         p->dictentry = 0;
@@ -389,8 +389,8 @@ static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl)
   for (i = 0; i < 256; i++)
     l += frequtable[i] * codesize[i];
   l = (((l + 31) >> 5) << 2) + 24 + dictsize * 4;
-  sox_debug("  Original size: %6d bytes", *dl);
-  sox_debug("Compressed size: %6d bytes", l);
+  lsx_debug("  Original size: %6d bytes", *dl);
+  lsx_debug("Compressed size: %6d bytes", l);
   datafork = lsx_malloc((size_t)l);
   ddf = datafork + 22;
   for(i = 0; i < dictsize; i++) {

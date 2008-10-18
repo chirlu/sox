@@ -334,7 +334,7 @@ static int sox_smpstartwrite(sox_format_t * ft)
 {
         priv_t * smp = (priv_t *) ft->priv;
         struct smpheader header;
-        char * comment = sox_cat_comments(ft->oob.comments);
+        char * comment = lsx_cat_comments(ft->oob.comments);
 
         /* If you have to seek around the output file */
         if (! ft->seekable)

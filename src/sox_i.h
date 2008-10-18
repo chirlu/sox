@@ -47,6 +47,14 @@ assert_static(sizeof(off_t) == _FILE_OFFSET_BITS >> 3, OFF_T_BUILD_PROBLEM);
 #define FMT_size_t "lu"
 #endif
 
+void lsx_debug(const char *, ...) PRINTF;
+void lsx_debug_more(char const * fmt, ...) PRINTF;
+void lsx_debug_most(char const * fmt, ...) PRINTF;
+
+#define lsx_debug      sox_globals.subsystem=__FILE__,lsx_debug
+#define lsx_debug_more sox_globals.subsystem=__FILE__,lsx_debug_more
+#define lsx_debug_most sox_globals.subsystem=__FILE__,lsx_debug_most
+
 /* Digitise one cycle of a wave and store it as
  * a table of samples of a specified data-type.
  */
@@ -202,7 +210,7 @@ int lsx_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_chan
 
 extern sox_format_handler_t const * sox_sndfile_format_fn(void);
 
-
+char * lsx_cat_comments(sox_comments_t comments);
 
 /*--------------------------------- Effects ----------------------------------*/
 

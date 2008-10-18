@@ -676,7 +676,7 @@ static int getblock(sox_format_t * ft)
         continue;       /* get next block */
       case VOC_LOOP:
       case VOC_LOOPEND:
-        sox_debug("skipping repeat loop");
+        lsx_debug("skipping repeat loop");
         lsx_skipbytes(ft, (size_t) sblen);
         break;
       case VOC_EXTENDED:
@@ -707,7 +707,7 @@ static int getblock(sox_format_t * ft)
         /* can be grabed.                               */
         continue;
       default:
-        sox_debug("skipping unknown block code %d", block);
+        lsx_debug("skipping unknown block code %d", block);
         lsx_skipbytes(ft, (size_t) sblen);
     }
   }

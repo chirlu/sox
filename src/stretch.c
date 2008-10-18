@@ -172,7 +172,7 @@ static int start(sox_effect_t * effp)
   } else if (p->overlap == 1)
     p->fade_coefs[0] = 1.0;
 
-  sox_debug("start: (factor=%g segment=%g shift=%g overlap=%g)\nstate=%d\n"
+  lsx_debug("start: (factor=%g segment=%g shift=%g overlap=%g)\nstate=%d\n"
       "segment=%lu\nindex=%lu\nishift=%lu\noindex=%lu\noshift=%lu\noverlap=%lu",
       p->factor, p->window, p->shift, p->fading, p->state,
       (unsigned long)p->segment, (unsigned long)p->index,

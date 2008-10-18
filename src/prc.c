@@ -131,7 +131,7 @@ static int startread(sox_format_t * ft)
 
   /* Check the header */
   if (prc_checkheader(ft, head))
-    sox_debug("Found Psion Record header");
+    lsx_debug("Found Psion Record header");
   else {
       lsx_fail_errno(ft,SOX_EHDR,"Not a Psion Record file");
       return (SOX_EOF);
@@ -153,10 +153,10 @@ static int startread(sox_format_t * ft)
 
   lsx_readdw(ft, &len);
   p->nsamp = len;
-  sox_debug("Number of samples: %d", len);
+  lsx_debug("Number of samples: %d", len);
 
   lsx_readdw(ft, &encoding);
-  sox_debug("Encoding of samples: %x", encoding);
+  lsx_debug("Encoding of samples: %x", encoding);
   if (encoding == 0)
     ft->encoding.encoding = SOX_ENCODING_ALAW;
   else if (encoding == 0x100001a1)
@@ -167,20 +167,20 @@ static int startread(sox_format_t * ft)
   }
 
   lsx_readw(ft, &reps);    /* Number of repeats */
-  sox_debug("Repeats: %d", reps);
+  lsx_debug("Repeats: %d", reps);
 
   lsx_readb(ft, &volume);
-  sox_debug("Volume: %d", (unsigned)volume);
+  lsx_debug("Volume: %d", (unsigned)volume);
   if (volume < 1 || volume > 5)
     sox_warn("Volume %d outside range 1..5", volume);
 
   lsx_readb(ft, &byte);   /* Unused and seems always zero */
 
   lsx_readdw(ft, &repgap); /* Time between repeats in usec */
-  sox_debug("Time between repeats (usec): %u", repgap);
+  lsx_debug("Time between repeats (usec): %u", repgap);
 
   lsx_readdw(ft, &listlen); /* Length of samples list */
-  sox_debug("Number of bytes in samples list: %u", listlen);
+  lsx_debug("Number of bytes in samples list: %u", listlen);
 
   if (ft->signal.rate != 0 && ft->signal.rate != 8000)
     sox_report("PRC only supports 8 kHz; overriding.");
@@ -216,25 +216,25 @@ static unsigned read_cardinal(sox_format_t * ft)
 
   if (lsx_readb(ft, &byte) == SOX_EOF)
     return (unsigned)SOX_EOF;
-  sox_debug_more("Cardinal byte 1: %x", byte);
+  lsx_debug_more("Cardinal byte 1: %x", byte);
   a = byte;
   if (!(a & 1))
     a >>= 1;
   else {
     if (lsx_readb(ft, &byte) == SOX_EOF)
       return (unsigned)SOX_EOF;
-    sox_debug_more("Cardinal byte 2: %x", byte);
+    lsx_debug_more("Cardinal byte 2: %x", byte);
     a |= byte << 8;
     if (!(a & 2))
       a >>= 2;
     else if (!(a & 4)) {
       if (lsx_readb(ft, &byte) == SOX_EOF)
         return (unsigned)SOX_EOF;
-      sox_debug_more("Cardinal byte 3: %x", byte);
+      lsx_debug_more("Cardinal byte 3: %x", byte);
       a |= byte << 16;
       if (lsx_readb(ft, &byte) == SOX_EOF)
         return (unsigned)SOX_EOF;
-      sox_debug_more("Cardinal byte 4: %x", byte);
+      lsx_debug_more("Cardinal byte 4: %x", byte);
       a |= byte << 24;
       a >>= 3;
     }
@@ -247,7 +247,7 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t samp)
 {
   priv_t * p = (priv_t *)ft->priv;
 
-  sox_debug_more("length now = %d", p->nsamp);
+  lsx_debug_more("length now = %d", p->nsamp);
 
   if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) {
     size_t nsamp, read;
@@ -259,14 +259,14 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t samp)
       if (framelen == (unsigned)SOX_EOF)
         return 0;
 
-      sox_debug_more("frame length %d", framelen);
+      lsx_debug_more("frame length %d", framelen);
       p->frame_samp = framelen;
 
       /* Discard length of compressed data */
-      sox_debug_more("compressed length %d", read_cardinal(ft));
+      lsx_debug_more("compressed length %d", read_cardinal(ft));
       /* Discard length of BListL */
       lsx_readdw(ft, &trash);
-      sox_debug_more("list length %d", trash);
+      lsx_debug_more("list length %d", trash);
 
       /* Reset CODEC for start of frame */
       lsx_adpcm_reset(&p->adpcm, ft->encoding.encoding);
@@ -275,7 +275,7 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t samp)
     p->nsamp += nsamp;
     read = lsx_adpcm_read(ft, &p->adpcm, buf, nsamp);
     p->frame_samp -= read;
-    sox_debug_more("samples left in this frame: %d", p->frame_samp);
+    lsx_debug_more("samples left in this frame: %d", p->frame_samp);
     return read;
   } else {
     p->nsamp += samp;
@@ -332,27 +332,27 @@ static void write_cardinal(sox_format_t * ft, unsigned a)
 
   if (a < 0x80) {
     byte = a << 1;
-    sox_debug_more("Cardinal byte 1: %x", byte);
+    lsx_debug_more("Cardinal byte 1: %x", byte);
     lsx_writeb(ft, byte);
   } else if (a < 0x8000) {
     byte = (a << 2) | 1;
-    sox_debug_more("Cardinal byte 1: %x", byte);
+    lsx_debug_more("Cardinal byte 1: %x", byte);
     lsx_writeb(ft, byte);
     byte = a >> 6;
-    sox_debug_more("Cardinal byte 2: %x", byte);
+    lsx_debug_more("Cardinal byte 2: %x", byte);
     lsx_writeb(ft, byte);
   } else {
     byte = (a << 3) | 3;
-    sox_debug_more("Cardinal byte 1: %x", byte);
+    lsx_debug_more("Cardinal byte 1: %x", byte);
     lsx_writeb(ft, byte);
     byte = a >> 5;
-    sox_debug_more("Cardinal byte 2: %x", byte);
+    lsx_debug_more("Cardinal byte 2: %x", byte);
     lsx_writeb(ft, byte);
     byte = a >> 13;
-    sox_debug_more("Cardinal byte 3: %x", byte);
+    lsx_debug_more("Cardinal byte 3: %x", byte);
     lsx_writeb(ft, byte);
     byte = a >> 21;
-    sox_debug_more("Cardinal byte 4: %x", byte);
+    lsx_debug_more("Cardinal byte 4: %x", byte);
     lsx_writeb(ft, byte);
   }
 }
@@ -362,7 +362,7 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t n
   priv_t * p = (priv_t *)ft->priv;
   /* Psion Record seems not to be able to handle frames > 800 samples */
   size_t written = 0;
-  sox_debug_more("length now = %d", p->nsamp);
+  lsx_debug_more("length now = %d", p->nsamp);
   if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) {
     while (written < nsamp) {
       size_t written1, samp = min(nsamp - written, 800);
@@ -371,7 +371,7 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t n
       /* Write compressed length */
       write_cardinal(ft, (unsigned) ((samp / 2) + (samp % 2) + 4));
       /* Write length again (seems to be a BListL) */
-      sox_debug_more("list length %lu", (unsigned long)samp);
+      lsx_debug_more("list length %lu", (unsigned long)samp);
       lsx_writedw(ft, (unsigned) samp);
       lsx_adpcm_reset(&p->adpcm, ft->encoding.encoding);
       written1 = lsx_adpcm_write(ft, &p->adpcm, buf + written, samp);
@@ -412,7 +412,7 @@ static void prcwriteheader(sox_format_t * ft)
   lsx_writebuf(ft, prc_header, sizeof(prc_header));
   lsx_writes(ft, "\x2arecord.app");
 
-  sox_debug("Number of samples: %d",p->nsamp);
+  lsx_debug("Number of samples: %d",p->nsamp);
   lsx_writedw(ft, p->nsamp);
 
   if (ft->encoding.encoding == SOX_ENCODING_ALAW)
@@ -425,7 +425,7 @@ static void prcwriteheader(sox_format_t * ft)
   lsx_writeb(ft, 0);             /* Unused and seems always zero */
   lsx_writedw(ft, 0);            /* Time between repeats in usec */
 
-  sox_debug("Number of bytes: %d", p->nbytes);
+  lsx_debug("Number of bytes: %d", p->nbytes);
   lsx_writedw(ft, p->nbytes);    /* Number of bytes of data */
 }
 

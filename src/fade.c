@@ -170,7 +170,7 @@ static int sox_fade_start(sox_effect_t * effp)
     fade->samplesdone = fade->in_start;
     fade->endpadwarned = 0;
 
-    sox_debug("fade: in_start = %lu in_stop = %lu out_start = %lu out_stop = %lu", (unsigned long)fade->in_start, (unsigned long)fade->in_stop, (unsigned long)fade->out_start, (unsigned long)fade->out_stop);
+    lsx_debug("fade: in_start = %lu in_stop = %lu out_start = %lu out_stop = %lu", (unsigned long)fade->in_start, (unsigned long)fade->in_stop, (unsigned long)fade->out_start, (unsigned long)fade->out_stop);
 
     if (fade->in_start == fade->in_stop && fade->out_start == fade->out_stop)
       return SOX_EFF_NULL;

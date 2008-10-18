@@ -334,7 +334,7 @@ int lsx_aiffstartread(sox_format_t * ft)
                         if (lsx_eof(ft))
                                 break;
                         buf[4] = 0;
-                        sox_debug("AIFFstartread: ignoring '%s' chunk", buf);
+                        lsx_debug("AIFFstartread: ignoring '%s' chunk", buf);
                         lsx_readdw(ft, &chunksize);
                         if (lsx_eof(ft))
                                 break;
@@ -418,12 +418,12 @@ int lsx_aiffstartread(sox_format_t * ft)
 
         if (foundmark && !foundinstr)
         {
-            sox_debug("Ignoring MARK chunk since no INSTR found.");
+            lsx_debug("Ignoring MARK chunk since no INSTR found.");
             foundmark = 0;
         }
         if (!foundmark && foundinstr)
         {
-            sox_debug("Ignoring INSTR chunk since no MARK found.");
+            lsx_debug("Ignoring INSTR chunk since no MARK found.");
             foundinstr = 0;
         }
         if (foundmark && foundinstr) {
@@ -525,7 +525,7 @@ static int textChunk(char **text, char *chunkDescription, sox_format_t * ft)
                         return(SOX_EOF);
                 }
         }
-  sox_debug("%-10s   \"%s\"", chunkDescription, *text);
+  lsx_debug("%-10s   \"%s\"", chunkDescription, *text);
   return(SOX_SUCCESS);
 }
 
@@ -579,7 +579,7 @@ static int commentChunk(char **text, char *chunkDescription, sox_format_t * ft)
         }
     }
   }
-  sox_debug("%-10s   \"%s\"", chunkDescription, *text);
+  lsx_debug("%-10s   \"%s\"", chunkDescription, *text);
   /* make sure we read the whole chunk */
   if (totalReadLength < chunksize) {
        size_t i;
@@ -708,7 +708,7 @@ static int aiffwriteheader(sox_format_t * ft, size_t nframes)
         unsigned i;
         size_t padded_comment_size = 0, comment_size = 0;
         size_t comment_chunk_size = 0;
-        char * comment = sox_cat_comments(ft->oob.comments);
+        char * comment = lsx_cat_comments(ft->oob.comments);
 
         /* MARK and INST chunks */
         if (ft->oob.instr.nloops) {
@@ -962,7 +962,7 @@ static void write_ieee_extended(sox_format_t * ft, double x)
 {
         char buf[10];
         ConvertToIeeeExtended(x, buf);
-        sox_debug_more("converted %g to %o %o %o %o %o %o %o %o %o %o",
+        lsx_debug_more("converted %g to %o %o %o %o %o %o %o %o %o %o",
                 x,
                 buf[0], buf[1], buf[2], buf[3], buf[4],
                 buf[5], buf[6], buf[7], buf[8], buf[9]);

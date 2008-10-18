@@ -50,7 +50,7 @@ static int start(sox_format_t * ft)
   p->last_n_bits = 5; /* 101 */
   p->step_mult = exp((-1 / .005 / ft->signal.rate));
   p->step_add = (1 - p->step_mult) * (.1 * SOX_SAMPLE_MAX);
-  sox_debug("step_mult=%g step_add=%f", p->step_mult, p->step_add);
+  lsx_debug("step_mult=%g step_add=%f", p->step_mult, p->step_add);
   return SOX_SUCCESS;
 }
 

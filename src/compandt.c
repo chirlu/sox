@@ -27,7 +27,7 @@ sox_bool lsx_compandt_show(sox_compandt_t * t, sox_plot_t plot)
   int i;
 
   for (i = 1; t->segments[i-1].x; ++i)
-    sox_debug("TF: %g %g %g %g",
+    lsx_debug("TF: %g %g %g %g",
        LOG_TO_LOG10(t->segments[i].x),
        LOG_TO_LOG10(t->segments[i].y),
        LOG_TO_LOG10(t->segments[i].a),

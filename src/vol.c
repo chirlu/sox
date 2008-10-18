@@ -83,7 +83,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
      * of the output amplitudes when using the limiter.) */
     vol->limiterthreshhold = SOX_SAMPLE_MAX * (1.0 - vol->limitergain) / (fabs(vol->gain) - vol->limitergain);
   }
-  sox_debug("mult=%g limit=%g", vol->gain, vol->limitergain);
+  lsx_debug("mult=%g limit=%g", vol->gain, vol->limitergain);
   return SOX_SUCCESS;
 }
 

@@ -62,9 +62,9 @@ void sox_output_message(FILE *file, const char *filename, const char *fmt, va_li
 #undef sox_fail
 #undef sox_warn
 #undef sox_report
-#undef sox_debug
-#undef sox_debug_more
-#undef sox_debug_most
+#undef lsx_debug
+#undef lsx_debug_more
+#undef lsx_debug_most
 
 #define SOX_MESSAGE_FUNCTION(name,level) \
 void name(char const * fmt, ...) { \
@@ -78,9 +78,9 @@ void name(char const * fmt, ...) { \
 SOX_MESSAGE_FUNCTION(sox_fail  , 1)
 SOX_MESSAGE_FUNCTION(sox_warn  , 2)
 SOX_MESSAGE_FUNCTION(sox_report, 3)
-SOX_MESSAGE_FUNCTION(sox_debug , 4)
-SOX_MESSAGE_FUNCTION(sox_debug_more , 5)
-SOX_MESSAGE_FUNCTION(sox_debug_most , 6)
+SOX_MESSAGE_FUNCTION(lsx_debug , 4)
+SOX_MESSAGE_FUNCTION(lsx_debug_more , 5)
+SOX_MESSAGE_FUNCTION(lsx_debug_most , 6)
 
 #undef SOX_MESSAGE_FUNCTION
 

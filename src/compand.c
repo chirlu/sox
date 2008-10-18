@@ -130,10 +130,10 @@ static int start(sox_effect_t * effp)
   priv_t * l = (priv_t *) effp->priv;
   unsigned i, j;
 
-  sox_debug("%i input channel(s) expected: actually %i",
+  lsx_debug("%i input channel(s) expected: actually %i",
       l->expectedChannels, effp->out_signal.channels);
   for (i = 0; i < l->expectedChannels; ++i)
-    sox_debug("Channel %i: attack = %g decay = %g", i,
+    lsx_debug("Channel %i: attack = %g decay = %g", i,
         l->channels[i].attack_times[0], l->channels[i].attack_times[1]);
   if (!lsx_compandt_show(&l->transfer_fn, effp->global_info->plot))
     return SOX_EOF;

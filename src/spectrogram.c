@@ -158,7 +158,7 @@ static int start(sox_effect_t * effp)
   p->end = p->dft_size = DFT_BASE_SIZE << p->y_size;
   p->rows = (p->dft_size >> 1) + 1;
   actual = make_window(p, p->last_end = 0);
-  sox_debug("window_density=%g", actual / p->dft_size);
+  lsx_debug("window_density=%g", actual / p->dft_size);
   p->step_size = (p->slack_overlap? sqrt(actual * p->dft_size) : actual) + .5;
   p->block_steps = effp->in_signal.rate / p->pixels_per_sec;
   p->step_size = p->block_steps / ceil((double)p->block_steps / p->step_size) +.5;
@@ -167,7 +167,7 @@ static int start(sox_effect_t * effp)
   actual = effp->in_signal.rate / p->step_size / p->block_steps;
   if (actual != p->pixels_per_sec)
     sox_report("actual pixels/s = %g", actual);
-  sox_debug("step_size=%i block_steps=%i", p->step_size, p->block_steps);
+  lsx_debug("step_size=%i block_steps=%i", p->step_size, p->block_steps);
   p->max = -p->dB_range;
   p->read = (p->step_size - p->dft_size) / 2;
   return SOX_SUCCESS;
@@ -244,13 +244,13 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf_, size_t * osamp)
 
     if (left_over >= p->step_size >> 1)
       isamp += p->step_size - left_over;
-    sox_debug("cols=%i left=%i end=%i", p->cols, p->read, p->end);
+    lsx_debug("cols=%i left=%i end=%i", p->cols, p->read, p->end);
     p->end = 0, p->end_min = -p->dft_size;
     if (flow(effp, ibuf, obuf, &isamp, &isamp) == SOX_SUCCESS && p->block_num) {
       p->block_norm *= (double)p->block_steps / p->block_num;
       do_column(effp);
     }
-    sox_debug("flushed cols=%i left=%i end=%i", p->cols, p->read, p->end);
+    lsx_debug("flushed cols=%i left=%i end=%i", p->cols, p->read, p->end);
     free(obuf);
     free(ibuf);
   }
@@ -419,7 +419,7 @@ static int stop(sox_effect_t * effp)
     free(p->dBfs);
     return SOX_EOF;
   }
-  sox_debug("signal-max=%g", p->max);
+  lsx_debug("signal-max=%g", p->max);
   font = malloc(font_len);
   assert(uncompress(font, &font_len, fixed, sizeof(fixed)-1) == Z_OK);
   make_palette(p, palette);

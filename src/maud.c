@@ -72,7 +72,7 @@ static int startread(sox_format_t * ft)
 
                 /*
                 buf[4] = 0;
-                sox_debug("chunk %s",buf);
+                lsx_debug("chunk %s",buf);
                 */
 
                 if (strncmp(buf,"MHDR",(size_t)4) == 0) {
@@ -168,7 +168,7 @@ static int startread(sox_format_t * ft)
                                 return(SOX_EOF);
                         }
                         chunk_buf[chunksize] = '\0';
-                        sox_debug("%s",chunk_buf);
+                        lsx_debug("%s",chunk_buf);
                         free(chunk_buf);
 
                         continue;

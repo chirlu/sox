@@ -194,7 +194,7 @@ static int startread(sox_format_t * ft)
 
 static int write_header(sox_format_t * ft)
 {
-  char * comment  = sox_cat_comments(ft->oob.comments);
+  char * comment  = lsx_cat_comments(ft->oob.comments);
   size_t len      = strlen(comment) + 1;     /* Write out null-terminated */
   size_t info_len = max(4, (len + 3) & ~3u); /* Minimum & multiple of 4 bytes */
   size_t size     = ft->olength? ft->olength : ft->signal.length;

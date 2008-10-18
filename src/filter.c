@@ -138,7 +138,7 @@ int lsx_makeFilter(double Imp[], long Nwing, double Froll, double Beta,
       for (i=Dh; i<Mwing; i+=Dh)
          DCgain += ImpR[i];
       DCgain = 2*DCgain + ImpR[0];    /* DC gain of real coefficients */
-      sox_debug("DCgain err=%.12f",DCgain-1.0);
+      lsx_debug("DCgain err=%.12f",DCgain-1.0);
 
       DCgain = 1.0/DCgain;
       for (i=0; i<Mwing; i++)
@@ -181,7 +181,7 @@ static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
                 }
                 if (*p) f->freq1 = f->freq0 = 0;
         }
-        sox_debug("freq: %g-%g", f->freq0, f->freq1);
+        lsx_debug("freq: %g-%g", f->freq0, f->freq1);
         if (f->freq0 == 0 && f->freq1 == 0)
           return lsx_usage(effp);
 
@@ -195,7 +195,7 @@ static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
         if ((n >= 3) && !sscanf(argv[2], "%lf", &f->beta))
           return lsx_usage(effp);
 
-        sox_debug("filter opts: %g-%g, window-len %ld, beta %f", f->freq0, f->freq1, f->Nwin, f->beta);
+        lsx_debug("filter opts: %g-%g, window-len %ld, beta %f", f->freq0, f->freq1, f->Nwin, f->beta);
         return (SOX_SUCCESS);
 }
 
@@ -344,7 +344,7 @@ static int sox_filter_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
         long i, Nproc;
 
         /* constrain amount we actually process */
-        /* sox_debug("Xh %d, Xt %d, isamp %d, ",f->Xh, f->Xt, *isamp); */
+        /* lsx_debug("Xh %d, Xt %d, isamp %d, ",f->Xh, f->Xt, *isamp); */
         Nx = BUFFSIZE + 2*f->Xh - f->Xt;
         if (Nx > *isamp) Nx = *isamp;
         if (Nx > *osamp) Nx = *osamp;
@@ -370,7 +370,7 @@ static int sox_filter_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
                 *osamp = 0;
                 return (SOX_SUCCESS);
         }
-        sox_debug("flow Nproc %ld",Nproc);
+        lsx_debug("flow Nproc %ld",Nproc);
         FiltWin(f, Nproc);
 
         /* Copy back portion of input signal that must be re-used */
@@ -395,7 +395,7 @@ static int sox_filter_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osa
         long isamp_res, osamp_res;
         sox_sample_t *Obuf;
 
-        sox_debug("Xh %ld, Xt %ld  <--- DRAIN",f->Xh, f->Xt);
+        lsx_debug("Xh %ld, Xt %ld  <--- DRAIN",f->Xh, f->Xt);
 
         /* stuff end with Xh zeros */
         isamp_res = f->Xh;
@@ -406,14 +406,14 @@ static int sox_filter_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osa
                 Isamp = isamp_res;
                 Osamp = osamp_res;
                 sox_filter_flow(effp, NULL, Obuf, &Isamp, &Osamp);
-          /* sox_debug("DRAIN isamp,osamp  (%d,%d) -> (%d,%d)",
+          /* lsx_debug("DRAIN isamp,osamp  (%d,%d) -> (%d,%d)",
                  * isamp_res,osamp_res,Isamp,Osamp); */
                 Obuf += Osamp;
                 osamp_res -= Osamp;
                 isamp_res -= Isamp;
         };
         *osamp -= osamp_res;
-        /* sox_debug("DRAIN osamp %d", *osamp); */
+        /* lsx_debug("DRAIN osamp %d", *osamp); */
         if (isamp_res)
                 sox_warn("drain overran obuf by %ld", isamp_res);
         /* FIXME: This is very picky. osamp better be big enough to grab

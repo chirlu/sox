@@ -338,7 +338,7 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
   assert(num_taps & 1);
   f->num_taps = num_taps;
   f->dft_length = dft_length;
-  sox_debug("fir_len=%i dft_length=%i Fp=%g atten=%g mult=%i",
+  lsx_debug("fir_len=%i dft_length=%i Fp=%g atten=%g mult=%i",
       num_taps, dft_length, Fp, atten, multiplier);
   lsx_safe_rdft(dft_length, 1, f->coefs);
 }
@@ -394,7 +394,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     assert(!last_stage.step.parts.fraction);
   else if (quality != Quick)
     assert(!last_stage.step.parts.integer);
-  sox_debug("i/o=%g; %.9g:%i @ level %i", p->factor, factor, divisor, p->level);
+  lsx_debug("i/o=%g; %.9g:%i @ level %i", p->factor, factor, divisor, p->level);
 
   mult = 1 + p->upsample; /* Compensate for zero-stuffing in double_sample */
   p->input_stage_num = -p->upsample;
@@ -425,7 +425,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
       assert(num_taps == f->num_coefs * phases - 1);
       last_stage.shared->poly_fir_coefs =
           prepare_coefs(coefs, f->num_coefs, phases, interp_order, mult);
-      sox_debug("fir_len=%i phases=%i coef_interp=%i mult=%i size=%s",
+      lsx_debug("fir_len=%i phases=%i coef_interp=%i mult=%i size=%s",
           f->num_coefs, phases, interp_order, mult,
           sox_sigfigs3((num_taps + 1) * (interp_order + 1) * sizeof(sample_t)));
       free(coefs);
@@ -487,7 +487,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     fifo_create(&s->fifo, (int)sizeof(sample_t));
     memset(fifo_reserve(&s->fifo, s->preload), 0, sizeof(sample_t)*s->preload);
     if (i < p->output_stage_num)
-      sox_debug("stage=%-3ipre_post=%-3ipre=%-3ipreload=%i",
+      lsx_debug("stage=%-3ipre_post=%-3ipre=%-3ipreload=%i",
           i, s->pre_post, s->pre, s->preload);
   }
 }

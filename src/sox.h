@@ -340,7 +340,6 @@ void sox_append_comment(sox_comments_t * comments, char const * comment);
 void sox_append_comments(sox_comments_t * comments, char const * comment);
 sox_comments_t sox_copy_comments(sox_comments_t comments);
 void sox_delete_comments(sox_comments_t * comments);
-char * sox_cat_comments(sox_comments_t comments);
 char const * sox_find_comment(sox_comments_t comments, char const * id);
 
 #define SOX_MAX_NLOOPS           8
@@ -392,6 +391,16 @@ struct sox_format {
 #define SOX_FILE_BIG_END (SOX_FILE_ENDIAN | SOX_FILE_ENDBIG)
 
 int sox_format_init(void);
+
+typedef const sox_format_handler_t *(*sox_format_fn_t)(void);
+
+typedef struct {
+  char *name;
+  sox_format_fn_t fn;
+} sox_format_tab_t;
+
+extern sox_format_tab_t sox_format_fns[];
+
 sox_format_t * sox_open_read(
     char               const * path,
     sox_signalinfo_t   const * signal,
@@ -416,7 +425,6 @@ int sox_close(sox_format_t * ft);
 int sox_seek(sox_format_t * ft, uint64_t offset, int whence);
 
 sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev);
-int sox_gettype(sox_format_t *, sox_bool);
 void sox_format_quit(void);
 
 /*
@@ -523,30 +531,21 @@ typedef int (* sox_playlist_callback_t)(void *, char *);
 sox_bool sox_is_playlist(char const * filename);
 int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * const listname);
 
+void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap);
+
+/* WARNING BEGIN
+ *
+ * The items in this section are subject to instability.  They only exist
+ * in public API because sox (the application) make use of them but
+ * may not be supported and may change rapidly.
+ */
 void sox_fail(const char *, ...) PRINTF;
 void sox_warn(const char *, ...) PRINTF;
 void sox_report(const char *, ...) PRINTF;
-void sox_debug(const char *, ...) PRINTF;
-void sox_debug_more(char const * fmt, ...) PRINTF;
-void sox_debug_most(char const * fmt, ...) PRINTF;
 
 #define sox_fail       sox_globals.subsystem=__FILE__,sox_fail
 #define sox_warn       sox_globals.subsystem=__FILE__,sox_warn
 #define sox_report     sox_globals.subsystem=__FILE__,sox_report
-#define sox_debug      sox_globals.subsystem=__FILE__,sox_debug
-#define sox_debug_more sox_globals.subsystem=__FILE__,sox_debug_more
-#define sox_debug_most sox_globals.subsystem=__FILE__,sox_debug_most
-
-void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap);
-
-typedef const sox_format_handler_t *(*sox_format_fn_t)(void);
-
-typedef struct {
-  char *name;
-  sox_format_fn_t fn;
-} sox_format_tab_t;
-
-extern sox_format_tab_t sox_format_fns[];
 
 typedef struct {char const *text; unsigned value;} sox_enum_item;
 #define ENUM_ITEM(prefix, item) {#item, prefix##item},
@@ -557,4 +556,5 @@ char const * sox_find_file_extension(char const * pathname);
 char const * sox_sigfigs3(size_t number);
 char const * sox_sigfigs3p(double percentage);
 
+/* WARNING END */
 #endif

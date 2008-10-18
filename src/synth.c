@@ -387,7 +387,7 @@ static int start(sox_effect_t * effp)
           (log(chan->freq2) - log(chan->freq)) / synth->samples_to_do : 1;
         break;
     }
-    sox_debug("type=%s, combine=%s, samples_to_do=%lu, f1=%g, f2=%g, "
+    lsx_debug("type=%s, combine=%s, samples_to_do=%lu, f1=%g, f2=%g, "
               "offset=%g, phase=%g, p1=%g, p2=%g, p3=%g mult=%g",
         sox_find_enum_value(chan->type, synth_type)->text,
         sox_find_enum_value(chan->combine, combine_type)->text,

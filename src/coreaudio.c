@@ -139,14 +139,14 @@ static int setup(sox_format_t *ft, int is_input)
 
   if (stream_desc.mChannelsPerFrame != ft->signal.channels)
   {
-    sox_debug("audio device did not accept %d channels. Use %d channels instead.", (int)ft->signal.channels, 
+    lsx_debug("audio device did not accept %d channels. Use %d channels instead.", (int)ft->signal.channels, 
               (int)stream_desc.mChannelsPerFrame);
     ft->signal.channels = stream_desc.mChannelsPerFrame;
   }
 
   if (stream_desc.mSampleRate != ft->signal.rate)
   {
-    sox_debug("audio device did not accept %d sample rate. Use %d instead.", (int)ft->signal.rate, 
+    lsx_debug("audio device did not accept %d sample rate. Use %d instead.", (int)ft->signal.rate, 
               (int)stream_desc.mSampleRate);
     ft->signal.rate = stream_desc.mSampleRate;
   }

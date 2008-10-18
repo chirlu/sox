@@ -107,20 +107,20 @@ static int startread(sox_format_t * ft)
     if (lsx_readw(ft, &xa->header.bits) != SOX_SUCCESS) return SOX_EOF;
 
     /* Output the data from the header */
-    sox_debug("XA Header:");
-    sox_debug(" szID:          %02x %02x %02x %02x  |%c%c%c%c|",
+    lsx_debug("XA Header:");
+    lsx_debug(" szID:          %02x %02x %02x %02x  |%c%c%c%c|",
         magic[0], magic[1], magic[2], magic[3],
         (magic[0] >= 0x20 && magic[0] <= 0x7e) ? magic[0] : '.',
         (magic[1] >= 0x20 && magic[1] <= 0x7e) ? magic[1] : '.',
         (magic[2] >= 0x20 && magic[2] <= 0x7e) ? magic[2] : '.',
         (magic[3] >= 0x20 && magic[3] <= 0x7e) ? magic[3] : '.');
-    sox_debug(" dwOutSize:     %u", xa->header.outSize);
-    sox_debug(" wTag:          0x%04x", xa->header.tag);
-    sox_debug(" wChannels:     %u", xa->header.channels);
-    sox_debug(" dwSampleRate:  %u", xa->header.sampleRate);
-    sox_debug(" dwAvgByteRate: %u", xa->header.avgByteRate);
-    sox_debug(" wAlign:        %u", xa->header.align);
-    sox_debug(" wBits:         %u", xa->header.bits);
+    lsx_debug(" dwOutSize:     %u", xa->header.outSize);
+    lsx_debug(" wTag:          0x%04x", xa->header.tag);
+    lsx_debug(" wChannels:     %u", xa->header.channels);
+    lsx_debug(" dwSampleRate:  %u", xa->header.sampleRate);
+    lsx_debug(" dwAvgByteRate: %u", xa->header.avgByteRate);
+    lsx_debug(" wAlign:        %u", xa->header.align);
+    lsx_debug(" wBits:         %u", xa->header.bits);
 
     /* Populate the sox_soundstream structure */
     ft->encoding.encoding = SOX_ENCODING_SIGN2;

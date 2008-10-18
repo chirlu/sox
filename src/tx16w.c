@@ -114,7 +114,7 @@ static int startread(sox_format_t * ft)
      */
 
     /* Check to make sure we got a good filetype ID from file */
-    sox_debug("Found header filetype %s",filetype);
+    lsx_debug("Found header filetype %s",filetype);
     if(strcmp(filetype,"LM8953"))
     {
         lsx_fail_errno(ft,SOX_EHDR,"Invalid filetype ID in input file header, != LM8953");
@@ -157,11 +157,11 @@ static int startread(sox_format_t * ft)
                     break;
             }
             if ( blewIt ) {
-                sox_debug("Invalid sample rate identifier found %d", sample_rate);
+                lsx_debug("Invalid sample rate identifier found %d", sample_rate);
                 ft->signal.rate = 1e5 / 3;
             }
     }
-    sox_debug("Sample rate = %g", ft->signal.rate);
+    lsx_debug("Sample rate = %g", ft->signal.rate);
 
     ft->signal.channels = 1 ; /* not sure about stereo sample data yet ??? */
     ft->encoding.bits_per_sample = 12;
@@ -232,7 +232,7 @@ static int startwrite(sox_format_t * ft)
   priv_t * sk = (priv_t *) ft->priv;
     struct WaveHeader_ WH;
 
-    sox_debug("tx16w selected output");
+    lsx_debug("tx16w selected output");
 
     memset(&WH, 0, sizeof(struct WaveHeader_));
 
@@ -299,7 +299,7 @@ static int stopwrite(sox_format_t * ft)
     /* If file header needs fixing up, for example it needs the */
     /* the number of samples in a field, seek back and write them here. */
 
-    sox_debug("tx16w:output finished");
+    lsx_debug("tx16w:output finished");
 
     memset(&WH, 0, sizeof(struct WaveHeader_));
     strncpy(WH.filetype,"LM8953",(size_t)6);

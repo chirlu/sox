@@ -171,9 +171,9 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
           return lsx_usage(effp);
         } else if (r->beta <= 2.0) {
         	r->beta = 0;
-                sox_debug("opts: Nuttall window, cutoff %f", r->rolloff);
+                lsx_debug("opts: Nuttall window, cutoff %f", r->rolloff);
         } else
-                sox_debug("opts: Kaiser window, cutoff %f, beta %f", r->rolloff, r->beta);
+                lsx_debug("opts: Kaiser window, cutoff %f, beta %f", r->rolloff, r->beta);
         return (SOX_SUCCESS);
 }
 
@@ -216,11 +216,11 @@ static int start(sox_effect_t * effp)
     return (SOX_EOF);
   }
 
-  sox_debug("Nmult: %ld, Nwing: %ld, Nq: %ld", r->Nmult, r->Nwing, r->Nq);
+  lsx_debug("Nmult: %ld, Nwing: %ld, Nq: %ld", r->Nmult, r->Nwing, r->Nq);
 
   if (r->quadr < 0) {     /* exact coeff's method */
     r->Xh = r->Nwing / r->b;
-    sox_debug("rate ratio %ld:%ld, coeff interpolation not needed", r->a, r->b);
+    lsx_debug("rate ratio %ld:%ld, coeff interpolation not needed", r->a, r->b);
   } else {
     r->dhb = Np;        /* Fixed-point Filter sampling-time-increment */
     if (r->Factor < 1.0)
@@ -250,7 +250,7 @@ static int start(sox_effect_t * effp)
 
   r->Xsize = 2 * Xoff + i / (1.0 + r->Factor);
   r->Ysize = BUFFSIZE - r->Xsize;
-  sox_debug("Xsize %li, Ysize %li, Xoff %li", r->Xsize, r->Ysize, r->Xoff);
+  lsx_debug("Xsize %li, Ysize %li, Xoff %li", r->Xsize, r->Ysize, r->Xoff);
 
   r->X = lsx_malloc(sizeof(double) * (BUFFSIZE));
   r->Y = r->X + r->Xsize;
@@ -271,7 +271,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
         priv_t * r = (priv_t *) effp->priv;
         long i, last, Nout, Nx, Nproc;
 
-        sox_debug_more("Xp %li, Xread %li, isamp %lu, ",r->Xp, r->Xread,(unsigned long)*isamp);
+        lsx_debug_more("Xp %li, Xread %li, isamp %lu, ",r->Xp, r->Xread,(unsigned long)*isamp);
 
         /* constrain amount we actually process */
         Nproc = r->Xsize - r->Xp;
@@ -288,7 +288,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
         }
         if ((unsigned long)Nx > *isamp)
                 Nx = *isamp;
-        sox_debug_more("Nx %li",Nx);
+        lsx_debug_more("Nx %li",Nx);
 
         if (ibuf == NULL) {
                 for(i = r->Xread; i < Nx + r->Xread  ; i++)
@@ -310,7 +310,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
         if (r->quadr < 0) { /* exact coeff's method */
                 long creep;
                 Nout = SrcEX(r, Nproc);
-                sox_debug_more("Nproc %li --> %li",Nproc,Nout);
+                lsx_debug_more("Nproc %li --> %li",Nproc,Nout);
                 /* Move converter Nproc samples back in time */
                 r->t -= Nproc * r->b;
                 /* Advance by number of samples processed */
@@ -321,12 +321,12 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
                 {
                   r->t -= creep * r->b;  /* Remove time accumulation   */
                   r->Xp += creep;        /* and add it to read pointer */
-                  sox_debug_more("Nproc %ld, creep %ld",Nproc,creep);
+                  lsx_debug_more("Nproc %ld, creep %ld",Nproc,creep);
                 }
         } else { /* approx coeff's method */
                 long creep;
                 Nout = SrcUD(r, Nproc);
-                sox_debug_more("Nproc %li --> %li",Nproc,Nout);
+                lsx_debug_more("Nproc %li --> %li",Nproc,Nout);
                 /* Move converter Nproc samples back in time */
                 r->Time -= Nproc;
                 /* Advance by number of samples processed */
@@ -337,7 +337,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
                 {
                   r->Time -= creep;   /* Remove time accumulation   */
                   r->Xp += creep;     /* and add it to read pointer */
-                  sox_debug_more("Nproc %ld, creep %ld",Nproc,creep);
+                  lsx_debug_more("Nproc %ld, creep %ld",Nproc,creep);
                 }
         }
 
@@ -345,7 +345,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
         long i,k;
         /* Copy back portion of input signal that must be re-used */
         k = r->Xp - r->Xoff;
-        sox_debug_more("k %li, last %li",k,last);
+        lsx_debug_more("k %li, last %li",k,last);
         for (i=0; i<last - k; i++)
             r->X[i] = r->X[i+k];
 
@@ -377,7 +377,7 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
         sox_sample_t *Obuf;
         int rc;
 
-        sox_debug("Xoff %li  <--- DRAIN",r->Xoff);
+        lsx_debug("Xoff %li  <--- DRAIN",r->Xoff);
 
         /* stuff end with Xoff zeros */
         isamp_res = r->Xoff;
@@ -390,14 +390,14 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
                 rc = flow(effp, NULL, Obuf, &Isamp, &Osamp);
                 if (rc)
                     return rc;
-                sox_debug("DRAIN isamp,osamp  (%li,%li) -> (%lu,%lu)",
+                lsx_debug("DRAIN isamp,osamp  (%li,%li) -> (%lu,%lu)",
                          isamp_res,osamp_res,(unsigned long)Isamp,(unsigned long)Osamp);
                 Obuf += Osamp;
                 osamp_res -= Osamp;
                 isamp_res -= Isamp;
         }
         *osamp -= osamp_res;
-        sox_debug("DRAIN osamp %lu", (unsigned long)*osamp);
+        lsx_debug("DRAIN osamp %lu", (unsigned long)*osamp);
         if (isamp_res)
                 sox_warn("drain overran obuf by %li", isamp_res);
         /* FIXME: This is very picky.  IF obuf is not big enough to
@@ -495,11 +495,11 @@ static long SrcUD(priv_t * r, long Nx)
    Factor = r->Factor;
    time = r->Time;
    dt = 1.0/Factor;        /* Output sampling period */
-   sox_debug_more("Factor %f, dt %f, ",Factor,dt);
-   sox_debug_more("Time %f, ",r->Time);
+   lsx_debug_more("Factor %f, dt %f, ",Factor,dt);
+   lsx_debug_more("Time %f, ",r->Time);
    /* (Xh * dhb)>>La is max index into Imp[] */
-   sox_debug_more("ct=%.2f %li",(double)r->Nwing*Na/r->dhb, r->Xh);
-   sox_debug_more("ct=%ld, T=%.6f, dhb=%6f, dt=%.6f",
+   lsx_debug_more("ct=%.2f %li",(double)r->Nwing*Na/r->dhb, r->Xh);
+   lsx_debug_more("ct=%ld, T=%.6f, dhb=%6f, dt=%.6f",
                          r->Xh, time-floor(time),(double)r->dhb/Na,dt);
    Ystart = Y = r->Y;
    n = (int)ceil((double)Nx/dt);
@@ -521,7 +521,7 @@ static long SrcUD(priv_t * r, long Nx)
       time += dt;            /* Move to next sample by time increment */
       }
    r->Time = time;
-   sox_debug_more("Time %f",r->Time);
+   lsx_debug_more("Time %f",r->Time);
    return (Y - Ystart);        /* Return the number of output samples */
 }
 

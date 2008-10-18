@@ -117,7 +117,7 @@ static int startread(sox_format_t * ft)
 
 static int write_header(sox_format_t * ft)
 {
-  char * comment  = sox_cat_comments(ft->oob.comments);
+  char * comment  = lsx_cat_comments(ft->oob.comments);
   size_t len      = min(FIXED_HDR - 26, strlen(comment)) + 1; /* null-terminated */
   size_t info_len = max(4, (len + 3) & ~3u); /* Minimum & multiple of 4 bytes */
   int i = ft->encoding.reverse_bytes == MACHINE_IS_BIGENDIAN? 0 : 2;

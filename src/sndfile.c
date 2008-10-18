@@ -59,7 +59,7 @@ static void drain_log_buffer(sox_format_t * ft)
       sox_warn("`%s': %.*s",
           ft->filename, (int)(end - sf->log_buffer_ptr), sf->log_buffer_ptr);
     } else
-      sox_debug("`%s': %.*s",
+      lsx_debug("`%s': %.*s",
           ft->filename, (int)(end - sf->log_buffer_ptr), sf->log_buffer_ptr);
     sf->log_buffer_ptr = end;
     if (*sf->log_buffer_ptr == '\n')

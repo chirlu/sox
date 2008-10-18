@@ -68,7 +68,7 @@ static void read_comments(sox_format_t * ft)
       if ((utf8 = utf8_id3tag_findframe(tag, "TLEN", 0))) {
         if (atoi((char *)utf8) > 0) {
           ft->signal.length = atoi((char *)utf8); /* In ms; convert to samples later */
-          sox_debug("got exact duration from ID3 TLEN");
+          lsx_debug("got exact duration from ID3 TLEN");
         }
         free(utf8);
       }
@@ -115,7 +115,7 @@ static size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
     memcpy(buffer, mad_stream.this_frame, leftover);
     read = fread(buffer + leftover, (size_t) 1, INPUT_BUFFER_SIZE - leftover, fp);
     if (read <= 0) {
-      sox_debug("got exact duration by scan to EOF (frames=%lu leftover=%lu)", (unsigned long)frames, (unsigned long)leftover);
+      lsx_debug("got exact duration by scan to EOF (frames=%lu leftover=%lu)", (unsigned long)frames, (unsigned long)leftover);
       break;
     }
     for (; !depadded && padding < read && !buffer[padding]; ++padding);
@@ -162,7 +162,7 @@ static size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
           }
         if ((frames = xing_frames(mad_stream.anc_ptr, mad_stream.anc_bitlen))) {
           mad_timer_multiply(&time, (signed long)frames);
-          sox_debug("got exact duration from XING frame count (%lu)", (unsigned long)frames);
+          lsx_debug("got exact duration from XING frame count (%lu)", (unsigned long)frames);
           break;
         }
       }
@@ -173,7 +173,7 @@ static size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
         struct stat filestat;
         fstat(fileno(fp), &filestat);
         mad_timer_mult(&time, (double)(filestat.st_size - tagsize) / consumed);
-        sox_debug("got approx. duration by CBR extrapolation");
+        lsx_debug("got approx. duration by CBR extrapolation");
         break;
       }
     }

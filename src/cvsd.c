@@ -162,7 +162,7 @@ int lsx_cvsdstopwrite(sox_format_t * ft)
                 lsx_writeb(ft, p->bit.shreg);
                 p->bytes_written++;
         }
-        sox_debug("cvsd: min slope %f, max slope %f",
+        lsx_debug("cvsd: min slope %f, max slope %f",
                p->com.v_min, p->com.v_max);
 
         return (SOX_SUCCESS);
@@ -174,7 +174,7 @@ int lsx_cvsdstopread(sox_format_t * ft)
 {
         priv_t *p = (priv_t *) ft->priv;
 
-        sox_debug("cvsd: min value %f, max value %f",
+        lsx_debug("cvsd: min value %f, max value %f",
                p->com.v_min, p->com.v_max);
 
         return(SOX_SUCCESS);
@@ -220,8 +220,8 @@ size_t lsx_cvsdread(sox_format_t * ft, sox_sample_t *buf, size_t nsamp)
                                           (p->cvsd_rate < 24000) ?
                                           dec_filter_16 : dec_filter_32,
                                           CVSD_DEC_FILTERLEN);
-                        sox_debug_more("input %d %f\n", debug_count, p->com.mla_int);
-                        sox_debug_more("recon %d %f\n", debug_count, oval);
+                        lsx_debug_more("input %d %f\n", debug_count, p->com.mla_int);
+                        lsx_debug_more("recon %d %f\n", debug_count, oval);
                         debug_count++;
 
                         if (oval > p->com.v_max)
@@ -289,8 +289,8 @@ size_t lsx_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp)
                 } else
                         p->bit.mask <<= 1;
                 p->com.phase += p->com.phase_inc;
-                sox_debug_more("input %d %f\n", debug_count, inval);
-                sox_debug_more("recon %d %f\n", debug_count, p->c.enc.recon_int);
+                lsx_debug_more("input %d %f\n", debug_count, inval);
+                lsx_debug_more("recon %d %f\n", debug_count, p->c.enc.recon_int);
                 debug_count++;
         }
 }
@@ -444,7 +444,7 @@ static void make_dvms_hdr(sox_format_t * ft, struct dvms_header *hdr)
 {
         priv_t *p = (priv_t *) ft->priv;
         size_t len;
-        char * comment = sox_cat_comments(ft->oob.comments);
+        char * comment = lsx_cat_comments(ft->oob.comments);
 
         memset(hdr->Filename, 0, sizeof(hdr->Filename));
         len = strlen(ft->filename);
@@ -479,21 +479,21 @@ int lsx_dvmsstartread(sox_format_t * ft)
             return rc;
         }
 
-        sox_debug("DVMS header of source file \"%s\":", ft->filename);
-        sox_debug("  filename  \"%.14s\"", hdr.Filename);
-        sox_debug("  id        0x%x", hdr.Id);
-        sox_debug("  state     0x%x", hdr.State);
-        sox_debug("  time      %s", ctime(&hdr.Unixtime)); /* ctime generates lf */
-        sox_debug("  usender   %u", hdr.Usender);
-        sox_debug("  ureceiver %u", hdr.Ureceiver);
-        sox_debug("  length    %lu", (unsigned long)hdr.Length);
-        sox_debug("  srate     %u", hdr.Srate);
-        sox_debug("  days      %u", hdr.Days);
-        sox_debug("  custom1   %u", hdr.Custom1);
-        sox_debug("  custom2   %u", hdr.Custom2);
-        sox_debug("  info      \"%.16s\"", hdr.Info);
+        lsx_debug("DVMS header of source file \"%s\":", ft->filename);
+        lsx_debug("  filename  \"%.14s\"", hdr.Filename);
+        lsx_debug("  id        0x%x", hdr.Id);
+        lsx_debug("  state     0x%x", hdr.State);
+        lsx_debug("  time      %s", ctime(&hdr.Unixtime)); /* ctime generates lf */
+        lsx_debug("  usender   %u", hdr.Usender);
+        lsx_debug("  ureceiver %u", hdr.Ureceiver);
+        lsx_debug("  length    %lu", (unsigned long)hdr.Length);
+        lsx_debug("  srate     %u", hdr.Srate);
+        lsx_debug("  days      %u", hdr.Days);
+        lsx_debug("  custom1   %u", hdr.Custom1);
+        lsx_debug("  custom2   %u", hdr.Custom2);
+        lsx_debug("  info      \"%.16s\"", hdr.Info);
         ft->signal.rate = (hdr.Srate < 240) ? 16000 : 32000;
-        sox_debug("DVMS rate %dbit/s using %gbit/s deviation %g%%",
+        lsx_debug("DVMS rate %dbit/s using %gbit/s deviation %g%%",
                hdr.Srate*100, ft->signal.rate,
                ((ft->signal.rate - hdr.Srate*100) * 100) / ft->signal.rate);
         rc = lsx_cvsdstartread(ft);

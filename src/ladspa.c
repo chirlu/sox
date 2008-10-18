@@ -172,12 +172,12 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
           return SOX_EOF;
         }
         l_st->control[i] = ladspa_default(&(l_st->desc->PortRangeHints[i]));
-        sox_debug("default argument for port %lu is %f", i, l_st->control[i]);
+        lsx_debug("default argument for port %lu is %f", i, l_st->control[i]);
       } else {
         if (!sscanf(argv[0], "%lf", &arg))
           return lsx_usage(effp);
         l_st->control[i] = (LADSPA_Data)arg;
-        sox_debug("argument for port %lu is %f", i, l_st->control[i]);
+        lsx_debug("argument for port %lu is %f", i, l_st->control[i]);
         n--; argv++;
       }
     }
@@ -196,7 +196,7 @@ static int sox_ladspa_start(sox_effect_t * effp)
   unsigned long i;
 
   /* Instantiate the plugin */
-  sox_debug("rate for plugin is %g", effp->in_signal.rate);
+  lsx_debug("rate for plugin is %g", effp->in_signal.rate);
   l_st->handle = l_st->desc->instantiate(l_st->desc, (unsigned long)effp->in_signal.rate);
   if (l_st->handle == NULL) {
     sox_fail("could not instantiate plugin");

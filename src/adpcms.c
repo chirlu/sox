@@ -74,7 +74,7 @@ int lsx_adpcm_decode(int code, adpcm_t * p)
   if (s < min_sample || s > max_sample) {
     int grace = (p->setup.steps[p->step_index] >> (p->setup.shift + 1)) & p->setup.mask;
     if (s < min_sample - grace || s > max_sample + grace) {
-      sox_debug_most("code=%i step=%i grace=%i s=%i",
+      lsx_debug_most("code=%i step=%i grace=%i s=%i",
           code & (2 * p->setup.sign - 1), p->setup.steps[p->step_index], grace, s);
       p->errors++;
     }
