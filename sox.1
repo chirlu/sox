@@ -1163,7 +1163,7 @@ For example, an initial tone is generated, then bent three times, yeilding
 four different notes in total:
 .EX
 	play -n synth 2.5 sin 667 gain 1 \\
-		bend .35,180,.25 .15,740,.53 0,-520,.3
+		bend .35,180,.25  .15,740,.53  0,-520,.3
 .EE
 Note that the clipping that is produced in this example is deliberate;
 to remove it, use
@@ -2011,13 +2011,13 @@ as detailed in the following table:
 center box;
 lB lw52.
 \-M/\-I/\-L	Phase response = minimum/intermediate/linear
+\-s	Steep filter (band-width = 99%)
+\-a	Allow aliasing above the pass-band
+\-b\ 74\-99\*d7	Any band-width %
 \-p\ 0\-100	T{
 .na
 Any phase response (0 = minimum, 25 = intermediate, 50 = linear, 100 = maximum)
 T}
-\-s	Steep filter (band-width = 99%)
-\-b\ 74\-99\*d7	Any band-width %
-\-a	Allow aliasing above the pass-band
 .TE
 .DT
 .SP

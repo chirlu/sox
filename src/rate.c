@@ -261,7 +261,7 @@ static void fir_to_phase(double * * h, int * len,
     work[i + work_len / 2] = 0;
   }
   lsx_safe_rdft(work_len, 1, work);
-  /* Some DFTs require phase unwrapping here, but rdft seems not to. */
+  /* Some filters require phase unwrapping here, but ours seem not to. */
 
   for (i = 2; i < work_len; i += 2) /* Interpolate between linear & min phase */
     work[i + 1] = phase * M_PI * .5 * i + (1 - phase) * work[i + 1];
@@ -319,9 +319,8 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
     f->post_peak = num_taps / 2;
   }
   else {
-    /* Empirical adjustment to negate att degradation with intermediate phase */
+    /* Adjustment to negate att degradation with intermediate phase */
     double att = phase && phase != 50 && phase != 100? atten * (34./33) : atten;
-
     double * h = design_lpf(Fp, 1., 2., allow_aliasing, att, &num_taps, 0);
 
     if (phase != 50)
@@ -442,7 +441,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
       {2 * array_length(half_fir_coefs_low) - 1, half_fir_coefs_low, 0,0},
       {0, NULL, .931, 110}, {0, NULL, .931, 125}, {0, NULL, .931, 170}};
     filter_t const * f = &filters[quality - Low];
-    double att = allow_aliasing? (34./33)* f->a : f->a;
+    double att = allow_aliasing? (34./33)* f->a : f->a; /* negate att degrade */
     double bw = bandwidth? 1 - (1 - bandwidth / 100) / TO_3dB : f->bw;
     double min = 1 - (allow_aliasing? MAX_TBW0A : MAX_TBW0) / 100;
     assert((size_t)(quality - Low) < array_length(filters));
@@ -667,11 +666,11 @@ sox_effect_handler_t const * sox_rate_effect_fn(void)
     " -v  very high      interm.  95%     175     24-bit mastering",
     "              OVERRIDE OPTIONS (only with -m, -h, -v)",
     " -M/-I/-L     Phase response = minimum/intermediate/linear",
+    " -s           Steep filter (band-width = 99%)",
+    " -a           Allow aliasing above the pass-band",
+    " -b 74-99.7   Any band-width %",
     " -p 0-100     Any phase response (0 = minimum, 25 = intermediate,",
     "              50 = linear, 100 = maximum)",
-    " -s           Steep filter (band-width = 99%)",
-    " -b 74-99.7   Any band-width %",
-    " -a           Allow aliasing above the pass-band",
   };
   static char * usage;
   handler.usage = lsx_usage_lines(&usage, lines, array_length(lines));
