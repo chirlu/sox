@@ -8,8 +8,8 @@ Creator:
 
 Mantainers:
 	Chris Bagwell		cbagwell@users.sourceforge.net
-		OSS and Sun players, bugfixes, ADPCM support,
-		patch collection and maintenance.
+		ALSA/OSS/Sun/MacOS X play/record support, initial ADPCM,
+		bugfixes, patch collection and general maintenance.
 	Rob Sykes		robs@users.sourceforge.net
                 FORMATS: M3U, PLS, FLAC, AMR, HTK, WavPack, VOX/IMA/VOC ADPCM
                 support, 24bit support for popular formats, MP3 tags & duration

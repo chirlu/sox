@@ -7,6 +7,6 @@ Name: SoX
 Description: Audio file format and effects library
 Version: @VERSION@
 URL: http://sox.sourceforge.net
-Libs: -L${libdir} -lsox -lsfx
+Libs: -L${libdir} -lsox
 Libs.private: @LIBS@
 Cflags: -I${includedir}

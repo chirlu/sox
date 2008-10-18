@@ -10,7 +10,7 @@ if HAVE_LIBLTDL
 # fmt libraries.  If any fmt ever needs to add a specific LDFLAGS
 # then it will need to also add -avoid-version because AM_LDFLAGS
 # is ignored when you specify a more specific one.
-# We want to version libsfx and libsox and we are OK because they
+# We want to version libsox and we are OK because they
 # have a more specific LDFLAGS that includes -version-info.
 AM_LDFLAGS = -avoid-version -module
 AM_CPPFLAGS += -DPKGLIBDIR="\"$(pkglibdir)\""
@@ -29,22 +29,22 @@ endif
 
 bin_PROGRAMS = sox
 EXTRA_PROGRAMS = example0 example1 example2 sox_sample_test
-lib_LTLIBRARIES = libsox.la libsfx.la
+lib_LTLIBRARIES = libsox.la
 include_HEADERS = sox.h
 nodist_include_HEADERS = soxstdint.h
 sox_SOURCES = sox.c
-sox_LDADD = libsox.la libsfx.la
+sox_LDADD = libsox.la
 example0_SOURCES = example0.c
-example0_LDADD = libsox.la libsfx.la
+example0_LDADD = libsox.la
 example1_SOURCES = example1.c
-example1_LDADD = libsox.la libsfx.la
+example1_LDADD = libsox.la
 example2_SOURCES = example2.c
 example2_LDADD = libsox.la
 sox_sample_test_SOURCES = sox_sample_test.c sox_sample_test.h
 
-#############################################
-# libsox Dynamic Libraries for File Formats #
-#############################################
+###############################################
+# libsox - Dynamic Libraries for File Formats #
+###############################################
 
 if HAVE_LIBLTDL
 
@@ -249,14 +249,22 @@ pkglib_LTLIBRARIES += libsox_fmt_sunau.la
 endif
 endif
 
-############################
-# libsfx - effects library #
-############################
+######################################################
+# libsox - file format, effects, and utility library #
+######################################################
 
-libsfx_la_SOURCES = \
-	band.h bend.c biquad.c biquad.h biquads.c chorus.c compand.c compandt.c \
-	compandt.h contrast.c dcshift.c delay.c dither.c earwax.c echo.c \
-	echos.c effects.c effects.h effects_i.c fade.c fft4g.c fft4g.h \
+# Format handlers and utils source
+libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
+	  g711.c g711.h g721.c g723_24.c g723_40.c g72x.c g72x.h vox.c vox.h \
+	  raw.c raw.h formats.c formats.h formats_i.c sox_i.h skelform.c \
+	  xmalloc.c xmalloc.h getopt.c getopt1.c getopt.h \
+	  util.c util.h libsox.c libsox_i.c
+
+# Effects source
+libsox_la_SOURCES += \
+	band.h bend.c biquad.c biquad.h biquads.c chorus.c compand.c \
+	compandt.c compandt.h contrast.c dcshift.c delay.c dither.c earwax.c \
+	echo.c echos.c effects.c effects.h effects_i.c fade.c fft4g.c fft4g.h \
 	fifo.h filter.c flanger.c input.c ladspa.c loudness.c mcompand.c \
 	mixer.c noiseprof.c noisered.c noisered.h normalise.c output.c pad.c \
 	pan.c phaser.c pitch.c polyphas.c rabbit.c rate.c \
@@ -265,33 +273,22 @@ libsfx_la_SOURCES = \
 	speed.c	splice.c stat.c swap.c stretch.c synth.c tempo.c tremolo.c \
 	trim.c vol.c
 if HAVE_PNG
-    libsfx_la_SOURCES += spectrogram.c
+    libsox_la_SOURCES += spectrogram.c
 endif
 
-libsfx_la_CFLAGS = @WARN_CFLAGS@ @SAMPLERATE_CFLAGS@
-libsfx_la_LIBADD = @PNG_LIBS@ @SAMPLERATE_LIBS@ libsox.la
-libsfx_la_LDFLAGS = -version-info @SHLIB_VERSION@
+# Libraries required by libsox for file handlers, effects, or utils;
+# regardless if libltdl is used or not.
+libsox_la_LIBADD = @PNG_LIBS@ @SAMPLERATE_LIBS@
+if HAVE_MAGIC
+libsox_la_LIBADD += @MAGIC_LIBS@
+endif
 
-############################################
-# libsox - file format and utility library #
-############################################
-
-libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
-	  g711.c g711.h g721.c g723_24.c g723_40.c g72x.c g72x.h vox.c vox.h \
-	  raw.c raw.h formats.c formats.h formats_i.c sox_i.h skelform.c \
-	  xmalloc.c xmalloc.h getopt.c getopt1.c getopt.h \
-	  util.c util.h libsox.c libsox_i.c
-libsox_la_CFLAGS = @WARN_CFLAGS@ 
+libsox_la_CFLAGS = @WARN_CFLAGS@  @SAMPLERATE_CFLAGS@
 libsox_la_LDFLAGS = -version-info @SHLIB_VERSION@
 
 if HAVE_LIBLTDL
   libsox_la_CFLAGS += $(LTDLINCL) 
-  libsfx_la_CFLAGS += $(LTDLINCL) 
   libsox_la_LDFLAGS += $(LIBLTDL) 
-  libsfx_la_LDFLAGS += $(LIBLTDL) 
-if HAVE_MAGIC
-  libsox_la_LIBADD = @MAGIC_LIBS@
-endif
 else
   libsox_la_SOURCES += raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
     s4-fmt.c u1-fmt.c u2-fmt.c u3-fmt.c u4-fmt.c al-fmt.c la-fmt.c ul-fmt.c \
@@ -299,8 +296,9 @@ else
     dvms-fmt.c dat.c gsm.c hcom.c htk.c lpc10.c maud.c prc.c sf.c smp.c \
     sounder.c soundtool.c sphere.c tx16w.c voc.c vox-fmt.c ima-fmt.c adpcm.c adpcm.h \
     ima_rw.c ima_rw.h wav.c wve.c xa.c nulfile.c f4-fmt.c f8-fmt.c
-libsox_la_LIBADD = @GSM_LIBS@ @LIBGSM_LIBADD@
+libsox_la_LIBADD += @GSM_LIBS@ @LIBGSM_LIBADD@
 libsox_la_LIBADD += @LPC10_LIBS@ @LIBLPC10_LIBADD@
+
 
 sox_LDADD += @GSM_LIBS@ @LIBGSM_LIBADD@
 sox_LDADD += @LPC10_LIBS@ @LIBLPC10_LIBADD@
@@ -314,10 +312,6 @@ if HAVE_FFMPEG
     libsox_la_SOURCES += ffmpeg.h ffmpeg.c
     libsox_la_LIBADD += @FFMPEG_LIBS@
     sox_LDADD += @FFMPEG_LIBS@
-endif
-if HAVE_MAGIC
-    libsox_la_LIBADD += @MAGIC_LIBS@
-    sox_LDADD += @MAGIC_LIBS@
 endif
 if HAVE_SNDFILE
     libsox_la_SOURCES += sndfile.c caf.c mat4.c mat5.c paf.c fap.c w64.c xi.c pvf.c sd2.c
