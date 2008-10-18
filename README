@@ -143,6 +143,7 @@ The audio effects/tools included in this release are as follows:
     o swap		Swap stereo channels
 
   o Pitch/tempo effects
+    o bend		Bend pitch at given times without changing tempo
     o pitch		Adjust pitch (= key) without changing tempo
     o speed		Adjust pitch & tempo together
     o tempo		Adjust tempo without changing pitch
