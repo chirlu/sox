@@ -1140,10 +1140,27 @@ These effects support the \fB\-\-plot\fR global option.
 .SP
 See also \fBequalizer\fR for a peaking equalisation effect.
 .TP
-\fBbend\fR [\fB\-f \fIframe-rate\fR(25)] [\fB\-o \fIoversample\fR(16)] { \fIdelay\fB,\fIcents\fB,\fIduration\fR }
-Pitch bending. Work in progress\*msubject to change.
+\fBbend\fR [\fB\-f \fIframe-rate\fR(25)] [\fB\-o \fIover-sample\fR(16)] { \fIdelay\fB,\fIcents\fB,\fIduration\fR }
+Changes pitch by specified amounts at specified times.
+Each given triple: \fIdelay\fB,\fIcents\fB,\fIduration\fR specifies one bend.
+.I delay
+is the amount of time after the start of the audio stream, or the end of the previous bend, at which to start bending the pitch;
+.I cents
+is the number of cents (100 cents = 1 semitone) by which to bend the pitch, and
+.I duration
+the length of time over which the pitch will be bent.
 .SP
-For example:
+The pitch-bending algorithm utilises the Discrete Fourier Transform (DTF)
+at a particular frame rate and over-sampling rate.
+The
+.B \-f
+and
+.B \-o
+parameters may be used to adjust these parameters and thus control the
+smoothness of the changes in pitch.
+.SP
+For example, an initial tone is generated, then bent three times, yeilding
+four different notes in total:
 .EX
 	play -n synth 2.5 sin 667 gain 1 \\
 		bend .35,180,.25 .15,740,.53 0,-520,.3
@@ -1152,7 +1169,7 @@ Note that the clipping that is produced in this example is deliberate;
 to remove it, use
 .B gain\ \-5
 in place of
-.BR gain\ \1 .
+.BR gain\ 1 .
 .TP
 \fBchorus \fIgain-in gain-out\fR <\fIdelay decay speed depth \fB\-s\fR\^|\^\fB\-t\fR>
 Add a chorus effect to the audio.  This can make a single vocal sound

@@ -28,75 +28,13 @@
  * ANY KIND. See http://www.dspguru.com/wol.htm for more information.
  */
 
+#ifdef NDEBUG /* Enable assert always. */
+#undef NDEBUG /* Must undef above assert.h or other that might include it. */
+#endif
+
 #include "sox_i.h"
 #include "getopt.h"
-
-static void smbFft(float *fftBuffer, long fftFrameSize, long sign)
-/* 
- * FFT routine, (C)1996 S.M.Bernsee. Sign = -1 is FFT, 1 is iFFT (inverse)
- * Fills fftBuffer[0...2*fftFrameSize-1] with the Fourier transform of the
- * time domain data in fftBuffer[0...2*fftFrameSize-1]. The FFT array takes
- * and returns the cosine and sine parts in an interleaved manner, ie.
- * fftBuffer[0] = cosPart[0], fftBuffer[1] = sinPart[0], asf. fftFrameSize
- * must be a power of 2. It expects a complex input signal (see footnote 2),
- * ie. when working with 'common' audio signals our input signal has to be
- * passed as {in[0],0.,in[1],0.,in[2],0.,...} asf. In that case, the transform
- * of the frequencies of interest is in fftBuffer[0...fftFrameSize].
- */
-{
-  float wr, wi, arg, *p1, *p2, temp;
-  float tr, ti, ur, ui, *p1r, *p1i, *p2r, *p2i;
-  long i, bitm, j, le, le2, k;
-
-  for (i = 2; i < 2 * fftFrameSize - 2; i += 2) {
-    for (bitm = 2, j = 0; bitm < 2 * fftFrameSize; bitm <<= 1) {
-      if (i & bitm)
-        j++;
-      j <<= 1;
-    }
-    if (i < j) {
-      p1 = fftBuffer + i;
-      p2 = fftBuffer + j;
-      temp = *p1;
-      *(p1++) = *p2;
-      *(p2++) = temp;
-      temp = *p1;
-      *p1 = *p2;
-      *p2 = temp;
-    }
-  }
-  for (k = 0, le = 2; k < (long) (log((double) fftFrameSize) / log(2.) + .5);
-       k++) {
-    le <<= 1;
-    le2 = le >> 1;
-    ur = 1.0;
-    ui = 0.0;
-    arg = M_PI / (le2 >> 1);
-    wr = cos(arg);
-    wi = sign * sin(arg);
-    for (j = 0; j < le2; j += 2) {
-      p1r = fftBuffer + j;
-      p1i = p1r + 1;
-      p2r = p1r + le2;
-      p2i = p2r + 1;
-      for (i = j; i < 2 * fftFrameSize; i += le) {
-        tr = *p2r * ur - *p2i * ui;
-        ti = *p2r * ui + *p2i * ur;
-        *p2r = *p1r - tr;
-        *p2i = *p1i - ti;
-        *p1r += tr;
-        *p1i += ti;
-        p1r += le;
-        p1i += le;
-        p2r += le;
-        p2i += le;
-      }
-      tr = ur * wr - ui * wi;
-      ui = ur * wi + ui * wr;
-      ur = tr;
-    }
-  }
-}
+#include <assert.h>
 
 #define MAX_FRAME_LENGTH 8192
 
@@ -117,7 +55,7 @@ typedef struct {
 
   float gInFIFO[MAX_FRAME_LENGTH];
   float gOutFIFO[MAX_FRAME_LENGTH];
-  float gFFTworksp[2 * MAX_FRAME_LENGTH];
+  double gFFTworksp[2 * MAX_FRAME_LENGTH];
   float gLastPhase[MAX_FRAME_LENGTH / 2 + 1];
   float gSumPhase[MAX_FRAME_LENGTH / 2 + 1];
   float gOutputAccum[2 * MAX_FRAME_LENGTH];
@@ -181,6 +119,7 @@ static int start(sox_effect_t * effp)
 
   int n = effp->in_signal.rate / p->frame_rate + .5;
   for (p->fftFrameSize = 2; n > 2; p->fftFrameSize <<= 1, n >>= 1);
+  assert(p->fftFrameSize <= MAX_FRAME_LENGTH);
   p->shift = 1;
   parse(effp, 0, effp->in_signal.rate); /* Re-parse now rate is known */
   p->in_pos = p->bends_pos = 0;
@@ -244,13 +183,13 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
       }
 
       /* ***************** ANALYSIS ******************* */
-      smbFft(p->gFFTworksp, p->fftFrameSize, -1);
+      lsx_safe_cdft(2 * p->fftFrameSize, 1, p->gFFTworksp);
 
       /* this is the analysis step */
       for (k = 0; k <= fftFrameSize2; k++) {
         /* de-interlace FFT buffer */
         real = p->gFFTworksp[2 * k];
-        imag = p->gFFTworksp[2 * k + 1];
+        imag = - p->gFFTworksp[2 * k + 1];
 
         /* compute magnitude and phase */
         magn = 2. * sqrt(real * real + imag * imag);
@@ -303,13 +242,13 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
         phase = p->gSumPhase[k];
         /* get real and imag part and re-interleave */
         p->gFFTworksp[2 * k] = magn * cos(phase);
-        p->gFFTworksp[2 * k + 1] = magn * sin(phase);
+        p->gFFTworksp[2 * k + 1] = - magn * sin(phase);
       }
 
       for (k = p->fftFrameSize + 2; k < 2 * p->fftFrameSize; k++)
         p->gFFTworksp[k] = 0.; /* zero negative frequencies */
 
-      smbFft(p->gFFTworksp, p->fftFrameSize, 1); /* do inverse transform */
+      lsx_safe_cdft(2 * p->fftFrameSize, -1, p->gFFTworksp);
 
       /* do windowing and add to output accumulator */
       for (k = 0; k < p->fftFrameSize; k++) {
@@ -355,7 +294,7 @@ static int kill(sox_effect_t * effp)
 sox_effect_handler_t const *sox_bend_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "bend", "{delay,cents,duration}", SOX_EFF_GETOPT,
+    "bend", "[-f frame-rate(25)] [-o over-sample(16)] {delay,cents,duration}", SOX_EFF_GETOPT,
     create, start, flow, 0, stop, kill, sizeof(priv_t)
   };
   return &handler;
