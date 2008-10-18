@@ -256,4 +256,6 @@ char * lsx_usage_lines(char * * usage, char const * const * lines, size_t n);
   break; \
 }
 
+int lsx_effect_set_imin(sox_effect_t * effp, size_t imin);
+
 #endif

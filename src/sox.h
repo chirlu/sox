@@ -491,7 +491,6 @@ int sox_effect_options(sox_effect_t *effp, int argc, char * const argv[]);
 
 typedef const sox_effect_handler_t *(*sox_effect_fn_t)(void);
 extern sox_effect_fn_t sox_effect_fns[];
-int sox_effect_set_imin(sox_effect_t * effp, size_t imin);
 
 struct sox_effects_chain {
   sox_effect_t * effects[SOX_MAX_EFFECTS];

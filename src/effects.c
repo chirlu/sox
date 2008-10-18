@@ -114,7 +114,7 @@ void sox_delete_effects_chain(sox_effects_chain_t *ecp)
 } /* sox_delete_effects_chain */
 
 /* Effect can call in start() or flow() to set minimum input size to flow() */
-int sox_effect_set_imin(sox_effect_t * effp, size_t imin)
+int lsx_effect_set_imin(sox_effect_t * effp, size_t imin)
 {
   if (imin > sox_globals.bufsiz / effp->flows) {
     sox_fail("sox_bufsiz not big enough");
