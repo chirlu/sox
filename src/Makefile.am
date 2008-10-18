@@ -262,7 +262,7 @@ libsfx_la_SOURCES = \
 	pan.c phaser.c pitch.c polyphas.c rabbit.c rate.c \
 	rate_filters.h rate_half_fir.h rate_poly_fir0.h rate_poly_fir.h \
 	remix.c repeat.c resample.c reverb.c reverse.c silence.c skeleff.c \
-	speed.c	splice.c stat.c swap.c synth.c tempo.c tremolo.c \
+	speed.c	splice.c stat.c swap.c stretch.c synth.c tempo.c tremolo.c \
 	trim.c vol.c
 if HAVE_PNG
     libsfx_la_SOURCES += spectrogram.c

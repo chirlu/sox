@@ -4,7 +4,7 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
-sox-14.1.1	2008-TBD
+sox-14.2.0	2008-TBD
 ----------
 
 Previously deprecated features that have been removed in this release:
@@ -12,7 +12,6 @@ Previously deprecated features that have been removed in this release:
   Deprec-  Feature    [O(ption)]
   ated in  [F(ormat)] [E(ffect)]   Replacement
   -------  ----------------------  ----------------------
-  14.0.0   E stretch               ~= tempo
   14.0.0   E pitch                 new pitch = old key
 
 Previously deprecated features (to be removed in future):
@@ -20,10 +19,11 @@ Previously deprecated features (to be removed in future):
   Deprec-  Feature    [O(ption)]                           Removal
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
   -------  ----------------------  ----------------------  -------
-  14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1         2009-01-29
+  14.0.0   E stretch               ~= tempo                14.2.0 + 6 months
   14.1.0   E resample              ~= rate                 2009-01-29
   14.1.0   E polyphase             ~= rate                 2009-01-29
   14.1.0   E rabbit                ~= rate                 2009-01-29
+  14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1         2009-01-29
   14.1.0   F wve (native)          wve (libsndfile)        2009-07-29
   14.1.0   Behaviour whereby       soxi                    2009-07-29
            sox -V file(s) -n
@@ -34,8 +34,8 @@ Newly deprecated features (to be removed in future):
   Deprec-  Feature    [O(ption)]                           Removal
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
   -------  ----------------------  ----------------------  -------
-  14.1.1   E key                   renamed to pitch        14.1.1 + 6 months
-  14.1.1   E pan                   ~= mixer/remix          14.1.1 + 6 months
+  14.2.0   E key                   renamed to pitch        14.2.0 + 6 months
+  14.2.0   E pan                   ~= mixer/remix          14.2.0 + 6 months
 
 File formats:
 
@@ -55,6 +55,7 @@ Effects:
   o New `bend' effect; pitch bending.  (robs)
   o New -b option for the norm effect; can be used to fix stereo
     imbalance.  (robs)
+  o Wider tempo range for `tempo' effect.  (robs)
   o New --effects-file option to read effects and arguments from
     a file instead of command line. (cbagwell)
   o `filter' effect now supports --plot.  (robs)

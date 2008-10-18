@@ -13,7 +13,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
   else(${ver} LESS 403)
     add_definitions(-Wtraditional-conversion)
   endif(${ver} LESS 403)
-  add_definitions(-Werror)
+  #add_definitions(-Werror)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 if (NOT EXTERNAL_GSM)
@@ -36,7 +36,7 @@ set(effects_srcs
   compandt                        output          reverb          tremolo
   contrast        filter          pad             reverse         trim
   dcshift         flanger         pan             silence         vol
-  delay           input           phaser          skeleff
+  delay           input           phaser          skeleff stretch
   dither          loudness        pitch           speed
 )
 set(formats_srcs

@@ -73,6 +73,7 @@
   EFFECT(speed)
   EFFECT(splice)
   EFFECT(stat)
+  EFFECT(stretch)
   EFFECT(swap)
   EFFECT(synth)
   EFFECT(tempo)
