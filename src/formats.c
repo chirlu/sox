@@ -351,7 +351,7 @@ static FILE * xfopen(char const * identifier, char const * mode, sox_bool * is_p
     free(command);
     *is_process = sox_true;
 #else
-    sox_fail("open URL support has not been built into SoX");
+    sox_fail("this build of SoX cannot open URLs");
 #endif
     return f;
   }
