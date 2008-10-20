@@ -104,6 +104,17 @@ sox.exe using mingw libraries then you can use the following:
 
 ./configure CC="gcc -mno-cygwin" --disable-shared
 
+The next cygwin example is used to build the cygwin version of SoX that is
+distributed by the project.  It tells gcc to prefer static libraries
+over dynamic ones and to use some static libraries compiled manually
+and installed under /usr/local.
+
+./configure LDFLAGS="-static -L/usr/local/lib" CPPFLAGS=-I/usr/local/include
+
+You can run "cygcheck.exe src/sox.exe" after compiling to see which
+dynamic DLL's will be required to be distributed with the cygwin
+executable.
+
 If you get compile failures during linking on your platform, you may need to
 pass "-no-undefined" to libtool.  Trying compiling with this:
 
@@ -120,9 +131,21 @@ To stick with old behavior use:
 Testing
 -------
 
-After successfully compiling SoX, try translating a sound file. If you
-can play one of the supported sound file formats, translate
-'monkey.wav' to your format (we'll use 'xxx'):
+NOTE: If SoX was compiled with libltdl support then it will not
+run correctly from within the source file directory and must be
+first installed.  Once install, it can be ran from the source directory.
+Either install before running the following tests or configure 
+with --without-libltdl temporarily.
+
+After successfully compiling SoX, try translating a sound file. You
+should also playback the new file to make sure it sounds like the original.  
+You can either use an external program or SoX itself if compiled with 
+playback support.  
+
+To work with widest range of playback programs, you should chose a format 
+that is native to your OS; such as .wav for Windows or .aif for MacOS.  
+In the following example, we'll use .xxx as the extension of your preferred
+format.
 
         cd src
 	./sox monkey.wav monkey.xxx
@@ -132,6 +155,10 @@ this command will make a sound file with a data rate of 12,500 samples
 per second and the data formatted as 2-byte (16-bit) signed integers:
 
 	./sox monkey.voc -r 12500 -2 -s monkey.xxx 
+
+If playback support was compiled in then it can be played like this:
+
+        ./play monkey.xxx
 
 If monkey.xxx plays properly (it's a very short monkey screech),
 congratulations! SoX works.
