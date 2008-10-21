@@ -65,6 +65,11 @@
   #define TIME_FRAC 1e3
 #endif
 
+/*#define INTERACTIVE 1 */
+#ifdef INTERACTIVE
+#include <unistd.h>
+#include <fcntl.h>
+#endif
 
 /* argv[0] options */
 
@@ -152,6 +157,7 @@ static sox_bool input_eof = sox_false;
 static sox_bool output_eof = sox_false;
 static sox_bool user_abort = sox_false;
 static sox_bool user_skip = sox_false;
+static sox_bool user_restart_eff = sox_false;
 static int success = 0;
 static sox_sample_t omax[2], omin[2];
 
@@ -913,10 +919,16 @@ static int advance_eff_chain(void)
     sox_delete_effects(effects_chain);
   else
   {
+    /* If user requested to restart this effect chain then
+     * do not advance to next.  Usually, this is because
+     * an option to current effect was changed.
+     */
+    if (user_restart_eff)
+      user_restart_eff = sox_false;
     /* Effect chain stopped so advance to next effect chain but
      * quite if no more chains exist.
      */
-    if (++current_eff_chain >= eff_chain_count) 
+    else if (++current_eff_chain >= eff_chain_count) 
       return SOX_EOF;
 
     while (nuser_effects[current_eff_chain] == 1 && 
@@ -1034,8 +1046,43 @@ static void display_status(sox_bool all_done)
 
 static int update_status(sox_bool all_done)
 {
+#ifdef INTERACTIVE
+  char ch = fgetc(stdin);
+
+  if (ch != -1)
+  {
+    if (files[current_input]->ft->handler.seek && 
+        files[current_input]->ft->seekable)
+    {
+      if (ch == '>')
+      {
+        read_wide_samples += files[current_input]->ft->signal.rate*30;
+        sox_seek(files[current_input]->ft, read_wide_samples,
+                 SOX_SEEK_SET);
+      }
+      if (ch == '<')
+      {
+        read_wide_samples -= files[current_input]->ft->signal.rate*30;
+        sox_seek(files[current_input]->ft, read_wide_samples,
+                 SOX_SEEK_SET);
+      }
+      if (ch == 'R')
+      {
+        /* Not very useful, eh!  Sample though of the place you
+         * could change the value to effects options
+         * like vol or speed or mixer.
+         * Modify values in user_effargs[current_eff_chain][xxx]
+         * and then chain will be drain()ed and restarted whence
+         * this function is existed.
+         */
+        user_restart_eff = sox_true;
+      }
+    }
+  }
+#endif
+
   display_status(all_done || user_abort);
-  return user_abort? SOX_EOF : SOX_SUCCESS;
+  return (user_abort || user_restart_eff) ? SOX_EOF : SOX_SUCCESS;
 }
 
 static void optimize_trim(void)
@@ -2233,6 +2280,9 @@ static int strends(char const * str, char const * end)
 int main(int argc, char **argv)
 {
   size_t i;
+#ifdef INTERACTIVE
+  int flags;
+#endif
 
   myname = argv[0];
   atexit(cleanup);
@@ -2253,6 +2303,12 @@ int main(int argc, char **argv)
 
   if (sox_mode == sox_soxi)
     exit(soxi(argc, argv));
+
+#ifdef INTERACTIVE
+  /* Turn off blocking on stdin so we can be fully interactive. */
+  flags = fcntl(STDIN_FILENO, F_GETFL);
+  fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+#endif
 
   parse_options_and_filenames(argc, argv);
 
