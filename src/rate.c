@@ -248,7 +248,7 @@ static void fir_to_phase(double * * h, int * len,
   work = calloc(work_len, sizeof(*work));
   for (i = 0; i < *len; ++i) work[i] = (*h)[i];
 
-  lsx_safe_rdft(work_len, 1, work); /* Cepstrum: */
+  lsx_safe_rdft(work_len, 1, work); /* Cepstral: */
   work[0] = log(fabs(work[0])), work[1] = log(fabs(work[1]));
   for (i = 2; i < work_len; i += 2) {
     work[i] = log(sqrt(sqr(work[i]) + sqr(work[i + 1])));
@@ -261,7 +261,9 @@ static void fir_to_phase(double * * h, int * len,
     work[i + work_len / 2] = 0;
   }
   lsx_safe_rdft(work_len, 1, work);
-  /* Some filters require phase unwrapping here, but ours seem not to. */
+
+  /* Some filters require phase unwrapping at this point.  Ours give dis-
+   * continuities only in the stop band, so no need to unwrap in this case. */
 
   for (i = 2; i < work_len; i += 2) /* Interpolate between linear & min phase */
     work[i + 1] = phase * M_PI * .5 * i + (1 - phase) * work[i + 1];
@@ -275,8 +277,8 @@ static void fir_to_phase(double * * h, int * len,
   lsx_safe_rdft(work_len, -1, work);
   for (i = 0; i < work_len; ++i) work[i] *= 2. / work_len;
 
-  for (i = 1; i < work_len; ++i) if (work[i] > work[peak])   /* Find peak. */
-    peak = i;                                             /* N.B. peak > 0 */
+  for (i = 1; i < work_len; ++i) if (work[i] > work[peak])  /* Find peak pos. */
+    peak = i;                                           /* N.B. peak val. > 0 */
 
   if (phase == 0)
     begin = 0;
