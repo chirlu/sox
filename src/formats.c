@@ -366,6 +366,7 @@ sox_format_t * sox_open_read(
 {
   sox_format_t * ft = lsx_calloc(1, sizeof(*ft));
   sox_format_handler_t const * handler;
+  char const * url = "";
 
   if (filetype) {
     if (!(handler = sox_find_format(filetype, sox_false))) {
@@ -388,9 +389,13 @@ sox_format_t * sox_open_read(
       SET_BINARY_MODE(stdin);
       ft->fp = stdin;
     }
-    else if ((ft->fp = xfopen(path, "rb", &ft->is_process)) == NULL) {
-      sox_fail("can't open input file `%s': %s", path, strerror(errno));
-      goto error;
+    else {
+      ft->fp = xfopen(path, "rb", &ft->is_process);
+      url = ft->is_process? " URL" : "";
+      if (ft->fp == NULL) {
+        sox_fail("can't open input file%s `%s': %s", url, path, strerror(errno));
+        goto error;
+      }
     }
     if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char) * input_bufsiz)) {
       sox_fail("Can't set read buffer");
@@ -462,7 +467,7 @@ sox_format_t * sox_open_read(
   ft->priv = lsx_calloc(1, ft->handler.priv_size);
   /* Read and write starters can change their formats. */
   if (ft->handler.startread && (*ft->handler.startread)(ft) != SOX_SUCCESS) {
-    sox_fail("can't open input file `%s': %s", ft->filename, ft->sox_errstr);
+    sox_fail("can't open input file%s `%s': %s", url, ft->filename, ft->sox_errstr);
     goto error;
   }
 
@@ -474,7 +479,7 @@ sox_format_t * sox_open_read(
 
   if (sox_checkformat(ft) == SOX_SUCCESS)
     return ft;
-  sox_fail("bad input format for file `%s': %s", ft->filename, ft->sox_errstr);
+  sox_fail("bad input format for file%s `%s': %s", url, ft->filename, ft->sox_errstr);
 
 error:
   if (ft->fp && ft->fp != stdin)
@@ -803,30 +808,33 @@ size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 
 int sox_close(sox_format_t * ft)
 {
-  int rc = SOX_SUCCESS;
+  int result = SOX_SUCCESS;
 
   if (ft->mode == 'r')
-    rc = ft->handler.stopread? (*ft->handler.stopread)(ft) : SOX_SUCCESS;
+    result = ft->handler.stopread? (*ft->handler.stopread)(ft) : SOX_SUCCESS;
   else {
     if (ft->handler.flags & SOX_FILE_REWIND) {
       if (ft->olength != ft->signal.length && ft->seekable) {
-        rc = lsx_seeki(ft, (off_t)0, 0);
-        if (rc == SOX_SUCCESS)
-          rc = ft->handler.stopwrite? (*ft->handler.stopwrite)(ft)
+        result = lsx_seeki(ft, (off_t)0, 0);
+        if (result == SOX_SUCCESS)
+          result = ft->handler.stopwrite? (*ft->handler.stopwrite)(ft)
              : ft->handler.startwrite?(*ft->handler.startwrite)(ft) : SOX_SUCCESS;
       }
     }
-    else rc = ft->handler.stopwrite? (*ft->handler.stopwrite)(ft) : SOX_SUCCESS;
+    else result = ft->handler.stopwrite? (*ft->handler.stopwrite)(ft) : SOX_SUCCESS;
   }
 
-  if (ft->fp && ft->fp != stdin && ft->fp != stdout)
-    xfclose(ft->fp, ft->is_process);
+  if (ft->fp && ft->fp != stdin && ft->fp != stdout &&
+      xfclose(ft->fp, ft->is_process) && ft->is_process) {
+    sox_fail("error reading file URL `%s'", ft->filename);
+    result = SOX_EOF;
+  }
   free(ft->filename);
   free(ft->filetype);
   sox_delete_comments(&ft->oob.comments);
 
   free(ft);
-  return rc;
+  return result;
 }
 
 int sox_seek(sox_format_t * ft, uint64_t offset, int whence)
@@ -928,7 +936,10 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
       sox_fail("error reading playlist file `%s': %s", listname, strerror(errno));
       result = SOX_EOF;
     }
-    xfclose(file, is_process);
+    if (xfclose(file, is_process) && is_process) {
+      sox_fail("error reading playlist file URL `%s'", listname);
+      result = SOX_EOF;
+    }
   }
   free(text);
   free(dirname);
