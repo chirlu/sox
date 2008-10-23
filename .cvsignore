@@ -1,9 +1,9 @@
 Makefile Makefile.in
 autom4te.cache
-configure config.log config.status confdefs.h configure.lineno config.status.lineno
-config.guess config.sub depcomp install-sh missing
-aclocal.m4
-libtool
+configure config.log config.status confdefs.h configure.lineno 
+config.status.lineno config.guess config.sub depcomp compile 
+install-sh missing aclocal.m4
+libtool ltmain.sh
 sox*.tar.gz
 *.txt *.pdf *.html
 sox.pc
