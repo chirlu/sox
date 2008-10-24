@@ -38,7 +38,7 @@ static int flow(sox_effect_t *effp, sox_sample_t const * ibuf,
    * different to *isamp, then something has gone wrong--most often, it's
    * out of disc space */
   if (len != *isamp) {
-    sox_fail("%s: %s", p->file->filename, p->file->sox_errstr);
+    lsx_fail("%s: %s", p->file->filename, p->file->sox_errstr);
     return SOX_EOF;
   }
 

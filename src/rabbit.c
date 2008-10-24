@@ -94,7 +94,7 @@ static int start(sox_effect_t * effp)
   r->state = src_new(r->converter_type, (int)effp->in_signal.channels, &err);
   if (err) {
     free(r->data);
-    sox_fail("cannot initialise rabbit: %s", src_strerror(err));
+    lsx_fail("cannot initialise rabbit: %s", src_strerror(err));
     return SOX_EOF;
   }
 
@@ -139,7 +139,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
   *osamp = 0;
   while (d->input_frames > 0 || d->end_of_input != 0) {
     if (src_process(r->state, r->data) != 0) {
-      sox_fail("%s", src_strerror(src_error(r->state)));
+      lsx_fail("%s", src_strerror(src_error(r->state)));
       return SOX_EOF;
     }
     d->input_frames -= d->input_frames_used;

@@ -91,9 +91,9 @@ typedef struct {
 
 
 
-static sox_enum_item const interp_enum[] = {
-  ENUM_ITEM(INTERP_,LINEAR)
-  ENUM_ITEM(INTERP_,QUADRATIC)
+static lsx_enum_item const interp_enum[] = {
+  LSX_ENUM_ITEM(INTERP_,LINEAR)
+  LSX_ENUM_ITEM(INTERP_,QUADRATIC)
   {0, 0}};
 
 
@@ -122,7 +122,7 @@ static int sox_flanger_getopts(sox_effect_t * effp, int argc, char *argv[])
   if (argc != 0)
     return lsx_usage(effp);
 
-  sox_report("parameters:\n"
+  lsx_report("parameters:\n"
       "delay = %gms\n"
       "depth = %gms\n"
       "regen = %g%%\n"
@@ -151,7 +151,7 @@ static int sox_flanger_start(sox_effect_t * effp)
   int c, channels = effp->in_signal.channels;
 
   if (channels > MAX_CHANNELS) {
-    sox_fail("Can not operate with more than %i channels", MAX_CHANNELS);
+    lsx_fail("Can not operate with more than %i channels", MAX_CHANNELS);
     return SOX_EOF;
   }
 

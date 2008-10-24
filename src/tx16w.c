@@ -317,7 +317,7 @@ static int stopwrite(sox_format_t * ft)
     else                            WH.sample_rate = 2;
 
     if (sk->samples_out >= TXMAXLEN) {
-        sox_warn("Sound too large for TX16W. Truncating, Loop Off");
+        lsx_warn("Sound too large for TX16W. Truncating, Loop Off");
         AttackLength       = TXMAXLEN/2;
         LoopLength         = TXMAXLEN/2;
     }

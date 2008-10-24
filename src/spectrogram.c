@@ -41,12 +41,12 @@
 #define MAX_COLS            999 /* Also max seconds */
 
 typedef enum {Window_Hann, Window_Hamming, Window_Bartlett, Window_Rectangular, Window_Kaiser} win_type_t;
-static sox_enum_item const window_options[] = {
-  ENUM_ITEM(Window_,Hann)
-  ENUM_ITEM(Window_,Hamming)
-  ENUM_ITEM(Window_,Bartlett)
-  ENUM_ITEM(Window_,Rectangular)
-  ENUM_ITEM(Window_,Kaiser)
+static lsx_enum_item const window_options[] = {
+  LSX_ENUM_ITEM(Window_,Hann)
+  LSX_ENUM_ITEM(Window_,Hamming)
+  LSX_ENUM_ITEM(Window_,Bartlett)
+  LSX_ENUM_ITEM(Window_,Rectangular)
+  LSX_ENUM_ITEM(Window_,Kaiser)
   {0, 0}};
 
 typedef struct {
@@ -72,9 +72,9 @@ typedef struct {
 #define secs(cols) \
   ((double)(cols) * p->step_size * p->block_steps / effp->in_signal.rate)
 
-static int enum_option(int c, sox_enum_item const * items)
+static int enum_option(int c, lsx_enum_item const * items)
 {
-  sox_enum_item const * p = sox_find_enum_text(optarg, items);
+  lsx_enum_item const * p = lsx_find_enum_text(optarg, items);
   if (p == NULL) {
     size_t len = 1;
     char * set = lsx_malloc(len);
@@ -83,7 +83,7 @@ static int enum_option(int c, sox_enum_item const * items)
       set = lsx_realloc(set, len += 2 + strlen(p->text));
       strcat(set, ", "); strcat(set, p->text);
     }
-    sox_fail("-%c: '%s' is not one of: %s.", c, optarg, set + 2);
+    lsx_fail("-%c: '%s' is not one of: %s.", c, optarg, set + 2);
     free(set);
     return INT_MAX;
   }
@@ -117,7 +117,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     case 'l': p->light_background = sox_true; break;
     case 'h': p->high_colour = sox_true; break;
     case 'o': p->out_name = optarg;   break;
-    default: sox_fail("unknown option `-%c'", optopt); return lsx_usage(effp);
+    default: lsx_fail("unknown option `-%c'", optopt); return lsx_usage(effp);
   }
   p->gain = -p->gain;
   --p->y_size, --p->perm;
@@ -151,7 +151,7 @@ static int start(sox_effect_t * effp)
   double actual;
 
   if (effp->in_signal.channels != 1) {
-    sox_fail("only 1 channel is supported");
+    lsx_fail("only 1 channel is supported");
     return SOX_EOF;
   }
   memset(&p->WORK, 0, sizeof(*p) - field_offset(priv_t, WORK));
@@ -166,7 +166,7 @@ static int start(sox_effect_t * effp)
   p->block_norm = 1. / p->block_steps;
   actual = effp->in_signal.rate / p->step_size / p->block_steps;
   if (actual != p->pixels_per_sec)
-    sox_report("actual pixels/s = %g", actual);
+    lsx_report("actual pixels/s = %g", actual);
   lsx_debug("step_size=%i block_steps=%i", p->step_size, p->block_steps);
   p->max = -p->dB_range;
   p->read = (p->step_size - p->dft_size) / 2;
@@ -179,7 +179,7 @@ static int do_column(sox_effect_t * effp)
   int i;
 
   if (p->cols == MAX_COLS) {
-    sox_warn("PNG truncated at %g seconds", secs(p->cols));
+    lsx_warn("PNG truncated at %g seconds", secs(p->cols));
     p->truncated = sox_true;
     return SOX_EOF;
   }
@@ -412,7 +412,7 @@ static int stop(sox_effect_t * effp)
   double      limit;
 
   if (!file) {
-    sox_fail("failed to create `%s' :(", p->out_name);
+    lsx_fail("failed to create `%s' :(", p->out_name);
     png_destroy_write_struct(&png, &png_info);
     free(png_rows);
     free(pixels);

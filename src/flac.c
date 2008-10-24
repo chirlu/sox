@@ -90,7 +90,7 @@ static void FLAC__decoder_metadata_callback(FLAC__StreamDecoder const * const fl
       return;
 
     if (ft->oob.comments != NULL) {
-      sox_warn("multiple Vorbis comment block ignored");
+      lsx_warn("multiple Vorbis comment block ignored");
       return;
     }
 
@@ -223,7 +223,7 @@ static int stop_read(sox_format_t * const ft)
 {
   priv_t * p = (priv_t *)ft->priv;
   if (!FLAC__stream_decoder_finish(p->decoder) && p->eof)
-    sox_warn("decoder MD5 checksum mismatch.");
+    lsx_warn("decoder MD5 checksum mismatch.");
   FLAC__stream_decoder_delete(p->decoder);
   return SOX_SUCCESS;
 }
@@ -306,7 +306,7 @@ static int start_write(sox_format_t * const ft)
 
   p->bits_per_sample = ft->encoding.bits_per_sample;
 
-  sox_report("encoding at %i bits per sample", p->bits_per_sample);
+  lsx_report("encoding at %i bits per sample", p->bits_per_sample);
 
   FLAC__stream_encoder_set_channels(p->encoder, ft->signal.channels);
   FLAC__stream_encoder_set_bits_per_sample(p->encoder, p->bits_per_sample);
@@ -320,7 +320,7 @@ static int start_write(sox_format_t * const ft)
     for (i = 0; !streamable && i < array_length(streamable_rates); ++i)
        streamable = (streamable_rates[i] == ft->signal.rate);
     if (!streamable) {
-      sox_report("non-standard rate; output may not be streamable");
+      lsx_report("non-standard rate; output may not be streamable");
       FLAC__stream_encoder_set_streamable_subset(p->encoder, sox_false);
     }
   }
@@ -349,7 +349,7 @@ static int start_write(sox_format_t * const ft)
       {4608, sox_true, sox_true, sox_false, 12, 6, 0},
     };
 #define SET_OPTION(x) do {\
-  sox_report(#x" = %i", options[compression_level].x); \
+  lsx_report(#x" = %i", options[compression_level].x); \
   FLAC__stream_encoder_set_##x(p->encoder, options[compression_level].x);\
 } while (0)
     SET_OPTION(blocksize);

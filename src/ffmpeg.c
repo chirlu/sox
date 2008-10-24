@@ -91,7 +91,7 @@ static int stream_component_open(priv_t * ffmpeg, int stream_index)
   if (!codec || avcodec_open(enc, codec) < 0)
     return -1;
   if (enc->codec_type != CODEC_TYPE_AUDIO) {
-    sox_fail("ffmpeg CODEC %x is not an audio CODEC", enc->codec_type);
+    lsx_fail("ffmpeg CODEC %x is not an audio CODEC", enc->codec_type);
     return -1;
   }
 
@@ -166,13 +166,13 @@ static int startread(sox_format_t * ft)
   /* Open file and get format */
   memset(&params, 0, sizeof(params));
   if ((ret = av_open_input_file(&ffmpeg->ctxt, ft->filename, NULL, 0, &params)) < 0) {
-    sox_fail("ffmpeg cannot open file for reading: %s (code %d)", ft->filename, ret);
+    lsx_fail("ffmpeg cannot open file for reading: %s (code %d)", ft->filename, ret);
     return SOX_EOF;
   }
 
   /* Get CODEC parameters */
   if ((ret = av_find_stream_info(ffmpeg->ctxt)) < 0) {
-    sox_fail("ffmpeg could not find CODEC parameters for %s", ft->filename);
+    lsx_fail("ffmpeg could not find CODEC parameters for %s", ft->filename);
     return SOX_EOF;
   }
 
@@ -192,7 +192,7 @@ static int startread(sox_format_t * ft)
   if (ffmpeg->audio_index < 0 ||
       stream_component_open(ffmpeg, ffmpeg->audio_index) < 0 ||
       ffmpeg->audio_stream < 0) {
-    sox_fail("ffmpeg could not open CODECs for %s", ft->filename);
+    lsx_fail("ffmpeg could not open CODECs for %s", ft->filename);
     return SOX_EOF;
   }
 
@@ -265,7 +265,7 @@ static AVStream *add_audio_stream(sox_format_t * ft, AVFormatContext *oc, enum C
 
   st = av_new_stream(oc, 1);
   if (!st) {
-    sox_fail("ffmpeg could not alloc stream");
+    lsx_fail("ffmpeg could not alloc stream");
     return NULL;
   }
 
@@ -292,13 +292,13 @@ static int open_audio(priv_t * ffmpeg, AVStream *st)
   /* find the audio encoder */
   codec = avcodec_find_encoder(c->codec_id);
   if (!codec) {
-    sox_fail("ffmpeg CODEC not found");
+    lsx_fail("ffmpeg CODEC not found");
     return SOX_EOF;
   }
 
   /* open it */
   if (avcodec_open(c, codec) < 0) {
-    sox_fail("ffmpeg could not open CODEC");
+    lsx_fail("ffmpeg could not open CODEC");
     return SOX_EOF;
   }
 
@@ -337,10 +337,10 @@ static int startwrite(sox_format_t * ft)
      mpeg. */
   ffmpeg->fmt = guess_format(NULL, ft->filename, NULL);
   if (!ffmpeg->fmt) {
-    sox_warn("ffmpeg could not deduce output format from file extension; using MPEG");
+    lsx_warn("ffmpeg could not deduce output format from file extension; using MPEG");
     ffmpeg->fmt = guess_format("mpeg", NULL, NULL);
     if (!ffmpeg->fmt) {
-      sox_fail("ffmpeg could not find suitable output format");
+      lsx_fail("ffmpeg could not find suitable output format");
       return SOX_EOF;
     }
   }
@@ -366,7 +366,7 @@ static int startwrite(sox_format_t * ft)
   /* set the output parameters (must be done even if no
      parameters). */
   if (av_set_parameters(ffmpeg->ctxt, NULL) < 0) {
-    sox_fail("ffmpeg invalid output format parameters");
+    lsx_fail("ffmpeg invalid output format parameters");
     return SOX_EOF;
   }
 
@@ -382,7 +382,7 @@ static int startwrite(sox_format_t * ft)
   /* open the output file, if needed */
   if (!(ffmpeg->fmt->flags & AVFMT_NOFILE)) {
     if (url_fopen(&ffmpeg->ctxt->pb, ft->filename, URL_WRONLY) < 0) {
-      sox_fail("ffmpeg could not open `%s'", ft->filename);
+      lsx_fail("ffmpeg could not open `%s'", ft->filename);
       return SOX_EOF;
     }
   }
@@ -425,7 +425,7 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
 
       /* write the compressed frame to the media file */
       if (av_write_frame(ffmpeg->ctxt, &pkt) != 0)
-        sox_fail("ffmpeg had error while writing audio frame");
+        lsx_fail("ffmpeg had error while writing audio frame");
 
       /* Increment nwritten whether write succeeded or not; we have to
          get rid of the input! */

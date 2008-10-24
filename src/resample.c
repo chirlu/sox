@@ -162,7 +162,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
         if ((n >= 1) && (sscanf(argv[0], "%lf", &r->rolloff) != 1)) {
           return lsx_usage(effp);
         } else if ((r->rolloff <= 0.01) || (r->rolloff >= 1.0)) {
-          sox_fail("rolloff factor (%f) no good, should be 0.01<x<1.0", r->rolloff);
+          lsx_fail("rolloff factor (%f) no good, should be 0.01<x<1.0", r->rolloff);
           return(SOX_EOF);
         }
 
@@ -212,7 +212,7 @@ static int start(sox_effect_t * effp)
   /* returns error # <=0, or adjusted wing-len > 0 */
   i = lsx_makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq, 1);
   if (i <= 0) {
-    sox_fail("Unable to make filter");
+    lsx_fail("Unable to make filter");
     return (SOX_EOF);
   }
 
@@ -244,7 +244,7 @@ static int start(sox_effect_t * effp)
   }
   i = BUFFSIZE - 2 * Xoff;
   if (i < r->Factor + 1.0 / r->Factor) {  /* Check input buffer size */
-    sox_fail("Factor is too small or large for BUFFSIZE");
+    lsx_fail("Factor is too small or large for BUFFSIZE");
     return (SOX_EOF);
   }
 
@@ -283,7 +283,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
         Nx = Nproc - r->Xread; /* space for right-wing future-data */
         if (Nx <= 0)
         {
-                sox_fail("Can not handle this sample rate change. Nx not positive: %li", Nx);
+                lsx_fail("Can not handle this sample rate change. Nx not positive: %li", Nx);
                 return (SOX_EOF);
         }
         if ((unsigned long)Nx > *isamp)
@@ -399,7 +399,7 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
         *osamp -= osamp_res;
         lsx_debug("DRAIN osamp %lu", (unsigned long)*osamp);
         if (isamp_res)
-                sox_warn("drain overran obuf by %li", isamp_res);
+                lsx_warn("drain overran obuf by %li", isamp_res);
         /* FIXME: This is very picky.  IF obuf is not big enough to
          * drain remaining samples, they will be lost.
          */

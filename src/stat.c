@@ -54,12 +54,12 @@ static int sox_stat_getopts(sox_effect_t * effp, int n, char **argv)
       stat->volume = 1;
     else if (!(strcmp(*argv, "-s"))) {
       if (n <= 1) {
-        sox_fail("-s option: invalid argument");
+        lsx_fail("-s option: invalid argument");
         return SOX_EOF;
       }
       n--, argv++;              /* Move to next argument. */
       if (!sscanf(*argv, "%lf", &stat->scale)) {
-        sox_fail("-s option: invalid argument");
+        lsx_fail("-s option: invalid argument");
         return SOX_EOF;
       }
     } else if (!(strcmp(*argv, "-rms")))
@@ -69,7 +69,7 @@ static int sox_stat_getopts(sox_effect_t * effp, int n, char **argv)
     else if (!(strcmp(*argv, "-d")))
       stat->volume = 2;
     else {
-      sox_fail("Summary effect: unknown option");
+      lsx_fail("Summary effect: unknown option");
       return SOX_EOF;
     }
   }

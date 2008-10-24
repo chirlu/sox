@@ -87,10 +87,10 @@ static enum { sox_single, sox_multiple } output_method = sox_single;
 static sox_bool interactive = sox_false;
 static sox_bool uservolume = sox_false;
 typedef enum {RG_off, RG_track, RG_album} rg_mode;
-static sox_enum_item const rg_modes[] = {
-  ENUM_ITEM(RG_,off)
-  ENUM_ITEM(RG_,track)
-  ENUM_ITEM(RG_,album)
+static lsx_enum_item const rg_modes[] = {
+  LSX_ENUM_ITEM(RG_,off)
+  LSX_ENUM_ITEM(RG_,track)
+  LSX_ENUM_ITEM(RG_,album)
   {0, 0}};
 static rg_mode replay_gain_mode = RG_off;
 static sox_option_t show_progress = SOX_OPTION_DEFAULT;
@@ -248,7 +248,7 @@ static void play_file_info(sox_format_t * ft, file_t * f, sox_bool full)
   fprintf(output, "\n");
 
   if (f && f->replay_gain != HUGE_VAL){
-    sprintf(buffer, "%s gain: %+.1fdB", sox_find_enum_value(f->replay_gain_mode, rg_modes)->text, f->replay_gain);
+    sprintf(buffer, "%s gain: %+.1fdB", lsx_find_enum_value(f->replay_gain_mode, rg_modes)->text, f->replay_gain);
     buffer[0] += 'A' - 'a';
     fprintf(output, "%-24s", buffer);
   } else
@@ -269,7 +269,7 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
 {
   static char const * const no_yes[] = {"no", "yes"};
   FILE * const output = sox_mode == sox_soxi? stdout : stderr;
-  char const * filetype = sox_find_file_extension(ft->filename);
+  char const * filetype = lsx_find_file_extension(ft->filename);
   sox_bool show_type = sox_true;
   size_t i;
 
@@ -326,7 +326,7 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
 
   if (f && f->replay_gain != HUGE_VAL)
     fprintf(output, "Replay gain    : %+g dB (%s)\n" , f->replay_gain,
-        sox_find_enum_value(f->replay_gain_mode, rg_modes)->text);
+        lsx_find_enum_value(f->replay_gain_mode, rg_modes)->text);
   if (f && f->volume != HUGE_VAL)
     fprintf(output, "Level adjust   : %g (linear gain)\n" , f->volume);
 
@@ -360,7 +360,7 @@ static void display_error(sox_format_t * ft)
     "Invalid argument",
     "Unsupported file format",
   };
-  sox_fail("%s: %s: %s", ft->filename, ft->sox_errstr,
+  lsx_fail("%s: %s: %s", ft->filename, ft->sox_errstr,
       ft->sox_errno < SOX_EHDR?
       strerror(ft->sox_errno) : sox_strerror[ft->sox_errno - SOX_EHDR]);
 }
@@ -575,10 +575,10 @@ static void add_effect(sox_effects_chain_t *chain, char const *name,
   effp = sox_create_effect(sox_find_effect(name)); /* Should always succeed. */
 
   if (!effp)
-    sox_fail("Failed creating effect.  Out of Memory?\n");
+    lsx_fail("Failed creating effect.  Out of Memory?\n");
 
   if (effp->handler.flags & SOX_EFF_DEPRECATED)
-    sox_warn("effect `%s' is deprecated; see sox(1) for an alternative", 
+    lsx_warn("effect `%s' is deprecated; see sox(1) for an alternative", 
              effp->handler.name);
 
   if (sox_effect_options(effp, argc, argv) == SOX_EOF)
@@ -656,7 +656,7 @@ static void parse_effects(int argc, char **argv)
 
     eff_offset = nuser_effects[eff_chain_count];
     if (eff_offset >= MAX_USER_EFF) {
-      sox_fail("too many effects specified (at most %i allowed)", MAX_USER_EFF);
+      lsx_fail("too many effects specified (at most %i allowed)", MAX_USER_EFF);
       exit(1);
     }
 
@@ -794,11 +794,11 @@ static void read_user_effects(char *filename)
 
     if (file == NULL)
     {
-        sox_fail("Cannot open effects file %s", filename);
+        lsx_fail("Cannot open effects file %s", filename);
         exit(1);
     }
 
-    sox_report("Reading effects from file %s", filename);
+    lsx_report("Reading effects from file %s", filename);
 
     while (fgets(s, FILENAME_MAX, file))
     {
@@ -857,10 +857,10 @@ static void create_user_effects(void)
       effp = sox_create_effect(sox_find_effect(user_effargs[current_eff_chain][i].name));
 
       if (!effp)
-        sox_fail("Failed creating effect.  Out of Memory?\n");
+        lsx_fail("Failed creating effect.  Out of Memory?\n");
 
       if (effp->handler.flags & SOX_EFF_DEPRECATED)
-        sox_warn("effect `%s' is deprecated; see sox(1) for an alternative", 
+        lsx_warn("effect `%s' is deprecated; see sox(1) for an alternative", 
                  effp->handler.name);
 
       /* The failing effect should have displayed an error message */
@@ -930,7 +930,7 @@ static void add_effects(sox_effects_chain_t *chain)
 
   for (i = 0; i < chain->length; ++i) {
     sox_effect_t const * effp = &chain->effects[i][0];
-    sox_report("effects chain: %-10s %gHz %u channels %u bits %s",
+    lsx_report("effects chain: %-10s %gHz %u channels %u bits %s",
         effp->handler.name, effp->in_signal.rate, effp->in_signal.channels, effp->in_signal.precision,
         (effp->handler.flags & SOX_EFF_MCHAN)? "(multi)" : "");
   }
@@ -1067,9 +1067,9 @@ static void display_status(sox_bool all_done)
       percentage = max(100. * read_wide_samples / input_wide_samples, 0);
     }
     fprintf(stderr, "\rIn:%-5s %s [%s] Out:%-5s [%6s|%-6s] %s Clip:%-5s",
-      sox_sigfigs3p(percentage), str_time(read_time), str_time(left_time),
-      sox_sigfigs3(output_samples),
-      vu(0), vu(1), headroom(), sox_sigfigs3(total_clips()));
+      lsx_sigfigs3p(percentage), str_time(read_time), str_time(left_time),
+      lsx_sigfigs3(output_samples),
+      vu(0), vu(1), headroom(), lsx_sigfigs3(total_clips()));
   }
   if (all_done)
     fputc('\n', stderr);
@@ -1145,10 +1145,10 @@ static sox_bool overwrite_permitted(char const * filename)
   char c;
 
   if (!interactive) {
-    sox_report("Overwriting `%s'", filename);
+    lsx_report("Overwriting `%s'", filename);
     return sox_true;
   }
-  sox_warn("Output file `%s' already exists", filename);
+  lsx_warn("Output file `%s' already exists", filename);
   if (!isatty(fileno(stdin)))
     return sox_false;
   do fprintf(stderr, "%s sox: overwrite `%s' (y/n)? ", myname, filename);
@@ -1284,7 +1284,7 @@ static void open_output_file(void)
   free(expand_fn);
 
   if (!ofile->ft)
-    /* sox_open_write() will call sox_warn for most errors.
+    /* sox_open_write() will call lsx_warn for most errors.
      * Rely on that printing something. */
     exit(2);
 
@@ -1359,14 +1359,14 @@ static void calculate_combiner_signal_parameters(void)
 
     /* Check for invalid/unusual rate or channel combinations: */
     if (min_rate != max_rate)
-      sox_fail("Input files must have the same sample-rate");
+      lsx_fail("Input files must have the same sample-rate");
       /* Don't exit quite yet; give the user any other message 1st */
     if (min_channels != max_channels) {
       if (combine_method == sox_concatenate) {
-        sox_fail("Input files must have the same # channels");
+        lsx_fail("Input files must have the same # channels");
         exit(1);
       } else if (combine_method != sox_merge)
-        sox_warn("Input files don't have the same # channels");
+        lsx_warn("Input files don't have the same # channels");
     }
     if (min_rate != max_rate)
       exit(1);
@@ -1760,7 +1760,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
   FILE * file = fopen(filename, "rt");
 
   if (file == NULL) {
-    sox_fail("Cannot open comment file %s", filename);
+    lsx_fail("Cannot open comment file %s", filename);
     exit(1);
   }
   do {
@@ -1772,7 +1772,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
       text[i++] = c;
     }
     if (ferror(file)) {
-      sox_fail("Error reading comment file %s", filename);
+      lsx_fail("Error reading comment file %s", filename);
       exit(1);
     }
     if (i) {
@@ -1830,26 +1830,26 @@ static int opt_index(int val)
   return -1;
 }
 
-static sox_enum_item const combine_methods[] = {
-  ENUM_ITEM(sox_,sequence)
-  ENUM_ITEM(sox_,concatenate)
-  ENUM_ITEM(sox_,mix)
+static lsx_enum_item const combine_methods[] = {
+  LSX_ENUM_ITEM(sox_,sequence)
+  LSX_ENUM_ITEM(sox_,concatenate)
+  LSX_ENUM_ITEM(sox_,mix)
   {"mix-power", sox_mix_power},
-  ENUM_ITEM(sox_,merge)
-  ENUM_ITEM(sox_,multiply)
+  LSX_ENUM_ITEM(sox_,merge)
+  LSX_ENUM_ITEM(sox_,multiply)
   {0, 0}};
 
 enum {ENDIAN_little, ENDIAN_big, ENDIAN_swap};
-static sox_enum_item const endian_options[] = {
-  ENUM_ITEM(ENDIAN_,little)
-  ENUM_ITEM(ENDIAN_,big)
-  ENUM_ITEM(ENDIAN_,swap)
+static lsx_enum_item const endian_options[] = {
+  LSX_ENUM_ITEM(ENDIAN_,little)
+  LSX_ENUM_ITEM(ENDIAN_,big)
+  LSX_ENUM_ITEM(ENDIAN_,swap)
   {0, 0}};
 
-static sox_enum_item const plot_methods[] = {
-  ENUM_ITEM(sox_plot_,off)
-  ENUM_ITEM(sox_plot_,octave)
-  ENUM_ITEM(sox_plot_,gnuplot)
+static lsx_enum_item const plot_methods[] = {
+  LSX_ENUM_ITEM(sox_plot_,off)
+  LSX_ENUM_ITEM(sox_plot_,octave)
+  LSX_ENUM_ITEM(sox_plot_,gnuplot)
   {0, 0}};
 
 enum {
@@ -1857,7 +1857,7 @@ enum {
   encoding_ms_adpcm, encoding_ima_adpcm, encoding_oki_adpcm,
   encoding_gsm_full_rate, encoding_u_law, encoding_a_law};
 
-static sox_enum_item const encodings[] = {
+static lsx_enum_item const encodings[] = {
   {"signed-integer", encoding_signed_integer},
   {"unsigned-integer", encoding_unsigned_integer},
   {"floating-point", encoding_floating_point},
@@ -1870,9 +1870,9 @@ static sox_enum_item const encodings[] = {
   {"a-law", encoding_a_law},
   {0, 0}};
 
-static int enum_option(int option_index, sox_enum_item const * items)
+static int enum_option(int option_index, lsx_enum_item const * items)
 {
-  sox_enum_item const * p = sox_find_enum_text(optarg, items);
+  lsx_enum_item const * p = lsx_find_enum_text(optarg, items);
   if (p == NULL) {
     size_t len = 1;
     char * set = lsx_malloc(len);
@@ -1881,7 +1881,7 @@ static int enum_option(int option_index, sox_enum_item const * items)
       set = lsx_realloc(set, len += 2 + strlen(p->text));
       strcat(set, ", "); strcat(set, p->text);
     }
-    sox_fail("--%s: '%s' is not one of: %s.",
+    lsx_fail("--%s: '%s' is not one of: %s.",
         long_options[option_index].name, optarg, set + 2);
     free(set);
     exit(1);
@@ -1910,7 +1910,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       case 1:
 #define SOX_BUFMIN 16
         if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= SOX_BUFMIN) {
-          sox_fail("Buffer size `%s' must be > %d", optarg, SOX_BUFMIN);
+          lsx_fail("Buffer size `%s' must be > %d", optarg, SOX_BUFMIN);
           exit(1);
         }
         sox_globals.bufsiz = i;
@@ -1943,7 +1943,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 
       case 6:
         if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= SOX_BUFMIN) {
-          sox_fail("Buffer size `%s' must be > %d", optarg, SOX_BUFMIN);
+          lsx_fail("Buffer size `%s' must be > %d", optarg, SOX_BUFMIN);
           exit(1);
         }
         sox_globals.input_bufsiz = i;
@@ -2011,7 +2011,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       char k = 0;
       size_t n = sscanf(optarg, "%lf %c %c", &f->signal.rate, &k, &dummy);
       if (n < 1 || f->signal.rate <= 0 || (n > 1 && k != 'k') || n > 2) {
-        sox_fail("Rate value `%s' is not a positive number", optarg);
+        lsx_fail("Rate value `%s' is not a positive number", optarg);
         exit(1);
       }
       f->signal.rate *= k == 'k'? 1000. : 1.;
@@ -2020,18 +2020,18 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 
     case 'v':
       if (sscanf(optarg, "%lf %c", &f->volume, &dummy) != 1) {
-        sox_fail("Volume value `%s' is not a number", optarg);
+        lsx_fail("Volume value `%s' is not a number", optarg);
         exit(1);
       }
       uservolume = sox_true;
       if (f->volume < 0.0)
-        sox_report("Volume adjustment is negative; "
+        lsx_report("Volume adjustment is negative; "
                   "this will result in a phase change");
       break;
 
     case 'c':
       if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
-        sox_fail("Channels value `%s' is not a positive integer", optarg);
+        lsx_fail("Channels value `%s' is not a positive integer", optarg);
         exit(1);
       }
       f->signal.channels = i;
@@ -2039,14 +2039,14 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 
     case 'C':
       if (sscanf(optarg, "%lf %c", &f->encoding.compression, &dummy) != 1) {
-        sox_fail("Compression value `%s' is not a number", optarg);
+        lsx_fail("Compression value `%s' is not a number", optarg);
         exit(1);
       }
       break;
 
     case 'b':
       if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
-        sox_fail("Bits value `%s' is not a positive integer", optarg);
+        lsx_fail("Bits value `%s' is not a positive integer", optarg);
         exit(1);
       }
       f->encoding.bits_per_sample = i;
@@ -2116,7 +2116,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       else {
         if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i < 0) {
           sox_globals.verbosity = 2;
-          sox_fail("Verbosity value `%s' is not a non-negative integer", optarg);
+          lsx_fail("Verbosity value `%s' is not a non-negative integer", optarg);
           exit(1);
         }
         sox_globals.verbosity = (unsigned)i;
@@ -2150,7 +2150,7 @@ static char const * set_default_device(file_t * f)
     f->filetype = "ao";
 
   if (!f->filetype) {
-    sox_fail("Sorry, there is no default audio device configured");
+    lsx_fail("Sorry, there is no default audio device configured");
     exit(1);
   }
   return device_name(f->filetype);
@@ -2189,7 +2189,7 @@ static void parse_options_and_filenames(int argc, char **argv)
     char c = parse_gopts_and_fopts(&opts, argc, argv);
     if (c == 'n') { /* is null file? */
       if (opts.filetype != NULL && strcmp(opts.filetype, "null") != 0)
-        sox_warn("ignoring `-t %s'.", opts.filetype);
+        lsx_warn("ignoring `-t %s'.", opts.filetype);
       opts.filetype = "null";
       add_file(&opts, "");
     }
@@ -2252,7 +2252,7 @@ static int soxi(int argc, char * const * argv)
       else {
         if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i < 0) {
           sox_globals.verbosity = 2;
-          sox_fail("Verbosity value `%s' is not a non-negative integer", optarg);
+          lsx_fail("Verbosity value `%s' is not a non-negative integer", optarg);
           exit(1);
         }
         sox_globals.verbosity = (unsigned)i;
@@ -2387,7 +2387,7 @@ int main(int argc, char **argv)
     }
     files[j]->ft = sox_open_read(f->filename, &f->signal, &f->encoding, f->filetype);
     if (!files[j]->ft)
-      /* sox_open_read() will call sox_warn for most errors.
+      /* sox_open_read() will call lsx_warn for most errors.
        * Rely on that printing something. */
       exit(2);
     if (show_progress == SOX_OPTION_DEFAULT &&
@@ -2469,18 +2469,18 @@ int main(int argc, char **argv)
 
   for (i = 0; i < file_count; ++i)
     if (files[i]->ft->clips != 0)
-      sox_warn(i < input_count?"%s: input clipped %lu samples" :
+      lsx_warn(i < input_count?"%s: input clipped %lu samples" :
                               "%s: output clipped %lu samples; decrease volume?",
           (files[i]->ft->handler.flags & SOX_FILE_DEVICE)?
                        files[i]->ft->handler.names[0] : files[i]->ft->filename,
           (unsigned long)files[i]->ft->clips);
 
   if (mixing_clips > 0)
-    sox_warn("mix-combining clipped %lu samples; decrease volume?", (unsigned long)mixing_clips);
+    lsx_warn("mix-combining clipped %lu samples; decrease volume?", (unsigned long)mixing_clips);
 
   for (i = 0; i < file_count; i++)
     if (files[i]->volume_clips > 0)
-      sox_warn("%s: balancing clipped %lu samples; decrease volume?",
+      lsx_warn("%s: balancing clipped %lu samples; decrease volume?",
           files[i]->filename, (unsigned long)files[i]->volume_clips);
 
   if (show_progress) {

@@ -20,7 +20,7 @@
 #include <errno.h>
 typedef enum {SOX_SHORT, SOX_INT, SOX_FLOAT, SOX_DOUBLE} sox_data_t;
 typedef enum {SOX_WAVE_SINE, SOX_WAVE_TRIANGLE} lsx_wave_t;
-extern sox_enum_item const lsx_wave_enum[];
+extern lsx_enum_item const lsx_wave_enum[];
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h> /* For off_t not found in stdio.h */
@@ -47,11 +47,9 @@ assert_static(sizeof(off_t) == _FILE_OFFSET_BITS >> 3, OFF_T_BUILD_PROBLEM);
 #define FMT_size_t "lu"
 #endif
 
-void lsx_debug(const char *, ...) PRINTF;
 void lsx_debug_more(char const * fmt, ...) PRINTF;
 void lsx_debug_most(char const * fmt, ...) PRINTF;
 
-#define lsx_debug      sox_globals.subsystem=__FILE__,lsx_debug
 #define lsx_debug_more sox_globals.subsystem=__FILE__,lsx_debug_more
 #define lsx_debug_most sox_globals.subsystem=__FILE__,lsx_debug_most
 
@@ -227,7 +225,7 @@ char * lsx_usage_lines(char * * usage, char const * const * lines, size_t n);
   d = strtod(*argv, &end_ptr); \
   if (end_ptr != *argv) { \
     if (d < min || d > max || *end_ptr != '\0') {\
-      sox_fail("parameter `%s' must be between %g and %g", #name, (double)min, (double)max); \
+      lsx_fail("parameter `%s' must be between %g and %g", #name, (double)min, (double)max); \
       return lsx_usage(effp); \
     } \
     p->name = d; \
@@ -236,9 +234,9 @@ char * lsx_usage_lines(char * * usage, char const * const * lines, size_t n);
 }
 
 #define TEXTUAL_PARAMETER(name, enum_table) { \
-  sox_enum_item const * e; \
+  lsx_enum_item const * e; \
   if (argc == 0) break; \
-  e = sox_find_enum_text(*argv, enum_table); \
+  e = lsx_find_enum_text(*argv, enum_table); \
   if (e != NULL) { \
     p->name = e->value; \
     --argc, ++argv; \
@@ -249,7 +247,7 @@ char * lsx_usage_lines(char * * usage, char const * const * lines, size_t n);
   char * end_ptr; \
   double d = strtod(optarg, &end_ptr); \
   if (end_ptr == optarg || d < min || d > max || *end_ptr != '\0') {\
-    sox_fail("parameter `%s' must be between %g and %g", #name, (double)min, (double)max); \
+    lsx_fail("parameter `%s' must be between %g and %g", #name, (double)min, (double)max); \
     return lsx_usage(effp); \
   } \
   p->name = d; \

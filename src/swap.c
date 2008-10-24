@@ -63,7 +63,7 @@ static int sox_swap_start(sox_effect_t * effp)
 
     if (effp->out_signal.channels == 1)
     {
-        sox_fail("Can't swap channels on mono data.");
+        lsx_fail("Can't swap channels on mono data.");
         return (SOX_EOF);
     }
 
@@ -77,12 +77,12 @@ static int sox_swap_start(sox_effect_t * effp)
 
         if (swap->order[2] || swap->order[3])
         {
-            sox_fail("invalid swap channel options used");
+            lsx_fail("invalid swap channel options used");
         }
         if (swap->order[0] != 1 && swap->order[0] != 2)
-            sox_fail("invalid swap channel options used");
+            lsx_fail("invalid swap channel options used");
         if (swap->order[1] != 1 && swap->order[1] != 2)
-            sox_fail("invalid swap channel options used");
+            lsx_fail("invalid swap channel options used");
 
         /* Convert to array offsets */
         swap->order[0]--;
@@ -100,13 +100,13 @@ static int sox_swap_start(sox_effect_t * effp)
         }
 
         if (swap->order[0] < 1 || swap->order[0] > 4)
-            sox_fail("invalid swap channel options used");
+            lsx_fail("invalid swap channel options used");
         if (swap->order[1] < 1 || swap->order[1] > 4)
-            sox_fail("invalid swap channel options used");
+            lsx_fail("invalid swap channel options used");
         if (swap->order[2] < 1 || swap->order[2] > 4)
-            sox_fail("invalid swap channel options used");
+            lsx_fail("invalid swap channel options used");
         if (swap->order[3] < 1 || swap->order[3] > 4)
-            sox_fail("invalid swap channel options used");
+            lsx_fail("invalid swap channel options used");
 
         /* Convert to array offsets */
         swap->order[0]--;

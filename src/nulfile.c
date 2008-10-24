@@ -23,7 +23,7 @@ static int startread(sox_format_t * ft)
 {
   if (!ft->signal.rate) {
     ft->signal.rate = SOX_DEFAULT_RATE;
-    sox_report("sample rate not specified; using %g", ft->signal.rate);
+    lsx_report("sample rate not specified; using %g", ft->signal.rate);
   }
   ft->signal.precision = ft->encoding.bits_per_sample?
       ft->encoding.bits_per_sample: SOX_SAMPLE_PRECISION;

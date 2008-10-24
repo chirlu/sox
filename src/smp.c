@@ -276,18 +276,18 @@ static int sox_smpstartread(sox_format_t * ft)
         smp->dataStart = samplestart;
         ft->signal.length = smp->NoOfSamps;
 
-        sox_report("SampleVision trailer:");
+        lsx_report("SampleVision trailer:");
         for(i = 0; i < 8; i++) if (1 || trailer.loops[i].count) {
-                sox_report("Loop %lu: start: %6d", (unsigned long)i, trailer.loops[i].start);
-                sox_report(" end:   %6d", trailer.loops[i].end);
-                sox_report(" count: %6d", trailer.loops[i].count);
+                lsx_report("Loop %lu: start: %6d", (unsigned long)i, trailer.loops[i].start);
+                lsx_report(" end:   %6d", trailer.loops[i].end);
+                lsx_report(" count: %6d", trailer.loops[i].count);
                 switch(trailer.loops[i].type) {
-                    case 0: sox_report("type:  off"); break;
-                    case 1: sox_report("type:  forward"); break;
-                    case 2: sox_report("type:  forward/backward"); break;
+                    case 0: lsx_report("type:  off"); break;
+                    case 1: lsx_report("type:  forward"); break;
+                    case 2: lsx_report("type:  forward/backward"); break;
                 }
         }
-        sox_report("MIDI Note number: %d", trailer.MIDInote);
+        lsx_report("MIDI Note number: %d", trailer.MIDInote);
 
         ft->oob.instr.nloops = 0;
         for(i = 0; i < 8; i++)

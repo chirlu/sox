@@ -43,7 +43,7 @@ static int drain(
    * 0 samples is returned does it indicate that end-of-file has been reached
    * or an error has occurred */
   if (!*osamp && p->file->sox_errno)
-    sox_fail("%s: %s", p->file->filename, p->file->sox_errstr);
+    lsx_fail("%s: %s", p->file->filename, p->file->sox_errstr);
   return *osamp? SOX_SUCCESS : SOX_EOF;
 }
 

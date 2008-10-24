@@ -220,7 +220,7 @@ static int stop(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
   if (p->splices_pos != p->nsplices)
-    sox_warn("Input audio too short; splices not made: %u", p->nsplices - p->splices_pos);
+    lsx_warn("Input audio too short; splices not made: %u", p->nsplices - p->splices_pos);
   free(p->buffer);
   return SOX_SUCCESS;
 }

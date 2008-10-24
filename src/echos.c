@@ -82,7 +82,7 @@ static int sox_echos_getopts(sox_effect_t * effp, int n, char **argv)
                 echos->num_delays++;
                 if ( echos->num_delays > MAX_ECHOS )
                 {
-                        sox_fail("echos: to many delays, use less than %i delays",
+                        lsx_fail("echos: to many delays, use less than %i delays",
                                 MAX_ECHOS);
                         return (SOX_EOF);
                 }
@@ -103,40 +103,40 @@ static int sox_echos_start(sox_effect_t * effp)
 
         if ( echos->in_gain < 0.0 )
         {
-                sox_fail("echos: gain-in must be positive!");
+                lsx_fail("echos: gain-in must be positive!");
                 return (SOX_EOF);
         }
         if ( echos->in_gain > 1.0 )
         {
-                sox_fail("echos: gain-in must be less than 1.0!");
+                lsx_fail("echos: gain-in must be less than 1.0!");
                 return (SOX_EOF);
         }
         if ( echos->out_gain < 0.0 )
         {
-                sox_fail("echos: gain-in must be positive!");
+                lsx_fail("echos: gain-in must be positive!");
                 return (SOX_EOF);
         }
         for ( i = 0; i < echos->num_delays; i++ ) {
                 echos->samples[i] = echos->delay[i] * effp->in_signal.rate / 1000.0;
                 if ( echos->samples[i] < 1 )
                 {
-                    sox_fail("echos: delay must be positive!");
+                    lsx_fail("echos: delay must be positive!");
                     return (SOX_EOF);
                 }
                 if ( echos->samples[i] > (ptrdiff_t)DELAY_BUFSIZ )
                 {
-                        sox_fail("echos: delay must be less than %g seconds!",
+                        lsx_fail("echos: delay must be less than %g seconds!",
                                 DELAY_BUFSIZ / effp->in_signal.rate );
                         return (SOX_EOF);
                 }
                 if ( echos->decay[i] < 0.0 )
                 {
-                    sox_fail("echos: decay must be positive!" );
+                    lsx_fail("echos: decay must be positive!" );
                     return (SOX_EOF);
                 }
                 if ( echos->decay[i] > 1.0 )
                 {
-                    sox_fail("echos: decay must be less than 1.0!" );
+                    lsx_fail("echos: decay must be less than 1.0!" );
                     return (SOX_EOF);
                 }
                 echos->counter[i] = 0;
@@ -151,7 +151,7 @@ static int sox_echos_start(sox_effect_t * effp)
         for ( i = 0; i < echos->num_delays; i++ )
                 sum_in_volume += echos->decay[i];
         if ( sum_in_volume * echos->in_gain > 1.0 / echos->out_gain )
-                sox_warn("echos: warning >>> gain-out can cause saturation of output <<<");
+                lsx_warn("echos: warning >>> gain-out can cause saturation of output <<<");
         return (SOX_SUCCESS);
 }
 

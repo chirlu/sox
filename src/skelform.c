@@ -92,12 +92,12 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
         *buf++ = SOX_UNSIGNED_8BIT_TO_SAMPLE(sample,);
         break;
       default:
-        sox_fail("Undetected sample encoding in read!");
+        lsx_fail("Undetected sample encoding in read!");
         exit(2);
       }
       break;
     default:
-      sox_fail("Undetected bad sample size in read!");
+      lsx_fail("Undetected bad sample size in read!");
       exit(2);
     }
   }
@@ -124,15 +124,15 @@ static int startwrite(sox_format_t * ft)
    * just set the length to max value and not fail.
    */
   if (!ft->seekable) {
-    sox_fail("Output .skel file must be a file, not a pipe");
+    lsx_fail("Output .skel file must be a file, not a pipe");
     return SOX_EOF;
   }
 
   if (ft->signal.rate != 44100)
-    sox_fail("Output .skel file must have a sample rate of 44100Hz");
+    lsx_fail("Output .skel file must have a sample rate of 44100Hz");
 
   if (ft->encoding.bits_per_sample == 0) {
-    sox_fail("Did not specify a size for .skel output file");
+    lsx_fail("Did not specify a size for .skel output file");
     return SOX_EOF;
   }
 
@@ -164,12 +164,12 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
         ++done;
       break;
     default:
-      sox_fail("Undetected bad sample encoding in write!");
+      lsx_fail("Undetected bad sample encoding in write!");
       exit(2);
     }
     break;
   default:
-    sox_fail("Undetected bad sample size in write!");
+    lsx_fail("Undetected bad sample size in write!");
     exit(2);
   }
   return done;

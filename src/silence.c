@@ -100,7 +100,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
       return lsx_usage(effp);
     if (silence->start_periods < 0)
     {
-        sox_fail("Periods must not be negative");
+        lsx_fail("Periods must not be negative");
         return(SOX_EOF);
     }
     argv++;
@@ -180,18 +180,18 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
     {
         if ((silence->start_unit != '%') && (silence->start_unit != 'd'))
         {
-            sox_fail("Invalid unit specified");
+            lsx_fail("Invalid unit specified");
             return lsx_usage(effp);
         }
         if ((silence->start_unit == '%') && ((silence->start_threshold < 0.0)
             || (silence->start_threshold > 100.0)))
         {
-            sox_fail("silence threshold should be between 0.0 and 100.0 %%");
+            lsx_fail("silence threshold should be between 0.0 and 100.0 %%");
             return (SOX_EOF);
         }
         if ((silence->start_unit == 'd') && (silence->start_threshold >= 0.0))
         {
-            sox_fail("silence threshold should be less than 0.0 dB");
+            lsx_fail("silence threshold should be less than 0.0 dB");
             return(SOX_EOF);
         }
     }
@@ -200,18 +200,18 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
     {
         if ((silence->stop_unit != '%') && (silence->stop_unit != 'd'))
         {
-            sox_fail("Invalid unit specified");
+            lsx_fail("Invalid unit specified");
             return(SOX_EOF);
         }
         if ((silence->stop_unit == '%') && ((silence->stop_threshold < 0.0) ||
                     (silence->stop_threshold > 100.0)))
         {
-            sox_fail("silence threshold should be between 0.0 and 100.0 %%");
+            lsx_fail("silence threshold should be between 0.0 and 100.0 %%");
             return (SOX_EOF);
         }
         if ((silence->stop_unit == 'd') && (silence->stop_threshold >= 0.0))
         {
-            sox_fail("silence threshold should be less than 0.0 dB");
+            lsx_fail("silence threshold should be less than 0.0 dB");
             return(SOX_EOF);
         }
     }

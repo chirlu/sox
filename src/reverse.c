@@ -24,7 +24,7 @@ static int start(sox_effect_t * effp)
   p->pos = 0;
   p->tmp_file = tmpfile();
   if (p->tmp_file == NULL) {
-    sox_fail("can't create temporary file: %s", strerror(errno));
+    lsx_fail("can't create temporary file: %s", strerror(errno));
     return SOX_EOF;
   }
   return SOX_SUCCESS;
@@ -35,7 +35,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 {
   priv_t * p = (priv_t *)effp->priv;
   if (fwrite(ibuf, sizeof(*ibuf), *isamp, p->tmp_file) != *isamp) {
-    sox_fail("error writing temporary file: %s", strerror(errno));
+    lsx_fail("error writing temporary file: %s", strerror(errno));
     return SOX_EOF;
   }
   (void)obuf, *osamp = 0; /* samples not output until drain */
@@ -51,7 +51,7 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
     fflush(p->tmp_file);
     p->pos = ftello(p->tmp_file);
     if (p->pos % sizeof(sox_sample_t) != 0) {
-      sox_fail("temporary file has incorrect size");
+      lsx_fail("temporary file has incorrect size");
       return SOX_EOF;
     }
     p->pos /= sizeof(sox_sample_t);
@@ -59,7 +59,7 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
   p->pos -= *osamp = min((off_t)*osamp, p->pos);
   fseeko(p->tmp_file, (off_t)(p->pos * sizeof(sox_sample_t)), SEEK_SET);
   if (fread(obuf, sizeof(sox_sample_t), *osamp, p->tmp_file) != *osamp) {
-    sox_fail("error reading temporary file: %s", strerror(errno));
+    lsx_fail("error reading temporary file: %s", strerror(errno));
     return SOX_EOF;
   }
   for (i = 0, j = *osamp - 1; i < j; ++i, --j) { /* reverse the samples */

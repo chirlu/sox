@@ -104,7 +104,7 @@ static int create(sox_effect_t * effp, int argc, char **argv)
   while ((c = getopt(argc, argv, opts)) != -1) switch (c) {
     GETOPT_NUMERIC('f', frame_rate, 10 , 80)
     GETOPT_NUMERIC('o', ovsamp,  4 , 32)
-    default: sox_fail("unknown option `-%c'", optopt); return lsx_usage(effp);
+    default: lsx_fail("unknown option `-%c'", optopt); return lsx_usage(effp);
   }
   argc -= optind, argv += optind;
 
@@ -275,7 +275,7 @@ static int stop(sox_effect_t * effp)
   priv_t *p = (priv_t *) effp->priv;
 
   if (p->bends_pos != p->nbends)
-    sox_warn("Input audio too short; bends not applied: %u",
+    lsx_warn("Input audio too short; bends not applied: %u",
         p->nbends - p->bends_pos);
   return SOX_SUCCESS;
 }

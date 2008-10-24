@@ -172,7 +172,7 @@ static int startread(sox_format_t * ft)
   lsx_readb(ft, &volume);
   lsx_debug("Volume: %d", (unsigned)volume);
   if (volume < 1 || volume > 5)
-    sox_warn("Volume %d outside range 1..5", volume);
+    lsx_warn("Volume %d outside range 1..5", volume);
 
   lsx_readb(ft, &byte);   /* Unused and seems always zero */
 
@@ -183,11 +183,11 @@ static int startread(sox_format_t * ft)
   lsx_debug("Number of bytes in samples list: %u", listlen);
 
   if (ft->signal.rate != 0 && ft->signal.rate != 8000)
-    sox_report("PRC only supports 8 kHz; overriding.");
+    lsx_report("PRC only supports 8 kHz; overriding.");
   ft->signal.rate = 8000;
 
   if (ft->signal.channels != 1 && ft->signal.channels != 0)
-    sox_report("PRC only supports 1 channel; overriding.");
+    lsx_report("PRC only supports 1 channel; overriding.");
   ft->signal.channels = 1;
 
   p->data_start = lsx_tell(ft);
@@ -393,7 +393,7 @@ static int stopwrite(sox_format_t * ft)
   p->nbytes = lsx_tell(ft) - p->data_start;
 
   if (!ft->seekable) {
-      sox_warn("Header will have invalid file length since file is not seekable");
+      lsx_warn("Header will have invalid file length since file is not seekable");
       return SOX_SUCCESS;
   }
 

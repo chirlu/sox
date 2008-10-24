@@ -56,13 +56,13 @@ static int sox_pan_getopts(sox_effect_t * effp, int n, char **argv)
 static int sox_pan_start(sox_effect_t * effp)
 {
     if (effp->out_signal.channels==1)
-        sox_warn("PAN onto a mono channel...");
+        lsx_warn("PAN onto a mono channel...");
     return SOX_SUCCESS;
 }
 
 
 #define UNEXPECTED_CHANNELS \
-    sox_fail("unexpected number of channels (in=%d, out=%d)", ich, och); \
+    lsx_fail("unexpected number of channels (in=%d, out=%d)", ich, och); \
     free(ibuf_copy); \
     return SOX_EOF
 

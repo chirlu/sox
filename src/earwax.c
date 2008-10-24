@@ -58,7 +58,7 @@ static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
   if (effp->in_signal.rate != 44100 || effp->in_signal.channels != 2) {
-    sox_fail("works only with stereo audio sampled at 44100Hz (i.e. CDDA)");
+    lsx_fail("works only with stereo audio sampled at 44100Hz (i.e. CDDA)");
     return SOX_EOF;
   }
   memset(p->tap, 0, NUMTAPS * sizeof(*p->tap)); /* zero tap memory */

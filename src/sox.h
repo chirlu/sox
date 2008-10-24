@@ -538,22 +538,24 @@ void sox_output_message(FILE *file, const char *filename, const char *fmt, va_li
  * in public API because sox (the application) make use of them but
  * may not be supported and may change rapidly.
  */
-void sox_fail(const char *, ...) PRINTF;
-void sox_warn(const char *, ...) PRINTF;
-void sox_report(const char *, ...) PRINTF;
+void lsx_fail(const char *, ...) PRINTF;
+void lsx_warn(const char *, ...) PRINTF;
+void lsx_report(const char *, ...) PRINTF;
+void lsx_debug(const char *, ...) PRINTF;
 
-#define sox_fail       sox_globals.subsystem=__FILE__,sox_fail
-#define sox_warn       sox_globals.subsystem=__FILE__,sox_warn
-#define sox_report     sox_globals.subsystem=__FILE__,sox_report
+#define lsx_fail       sox_globals.subsystem=__FILE__,lsx_fail
+#define lsx_warn       sox_globals.subsystem=__FILE__,lsx_warn
+#define lsx_report     sox_globals.subsystem=__FILE__,lsx_report
+#define lsx_debug      sox_globals.subsystem=__FILE__,lsx_debug
 
-typedef struct {char const *text; unsigned value;} sox_enum_item;
-#define ENUM_ITEM(prefix, item) {#item, prefix##item},
+typedef struct {char const *text; unsigned value;} lsx_enum_item;
+#define LSX_ENUM_ITEM(prefix, item) {#item, prefix##item},
 
-sox_enum_item const * sox_find_enum_text(char const * text, sox_enum_item const * sox_enum_items);
-sox_enum_item const * sox_find_enum_value(unsigned value, sox_enum_item const * sox_enum_items);
-char const * sox_find_file_extension(char const * pathname);
-char const * sox_sigfigs3(size_t number);
-char const * sox_sigfigs3p(double percentage);
+lsx_enum_item const * lsx_find_enum_text(char const * text, lsx_enum_item const * lsx_enum_items);
+lsx_enum_item const * lsx_find_enum_value(unsigned value, lsx_enum_item const * lsx_enum_items);
+char const * lsx_find_file_extension(char const * pathname);
+char const * lsx_sigfigs3(size_t number);
+char const * lsx_sigfigs3p(double percentage);
 
 /* WARNING END */
 #endif

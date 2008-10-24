@@ -128,19 +128,19 @@ static int startread(sox_format_t * ft)
     if (!ft->encoding.bits_per_sample || ft->encoding.bits_per_sample == xa->header.bits) {
         ft->encoding.bits_per_sample = xa->header.bits;
     } else {
-        sox_report("User options overriding size read in .xa header");
+        lsx_report("User options overriding size read in .xa header");
     }
 
     if (ft->signal.channels == 0 || ft->signal.channels == xa->header.channels) {
         ft->signal.channels = xa->header.channels;
     } else {
-        sox_report("User options overriding channels read in .xa header");
+        lsx_report("User options overriding channels read in .xa header");
     }
 
     if (ft->signal.rate == 0 || ft->signal.rate == xa->header.sampleRate) {
         ft->signal.rate = xa->header.sampleRate;
     } else {
-        sox_report("User options overriding rate read in .xa header");
+        lsx_report("User options overriding rate read in .xa header");
     }
 
     /* Check for supported formats */
@@ -152,17 +152,17 @@ static int startread(sox_format_t * ft)
 
     /* Validate the header */
     if (xa->header.bits != ft->encoding.bits_per_sample) {
-        sox_report("Invalid sample resolution %d bits.  Assuming %d bits.",
+        lsx_report("Invalid sample resolution %d bits.  Assuming %d bits.",
             xa->header.bits, ft->encoding.bits_per_sample);
         xa->header.bits = ft->encoding.bits_per_sample;
     }
     if (xa->header.align != (ft->encoding.bits_per_sample >> 3) * xa->header.channels) {
-        sox_report("Invalid sample alignment value %d.  Assuming %d.",
+        lsx_report("Invalid sample alignment value %d.  Assuming %d.",
             xa->header.align, (ft->encoding.bits_per_sample >> 3) * xa->header.channels);
         xa->header.align = (ft->encoding.bits_per_sample >> 3) * xa->header.channels;
     }
     if (xa->header.avgByteRate != (xa->header.align * xa->header.sampleRate)) {
-        sox_report("Invalid dwAvgByteRate value %d.  Assuming %d.",
+        lsx_report("Invalid dwAvgByteRate value %d.  Assuming %d.",
             xa->header.avgByteRate, xa->header.align * xa->header.sampleRate);
         xa->header.avgByteRate = xa->header.align * xa->header.sampleRate;
     }

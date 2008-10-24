@@ -84,7 +84,7 @@ static int startread(sox_format_t * ft)
     lsx_fail_errno(ft, SOX_EHDR, "sf: can't find IRCAM identifier");
     return SOX_EOF;
   }
-  sox_report("found %s identifier", id[i].desc);
+  lsx_report("found %s identifier", id[i].desc);
   ft->encoding.reverse_bytes = id[i].reverse_bytes;
 
   if (lsx_readf(ft, &rate) || lsx_readdw(ft, &channels) || lsx_readdw(ft, &ft_encoding))

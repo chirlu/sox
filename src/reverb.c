@@ -198,7 +198,7 @@ static int start(sox_effect_t * effp)
   p->ichannels = p->ochannels = 1;
   effp->out_signal.rate = effp->in_signal.rate;
   if (effp->in_signal.channels > 2 && p->stereo_depth) {
-    sox_warn("stereo-depth not applicable with >2 channels");
+    lsx_warn("stereo-depth not applicable with >2 channels");
     p->stereo_depth = 0;
   }
   if (effp->in_signal.channels == 1 && p->stereo_depth)

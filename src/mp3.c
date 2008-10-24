@@ -307,7 +307,7 @@ static size_t sox_mp3read(sox_format_t * ft, sox_sample_t *buf, size_t len)
                     continue;
                 else
                 {
-                    sox_report("unrecoverable frame level error (%s).",
+                    lsx_report("unrecoverable frame level error (%s).",
                               mad_stream_errorstr(&p->Stream));
                     return done;
                 }
@@ -356,7 +356,7 @@ static int startwrite(sox_format_t * ft)
 
   if (ft->encoding.encoding != SOX_ENCODING_MP3) {
     if(ft->encoding.encoding != SOX_ENCODING_UNKNOWN)
-      sox_report("Encoding forced to MP3");
+      lsx_report("Encoding forced to MP3");
     ft->encoding.encoding = SOX_ENCODING_MP3;
   }
 
@@ -386,7 +386,7 @@ static int startwrite(sox_format_t * ft)
      here.  E.g. by using the -C value as an index into a table of params or
      as a compressed bit-rate. */
   if (ft->encoding.compression != HUGE_VAL)
-      sox_warn("-C option not supported for mp3; using default compression rate");
+      lsx_warn("-C option not supported for mp3; using default compression rate");
   if (lame_init_params(p->gfp) < 0){
         lsx_fail_errno(ft,SOX_EOF,"LAME initialization failed");
         return(SOX_EOF);

@@ -142,7 +142,7 @@ static int startread(sox_format_t * ft)
     lsx_fail_errno(ft, SOX_EHDR, "au: can't find Sun/NeXT/DEC identifier");
     return SOX_EOF;
   }
-  sox_report("found %s identifier", id[i].desc);
+  lsx_report("found %s identifier", id[i].desc);
   ft->encoding.reverse_bytes = id[i].reverse_bytes;
 
   if (lsx_readdw(ft, &hdr_size) ||
@@ -157,7 +157,7 @@ static int startread(sox_format_t * ft)
     return SOX_EOF;
   }
   if (hdr_size < FIXED_HDR + 4)
-    sox_warn("header size %u is too small", hdr_size);
+    lsx_warn("header size %u is too small", hdr_size);
 
   if (!(encoding = sox_enc(ft_encoding, &bits_per_sample))) {
     int n = min(ft_encoding, Unknown_other);

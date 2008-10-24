@@ -167,7 +167,7 @@ static int start(sox_effect_t * effp)
   double alpha = 0;
 
   if (w0 > M_PI) {
-    sox_fail("frequency must be less than half the sample-rate (Nyquist rate)");
+    lsx_fail("frequency must be less than half the sample-rate (Nyquist rate)");
     return SOX_EOF;
   }
 
@@ -277,7 +277,7 @@ static int start(sox_effect_t * effp)
 
     case filter_deemph:  /* See deemph.plt for documentation */
       if (effp->in_signal.rate != 44100) {
-        sox_fail("Sample rate must be 44100 (audio-CD)");
+        lsx_fail("Sample rate must be 44100 (audio-CD)");
         return SOX_EOF;
       }
       /* Falls through... */
@@ -356,7 +356,7 @@ static int start(sox_effect_t * effp)
         make_poly_from_roots(poles, 2, &p->a0);
       }
       else {
-        sox_fail("Sample rate must be 44.1k, 48k, 88.2k, or 96k");
+        lsx_fail("Sample rate must be 44.1k, 48k, 88.2k, or 96k");
         return SOX_EOF;
       }
       {double g = dB_to_linear(19.9 - linear_to_dB(

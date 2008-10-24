@@ -24,10 +24,10 @@
 #endif
 
 
-#undef sox_fail
-#undef sox_report
-#define sox_fail sox_globals.subsystem=effp->handler.name,sox_fail
-#define sox_report sox_globals.subsystem=effp->handler.name,sox_report
+#undef lsx_fail
+#undef lsx_report
+#define lsx_fail sox_globals.subsystem=effp->handler.name,lsx_fail
+#define lsx_report sox_globals.subsystem=effp->handler.name,lsx_report
 
 #define DEBUG_EFFECTS_CHAIN 0
 
@@ -117,7 +117,7 @@ void sox_delete_effects_chain(sox_effects_chain_t *ecp)
 int lsx_effect_set_imin(sox_effect_t * effp, size_t imin)
 {
   if (imin > sox_globals.bufsiz / effp->flows) {
-    sox_fail("sox_bufsiz not big enough");
+    lsx_fail("sox_bufsiz not big enough");
     return SOX_EOF;
   }
 
@@ -138,7 +138,7 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
   sox_effect_t eff0;  /* Copy of effect for flow 0 before calling start */
 
   if (effp->handler.flags & SOX_EFF_NULL) {
-    sox_report("has no effect (is a proxy effect)");
+    lsx_report("has no effect (is a proxy effect)");
     return SOX_SUCCESS;
   }
   effp->global_info = &chain->global_info;
@@ -161,7 +161,7 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
   eff0.priv = lsx_memdup(eff0.priv, eff0.handler.priv_size);
   ret = start(effp);
   if (ret == SOX_EFF_NULL) {
-    sox_report("has no effect in this configuration");
+    lsx_report("has no effect in this configuration");
     free(eff0.priv);
     return SOX_SUCCESS;
   }
@@ -173,7 +173,7 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
   *in = effp->out_signal;
 
   if (chain->length == SOX_MAX_EFFECTS) {
-    sox_fail("Too many effects!");
+    lsx_fail("Too many effects!");
     free(eff0.priv);
     return SOX_EOF;
   }
@@ -228,7 +228,7 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
       int eff_status_c = effp->handler.flow(&chain->effects[n][f],
           chain->ibufc[f], chain->obufc[f], &idonec, &odonec);
       if (f && (idonec != idone_last || odonec != odone_last)) {
-        sox_fail("flowed asymmetrically!");
+        lsx_fail("flowed asymmetrically!");
         effstatus = SOX_EOF;
       }
       idone_last = idonec;
@@ -246,7 +246,7 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
     obeg = f * odone_last;
   }
 #if DEBUG_EFFECTS_CHAIN
-  sox_report("flow:  %5u%5u%5u%5u", pre_idone, pre_odone, idone, obeg);
+  lsx_report("flow:  %5u%5u%5u%5u", pre_idone, pre_odone, idone, obeg);
 #endif
   effp1->obeg += idone;
   if (effp1->obeg == effp1->oend)
@@ -283,7 +283,7 @@ static int drain_effect(sox_effects_chain_t * chain, size_t n)
       size_t odonec = obeg / effp->flows;
       int eff_status_c = effp->handler.drain(&chain->effects[n][f], chain->obufc[f], &odonec);
       if (f && (odonec != odone_last)) {
-        sox_fail("drained asymmetrically!");
+        lsx_fail("drained asymmetrically!");
         effstatus = SOX_EOF;
       }
       odone_last = odonec;
@@ -298,7 +298,7 @@ static int drain_effect(sox_effects_chain_t * chain, size_t n)
     obeg = f * odone_last;
   }
 #if DEBUG_EFFECTS_CHAIN
-  sox_report("drain: %5u%5u%5u%5u", 0, pre_odone, 0, obeg);
+  lsx_report("drain: %5u%5u%5u%5u", 0, pre_odone, 0, obeg);
 #endif
   if (!obeg)   /* This is the only thing that drain has and flow hasn't */
     effstatus = SOX_EOF;
@@ -422,7 +422,7 @@ void sox_delete_effect(sox_effect_t *effp)
   unsigned f;
 
   if ((clips = sox_stop_effect(effp)) != 0)
-    sox_warn("%s clipped %lu samples; decrease volume?",
+    lsx_warn("%s clipped %lu samples; decrease volume?",
         effp->handler.name, (unsigned long)clips);
   effp->handler.kill(effp); /* N.B. only one kill; not one per flow */
   for (f = 0; f < effp->flows; ++f)

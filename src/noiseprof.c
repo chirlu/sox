@@ -68,14 +68,14 @@ static int sox_noiseprof_start(sox_effect_t * effp)
    * since we already use stderr for diagnostics. */
   if (!data->output_filename || !strcmp(data->output_filename, "-")) {
     if (effp->global_info->global_info->stdout_in_use_by) {
-      sox_fail("stdout already in use by '%s'", effp->global_info->global_info->stdout_in_use_by);
+      lsx_fail("stdout already in use by '%s'", effp->global_info->global_info->stdout_in_use_by);
       return SOX_EOF;
     }
     effp->global_info->global_info->stdout_in_use_by = effp->handler.name;
     data->output_file = stdout;
   }
   else if ((data->output_file = fopen(data->output_filename, "w")) == NULL) {
-    sox_fail("Couldn't open profile file %s: %s", data->output_filename, strerror(errno));
+    lsx_fail("Couldn't open profile file %s: %s", data->output_filename, strerror(errno));
     return SOX_EOF;
   }
 

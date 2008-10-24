@@ -51,14 +51,14 @@ static int startwrite(sox_format_t * ft)
   if (strcmp(ft->filename,"default") == 0)
   {
       if ((ao->driver_id = ao_default_driver_id()) < 0) {
-          sox_fail("Could not find a default ao driver");
+          lsx_fail("Could not find a default ao driver");
           return SOX_EOF;
       }
   }
   else
   {
       if ((ao->driver_id = ao_driver_id(ft->filename)) < 0) {
-          sox_fail("Could not find a ao driver %s", ft->filename);
+          lsx_fail("Could not find a ao driver %s", ft->filename);
           return SOX_EOF;
       }
   }
@@ -68,7 +68,7 @@ static int startwrite(sox_format_t * ft)
   ao->format.channels = ft->signal.channels;
   ao->format.byte_format = AO_FMT_NATIVE;
   if ((ao->device = ao_open_live(ao->driver_id, &ao->format, NULL)) == NULL) {
-    sox_fail("Could not open device: error %d", errno);
+    lsx_fail("Could not open device: error %d", errno);
     return SOX_EOF;
   }
 
@@ -112,7 +112,7 @@ static int stopwrite(sox_format_t * ft)
   free(ao->buf);
 
   if (ao_close(ao->device) == 0) {
-    sox_fail("Error closing libao output");
+    lsx_fail("Error closing libao output");
     return SOX_EOF;
   }
   ao_shutdown();

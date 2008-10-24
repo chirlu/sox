@@ -148,19 +148,19 @@ static int sox_dcshift_stop(sox_effect_t * effp)
 
     if (dcs->limited)
     {
-        sox_warn("DCSHIFT limited %d values (%d percent).",
+        lsx_warn("DCSHIFT limited %d values (%d percent).",
              dcs->limited, (int) (dcs->limited * 100.0 / dcs->totalprocessed));
     }
     if (dcs->clipped)
     {
         if (dcs->dcshift > 0)
         {
-             sox_warn("DCSHIFT clipped %d values, dcshift=%f too high...",
+             lsx_warn("DCSHIFT clipped %d values, dcshift=%f too high...",
                   dcs->clipped, dcs->dcshift);
         }
         else
         {
-             sox_warn("DCSHIFT clipped %d values, dcshift=%f too low...",
+             lsx_warn("DCSHIFT clipped %d values, dcshift=%f too low...",
                   dcs->clipped, dcs->dcshift);
         }
     }

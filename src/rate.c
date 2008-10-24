@@ -428,7 +428,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
           prepare_coefs(coefs, f->num_coefs, phases, interp_order, mult);
       lsx_debug("fir_len=%i phases=%i coef_interp=%i mult=%i size=%s",
           f->num_coefs, phases, interp_order, mult,
-          sox_sigfigs3((num_taps + 1) * (interp_order + 1) * sizeof(sample_t)));
+          lsx_sigfigs3((num_taps + 1) * (interp_order + 1) * sizeof(sample_t)));
       free(coefs);
     }
     last_stage.fn = f1->fn;
@@ -579,17 +579,17 @@ static int create(sox_effect_t * effp, int argc, char **argv)
     case 's': p->bandwidth = 99; break;
     case 'a': p->allow_aliasing = sox_true; break;
     default: if ((found_at = strchr(qopts, c))) p->quality = found_at - qopts;
-      else {sox_fail("unknown option `-%c'", optopt); return lsx_usage(effp);}
+      else {lsx_fail("unknown option `-%c'", optopt); return lsx_usage(effp);}
   }
   argc -= optind, argv += optind;
 
   if ((unsigned)p->quality < 2 && (p->bandwidth || p->phase != 25 || p->allow_aliasing)) {
-    sox_fail("override options not allowed with this quality level");
+    lsx_fail("override options not allowed with this quality level");
     return SOX_EOF;
   }
 
   if (p->bandwidth && p->bandwidth < 100 - MAX_TBW3A && p->allow_aliasing) {
-    sox_fail("minimum allowed bandwidth with aliasing is %g%%", 100 - MAX_TBW3A);
+    lsx_fail("minimum allowed bandwidth with aliasing is %g%%", 100 - MAX_TBW3A);
     return SOX_EOF;
   }
 

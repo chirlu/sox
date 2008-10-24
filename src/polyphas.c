@@ -95,7 +95,7 @@ static int sox_poly_getopts(sox_effect_t * effp, int n, char **argv)
       continue;
     }
 
-    sox_fail("Polyphase: unknown argument (%s %s)!", argv[0], argv[1]);
+    lsx_fail("Polyphase: unknown argument (%s %s)!", argv[0], argv[1]);
     return SOX_EOF;
   }
 
@@ -134,7 +134,7 @@ static int prime(unsigned n, int *q0)
   while (n > 1) {
     while ((pr = *p) && (n % pr)) p++;
     if (!pr) {
-      sox_fail("Number %d too large of a prime.",n);
+      lsx_fail("Number %d too large of a prime.",n);
       pr = n;
     }
     *q++ = pr;
@@ -261,7 +261,7 @@ static void nuttall(Float *buffer, int length)
   int N1;
 
   if(buffer == NULL || length <= 0)
-    sox_fail("Illegal buffer %p or length %d to nuttall.", (void *)buffer, length);
+    lsx_fail("Illegal buffer %p or length %d to nuttall.", (void *)buffer, length);
 
   /* Initial variable setups. */
   N = length;
@@ -284,7 +284,7 @@ static void hamming(Float *buffer, int length)
     int N1;
 
     if(buffer == NULL || length <= 0)
-      sox_fail("Illegal buffer %p or length %d to hamming.",(void *)buffer,length);
+      lsx_fail("Illegal buffer %p or length %d to hamming.",(void *)buffer,length);
 
     N1 = length/2;
     for(j=0;j<length;j++)
@@ -310,7 +310,7 @@ static void fir_design(priv_t * rate, Float *buffer, int length, double cutoff)
     double sum;
 
     if(buffer == NULL || length < 0 || cutoff < 0 || cutoff > M_PI)
-      sox_fail("Illegal buffer %p, length %d, or cutoff %f.",(void *)buffer,length,cutoff);
+      lsx_fail("Illegal buffer %p, length %d, or cutoff %f.",(void *)buffer,length,cutoff);
 
     /* Use the user-option of window type */
     if (rate->win_type == 0)

@@ -35,7 +35,7 @@ void *lsx_realloc(void *ptr, size_t newsize)
   }
 
   if ((ptr = realloc(ptr, newsize)) == NULL) {
-    sox_fail("out of memory");
+    lsx_fail("out of memory");
     exit(2);
   }
 

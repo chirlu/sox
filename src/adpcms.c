@@ -222,7 +222,7 @@ size_t lsx_adpcm_read(sox_format_t * ft, adpcm_io_t * state, sox_sample_t * buff
 int lsx_adpcm_stopread(sox_format_t * ft UNUSED, adpcm_io_t * state)
 {
   if (state->encoder.errors)
-    sox_warn("%s: ADPCM state errors: %u", ft->filename, state->encoder.errors);
+    lsx_warn("%s: ADPCM state errors: %u", ft->filename, state->encoder.errors);
   free(state->file.buf);
 
   return (SOX_SUCCESS);

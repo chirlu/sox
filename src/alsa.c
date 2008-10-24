@@ -23,7 +23,7 @@ static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
 {
     if (ft->encoding.bits_per_sample != 16)
     {
-        sox_report("trying for word samples.");
+        lsx_report("trying for word samples.");
         ft->encoding.bits_per_sample = 16;
     }
 
@@ -33,13 +33,13 @@ static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
         if (ft->encoding.bits_per_sample == 16)
         {
           if (ft->encoding.encoding != SOX_ENCODING_UNKNOWN)
-            sox_report("driver supports only signed and unsigned samples.  Changing to signed.");
+            lsx_report("driver supports only signed and unsigned samples.  Changing to signed.");
             ft->encoding.encoding = SOX_ENCODING_SIGN2;
         }
         else
         {
           if (ft->encoding.encoding != SOX_ENCODING_UNKNOWN)
-            sox_report("driver supports only signed and unsigned samples.  Changing to unsigned.");
+            lsx_report("driver supports only signed and unsigned samples.  Changing to unsigned.");
             ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
         }
     }
@@ -50,7 +50,7 @@ static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
         if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U8)) &&
             !(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S8)))
         {
-            sox_report("driver doesn't supported byte samples.  Changing to words.");
+            lsx_report("driver doesn't supported byte samples.  Changing to words.");
             ft->encoding.bits_per_sample = 16;
         }
     }
@@ -59,7 +59,7 @@ static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
         if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)) &&
             !(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
         {
-            sox_report("driver doesn't supported word samples.  Changing to bytes.");
+            lsx_report("driver doesn't supported word samples.  Changing to bytes.");
             ft->encoding.bits_per_sample = 8;
         }
     }
@@ -68,12 +68,12 @@ static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
         if ((snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)) ||
             (snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
         {
-            sox_report("driver doesn't supported %u-bit samples.  Changing to 16-bit.", ft->encoding.bits_per_sample);
+            lsx_report("driver doesn't supported %u-bit samples.  Changing to 16-bit.", ft->encoding.bits_per_sample);
             ft->encoding.bits_per_sample = 16;
         }
         else
         {
-            sox_report("driver doesn't supported %u-bit samples.  Changing to 8-bit.", ft->encoding.bits_per_sample);
+            lsx_report("driver doesn't supported %u-bit samples.  Changing to 8-bit.", ft->encoding.bits_per_sample);
             ft->encoding.bits_per_sample = 8;
         }
     }
@@ -84,14 +84,14 @@ static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
             case SOX_ENCODING_SIGN2:
                 if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S8)))
                 {
-                    sox_report("driver doesn't supported signed byte samples.  Changing to unsigned bytes.");
+                    lsx_report("driver doesn't supported signed byte samples.  Changing to unsigned bytes.");
                     ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
                 }
                 break;
             case SOX_ENCODING_UNSIGNED:
                 if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U8)))
                 {
-                    sox_report("driver doesn't supported unsigned byte samples.  Changing to signed bytes.");
+                    lsx_report("driver doesn't supported unsigned byte samples.  Changing to signed bytes.");
                     ft->encoding.encoding = SOX_ENCODING_SIGN2;
                 }
                 break;
@@ -126,14 +126,14 @@ static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
             case SOX_ENCODING_SIGN2:
                 if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
                 {
-                    sox_report("driver does not support signed word samples.  Changing to unsigned words.");
+                    lsx_report("driver does not support signed word samples.  Changing to unsigned words.");
                     ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
                 }
                 break;
             case SOX_ENCODING_UNSIGNED:
                 if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)))
                 {
-                    sox_report("driver does not support unsigned word samples.  Changing to signed words.");
+                    lsx_report("driver does not support unsigned word samples.  Changing to signed words.");
                     ft->encoding.encoding = SOX_ENCODING_SIGN2;
                 }
                 break;
@@ -259,7 +259,7 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
     if (rate != ft->signal.rate)
     {
       if (client_signal.rate != 0)
-        sox_report("hardware does not support sample rate %g; changing to %i.", ft->signal.rate, rate);
+        lsx_report("hardware does not support sample rate %g; changing to %i.", ft->signal.rate, rate);
         ft->signal.rate = rate;
     }
     dir = 0;
@@ -277,7 +277,7 @@ static int setup(sox_format_t * ft, snd_pcm_stream_t mode)
 
     if (rate != ft->signal.rate)
     {
-        sox_report("Could not set exact rate of %g.  Approximating with %i",
+        lsx_report("Could not set exact rate of %g.  Approximating with %i",
                 ft->signal.rate, rate);
     }
 
@@ -394,7 +394,7 @@ static int xrun_recovery(snd_pcm_t *handle, int err)
     {   /* over/under-run */
         err = snd_pcm_prepare(handle);
         if (err < 0)
-            sox_warn("Can't recover from over/underrun, prepare failed: %s", snd_strerror(err));
+            lsx_warn("Can't recover from over/underrun, prepare failed: %s", snd_strerror(err));
         return 0;
     }
     else
@@ -408,7 +408,7 @@ static int xrun_recovery(snd_pcm_t *handle, int err)
             {
                 err = snd_pcm_prepare(handle);
                 if (err < 0)
-                    sox_warn("Can't recovery from suspend, prepare failed: %s", snd_strerror(err));
+                    lsx_warn("Can't recovery from suspend, prepare failed: %s", snd_strerror(err));
             }
         }
         return 0;

@@ -234,7 +234,7 @@ static int sox_mcompand_getopts_1(comp_band_t * l, size_t n, char **argv)
       if (commas % 2 == 0) /* There must be an even number of
                               attack/decay parameters */
       {
-        sox_fail("compander: Odd number of attack & decay rate parameters");
+        lsx_fail("compander: Odd number of attack & decay rate parameters");
         return (SOX_EOF);
       }
 
@@ -292,7 +292,7 @@ static int parse_subarg(char *s, char **subargv, size_t *subargc) {
 
   if (*subargc < 2 || *subargc > 5)
     {
-      sox_fail("Wrong number of parameters for the compander effect within mcompand; usage:\n"
+      lsx_fail("Wrong number of parameters for the compander effect within mcompand; usage:\n"
   "\tattack1,decay1{,attack2,decay2} [soft-knee-dB:]in-dB1[,out-dB1]{,in-dB2,out-dB2} [gain [initial-volume-dB [delay]]]\n"
   "\twhere {} means optional and repeatable and [] means optional.\n"
   "\tdB values are floating point or -inf'; times are in seconds.");
@@ -313,7 +313,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
 
   /* how many bands? */
   if (! (n&1)) {
-    sox_fail("mcompand accepts only an odd number of arguments:\n"
+    lsx_fail("mcompand accepts only an odd number of arguments:\n"
             "  mcompand quoted_compand_args [xover_freq quoted_compand_args [...]");
     return SOX_EOF;
   }
@@ -332,11 +332,11 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
     else {
       c->bands[i].topfreq = lsx_parse_frequency(argv[(i<<1)+1],&cp);
       if (*cp) {
-        sox_fail("bad frequency in args to mcompand");
+        lsx_fail("bad frequency in args to mcompand");
         return SOX_EOF;
       }
       if ((i>0) && (c->bands[i].topfreq < c->bands[i-1].topfreq)) {
-        sox_fail("mcompand crossover frequencies must be in ascending order.");
+        lsx_fail("mcompand crossover frequencies must be in ascending order.");
         return SOX_EOF;
       }
     }

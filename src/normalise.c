@@ -46,7 +46,7 @@ static int start(sox_effect_t * effp)
   p->norm0 = p->max = p->min = 0;
   p->tmp_file = tmpfile();
   if (p->tmp_file == NULL) {
-    sox_fail("can't create temporary file: %s", strerror(errno));
+    lsx_fail("can't create temporary file: %s", strerror(errno));
     return SOX_EOF;
   }
   return SOX_SUCCESS;
@@ -59,7 +59,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   size_t len;
 
   if (fwrite(ibuf, sizeof(*ibuf), *isamp, p->tmp_file) != *isamp) {
-    sox_fail("error writing temporary file: %s", strerror(errno));
+    lsx_fail("error writing temporary file: %s", strerror(errno));
     return SOX_EOF;
   }
   if (p->balance) for (len = *osamp; len; --len, ++ibuf) {
@@ -100,7 +100,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
   }
   len = fread(obuf, sizeof(*obuf), *osamp, p->tmp_file);
   if (len != *osamp && !feof(p->tmp_file)) {
-    sox_fail("error reading temporary file: %s", strerror(errno));
+    lsx_fail("error reading temporary file: %s", strerror(errno));
     result = SOX_EOF;
   }
   if (p->balance) for (*osamp = len; len; --len, ++obuf)

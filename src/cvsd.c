@@ -100,7 +100,7 @@ static void cvsdstartcommon(sox_format_t * ft)
         p->bytes_written = 0;
         p->com.v_min = 1;
         p->com.v_max = -1;
-        sox_report("cvsd: bit rate %dbit/s, bits from %s", p->cvsd_rate,
+        lsx_report("cvsd: bit rate %dbit/s, bits from %s", p->cvsd_rate,
                ft->encoding.reverse_bits ? "msb to lsb" : "lsb to msb");
 }
 
@@ -385,7 +385,7 @@ static int dvms_read_header(sox_format_t * ft, struct dvms_header *hdr)
         hdr->Crc = get16_le(&pch);
         if (sum != hdr->Crc)
         {
-                sox_report("DVMS header checksum error, read %u, calculated %u",
+                lsx_report("DVMS header checksum error, read %u, calculated %u",
                      hdr->Crc, sum);
                 return (SOX_EOF);
         }
@@ -427,12 +427,12 @@ static int dvms_write_header(sox_format_t * ft, struct dvms_header *hdr)
         put16_le(&pch, hdr->Crc);
         if (lsx_seeki(ft, (off_t)0, SEEK_SET) < 0)
         {
-                sox_report("seek failed\n: %s",strerror(errno));
+                lsx_report("seek failed\n: %s",strerror(errno));
                 return (SOX_EOF);
         }
         if (lsx_writebuf(ft, hdrbuf, sizeof(hdrbuf)) != sizeof(hdrbuf))
         {
-                sox_report("%s",strerror(errno));
+                lsx_report("%s",strerror(errno));
                 return (SOX_EOF);
         }
         return (SOX_SUCCESS);
@@ -522,7 +522,7 @@ int lsx_dvmsstartwrite(sox_format_t * ft)
         }
 
         if (!ft->seekable)
-               sox_warn("Length in output .DVMS header will wrong since can't seek to fix it");
+               lsx_warn("Length in output .DVMS header will wrong since can't seek to fix it");
 
         return(SOX_SUCCESS);
 }
@@ -537,7 +537,7 @@ int lsx_dvmsstopwrite(sox_format_t * ft)
         lsx_cvsdstopwrite(ft);
         if (!ft->seekable)
         {
-            sox_warn("File not seekable");
+            lsx_warn("File not seekable");
             return (SOX_EOF);
         }
         if (lsx_seeki(ft, (off_t)0, 0) != 0)

@@ -57,7 +57,7 @@ static int start_read(sox_format_t * ft)
   ft->encoding.bits_per_sample = WavpackGetBytesPerSample(p->codec) << 3;
   ft->signal.channels   = WavpackGetNumChannels(p->codec);
   if (WavpackGetSampleRate(p->codec) && ft->signal.rate && ft->signal.rate != WavpackGetSampleRate(p->codec))
-    sox_warn("`%s': overriding sample rate", ft->filename);
+    lsx_warn("`%s': overriding sample rate", ft->filename);
   else ft->signal.rate = WavpackGetSampleRate(p->codec);
 
   ft->signal.length = WavpackGetNumSamples(p->codec) * ft->signal.channels;

@@ -36,7 +36,7 @@ int strncasecmp(char const * s1, char const * s2, size_t n)
 }
 #endif
 
-char const * sox_find_file_extension(char const * pathname)
+char const * lsx_find_file_extension(char const * pathname)
 {
   /* First, chop off any path portions of filename.  This
    * prevents the next search from considering that part. */
@@ -51,9 +51,9 @@ char const * sox_find_file_extension(char const * pathname)
   return result;
 }
 
-sox_enum_item const * sox_find_enum_text(char const * text, sox_enum_item const * enum_items)
+lsx_enum_item const * lsx_find_enum_text(char const * text, lsx_enum_item const * enum_items)
 {
-  sox_enum_item const * result = NULL; /* Assume not found */
+  lsx_enum_item const * result = NULL; /* Assume not found */
 
   while (enum_items->text) {
     if (strcasecmp(text, enum_items->text) == 0)
@@ -68,7 +68,7 @@ sox_enum_item const * sox_find_enum_text(char const * text, sox_enum_item const 
   return result;
 }
 
-sox_enum_item const * sox_find_enum_value(unsigned value, sox_enum_item const * enum_items)
+lsx_enum_item const * lsx_find_enum_value(unsigned value, lsx_enum_item const * enum_items)
 {
   for (;enum_items->text; ++enum_items)
     if (value == enum_items->value)
@@ -76,7 +76,7 @@ sox_enum_item const * sox_find_enum_value(unsigned value, sox_enum_item const * 
   return NULL;
 }
 
-char const * sox_sigfigs3(size_t number)
+char const * lsx_sigfigs3(size_t number)
 {
   static char string[16][10];
   static unsigned n;
@@ -92,7 +92,7 @@ char const * sox_sigfigs3(size_t number)
   return string[n];
 }
 
-char const * sox_sigfigs3p(double percentage)
+char const * lsx_sigfigs3p(double percentage)
 {
   static char string[16][10];
   static unsigned n;

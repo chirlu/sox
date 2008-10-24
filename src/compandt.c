@@ -143,11 +143,11 @@ static sox_bool parse_transfer_value(char const * text, double * value)
   if (!strcmp(text, "-inf"))
     *value = -20 * log10(-(double)SOX_SAMPLE_MIN);
   else if (sscanf(text, "%lf %c", value, &dummy) != 1) {
-    sox_fail("syntax error trying to read transfer function value");
+    lsx_fail("syntax error trying to read transfer function value");
     return sox_false;
   }
   else if (*value > 0) {
-    sox_fail("transfer function values are relative to maximum volume so can't exceed 0dB");
+    lsx_fail("transfer function values are relative to maximum volume so can't exceed 0dB");
     return sox_false;
   }
   return sox_true;
@@ -176,7 +176,7 @@ sox_bool lsx_compandt_parse(sox_compandt_t * t, char * points, char * gain)
     if (!parse_transfer_value(text, &s(i).x))
       return sox_false;
     if (i && s(i-1).x > s(i).x) {
-      sox_fail("transfer function input values must be strictly increasing");
+      lsx_fail("transfer function input values must be strictly increasing");
       return sox_false;
     }
     if (i || (commas & 1)) {
@@ -194,7 +194,7 @@ sox_bool lsx_compandt_parse(sox_compandt_t * t, char * points, char * gain)
 #undef s
 
   if (gain && sscanf(gain, "%lf %c", &t->outgain_dB, &dummy) != 1) {
-    sox_fail("syntax error trying to read post-processing gain value");
+    lsx_fail("syntax error trying to read post-processing gain value");
     return sox_false;
   }
 

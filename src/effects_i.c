@@ -26,15 +26,15 @@
 #include <assert.h>
 #include <string.h>
 
-#undef sox_fail
-#define sox_fail sox_globals.subsystem=effp->handler.name,sox_fail
+#undef lsx_fail
+#define lsx_fail sox_globals.subsystem=effp->handler.name,lsx_fail
 
 int lsx_usage(sox_effect_t * effp)
 {
   if (effp->handler.usage)
-    sox_fail("usage: %s", effp->handler.usage);
+    lsx_fail("usage: %s", effp->handler.usage);
   else
-    sox_fail("this effect takes no parameters");
+    lsx_fail("this effect takes no parameters");
   return SOX_EOF;
 }
 
@@ -118,9 +118,9 @@ double lsx_spline3(double const * x, double const * y, double const * y_2d,
     ((a * a * a - a) * y_2d[i[0]] + (b * b * b - b) * y_2d[i[1]]) * d * d / 6;
 }
 
-sox_enum_item const lsx_wave_enum[] = {
-  ENUM_ITEM(SOX_WAVE_,SINE)
-  ENUM_ITEM(SOX_WAVE_,TRIANGLE)
+lsx_enum_item const lsx_wave_enum[] = {
+  LSX_ENUM_ITEM(SOX_WAVE_,SINE)
+  LSX_ENUM_ITEM(SOX_WAVE_,TRIANGLE)
   {0, 0}};
 
 void lsx_generate_wave_table(

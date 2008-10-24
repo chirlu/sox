@@ -43,7 +43,7 @@ static int start(sox_effect_t * effp)
     return SOX_EFF_NULL;
 
   if ((p->tmp_file = tmpfile()) == NULL) {
-    sox_fail("can't create temporary file: %s", strerror(errno));
+    lsx_fail("can't create temporary file: %s", strerror(errno));
     return SOX_EOF;
   }
   p->first_drain = 1;
@@ -55,7 +55,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 {
   priv_t * p = (priv_t *)effp->priv;
   if (fwrite(ibuf, sizeof(*ibuf), *isamp, p->tmp_file) != *isamp) {
-    sox_fail("error writing temporary file: %s", strerror(errno));
+    lsx_fail("error writing temporary file: %s", strerror(errno));
     return SOX_EOF;
   }
   (void)obuf, *osamp = 0; /* samples not output until drain */
@@ -77,7 +77,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
     p->total = ftello(p->tmp_file);
 
     if ((p->total % sizeof(sox_sample_t)) != 0) {
-      sox_fail("corrupted temporary file");
+      lsx_fail("corrupted temporary file");
       return (SOX_EOF);
     }
 
@@ -104,7 +104,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
     read = fread(buf, sizeof(sox_sample_t), samp, p->tmp_file);
     if (read != samp) {
       perror(strerror(errno));
-      sox_fail("read error on temporary file");
+      lsx_fail("read error on temporary file");
       return (SOX_EOF);
     }
 
@@ -129,7 +129,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
       read = fread(buf, sizeof(sox_sample_t), samp, p->tmp_file);
       if (read != samp) {
         perror(strerror(errno));
-        sox_fail("repeat2: read error on temporary " "file\n");
+        lsx_fail("repeat2: read error on temporary " "file\n");
         return (SOX_EOF);
       }
 
@@ -142,7 +142,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
     read = fread(obuf, sizeof(sox_sample_t), *osamp, p->tmp_file);
     if (read != *osamp) {
       perror(strerror(errno));
-      sox_fail("repeat3: read error on temporary file");
+      lsx_fail("repeat3: read error on temporary file");
       return (SOX_EOF);
     }
     p->remaining -= *osamp;

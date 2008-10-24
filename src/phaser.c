@@ -114,39 +114,39 @@ static int sox_phaser_start(sox_effect_t * effp)
 
         if ( phaser->delay < 0.0 )
         {
-            sox_fail("phaser: delay must be positive!");
+            lsx_fail("phaser: delay must be positive!");
             return (SOX_EOF);
         }
         if ( phaser->delay > 5.0 )
         {
-            sox_fail("phaser: delay must be less than 5.0 msec!");
+            lsx_fail("phaser: delay must be less than 5.0 msec!");
             return (SOX_EOF);
         }
         if ( phaser->speed < 0.1 )
         {
-            sox_fail("phaser: speed must be more than 0.1 Hz!");
+            lsx_fail("phaser: speed must be more than 0.1 Hz!");
             return (SOX_EOF);
         }
         if ( phaser->speed > 2.0 )
         {
-            sox_fail("phaser: speed must be less than 2.0 Hz!");
+            lsx_fail("phaser: speed must be less than 2.0 Hz!");
             return (SOX_EOF);
         }
         if ( phaser->decay < 0.0 )
         {
-            sox_fail("phaser: decay must be positive!" );
+            lsx_fail("phaser: decay must be positive!" );
             return (SOX_EOF);
         }
         if ( phaser->decay >= 1.0 )
         {
-            sox_fail("phaser: decay must be less that 1.0!" );
+            lsx_fail("phaser: decay must be less that 1.0!" );
             return (SOX_EOF);
         }
         /* Be nice and check the hint with warning, if... */
         if ( phaser->in_gain > ( 1.0 - phaser->decay * phaser->decay ) )
-                sox_warn("phaser: warning >>> gain-in can cause saturation or clipping of output <<<");
+                lsx_warn("phaser: warning >>> gain-in can cause saturation or clipping of output <<<");
         if ( phaser->in_gain / ( 1.0 - phaser->decay ) > 1.0 / phaser->out_gain )
-                sox_warn("phaser: warning >>> gain-out can cause saturation or clipping of output <<<");
+                lsx_warn("phaser: warning >>> gain-out can cause saturation or clipping of output <<<");
 
         phaser->length = effp->in_signal.rate / phaser->speed;
         phaser->phaserbuf = lsx_malloc(sizeof (double) * phaser->maxsamples);

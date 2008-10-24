@@ -365,7 +365,7 @@ int lsx_aiffstartread(sox_format_t * ft)
         }
         /* SSND chunk just read */
         if (blocksize != 0)
-            sox_warn("AIFF header has invalid blocksize.  Ignoring but expect a premature EOF");
+            lsx_warn("AIFF header has invalid blocksize.  Ignoring but expect a premature EOF");
 
         while (offset-- > 0) {
                 if (lsx_readb(ft, &trash8) == SOX_EOF)
@@ -379,7 +379,7 @@ int lsx_aiffstartread(sox_format_t * ft)
                 ft->signal.channels = channels;
                 ft->signal.rate = rate;
                 if (ft->encoding.encoding != SOX_ENCODING_UNKNOWN && ft->encoding.encoding != SOX_ENCODING_SIGN2)
-                    sox_report("AIFF only supports signed data.  Forcing to signed.");
+                    lsx_report("AIFF only supports signed data.  Forcing to signed.");
                 ft->encoding.encoding = SOX_ENCODING_SIGN2;
                 if (bits <= 8)
                     ft->encoding.bits_per_sample = 8;
@@ -399,8 +399,8 @@ int lsx_aiffstartread(sox_format_t * ft)
                         || (ft->signal.rate == 0)
                         || (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
                         || (ft->encoding.bits_per_sample == 0)) {
-                  sox_report("You must specify # channels, sample rate, signed/unsigned,");
-                  sox_report("and 8/16 on the command line.");
+                  lsx_report("You must specify # channels, sample rate, signed/unsigned,");
+                  lsx_report("and 8/16 on the command line.");
                   lsx_fail_errno(ft,SOX_EFMT,"Bogus AIFF file: no COMM section.");
                   return(SOX_EOF);
                 }
@@ -482,24 +482,24 @@ static void reportInstrument(sox_format_t * ft)
   unsigned loopNum;
 
   if(ft->oob.instr.nloops > 0)
-    sox_report("AIFF Loop markers:");
+    lsx_report("AIFF Loop markers:");
   for(loopNum  = 0; loopNum < ft->oob.instr.nloops; loopNum++) {
     if (ft->oob.loops[loopNum].count) {
-      sox_report("Loop %d: start: %6lu", loopNum, (unsigned long)ft->oob.loops[loopNum].start);
-      sox_report(" end:   %6lu",
+      lsx_report("Loop %d: start: %6lu", loopNum, (unsigned long)ft->oob.loops[loopNum].start);
+      lsx_report(" end:   %6lu",
               (unsigned long)(ft->oob.loops[loopNum].start + ft->oob.loops[loopNum].length));
-      sox_report(" count: %6d", ft->oob.loops[loopNum].count);
-      sox_report(" type:  ");
+      lsx_report(" count: %6d", ft->oob.loops[loopNum].count);
+      lsx_report(" type:  ");
       switch(ft->oob.loops[loopNum].type & ~SOX_LOOP_SUSTAIN_DECAY) {
-      case 0: sox_report("off"); break;
-      case 1: sox_report("forward"); break;
-      case 2: sox_report("forward/backward"); break;
+      case 0: lsx_report("off"); break;
+      case 1: lsx_report("forward"); break;
+      case 2: lsx_report("forward/backward"); break;
       }
     }
   }
-  sox_report("Unity MIDI Note: %d", ft->oob.instr.MIDInote);
-  sox_report("Low   MIDI Note: %d", ft->oob.instr.MIDIlow);
-  sox_report("High  MIDI Note: %d", ft->oob.instr.MIDIhi);
+  lsx_report("Unity MIDI Note: %d", ft->oob.instr.MIDInote);
+  lsx_report("Low   MIDI Note: %d", ft->oob.instr.MIDIlow);
+  lsx_report("High  MIDI Note: %d", ft->oob.instr.MIDIhi);
 }
 
 /* Process a text chunk, allocate memory, display it if verbose and return */
@@ -599,7 +599,7 @@ size_t lsx_aiffread(sox_format_t * ft, sox_sample_t *buf, size_t len)
                 len = aiff->nsamples;
         done = lsx_rawread(ft, buf, len);
         if (done == 0 && aiff->nsamples != 0)
-                sox_warn("Premature EOF on AIFF input file");
+                lsx_warn("Premature EOF on AIFF input file");
         aiff->nsamples -= done;
         return done;
 }
@@ -621,10 +621,10 @@ int lsx_aiffstopread(sox_format_t * ft)
                 if (lsx_eof(ft))
                         break;
                 buf[4] = '\0';
-                sox_warn("Ignoring AIFF tail chunk: '%s', %u bytes long",
+                lsx_warn("Ignoring AIFF tail chunk: '%s', %u bytes long",
                         buf, chunksize);
                 if (! strcmp(buf, "MARK") || ! strcmp(buf, "INST"))
-                        sox_warn("       You're stripping MIDI/loop info!");
+                        lsx_warn("       You're stripping MIDI/loop info!");
                 while (chunksize-- > 0)
                 {
                         if (lsx_readb(ft, &trash) == SOX_EOF)

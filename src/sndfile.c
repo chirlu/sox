@@ -56,7 +56,7 @@ static void drain_log_buffer(sox_format_t * ft)
       end = strchr(sf->log_buffer_ptr, '\0');
     if (!strncmp(sf->log_buffer_ptr, warning_prefix, strlen(warning_prefix))) {
       sf->log_buffer_ptr += strlen(warning_prefix);
-      sox_warn("`%s': %.*s",
+      lsx_warn("`%s': %.*s",
           ft->filename, (int)(end - sf->log_buffer_ptr), sf->log_buffer_ptr);
     } else
       lsx_debug("`%s': %.*s",
@@ -231,19 +231,19 @@ static int check_read_params(sox_format_t * ft, unsigned channels,
   ft->signal.length = length;
 
   if (channels && ft->signal.channels && ft->signal.channels != channels)
-    sox_warn("`%s': overriding number of channels", ft->filename);
+    lsx_warn("`%s': overriding number of channels", ft->filename);
   else ft->signal.channels = channels;
 
   if (rate && ft->signal.rate && ft->signal.rate != rate)
-    sox_warn("`%s': overriding sample rate", ft->filename);
+    lsx_warn("`%s': overriding sample rate", ft->filename);
   else ft->signal.rate = rate;
 
   if (encoding && ft->encoding.encoding && ft->encoding.encoding != encoding)
-    sox_warn("`%s': overriding encoding type", ft->filename);
+    lsx_warn("`%s': overriding encoding type", ft->filename);
   else ft->encoding.encoding = encoding;
 
   if (bits_per_sample && ft->encoding.bits_per_sample && ft->encoding.bits_per_sample != bits_per_sample)
-    sox_warn("`%s': overriding encoding size", ft->filename);
+    lsx_warn("`%s': overriding encoding size", ft->filename);
   ft->encoding.bits_per_sample = bits_per_sample;
 
   if (sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample))
@@ -282,7 +282,7 @@ static int startread(sox_format_t * ft)
 
   /* Don't believe LSF's rate for raw files */
   if ((sf->sf_info->format & SF_FORMAT_TYPEMASK) == SF_FORMAT_RAW && !ft->signal.rate) {
-    sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
+    lsx_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
     rate = 8000;
   }
   else rate = sf->sf_info->samplerate;
@@ -345,11 +345,11 @@ static int startwrite(sox_format_t * ft)
     }
 
     if (!sf_format_check(sf->sf_info)) {
-      sox_fail("cannot find a usable output encoding");
+      lsx_fail("cannot find a usable output encoding");
       return SOX_EOF;
     }
     if ((sf->sf_info->format & SF_FORMAT_TYPEMASK) != SF_FORMAT_RAW)
-      sox_warn("cannot use desired output encoding, choosing default");
+      lsx_warn("cannot use desired output encoding, choosing default");
   }
 
   sf->sf_file = sf_open_fd(fileno(ft->fp), SFM_WRITE, sf->sf_info, 1);

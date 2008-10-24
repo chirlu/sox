@@ -273,20 +273,20 @@ static void set_endiannesses(sox_format_t * ft)
   if (ft->handler.flags & SOX_FILE_ENDIAN) {
     if (ft->encoding.reverse_bytes == (sox_option_t)
         (!(ft->handler.flags & SOX_FILE_ENDBIG) != MACHINE_IS_BIGENDIAN))
-      sox_report("`%s': overriding file-type byte-order", ft->filename);
+      lsx_report("`%s': overriding file-type byte-order", ft->filename);
   } else if (ft->encoding.reverse_bytes == sox_true)
-    sox_report("`%s': overriding machine byte-order", ft->filename);
+    lsx_report("`%s': overriding machine byte-order", ft->filename);
 
   if (ft->encoding.reverse_bits == SOX_OPTION_DEFAULT)
     ft->encoding.reverse_bits = !!(ft->handler.flags & SOX_FILE_BIT_REV);
   else if (ft->encoding.reverse_bits == !(ft->handler.flags & SOX_FILE_BIT_REV))
-      sox_report("`%s': overriding file-type bit-order", ft->filename);
+      lsx_report("`%s': overriding file-type bit-order", ft->filename);
 
   if (ft->encoding.reverse_nibbles == SOX_OPTION_DEFAULT)
     ft->encoding.reverse_nibbles = !!(ft->handler.flags & SOX_FILE_NIB_REV);
   else
     if (ft->encoding.reverse_nibbles == !(ft->handler.flags & SOX_FILE_NIB_REV))
-      sox_report("`%s': overriding file-type nibble-order", ft->filename);
+      lsx_report("`%s': overriding file-type nibble-order", ft->filename);
 }
 
 static sox_bool is_seekable(sox_format_t const * ft)
@@ -351,7 +351,7 @@ static FILE * xfopen(char const * identifier, char const * mode, sox_bool * is_p
     free(command);
     *is_process = sox_true;
 #else
-    sox_fail("this build of SoX cannot open URLs");
+    lsx_fail("this build of SoX cannot open URLs");
 #endif
     return f;
   }
@@ -370,7 +370,7 @@ sox_format_t * sox_open_read(
 
   if (filetype) {
     if (!(handler = sox_find_format(filetype, sox_false))) {
-      sox_fail("no handler for given file type `%s'", filetype);
+      lsx_fail("no handler for given file type `%s'", filetype);
       goto error;
     }
     ft->handler = *handler;
@@ -382,7 +382,7 @@ sox_format_t * sox_open_read(
 
     if (!strcmp(path, "-")) { /* Use stdin if the filename is "-" */
       if (sox_globals.stdin_in_use_by) {
-        sox_fail("`-' (stdin) already in use by `%s'", sox_globals.stdin_in_use_by);
+        lsx_fail("`-' (stdin) already in use by `%s'", sox_globals.stdin_in_use_by);
         goto error;
       }
       sox_globals.stdin_in_use_by = "audio input";
@@ -393,12 +393,12 @@ sox_format_t * sox_open_read(
       ft->fp = xfopen(path, "rb", &ft->is_process);
       url = ft->is_process? " URL" : "";
       if (ft->fp == NULL) {
-        sox_fail("can't open input file%s `%s': %s", url, path, strerror(errno));
+        lsx_fail("can't open input file%s `%s': %s", url, path, strerror(errno));
         goto error;
       }
     }
     if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char) * input_bufsiz)) {
-      sox_fail("Can't set read buffer");
+      lsx_fail("Can't set read buffer");
       goto error;
     }
     ft->seekable = is_seekable(ft);
@@ -406,7 +406,7 @@ sox_format_t * sox_open_read(
 
   if (!filetype) {
     if (ft->seekable) {
-      filetype = detect_magic(ft, sox_find_file_extension(path));
+      filetype = detect_magic(ft, lsx_find_file_extension(path));
       lsx_rewind(ft);
 #if HAVE_MAGIC
       if (!filetype) {
@@ -426,19 +426,19 @@ sox_format_t * sox_open_read(
 #endif
     }
     if (filetype) {
-      sox_report("detected file format type `%s'", filetype);
+      lsx_report("detected file format type `%s'", filetype);
       if (!(handler = sox_find_format(filetype, sox_false))) {
-        sox_fail("no handler for detected file type `%s'", filetype);
+        lsx_fail("no handler for detected file type `%s'", filetype);
         goto error;
       }
     }
     else {
-      if (!(filetype = sox_find_file_extension(path))) {
-        sox_fail("can't determine type of `%s'", path);
+      if (!(filetype = lsx_find_file_extension(path))) {
+        lsx_fail("can't determine type of `%s'", path);
         goto error;
       }
       if (!(handler = sox_find_format(filetype, sox_true))) {
-        sox_fail("no handler for file extension `%s'", filetype);
+        lsx_fail("no handler for file extension `%s'", filetype);
         goto error;
       }
     }
@@ -449,7 +449,7 @@ sox_format_t * sox_open_read(
     }
   }
   if (!ft->handler.startread && !ft->handler.read) {
-    sox_fail("file type `%s' isn't readable", filetype);
+    lsx_fail("file type `%s' isn't readable", filetype);
     goto error;
   }
 
@@ -467,7 +467,7 @@ sox_format_t * sox_open_read(
   ft->priv = lsx_calloc(1, ft->handler.priv_size);
   /* Read and write starters can change their formats. */
   if (ft->handler.startread && (*ft->handler.startread)(ft) != SOX_SUCCESS) {
-    sox_fail("can't open input file%s `%s': %s", url, ft->filename, ft->sox_errstr);
+    lsx_fail("can't open input file%s `%s': %s", url, ft->filename, ft->sox_errstr);
     goto error;
   }
 
@@ -479,7 +479,7 @@ sox_format_t * sox_open_read(
 
   if (sox_checkformat(ft) == SOX_SUCCESS)
     return ft;
-  sox_fail("bad input format for file%s `%s': %s", url, ft->filename, ft->sox_errstr);
+  lsx_fail("bad input format for file%s `%s': %s", url, ft->filename, ft->sox_errstr);
 
 error:
   if (ft->fp && ft->fp != stdin)
@@ -505,7 +505,7 @@ sox_bool sox_format_supports_encoding(
   assert(path);
   assert(encoding);
   if (!filetype)
-    filetype = sox_find_file_extension(path);
+    filetype = lsx_find_file_extension(path);
 
   if (!filetype || !(handler = sox_find_format(filetype, is_file_extension)) ||
       !handler->write_formats)
@@ -551,7 +551,7 @@ static void set_output_format(sox_format_t * ft)
         }
         if (ft->signal.rate == HUGE_VAL)
           ft->signal.rate = max;
-        sox_warn("%s can't encode at %gHz; using %gHz", ft->handler.names[0], given, ft->signal.rate);
+        lsx_warn("%s can't encode at %gHz; using %gHz", ft->handler.names[0], given, ft->signal.rate);
       }
     }
   }
@@ -561,15 +561,15 @@ static void set_output_format(sox_format_t * ft)
   if (ft->handler.flags & SOX_FILE_CHANS) {
     if (ft->signal.channels == 1 && !(ft->handler.flags & SOX_FILE_MONO)) {
       ft->signal.channels = (ft->handler.flags & SOX_FILE_STEREO)? 2 : 4;
-      sox_warn("%s can't encode mono; setting channels to %u", ft->handler.names[0], ft->signal.channels);
+      lsx_warn("%s can't encode mono; setting channels to %u", ft->handler.names[0], ft->signal.channels);
     } else
     if (ft->signal.channels == 2 && !(ft->handler.flags & SOX_FILE_STEREO)) {
       ft->signal.channels = (ft->handler.flags & SOX_FILE_QUAD)? 4 : 1;
-      sox_warn("%s can't encode stereo; setting channels to %u", ft->handler.names[0], ft->signal.channels);
+      lsx_warn("%s can't encode stereo; setting channels to %u", ft->handler.names[0], ft->signal.channels);
     } else
     if (ft->signal.channels == 4 && !(ft->handler.flags & SOX_FILE_QUAD)) {
       ft->signal.channels = (ft->handler.flags & SOX_FILE_STEREO)? 2 : 1;
-      sox_warn("%s can't encode quad; setting channels to %u", ft->handler.names[0], ft->signal.channels);
+      lsx_warn("%s can't encode quad; setting channels to %u", ft->handler.names[0], ft->signal.channels);
     }
   } else ft->signal.channels = max(ft->signal.channels, 1);
 
@@ -584,7 +584,7 @@ static void set_output_format(sox_format_t * ft)
       while (enc_arg(unsigned));
     }
     if (e != ft->encoding.encoding) {
-      sox_warn("%s can't encode %s", ft->handler.names[0], sox_encodings_info[ft->encoding.encoding].desc);
+      lsx_warn("%s can't encode %s", ft->handler.names[0], sox_encodings_info[ft->encoding.encoding].desc);
       ft->encoding.encoding = 0;
     }
     else {
@@ -612,7 +612,7 @@ static void set_output_format(sox_format_t * ft)
       if (given_size) {
         if (found)
           ft->encoding.bits_per_sample = given_size;
-        else sox_warn("%s can't encode %s to %u-bit", ft->handler.names[0], sox_encodings_info[ft->encoding.encoding].desc, given_size);
+        else lsx_warn("%s can't encode %s to %u-bit", ft->handler.names[0], sox_encodings_info[ft->encoding.encoding].desc, given_size);
       }
     }
   }
@@ -624,7 +624,7 @@ static void set_output_format(sox_format_t * ft)
     while (s != ft->encoding.bits_per_sample && (e = enc_arg(sox_encoding_t)))
       while ((s = enc_arg(unsigned)) && s != ft->encoding.bits_per_sample);
     if (s != ft->encoding.bits_per_sample) {
-      sox_warn("%s can't encode to %u-bit", ft->handler.names[0], ft->encoding.bits_per_sample);
+      lsx_warn("%s can't encode to %u-bit", ft->handler.names[0], ft->encoding.bits_per_sample);
       ft->encoding.bits_per_sample = 0;
     }
     else ft->encoding.encoding = e;
@@ -686,37 +686,37 @@ sox_format_t * sox_open_write(
   sox_format_handler_t const * handler;
 
   if (!path || !signal) {
-    sox_fail("must specify file name and signal parameters to write file");
+    lsx_fail("must specify file name and signal parameters to write file");
     goto error;
   }
 
   if (filetype) {
     if (!(handler = sox_find_format(filetype, sox_false))) {
-      sox_fail("no handler for given file type `%s'", filetype);
+      lsx_fail("no handler for given file type `%s'", filetype);
       goto error;
     }
     ft->handler = *handler;
   }
   else {
-    if (!(filetype = sox_find_file_extension(path))) {
-      sox_fail("can't determine type of `%s'", path);
+    if (!(filetype = lsx_find_file_extension(path))) {
+      lsx_fail("can't determine type of `%s'", path);
       goto error;
     }
     if (!(handler = sox_find_format(filetype, sox_true))) {
-      sox_fail("no handler for file extension `%s'", filetype);
+      lsx_fail("no handler for file extension `%s'", filetype);
       goto error;
     }
     ft->handler = *handler;
   }
   if (!ft->handler.startwrite && !ft->handler.write) {
-    sox_fail("file type `%s' isn't writeable", filetype);
+    lsx_fail("file type `%s' isn't writeable", filetype);
     goto error;
   }
 
   if (!(ft->handler.flags & SOX_FILE_NOSTDIO)) {
     if (!strcmp(path, "-")) { /* Use stdout if the filename is "-" */
       if (sox_globals.stdout_in_use_by) {
-        sox_fail("`-' (stdout) already in use by `%s'", sox_globals.stdout_in_use_by);
+        lsx_fail("`-' (stdout) already in use by `%s'", sox_globals.stdout_in_use_by);
         goto error;
       }
       sox_globals.stdout_in_use_by = "audio output";
@@ -727,11 +727,11 @@ sox_format_t * sox_open_write(
       struct stat st;
       if (!stat(path, &st) && (st.st_mode & S_IFMT) == S_IFREG &&
           (overwrite_permitted && !overwrite_permitted(path))) {
-        sox_fail("permission to overwrite '%s' denied", path);
+        lsx_fail("permission to overwrite '%s' denied", path);
         goto error;
       }
       if ((ft->fp = fopen(path, "wb")) == NULL) {
-        sox_fail("can't open output file `%s': %s", path, strerror(errno));
+        lsx_fail("can't open output file `%s': %s", path, strerror(errno));
         goto error;
       }
     }
@@ -739,7 +739,7 @@ sox_format_t * sox_open_write(
     /* stdout tends to be line-buffered.  Override this */
     /* to be Full Buffering. */
     if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char) * sox_globals.bufsiz)) {
-      sox_fail("Can't set write buffer");
+      lsx_fail("Can't set write buffer");
       goto error;
     }
     ft->seekable = is_seekable(ft);
@@ -770,18 +770,18 @@ sox_format_t * sox_open_write(
       ft->signal.channels / signal->channels + .5;
 
   if ((ft->handler.flags & SOX_FILE_REWIND) && !ft->signal.length && !ft->seekable)
-    sox_warn("can't seek in output file `%s'; length in file header will be unspecified", ft->filename);
+    lsx_warn("can't seek in output file `%s'; length in file header will be unspecified", ft->filename);
 
   ft->priv = lsx_calloc(1, ft->handler.priv_size);
   /* Read and write starters can change their formats. */
   if (ft->handler.startwrite && (ft->handler.startwrite)(ft) != SOX_SUCCESS){
-    sox_fail("can't open output file `%s': %s", ft->filename, ft->sox_errstr);
+    lsx_fail("can't open output file `%s': %s", ft->filename, ft->sox_errstr);
     goto error;
   }
 
   if (sox_checkformat(ft) == SOX_SUCCESS)
     return ft;
-  sox_fail("bad format for output file `%s': %s", ft->filename, ft->sox_errstr);
+  lsx_fail("bad format for output file `%s': %s", ft->filename, ft->sox_errstr);
 
 error:
   if (ft->fp && ft->fp != stdout)
@@ -826,7 +826,7 @@ int sox_close(sox_format_t * ft)
 
   if (ft->fp && ft->fp != stdin && ft->fp != stdout &&
       xfclose(ft->fp, ft->is_process) && ft->is_process) {
-    sox_fail("error reading file URL `%s'", ft->filename);
+    lsx_fail("error reading file URL `%s'", ft->filename);
     result = SOX_EOF;
   }
   free(ft->filename);
@@ -881,7 +881,7 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
     *slash_pos = '\0';
 
   if (file == NULL) {
-    sox_fail("Can't open playlist file `%s': %s", listname, strerror(errno));
+    lsx_fail("Can't open playlist file `%s': %s", listname, strerror(errno));
     result = SOX_EOF;
   }
   else {
@@ -933,11 +933,11 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
     } while (c != EOF);
 
     if (ferror(file)) {
-      sox_fail("error reading playlist file `%s': %s", listname, strerror(errno));
+      lsx_fail("error reading playlist file `%s': %s", listname, strerror(errno));
       result = SOX_EOF;
     }
     if (xfclose(file, is_process) && is_process) {
-      sox_fail("error reading playlist file URL `%s'", listname);
+      lsx_fail("error reading playlist file URL `%s'", listname);
       result = SOX_EOF;
     }
   }
@@ -985,7 +985,7 @@ int sox_format_init(void) /* Find & load format handlers.  */
   int ret;
 
   if ((ret = lt_dlinit()) != 0) {
-    sox_fail("lt_dlinit failed with %d error(s): %s", ret, lt_dlerror());
+    lsx_fail("lt_dlinit failed with %d error(s): %s", ret, lt_dlerror());
     return SOX_EOF;
   }
   plugins_initted = sox_true;
@@ -998,7 +998,7 @@ void sox_format_quit(void) /* Cleanup things.  */
 {
   int ret;
   if (plugins_initted && (ret = lt_dlexit()) != 0)
-    sox_fail("lt_dlexit failed with %d error(s): %s", ret, lt_dlerror());
+    lsx_fail("lt_dlexit failed with %d error(s): %s", ret, lt_dlerror());
 }
 
 #else /* Static format handlers */

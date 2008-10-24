@@ -71,7 +71,7 @@ static LADSPA_Data ladspa_default(const LADSPA_PortRangeHint *p)
       d = p->LowerBound * 0.25 + p->UpperBound * 0.75;
   } else { /* shouldn't happen */
     /* FIXME: Deal with this at a higher level */
-    sox_fail("non-existent default value; using 0.1");
+    lsx_fail("non-existent default value; using 0.1");
     d = 0.1; /* Should at least avoid divide by 0 */
   }
 
@@ -104,19 +104,19 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
     path = LADSPA_PATH;
   lt_dlsetsearchpath(path);
   if ((l_st->lth = lt_dlopenext(l_st->name)) == NULL) {
-    sox_fail("could not open LADSPA plugin %s", l_st->name);
+    lsx_fail("could not open LADSPA plugin %s", l_st->name);
     return SOX_EOF;
   }
 
   /* Get descriptor function */
   if ((ltptr.ptr = lt_dlsym(l_st->lth, "ladspa_descriptor")) == NULL) {
-    sox_fail("could not find ladspa_descriptor");
+    lsx_fail("could not find ladspa_descriptor");
     return SOX_EOF;
   }
 
   /* If no plugins in this module, complain */
   if (ltptr.fn(0UL) == NULL) {
-    sox_fail("no plugins found");
+    lsx_fail("no plugins found");
     return SOX_EOF;
   }
 
@@ -130,7 +130,7 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
     while (l_st->desc && strcmp(l_st->desc->Label, argv[0]) != 0)
       l_st->desc = ltptr.fn(++index);
     if (l_st->desc == NULL) {
-      sox_fail("no plugin called `%s' found", argv[0]);
+      lsx_fail("no plugin called `%s' found", argv[0]);
       return SOX_EOF;
     } else
       n--; argv++;
@@ -144,23 +144,23 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
     /* Check port is well specified. All control ports should be
        inputs, but don't bother checking, as we never rely on this. */
     if (LADSPA_IS_PORT_INPUT(port) && LADSPA_IS_PORT_OUTPUT(port)) {
-      sox_fail("port %lu is both input and output", i);
+      lsx_fail("port %lu is both input and output", i);
       return SOX_EOF;
     } else if (LADSPA_IS_PORT_CONTROL(port) && LADSPA_IS_PORT_AUDIO(port)) {
-      sox_fail("port %lu is both audio and control", i);
+      lsx_fail("port %lu is both audio and control", i);
       return SOX_EOF;
     }
 
     if (LADSPA_IS_PORT_AUDIO(port)) {
       if (LADSPA_IS_PORT_INPUT(port)) {
         if (l_st->input_port != ULONG_MAX) {
-          sox_fail("can't use a plugin with more than one audio input port");
+          lsx_fail("can't use a plugin with more than one audio input port");
           return SOX_EOF;
         }
         l_st->input_port = i;
       } else if (LADSPA_IS_PORT_OUTPUT(port)) {
         if (l_st->output_port != ULONG_MAX) {
-          sox_fail("can't use a plugin with more than one audio output port");
+          lsx_fail("can't use a plugin with more than one audio output port");
           return SOX_EOF;
         }
         l_st->output_port = i;
@@ -168,7 +168,7 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
     } else {                    /* Control port */
       if (n == 0) {
         if (!LADSPA_IS_HINT_HAS_DEFAULT(l_st->desc->PortRangeHints[i].HintDescriptor)) {
-          sox_fail("not enough arguments for control ports");
+          lsx_fail("not enough arguments for control ports");
           return SOX_EOF;
         }
         l_st->control[i] = ladspa_default(&(l_st->desc->PortRangeHints[i]));
@@ -199,7 +199,7 @@ static int sox_ladspa_start(sox_effect_t * effp)
   lsx_debug("rate for plugin is %g", effp->in_signal.rate);
   l_st->handle = l_st->desc->instantiate(l_st->desc, (unsigned long)effp->in_signal.rate);
   if (l_st->handle == NULL) {
-    sox_fail("could not instantiate plugin");
+    lsx_fail("could not instantiate plugin");
     return SOX_EOF;
   }
 

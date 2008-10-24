@@ -128,7 +128,7 @@ static size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
         if (mad_stream.error == MAD_ERROR_BUFLEN)
           break;  /* Normal behaviour; get some more data from the file */
         if (!MAD_RECOVERABLE(mad_stream.error)) {
-          sox_warn("unrecoverable MAD error");
+          lsx_warn("unrecoverable MAD error");
           break;
         }
         if (mad_stream.error == MAD_ERROR_LOSTSYNC) {
@@ -141,9 +141,9 @@ static size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
             }
             mad_stream_skip(&mad_stream, min(tagsize, available));
           }
-          else sox_warn("MAD lost sync");
+          else lsx_warn("MAD lost sync");
         }
-        else sox_warn("recoverable MAD error");
+        else lsx_warn("recoverable MAD error");
         continue; /* Not an audio frame */
       }
 
@@ -157,7 +157,7 @@ static size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
         mad_frame.header = mad_header;
         if (mad_frame_decode(&mad_frame, &mad_stream) == -1)
           if (!MAD_RECOVERABLE(mad_stream.error)) {
-            sox_warn("unrecoverable MAD error");
+            lsx_warn("unrecoverable MAD error");
             break;
           }
         if ((frames = xing_frames(mad_stream.anc_ptr, mad_stream.anc_bitlen))) {

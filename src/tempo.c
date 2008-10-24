@@ -223,7 +223,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     case 'm': profile = Music; break;
     case 's': profile = Speech; break;
     case 'l': profile = Linear; p->search_ms = 0; break;
-    default: sox_fail("unknown option `-%c'", optopt); return lsx_usage(effp);
+    default: lsx_fail("unknown option `-%c'", optopt); return lsx_usage(effp);
   }
   argc -= optind, argv += optind;
   do {                    /* break-able block */
@@ -241,7 +241,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     p->search_ms = p->segment_ms / searches_div[profile];
 
   p->overlap_ms = min(p->overlap_ms, p->segment_ms / 2);
-  sox_report("quick_search=%u factor=%g segment=%g search=%g overlap=%g",
+  lsx_report("quick_search=%u factor=%g segment=%g search=%g overlap=%g",
     p->quick_search, p->factor, p->segment_ms, p->search_ms, p->overlap_ms);
   return argc? lsx_usage(effp) : SOX_SUCCESS;
 }

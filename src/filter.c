@@ -188,7 +188,7 @@ static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
         if ((n >= 2) && !sscanf(argv[1], "%ld", &f->Nwin))
           return lsx_usage(effp);
         else if (f->Nwin < 4) {
-                sox_fail("filter: window length (%ld) <4 is too short", f->Nwin);
+                lsx_fail("filter: window length (%ld) <4 is too short", f->Nwin);
                 return (SOX_EOF);
         }
 
@@ -224,7 +224,7 @@ static int sox_filter_start(sox_effect_t * effp)
 
         if ((f->freq0 < 0) || (f->freq0 > f->freq1))
         {
-                sox_fail("filter: low(%g),high(%g) parameters must satisfy 0 <= low <= high <= %g",
+                lsx_fail("filter: low(%g),high(%g) parameters must satisfy 0 <= low <= high <= %g",
                                         f->freq0, f->freq1, f->rate/2);
                 return (SOX_EOF);
         }
@@ -236,7 +236,7 @@ static int sox_filter_start(sox_effect_t * effp)
                 Xh0 = lsx_makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, (size_t) 1, 0);
                 if (Xh0 <= 1)
                 {
-                        sox_fail("filter: Unable to make low filter");
+                        lsx_fail("filter: Unable to make low filter");
                         return (SOX_EOF);
                 }
         } else {
@@ -249,7 +249,7 @@ static int sox_filter_start(sox_effect_t * effp)
                 Xh1 = lsx_makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, (size_t) 1, 0);
                 if (Xh1 <= 1)
                 {
-                        sox_fail("filter: Unable to make high filter");
+                        lsx_fail("filter: Unable to make high filter");
                         return (SOX_EOF);
                 }
         } else {
@@ -270,7 +270,7 @@ static int sox_filter_start(sox_effect_t * effp)
 
         Xh -= 1;       /* Xh = 0 can only happen if filter was identity 0-Nyquist */
         if (Xh<=0)
-                sox_warn("filter: adjusted freq %g-%g is identity", f->freq0, f->freq1);
+                lsx_warn("filter: adjusted freq %g-%g is identity", f->freq0, f->freq1);
 
         f->Nwin = 2*Xh + 1;  /* not really used afterwards */
         f->Xh = Xh;
@@ -415,7 +415,7 @@ static int sox_filter_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osa
         *osamp -= osamp_res;
         /* lsx_debug("DRAIN osamp %d", *osamp); */
         if (isamp_res)
-                sox_warn("drain overran obuf by %ld", isamp_res);
+                lsx_warn("drain overran obuf by %ld", isamp_res);
         /* FIXME: This is very picky. osamp better be big enough to grab
          * all remaining samples or they will be discarded.
          */

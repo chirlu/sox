@@ -26,10 +26,10 @@ typedef struct {
 
 enum {vol_amplitude, vol_dB, vol_power};
 
-static sox_enum_item const vol_types[] = {
-  ENUM_ITEM(vol_,amplitude)
-  ENUM_ITEM(vol_,dB)
-  ENUM_ITEM(vol_,power)
+static lsx_enum_item const vol_types[] = {
+  LSX_ENUM_ITEM(vol_,amplitude)
+  LSX_ENUM_ITEM(vol_,dB)
+  LSX_ENUM_ITEM(vol_,power)
   {0, 0}};
 
 /*
@@ -59,7 +59,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   }
 
   if (have_type) {
-    sox_enum_item const * p = sox_find_enum_text(type_ptr, vol_types);
+    lsx_enum_item const * p = lsx_find_enum_text(type_ptr, vol_types);
     if (!p)
       return lsx_usage(effp);
     switch (p->value) {
@@ -168,7 +168,7 @@ static int stop(sox_effect_t * effp)
 {
   priv_t * vol = (priv_t *) effp->priv;
   if (vol->limited) {
-    sox_warn("limited %d values (%d percent).",
+    lsx_warn("limited %d values (%d percent).",
          vol->limited, (int) (vol->limited * 100.0 / vol->totalprocessed));
   }
   return SOX_SUCCESS;

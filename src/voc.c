@@ -291,7 +291,7 @@ static int startread(sox_format_t * ft)
       v->size = 4;
       break;
     default:
-      sox_fail("Unknown VOC format %d", v->format);
+      lsx_fail("Unknown VOC format %d", v->format);
       rtn = SOX_EOF;
       break;
   }
@@ -348,7 +348,7 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
       if (v->size <= 4) {
         if (!v->adpcm.setup.sign) {
           if (lsx_readb(ft, &uc) == SOX_EOF) {
-            sox_warn("VOC input: short file");
+            lsx_warn("VOC input: short file");
             v->block_remaining = 0;
             return done;
           }
@@ -359,7 +359,7 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
           ++done;
         }
         if (lsx_readb(ft, &uc) == SOX_EOF) {
-          sox_warn("VOC input: short file");
+          lsx_warn("VOC input: short file");
           v->block_remaining = 0;
           return done;
         }
@@ -405,7 +405,7 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
         switch (v->size) {
           case 8:
             if (lsx_readb(ft, &uc) == SOX_EOF) {
-              sox_warn("VOC input: short file");
+              lsx_warn("VOC input: short file");
               v->block_remaining = 0;
               return done;
             }
@@ -420,7 +420,7 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
           case 16:
             lsx_readsw(ft, &sw);
             if (lsx_eof(ft)) {
-              sox_warn("VOC input: short file");
+              lsx_warn("VOC input: short file");
               v->block_remaining = 0;
               return done;
             }
@@ -656,7 +656,7 @@ static int getblock(sox_format_t * ft)
           int8_t c                /*, line_buf[80];
                                  * int len = 0 */ ;
 
-          sox_warn("VOC TEXT");
+          lsx_warn("VOC TEXT");
           while (i--) {
             lsx_readsb(ft, &c);
             /* FIXME: this needs to be tested but I couldn't
@@ -666,7 +666,7 @@ static int getblock(sox_format_t * ft)
              if (len && (c == '\0' || c == '\r' ||
              i == 0 || len == sizeof(line_buf) - 1))
              {
-             sox_report("%s", line_buf);
+             lsx_report("%s", line_buf);
              line_buf[len] = '\0';
              len = 0;
              }

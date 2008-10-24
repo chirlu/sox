@@ -73,7 +73,7 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
   /* Start by checking the attack and decay rates */
   for (s = argv[0], commas = 0; *s; ++s) if (*s == ',') ++commas;
   if ((commas % 2) == 0) {
-    sox_fail("there must be an even number of attack/decay parameters");
+    lsx_fail("there must be an even number of attack/decay parameters");
     return SOX_EOF;
   }
   pairs = 1 + commas/2;
@@ -85,10 +85,10 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
   for (i = 0, s = strtok(argv[0], ","); s != NULL; ++i) {
     for (j = 0; j < 2; ++j) {
       if (sscanf(s, "%lf %c", &l->channels[i].attack_times[j], &dummy) != 1) {
-        sox_fail("syntax error trying to read attack/decay time");
+        lsx_fail("syntax error trying to read attack/decay time");
         return SOX_EOF;
       } else if (l->channels[i].attack_times[j] < 0) {
-        sox_fail("attack & decay times can't be less than 0 seconds");
+        lsx_fail("attack & decay times can't be less than 0 seconds");
         return SOX_EOF;
       }
       s = strtok(NULL, ",");
@@ -104,10 +104,10 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
   for (i = 0; i < l->expectedChannels; ++i) {
     double init_vol_dB = 0;
     if (n > 3 && sscanf(argv[3], "%lf %c", &init_vol_dB, &dummy) != 1) {
-      sox_fail("syntax error trying to read initial volume");
+      lsx_fail("syntax error trying to read initial volume");
       return SOX_EOF;
     } else if (init_vol_dB > 0) {
-      sox_fail("initial volume is relative to maximum volume so can't exceed 0dB");
+      lsx_fail("initial volume is relative to maximum volume so can't exceed 0dB");
       return SOX_EOF;
     }
     l->channels[i].volume = pow(10., init_vol_dB / 20);
@@ -115,10 +115,10 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
 
   /* If there is a delay, store it. */
   if (n > 4 && sscanf(argv[4], "%lf %c", &l->delay, &dummy) != 1) {
-    sox_fail("syntax error trying to read delay value");
+    lsx_fail("syntax error trying to read delay value");
     return SOX_EOF;
   } else if (l->delay < 0) {
-    sox_fail("delay can't be less than 0 seconds");
+    lsx_fail("delay can't be less than 0 seconds");
     return SOX_EOF;
   }
 

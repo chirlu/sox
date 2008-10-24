@@ -46,7 +46,7 @@ static int getopts(sox_effect_t * effp, int n, char UNUSED **argv)
 static int start(sox_effect_t * effp)
 {
   if (effp->out_signal.channels == 1) {
-    sox_fail("Can't run on mono data.");
+    lsx_fail("Can't run on mono data.");
     return SOX_EOF;
   }
 

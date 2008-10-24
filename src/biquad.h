@@ -74,7 +74,7 @@ int lsx_biquad_start(sox_effect_t * effp);
 int lsx_biquad_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                         size_t *isamp, size_t *osamp);
 
-#undef sox_fail
-#define sox_fail sox_globals.subsystem=effp->handler.name,sox_fail
+#undef lsx_fail
+#define lsx_fail sox_globals.subsystem=effp->handler.name,lsx_fail
 
 #endif

@@ -54,8 +54,8 @@ static int ossinit(sox_format_t * ft)
         if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
             ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
         if (ft->encoding.encoding != SOX_ENCODING_UNSIGNED) {
-            sox_report("OSS driver only supports unsigned with bytes");
-            sox_report("Forcing to unsigned");
+            lsx_report("OSS driver only supports unsigned with bytes");
+            lsx_report("Forcing to unsigned");
             ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
         }
     }
@@ -69,8 +69,8 @@ static int ossinit(sox_format_t * ft)
         if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
             ft->encoding.encoding = SOX_ENCODING_SIGN2;
         if (ft->encoding.encoding != SOX_ENCODING_SIGN2) {
-            sox_report("OSS driver only supports signed with words");
-            sox_report("Forcing to signed linear");
+            lsx_report("OSS driver only supports signed with words");
+            lsx_report("Forcing to signed linear");
             ft->encoding.encoding = SOX_ENCODING_SIGN2;
         }
     }
@@ -83,8 +83,8 @@ static int ossinit(sox_format_t * ft)
         samplesize = 16;
         ft->encoding.bits_per_sample = 16;
         ft->encoding.encoding = SOX_ENCODING_SIGN2;
-        sox_report("OSS driver only supports bytes and words");
-        sox_report("Forcing to signed linear word");
+        lsx_report("OSS driver only supports bytes and words");
+        lsx_report("Forcing to signed linear word");
     }
 
     if (ft->signal.channels > 2) ft->signal.channels = 2;
@@ -107,8 +107,8 @@ static int ossinit(sox_format_t * ft)
                 /* Must not like 16-bits, try 8-bits */
                 ft->encoding.bits_per_sample = 8;
                 ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
-                sox_report("OSS driver doesn't like signed words");
-                sox_report("Forcing to unsigned bytes");
+                lsx_report("OSS driver doesn't like signed words");
+                lsx_report("Forcing to unsigned bytes");
                 tmp = sampletype = AFMT_U8;
                 samplesize = 8;
             }
@@ -117,8 +117,8 @@ static int ossinit(sox_format_t * ft)
             {
                 ft->encoding.bits_per_sample = 16;
                 ft->encoding.encoding = SOX_ENCODING_SIGN2;
-                sox_report("OSS driver doesn't like unsigned bytes");
-                sox_report("Forcing to signed words");
+                lsx_report("OSS driver doesn't like unsigned bytes");
+                lsx_report("Forcing to signed words");
                 sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
                 samplesize = 16;
             }
@@ -151,14 +151,14 @@ static int ossinit(sox_format_t * ft)
     tmp = dsp_stereo;
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_STEREO, &tmp) < 0)
     {
-        sox_warn("Couldn't set to %s", dsp_stereo?  "stereo":"mono");
+        lsx_warn("Couldn't set to %s", dsp_stereo?  "stereo":"mono");
         dsp_stereo = 0;
     }
 
     if (tmp != dsp_stereo)
     {
       if (client_signal.channels != 0)
-        sox_warn("Sound card appears to support only %d channels.  Overriding format", tmp+1);
+        lsx_warn("Sound card appears to support only %d channels.  Overriding format", tmp+1);
         ft->signal.channels = tmp + 1;
     }
 
@@ -176,7 +176,7 @@ static int ossinit(sox_format_t * ft)
         if ((int)ft->signal.rate - tmp > (tmp * .01) ||
             tmp - (int)ft->signal.rate > (tmp * .01)) {
           if (client_signal.rate != 0)
-            sox_warn("Unable to set audio speed to %g (set to %d)",
+            lsx_warn("Unable to set audio speed to %g (set to %d)",
                      ft->signal.rate, tmp);
             ft->signal.rate = tmp;
         }

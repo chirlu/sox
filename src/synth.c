@@ -28,28 +28,28 @@ typedef enum {
   synth_brownnoise
 } type_t;
 
-static sox_enum_item const synth_type[] = {
-  ENUM_ITEM(synth_, sine)
-  ENUM_ITEM(synth_, square)
-  ENUM_ITEM(synth_, sawtooth)
-  ENUM_ITEM(synth_, triangle)
-  ENUM_ITEM(synth_, trapezium)
-  ENUM_ITEM(synth_, trapetz)
-  ENUM_ITEM(synth_, exp)
-  ENUM_ITEM(synth_, whitenoise)
-  ENUM_ITEM(synth_, noise)
-  ENUM_ITEM(synth_, pinknoise)
-  ENUM_ITEM(synth_, brownnoise)
+static lsx_enum_item const synth_type[] = {
+  LSX_ENUM_ITEM(synth_, sine)
+  LSX_ENUM_ITEM(synth_, square)
+  LSX_ENUM_ITEM(synth_, sawtooth)
+  LSX_ENUM_ITEM(synth_, triangle)
+  LSX_ENUM_ITEM(synth_, trapezium)
+  LSX_ENUM_ITEM(synth_, trapetz)
+  LSX_ENUM_ITEM(synth_, exp)
+  LSX_ENUM_ITEM(synth_, whitenoise)
+  LSX_ENUM_ITEM(synth_, noise)
+  LSX_ENUM_ITEM(synth_, pinknoise)
+  LSX_ENUM_ITEM(synth_, brownnoise)
   {0, 0}
 };
 
 typedef enum {synth_create, synth_mix, synth_amod, synth_fmod} combine_t;
 
-static sox_enum_item const combine_type[] = {
-  ENUM_ITEM(synth_, create)
-  ENUM_ITEM(synth_, mix)
-  ENUM_ITEM(synth_, amod)
-  ENUM_ITEM(synth_, fmod)
+static lsx_enum_item const combine_type[] = {
+  LSX_ENUM_ITEM(synth_, create)
+  LSX_ENUM_ITEM(synth_, mix)
+  LSX_ENUM_ITEM(synth_, amod)
+  LSX_ENUM_ITEM(synth_, fmod)
   {0, 0}
 };
 
@@ -258,10 +258,10 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   while (argn < argc) { /* type [combine] [f1[-f2] [p1 [p2 [p3 [p3 [p4]]]]]] */
     channel_t chan;
     char * end_ptr;
-    sox_enum_item const *p = sox_find_enum_text(argv[argn], synth_type);
+    lsx_enum_item const *p = lsx_find_enum_text(argv[argn], synth_type);
 
     if (p == NULL) {
-      sox_fail("no type given");
+      lsx_fail("no type given");
       return SOX_EOF;
     }
     synth->getopts_channels = lsx_realloc(synth->getopts_channels, sizeof(*synth->getopts_channels) * (synth->getopts_nchannels + 1));
@@ -272,7 +272,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
       break;
 
     /* maybe there is a combine-type in next arg */
-    p = sox_find_enum_text(argv[argn], combine_type);
+    p = lsx_find_enum_text(argv[argn], combine_type);
     if (p != NULL) {
       chan->combine = p->value;
       if (++argn == argc)
@@ -286,27 +286,27 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
       chan->freq2 = chan->freq = lsx_parse_frequency(argv[argn], &end_ptr);
       if (chan->freq < 0) {
-        sox_fail("invalid freq");
+        lsx_fail("invalid freq");
         return SOX_EOF;
       }
       if (*end_ptr && strchr(sweeps, *end_ptr)) {         /* freq2 given? */
         chan->sweep = strchr(sweeps, *end_ptr) - sweeps;
         chan->freq2 = lsx_parse_frequency(end_ptr + 1, &end_ptr);
         if (chan->freq2 < 0) {
-          sox_fail("invalid freq2");
+          lsx_fail("invalid freq2");
           return SOX_EOF;
         }
         if (synth->length_str == NULL) {
-          sox_fail("duration must be given when using freq2");
+          lsx_fail("duration must be given when using freq2");
           return SOX_EOF;
         }
       }
       if (*end_ptr) {
-        sox_fail("frequency: invalid trailing character");
+        lsx_fail("frequency: invalid trailing character");
         return SOX_EOF;
       }
       if (chan->sweep >= Exp && chan->freq * chan->freq2 == 0) {
-        sox_fail("invalid frequency for exponential sweep");
+        lsx_fail("invalid frequency for exponential sweep");
         return SOX_EOF;
       }
 
@@ -322,7 +322,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
       if (end_ptr == argv[argn]) \
         break; \
       if (d < min || d > max || *end_ptr != '\0') { \
-        sox_fail("parameter error"); \
+        lsx_fail("parameter error"); \
         return SOX_EOF; \
       } \
       chan->p = d / 100; /* adjust so abs(parameter) <= 1 */\
@@ -389,8 +389,8 @@ static int start(sox_effect_t * effp)
     }
     lsx_debug("type=%s, combine=%s, samples_to_do=%lu, f1=%g, f2=%g, "
               "offset=%g, phase=%g, p1=%g, p2=%g, p3=%g mult=%g",
-        sox_find_enum_value(chan->type, synth_type)->text,
-        sox_find_enum_value(chan->combine, combine_type)->text,
+        lsx_find_enum_value(chan->type, synth_type)->text,
+        lsx_find_enum_value(chan->combine, combine_type)->text,
         (unsigned long)synth->samples_to_do, chan->freq, chan->freq2,
         chan->offset, chan->phase, chan->p1, chan->p2, chan->p3, chan->mult);
   }

@@ -105,7 +105,7 @@ static int sox_chorus_getopts(sox_effect_t * effp, int n, char **argv)
         while ( i < n ) {
                 if ( chorus->num_chorus > MAX_CHORUS )
                 {
-                        sox_fail("chorus: to many delays, use less than %i delays", MAX_CHORUS);
+                        lsx_fail("chorus: to many delays, use less than %i delays", MAX_CHORUS);
                         return (SOX_EOF);
                 }
                 sscanf(argv[i++], "%f", &chorus->delay[chorus->num_chorus]);
@@ -137,17 +137,17 @@ static int sox_chorus_start(sox_effect_t * effp)
 
         if ( chorus->in_gain < 0.0 )
         {
-                sox_fail("chorus: gain-in must be positive!");
+                lsx_fail("chorus: gain-in must be positive!");
                 return (SOX_EOF);
         }
         if ( chorus->in_gain > 1.0 )
         {
-                sox_fail("chorus: gain-in must be less than 1.0!");
+                lsx_fail("chorus: gain-in must be less than 1.0!");
                 return (SOX_EOF);
         }
         if ( chorus->out_gain < 0.0 )
         {
-                sox_fail("chorus: gain-out must be positive!");
+                lsx_fail("chorus: gain-out must be positive!");
                 return (SOX_EOF);
         }
         for ( i = 0; i < chorus->num_chorus; i++ ) {
@@ -158,42 +158,42 @@ static int sox_chorus_start(sox_effect_t * effp)
 
                 if ( chorus->delay[i] < 20.0 )
                 {
-                        sox_fail("chorus: delay must be more than 20.0 msec!");
+                        lsx_fail("chorus: delay must be more than 20.0 msec!");
                         return (SOX_EOF);
                 }
                 if ( chorus->delay[i] > 100.0 )
                 {
-                        sox_fail("chorus: delay must be less than 100.0 msec!");
+                        lsx_fail("chorus: delay must be less than 100.0 msec!");
                         return (SOX_EOF);
                 }
                 if ( chorus->speed[i] < 0.1 )
                 {
-                        sox_fail("chorus: speed must be more than 0.1 Hz!");
+                        lsx_fail("chorus: speed must be more than 0.1 Hz!");
                         return (SOX_EOF);
                 }
                 if ( chorus->speed[i] > 5.0 )
                 {
-                        sox_fail("chorus: speed must be less than 5.0 Hz!");
+                        lsx_fail("chorus: speed must be less than 5.0 Hz!");
                         return (SOX_EOF);
                 }
                 if ( chorus->depth[i] < 0.0 )
                 {
-                        sox_fail("chorus: delay must be more positive!");
+                        lsx_fail("chorus: delay must be more positive!");
                         return (SOX_EOF);
                 }
                 if ( chorus->depth[i] > 10.0 )
                 {
-                    sox_fail("chorus: delay must be less than 10.0 msec!");
+                    lsx_fail("chorus: delay must be less than 10.0 msec!");
                     return (SOX_EOF);
                 }
                 if ( chorus->decay[i] < 0.0 )
                 {
-                        sox_fail("chorus: decay must be positive!" );
+                        lsx_fail("chorus: decay must be positive!" );
                         return (SOX_EOF);
                 }
                 if ( chorus->decay[i] > 1.0 )
                 {
-                        sox_fail("chorus: decay must be less that 1.0!" );
+                        lsx_fail("chorus: decay must be less that 1.0!" );
                         return (SOX_EOF);
                 }
                 chorus->length[i] = effp->in_signal.rate / chorus->speed[i];
@@ -218,7 +218,7 @@ static int sox_chorus_start(sox_effect_t * effp)
         for ( i = 0; i < chorus->num_chorus; i++ )
                 sum_in_volume += chorus->decay[i];
         if ( chorus->in_gain * ( sum_in_volume ) > 1.0 / chorus->out_gain )
-        sox_warn("chorus: warning >>> gain-out can cause saturation or clipping of output <<<");
+        lsx_warn("chorus: warning >>> gain-out can cause saturation or clipping of output <<<");
 
 
         chorus->chorusbuf = lsx_malloc(sizeof (float) * chorus->maxsamples);

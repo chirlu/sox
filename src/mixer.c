@@ -73,7 +73,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
                 if (*s == ',') {
                     ++commas;
                     if (commas >= 16) {
-                        sox_fail("mixer can only take up to 16 pan values");
+                        lsx_fail("mixer can only take up to 16 pan values");
                         return (SOX_EOF);
                     }
                     pans[commas] = atof(s+1);
@@ -169,14 +169,14 @@ static int start(sox_effect_t * effp)
      ichan = effp->in_signal.channels;
      ochan = effp->out_signal.channels;
      if (ochan == -1) {
-         sox_fail("Output must have known number of channels");
+         lsx_fail("Output must have known number of channels");
          return(SOX_EOF);
      }
 
      if ((ichan != 1 && ichan != 2 && ichan != 4 &&
           mixer->mix != MIX_CENTER && ochan != 1)
              ||  (ochan != 1 && ochan != 2 && ochan != 4)) {
-         sox_fail("Can't mix %d -> %d channels", ichan, ochan);
+         lsx_fail("Can't mix %d -> %d channels", ichan, ochan);
          return (SOX_EOF);
      }
 
@@ -203,7 +203,7 @@ static int start(sox_effect_t * effp)
              }
              else
              {
-                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
+                 lsx_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
              break;
@@ -224,7 +224,7 @@ static int start(sox_effect_t * effp)
              }
              else
              {
-                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
+                 lsx_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
              break;
@@ -245,7 +245,7 @@ static int start(sox_effect_t * effp)
              }
              else
              {
-                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
+                 lsx_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
              break;
@@ -266,7 +266,7 @@ static int start(sox_effect_t * effp)
              }
              else
              {
-                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
+                 lsx_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
              break;
@@ -287,7 +287,7 @@ static int start(sox_effect_t * effp)
              }
              else
              {
-                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
+                 lsx_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
              break;
@@ -308,7 +308,7 @@ static int start(sox_effect_t * effp)
              }
              else
              {
-                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
+                 lsx_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
              break;
@@ -324,7 +324,7 @@ static int start(sox_effect_t * effp)
              }
              else
              {
-                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
+                 lsx_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
              break;
@@ -340,7 +340,7 @@ static int start(sox_effect_t * effp)
              }
              else
              {
-                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
+                 lsx_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
              break;
@@ -348,7 +348,7 @@ static int start(sox_effect_t * effp)
          case MIX_SPECIFIED:
              break;
          default:
-             sox_fail("Unknown mix option");
+             lsx_fail("Unknown mix option");
              return SOX_EOF;
      }
 
@@ -398,7 +398,7 @@ static int start(sox_effect_t * effp)
              mixer->sources[3][1] = 0.5;
          }
          else {
-             sox_fail("You must specify at least one mix level when using mixer with an unusual number of channels.");
+             lsx_fail("You must specify at least one mix level when using mixer with an unusual number of channels.");
              return(SOX_EOF);
          }
      }
@@ -426,7 +426,7 @@ static int start(sox_effect_t * effp)
          }
          else
          {
-             sox_fail("Invalid options while not mixing");
+             lsx_fail("Invalid options while not mixing");
              return SOX_EOF;
          }
      }
@@ -453,12 +453,12 @@ static int start(sox_effect_t * effp)
          }
          else
          {
-             sox_fail("Invalid options for this channel combination");
+             lsx_fail("Invalid options for this channel combination");
              return SOX_EOF;
          }
      }
      else if (mixer->num_pans == 3) {
-       sox_fail("Invalid options while not mixing");
+       lsx_fail("Invalid options while not mixing");
        return SOX_EOF;
      }
      else if (mixer->num_pans == 4) {
@@ -479,7 +479,7 @@ static int start(sox_effect_t * effp)
          }
          else
          {
-             sox_fail("Invalid options for this channel combination");
+             lsx_fail("Invalid options for this channel combination");
              return SOX_EOF;
          }
      }

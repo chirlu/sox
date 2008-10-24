@@ -98,14 +98,14 @@ static int sox_noisered_start(sox_effect_t * effp)
     /* Here we actually open the input file. */
     if (!data->profile_filename || !strcmp(data->profile_filename, "-")) {
       if (effp->global_info->global_info->stdin_in_use_by) {
-        sox_fail("stdin already in use by '%s'", effp->global_info->global_info->stdin_in_use_by);
+        lsx_fail("stdin already in use by '%s'", effp->global_info->global_info->stdin_in_use_by);
         return SOX_EOF;
       }
       effp->global_info->global_info->stdin_in_use_by = effp->handler.name;
       ifp = stdin;
     }
     else if ((ifp = fopen(data->profile_filename, "r")) == NULL) {
-        sox_fail("Couldn't open profile file %s: %s",
+        lsx_fail("Couldn't open profile file %s: %s",
                 data->profile_filename, strerror(errno));
         return SOX_EOF;
     }
@@ -118,7 +118,7 @@ static int sox_noisered_start(sox_effect_t * effp)
             break;
         i1 = i1_ul;
         if (i1 != fchannels) {
-            sox_fail("noisered: Got channel %lu, expected channel %lu.",
+            lsx_fail("noisered: Got channel %lu, expected channel %lu.",
                     (unsigned long)i1, (unsigned long)fchannels);
             return SOX_EOF;
         }
@@ -126,7 +126,7 @@ static int sox_noisered_start(sox_effect_t * effp)
         data->chandata[fchannels].noisegate[0] = f1;
         for (i = 1; i < FREQCOUNT; i ++) {
             if (1 != fscanf(ifp, ", %f", &f1)) {
-                sox_fail("noisered: Not enough datums for channel %lu "
+                lsx_fail("noisered: Not enough datums for channel %lu "
                         "(expected %d, got %lu)", (unsigned long)fchannels, FREQCOUNT, (unsigned long)i);
                 return SOX_EOF;
             }
@@ -135,7 +135,7 @@ static int sox_noisered_start(sox_effect_t * effp)
         fchannels ++;
     }
     if (fchannels != channels) {
-        sox_fail("noisered: channel mismatch: %lu in input, %lu in profile.",
+        lsx_fail("noisered: channel mismatch: %lu in input, %lu in profile.",
                 (unsigned long)channels, (unsigned long)fchannels);
         return SOX_EOF;
     }

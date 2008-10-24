@@ -81,7 +81,7 @@ static void ImaExpandS(
         val = (short)(ip[0] + (ip[1]<<8)); /* need cast for sign-extend */
         state = ip[2];
         if (state > ISSTMAX) {
-                sox_warn("IMA_ADPCM block ch%d initial-state (%d) out of range", ch, state);
+                lsx_warn("IMA_ADPCM block ch%d initial-state (%d) out of range", ch, state);
                 state = 0;
         }
         /* specs say to ignore ip[3] , but write it as 0 */

@@ -113,7 +113,7 @@ static int start(sox_effect_t * effp)
   priv_t * p = (priv_t *)effp->priv;
   parse(effp, NULL, effp->in_signal.channels);
   if (effp->in_signal.channels < p->min_in_channels) {
-    sox_fail("too few input channels");
+    lsx_fail("too few input channels");
     return SOX_EOF;
   }
   return SOX_SUCCESS;

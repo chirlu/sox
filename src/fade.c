@@ -132,7 +132,7 @@ static int sox_fade_start(sox_effect_t * effp)
         if (!fade->out_stop) {
           fade->out_stop = effp->in_signal.length / effp->in_signal.channels;
           if (!fade->out_stop) {
-            sox_fail("cannot fade out: audio length is neither known nor given");
+            lsx_fail("cannot fade out: audio length is neither known nor given");
             return SOX_EOF;
           }
         }
@@ -163,7 +163,7 @@ static int sox_fade_start(sox_effect_t * effp)
     /* Sanity check for fade times vs total time */
     if (fade->in_stop > fade->out_start && fade->out_start != 0)
     { /* Fades too long */
-        sox_fail("Fade: End of fade-in should not happen before beginning of fade-out");
+        lsx_fail("Fade: End of fade-in should not happen before beginning of fade-out");
         return(SOX_EOF);
     } /* endif fade time sanity */
 
@@ -275,7 +275,7 @@ static int sox_fade_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp
     if (fade->do_out && fade->samplesdone < fade->out_stop &&
         !(fade->endpadwarned))
     { /* Warning about padding silence into end of sample */
-        sox_warn("Fade: warning: End time passed end-of-file. Padding with silence");
+        lsx_warn("Fade: warning: End time passed end-of-file. Padding with silence");
         fade->endpadwarned = 1;
     } /* endif endpadwarned */
 
