@@ -137,9 +137,8 @@ static sox_effect_t *user_efftab[MAX_USER_EFF];
 static sox_effects_chain_t *effects_chain = NULL;
 static sox_effect_t *save_output_eff = NULL;
 
-#define MAX_USER_EFF_CHAINS 256
-static struct { char *name; int argc; char *argv[FILENAME_MAX]; } user_effargs[MAX_USER_EFF_CHAINS][MAX_USER_EFF];
-static unsigned nuser_effects[MAX_USER_EFF_CHAINS];
+static struct { char *name; int argc; char *argv[FILENAME_MAX]; } (*user_effargs)[MAX_USER_EFF] = NULL;
+static unsigned *nuser_effects = NULL;
 static int current_eff_chain = 0;
 static int eff_chain_count = 0;
 static char *effects_filename = NULL;
@@ -589,7 +588,27 @@ static void add_effect(sox_effects_chain_t *chain, char const *name,
     exit(2); /* The effects chain should have displayed an error message */
 }
 
-static void delete_user_effargs(void)
+static void init_eff_chains(void)
+{
+  user_effargs = lsx_malloc(sizeof(user_effargs[0][0]) * MAX_USER_EFF);
+  nuser_effects = lsx_malloc(sizeof(*nuser_effects));
+  nuser_effects[0] = 0;
+} /* init_eff_chains */
+
+/* add_eff_chain() - NOTE: this only adds memory for one 
+ * additional effects chain beyond value of eff_chain_count.  It
+ * does not unconditionally increase size of effects chain.
+ */
+static void add_eff_chain(void)
+{
+  user_effargs = lsx_realloc(user_effargs, (eff_chain_count+1) *
+                             sizeof(user_effargs[0][0]) * MAX_USER_EFF);
+  nuser_effects = lsx_realloc(nuser_effects, (eff_chain_count+1) *
+                              sizeof(*nuser_effects));
+  nuser_effects[eff_chain_count] = 0;
+} /* add_eff_chain */
+
+static void delete_eff_chains(void)
 {
   unsigned j;
   int i, k;
@@ -611,8 +630,12 @@ static void delete_user_effargs(void)
     }
     nuser_effects[i] = 0;
   }
+  free(user_effargs);
+  free(nuser_effects);
+  user_effargs = NULL;
+  nuser_effects = NULL;
   eff_chain_count = 0;
-} /* delete_user_effargs */
+} /* delete_eff_chains */
 
 static sox_bool is_pseudo_effect(char *s)
 {
@@ -626,16 +649,10 @@ static sox_bool is_pseudo_effect(char *s)
 
 static void parse_effects(int argc, char **argv)
 {
-  nuser_effects[eff_chain_count] = 0;
   while (optind < argc) {
     unsigned eff_offset;
     int j;
     int newline_mode = 0;
-
-    if (eff_chain_count >= MAX_USER_EFF_CHAINS) {
-      sox_fail("too many effects chains specified (at most %i allowed)", MAX_USER_EFF_CHAINS);
-      exit(1);
-    }
 
     eff_offset = nuser_effects[eff_chain_count];
     if (eff_offset >= MAX_USER_EFF) {
@@ -650,7 +667,10 @@ static void parse_effects(int argc, char **argv)
        * Error checking will be done when loop is restarted.
        */
       if (nuser_effects[eff_chain_count] != 0)
-        nuser_effects[++eff_chain_count] = 0;
+      {
+        eff_chain_count++;
+        add_eff_chain();
+      }
       optind++;
       continue;
     }
@@ -663,7 +683,8 @@ static void parse_effects(int argc, char **argv)
        */
       if (nuser_effects[eff_chain_count] != 0)
       {
-        nuser_effects[++eff_chain_count] = 0;
+        eff_chain_count++;
+        add_eff_chain();
         continue;
       }
       newline_mode = 1;
@@ -676,7 +697,8 @@ static void parse_effects(int argc, char **argv)
        */
       if (nuser_effects[eff_chain_count] != 0)
       {
-        nuser_effects[++eff_chain_count] = 0;
+        eff_chain_count++;
+        add_eff_chain();
         continue;
       }
       newline_mode = 1;
@@ -694,7 +716,8 @@ static void parse_effects(int argc, char **argv)
     if (newline_mode) 
     {
       output_method = sox_multiple;
-      nuser_effects[++eff_chain_count] = 0;
+      eff_chain_count++;
+      add_eff_chain();
     }
   }
 } /* parse_effects */
@@ -762,8 +785,12 @@ static void read_user_effects(char *filename)
     char *argv[FILENAME_MAX];
     int len;
 
-    delete_user_effargs();
+    /* Free any command line options and then re-initialize to
+     * starter user_effargs.
+     */
+    delete_eff_chains();
     current_eff_chain = 0;
+    init_eff_chains();
 
     if (file == NULL)
     {
@@ -794,11 +821,15 @@ static void read_user_effects(char *filename)
        */
       optind = 0;
       parse_effects(argc, argv);
+
       /* Advance to next effect but only if current chain has been
        * filled in.  This recovers from side affects of psuedo-effects.
        */
       if (nuser_effects[eff_chain_count] > 0)
+      {
         eff_chain_count++;
+        add_eff_chain();
+      }
     }
 
     fclose(file);
@@ -2378,10 +2409,17 @@ int main(int argc, char **argv)
     set_replay_gain(files[i]->ft->oob.comments, files[i]);
   signal(SIGINT, SIG_DFL);
 
+  init_eff_chains();
+
   /* Loop through the rest of the arguments looking for effects */
   parse_effects(argc, argv);
   if (eff_chain_count == 0 || nuser_effects[eff_chain_count] > 0)
+  {
     eff_chain_count++;
+    /* Note: Purposely not calling add_eff_chain() to save some
+     * memory although it would be more consistent to do so.
+     */
+  }
 
   /* Not the best way for users to do this; now deprecated in favour of soxi. */
   if (!show_progress && !nuser_effects[current_eff_chain] && 
@@ -2427,7 +2465,7 @@ int main(int argc, char **argv)
   }
 
   sox_delete_effects_chain(effects_chain);
-  delete_user_effargs();
+  delete_eff_chains();
 
   for (i = 0; i < file_count; ++i)
     if (files[i]->ft->clips != 0)
