@@ -824,11 +824,8 @@ int sox_close(sox_format_t * ft)
     else result = ft->handler.stopwrite? (*ft->handler.stopwrite)(ft) : SOX_SUCCESS;
   }
 
-  if (ft->fp && ft->fp != stdin && ft->fp != stdout &&
-      xfclose(ft->fp, ft->is_process) && ft->is_process) {
-    lsx_fail("error reading file URL `%s'", ft->filename);
-    result = SOX_EOF;
-  }
+  if (ft->fp && ft->fp != stdin && ft->fp != stdout)
+    xfclose(ft->fp, ft->is_process);
   free(ft->filename);
   free(ft->filetype);
   sox_delete_comments(&ft->oob.comments);
