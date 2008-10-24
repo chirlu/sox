@@ -63,6 +63,7 @@ Effects:
   o Fix broken audio pass-through with noiseprof effect.  (robs)
   o Fix graph legend display when using --plot octave.  (robs)
   o Fix rare crash with `rate' effect.  (robs)
+  o Fix [2190767] `norm' under-amplifying in some cases.  (George Yohng)
   o Trim will now skip past 2G point correctly. (cbagwell)
 
 Other new features:
