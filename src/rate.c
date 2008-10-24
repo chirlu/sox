@@ -299,7 +299,7 @@ static void fir_to_phase(double * * h, int * len,
   }
   for (i = 0; i < *len; ++i)
     (*h)[i] = work[begin + (phase0 > 50 ? *len - 1 - i : i)];
-  *post_len = begin + *len - (peak + 1);
+  *post_len = phase0 > 50 ? peak - begin : begin + *len - (peak + 1);
   free(work);
 }
 
