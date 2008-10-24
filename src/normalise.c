@@ -62,13 +62,13 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     lsx_fail("error writing temporary file: %s", strerror(errno));
     return SOX_EOF;
   }
-  if (p->balance) for (len = *osamp; len; --len, ++ibuf) {
+  if (p->balance) for (len = *isamp; len; --len, ++ibuf) {
     size_t dummy = 0;
     double d = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf, dummy);
     p->rms += sqr(d);
     ++p->num_samples;
   }
-  else for (len = *osamp; len; --len, ++ibuf) {
+  else for (len = *isamp; len; --len, ++ibuf) {
     p->max = max(p->max, *ibuf);
     p->min = min(p->min, *ibuf);
   }
