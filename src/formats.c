@@ -329,19 +329,30 @@ static sox_bool is_uri(char const * text)
   return *text == ':';
 }
 
-static int xfclose(FILE * file, sox_bool is_process)
+static int xfclose(FILE * file, lsx_io_type io_type)
 {
   return
 #ifdef HAVE_POPEN
-    is_process? pclose(file) :
+    io_type != lsx_io_file? pclose(file) :
 #endif
     fclose(file);
 }
 
-static FILE * xfopen(char const * identifier, char const * mode, sox_bool * is_process)
+static FILE * xfopen(char const * identifier, char const * mode, lsx_io_type * io_type)
 {
-  *is_process = sox_false;
-  if (is_uri(identifier)) {
+  *io_type = lsx_io_file;
+
+  if (*identifier == '|') {
+    FILE * f = NULL;
+#ifdef HAVE_POPEN
+    f = popen(identifier + 1, "r");
+    *io_type = lsx_io_pipe;
+#else
+    lsx_fail("this build of SoX cannot open pipes");
+#endif
+    return f;
+  }
+  else if (is_uri(identifier)) {
     FILE * f = NULL;
 #ifdef HAVE_POPEN
     char const * const command_format = "wget --no-check-certificate -q -O- \"%s\"";
@@ -349,7 +360,7 @@ static FILE * xfopen(char const * identifier, char const * mode, sox_bool * is_p
     sprintf(command, command_format, identifier);
     f = popen(command, "r");
     free(command);
-    *is_process = sox_true;
+    *io_type = lsx_io_url;
 #else
     lsx_fail("this build of SoX cannot open URLs");
 #endif
@@ -366,7 +377,8 @@ sox_format_t * sox_open_read(
 {
   sox_format_t * ft = lsx_calloc(1, sizeof(*ft));
   sox_format_handler_t const * handler;
-  char const * url = "";
+  char const * const io_types[] = {"file", "pipe", "file URL"};
+  char const * type = "";
 
   if (filetype) {
     if (!(handler = sox_find_format(filetype, sox_false))) {
@@ -390,10 +402,10 @@ sox_format_t * sox_open_read(
       ft->fp = stdin;
     }
     else {
-      ft->fp = xfopen(path, "rb", &ft->is_process);
-      url = ft->is_process? " URL" : "";
+      ft->fp = xfopen(path, "rb", &ft->io_type);
+      type = io_types[ft->io_type];
       if (ft->fp == NULL) {
-        lsx_fail("can't open input file%s `%s': %s", url, path, strerror(errno));
+        lsx_fail("can't open input %s `%s': %s", type, path, strerror(errno));
         goto error;
       }
     }
@@ -444,7 +456,7 @@ sox_format_t * sox_open_read(
     }
     ft->handler = *handler;
     if (ft->handler.flags & SOX_FILE_NOSTDIO) {
-      xfclose(ft->fp, ft->is_process);
+      xfclose(ft->fp, ft->io_type);
       ft->fp = NULL;
     }
   }
@@ -467,7 +479,7 @@ sox_format_t * sox_open_read(
   ft->priv = lsx_calloc(1, ft->handler.priv_size);
   /* Read and write starters can change their formats. */
   if (ft->handler.startread && (*ft->handler.startread)(ft) != SOX_SUCCESS) {
-    lsx_fail("can't open input file%s `%s': %s", url, ft->filename, ft->sox_errstr);
+    lsx_fail("can't open input %s `%s': %s", type, ft->filename, ft->sox_errstr);
     goto error;
   }
 
@@ -479,11 +491,11 @@ sox_format_t * sox_open_read(
 
   if (sox_checkformat(ft) == SOX_SUCCESS)
     return ft;
-  lsx_fail("bad input format for file%s `%s': %s", url, ft->filename, ft->sox_errstr);
+  lsx_fail("bad input format for %s `%s': %s", type, ft->filename, ft->sox_errstr);
 
 error:
   if (ft->fp && ft->fp != stdin)
-    xfclose(ft->fp, ft->is_process);
+    xfclose(ft->fp, ft->io_type);
   free(ft->priv);
   free(ft->filename);
   free(ft->filetype);
@@ -785,7 +797,7 @@ sox_format_t * sox_open_write(
 
 error:
   if (ft->fp && ft->fp != stdout)
-    xfclose(ft->fp, ft->is_process);
+    xfclose(ft->fp, ft->io_type);
   free(ft->priv);
   free(ft->filename);
   free(ft->filetype);
@@ -825,7 +837,7 @@ int sox_close(sox_format_t * ft)
   }
 
   if (ft->fp && ft->fp != stdin && ft->fp != stdout)
-    xfclose(ft->fp, ft->is_process);
+    xfclose(ft->fp, ft->io_type);
   free(ft->filename);
   free(ft->filetype);
   sox_delete_comments(&ft->oob.comments);
@@ -856,7 +868,8 @@ static int strcaseends(char const * str, char const * end)
 
 sox_bool sox_is_playlist(char const * filename)
 {
-  return strcaseends(filename, ".m3u") || strcaseends(filename, ".pls");
+  return *filename != '|' && 
+    (strcaseends(filename, ".m3u") || strcaseends(filename, ".pls"));
 }
 
 int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * const listname)
@@ -867,8 +880,8 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
   char * text = lsx_malloc(text_length + 1);
   char * dirname = lsx_strdup(listname);
   char * slash_pos = LAST_SLASH(dirname);
-  sox_bool is_process;
-  FILE * file = xfopen(listname, "r", &is_process);
+  lsx_io_type io_type;
+  FILE * file = xfopen(listname, "r", &io_type);
   char * filename;
   int c, result = SOX_SUCCESS;
 
@@ -933,7 +946,7 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
       lsx_fail("error reading playlist file `%s': %s", listname, strerror(errno));
       result = SOX_EOF;
     }
-    if (xfclose(file, is_process) && is_process) {
+    if (xfclose(file, io_type) && io_type == lsx_io_url) {
       lsx_fail("error reading playlist file URL `%s'", listname);
       result = SOX_EOF;
     }

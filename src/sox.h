@@ -353,6 +353,8 @@ typedef struct {
   /* TBD: Non-decoded chunks, etc: */
 } sox_oob_t;                              /* Out Of Band data */
 
+typedef enum {lsx_io_file, lsx_io_pipe, lsx_io_url} lsx_io_type;
+
 struct sox_format {
   char             * filename;      /* File name */
   sox_signalinfo_t signal;          /* Signal specifications */
@@ -366,7 +368,7 @@ struct sox_format {
   int              sox_errno;       /* Failure error code */
   char             sox_errstr[256]; /* Failure error text */
   FILE             * fp;            /* File stream pointer */
-  sox_bool         is_process;      /* True/false if fp is from popen/fopen */
+  lsx_io_type      io_type;
   long             tell_off;
   long             data_start;
   sox_format_handler_t handler;     /* Format handler for this file */
