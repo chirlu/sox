@@ -130,6 +130,13 @@ records 10 seconds of stereo audio, and
 	rec -M take1.aiff take1-dub.aiff
 .EE
 records a new track in a multi-track recording.
+.EX
+	rec -r 44100 -2 -s -p silence 1 0.50 0.1% 1 10:00 0.1% | sox -p song.ogg silence 1 0.50 0.1% 1 2.0 0.1% : newfile : restart
+.EE
+records a stream of audio such as LP/cassette and splits in to multiple
+audio files at points with 2 seconds of silence.  Also does not start
+recording until it detects audio is playing and stops after it sees
+10 minutes of silence.
 .SP
 N.B.  Detailed explanations of how to use \fIall\fR SoX parameters, file
 formats, and effects can be found below in this manual, and in
