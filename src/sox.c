@@ -1455,12 +1455,11 @@ static int process(void)
 
   calculate_combiner_signal_parameters();
   set_combiner_and_output_encoding_parameters();
-
   calculate_output_signal_parameters();
 
   /* Now take account of any net speed change specified by user effects by
    * adjusting the nominal sample rate at the output of the combiner.  This
-   * cannot be done inside set_combiner_and_output_encoding_parameters since
+   * cannot be done inside calculate_combiner_signal_parameters since
    * it must be done after calculate_output_signal_parameters. */
   combiner_signal.rate *= sox_effects_globals.speed;
 
@@ -1592,8 +1591,12 @@ static void usage(char const * message)
 "-                        Pipe/redirect input/output (stdin/stdout); use with -t",
 "-d, --default-device     Use the default audio device (where available)",
 "-n, --null               Use the `null' file handler; e.g. with synth effect",
-"-p, --pipe               Alias for `-t sox -'",
+"-p, --sox-pipe           Alias for `-t sox -'",
+#ifdef HAVE_POPEN
+"\nSPECIAL FILENAMES (infile only):",
+"\"|program [options] ...\" Pipe input from external program (where supported)",
 "http://server/file       Use the given URL as input file (where supported)",
+#endif
 "",
 "GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):",
 "--buffer BYTES           Set the size of all processing buffers (default 8192)",
