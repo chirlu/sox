@@ -981,7 +981,8 @@ for more information.
 .SH EFFECTS
 In addition to converting and playing audio files, SoX can be used to
 invoke a number of audio `effects'.  Multiple effects may be applied
-by specifying them one after another at the end of the SoX command line.
+by specifying them one after another at the end of the SoX command line;
+forming an effects chain.
 Note that applying multiple effects in real-time (i.e. when playing audio)
 is likely to need a high performance computer; stopping other applications
 may alleviate performance issues should they occur.
@@ -990,6 +991,40 @@ Some of the SoX effects are primarily intended to be applied to a single
 instrument or `voice'.  To facilitate this, the \fBremix\fR effect and
 the global SoX option \fB\-M\fR can be used to isolate then recombine
 tracks from a multi-track recording.
+.SS Multiple Effect Chains
+A single effects chain is made up of one or more effects. Audio from
+the input in ran through the chain until either the input file reaches
+end of file or an effects in the chain requests to terminate the chain.
+.SP
+SoX supports running multiple effects chain over the input audio.
+In this case, when one chain indicates it is done processing audio
+the audio data is then sent through the next effects chain.  This
+continues until either no more effects chains exist or the input has
+reach end of file.
+.SP
+A effects chain is terminated by placing a
+.B :
+(colon) after an effect.  Any following effects are apart of a new effects chain.
+.SP
+There are a few pseudo-effects that aid using multiple effects chains.
+Examples are 
+.B newfile
+which will start writing to a new output file before moving to the
+next effects chain and 
+.B restart
+which will move back to the first effects chain.  Pseudo-effects
+must be specified as the first effect in a chain and as the only
+effect in a chain (they must have a 
+.B :
+before and after they are specified).
+.SP
+The following is an example of multiple effects chains.  It will split the
+input file into multiple files of 30 seconds in length.  Each output filename
+will have unique number in its name as documented in
+.B Output Files
+section.
+.EX
+	sox infile.wav output.wav trim 0 30 : newfile : restart
 .SS Common Notation And Parameters
 In the descriptions that follow,
 brackets [ ] are used to denote parameters that are optional, braces
