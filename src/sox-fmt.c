@@ -18,13 +18,12 @@
 #include "sox_i.h"
 #include <string.h>
 
-static char const magic[4] = ".SoX";
-static char const cigam[4] = "XoS.";
+static char const magic[2][4] = {".SoX", "XoS."};
 #define FIXED_HDR     (4 + 8 + 8 + 4 + 4) /* Without magic */
 
 static int startread(sox_format_t * ft)
 {
-  char     magic_[sizeof(magic)];
+  char     magic_[sizeof(magic[0])];
   uint32_t headers_bytes, num_channels, comments_bytes;
   uint64_t num_samples;
   double   rate;
@@ -32,8 +31,8 @@ static int startread(sox_format_t * ft)
   if (lsx_readdw(ft, (uint32_t *)&magic_))
     return SOX_EOF;
 
-  if (memcmp(magic, magic_, sizeof(magic))) {
-    if (memcmp(cigam, magic_, sizeof(magic))) {
+  if (memcmp(magic[MACHINE_IS_BIGENDIAN], magic_, sizeof(magic_))) {
+    if (memcmp(magic[MACHINE_IS_LITTLEENDIAN], magic_, sizeof(magic_))) {
       lsx_fail_errno(ft, SOX_EHDR, "can't find sox file format identifier");
       return SOX_EOF;
     }
@@ -78,7 +77,7 @@ static int write_header(sox_format_t * ft)
   size_t comments_bytes = (comments_len + 7) & ~7u; /* Multiple of 8 bytes */
   uint64_t size   = ft->olength? ft->olength : ft->signal.length;
   sox_bool error  = sox_false
-  ||lsx_writedw(ft, *(uint32_t *)&magic)
+  ||lsx_writedw(ft, *(uint32_t *)&magic[MACHINE_IS_BIGENDIAN])
   ||lsx_writedw(ft, FIXED_HDR + (unsigned)comments_bytes)
   ||lsx_writeqw(ft, size)
   ||lsx_writedf(ft, ft->signal.rate)
