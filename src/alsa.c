@@ -410,8 +410,8 @@ static int xrun_recovery(snd_pcm_t *handle, int err)
                 if (err < 0)
                     lsx_warn("Can't recovery from suspend, prepare failed: %s", snd_strerror(err));
             }
+            return 0;
         }
-        return 0;
     }
     return err;
 }
