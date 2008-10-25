@@ -19,7 +19,6 @@ Previously deprecated features (to be removed in future):
   Deprec-  Feature    [O(ption)]                           Removal
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
   -------  ----------------------  ----------------------  -------
-  14.0.0   E stretch               ~= tempo                14.2.0 + 6 months
   14.1.0   E resample              ~= rate                 2009-01-29
   14.1.0   E polyphase             ~= rate                 2009-01-29
   14.1.0   E rabbit                ~= rate                 2009-01-29

@@ -2764,6 +2764,36 @@ See also the
 .B remix
 effect.
 .TP
+\fBstretch \fIfactor\fR [\fIwindow fade shift fading\fR]
+Change the audio duration (but not its pitch).
+This effect is broadly equivalent to the
+.B tempo
+effect with (\fIfactor\fR inverted and)
+.I search
+set to zero, so in general, its results are comparatively poor;
+it is retained as it can sometimes out-perform
+.B tempo
+for small
+.IR factor s.
+.SP
+.I factor
+of stretching: >1 lengthen, <1 shorten duration.
+.I window
+size is in ms.  Default is 20ms.  The
+.I fade
+option, can be `lin'.
+.I shift
+ratio, in [0 1].  Default depends on stretch factor. 1
+to shorten, 0\*d8 to lengthen.  The
+.I fading
+ratio, in [0 0\*d5].  The amount of a fade's default depends on
+.I factor
+and \fIshift\fR.
+.SP
+See also the
+.B tempo
+effect.
+.TP
 \fBsynth\fR [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR] [[\fB%\fR]\fIfreq\fR[\fBk\fR][\fB:\fR\^|\^\fB+\fR\^|\^\fB/\fR\^|\^\fB\-\fR[\fB%\fR]\fIfreq2\fR[\fBk\fR]]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
 This effect can be used to generate fixed or swept frequency audio tones
 with various wave shapes, or to generate wide-band noise of various

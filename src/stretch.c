@@ -317,7 +317,7 @@ const sox_effect_handler_t *sox_stretch_effect_fn(void)
     "factor [window fade shift fading]\n"
     "       (expansion, frame in ms, lin/..., unit<1.0, unit<0.5)\n"
     "       (defaults: 1.0 20 lin ...)",
-    SOX_EFF_LENGTH | SOX_EFF_DEPRECATED,
+    SOX_EFF_LENGTH,
     getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
   return &handler;

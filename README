@@ -146,7 +146,8 @@ The audio effects/tools included in this release are as follows:
     o bend		Bend pitch at given times without changing tempo
     o pitch		Adjust pitch (= key) without changing tempo
     o speed		Adjust pitch & tempo together
-    o tempo		Adjust tempo without changing pitch
+    o stretch		Adjust tempo without changing pitch (simple alg.)
+    o tempo		Adjust tempo without changing pitch (WSOLA alg.)
 
   o Mastering effects
     o dither		Add dither noise to increase SNR of <= 16-bit audio
