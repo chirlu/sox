@@ -80,6 +80,8 @@ static char const * detect_magic(sox_format_t * ft, char const * ext)
   MAGIC(sf    , 0, 0, ""     , 0,  4, "\144\243\003\0")
   MAGIC(sf    , 0, 0, ""     , 0,  4, "\0\003\243\144")
   MAGIC(sf    , 0, 0, ""     , 0,  4, "\144\243\004\0")
+  MAGIC(sox   , 0, 0, ""     , 0,  4, ".SoX")
+  MAGIC(sox   , 0, 0, ""     , 0,  4, "XoS.")
 
   if (ext && !strcasecmp(ext, "snd"))
   MAGIC(sndr  , 7, 1, ""     , 0,  2, "\0")
