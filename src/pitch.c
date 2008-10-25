@@ -28,7 +28,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   double d;
   char dummy, arg[100], **argv2 = malloc(argc * sizeof(*argv2));
-  int ret, pos = (argc && !strcmp(*argv, "-q"))? 1 : 0;
+  int ret, pos = (argc > 1 && !strcmp(argv[1], "-q"))? 2 : 1;
 
   if (argc <= pos || sscanf(argv[pos], "%lf %c", &d, &dummy) != 1)
     return lsx_usage(effp);
