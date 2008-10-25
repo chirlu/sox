@@ -272,20 +272,28 @@ static void lsx_swapf(float * f)
     *f = u.f;
 }
 
-/* generic swap routine. Swap l and place in to f (datatype length = n) */
-static void swap(char const * l, char * f, size_t n)
+static void swap(void * data, size_t len)
 {
-    size_t i;
+  uint8_t * bytes = (uint8_t *)data;
+  size_t i;
 
-    for (i= 0; i< n; i++)
-        f[i]= l[n-i-1];
+  for (i = 0; i < len / 2; ++i) {
+    char tmp = bytes[i];
+    bytes[i] = bytes[len - 1 - i];
+    bytes[len - 1 - i] = tmp;
+  }
 }
 
-static double lsx_swapdf(double df)
+static double lsx_swapdf(double data)
 {
-    double sdf;
-    swap((char *)&df, (char *)&sdf, (size_t) sizeof(double));
-    return (sdf);
+  swap(&data, sizeof(data));
+  return data;
+}
+
+static uint64_t lsx_swapqw(uint64_t data)
+{
+  swap(&data, sizeof(data));
+  return data;
 }
 
 /* Lookup table to reverse the bit order of a byte. ie MSB become LSB */
@@ -368,6 +376,7 @@ READ_FUNC(b, 1, uint8_t, TWIDDLE_BYTE)
 READ_FUNC(w, 2, uint16_t, TWIDDLE_WORD)
 READ_FUNC_UNPACK(3, 3, uint24_t, TWIDDLE_WORD)
 READ_FUNC(dw, 4, uint32_t, TWIDDLE_WORD)
+READ_FUNC(qw, 8, uint64_t, TWIDDLE_WORD)
 READ_FUNC(f, sizeof(float), float, TWIDDLE_FLOAT)
 READ_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
 
@@ -386,6 +395,7 @@ READ1_FUNC(b,  uint8_t)
 READ1_FUNC(w,  uint16_t)
 READ1_FUNC(3,  uint24_t)
 READ1_FUNC(dw, uint32_t)
+READ1_FUNC(qw, uint64_t)
 READ1_FUNC(f,  float)
 READ1_FUNC(df, double)
 
@@ -437,6 +447,7 @@ WRITE_FUNC(b, 1, uint8_t, TWIDDLE_BYTE)
 WRITE_FUNC(w, 2, uint16_t, TWIDDLE_WORD)
 WRITE_FUNC_PACK(3, 3, uint24_t, TWIDDLE_WORD)
 WRITE_FUNC(dw, 4, uint32_t, TWIDDLE_WORD)
+WRITE_FUNC(qw, 8, uint64_t, TWIDDLE_WORD)
 WRITE_FUNC(f, sizeof(float), float, TWIDDLE_FLOAT)
 WRITE_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
 
@@ -462,6 +473,7 @@ WRITE1U_FUNC(b, uint8_t)
 WRITE1U_FUNC(w, uint16_t)
 WRITE1U_FUNC(3, uint24_t)
 WRITE1U_FUNC(dw, uint32_t)
+WRITE1_FUNC(qw, uint64_t)
 WRITE1S_FUNC(b, uint8_t)
 WRITE1S_FUNC(w, uint16_t)
 WRITE1_FUNC(df, double)

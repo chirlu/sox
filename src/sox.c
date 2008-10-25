@@ -1588,8 +1588,9 @@ static void usage(char const * message)
   static char const * lines[] = {
 "SPECIAL FILENAMES (infile, outfile):",
 "-                        Pipe/redirect input/output (stdin/stdout); use with -t",
-"-d                       Use the default audio device (where available)",
-"-n                       Use the `null' file handler; e.g. with synth effect",
+"-d, --default-device     Use the default audio device (where available)",
+"-n, --null               Use the `null' file handler; e.g. with synth effect",
+"-p, --pipe               Alias for `-t sox -'",
 "http://server/file       Use the given URL as input file (where supported)",
 "",
 "GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):",
@@ -1785,7 +1786,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
   free(text);
 }
 
-static char *getoptstr = "+ab:c:de:fghimnoqr:st:uv:xABC:LMNRSTUV::X12348";
+static char *getoptstr = "+ab:c:de:fghimnopqr:st:uv:xABC:LMNRSTUV::X12348";
 
 static struct option long_options[] =
   {
@@ -1808,9 +1809,12 @@ static struct option long_options[] =
     {"bits"            , required_argument, NULL, 'b'},
     {"channels"        , required_argument, NULL, 'c'},
     {"compression"     , required_argument, NULL, 'C'},
+    {"default-device"  ,       no_argument, NULL, 'd'},
     {"encoding"        , required_argument, NULL, 'e'},
     {"help"            ,       no_argument, NULL, 'h'},
+    {"null"            ,       no_argument, NULL, 'n'},
     {"no-show-progress",       no_argument, NULL, 'q'},
+    {"pipe"            ,       no_argument, NULL, 'p'},
     {"rate"            , required_argument, NULL, 'r'},
     {"reverse-bits"    ,       no_argument, NULL, 'X'},
     {"reverse-nibbles" ,       no_argument, NULL, 'N'},
@@ -1989,7 +1993,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       sox_globals.repeatable = sox_true;
       break;
 
-    case 'd': case 'n':
+    case 'd': case 'n': case 'p':
       return c;
       break;
 
@@ -2195,6 +2199,12 @@ static void parse_options_and_filenames(int argc, char **argv)
     }
     else if (c == 'd') /* is default device? */
       add_file(&opts, set_default_device(&opts));
+    else if (c == 'p') { /* is sox pipe? */
+      if (opts.filetype != NULL && strcmp(opts.filetype, "sox") != 0)
+        lsx_warn("ignoring `-t %s'.", opts.filetype);
+      opts.filetype = "sox";
+      add_file(&opts, "-");
+    }
     else if (optind >= argc || sox_find_effect(argv[optind]))
       break;
     else if (!sox_is_playlist(argv[optind]))

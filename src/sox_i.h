@@ -124,6 +124,7 @@ size_t lsx_read_3_buf(sox_format_t * ft, uint24_t *buf, size_t len);
 size_t lsx_read_b_buf(sox_format_t * ft, uint8_t *buf, size_t len);
 size_t lsx_read_df_buf(sox_format_t * ft, double *buf, size_t len);
 size_t lsx_read_dw_buf(sox_format_t * ft, uint32_t *buf, size_t len);
+size_t lsx_read_qw_buf(sox_format_t * ft, uint64_t *buf, size_t len);
 size_t lsx_read_f_buf(sox_format_t * ft, float *buf, size_t len);
 size_t lsx_read_w_buf(sox_format_t * ft, uint16_t *buf, size_t len);
 
@@ -131,6 +132,7 @@ size_t lsx_write_3_buf(sox_format_t * ft, uint24_t *buf, size_t len);
 size_t lsx_write_b_buf(sox_format_t * ft, uint8_t *buf, size_t len);
 size_t lsx_write_df_buf(sox_format_t * ft, double *buf, size_t len);
 size_t lsx_write_dw_buf(sox_format_t * ft, uint32_t *buf, size_t len);
+size_t lsx_write_qw_buf(sox_format_t * ft, uint64_t *buf, size_t len);
 size_t lsx_write_f_buf(sox_format_t * ft, float *buf, size_t len);
 size_t lsx_write_w_buf(sox_format_t * ft, uint16_t *buf, size_t len);
 
@@ -139,6 +141,7 @@ int lsx_readb(sox_format_t * ft, uint8_t * ub);
 int lsx_readchars(sox_format_t * ft, char * chars, size_t len);
 int lsx_readdf(sox_format_t * ft, double * d);
 int lsx_readdw(sox_format_t * ft, uint32_t * udw);
+int lsx_readqw(sox_format_t * ft, uint64_t * udw);
 int lsx_readf(sox_format_t * ft, float * f);
 int lsx_readw(sox_format_t * ft, uint16_t * uw);
 
@@ -151,6 +154,7 @@ int lsx_write3(sox_format_t * ft, unsigned u3);
 int lsx_writeb(sox_format_t * ft, unsigned ub);
 int lsx_writedf(sox_format_t * ft, double d);
 int lsx_writedw(sox_format_t * ft, unsigned udw);
+int lsx_writeqw(sox_format_t * ft, uint64_t uqw);
 int lsx_writef(sox_format_t * ft, double f);
 int lsx_writew(sox_format_t * ft, unsigned uw);
 

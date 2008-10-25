@@ -445,7 +445,11 @@ sox_format_t * sox_open_read(
       }
     }
     else {
-      if (!(filetype = lsx_find_file_extension(path))) {
+      if (ft->io_type == lsx_io_pipe) {
+        filetype = "sox";
+        lsx_report("assuming input pipe `%s' has file-type `sox'", path);
+      }
+      else if (!(filetype = lsx_find_file_extension(path))) {
         lsx_fail("can't determine type of `%s'", path);
         goto error;
       }
@@ -781,7 +785,7 @@ sox_format_t * sox_open_write(
     ft->signal.length = ft->signal.length * ft->signal.rate / signal->rate *
       ft->signal.channels / signal->channels + .5;
 
-  if ((ft->handler.flags & SOX_FILE_REWIND) && !ft->signal.length && !ft->seekable)
+  if ((ft->handler.flags & SOX_FILE_REWIND) && strcmp(ft->filetype, "sox") && !ft->signal.length && !ft->seekable)
     lsx_warn("can't seek in output file `%s'; length in file header will be unspecified", ft->filename);
 
   ft->priv = lsx_calloc(1, ft->handler.priv_size);
@@ -992,7 +996,10 @@ static int init_format(const char *file, lt_ptr data)
 
 int sox_format_init(void) /* Find & load format handlers.  */
 {
+  sox_format_handler_t const * sox_sox_format_fn(void);
   int ret;
+
+  sox_format_fns[nformats++].fn = sox_sox_format_fn;
 
   if ((ret = lt_dlinit()) != 0) {
     lsx_fail("lt_dlinit failed with %d error(s): %s", ret, lt_dlerror());

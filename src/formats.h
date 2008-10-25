@@ -48,6 +48,7 @@
   FORMAT(smp)
   FORMAT(sounder)
   FORMAT(soundtool)
+  FORMAT(sox)
   FORMAT(sphere)
   FORMAT(svx)
   FORMAT(txw)
