@@ -537,7 +537,7 @@ The following special filenames may be used in certain circumstances
 in place of a normal filename on the command line:
 .TP
 \fB\-\fR
-SoX can be used in pipeline operations by using the special
+SoX can be used in simple pipeline operations by using the special
 filename `\-' which,
 if used in place of an input filename, will cause
 SoX will read audio data from `standard input' (stdin),
@@ -548,7 +548,41 @@ Note that when using this option, the file-type (see
 .B \-t
 below) must also be given.
 .TP
-\fB\-d\fR
+\fB\(dq|\fIprogram \fR[\fIoptions\fR] ...\fB\(dq\fR
+This can be used in place of an input filename to specify the
+the given program's standard output (stdout) be used as an input file.
+Unlike
+.B \-
+(above), this can be used for several inputs to one SoX command.  For
+example, if `genw' generates mono WAV formatted signals to its
+standard output, then the following command makes a stereo file
+from two generated signals:
+.EX
+  sox -M -t wav "|genw --imd -" -t wav "|genw --thd -" out.wav
+.EE
+If
+.B \-t
+is not given then the signal is assumed (and checked) to be in SoX's
+native
+.B .sox
+format (see
+.B \-p
+below and
+.BR soxformat (7)).
+.TP
+\fB\-p\fR, \fB\-\-sox\-pipe\fR
+This can be used in place of an output filename to specify that
+the SoX command should be used as in input pipe to another SoX command.
+For example, the command:
+.EX
+  play "|sox -n -p synth 2" "|sox -n -p synth 2 tremolo 10" stat
+.EE
+plays two `files' in succession, each with different effects.
+.SP
+.B \-p
+is in fact an alias for `\fB\-t sox \-\fR'.
+.TP
+\fB\-d\fR, \fB\-\-default\-device\fR
 This can be used in place of an input or output filename to specify that
 the default audio device (if one has been built into SoX) is to be used.
 This is akin to invoking
@@ -557,7 +591,7 @@ or
 .B play
 (as described above).
 .TP
-\fB\-n\fR
+\fB\-n\fR, \fB\-\-null\fR
 This can be used in place of an input or output filename to specify that
 a `null file' is to be used.  Note that here, `null file' refers to a
 SoX-specific mechanism and is not related to any operating-system

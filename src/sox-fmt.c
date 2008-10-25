@@ -61,7 +61,12 @@ static int startread(sox_format_t * ft)
     sox_append_comments(&ft->oob.comments, buf);
     free(buf);
   }
+  
+  /* Consume any bytes after the comments and before the start of the audio
+   * block.  These may include comment padding up to a multiple of 8 bytes,
+   * and further header information that might be defined in future. */
   lsx_seeki(ft, (off_t)(headers_bytes - FIXED_HDR - comments_bytes), SEEK_CUR);
+
   return lsx_check_read_params(
       ft, num_channels, rate, SOX_ENCODING_SIGN2, 32, (off_t)num_samples);
 }

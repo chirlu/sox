@@ -507,6 +507,21 @@ An alias for the
 .B .u1
 raw format.
 .TP
+.B .sox
+SoX's native uncompressed PCM format, intended for storing (or piping)
+audio at intermediate processing points (i.e. between SoX invocations).
+It has much in common with the popular WAV, AIFF, and AU uncompressed PCM
+formats, but has the following specific characteristics: the PCM samples
+are always stored as 32 bit signed integers, the samples are stored (by
+default) as `native endian', and the number of samples in the file is
+recorded as a 64-bit integer.  Comments are also supported.
+.SP
+See `Special Filenames' in
+.BR sox (1)
+for examples of using the
+.B .sox
+format with `pipes'.
+.TP
 \fBsunau\fR (optional)
 Sun /dev/audio device driver; supports both playing and
 recording audio.  For example:

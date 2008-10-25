@@ -39,12 +39,13 @@ Newly deprecated features (to be removed in future):
 File formats:
 
   o New unfiltered CVSD; supports any bit-rate.  (robs)
+  o New `.sox' native format intended for intermediate files.  (robs)
   o Fix WAV write on 64-bit arch.  (robs)
   o Fix writing PRC ADPCM files.  (Silas Brown)
 
 Effects:
 
-  o N.B. Changed to better default settings for `rate' effect;
+  o N.B. Changed to different default settings for `rate' effect;
     add -s -L options to be compatible with SoX v14.1.0.  (robs)
   o New options for `rate' effect to configure phase response,
     band-width and aliasing.  (robs)
@@ -71,6 +72,8 @@ Other new features:
     multiple effect chains on a single file.  newfile will
     create a new output file when an effect chain terminates.
     Of most use with trim and silence effects. (cbagwell)
+  o Can now use multiple pipes as inputs to the combiner;
+    see `Special Filenames' in sox(1).  (robs)
   o Display SoX build environment information with -V -V.  (robs)
   o Display (with -V) the detected file-type if it differs from the 
     file extension.  (robs)

@@ -11,19 +11,20 @@ Mantainers:
 		ALSA/OSS/Sun/MacOS X play/record support, initial ADPCM,
 		bugfixes, patch collection and general maintenance.
 	Rob Sykes		robs@users.sourceforge.net
-                FORMATS: M3U, PLS, FLAC, AMR, HTK, WavPack, VOX/IMA/VOC ADPCM
-                support, 24bit support for popular formats, MP3 tags & duration
-                support.
+		FORMATS: M3U, PLS, FLAC, AMR, HTK, WavPack, VOX/IMA/VOC ADPCM
+		support, 24bit support for popular formats, MP3 tags & duration
+		support, .sox native format.
 		EFFECTS: tempo, pad, bass, bend, treble, delay, new reverb, new
 		flanger, soft-knee companding, speed via resampling, filters
 		makeover inc. gnuplot & octave plotting, splice, remix, norm,
 		contrast, new rate, spectrogram, new pitch, riaa, loudness;
-                new effects chain with buffering and any # channels.
-                OTHERS: open input files via URL, file merge, play
-                multiple files with mixed format types, play with replay-gain,
-                building with cmake, much manual improvement and expansion,
+		new effects chain with buffering and any # channels.
+		OTHERS: open input files via URL, file merge, play
+		multiple files with mixed format types, play with replay-gain,
+		building with cmake, much manual improvement and expansion,
 		soxi, improved displays with -S & -V including VU and clips,
-                libSoX examples, various fixes, enhancements and clean-ups.
+		libSoX examples, various fixes, enhancements and clean-ups,
+		multiple input pipes.
 
 Contributors:
 	Reuben Thomas		rrt@sc3d.org
@@ -71,8 +72,8 @@ Contributors:
 		Raw textual data
 	Boisy G. Pitre          boisy@microware.com
 		OS9 port.
-        Sun Microsystems, Guido Van Rossum
-	        CCITT G.711, G.721, G.723 implementation
+	Sun Microsystems, Guido Van Rossum
+		CCITT G.711, G.721, G.723 implementation
 	Graeme Gill		graeme@labtam.labtam.oz.au
 		A-LAW format, Good .WAV handling, avg channel
 		expansion.
