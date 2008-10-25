@@ -1375,11 +1375,6 @@ static void calculate_combiner_signal_parameters(void)
     combiner_signal.channels =
       combine_method == sox_merge? total_channels : max_channels;
   }
-
-  /* Now take account of any net speed change specified by user effects by
-   * adjusting the nominal sample rate at the output of the combiner: */
-  combiner_signal.rate *= sox_effects_globals.speed;
-
 } /* calculate_combiner_signal_parameters */
 
 static void calculate_output_signal_parameters(void)
@@ -1462,6 +1457,13 @@ static int process(void)
   set_combiner_and_output_encoding_parameters();
 
   calculate_output_signal_parameters();
+
+  /* Now take account of any net speed change specified by user effects by
+   * adjusting the nominal sample rate at the output of the combiner.  This
+   * cannot be done inside set_combiner_and_output_encoding_parameters since
+   * it must be done after calculate_output_signal_parameters. */
+  combiner_signal.rate *= sox_effects_globals.speed;
+
   open_output_file();
 
   if (!effects_chain)
