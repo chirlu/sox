@@ -502,16 +502,16 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t nsamp)
 
     len = 0;
     while (len < nsamp) {
-      size_t n = snd_pcm_readi(alsa->pcm_handle, alsa->buf,
+      long n = snd_pcm_readi(alsa->pcm_handle, alsa->buf,
           (nsamp - len)/ft->signal.channels); /* ALSA takes "frame" counts. */
-      if ((int)n < 0) {
-        if (xrun_recovery(alsa->pcm_handle, (int)n) < 0) {
+      if (n < 0) {
+        if (xrun_recovery(alsa->pcm_handle, n) < 0) {
           lsx_fail_errno(ft, SOX_EPERM, "ALSA read error");
           return 0;
         }
       } else {
         n *= ft->signal.channels;
-        read_buf(buf + len, alsa->buf, n, ft->encoding.reverse_bytes, &ft->clips);
+        read_buf(buf + len, alsa->buf, (size_t)n, ft->encoding.reverse_bytes, &ft->clips);
         len += n;
       }
     }
