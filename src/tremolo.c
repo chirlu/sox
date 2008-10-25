@@ -22,7 +22,7 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
   double speed, depth = 40;
   char dummy;     /* To check for extraneous chars. */
   char offset[100];
-  char * args[] = {"sine", "fmod", 0, 0};
+  char * args[] = {"sine", "fmod", 0, 0, "25"};
 
   if (n < 1 || n > 2 ||
       sscanf(argv[0], "%lf %c", &speed, &dummy) != 1 || speed < 0 ||
