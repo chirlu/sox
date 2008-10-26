@@ -1047,8 +1047,19 @@ A effects chain is terminated by placing a
 .B :
 (colon) after an effect.  Any following effects are apart of a new effects chain.
 .SP
+It is important to place the effect that will stop the chain
+as the first effect in the chain.  This is because any samples
+that are buffered by effects to the left of the terminating effect
+will be discarded.  The amount of samples discarded is related to the
+.B --buffer
+option and it should be keep small, relative to the sample rate, if
+the terminating effect can not be first.  Further information on 
+stopping effects can be found in the 
+.B Stopping SoX
+section.
+.SP
 There are a few pseudo-effects that aid using multiple effects chains.
-Examples are 
+These include 
 .B newfile
 which will start writing to a new output file before moving to the
 next effects chain and 
