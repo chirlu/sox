@@ -28,9 +28,9 @@ static int32_t ft_read_b_buf(void * ft, void * buf, int32_t len) {
 static uint32_t ft_tell(void * ft) {
   return lsx_tell((sox_format_t *)ft);}
 static int ft_seek_abs(void * ft, uint32_t offset) {
-  return lsx_seeki((sox_format_t *)ft, (ptrdiff_t)offset, SEEK_SET);}
+  return lsx_seeki((sox_format_t *)ft, (off_t)offset, SEEK_SET);}
 static int ft_seek_rel(void * ft, int32_t offset, int mode) {
-  return lsx_seeki((sox_format_t *)ft, (ptrdiff_t)offset, mode);}
+  return lsx_seeki((sox_format_t *)ft, (off_t)(ptrdiff_t)offset, mode);}
 static int ft_unreadb(void * ft, int b) {
   return lsx_unreadb((sox_format_t *)ft, (unsigned)b);}
 static uint32_t ft_filelength(void * ft) {
@@ -152,7 +152,7 @@ static int stop_write(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static int seek(sox_format_t * ft, size_t offset)
+static int seek(sox_format_t * ft, uint64_t offset)
 {
   priv_t * p = (priv_t *)ft->priv;
 
