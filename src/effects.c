@@ -33,7 +33,7 @@
 
 /* FIXME: Not thread safe using globals */
 sox_effects_globals_t sox_effects_globals =
-    {sox_plot_off, 1, &sox_globals};
+    {sox_plot_off, &sox_globals};
 
 /* Default effect handler functions for do-nothing situations: */
 
@@ -137,10 +137,6 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
   unsigned f;
   sox_effect_t eff0;  /* Copy of effect for flow 0 before calling start */
 
-  if (effp->handler.flags & SOX_EFF_NULL) {
-    lsx_report("has no effect (is a proxy effect)");
-    return SOX_SUCCESS;
-  }
   effp->global_info = &chain->global_info;
   effp->in_signal = *in;
   effp->out_signal = *out;

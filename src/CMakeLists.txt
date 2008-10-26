@@ -13,7 +13,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
   else(${ver} LESS 403)
     add_definitions(-Wtraditional-conversion)
   endif(${ver} LESS 403)
-  #add_definitions(-Werror)
+  add_definitions(-Werror)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 if (NOT EXTERNAL_GSM)
@@ -28,16 +28,16 @@ add_custom_command(
 
 # Format with: !xargs echo|tr ' ' '\n'|sort|column|expand|sed 's/^/  /'
 set(effects_srcs
-  bend            earwax          mixer           rate            stat
-  biquad          echo            noiseprof       remix           stretch
-  biquads         echos           noisered        repeat          swap
-  chorus          fade            normalise       resample        synth
-  compand         fft4g           output          reverb          tempo
-  compandt        filter          pad             reverse         tremolo
-  contrast        flanger         pan             silence         trim
-  dcshift         input           phaser          skeleff         vol
-  delay           loudness        pitch           speed
-  dither          mcompand        polyphas        splice
+  bend            earwax          mixer           remix           stretch
+  biquad          echo            noiseprof       repeat          swap
+  biquads         echos           noisered        resample        synth
+  chorus          fade            normalise       reverb          tempo
+  compand         fft4g           output          reverse         tremolo
+  compandt        filter          pad             silence         trim
+  contrast        flanger         pan             skeleff         vol
+  dcshift         input           phaser          speed
+  delay           loudness        polyphas        splice
+  dither          mcompand        rate            stat
 )
 set(formats_srcs
   8svx            dat             ima-fmt         s3-fmt          u3-fmt

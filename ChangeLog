@@ -38,7 +38,7 @@ Newly deprecated features (to be removed in future):
 
 File formats:
 
-  o New unfiltered CVSD; supports any bit-rate.  (robs)
+  o New `.cvu' unfiltered CVSD; supports any bit-rate.  (robs)
   o New `.sox' native format intended for intermediate files.  (robs)
   o Fix WAV write on 64-bit arch.  (robs)
   o Fix writing PRC ADPCM files.  (Silas Brown)
@@ -65,6 +65,7 @@ Effects:
   o Fix rare crash with `rate' effect.  (robs)
   o Fix [2190767] `norm' under-amplifying in some cases.  (George Yohng)
   o Trim will now skip past 2G point correctly. (cbagwell)
+  o Improved handling of speed changes in the effects chain.  (robs)
 
 Other new features:
 

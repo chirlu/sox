@@ -1,5 +1,5 @@
 /* libSoX Effect: Adjust the audio speed (pitch and tempo together)
- * (c) 2006 robs@users.sourceforge.net
+ * (c) 2006,8 robs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -24,22 +24,22 @@
 #include "sox_i.h"
 #include <string.h>
 
+typedef struct {
+  double factor;
+} priv_t;
+
 static int getopts(sox_effect_t * effp, int n, char * * argv)
 {
+  priv_t * p = (priv_t *) effp->priv;
   sox_bool is_cents = sox_false;
-  double speed;
-
-  /* Be quietly compatible with the old speed effect: */
-  if (n != 0 && strcmp(*argv, "-c") == 0)
-    is_cents = sox_true, ++argv, --n;
 
   if (n == 1) {
     char c, dummy;
-    int scanned = sscanf(*argv, "%lf%c %c", &speed, &c, &dummy);
+    int scanned = sscanf(*argv, "%lf%c %c", &p->factor, &c, &dummy);
     if (scanned == 1 || (scanned == 2 && c == 'c')) {
       is_cents |= scanned == 2;
-      if (is_cents || speed > 0) {
-        effp->global_info->speed *= is_cents? pow(2., speed/1200) : speed;
+      if (is_cents || p->factor > 0) {
+        p->factor = is_cents? pow(2., p->factor / 1200) : p->factor;
         return SOX_SUCCESS;
       }
     }
@@ -47,10 +47,30 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
   return lsx_usage(effp);
 }
 
+static int start(sox_effect_t * effp)
+{
+  priv_t * p = (priv_t *) effp->priv;
+
+  if (p->factor == 1)
+    return SOX_EFF_NULL;
+
+  effp->out_signal.rate = effp->in_signal.rate * p->factor;
+  return SOX_SUCCESS;
+}
+
+static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
+                sox_sample_t * obuf, size_t * isamp, size_t * osamp)
+{
+  size_t len = *isamp = *osamp = min(*isamp, *osamp);
+  memcpy(obuf, ibuf, len * sizeof(*osamp));
+  (void)effp;
+  return SOX_SUCCESS;
+}
+
 sox_effect_handler_t const * sox_speed_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "speed", "factor[c]", SOX_EFF_NULL | SOX_EFF_LENGTH,
-    getopts, 0, 0, 0, 0, 0, 0};
+    "speed", "factor[c]",SOX_EFF_NULL|SOX_EFF_MCHAN|SOX_EFF_RATE|SOX_EFF_LENGTH,
+    getopts, start, flow, 0, 0, 0, sizeof(priv_t)};
   return &handler;
 }

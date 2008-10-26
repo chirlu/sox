@@ -448,7 +448,6 @@ typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot} sox_plot_t;
 typedef struct sox_effect sox_effect_t;
 struct sox_effects_globals { /* Global parameters (for effects) */
   sox_plot_t plot;         /* To help the user choose effect & options */
-  double speed;            /* Gather up all speed changes here, then resample */
   sox_globals_t * global_info;
 };
 typedef struct sox_effects_globals sox_effects_globals_t;

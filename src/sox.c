@@ -1456,13 +1456,6 @@ static int process(void)
   calculate_combiner_signal_parameters();
   set_combiner_and_output_encoding_parameters();
   calculate_output_signal_parameters();
-
-  /* Now take account of any net speed change specified by user effects by
-   * adjusting the nominal sample rate at the output of the combiner.  This
-   * cannot be done inside calculate_combiner_signal_parameters since
-   * it must be done after calculate_output_signal_parameters. */
-  combiner_signal.rate *= sox_effects_globals.speed;
-
   open_output_file();
 
   if (!effects_chain)

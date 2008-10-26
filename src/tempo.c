@@ -1,5 +1,5 @@
-/* libSoX effect: change tempo (alter duration, maintain pitch)
- * Copyright (c) 2007 robs@users.sourceforge.net
+/* libSoX effect: change tempo (and duration) or pitch (maintain duration)
+ * Copyright (c) 2007,8 robs@users.sourceforge.net
  * Based on ideas from Olli Parviainen's SoundTouch Library.
  *
  * This library is free software; you can redistribute it and/or modify it
@@ -302,5 +302,57 @@ sox_effect_handler_t const * sox_tempo_effect_fn(void)
     SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_GETOPT,
     getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
+  return &handler;
+}
+
+/*---------------------------------- pitch -----------------------------------*/
+
+static int pitch_getopts(sox_effect_t * effp, int argc, char **argv)
+{
+  double d;
+  char dummy, arg[100], **argv2 = malloc(argc * sizeof(*argv2));
+  int result, pos = (argc > 1 && !strcmp(argv[1], "-q"))? 2 : 1;
+
+  if (argc <= pos || sscanf(argv[pos], "%lf %c", &d, &dummy) != 1)
+    return lsx_usage(effp);
+
+  d = pow(2., d / 1200);  /* cents --> factor */
+  sprintf(arg, "%g", 1 / d);
+  memcpy(argv2, argv, argc * sizeof(*argv2));
+  argv2[pos] = arg;
+  result = getopts(effp, argc, argv2);
+  free(argv2);
+  return result;
+}
+
+static int pitch_start(sox_effect_t * effp)
+{
+  priv_t * p = (priv_t *) effp->priv;
+  int result = start(effp);
+
+  effp->out_signal.rate = effp->in_signal.rate / p->factor;
+  return result;
+}
+
+sox_effect_handler_t const * sox_pitch_effect_fn(void)
+{
+  static sox_effect_handler_t handler;
+  handler = *sox_tempo_effect_fn();
+  handler.name = "pitch";
+  handler.usage = "[-q] shift-in-cents [segment-ms [search-ms [overlap-ms]]]",
+  handler.getopts = pitch_getopts;
+  handler.start = pitch_start;
+  handler.flags &= ~SOX_EFF_LENGTH;
+  return &handler;
+}
+
+/*------------------------- key (old name for pitch) -------------------------*/
+
+sox_effect_handler_t const * sox_key_effect_fn(void)
+{
+  static sox_effect_handler_t handler;
+  handler = *sox_pitch_effect_fn();
+  handler.name = "key";
+  handler.flags |= SOX_EFF_DEPRECATED;
   return &handler;
 }
