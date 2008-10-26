@@ -1645,8 +1645,10 @@ static void usage(char const * message)
 "--comment-file FILENAME  File containing comment text for the output file",
 ""};
 
-  display_SoX_version(stdout);
-  putchar('\n');
+  if (!(sox_globals.verbosity > 2)) {
+    display_SoX_version(stdout);
+    putchar('\n');
+  }
 
   if (message)
     fprintf(stderr, "Failed: %s\n\n", message);  /* N.B. stderr */
