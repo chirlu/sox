@@ -46,7 +46,8 @@ static int startread(sox_format_t * ft)
       lsx_readdw(ft, &comments_bytes))
     return SOX_EOF;
 
-  if (((headers_bytes + 4) & 7) || headers_bytes < FIXED_HDR + comments_bytes) {
+  if (((headers_bytes + 4) & 7) || headers_bytes < FIXED_HDR + comments_bytes ||
+      (num_channels > 65535)) /* Reserve top 16 bits */ {
     lsx_fail_errno(ft, SOX_EHDR, "invalid sox file format header");
     return SOX_EOF;
   }
@@ -94,8 +95,9 @@ SOX_FORMAT_HANDLER(sox)
   static char const * const names[] = {"sox", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 32, 0, 0};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
-    "SoX native", names, SOX_FILE_REWIND, startread, lsx_rawread, NULL,
-    write_header, lsx_rawwrite, NULL, lsx_rawseek, write_encodings, NULL, 0
+    "SoX native intermediate format", names, SOX_FILE_REWIND, 
+    startread, lsx_rawread, NULL, write_header, lsx_rawwrite, NULL,
+    lsx_rawseek, write_encodings, NULL, 0
   };
   return &handler;
 }
