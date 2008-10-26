@@ -30,7 +30,7 @@ static uint32_t ft_tell(void * ft) {
 static int ft_seek_abs(void * ft, uint32_t offset) {
   return lsx_seeki((sox_format_t *)ft, (off_t)offset, SEEK_SET);}
 static int ft_seek_rel(void * ft, int32_t offset, int mode) {
-  return lsx_seeki((sox_format_t *)ft, (off_t)(ptrdiff_t)offset, mode);}
+  return lsx_seeki((sox_format_t *)ft, (off_t)offset, mode);}
 static int ft_unreadb(void * ft, int b) {
   return lsx_unreadb((sox_format_t *)ft, (unsigned)b);}
 static uint32_t ft_filelength(void * ft) {
