@@ -71,7 +71,8 @@ check_file $tmp.au $tmp.j
 ./sox $tmp.flac $tmp.sf
 ./sox $tmp.sf $tmp.ogg
 ./sox $tmp.ogg $tmp.sndt
-./sox $tmp.sndt $tmp.au
+./sox $tmp.sndt $tmp.sox
+./sox $tmp.sox $tmp.au
 check_file $tmp.au $tmp.i
 
 rm -f $tmp.*

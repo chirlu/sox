@@ -49,4 +49,4 @@ test_converters 11025 48000
 test_converters 22000 96100
 test_converters 44100 96000
 test_converters 96000 44100
-#test_converters 96000 8000 # rabbit hangs
+test_converters 96000 8000 # rabbit 0.1.3 hangs, 0.1.4 is okay

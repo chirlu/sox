@@ -62,8 +62,6 @@ getFormat () {
   case $1 in
     al )  formatText="alaw" ;;
     ul )  formatText="ulaw" ;;
-    raw)  formatText="float"; formatFlags="-f -4" ;;
-    Raw)  formatText="double"; formatFlags="-f -8" ;;
     wavu1)formatText="u1 in wav";  formatFlags="-u -1"; formatExt="wav" ;;
     s1X ) formatText="s1 (swap bits)"; formatExt="s1"; formatFlags="-X" ;;
     s1N ) formatText="s1 (swap nibbles)"; formatExt="s1"; formatFlags="-N" ;;
@@ -124,23 +122,23 @@ convertToAndFrom () {
 
 do_multichannel_formats () {
   format1=u1
-  convertToAndFrom s1 u1 s2 u2 s3 u3 s4 u4 raw Raw dat au wav aiff aifc flac caf sph wv
+  convertToAndFrom s1 u1 s2 u2 s3 u3 s4 u4 f4 f8 dat au wav aiff aifc flac caf sph wv sox
 
   format1=s2
-  convertToAndFrom s2 u2 s3 u3 s4 u4 raw Raw dat au wav aiff aifc flac caf sph wv
+  convertToAndFrom s2 u2 s3 u3 s4 u4 f4 f8 dat au wav aiff aifc flac caf sph wv sox
 
   format1=u3
-  convertToAndFrom s3 u3 s4 u4 raw Raw wav aiff aifc flac sph wv
+  convertToAndFrom s3 u3 s4 u4 f4 f8 wav aiff aifc flac sph wv sox
   (samples=23500; convertToAndFrom paf) || exit 1
 
   format1=s4
-  convertToAndFrom s4 u4 Raw wav aiff aifc caf sph wv mat4 mat5
+  convertToAndFrom s4 u4 f8 wav aiff aifc caf sph wv mat4 mat5 sox
 
   format1=al
-  convertToAndFrom al s2 u2 s4 raw Raw dat aiff aifc flac caf w64
+  convertToAndFrom al s2 u2 s4 f4 f8 dat aiff aifc flac caf w64
 
   format1=ul
-  convertToAndFrom ul s2 u2 s4 raw Raw dat aiff aifc flac caf sph
+  convertToAndFrom ul s2 u2 s4 f4 f8 dat aiff aifc flac caf sph
 
   format1=wavu1
   convertToAndFrom wavu1 aiff aifc au dat sf flac caf sph
@@ -155,10 +153,10 @@ do_twochannel_formats () {
 
 do_singlechannel_formats () {
   format1=vox
-  convertToAndFrom vox s2 u2 s3 u3 s4 u4 raw Raw dat au wav aiff aifc flac caf
+  convertToAndFrom vox s2 u2 s3 u3 s4 u4 f4 f8 dat au wav aiff aifc flac caf sox
 
   format1=ima
-  convertToAndFrom ima s2 u2 s3 u3 s4 u4 raw Raw dat au aiff aifc flac caf # FIXME: wav
+  convertToAndFrom ima s2 u2 s3 u3 s4 u4 f4 f8 dat au aiff aifc flac caf # FIXME: wav
 
   format1=wavu1
   convertToAndFrom smp s1 s1X s1N s1XN sndt sndr
@@ -166,10 +164,10 @@ do_singlechannel_formats () {
   (rate=11025; convertToAndFrom hcom) || exit 1     # Fixed rates
 
   format1=wve
-  (rate=8000; convertToAndFrom al s2 u2 s4 raw Raw dat) || exit 1 # Fixed rate
+  (rate=8000; convertToAndFrom al s2 u2 s4 f4 f8 dat) || exit 1 # Fixed rate
 
   format1=prc
-  (rate=8000; convertToAndFrom al s2 u2 s4 raw Raw dat) || exit 1 # Fixed rate
+  (rate=8000; convertToAndFrom al s2 u2 s4 f4 f8 dat) || exit 1 # Fixed rate
 }
 
 # Reading and writing performance test
@@ -251,7 +249,7 @@ echo "Checked $vectors vectors"
 
 channels=2
 samples=10000000
-timeIO s1 u1 s2 u2 s3 u3 s4 u4 raw Raw au wav aiff aifc caf sph # FIXME?: flac dat
+timeIO s1 u1 s2 u2 s3 u3 s4 u4 f4 f8 au wav aiff aifc caf sph # FIXME?: flac dat
 
 test -n "$skip" && echo "Skipped: $skip"
 
