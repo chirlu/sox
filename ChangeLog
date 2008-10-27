@@ -98,6 +98,7 @@ Other bug fixes:
   o Fix memory leaks in effects chain when restarting effects. (cbagwell)
   o Fixed pkg-config CFLAGS. (evilynux)
   o Fix sndfile inclusion in build in some circumstances.  (robs)
+  o Fix [2026912] Fails on URL-like filenames.  (robs)
 
 Internal improvements:
 

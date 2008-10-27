@@ -318,17 +318,12 @@ static int sox_checkformat(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static sox_bool is_uri(char const * text)
+static sox_bool is_url(char const * text) /* detects only wget-supported URLs */
 {
-  if (!isalpha((int)*text))
-    return sox_false;
-  ++text;
-  do {
-    if (!isalnum((int)*text) && !strchr("+-.", *text))
-      return sox_false;
-    ++text;
-  } while (*text && *text != ':');
-  return *text == ':';
+  return !(
+      strncasecmp(text, "http:" , 5) &&
+      strncasecmp(text, "https:", 6) &&
+      strncasecmp(text, "ftp:"  , 4));
 }
 
 static int xfclose(FILE * file, lsx_io_type io_type)
@@ -354,7 +349,7 @@ static FILE * xfopen(char const * identifier, char const * mode, lsx_io_type * i
 #endif
     return f;
   }
-  else if (is_uri(identifier)) {
+  else if (is_url(identifier)) {
     FILE * f = NULL;
 #ifdef HAVE_POPEN
     char const * const command_format = "wget --no-check-certificate -q -O- \"%s\"";
@@ -452,7 +447,7 @@ sox_format_t * sox_open_read(
         lsx_report("assuming input pipe `%s' has file-type `sox'", path);
       }
       else if (!(filetype = lsx_find_file_extension(path))) {
-        lsx_fail("can't determine type of `%s'", path);
+        lsx_fail("can't determine type of %s `%s'", type, path);
         goto error;
       }
       if (!(handler = sox_find_format(filetype, sox_true))) {
@@ -934,7 +929,7 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
       if (begin != end) {
         char const * id = text + begin;
 
-        if (!dirname[0] || is_uri(id) || IS_ABSOLUTE(id))
+        if (!dirname[0] || is_url(id) || IS_ABSOLUTE(id))
           filename = lsx_strdup(id);
         else {
           filename = lsx_malloc(strlen(dirname) + strlen(id) + 2);
