@@ -550,7 +550,7 @@ Note that when using this option, the file-type (see
 .B \-t
 below) must also be given.
 .TP
-\fB\(dq|\fIprogram \fR[\fIoptions\fR] ...\fB\(dq\fR
+\fB\(dq\^|\^\fIprogram \fR[\fIoptions\fR] ...\fB\(dq\fR
 This can be used in place of an input filename to specify the
 the given program's standard output (stdout) be used as an input file.
 Unlike
@@ -2326,9 +2326,10 @@ One typical use of the
 effect is to split an audio file into a set of files, each containing
 one of the constituent channels (in order to perform subsequent
 processing on individual audio channels).  Where more than a few
-channels are involved, a script such as the following is useful:
+channels are involved, a script such as the following (Bourne shell
+script) is useful:
 .EX
-#!/bin/sh                        # This is a Bourne shell script
+#!/bin/sh
 chans=\`soxi -c "$1"\`
 while [ $chans -ge 1 ]; do
   chans0=\`printf %02i $chans\`   # 2 digits hence up to 99 chans
