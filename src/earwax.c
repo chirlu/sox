@@ -72,14 +72,15 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   size_t i, len = *isamp = *osamp = min(*isamp, *osamp);
 
   while (len--) {       /* update taps and calculate output */
-    sox_sample_t output = 0;
+    double output = 0;
 
     for (i = NUMTAPS - 1; i; --i) {
       p->tap[i] = p->tap[i - 1];
       output += p->tap[i] * filt[i];
     }
-    p->tap[0] = *ibuf++ / 64;
-    *obuf++ = output + p->tap[0] * filt[0];   /* store scaled output */
+    p->tap[0] = *ibuf++ / 64; /* scale output */
+    output += p->tap[0] * filt[0];
+    *obuf++ = SOX_ROUND_CLIP_COUNT(output, effp->clips);
   }
   return SOX_SUCCESS;
 }
