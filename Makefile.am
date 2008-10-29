@@ -35,6 +35,24 @@ txt: $(DOCTXT)
 DOCPDF = sox.pdf soxi.pdf soxformat.pdf libsox.pdf
 pdf: $(DOCPDF)
 
+install-pdf: pdf
+	@$(NORMAL_INSTALL)
+	test -z "$(pdfdir)" || $(MKDIR_P) "$(DESTDIR)$(pdfdir)"
+	@list='$(DOCPDF)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(INSTALL_DATA) '$$d$$p' '$(DESTDIR)$(pdfdir)/$$f'"; \
+	  $(INSTALL_DATA) "$$d$$p" "$(DESTDIR)$(pdfdir)/$$f"; \
+	  done
+
+uninstall-pdf:
+	@$(NORMAL_UNINSTALL)
+	@list='$(DOCPDF)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " $(RM) '$(DESTDIR)$(pdfdir)/$$f'"; \
+	  $(RM) "$(DESTDIR)$(pdfdir)/$$f"; \
+	  done
+
 # Rule for making HTML man pages
 #
 # Get rid on unneeded Content-Type, man directory and manpage index in extension.
@@ -50,6 +68,24 @@ FIXHTML = sed '1s,^Content-type.*,,' | \
 
 DOCHTML = sox.html soxi.html soxformat.html libsox.html
 html: $(DOCHTML)
+
+install-html: html
+	@$(NORMAL_INSTALL)
+	test -z "$(htmldir)" || $(MKDIR_P) "$(DESTDIR)$(htmldir)"
+	@list='$(DOCHTML)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(INSTALL_DATA) '$$d$$p' '$(DESTDIR)$(htmldir)/$$f'"; \
+	  $(INSTALL_DATA) "$$d$$p" "$(DESTDIR)$(htmldir)/$$f"; \
+	  done
+
+uninstall-html:
+	@$(NORMAL_UNINSTALL)
+	@list='$(DOCHTML)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " $(RM) '$(DESTDIR)$(htmldir)/$$f'"; \
+	  $(RM) "$(DESTDIR)$(htmldir)/$$f"; \
+	  done
 
 DISTCLEANFILES = $(DOCHTML) $(DOCPDF) $(DOCTXT)
 

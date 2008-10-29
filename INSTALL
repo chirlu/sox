@@ -28,13 +28,18 @@ commands:
 	make
 	make install
 
-Optionally:
+Optionally, to test the executable:
 
 	make installcheck
 
 (At the moment you can't run "make check", because when built
 modularly SoX can't use its format and effect modules until
 it is installed.)
+
+Optionally, to install HTML or PDF versions of manual pages:
+
+        make install-pdf
+        make install-html
 
 There are several optional parameters that you may pass to the
 configure script to customize SoX for your applications. Run
