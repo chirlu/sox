@@ -79,7 +79,7 @@ static double * make_filter(int n, double start, double delta, double rate)
   }
   fs[i + 1] = log(100000.);
   spl[i + 1] = spl[0];
-  lsx_prepare_spline3(fs, spl, LEN, HUGE_VAL, HUGE_VAL, d);
+  lsx_prepare_spline3(fs, spl, (int)LEN, HUGE_VAL, HUGE_VAL, d);
 
   for (work_len = 8192; work_len < rate / 2; work_len <<= 1);
   work = lsx_calloc(work_len, sizeof(*work));
@@ -87,7 +87,7 @@ static double * make_filter(int n, double start, double delta, double rate)
 
   for (i = 1; i <= work_len / 2; ++i) {
     double f = rate * i / work_len;
-    double spl1 = f < 1? spl[0] : lsx_spline3(fs, spl, d, LEN, log(f));
+    double spl1 = f < 1? spl[0] : lsx_spline3(fs, spl, d, (int)LEN, log(f));
     work[i < work_len / 2 ? 2 * i : 1] = dB_to_linear(spl1);
   }
   lsx_safe_rdft(work_len, -1, work);

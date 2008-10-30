@@ -199,7 +199,7 @@ static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
         return (SOX_SUCCESS);
 }
 
-static int p2(int n)
+static int p2(long n)
 {
   int N;
   for (N = 1; n; n >>= 1, N <<= 1);

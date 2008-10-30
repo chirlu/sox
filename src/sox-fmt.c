@@ -53,8 +53,8 @@ static int startread(sox_format_t * ft)
   }
 
   if (comments_bytes) {
-    char * buf = lsx_calloc(1, comments_bytes + 1); /* ensure nul-terminated */
-    if (lsx_readchars(ft, buf, comments_bytes) != SOX_SUCCESS) {
+    char * buf = lsx_calloc(1, (size_t)comments_bytes + 1); /* ensure nul-terminated */
+    if (lsx_readchars(ft, buf, (size_t)comments_bytes) != SOX_SUCCESS) {
       free(buf);
       return SOX_EOF;
     }
@@ -83,7 +83,7 @@ static int write_header(sox_format_t * ft)
   ||lsx_writeqw(ft, size)
   ||lsx_writedf(ft, ft->signal.rate)
   ||lsx_writedw(ft, ft->signal.channels)
-  ||lsx_writedw(ft, comments_len)
+  ||lsx_writedw(ft, (unsigned)comments_len)
   ||lsx_writechars(ft, comments, comments_len)
   ||lsx_padbytes(ft, comments_bytes - comments_len);
   free(comments);

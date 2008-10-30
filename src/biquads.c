@@ -334,26 +334,26 @@ static int start(sox_effect_t * effp)
       if (effp->in_signal.rate == 44100) {
         static const double zeros[] = {-0.2014898, 0.9233820};
         static const double poles[] = {0.7083149, 0.9924091};
-        make_poly_from_roots(zeros, 2, &p->b0);
-        make_poly_from_roots(poles, 2, &p->a0);
+        make_poly_from_roots(zeros, (size_t)2, &p->b0);
+        make_poly_from_roots(poles, (size_t)2, &p->a0);
       }
       else if (effp->in_signal.rate == 48000) {
         static const double zeros[] = {-0.1766069, 0.9321590};
         static const double poles[] = {0.7396325, 0.9931330};
-        make_poly_from_roots(zeros, 2, &p->b0);
-        make_poly_from_roots(poles, 2, &p->a0);
+        make_poly_from_roots(zeros, (size_t)2, &p->b0);
+        make_poly_from_roots(poles, (size_t)2, &p->a0);
       }
       else if (effp->in_signal.rate == 88200) {
         static const double zeros[] = {-0.1168735, 0.9648312};
         static const double poles[] = {0.8590646, 0.9964002};
-        make_poly_from_roots(zeros, 2, &p->b0);
-        make_poly_from_roots(poles, 2, &p->a0);
+        make_poly_from_roots(zeros, (size_t)2, &p->b0);
+        make_poly_from_roots(poles, (size_t)2, &p->a0);
       }
       else if (effp->in_signal.rate == 96000) {
         static const double zeros[] = {-0.1141486, 0.9676817};
         static const double poles[] = {0.8699137, 0.9966946};
-        make_poly_from_roots(zeros, 2, &p->b0);
-        make_poly_from_roots(poles, 2, &p->a0);
+        make_poly_from_roots(zeros, (size_t)2, &p->b0);
+        make_poly_from_roots(poles, (size_t)2, &p->a0);
       }
       else {
         lsx_fail("Sample rate must be 44.1k, 48k, 88.2k, or 96k");

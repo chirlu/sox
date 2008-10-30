@@ -321,9 +321,9 @@ static int sox_checkformat(sox_format_t * ft)
 static sox_bool is_url(char const * text) /* detects only wget-supported URLs */
 {
   return !(
-      strncasecmp(text, "http:" , 5) &&
-      strncasecmp(text, "https:", 6) &&
-      strncasecmp(text, "ftp:"  , 4));
+      strncasecmp(text, "http:" , (size_t)5) &&
+      strncasecmp(text, "https:", (size_t)6) &&
+      strncasecmp(text, "ftp:"  , (size_t)4));
 }
 
 static int xfclose(FILE * file, lsx_io_type io_type)

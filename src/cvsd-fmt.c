@@ -75,7 +75,7 @@ static size_t read(sox_format_t * ft, sox_sample_t * buf, size_t len)
 
   for (i = 0; i < len; ++i) {
     if (!(p->bit_count & 7))
-      if (lsx_read_b_buf(ft, &p->byte, 1) != 1)
+      if (lsx_read_b_buf(ft, &p->byte, (size_t)1) != 1)
         break;
     ++p->bit_count;
     decode(p, p->byte & 1);
