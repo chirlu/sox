@@ -1,4 +1,4 @@
-sox (14.1.0+cvs-1) UNRELEASED; urgency=low
+sox (14.2.0+cvs-1) UNRELEASED; urgency=low
 
   * CVS version.
   * [debian/control]:
@@ -7,8 +7,9 @@ sox (14.1.0+cvs-1) UNRELEASED; urgency=low
     - Moved Homepage field to source.
     - Prevented libsox-fmt-alsa from being packaged where alsa doesn't exist.
     - Improved libsox-fmt-base description by giving format examples.
+    - Added Build-Dep on libmagic-dev.
 
- -- Pascal Giard <evilynux@gmail.com>  Thu, 07 Aug 2008 09:56:19 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Wed, 29 Oct 2008 23:46:14 -0400
 
 sox (14.1.0-1) unstable; urgency=medium
 
