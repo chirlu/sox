@@ -36,17 +36,14 @@ Optionally, to test the executable:
 modularly SoX can't use its format and effect modules until
 it is installed.)
 
-Optionally, to install HTML or PDF versions of manual pages:
-
-        make install-pdf
-        make install-html
-
 There are several optional parameters that you may pass to the
 configure script to customize SoX for your applications. Run
 
 	./configure --help
 
-for a complete list of options.
+for a complete list of options.  In addition, there are several
+optional make targets that can be used (run as "make target").
+They include: pdf, html, install-pdf, install-html
 
 
 Compiling using Microsoft's Visual C
