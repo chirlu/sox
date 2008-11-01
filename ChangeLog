@@ -112,6 +112,7 @@ Internal improvements:
   o Allow effects to use getopt.  (robs)
   o Use libmagic for mp3.  (robs)
   o Change sox_seek() offset to 64-bit to work with > 2G files (cbagwell)
+  o Merged libsfx back into libsox to align with sox.h API. (cbagwell)
 
 
 sox-14.1.0	2008-7-29

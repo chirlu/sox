@@ -170,9 +170,11 @@ The audio effects/tools included in this release are as follows:
     o ladspa		Apply LADSPA (Linux Audio Developer's Simple Plugin API)
 			effects such as cmt (Computer Music Toolkit)
     o synth		Synthesise/modulate audio tones or noise signals
+    o newfile		Create a new output file when an effects chain ends.
+    o restart		Restart 1st effects chain when multiple chains exist.
 
-In this release, multiple audio files can be combined (and then further
-processed with effects) using any one of the following combiner methods:
+Multiple audio files can be combined (and then further processed with
+effects) using any one of the following combiner methods:
 
   o concatenate
   o mix
