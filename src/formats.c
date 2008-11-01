@@ -429,7 +429,7 @@ sox_format_t * sox_open_read(
           filetype = magic_file(magic, path);
         if (filetype && (
               !strcmp(filetype, "application/octet-stream") ||
-              !strncmp(filetype, "text/plain", 10) ))
+              !strncmp(filetype, "text/plain", (size_t)10) ))
           filetype = NULL;
       }
 #endif
