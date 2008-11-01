@@ -429,7 +429,7 @@ using_id3tag=no
 if test "$with_id3tag" != "no"; then
     using_id3tag=yes
     AC_CHECK_HEADER(id3tag.h,
-        [AC_CHECK_LIB(id3tag, id3_file_open, MP3_LIBS="$MP3_LIBS -lid3tag",using_id3tag=no)],
+        [AC_CHECK_LIB(id3tag, id3_file_open, MP3_LIBS="$MP3_LIBS -lid3tag -lz",using_id3tag=no, -lz)],
         using_id3tag=no)
     if test "$with_id3tag" = "yes" -a "$using_id3tag" = "no"; then
         AC_MSG_FAILURE([cannot find id3tag])
