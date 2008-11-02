@@ -1491,12 +1491,21 @@ The following (one long) command plays a chime sound:
 	  delay 0 .27 .54 .76 1.01 1.3 remix - fade h 0.1 2.72 2.5
 .EE
 .TP
-\fBdither\fR [\fIdepth\fR]
+\fBdither\fR [\fB\-r\fR|\fB\-t\fR] [\fB\-s\fR] [\fIdepth\fR]
 Apply dithering to the audio.
-Dithering deliberately adds TPDF white noise to the signal
+Dithering deliberately adds a small amount of noise to the signal
 in order to mask audible quantization effects that
 can occur if the output sample size is less than 24 bits.
-By default, the amount of noise added is \(12 bit;
+The
+.B \-r
+option selects Rectangular Probability Density Function (RPDF) white noise;
+the default (or with the
+.B \-t
+option) is Triangular (TPDF) white noise.
+Noise-shaping for CDDA (44100Hz) can be selected with
+.BR \-s .
+By default, the amount of noise added is \(+-\(12 bit for RPDF, \(+-1 bit
+for TPDF;
 the optional \fIdepth\fR parameter is a (linear or voltage)
 multiplier of this amount.
 .SP

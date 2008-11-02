@@ -554,6 +554,7 @@ typedef struct {char const *text; unsigned value;} lsx_enum_item;
 
 lsx_enum_item const * lsx_find_enum_text(char const * text, lsx_enum_item const * lsx_enum_items);
 lsx_enum_item const * lsx_find_enum_value(unsigned value, lsx_enum_item const * lsx_enum_items);
+int lsx_enum_option(int c, lsx_enum_item const * items);
 char const * lsx_find_file_extension(char const * pathname);
 char const * lsx_sigfigs3(size_t number);
 char const * lsx_sigfigs3p(double percentage);

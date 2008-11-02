@@ -49,6 +49,7 @@ Effects:
     add -s -L options to be compatible with SoX v14.1.0.  (robs)
   o New options for `rate' effect to configure phase response,
     band-width and aliasing.  (robs)
+  o New options for 'dither' effect: RPDF, TPDF, noise-shaping.  (robs)
   o New `riaa' effect: RIAA vinyl playback EQ.  (robs)
   o New `loudness' effect: gain control with ISO 226 loudness
     compensation.  (robs)

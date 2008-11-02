@@ -72,24 +72,6 @@ typedef struct {
 #define secs(cols) \
   ((double)(cols) * p->step_size * p->block_steps / effp->in_signal.rate)
 
-static int enum_option(int c, lsx_enum_item const * items)
-{
-  lsx_enum_item const * p = lsx_find_enum_text(optarg, items);
-  if (p == NULL) {
-    size_t len = 1;
-    char * set = lsx_malloc(len);
-    *set = 0;
-    for (p = items; p->text; ++p) {
-      set = lsx_realloc(set, len += 2 + strlen(p->text));
-      strcat(set, ", "); strcat(set, p->text);
-    }
-    lsx_fail("-%c: '%s' is not one of: %s.", c, optarg, set + 2);
-    free(set);
-    return INT_MAX;
-  }
-  return p->value;
-}
-
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *)effp->priv;
@@ -108,7 +90,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     GETOPT_NUMERIC('Z', gain          ,-100, 100)
     GETOPT_NUMERIC('q', spectrum_points, 0 , p->spectrum_points)
     GETOPT_NUMERIC('p', perm          ,  1 , 6)
-    case 'w': p->win_type = enum_option(c, window_options);   break;
+    case 'w': p->win_type = lsx_enum_option(c, window_options);   break;
     case 's': p->slack_overlap = sox_true; break;
     case 't': p->title    = optarg;   break;
     case 'c': p->comment  = optarg;   break;
@@ -117,7 +99,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     case 'l': p->light_background = sox_true; break;
     case 'h': p->high_colour = sox_true; break;
     case 'o': p->out_name = optarg;   break;
-    default: lsx_fail("unknown option `-%c'", optopt); return lsx_usage(effp);
+    default: lsx_fail("invalid option `-%c'", optopt); return lsx_usage(effp);
   }
   p->gain = -p->gain;
   --p->y_size, --p->perm;
