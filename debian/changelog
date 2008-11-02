@@ -1,6 +1,6 @@
 sox (14.2.0+cvs-1) UNRELEASED; urgency=low
 
-  * CVS version.
+  * CVS version (closes: #479557, #484562).
   * [debian/control]:
     - libsox1 replaces libsox0a.
     - Improved libsox1 short and long descriptions (closes: #493483).
