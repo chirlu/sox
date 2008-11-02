@@ -168,6 +168,7 @@ static int startread(sox_format_t * ft)
     if (ft->seekable) {
 #if HAVE_ID3TAG && HAVE_UNISTD_H
       read_comments(ft);
+      rewind(ft->fp);
       if (!ft->signal.length)
 #endif
         ft->signal.length = mp3_duration_ms(ft->fp, p->InputBuffer);
@@ -185,11 +186,8 @@ static int startread(sox_format_t * ft)
      * can be processed later.
      */
     ReadSize = lsx_readbuf(ft, p->InputBuffer, INPUT_BUFFER_SIZE);
-    if (ReadSize < INPUT_BUFFER_SIZE) {
-      if (lsx_eof(ft))
-        lsx_fail_errno(ft, SOX_EOF, "input file too short");
+    if (ReadSize != INPUT_BUFFER_SIZE && ferror(ft->fp))
       return SOX_EOF;
-    }
 
     mad_stream_buffer(&p->Stream, p->InputBuffer, ReadSize);
 

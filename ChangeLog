@@ -42,6 +42,7 @@ File formats:
   o New `.sox' native format intended for intermediate files.  (robs)
   o Fix WAV write on 64-bit arch.  (robs)
   o Fix writing PRC ADPCM files.  (Silas Brown)
+  o Fix problems reading short mp3 files.  (robs)
 
 Effects:
 
