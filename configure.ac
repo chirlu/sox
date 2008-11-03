@@ -36,10 +36,7 @@ if test "$with_libltdl" != "no"; then
     dnl Force off using libltdl on targets that are know to have
     dnl problems.
     case $target in
-      *cygwin*)
-        using_libltdl=no
-        ;;
-      *os2*)
+      *cygwin* | *os2*)
         using_libltdl=no
         ;;
     esac
@@ -109,7 +106,7 @@ if test "$GCC" = yes; then
     fi
     dnl Define stricter policy on GNU/Linux, all symbols must be resolved
     case $target in
-      *linux*)
+      *linux* | *solaris*)
         LDFLAGS="$LDFLAGS -Wl,-z,defs"
         ;;
     esac
