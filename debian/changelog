@@ -1,6 +1,6 @@
 sox (14.2.0+cvs-1) UNRELEASED; urgency=low
 
-  * CVS version (closes: #479557, #484562).
+  * CVS version (closes: #479557, #484562, #499041).
   * [debian/control]:
     - libsox1 replaces libsox0a.
     - Improved libsox1 short and long descriptions (closes: #493483).
@@ -9,7 +9,7 @@ sox (14.2.0+cvs-1) UNRELEASED; urgency=low
     - Improved libsox-fmt-base description by giving format examples.
     - Added Build-Dep on libmagic-dev.
 
- -- Pascal Giard <evilynux@gmail.com>  Wed, 29 Oct 2008 23:46:14 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Sun, 02 Nov 2008 22:49:34 -0500
 
 sox (14.1.0-1) unstable; urgency=medium
 
