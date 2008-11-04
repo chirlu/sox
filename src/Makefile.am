@@ -35,11 +35,8 @@ nodist_include_HEADERS = soxstdint.h
 sox_SOURCES = sox.c
 sox_LDADD = libsox.la
 example0_SOURCES = example0.c
-example0_LDADD = libsox.la
 example1_SOURCES = example1.c
-example1_LDADD = libsox.la
 example2_SOURCES = example2.c
-example2_LDADD = libsox.la
 sox_sample_test_SOURCES = sox_sample_test.c sox_sample_test.h
 
 ###############################################
@@ -370,6 +367,11 @@ endif
 
 #end !HAVE_LIBLTDL
 endif
+
+# example programs will need same link options as sox does.
+example0_LDADD = ${sox_LDADD}
+example1_LDADD = ${sox_LDADD}
+example2_LDADD = ${sox_LDADD}
 
 EXTRA_DIST = monkey.au monkey.wav \
 	     CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake \
