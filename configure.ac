@@ -110,11 +110,11 @@ if test "$GCC" = yes; then
         LDFLAGS="$LDFLAGS -Wl,-z,defs"
         ;;
       *os2*)
-        CFLAGS="$CFLAGS -Zofm"
-        LDFLAGS="$LDFLAGS -no-undefined"
+        APP_LDFLAGS="-no-undefined"
         ;;
     esac
 fi
+AC_SUBST(APP_LDFLAGS)
 AC_SUBST(WARN_CFLAGS)
 
 dnl Get distro name from /etc/issue

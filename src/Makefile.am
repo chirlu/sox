@@ -281,7 +281,7 @@ libsox_la_LIBADD += @MAGIC_LIBS@
 endif
 
 libsox_la_CFLAGS = @WARN_CFLAGS@  @SAMPLERATE_CFLAGS@
-libsox_la_LDFLAGS = -version-info @SHLIB_VERSION@
+libsox_la_LDFLAGS = @APP_LDFLAGS@ -version-info @SHLIB_VERSION@
 
 if HAVE_LIBLTDL
   libsox_la_CFLAGS += $(LTDLINCL) 
