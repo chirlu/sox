@@ -109,6 +109,10 @@ if test "$GCC" = yes; then
       *linux* | *solaris*)
         LDFLAGS="$LDFLAGS -Wl,-z,defs"
         ;;
+      *os2*)
+        CFLAGS="$CFLAGS -Zofm"
+        LDFLAGS="$LDFLAGS -no-undefined"
+        ;;
     esac
 fi
 AC_SUBST(WARN_CFLAGS)
