@@ -260,7 +260,8 @@ libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
 # Effects source
 libsox_la_SOURCES += \
 	band.h bend.c biquad.c biquad.h biquads.c chorus.c compand.c \
-	compandt.c compandt.h contrast.c dcshift.c delay.c dither.c earwax.c \
+	compandt.c compandt.h contrast.c dcshift.c delay.c dither.c \
+	dither_fir.h dither_iir.h earwax.c \
 	echo.c echos.c effects.c effects.h effects_i.c fade.c fft4g.c fft4g.h \
 	fifo.h filter.c flanger.c input.c ladspa.c loudness.c mcompand.c \
 	mixer.c noiseprof.c noisered.c noisered.h normalise.c output.c pad.c \
