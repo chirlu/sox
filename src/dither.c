@@ -272,7 +272,7 @@ sox_effect_handler_t const * sox_dither_effect_fn(void)
     "\n  -s       Shape noise (with shibata filter)"
     "\n  -f name  Set shaping filter to one of: lipshitz, f-weighted,"
     "\n           modified-e-weighted, improved-e-weighted, gesemann,"
-    "\n           shibata, low-shibata, high-shibata.",
+    "\n           shibata, low-shibata, high-shibata."
     "\n  depth    Noise depth; 0.5 to 1; default 1",
     SOX_EFF_GETOPT | SOX_EFF_PREC, getopts, start, flow, 0, 0, 0, sizeof(priv_t)
   };
