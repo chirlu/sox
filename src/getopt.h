@@ -42,9 +42,16 @@
 # include <ctype.h>
 #endif
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 extern "C" {
 #endif
+
+/* Create aliases to prevent collisions with c libraries versions of
+ * these.
+ */
+#define optind lsx_optind
+#define optarg lsx_optarg
+#define getopt lsx_getopt
 
 /* For communication from `getopt' to the caller.
    When `getopt' finds an option that takes an argument,
@@ -84,9 +91,9 @@ extern int optopt;
    zero.
 
    The field `has_arg' is:
-   no_argument		(or 0) if the option does not take an argument,
-   required_argument	(or 1) if the option requires an argument,
-   optional_argument 	(or 2) if the option takes an optional argument.
+   no_argument          (or 0) if the option does not take an argument,
+   required_argument    (or 1) if the option requires an argument,
+   optional_argument    (or 2) if the option takes an optional argument.
 
    If the field `flag' is not NULL, it points to a variable that is set
    to the value given in the field `val' when the option is found, but
@@ -115,10 +122,10 @@ struct option
 
 /* Names for the values of the `has_arg' field of `struct option'.  */
 
-# define no_argument		0
-# define required_argument	1
-# define optional_argument	2
-#endif	/* need getopt */
+# define no_argument            0
+# define required_argument      1
+# define optional_argument      2
+#endif  /* need getopt */
 
 
 /* Get definitions and prototypes for functions to process the
@@ -157,17 +164,17 @@ extern int getopt ();
 
 # ifndef __need_getopt
 extern int getopt_long (int ___argc, char *const *___argv,
-			const char *__shortopts,
-		        const struct option *__longopts, int *__longind);
+                        const char *__shortopts,
+                        const struct option *__longopts, int *__longind);
 extern int getopt_long_only (int ___argc, char *const *___argv,
-			     const char *__shortopts,
-		             const struct option *__longopts, int *__longind);
+                             const char *__shortopts,
+                             const struct option *__longopts, int *__longind);
 
 /* Internal only.  Users should not call this directly.  */
 extern int _getopt_internal (int ___argc, char *const *___argv,
-			     const char *__shortopts,
-		             const struct option *__longopts, int *__longind,
-			     int __long_only);
+                             const char *__shortopts,
+                             const struct option *__longopts, int *__longind,
+                             int __long_only);
 # endif
 #else /* not __STDC__ */
 extern int getopt ();
@@ -179,7 +186,7 @@ extern int _getopt_internal ();
 # endif
 #endif /* __STDC__ */
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 }
 #endif
 

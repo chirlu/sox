@@ -56,6 +56,11 @@
 #endif
 #endif
 
+/* Always compile for SoX */
+#if defined ELIDE_CODE
+#undef ELIDE_CODE
+#endif
+
 #ifndef ELIDE_CODE
 
 

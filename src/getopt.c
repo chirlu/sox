@@ -1,4 +1,3 @@
-#include "soxconfig.h"
 /* Getopt for GNU.
    NOTE: getopt is now part of the C library, so if you don't know what
    "Keep this file name-space clean" means, talk to drepper@gnu.org
@@ -58,6 +57,11 @@
 # if _GNU_GETOPT_INTERFACE_VERSION == GETOPT_INTERFACE_VERSION
 #  define ELIDE_CODE
 # endif
+#endif
+
+/* For SoX, always compile this */
+#if defined ELIDE_CODE
+#undef ELIDE_CODE
 #endif
 
 #ifndef ELIDE_CODE
