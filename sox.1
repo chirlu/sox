@@ -1777,14 +1777,14 @@ See the description of the \fBhighpass\fR effect for details.
 \fBmcompand\fR \(dq\fIattack1\fB,\fIdecay1\fR{\fB,\fIattack2\fB,\fIdecay2\fR}
 [\fIsoft-knee-dB\fB:\fR]\fIin-dB1\fR[\fB,\fIout-dB1\fR]{\fB,\fIin-dB2\fB,\fIout-dB2\fR}
 .br
-[\fIgain\fR [\fIinitial-volume-dB\fR [\fIdelay\fR]]]\(dq {\fIxover-freq\fR[\fBk\fR] \(dqattack1,...\(dq}
+[\fIgain\fR [\fIinitial-volume-dB\fR [\fIdelay\fR]]]\(dq {\fIcrossover-freq\fR[\fBk\fR] \(dqattack1,...\(dq}
 .SP
 The multi-band compander is similar to the single-band compander but the
-audio is first divided into bands using Butterworth cross-over filters
+audio is first divided into bands using Linkwitz-Riley cross-over filters
 and a separately specifiable compander run on each band.  See the
 \fBcompand\fR effect for the definition of its parameters.  Compand
 parameters are specified between double quotes and the crossover
-frequency for that band is given by \fIxover-freq\fR; these can be
+frequency for that band is given by \fIcrossover-freq\fR; these can be
 repeated to create multiple bands.
 .SP
 For example, the following (one long) command shows how multi-band

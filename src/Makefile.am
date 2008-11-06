@@ -261,15 +261,14 @@ libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
 libsox_la_SOURCES += \
 	band.h bend.c biquad.c biquad.h biquads.c chorus.c compand.c \
 	compandt.c compandt.h contrast.c dcshift.c delay.c dither.c \
-	dither_fir.h dither_iir.h earwax.c \
-	echo.c echos.c effects.c effects.h effects_i.c fade.c fft4g.c fft4g.h \
-	fifo.h filter.c flanger.c input.c ladspa.c loudness.c mcompand.c \
-	mixer.c noiseprof.c noisered.c noisered.h normalise.c output.c pad.c \
-	pan.c phaser.c polyphas.c rabbit.c rate.c \
-	rate_filters.h rate_half_fir.h rate_poly_fir0.h rate_poly_fir.h \
-	remix.c repeat.c resample.c reverb.c reverse.c silence.c skeleff.c \
-	speed.c	splice.c stat.c swap.c stretch.c synth.c tempo.c tremolo.c \
-	trim.c vol.c
+	dither_fir.h dither_iir.h earwax.c echo.c echos.c effects.c effects.h \
+	effects_i.c fade.c fft4g.c fft4g.h fifo.h filter.c flanger.c input.c \
+	ladspa.c loudness.c mcompand.c mcompand_xover.h mixer.c noiseprof.c \
+	noisered.c noisered.h normalise.c output.c pad.c pan.c phaser.c \
+	polyphas.c rabbit.c rate.c rate_filters.h rate_half_fir.h \
+	rate_poly_fir0.h rate_poly_fir.h remix.c repeat.c resample.c reverb.c \
+	reverse.c silence.c skeleff.c speed.c splice.c stat.c swap.c stretch.c \
+	synth.c tempo.c tremolo.c trim.c vol.c shape.c
 if HAVE_PNG
     libsox_la_SOURCES += spectrogram.c
 endif

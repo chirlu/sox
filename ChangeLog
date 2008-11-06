@@ -67,6 +67,7 @@ Effects:
   o Fix rare crash with `rate' effect.  (robs)
   o Fix [2190767] `norm' under-amplifying in some cases.  (George Yohng)
   o Fix [2007062] Earwax effect can overflow; should clip. (robs)
+  o Fix [2223251] mcompand should use linkwitz-riley.  (robs)
   o Fix `phaser' clicks and overflows.  (robs)
   o Trim will now skip past 2G point correctly. (cbagwell)
   o Improved handling of speed changes in the effects chain.  (robs)

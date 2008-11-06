@@ -3,23 +3,12 @@
  *
  * Compander code adapted from the SoX compand effect, by Nick Bailey
  *
- * Butterworth code adapted from the SoX Butterworth effect family, by
- * Jan Paul Schmidt
+ * SoX is Copyright 1999 Chris Bagwell And Nick Bailey This source code is
+ * freely redistributable and may be used for any purpose.  This copyright
+ * notice must be maintained.  Chris Bagwell And Nick Bailey are not
+ * responsible for the consequences of using this software.
  *
- * SoX is Copyright 1999 Chris Bagwell And Nick Bailey
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained.
- * Chris Bagwell And Nick Bailey are not responsible for
- * the consequences of using this software.
- */
-
-#include "sox_i.h"
-
-#include <string.h>
-#include <stdlib.h>
-#include "compandt.h"
-
-/*
+ *
  * Usage:
  *   mcompand quoted_compand_args [crossover_frequency
  *      quoted_compand_args [...]]
@@ -32,163 +21,33 @@
  *
  *   Beware a variety of headroom (clipping) bugaboos.
  *
- *   Here is an example application, an FM radio sound simulator (or
- *   broadcast signal conditioner, if the lowp at the end is skipped -
- *   note that the pipeline is set up with US-style 75us preemphasis).
+ * Implementation details:
+ *   The input is divided into bands using 4th order Linkwitz-Riley IIRs.
+ *   This is akin to the crossover of a loudspeaker, and results in flat
+ *   frequency response absent compander action.
  *
- *   sox -V -t raw -r 44100 -s -w -c 2 - -t raw -r 44100 -s -l -c 2 \
- *      - vol -3 db filter 8000- 32 100 mcompand ".005,.1 \
- *      -47,-40,-34,-34,-17,-33 0 0 0" 100 ".003,.05 \
- *      -47,-40,-34,-34,-17,-33 0 0 0" 400 ".000625,.0125 \
- *      -47,-40,-34,-34,-15,-33 0 0 0" 1600 ".0001,.025 \
- *      -47,-40,-34,-34,-31,-31,-0,-30 0 0 0" 6400 \
- *      "0,.025 -38,-31,-28,-28,-0,-25 0 0 0" vol 27 db vol -12 \
- *      db highpass 22 highpass 22 filter -17500 256 vol +12 db \
- *      vol -3 db lowp 1780
+ *   The outputs of the array of companders is summed, and sample truncation
+ *   is done on the final sum.
  *
- *   implementation details:
- *
- *   The input is divided into bands using aligned 2nd order
- *   Butterworth IIR's (code adapted from SoX's existing Butterworth
- *   effect).  This is akin to the crossover of a loudspeaker, and
- *   results in flat frequency response (within a db or so) absent
- *   compander action.
- *
- *   (Crossover design from "Electroacoustic System Design" by
- *   Tom Raymann, http://www.traymann.free-online.co.uk/soph.htm)
- *
- *   The imported Butterworth code is modified to handle
- *   interleaved-channel sample streams, to make the code clean and
- *   efficient.  The outputs of the array of companders is summed, and
- *   sample truncation is done on the final sum.
- *
- *   Modifications to the predictive compression code properly
- *   maintain alignment of the outputs of the array of companders when
- *   the companders have different prediction intervals (volume
- *   application delays).  Note that the predictive mode of the
- *   limiter needs some TLC - in fact, a rewrite - since what's really
- *   useful is to assure that a waveform won't be clipped, by slewing
- *   the volume in advance so that the peak is at limit (or below, if
- *   there's a higher subsequent peak visible in the lookahead window)
- *   once it's reached.  */
+ *   Modifications to the predictive compression code properly maintain
+ *   alignment of the outputs of the array of companders when the companders
+ *   have different prediction intervals (volume application delays).  Note
+ *   that the predictive mode of the limiter needs some TLC - in fact, a
+ *   rewrite - since what's really useful is to assure that a waveform won't
+ *   be clipped, by slewing the volume in advance so that the peak is at
+ *   limit (or below, if there's a higher subsequent peak visible in the
+ *   lookahead window) once it's reached.  */
 
-struct xy {
-    double x [2];
-    double y [2];
-} ;
+#ifdef NDEBUG /* Enable assert always. */
+#undef NDEBUG /* Must undef above assert.h or other that might include it. */
+#endif
 
-typedef struct {
-  struct xy *xy_low, *xy_high;
-
-  double a_low[3], a_high[3];
-  double b_low[2], b_high[3];
-
-  /*
-   * Cut off frequencies for respective filters
-   */
-  double frequency_low, frequency_high;
-
-  double bandwidth;
-} butterworth_crossover_t;
-
-static int lowpass_setup (butterworth_crossover_t * butterworth, double frequency, sox_rate_t rate, size_t nchan) {
-  double c;
-
-  butterworth->xy_low = lsx_calloc(nchan, sizeof(struct xy));
-  butterworth->xy_high = lsx_calloc(nchan, sizeof(struct xy));
-
-  /* lowpass setup */
-  butterworth->frequency_low = frequency/1.3;
-
-  c = 1.0 / tan (M_PI * butterworth->frequency_low / rate);
-
-  butterworth->a_low[0] = 1.0 / (1.0 + sqrt(2.0) * c + c * c);
-  butterworth->a_low[1] = 2.0 * butterworth->a_low [0];
-  butterworth->a_low[2] = butterworth->a_low [0];
-
-  butterworth->b_low[0] = 2 * (1.0 - c * c) * butterworth->a_low[0];
-  butterworth->b_low[1] = (1.0 - sqrt(2.0) * c + c * c) * butterworth->a_low[0];
-
-  /* highpass setup */
-  butterworth->frequency_high = frequency*1.3;
-
-  c = tan (M_PI * butterworth->frequency_high / rate);
-
-  butterworth->a_high[0] = 1.0 / (1.0 + sqrt (2.0) * c + c * c);
-  butterworth->a_high[1] = -2.0 * butterworth->a_high[0];
-  butterworth->a_high[2] = butterworth->a_high[0];
-
-  butterworth->b_high[0] = 2 * (c * c - 1.0) * butterworth->a_high[0];
-  butterworth->b_high[1] = (1.0 - sqrt(2.0) * c + c * c) * butterworth->a_high[0];
-
-  return (SOX_SUCCESS);
-}
-
-static int lowpass_flow(sox_effect_t * effp, butterworth_crossover_t * butterworth, size_t nChan, sox_sample_t *ibuf, sox_sample_t *lowbuf, sox_sample_t *highbuf,
-                         size_t len) {
-  size_t chan;
-  double in, out;
-
-  size_t done;
-
-  sox_sample_t *ibufptr, *lowbufptr, *highbufptr;
-
-  for (chan=0;chan<nChan;++chan) {
-    ibufptr = ibuf+chan;
-    lowbufptr = lowbuf+chan;
-    highbufptr = highbuf+chan;
-
-    for (done = chan; done < len; done += nChan) {
-      in = *ibufptr;
-      ibufptr += nChan;
-
-      /*
-       * Substituting butterworth->a [x] and butterworth->b [x] with
-       * variables, which are set outside of the loop, did not increased
-       * speed on my AMD Box. GCC seems to do a good job :o)
-       */
-
-      out =
-        butterworth->a_low[0] * in +
-        butterworth->a_low [1] * butterworth->xy_low[chan].x [0] +
-        butterworth->a_low [2] * butterworth->xy_low[chan].x [1] -
-        butterworth->b_low [0] * butterworth->xy_low[chan].y [0] -
-        butterworth->b_low [1] * butterworth->xy_low[chan].y [1];
-
-      butterworth->xy_low[chan].x [1] = butterworth->xy_low[chan].x [0];
-      butterworth->xy_low[chan].x [0] = in;
-      butterworth->xy_low[chan].y [1] = butterworth->xy_low[chan].y [0];
-      butterworth->xy_low[chan].y [0] = out;
-
-      SOX_SAMPLE_CLIP_COUNT(out, effp->clips);
-
-      *lowbufptr = out;
-
-      out =
-        butterworth->a_high[0] * in +
-        butterworth->a_high [1] * butterworth->xy_high[chan].x [0] +
-        butterworth->a_high [2] * butterworth->xy_high[chan].x [1] -
-        butterworth->b_high [0] * butterworth->xy_high[chan].y [0] -
-        butterworth->b_high [1] * butterworth->xy_high[chan].y [1];
-
-      butterworth->xy_high[chan].x [1] = butterworth->xy_high[chan].x [0];
-      butterworth->xy_high[chan].x [0] = in;
-      butterworth->xy_high[chan].y [1] = butterworth->xy_high[chan].y [0];
-      butterworth->xy_high[chan].y [0] = out;
-
-      SOX_SAMPLE_CLIP_COUNT(out, effp->clips);
-
-      /* don't forget polarity reversal of high pass! */
-
-      *highbufptr = -out;
-
-      lowbufptr += nChan;
-      highbufptr += nChan;
-    }
-  }
-
-  return (SOX_SUCCESS);
-}
+#include "sox_i.h"
+#include <assert.h>
+#include <string.h>
+#include <stdlib.h>
+#include "compandt.h"
+#include "mcompand_xover.h"
 
 typedef struct {
   sox_compandt_t transfer_fn;
@@ -200,7 +59,7 @@ typedef struct {
   double *volume;       /* Current "volume" of each channel */
   double delay;         /* Delay to apply before companding */
   double topfreq;       /* upper bound crossover frequency */
-  butterworth_crossover_t filter;
+  crossover_t filter;
   sox_sample_t *delay_buf;   /* Old samples, used for delay processing */
   size_t delay_size;    /* lookahead for this band (in samples) - function of delay, above */
   ptrdiff_t delay_buf_ptr; /* Index into delay_buf */
@@ -314,7 +173,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
   /* how many bands? */
   if (! (n&1)) {
     lsx_fail("mcompand accepts only an odd number of arguments:\n"
-            "  mcompand quoted_compand_args [xover_freq quoted_compand_args [...]");
+            "  mcompand quoted_compand_args [crossover_freq quoted_compand_args [...]");
     return SOX_EOF;
   }
   c->nBands = (n+1)>>1;
@@ -387,7 +246,7 @@ static int start(sox_effect_t * effp)
     l->delay_buf_cnt = 0;
 
     if (l->topfreq != 0)
-      lowpass_setup(&l->filter, l->topfreq, effp->out_signal.rate, (size_t) effp->out_signal.channels);
+      crossover_setup(effp, &l->filter, l->topfreq);
   }
   return (SOX_SUCCESS);
 }
@@ -497,14 +356,14 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
   ibuf_copy = lsx_malloc(*isamp * sizeof(sox_sample_t));
   memcpy(ibuf_copy, ibuf, *isamp * sizeof(sox_sample_t));
 
-  /* split ibuf into bands using butterworths, pipe each band through sox_mcompand_flow_1, then add back together and write to obuf */
+  /* split ibuf into bands using filters, pipe each band through sox_mcompand_flow_1, then add back together and write to obuf */
 
   memset(obuf,0,len * sizeof *obuf);
   for (band=0,abuf=ibuf_copy,bbuf=c->band_buf2,cbuf=c->band_buf1;band<c->nBands;++band) {
     l = &c->bands[band];
 
     if (l->topfreq)
-      lowpass_flow(effp, &l->filter, (size_t) effp->out_signal.channels, abuf, bbuf, cbuf, len);
+      crossover_flow(effp, &l->filter, abuf, bbuf, cbuf, len);
     else {
       bbuf = abuf;
       abuf = cbuf;
@@ -595,10 +454,8 @@ static int stop(sox_effect_t * effp)
   for (band = 0; band < c->nBands; band++) {
     l = &c->bands[band];
     free(l->delay_buf);
-    if (l->topfreq != 0) {
-      free(l->filter.xy_low);
-      free(l->filter.xy_high);
-    }
+    if (l->topfreq != 0)
+      free(l->filter.previous);
   }
 
   return SOX_SUCCESS;
