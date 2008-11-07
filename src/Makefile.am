@@ -385,16 +385,24 @@ play rec: sox$(EXEEXT)
 	fi
 
 soxi: sox$(EXEEXT)
-	test -f sox$(EXEEXT) && ( $(RM) $@ && $(LN_S) sox$(EXEEXT) $@ ) || $(LN_S) sox $@;
+	if test "$(SYMLINKS)" = "yes"; then	\
+		test -f sox$(EXEEXT) && ( $(RM) $@ && $(LN_S) sox$(EXEEXT) $@ ) || $(LN_S) sox $@; \
+	fi
 
 install-exec-hook:
 	if test "$(PLAYRECLINKS)" = "yes"; then	\
-		cd $(DESTDIR)$(bindir); $(RM) play rec soxi; $(LN_S) sox play; $(LN_S) sox rec; $(LN_S) sox soxi; \
+		cd $(DESTDIR)$(bindir); $(RM) play rec; $(LN_S) sox play; $(LN_S) sox rec; \
+	fi
+	if test "$(SYMLINKS)" = "yes"; then	\
+		cd $(DESTDIR)$(bindir); $(RM) soxi; $(LN_S) sox soxi; \
 	fi
 
 uninstall-hook:
 	if test "$(PLAYRECLINKS)" = "yes"; then	\
-		cd $(DESTDIR)$(bindir); $(RM) play rec soxi; \
+		cd $(DESTDIR)$(bindir); $(RM) play rec; \
+	fi
+	if test "$(SYMLINKS)" = "yes"; then	\
+		cd $(DESTDIR)$(bindir); $(RM) soxi; \
 	fi
 
 clean-local:

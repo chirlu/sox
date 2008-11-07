@@ -255,18 +255,21 @@ fi
 AM_CONDITIONAL(HAVE_COREAUDIO, test x$enable_coreaudio = xyes)
 AC_SUBST(COREAUDIO_LIBS)
 
-dnl Check if we want play/rec links
-AC_MSG_CHECKING([whether to make play and rec symlinks])
-AC_ARG_ENABLE(playrec-symlinks,
-    AC_HELP_STRING([--disable-playrec-symlinks], [Don't make play and rec symlinks to sox.]),,enable_playrec_symlinks=yes)
-AC_MSG_RESULT($enable_playrec_symlinks)
-if test "$enable_playrec_symlinks" = "yes"; then
+dnl Check if we want to disable all symlinks
+AC_MSG_CHECKING([whether to enable symlinks])
+AC_ARG_ENABLE(symlinks,
+    AC_HELP_STRING([--disable-symlinks], [Don't make any symlinks to sox.]),,enable_symlinks=yes)
+AC_MSG_RESULT($enable_symlinks)
+
+enable_playrec_symlinks=no
+if test "$enable_symlinks" = "yes"; then
+    SYMLINKS=yes
     if test "$audio_driver_found" = "yes"; then
         PLAYRECLINKS=yes
-    else
-        enable_playrec_symlinks=no
+        enable_playrec_symlinks=yes
     fi
 fi
+AC_SUBST(SYMLINKS)
 AC_SUBST(PLAYRECLINKS)
  
 dnl Check for libgsm
@@ -606,6 +609,7 @@ echo "libao driver...................... $enable_libao"
 echo "OSS driver........................ $enable_oss"
 echo "SUN audio driver.................. $enable_sun_audio"
 echo "CoreAudio driver.................. $enable_coreaudio"
+echo "symlinks enabled.................. $enable_symlinks"
 echo "play and rec symlinks............. $enable_playrec_symlinks"
 echo "libgsm............................ $gsm_option"
 echo "liblpc10.......................... $lpc10_option"
