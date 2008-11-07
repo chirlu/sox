@@ -379,9 +379,13 @@ EXTRA_DIST = monkey.au monkey.wav \
 
 all: sox$(EXEEXT) play rec soxi sox_sample_test$(EXEEXT) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT)
 
-play rec soxi: sox$(EXEEXT)
-	./sox -V4 --version
-	test -f .libs/lt-sox && ( $(RM) $@ && $(LN_S) .libs/lt-sox $@ ) || $(LN_S) sox$(EXEEXT) $@
+play rec: sox$(EXEEXT)
+	if test "$(PLAYRECLINKS)" = "yes"; then	\
+		test -f sox$(EXEEXT) && ( $(RM) $@ && $(LN_S) sox$(EXEEXT) $@ ) || $(LN_S) sox $@; \
+	fi
+
+soxi: sox$(EXEEXT)
+	test -f sox$(EXEEXT) && ( $(RM) $@ && $(LN_S) sox$(EXEEXT) $@ ) || $(LN_S) sox $@;
 
 install-exec-hook:
 	if test "$(PLAYRECLINKS)" = "yes"; then	\
@@ -395,8 +399,8 @@ uninstall-hook:
 
 clean-local:
 	$(RM) play rec soxi
-	$(RM) sox_sample_test
-	$(RM) example0 example1 example2
+	$(RM) sox_sample_test$(EXEEXT)
+	$(RM) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT)
 
 distclean-local:
 	$(RM) soxstdint.h
