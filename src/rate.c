@@ -583,7 +583,7 @@ static int create(sox_effect_t * effp, int argc, char **argv)
   }
   argc -= optind, argv += optind;
 
-  if ((unsigned)p->quality < 2 && (p->bandwidth || p->phase != 25 || p->allow_aliasing)) {
+  if ((unsigned)p->quality < 2 && (p->bandwidth || p->phase != 50 || p->allow_aliasing)) {
     lsx_fail("override options not allowed with this quality level");
     return SOX_EOF;
   }
