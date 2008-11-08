@@ -56,7 +56,7 @@ cat FEATURES.in \
 	| sed "s/!!/			/" \
 	| sed "s/^\*\*/    o /" \
 	| sed "s/^\*/  o /" \
-	| sed "s/(:[a-zA-Z0-9_-= ]*:)//g" \
+	| sed "s/(:[a-zA-Z0-9_= -]*:)//g" \
        	>> README
 
 echo version=pmwiki-2.2.0-beta65 ordered=1 urlencoded=1 > Docs.Features
