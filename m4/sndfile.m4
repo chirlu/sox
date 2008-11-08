@@ -16,7 +16,7 @@ m4_ifdef([PKG_CHECK_MODULES],
   [# PKG_CHECK_MODULES available
   PKG_CHECK_MODULES(SNDFILE, sndfile, have_sndfile="maybe", 
                     have_sndfile="no")],
-  [# PKG_CHECK_MODULES is unavailable, search for pkg-config program
+  [# Step 2: use pkg-config manually if available
   AC_PATH_PROG([PKGCONFIG], [pkg-config], [none])
   if test "$PKGCONFIG" != "none" && `$PKGCONFIG --exists sndfile`
   then
@@ -24,24 +24,23 @@ m4_ifdef([PKG_CHECK_MODULES],
     SNDFILE_LIBS=`$PKGCONFIG --libs sndfile`
     have_sndfile="maybe"
   else
-    if test "$PKGCONFIG" != "none"
-    then
-      AC_MSG_NOTICE([$PKGCONFIG couldn't find libsndfile. Try adjusting PKG_CONFIG_PATH.])
-    fi
-    # libsndfile doesn't have sndfile-config but other
-    # packages do and so keep around as an example.
-    # Step 2: try sndfile-config
-    #AC_PATH_PROG([SNDFILECONFIG], [sndfile-config], [none])
-    #if test "$SNDFILECONFIG" != "none" && test `$SNDFILECONFIG --package` = "libsndfile"
-    #then
-    #  SNDFILE_CFLAGS=`$SNDFILECONFIG --cflags`
-    #  SNDFILE_LIBS=`$SNDFILECONFIG --libs`
-    #  have_sndfile="maybe"
-    #fi
+    have_sndfile="no"
   fi
   ])
 
-# Now try actually using libsndfile
+# Step 3: Even if pkg-config says its not installed, user may have
+# manually installed libraries with no -kg-config support.
+if test "$have_sndfile" = "no"
+then
+  # As a last resort, just hope that header and ilbrary can
+  # be found in default paths and that it doesn't need
+  # to link against any other libraries.
+  SNDFILE_LIBS="-lsndfile"
+  have_sndfile="maybe"
+fi
+
+# Even if pkg-config or similar told us how to find library,
+# do a safety check.
 if test "$have_sndfile" != "no"
 then
   ac_save_CFLAGS="$CFLAGS"
