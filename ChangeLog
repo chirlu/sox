@@ -46,8 +46,8 @@ File formats:
 
 Effects:
 
-  o N.B. Changed to different default settings for `rate' effect;
-    add -s -L options to be compatible with SoX v14.1.0.  (robs)
+  o N.B. Reduced default bandwidth setting for `rate' effect from 99%
+    to 95%; use `rate -s' to be compatible with SoX v14.1.0.  (robs)
   o New options for `rate' effect to configure phase response,
     band-width and aliasing.  (robs)
   o New options for 'dither' effect: RPDF, TPDF, noise-shaping.  (robs)
@@ -80,7 +80,7 @@ Other new features:
     Of most use with trim and silence effects. (cbagwell)
   o Can now use multiple pipes as inputs to the combiner;
     see `Special Filenames' in sox(1).  (robs)
-  o Display SoX build environment information with -V -V.  (robs)
+  o Display SoX build/run environment information with -V -V.  (robs)
   o Display (with -V) the detected file-type if it differs from the 
     file extension.  (robs)
   o New -t option for soxi; to display the detected file type.  (robs)

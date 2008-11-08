@@ -566,7 +566,7 @@ static int create(sox_effect_t * effp, int argc, char **argv)
   char * dummy_p, * found_at, * opts = "+i:b:p:MILasqlmhv", * qopts = opts +12;
 
   p->quality = -1;
-  p->phase = 25;
+  p->phase = 50;
   p->shared_ptr = &p->shared;
 
   while ((c = getopt(argc, argv, opts)) != -1) switch (c) {
@@ -659,15 +659,15 @@ sox_effect_handler_t const * sox_rate_effect_fn(void)
   };
   static char const * lines[] = {
     "[-q|-l|-m|-h|-v] [override-options] RATE[k]",
-    "                    PHASE    BAND-",
-    "     QUALITY       RESPONSE  WIDTH  REJ dB   TYPICAL USE",
-    " -q  quick          linear   n/a  ~30 @ Fs/4 playback on ancient hardware",
-    " -l  low            linear   80%     100     playback on old hardware",
-    " -m  medium         interm.  95%     100     audio playback",
-    " -h  high (default) interm.  95%     125     16-bit mastering (use with dither)",
-    " -v  very high      interm.  95%     175     24-bit mastering",
+    "                    BAND-",
+    "     QUALITY        WIDTH  REJ dB   TYPICAL USE",
+    " -q  quick          n/a  ~30 @ Fs/4 playback on ancient hardware",
+    " -l  low            80%     100     playback on old hardware",
+    " -m  medium         95%     100     audio playback",
+    " -h  high (default) 95%     125     16-bit mastering (use with dither)",
+    " -v  very high      95%     175     24-bit mastering",
     "              OVERRIDE OPTIONS (only with -m, -h, -v)",
-    " -M/-I/-L     Phase response = minimum/intermediate/linear",
+    " -M/-I/-L     Phase response = minimum/intermediate/linear(default)",
     " -s           Steep filter (band-width = 99%)",
     " -a           Allow aliasing above the pass-band",
     " -b 74-99.7   Any band-width %",

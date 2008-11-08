@@ -2037,12 +2037,9 @@ Change the audio sampling rate (i.e. resample the audio) to any given
 using a quality level defined as follows:
 .TS
 center box;
-cI cI2w9 cI cI2w6 cIw6 lIw17
-cB c c c c l.
+cI cI2w9 cI2w6 cIw6 lIw17
+cB c c c l.
 \ 	Quality	T{
-.na
-Phase Response
-T}	T{
 .na
 Band-width
 T}	Rej dB	T{
@@ -2052,29 +2049,29 @@ T}
 \-q	T{
 .na
 quick
-T}	linear	n/a	T{
+T}	n/a	T{
 .na
 \(~=30 @ \ Fs/4
 T}	T{
 .na
 playback on ancient hardware
 T}
-\-l	low	linear	80%	100	T{
+\-l	low	80%	100	T{
 .na
 playback on old hardware
 T}
-\-m	medium	intermediate	95%	100	T{
+\-m	medium	95%	100	T{
 .na
 audio playback
 T}
-\-h	high	intermediate	95%	125	T{
+\-h	high	95%	125	T{
 .na
 16-bit mastering (use with dither)
 T}
 \-v	T{
 .na
 very high
-T}	intermediate	95%	175	24-bit mastering
+T}	95%	175	24-bit mastering
 .TE
 .DT
 .SP
@@ -2087,10 +2084,9 @@ quality come at the expense of increasing amounts of time to process the
 audio.  If no quality option is given, the quality level used is `high'.
 .SP
 The `quick' algorithm uses cubic interpolation; all others use
-band-limited interpolation.  The `quick' and `low' quality
-algorithms have a `linear' phase response; for `medium', `high' and
-`very high', the phase response is configurable (see below), but
-defaults to `intermediate'.
+band-limited interpolation.  By default, all algorithms have
+a `linear' phase response; for `medium', `high' and
+`very high', the phase response is configurable (see below).
 .SP
 The
 .B rate
