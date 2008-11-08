@@ -26,10 +26,14 @@
 
 #include "sox_i.h"
 #include "fft4g.h"
-#include "getopt.h"
 #include <assert.h>
 #include <math.h>
 #include <png.h>
+
+/* we are playing games with getopt aliases so this needs to be included
+ * after system header files to prevent aliasing OS's version of getopt.
+ */
+#include "getopt.h"
 
 #define malloc              lsx_malloc
 #define calloc              lsx_calloc

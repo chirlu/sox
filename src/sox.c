@@ -70,8 +70,8 @@
 #include <fcntl.h>
 #endif
 
-/* We are playing games with getopt aliases so this needs to be included after unistd.h
- * to prevent aliasing oS's version of getopt.
+/* We are playing games with getopt aliases so this needs to be included after
+ * unistd.h to prevent aliasing OS's version of getopt.
  */
 #include "getopt.h"
 
