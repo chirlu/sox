@@ -21,11 +21,14 @@ endif
 play.1 rec.1: sox.1
 	$(RM) $@ && $(LN_S) $< $@
 
+README: README.sh FEATURES.in
+	./README.sh
+
 # Rule for making text man pages
 .1.txt .3.txt .7.txt:
 	tbl $(srcdir)/$< | nroff -man | col -b > $@
 
-DOCTXT = sox.txt soxi.txt soxformat.txt libsox.txt
+DOCTXT = sox.txt soxi.txt soxformat.txt libsox.txt README
 txt: $(DOCTXT)
 
 # Rule for making PDF man pages
