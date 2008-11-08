@@ -42,8 +42,8 @@ static int create(sox_effect_t * effp, int argc, char **argv)
   p->start = 65;
   p->n = 1023;
   do {                    /* break-able block */
-    NUMERIC_PARAMETER(delta,-50 , 15)
-    NUMERIC_PARAMETER(start, 50 , 75)
+    NUMERIC_PARAMETER(delta,-50 , 15) /* FIXME expand range */
+    NUMERIC_PARAMETER(start, 50 , 75) /* FIXME expand range */
     NUMERIC_PARAMETER(n    ,127 ,2047)
   } while (0);
   p->n = 2 * p->n + 1;

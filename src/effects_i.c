@@ -501,7 +501,7 @@ void lsx_apply_bartlett(double h[], const int num_points)
   }
 }
 
-void lsx_apply_blackman(double h[], const int num_points, double alpha)
+void lsx_apply_blackman(double h[], const int num_points, double alpha /*.16*/)
 {
   int i, m = num_points - 1;
   for (i = 0; i < num_points; ++i) {
