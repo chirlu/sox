@@ -72,7 +72,7 @@ fi
 echo "crossfade and concatenate files"
 echo
 echo  "Finding length of $first_file..."
-first_length=`$SOX "$first_file" 2>&1 -e stat | grep Length | cut -d : -f 2 | cut -f 1`
+first_length=`$SOX "$first_file" 2>&1 -n stat | grep Length | cut -d : -f 2 | cut -f 1`
 echo "Length is $first_length seconds"
 
 trim_length=`echo "$first_length - $fade_length" | bc`
@@ -80,7 +80,7 @@ crossfade_split_length=`echo "scale=2; $fade_length / 2.0" | bc`
 
 # Get crossfade section from first file and optionally do the fade out
 echo "Obtaining $fade_length seconds of fade out portion from $first_file..."
-$SOX "$first_file" -s -w fadeout1.wav trim $trim_length $fade_first_opts
+$SOX "$first_file" -s -b 16 fadeout1.wav trim $trim_length $fade_first_opts
 
 # When user specifies "auto" try to guess if a fadeout is needed.
 # "RMS amplitude" from the stat effect is effectively an average
@@ -88,7 +88,7 @@ $SOX "$first_file" -s -w fadeout1.wav trim $trim_length $fade_first_opts
 # quite then assume a fadeout has already been done.  An RMS value
 # of 0.1 was just obtained from trail and error.
 if [ "$fade_first" == "auto" ]; then
-    RMS=`$SOX fadeout1.wav 2>&1 -e stat | grep RMS | grep amplitude | cut -d : -f 2 | cut -f 1`
+    RMS=`$SOX fadeout1.wav 2>&1 -n stat | grep RMS | grep amplitude | cut -d : -f 2 | cut -f 1`
     should_fade=`echo "$RMS > 0.1" | bc`
     if [ $should_fade == 0 ]; then
         echo "Auto mode decided not to fadeout with RMS of $RMS"
@@ -102,11 +102,11 @@ $SOX fadeout1.wav fadeout2.wav $fade_first_opts
 
 # Get the crossfade section from the second file and optionally do the fade in
 echo "Obtaining $fade_length seconds of fade in portion from $second_file..."
-$SOX "$second_file" -s -w fadein1.wav trim 0 $fade_length
+$SOX "$second_file" -s -b 16 fadein1.wav trim 0 $fade_length
 
 # For auto, do similar thing as for fadeout.
 if [ "$fade_second" == "auto" ]; then
-    RMS=`$SOX fadein1.wav 2>&1 -e stat | grep RMS | grep amplitude | cut -d : -f 2 | cut -f 1`
+    RMS=`$SOX fadein1.wav 2>&1 -n stat | grep RMS | grep amplitude | cut -d : -f 2 | cut -f 1`
     should_fade=`echo "$RMS > 0.1" | bc`
     if [ $should_fade == 0 ]; then
         echo "Auto mode decided not to fadein with RMS of $RMS"
@@ -128,8 +128,8 @@ $SOX crossfade.wav crossfade2.wav trim $crossfade_split_length
 
 echo "Trimming off crossfade sections from original files..."
 
-$SOX "$first_file" -s -w song1.wav trim 0 $trim_length
-$SOX "$second_file" -s -w song2.wav trim $fade_length
+$SOX "$first_file" -s -b 16 song1.wav trim 0 $trim_length
+$SOX "$second_file" -s -b 16 song2.wav trim $fade_length
 
 echo "Creating crossfade files"
 $SOX song1.wav crossfade1.wav "cfo_${first_file}.wav"
