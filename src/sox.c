@@ -23,7 +23,6 @@
 #include "soxconfig.h"
 #include "sox.h"
 #include "util.h"
-#include "getopt.h"
 
 #include <errno.h>
 #include <math.h>
@@ -70,6 +69,11 @@
 #include <unistd.h>
 #include <fcntl.h>
 #endif
+
+/* We are playing games with getopt aliases so this needs to be included after unistd.h
+ * to prevent aliasing oS's version of getopt.
+ */
+#include "getopt.h"
 
 /* argv[0] options */
 
