@@ -61,7 +61,10 @@ uninstall-pdf:
 # Get rid on unneeded Content-Type, man directory and manpage index in extension.
 # e.g. ../man1/soxi.1.html becomes ../soxi.html
 # Return to Main Contents and link to man2html are also modified.
-FIXHTML = sed '1s,^Content-type.*,,' | \
+FIXHTML = sed 's,<HEAD>,&<link rel="stylesheet" href="http://sox.sourceforge.net/pub/skins/sox/sox.css" type="text/css"></link>,' | \
+	  tr '\n' '^' | sed 's,\^\^\^\^</PRE>,^</PRE>,g' | tr '^' '\n' | \
+	  sed 's,\<sr,\&radic;,g' | \
+	  sed '1s,^Content-type.*,,' | \
 	  sed 's,<A HREF="\.\./man[0-9]/\([-a-z]\+\)\.[0-9],<A HREF="\1,g' | \
 	  sed 's,<A HREF="\.\./index\.html">\(Return\ to\ Main\ Contents\),<A HREF=".">\1,' | \
 	  sed 's,<A HREF="/cgi-bin/man/man2html">man2html</A>,<A HREF="http://primates.ximian.com/~flucifredi/man/">man2html</A>,'

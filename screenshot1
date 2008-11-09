@@ -1,0 +1,45 @@
+
+ $ sox track1.wav track1-processed.flac remix - norm -3 highpass 22
+ gain -3 rate 48k norm -3 dither
+
+ Input File     : 'track1.wav'
+ Channels       : 2
+ Sample Rate    : 44100
+ Precision      : 16-bit
+ Duration       : 00:02:54.97 = 7716324 samples = 13123 CDDA sectors
+ Sample Encoding: 16-bit Signed Integer PCM
+ Endian Type    : little
+
+ Output File    : 'track1-processed.flac'
+ Channels       : 1
+ Sample Rate    : 48000
+ Precision      : 16-bit
+ Duration       : 00:02:54.97 = 8398720 samples ~ 13123 CDDA sectors
+ Sample Encoding: 16-bit FLAC
+
+ sox: effects chain: input      44100Hz 2 channels 16 bits (multi)
+ sox: effects chain: remix      44100Hz 2 channels 16 bits (multi)
+ sox: effects chain: norm       44100Hz 1 channels 16 bits
+ sox: effects chain: highpass   44100Hz 1 channels 16 bits
+ sox: effects chain: gain       44100Hz 1 channels 16 bits (multi)
+ sox: effects chain: rate       44100Hz 1 channels 16 bits
+ sox: effects chain: norm       48000Hz 1 channels 16 bits
+ sox: effects chain: dither     48000Hz 1 channels 16 bits
+ sox: effects chain: output     48000Hz 1 channels 16 bits (multi)
+
+ $ play *.ogg
+
+ 01 - Summer's Cauldron.ogg:
+
+   Encoding: Vorbis
+   Channels: 2 @ 16-bit   Track: 01 of 15
+ Samplerate: 44100Hz      Album: Skylarking
+ Album gain: -7.8dB      Artist: XTC
+   Duration: 00:03:19.99  Title: Summer's Cauldron
+
+ In:20.8% 00:00:41.61 [00:02:38.38] Out:1.84M [  ====|====  ] Clip:0
+
+
+
+
+
