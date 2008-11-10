@@ -48,8 +48,8 @@ if test "$using_libltdl" != "no"; then
 fi
 AC_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
-AC_CONFIG_SUBDIRS(libltdl)
 if test "$using_libltdl" != "no"; then
+  AC_WITH_LTDL
   AC_SUBST(LIBLTDL)
   AC_SUBST(LTDLINCL)
   AC_CHECK_HEADERS(ltdl.h, AC_DEFINE([HAVE_LIBLTDL], 1, [Define to 1 if you have libltdl]), [using_libltdl=no])
