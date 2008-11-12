@@ -13,6 +13,9 @@
 #include <string.h>
 #include <ctype.h>
 
+#define RAND (2. * rand() * (1. / RAND_MAX) - 1)
+#define RAND_ ranqd1(r) * (1. / (65536. * 32768.)) /* [-1,1) */
+
 typedef enum {
   synth_sine,
   synth_square,
@@ -25,7 +28,8 @@ typedef enum {
   synth_whitenoise,
   synth_noise = synth_whitenoise,     /* Just a handy alias */
   synth_pinknoise,
-  synth_brownnoise
+  synth_brownnoise,
+  synth_pluck
 } type_t;
 
 static lsx_enum_item const synth_type[] = {
@@ -40,6 +44,7 @@ static lsx_enum_item const synth_type[] = {
   LSX_ENUM_ITEM(synth_, noise)
   LSX_ENUM_ITEM(synth_, pinknoise)
   LSX_ENUM_ITEM(synth_, brownnoise)
+  LSX_ENUM_ITEM(synth_, pluck)
   {0, 0}
 };
 
@@ -60,15 +65,6 @@ static lsx_enum_item const combine_type[] = {
  * algorithm stolen from:
  * Author: Phil Burk, http://www.softsynth.com
  */
-
-/* Calculate pseudo-random 32 bit number based on linear congruential method. */
-static unsigned long GenerateRandomNumber(void)
-{
-  static unsigned long randSeed = 22222;        /* Change this for different random sequences. */
-
-  randSeed = (randSeed * 196314165) + 907633515;
-  return randSeed;
-}
 
 #define PINK_MAX_RANDOM_ROWS   (30)
 #define PINK_RANDOM_BITS       (24)
@@ -105,6 +101,7 @@ static float GeneratePinkNoise(PinkNoise * pink)
   long newRandom;
   long sum;
   float output;
+  static int32_t r;
 
   /* Increment and mask index. */
   pink->pink_Index = (pink->pink_Index + 1) & pink->pink_IndexMask;
@@ -126,13 +123,13 @@ static float GeneratePinkNoise(PinkNoise * pink)
      * values together. Only one changes each time.
      */
     pink->pink_RunningSum -= pink->pink_Rows[numZeros];
-    newRandom = ((long) GenerateRandomNumber()) >> PINK_RANDOM_SHIFT;
+    newRandom = ranqd1(r) >> PINK_RANDOM_SHIFT;
     pink->pink_RunningSum += newRandom;
     pink->pink_Rows[numZeros] = newRandom;
   }
 
   /* Add extra white noise value. */
-  newRandom = ((long) GenerateRandomNumber()) >> PINK_RANDOM_SHIFT;
+  newRandom = ranqd1(r) >> PINK_RANDOM_SHIFT;
   sum = pink->pink_RunningSum + newRandom;
 
   /* Scale to range of -1 to 0.9999. */
@@ -158,8 +155,10 @@ typedef struct {
 
   /* internal stuff */
   double cycle_start_time_s;
-  double brown_noise;
+  double last_out;
   PinkNoise pink_noise;
+  float *buffer;
+  size_t buffer_len;
 } * channel_t;
 
 
@@ -234,6 +233,12 @@ static void set_default_parameters(channel_t chan, size_t c)
         chan->p2 = 1;
       break;
 
+    case synth_pluck:
+      if (chan->p1 < 0)
+        chan->p1 = 0.995 * .5;
+      if (chan->p2 < 0)
+        chan->p2 = 16;
+
     default: break;
   }
 }
@@ -255,7 +260,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     argn++;
   }
 
-  while (argn < argc) { /* type [combine] [f1[-f2] [p1 [p2 [p3 [p3 [p4]]]]]] */
+  while (argn < argc) { /* type [combine] [f1[-f2] [off [ph [p1 [p2 [p3]]]]]] */
     channel_t chan;
     char * end_ptr;
     lsx_enum_item const *p = lsx_find_enum_text(argv[argn], synth_type);
@@ -334,8 +339,15 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
       NUMERIC_PARAMETER(phase ,   0, 100)
       NUMERIC_PARAMETER(p1,   0, 100)
       NUMERIC_PARAMETER(p2,   0, 100)
-      NUMERIC_PARAMETER(p1,   0, 100)
+      NUMERIC_PARAMETER(p3,   0, 100)
     } while (0);
+
+    if (chan->type == synth_pluck) {
+      if (chan->p1 >= 0)
+        chan->p1 = .4 + (.1 / 3) * log10(1 + 999 * chan->p1);
+      if (chan->p2 >= 0)
+        chan->p2 *= 100;
+    }
   }
 
   /* If no channel parameters were given, create one default channel: */
@@ -355,7 +367,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 static int start(sox_effect_t * effp)
 {
   priv_t * synth = (priv_t *) effp->priv;
-  size_t i;
+  size_t i, j;
 
   synth->max = lsx_sample_max(effp->out_encoding);
   synth->samples_done = 0;
@@ -370,6 +382,19 @@ static int start(sox_effect_t * effp)
     channel_t chan = &synth->channels[i];
     *chan = synth->getopts_channels[i % synth->getopts_nchannels];
     set_default_parameters(chan, i);
+    if (chan->type == synth_pluck) {
+      int32_t r = 0;
+      float dc = 0;
+      chan->buffer_len = effp->in_signal.rate / chan->freq + .5;
+      chan->buffer = malloc(chan->buffer_len * sizeof(*chan->buffer));
+      chan->buffer[0] = 0;
+      for (j = 1; j < chan->buffer_len; dc += chan->buffer[j++])
+        do chan->buffer[j] = chan->buffer[j - 1] + RAND_ * (1. / chan->p2);
+        while (fabs(chan->buffer[j]) > 1);
+      for (dc /= chan->buffer_len, j = 0; j < chan->buffer_len; ++j)
+        chan->buffer[j] = range_limit(chan->buffer[j] - dc, -1, 1);
+      chan->p1 /= cos(M_PI * chan->freq / effp->in_signal.rate);
+    }
     switch (chan->sweep) {
       case Linear: chan->mult = synth->samples_to_do?
           (chan->freq2 - chan->freq) / synth->samples_to_do / 2 : 0;
@@ -527,7 +552,6 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
           default: synth_out = 0;
         }
       } else switch (chan->type) {
-#define RAND (2. * rand() * (1. / RAND_MAX) - 1)
         case synth_whitenoise:
           synth_out = RAND;
           break;
@@ -537,10 +561,18 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
           break;
 
         case synth_brownnoise:
-          do synth_out = chan->brown_noise + RAND * (1. / 16);
+          do synth_out = chan->last_out + RAND * (1. / 16);
           while (fabs(synth_out) > 1);
-          chan->brown_noise = synth_out;
+          chan->last_out = synth_out;
           break;
+
+        case synth_pluck: {
+          size_t j = synth->samples_done % chan->buffer_len;
+          synth_out = chan->buffer[j];
+          chan->buffer[j] = chan->p1 * (synth_out + chan->last_out); 
+          chan->last_out = synth_out;
+          break;
+        }
 
         default: synth_out = 0;
       }
@@ -567,6 +599,10 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
 static int stop(sox_effect_t * effp)
 {
   priv_t * synth = (priv_t *) effp->priv;
+  size_t i;
+
+  for (i = 0; i < synth->number_of_channels; ++i)
+    free(synth->channels[i].buffer);
   free(synth->channels);
   return SOX_SUCCESS;
 }
