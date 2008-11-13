@@ -10,10 +10,12 @@
 #include "sox_i.h"
 #include "g711.h"
 
+typedef uint16_t uint14_t;
+typedef uint16_t uint13_t;
 #define SOX_ULAW_BYTE_TO_SAMPLE(d,clips)   SOX_SIGNED_16BIT_TO_SAMPLE(sox_ulaw2linear16(d),clips)
 #define SOX_ALAW_BYTE_TO_SAMPLE(d,clips)   SOX_SIGNED_16BIT_TO_SAMPLE(sox_alaw2linear16(d),clips)
-#define SOX_SAMPLE_TO_ULAW_BYTE(d,c) sox_14linear2ulaw(SOX_SAMPLE_TO_SIGNED_16BIT(d,c) >> 2)
-#define SOX_SAMPLE_TO_ALAW_BYTE(d,c) sox_13linear2alaw(SOX_SAMPLE_TO_SIGNED_16BIT(d,c) >> 3)
+#define SOX_SAMPLE_TO_ULAW_BYTE(d,c) sox_14linear2ulaw(SOX_SAMPLE_TO_UNSIGNED(14,d,c) - 0x2000)
+#define SOX_SAMPLE_TO_ALAW_BYTE(d,c) sox_13linear2alaw(SOX_SAMPLE_TO_UNSIGNED(13,d,c) - 0x1000)
 
 int lsx_rawseek(sox_format_t * ft, uint64_t offset)
 {
