@@ -117,14 +117,14 @@ fi
 AC_SUBST(APP_LDFLAGS)
 AC_SUBST(WARN_CFLAGS)
 
-dnl Get distro name from /etc/issue
-if test -r /etc/issue; then
-  AC_MSG_CHECKING([distro name])
-  DISTRO=`sed -e "s/.[0-9][0-9;]*[mJH]//g" < /etc/issue|tr "\n" " " | sed -e "s/(\\\\?\\\\\\\\.*//" -e "s/  */ /g" -e "s/^ //" -e "s/ $//"`
-  AC_MSG_RESULT("$DISTRO")
+AC_ARG_WITH(distro, AC_HELP_STRING([--with-distro=distro], [Provide distribution name]))
+if test "x$with_distro" != "x"; then
+  DISTRO="$with_distro"
   AC_SUBST(DISTRO)
   AC_DEFINE(HAVE_DISTRO, 1, [1 if DISTRO is defined])
   have_distro=yes
+else
+  DISTRO="not specified!"
 fi
 AM_CONDITIONAL(HAVE_DISTRO, test x$have_distro = xyes)
 
@@ -602,6 +602,7 @@ fi
 
 dnl Report configuration.
 echo
+echo "Distro name ...................... $DISTRO"
 echo "Debugging build................... $enable_debug"
 echo "External module support........... $using_libltdl"
 echo "ALSA driver....................... $enable_alsa"
