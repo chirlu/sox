@@ -113,6 +113,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
     p->remaining = 0;
 
     while (p->repeats > 0) {
+      lsx_debug("repeats=%u", p->repeats);
       p->repeats--;
       fseeko(p->tmp_file, (off_t) 0, SEEK_SET);
 
@@ -148,7 +149,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
     p->remaining -= *osamp;
   }
 
-  if (p->remaining == 0)
+  if (p->repeats == 0 && p->remaining == 0)
     return SOX_EOF;
   else
     return SOX_SUCCESS;
