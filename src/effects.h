@@ -51,6 +51,7 @@
   EFFECT(norm)
   EFFECT(oops)
   EFFECT(output)
+  EFFECT(overdrive)
   EFFECT(pad)
   EFFECT(pan)
   EFFECT(phaser)
