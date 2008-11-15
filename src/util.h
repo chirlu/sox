@@ -91,6 +91,9 @@
 #define M_SQRT2  sqrt(2.)
 #endif
 
+/* Numerical Recipes in C, p. 284 */
+#define ranqd1(x) ((x) = 1664525L * (x) + 1013904223L)
+
 #ifdef WORDS_BIGENDIAN
 #define MACHINE_IS_BIGENDIAN 1
 #define MACHINE_IS_LITTLEENDIAN 0
