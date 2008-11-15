@@ -27,6 +27,7 @@ typedef enum {
                                       /* Tones above, noises below */
   synth_whitenoise,
   synth_noise = synth_whitenoise,     /* Just a handy alias */
+  synth_tpdfnoise,
   synth_pinknoise,
   synth_brownnoise,
   synth_pluck
@@ -42,6 +43,7 @@ static lsx_enum_item const synth_type[] = {
   LSX_ENUM_ITEM(synth_, exp)
   LSX_ENUM_ITEM(synth_, whitenoise)
   LSX_ENUM_ITEM(synth_, noise)
+  LSX_ENUM_ITEM(synth_, tpdfnoise)
   LSX_ENUM_ITEM(synth_, pinknoise)
   LSX_ENUM_ITEM(synth_, brownnoise)
   LSX_ENUM_ITEM(synth_, pluck)
@@ -159,25 +161,25 @@ typedef struct {
   PinkNoise pink_noise;
   float *buffer;
   size_t buffer_len;
-} * channel_t;
+} channel_t;
 
 
 
 /* Private data for the synthesizer */
 typedef struct {
   char *        length_str;
-  channel_t     getopts_channels;
+  channel_t *      getopts_channels;
   size_t    getopts_nchannels;
   sox_sample_t  max;
   size_t    samples_done;
   size_t    samples_to_do;
-  channel_t     channels;
+  channel_t *      channels;
   size_t    number_of_channels;
 } priv_t;
 
 
 
-static void create_channel(channel_t chan)
+static void create_channel(channel_t *  chan)
 {
   memset(chan, 0, sizeof(*chan));
   chan->freq2 = chan->freq = 440;
@@ -186,7 +188,7 @@ static void create_channel(channel_t chan)
 
 
 
-static void set_default_parameters(channel_t chan, size_t c)
+static void set_default_parameters(channel_t *  chan, size_t c)
 {
   switch (chan->type) {
     case synth_square:    /* p1 is pulse width */
@@ -235,9 +237,9 @@ static void set_default_parameters(channel_t chan, size_t c)
 
     case synth_pluck:
       if (chan->p1 < 0)
-        chan->p1 = 0.995 * .5;
+        chan->p1 = .4;
       if (chan->p2 < 0)
-        chan->p2 = 16;
+        chan->p2 = 0;
 
     default: break;
   }
@@ -245,9 +247,27 @@ static void set_default_parameters(channel_t chan, size_t c)
 
 
 
+#undef NUMERIC_PARAMETER
+#define NUMERIC_PARAMETER(p, min, max) { \
+char * end_ptr; \
+double d = strtod(argv[argn], &end_ptr); \
+if (end_ptr == argv[argn]) \
+  break; \
+if (d < min || d > max || *end_ptr != '\0') { \
+  lsx_fail("parameter error"); \
+  return SOX_EOF; \
+} \
+chan->p = d / 100; /* adjust so abs(parameter) <= 1 */\
+if (++argn == argc) \
+  break; \
+}
+
+
+
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * synth = (priv_t *) effp->priv;
+  channel_t master, * chan = &master;
   int argn = 0;
 
   /* Get duration if given (if first arg starts with digit) */
@@ -255,13 +275,23 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     synth->length_str = lsx_malloc(strlen(argv[argn]) + 1);
     strcpy(synth->length_str, argv[argn]);
     /* Do a dummy parse of to see if it will fail */
-    if (lsx_parsesamples(9e9, synth->length_str, &synth->samples_to_do, 't') == NULL || !synth->samples_to_do)
+    if (lsx_parsesamples(9e9, synth->length_str, &synth->samples_to_do, 't') == NULL)
       return lsx_usage(effp);
     argn++;
   }
 
+  if (argn < argc) {            /* [off [ph [p1 [p2 [p3]]]]]] */
+    create_channel(chan);
+    do { /* break-able block */
+      NUMERIC_PARAMETER(offset,-100, 100)
+      NUMERIC_PARAMETER(phase ,   0, 100)
+      NUMERIC_PARAMETER(p1,   0, 100)
+      NUMERIC_PARAMETER(p2,   0, 100)
+      NUMERIC_PARAMETER(p3,   0, 100)
+    } while (0);
+  }
+
   while (argn < argc) { /* type [combine] [f1[-f2] [off [ph [p1 [p2 [p3]]]]]] */
-    channel_t chan;
     char * end_ptr;
     lsx_enum_item const *p = lsx_find_enum_text(argv[argn], synth_type);
 
@@ -271,7 +301,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     }
     synth->getopts_channels = lsx_realloc(synth->getopts_channels, sizeof(*synth->getopts_channels) * (synth->getopts_nchannels + 1));
     chan = &synth->getopts_channels[synth->getopts_nchannels++];
-    create_channel(chan);
+    memcpy(chan, &master, sizeof(*chan));
     chan->type = p->value;
     if (++argn == argc)
       break;
@@ -320,20 +350,6 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     }
 
     /* read rest of parameters */
-#undef NUMERIC_PARAMETER
-#define NUMERIC_PARAMETER(p, min, max) { \
-      char * end_ptr; \
-      double d = strtod(argv[argn], &end_ptr); \
-      if (end_ptr == argv[argn]) \
-        break; \
-      if (d < min || d > max || *end_ptr != '\0') { \
-        lsx_fail("parameter error"); \
-        return SOX_EOF; \
-      } \
-      chan->p = d / 100; /* adjust so abs(parameter) <= 1 */\
-      if (++argn == argc) \
-        break; \
-    }
     do { /* break-able block */
       NUMERIC_PARAMETER(offset,-100, 100)
       NUMERIC_PARAMETER(phase ,   0, 100)
@@ -341,19 +357,13 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
       NUMERIC_PARAMETER(p2,   0, 100)
       NUMERIC_PARAMETER(p3,   0, 100)
     } while (0);
-
-    if (chan->type == synth_pluck) {
-      if (chan->p1 >= 0)
-        chan->p1 = .4 + (.1 / 3) * log10(1 + 999 * chan->p1);
-      if (chan->p2 >= 0)
-        chan->p2 *= 100;
-    }
   }
 
   /* If no channel parameters were given, create one default channel: */
   if (!synth->getopts_nchannels) {
     synth->getopts_channels = lsx_malloc(sizeof(*synth->getopts_channels));
-    create_channel(&synth->getopts_channels[synth->getopts_nchannels++]);
+    memcpy(&synth->getopts_channels[0], &master, sizeof(channel_t));
+    ++synth->getopts_nchannels;
   }
 
   if (!effp->in_signal.channels)
@@ -373,27 +383,30 @@ static int start(sox_effect_t * effp)
   synth->samples_done = 0;
 
   if (synth->length_str)
-    if (lsx_parsesamples(effp->in_signal.rate, synth->length_str, &synth->samples_to_do, 't') == NULL || !synth->samples_to_do)
+    if (lsx_parsesamples(effp->in_signal.rate, synth->length_str, &synth->samples_to_do, 't') == NULL)
       return lsx_usage(effp);
 
   synth->number_of_channels = effp->in_signal.channels;
   synth->channels = lsx_calloc(synth->number_of_channels, sizeof(*synth->channels));
   for (i = 0; i < synth->number_of_channels; ++i) {
-    channel_t chan = &synth->channels[i];
+    channel_t *  chan = &synth->channels[i];
     *chan = synth->getopts_channels[i % synth->getopts_nchannels];
     set_default_parameters(chan, i);
     if (chan->type == synth_pluck) {
       int32_t r = 0;
-      float dc = 0;
+      float colour = pow(2., 4 * (chan->p2 - 1));
+      float dc = 0, a = 6.9 / (chan->p2 < .25? chan->p2  / .25 * 11 + 7 :
+                     chan->p2 <= .55? 18 :  (1-chan->p2) / .45 * 3 + 15);
       chan->buffer_len = effp->in_signal.rate / chan->freq + .5;
       chan->buffer = malloc(chan->buffer_len * sizeof(*chan->buffer));
       chan->buffer[0] = 0;
       for (j = 1; j < chan->buffer_len; dc += chan->buffer[j++])
-        do chan->buffer[j] = chan->buffer[j - 1] + RAND_ * (1. / chan->p2);
+        do chan->buffer[j] = chan->buffer[j - 1] + RAND_ * colour;
         while (fabs(chan->buffer[j]) > 1);
       for (dc /= chan->buffer_len, j = 0; j < chan->buffer_len; ++j)
-        chan->buffer[j] = range_limit(chan->buffer[j] - dc, -1, 1);
-      chan->p1 /= cos(M_PI * chan->freq / effp->in_signal.rate);
+        chan->buffer[j] = range_limit(chan->buffer[j] - dc, -1, 1) * a;
+      chan->p3 = .5 * exp(log(.6) / chan->freq / chan->p1);
+      lsx_debug("a=%g colour=%g", a, 1/colour);
     }
     switch (chan->sweep) {
       case Linear: chan->mult = synth->samples_to_do?
@@ -438,7 +451,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
   for (done = 0; done < len && result == SOX_SUCCESS; ++done) {
     for (c = 0; c < effp->in_signal.channels; c++) {
       sox_sample_t synth_input = *ibuf++;
-      channel_t chan = &synth->channels[c];
+      channel_t *  chan = &synth->channels[c];
       double synth_out;              /* [-1, 1] */
 
       if (chan->type < synth_noise) { /* Need to calculate phase: */
@@ -556,6 +569,10 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
           synth_out = RAND;
           break;
 
+        case synth_tpdfnoise:
+          synth_out = .5 * (RAND + RAND);
+          break;
+
         case synth_pinknoise:
           synth_out = GeneratePinkNoise(&(chan->pink_noise));
           break;
@@ -569,7 +586,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
         case synth_pluck: {
           size_t j = synth->samples_done % chan->buffer_len;
           synth_out = chan->buffer[j];
-          chan->buffer[j] = chan->p1 * (synth_out + chan->last_out); 
+          chan->buffer[j] = chan->p3 * (synth_out + chan->last_out); 
           chan->last_out = synth_out;
           break;
         }
