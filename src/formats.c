@@ -37,55 +37,55 @@
   #include <magic.h>
 #endif
 
-static char const * detect_magic(sox_format_t * ft, char const * ext)
+static char const * detect_format(sox_format_t * ft, char const * ext)
 {
   char data[256];
   size_t len = lsx_readbuf(ft, data, sizeof(data));
-  #define MAGIC(type, p2, l2, d2, p1, l1, d1) if (len >= p1 + l1 && \
+  #define CHECK(type, p2, l2, d2, p1, l1, d1) if (len >= p1 + l1 && \
       !memcmp(data + p1, d1, (size_t)l1) && !memcmp(data + p2, d2, (size_t)l2)) return #type;
-  MAGIC(voc   , 0, 0, ""     , 0, 20, "Creative Voice File\x1a")
-  MAGIC(smp   , 0, 0, ""     , 0, 17, "SOUND SAMPLE DATA")
-  MAGIC(wve   , 0, 0, ""     , 0, 15, "ALawSoundFile**")
-  MAGIC(amr-wb, 0, 0, ""     , 0,  9, "#!AMR-WB\n")
-  MAGIC(prc   , 0, 0, ""     , 0,  8, "\x37\x00\x00\x10\x6d\x00\x00\x10")
-  MAGIC(sph   , 0, 0, ""     , 0,  7, "NIST_1A")
-  MAGIC(amr-nb, 0, 0, ""     , 0,  6, "#!AMR\n")
-  MAGIC(txw   , 0, 0, ""     , 0,  6, "LM8953")
-  MAGIC(sndt  , 0, 0, ""     , 0,  6, "SOUND\x1a")
-  MAGIC(vorbis, 0, 4, "OggS" , 29, 6, "vorbis")
-  MAGIC(speex , 0, 4, "OggS" , 28, 6, "Speex")
-  MAGIC(hcom  ,65, 4, "FSSD" , 128,4, "HCOM")
-  MAGIC(wav   , 0, 4, "RIFF" , 8,  4, "WAVE")
-  MAGIC(wav   , 0, 4, "RIFX" , 8,  4, "WAVE")
-  MAGIC(aiff  , 0, 4, "FORM" , 8,  4, "AIFF")
-  MAGIC(aifc  , 0, 4, "FORM" , 8,  4, "AIFC")
-  MAGIC(8svx  , 0, 4, "FORM" , 8,  4, "8SVX")
-  MAGIC(maud  , 0, 4, "FORM" , 8,  4, "MAUD")
-  MAGIC(xa    , 0, 0, ""     , 0,  4, "XA\0\0")
-  MAGIC(xa    , 0, 0, ""     , 0,  4, "XAI\0")
-  MAGIC(xa    , 0, 0, ""     , 0,  4, "XAJ\0")
-  MAGIC(au    , 0, 0, ""     , 0,  4, ".snd")
-  MAGIC(au    , 0, 0, ""     , 0,  4, "dns.")
-  MAGIC(au    , 0, 0, ""     , 0,  4, "\0ds.")
-  MAGIC(au    , 0, 0, ""     , 0,  4, ".sd\0")
-  MAGIC(flac  , 0, 0, ""     , 0,  4, "fLaC")
-  MAGIC(avr   , 0, 0, ""     , 0,  4, "2BIT")
-  MAGIC(caf   , 0, 0, ""     , 0,  4, "caff")
-  MAGIC(wv    , 0, 0, ""     , 0,  4, "wvpk")
-  MAGIC(paf   , 0, 0, ""     , 0,  4, " paf")
-  MAGIC(sf    , 0, 0, ""     , 0,  4, "\144\243\001\0")
-  MAGIC(sf    , 0, 0, ""     , 0,  4, "\0\001\243\144")
-  MAGIC(sf    , 0, 0, ""     , 0,  4, "\144\243\002\0")
-  MAGIC(sf    , 0, 0, ""     , 0,  4, "\0\002\243\144")
-  MAGIC(sf    , 0, 0, ""     , 0,  4, "\144\243\003\0")
-  MAGIC(sf    , 0, 0, ""     , 0,  4, "\0\003\243\144")
-  MAGIC(sf    , 0, 0, ""     , 0,  4, "\144\243\004\0")
-  MAGIC(sox   , 0, 0, ""     , 0,  4, ".SoX")
-  MAGIC(sox   , 0, 0, ""     , 0,  4, "XoS.")
+  CHECK(voc   , 0, 0, ""     , 0, 20, "Creative Voice File\x1a")
+  CHECK(smp   , 0, 0, ""     , 0, 17, "SOUND SAMPLE DATA")
+  CHECK(wve   , 0, 0, ""     , 0, 15, "ALawSoundFile**")
+  CHECK(amr-wb, 0, 0, ""     , 0,  9, "#!AMR-WB\n")
+  CHECK(prc   , 0, 0, ""     , 0,  8, "\x37\x00\x00\x10\x6d\x00\x00\x10")
+  CHECK(sph   , 0, 0, ""     , 0,  7, "NIST_1A")
+  CHECK(amr-nb, 0, 0, ""     , 0,  6, "#!AMR\n")
+  CHECK(txw   , 0, 0, ""     , 0,  6, "LM8953")
+  CHECK(sndt  , 0, 0, ""     , 0,  6, "SOUND\x1a")
+  CHECK(vorbis, 0, 4, "OggS" , 29, 6, "vorbis")
+  CHECK(speex , 0, 4, "OggS" , 28, 6, "Speex")
+  CHECK(hcom  ,65, 4, "FSSD" , 128,4, "HCOM")
+  CHECK(wav   , 0, 4, "RIFF" , 8,  4, "WAVE")
+  CHECK(wav   , 0, 4, "RIFX" , 8,  4, "WAVE")
+  CHECK(aiff  , 0, 4, "FORM" , 8,  4, "AIFF")
+  CHECK(aifc  , 0, 4, "FORM" , 8,  4, "AIFC")
+  CHECK(8svx  , 0, 4, "FORM" , 8,  4, "8SVX")
+  CHECK(maud  , 0, 4, "FORM" , 8,  4, "MAUD")
+  CHECK(xa    , 0, 0, ""     , 0,  4, "XA\0\0")
+  CHECK(xa    , 0, 0, ""     , 0,  4, "XAI\0")
+  CHECK(xa    , 0, 0, ""     , 0,  4, "XAJ\0")
+  CHECK(au    , 0, 0, ""     , 0,  4, ".snd")
+  CHECK(au    , 0, 0, ""     , 0,  4, "dns.")
+  CHECK(au    , 0, 0, ""     , 0,  4, "\0ds.")
+  CHECK(au    , 0, 0, ""     , 0,  4, ".sd\0")
+  CHECK(flac  , 0, 0, ""     , 0,  4, "fLaC")
+  CHECK(avr   , 0, 0, ""     , 0,  4, "2BIT")
+  CHECK(caf   , 0, 0, ""     , 0,  4, "caff")
+  CHECK(wv    , 0, 0, ""     , 0,  4, "wvpk")
+  CHECK(paf   , 0, 0, ""     , 0,  4, " paf")
+  CHECK(sf    , 0, 0, ""     , 0,  4, "\144\243\001\0")
+  CHECK(sf    , 0, 0, ""     , 0,  4, "\0\001\243\144")
+  CHECK(sf    , 0, 0, ""     , 0,  4, "\144\243\002\0")
+  CHECK(sf    , 0, 0, ""     , 0,  4, "\0\002\243\144")
+  CHECK(sf    , 0, 0, ""     , 0,  4, "\144\243\003\0")
+  CHECK(sf    , 0, 0, ""     , 0,  4, "\0\003\243\144")
+  CHECK(sf    , 0, 0, ""     , 0,  4, "\144\243\004\0")
+  CHECK(sox   , 0, 0, ""     , 0,  4, ".SoX")
+  CHECK(sox   , 0, 0, ""     , 0,  4, "XoS.")
 
   if (ext && !strcasecmp(ext, "snd"))
-  MAGIC(sndr  , 7, 1, ""     , 0,  2, "\0")
-  #undef MAGIC
+  CHECK(sndr  , 7, 1, ""     , 0,  2, "\0")
+  #undef CHECK
   return NULL;
 }
 
@@ -415,7 +415,7 @@ sox_format_t * sox_open_read(
 
   if (!filetype) {
     if (ft->seekable) {
-      filetype = detect_magic(ft, lsx_find_file_extension(path));
+      filetype = detect_format(ft, lsx_find_file_extension(path));
       lsx_rewind(ft);
 #if HAVE_MAGIC
       if (!filetype) {
