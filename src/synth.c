@@ -280,8 +280,8 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     argn++;
   }
 
+  create_channel(chan);
   if (argn < argc) {            /* [off [ph [p1 [p2 [p3]]]]]] */
-    create_channel(chan);
     do { /* break-able block */
       NUMERIC_PARAMETER(offset,-100, 100)
       NUMERIC_PARAMETER(phase ,   0, 100)
