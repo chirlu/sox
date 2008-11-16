@@ -159,8 +159,9 @@ typedef struct {
   double cycle_start_time_s;
   double last_out;
   PinkNoise pink_noise;
-  float *buffer;
-  size_t buffer_len;
+
+  double * buffer;
+  size_t buffer_len, pos, dx, dy, acc;
 } channel_t;
 
 
@@ -394,10 +395,13 @@ static int start(sox_effect_t * effp)
     set_default_parameters(chan, i);
     if (chan->type == synth_pluck) {
       int32_t r = 0;
-      float colour = pow(2., 4 * (chan->p2 - 1));
-      float dc = 0, a = 6.9 / (chan->p2 < .25? chan->p2  / .25 * 11 + 7 :
+      double colour = pow(2., 4 * (chan->p2 - 1));
+      double dc = 0, a = 6.9 / (chan->p2 < .25? chan->p2  / .25 * 11 + 7 :
                      chan->p2 <= .55? 18 :  (1-chan->p2) / .45 * 3 + 15);
       chan->buffer_len = effp->in_signal.rate / chan->freq + .5;
+      chan->dx = chan->freq * 1000 + .5;
+      chan->dy = effp->in_signal.rate / chan->buffer_len * 1000 + .5;
+      chan->pos = chan->acc = 0;
       chan->buffer = malloc(chan->buffer_len * sizeof(*chan->buffer));
       chan->buffer[0] = 0;
       for (j = 1; j < chan->buffer_len; dc += chan->buffer[j++])
@@ -584,10 +588,16 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
           break;
 
         case synth_pluck: {
-          size_t j = synth->samples_done % chan->buffer_len;
-          synth_out = chan->buffer[j];
-          chan->buffer[j] = chan->p3 * (synth_out + chan->last_out); 
-          chan->last_out = synth_out;
+          size_t pos1 = chan->pos + 1 == chan->buffer_len? 0 : chan->pos + 1;
+          double t = (double)chan->acc / chan->dy;
+          synth_out = chan->buffer[chan->pos] * (1-t) + chan->buffer[pos1] * t;
+          for (chan->acc+=chan->dx; chan->acc>=chan->dy; chan->acc-=chan->dy) {
+            t = chan->buffer[chan->pos];
+            chan->buffer[chan->pos] =
+              chan->p3 * (chan->buffer[chan->pos] + chan->last_out);
+            chan->last_out = t;
+            chan->pos = chan->pos + 1 == chan->buffer_len? 0 : chan->pos + 1;
+          }
           break;
         }
 

@@ -24,20 +24,20 @@ B0="pl %-27 pl %-22 pl %-15 pl %-10 pl %-6 pl %-3"
 A1="pl %-17 pl %-12 pl %-9 pl %-5 pl %0 pl %4"
 B1="pl %-15 pl %-10 pl %-7 pl %-3 pl %2 pl %6"
 
-e="delay 0 .02 .04 .06 .08 .1 remix - overdrive 40 gain -10 fade 0"
+e="delay 0 .02 .04 .06 .08 .1 remix - overdrive 40 gain -11 fade 0"
 s="$sox -q -n -p synth 0 0 0 80 87"
 
-$play -m \
+$play -m -v .8 \
 "|$sox \
 \"|$sox -n -p synth noise fade 0 .5 .48 trim 0 .15\" \
 \"|$sox -n -p synth noise fade h 0 .26 .11 gain -35 lowpass -1 12k\" \
--p splice .15,.06,0 gain -14 lowpass -1 12k highpass -1 9k \
+-p splice .15,.06,0 gain -15 lowpass -1 12k highpass -1 9k \
 equalizer 14k 1.3 13 \
 equalizer 9500 10 8 \
 equalizer 7000 10 8 \
 equalizer 5200 10 8 \
 equalizer 3800 10 8 \
-equalizer 1500 10 8 pad 0 .21 remix 1 1 repeat 72" \
+equalizer 1500 10 8 pad 0 .21 remix 1 1 reverb 20 repeat 72" \
 "|$sox \
 \"|$sox -n -p trim 0 1.4\" \
 \"|$s $A0 $e 4 .1 bend .4,+200,.3\" \
