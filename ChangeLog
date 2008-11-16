@@ -4,6 +4,37 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-14.x.x	200x-xx-xx
+----------
+
+Deprecation status:
+
+  Unchanged from 14.2.0
+
+File formats:
+
+  o 
+
+Effects:
+
+  o New `overdrive' effect.  (robs)
+  o New `pluck' and `tpdf' types for `synth'.  (robs)
+  o Can now set common parameters for multiple `synth' channels.  (robs)
+  o Fix `repeat' sometimes stopping repeating too soon.  (robs)
+
+Other new features:
+
+  o 
+
+Other bug fixes:
+
+  o Fix [2262177] SoX build could fail with parse /etc/issue error.  (robs)
+
+Internal improvements:
+
+  o 
+
+
 sox-14.2.0	2008-11-09
 ----------
 
