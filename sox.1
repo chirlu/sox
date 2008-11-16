@@ -1486,9 +1486,14 @@ seconds, and leaves the second channel (and any other channels that may be
 present) un-delayed.
 The following (one long) command plays a chime sound:
 .EX
-	play -n synth sin %-21.5 sin %-14.5 sin %-9.5 sin %-5.5 \\
-	  sin %-2.5 sin %2.5 gain -5.4 fade h 0.008 2 1.5 \\
-	  delay 0 .27 .54 .76 1.01 1.3 remix - fade h 0.1 2.72 2.5
+	play -n synth sin %3 sin %-2 sin %-5 sin %-9 \\
+	  sin %-14 sin %-21 fade h .01 2 1.5 delay \\
+	  1.3 1 .76 .54 .27 remix - fade h 0 2.7 2.5 norm -1
+.EE
+and this plays a guitar chord:
+.EX
+	play -n synth pl %-26 pl %-22 pl %-19 pl %-14 pl %-7 pl \\
+	  %-2 delay 0 .05 .1 .15 .2 .25 remix - fade 0 4 .1 norm -1
 .EE
 .TP
 \fBdither\fR [\fB\-r\fR|\fB\-t\fR] [\fB\-s\fR|\fB\-f \fIfilter\fR] [\fIdepth\fR]
@@ -1965,6 +1970,11 @@ Mixes stereo to twin-mono where each mono channel contains the
 difference between the left and right stereo channels.
 This is sometimes known as the `karaoke' effect as it often has the effect
 of removing most or all of the vocals from a recording.
+.TP
+\fBoverdrive\fR [\fIgain\fR(20) [\fIcolour\fR(20)]]
+Non linear distortion.
+The \fIcolour\fR parameter controls the amount of even harmonic content
+in the overdriven output.
 .TP
 \fBpad\fR { \fIlength\fR[\fB@\fIposition\fR] }
 Pad the audio with silence, at the beginning, the end, or any
@@ -2930,9 +2940,14 @@ to create a more complex waveform:
 .EE
 Frequencies can also be given as a number of musical semitones relative
 to `middle A' (440\ Hz) by prefixing a `%' character;  for example, the
-following could be used to help tune a guitar's `E' strings:
+following could be used to help tune a guitar's low `E' string:
 .EX
-	play -n synth sine %-17
+	play -n synth 4 pluck %-29
+.EE
+or with a (Bourne shell) loop, the whole guitar:
+.EX
+	for s in -29 -24 -19 -14 -10 -5; do \\
+		play -n synth 4 pluck %$s repeat 2; done
 .EE
 .B N.B.
 This effect generates audio at maximum volume (0dBFS), which means that there
@@ -2955,7 +2970,7 @@ for specifying sample counts is the number of samples with the letter
 `s' appended to it.
 .SP
 \fItype\fR is one of sine, square, triangle, sawtooth, trapezium, exp,
-[white]noise, pinknoise, brownnoise; default=sine
+[white]noise, tpdfnoise pinknoise, brownnoise, pluck; default=sine
 .SP
 \fIcombine\fR is one of create, mix, amod (amplitude modulation), fmod
 (frequency modulation); default=create
@@ -2992,10 +3007,11 @@ used for noise.
 .SP
 \fIp1\fR is the percentage of each cycle that is `on' (square), or
 `rising' (triangle, exp, trapezium); default=50 (square, triangle, exp),
-default=10 (trapezium).
+default=10 (trapezium), or sustain (pluck); default=40.
 .SP
 \fIp2\fR (trapezium): the percentage through each cycle at which `falling'
-begins; default=50. exp: the amplitude in percent; default=100.
+begins; default=50. exp: the amplitude in percent; default=100, or tone
+(pluck) default=0.
 .SP
 \fIp3\fR (trapezium): the percentage through each cycle at which `falling'
 ends; default=60.
