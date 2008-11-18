@@ -37,19 +37,10 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  double fc = 10;
-  double w0 = 2 * M_PI * fc / effp->in_signal.rate;
 
   if (p->gain == 1)
     return SOX_EFF_NULL;
 
-  if (w0 > M_PI) {
-    lsx_fail("frequency must be less than half the sample-rate (Nyquist rate)");
-    return SOX_EOF;
-  }
-  p->a1 = -exp(-w0);
-  p->b0 = (1 - p->a1)/2;
-  p->b1 = -p->b0;
   return SOX_SUCCESS;
 }
 
@@ -59,13 +50,13 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   priv_t * p = (priv_t *)effp->priv;
   size_t dummy = 0, len = *isamp = *osamp = min(*isamp, *osamp);
   while (len--) {
-    double d = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf++, dummy);
+    double d = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf++, dummy), d0 = d;
     d *= p->gain;
     d += p->colour;
     d = d < -1? -2./3 : d > 1? 2./3 : d - d * d * d * (1./3);
-    p->last_out = p->b0 * d + p->b1 * p->last_in - p->a1 * p->last_out;
+    p->last_out = d - p->last_in + .995 * p->last_out;
     p->last_in = d;
-    *obuf++ = SOX_FLOAT_64BIT_TO_SAMPLE(p->last_out, dummy);
+    *obuf++ = SOX_FLOAT_64BIT_TO_SAMPLE(d0 * .5 + p->last_out * .75, dummy);
   }
   return SOX_SUCCESS;
 }
