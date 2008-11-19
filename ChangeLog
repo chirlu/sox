@@ -13,7 +13,8 @@ Deprecation status:
 
 File formats:
 
-  o 
+  o Slight improvement to A-law/u-law conversion accuracy: round LSB
+    instead of truncating.  (robs)
 
 Effects:
 
