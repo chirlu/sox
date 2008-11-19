@@ -577,6 +577,7 @@ static int commentChunk(char **text, char *chunkDescription, sox_format_t * ft)
             lsx_fail_errno(ft,SOX_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
             return(SOX_EOF);
         }
+        totalReadLength += 1;
     }
   }
   lsx_debug("%-10s   \"%s\"", chunkDescription, *text);

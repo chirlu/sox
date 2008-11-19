@@ -29,6 +29,7 @@ Other new features:
 Other bug fixes:
 
   o Fix [2262177] SoX build could fail with parse /etc/issue error.  (robs)
+  o Fix reading AIFF files with pad bytes in COMT chunks. (Joe Holt)
 
 Internal improvements:
 
