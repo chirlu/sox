@@ -287,7 +287,7 @@ static int startread(sox_format_t * ft)
   }
   else rate = sf->sf_info->samplerate;
 
-#if 0
+#ifdef HAVE_SFC_SET_SCALE_FLOAT_INT_READ
   if ((sf->sf_info->format & SF_FORMAT_SUBMASK) == SF_FORMAT_FLOAT)
     sf_command(sf->sf_file, SFC_SET_SCALE_FLOAT_INT_READ, NULL, SF_TRUE);
 #endif
@@ -363,7 +363,7 @@ static int startwrite(sox_format_t * ft)
     return SOX_EOF;
   }
 
-#if 0
+#ifdef HAVE_SFC_SET_SCALE_INT_FLOAT_WRITE
   if ((sf->sf_info->format & SF_FORMAT_SUBMASK) == SF_FORMAT_FLOAT)
     sf_command(sf->sf_file, SFC_SET_SCALE_INT_FLOAT_WRITE, NULL, SF_TRUE);
 #endif

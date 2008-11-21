@@ -15,6 +15,7 @@ File formats:
 
   o Slight improvement to A-law/u-law conversion accuracy: round LSB
     instead of truncating.  (robs)
+  o Fix [2028181] w64 float format incompatibility.  (Tim Munro)
 
 Effects:
 
