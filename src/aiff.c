@@ -367,6 +367,7 @@ int lsx_aiffstartread(sox_format_t * ft)
         if (blocksize != 0)
             lsx_warn("AIFF header has invalid blocksize.  Ignoring but expect a premature EOF");
 
+        ssndsize -= offset;
         while (offset-- > 0) {
                 if (lsx_readb(ft, &trash8) == SOX_EOF)
                 {
@@ -411,10 +412,7 @@ int lsx_aiffstartread(sox_format_t * ft)
 
         /* Cope with 'sowt' CD tracks as read on Macs */
         if (is_sowt)
-        {
-                aiff->nsamples -= 4;
                 ft->encoding.reverse_bytes = !ft->encoding.reverse_bytes;
-        }
 
         if (foundmark && !foundinstr)
         {
