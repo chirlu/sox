@@ -65,6 +65,7 @@ The audio effects/tools included in this release are as follows:
 ** echo: Add an echo
 ** echos: Add a sequence of echoes
 ** flanger: Stereo flanger
+** overdrive: Non-linear distortion
 ** phaser: Phase shifter
 ** repeat: Loop the audio a number of times
 ** reverb: Add reverberation
