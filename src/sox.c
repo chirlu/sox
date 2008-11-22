@@ -2222,24 +2222,42 @@ static void parse_options_and_filenames(int argc, char **argv)
     add_file(&opts, device_name(opts.filetype));
 }
 
-typedef enum {Full,
-  Type, Rate, Channels, Samples, Duration, Bits, Encoding, Annotation} soxi_t;
+static double soxi_total;
+static size_t soxi_file_count;
 
-static int soxi1(soxi_t * type, char * filename)
+typedef enum {Full, Type, Rate, Channels, Samples, Duration, Duration_secs,
+    Bits, Bitrate, Encoding, Annotation} soxi_t;
+
+static int soxi1(soxi_t const * type, char * filename)
 {
   size_t ws;
+  double secs;
   sox_format_t * ft = sox_open_read(filename, NULL, NULL, NULL);
 
   if (!ft)
     return 1;
   ws = ft->signal.length / max(ft->signal.channels, 1);
+  secs = (double)ws / max(ft->signal.rate, 1);
+  ++soxi_file_count;
+  if (soxi_total >= 0 && !ws)
+    soxi_total = -2;
+  if (soxi_total >= 0) soxi_total += *type == Samples? ws : secs;
+
   switch (*type) {
     case Type: printf("%s\n", ft->filetype); break;
     case Rate: printf("%g\n", ft->signal.rate); break;
     case Channels: printf("%u\n", ft->signal.channels); break;
-    case Samples: printf("%lu\n", (unsigned long)ws); break;
-    case Duration: printf("%s\n", str_time((double)ws / max(ft->signal.rate, 1))); break;
+    case Samples: if (soxi_total ==-1) printf("%lu\n",(unsigned long)ws); break;
+    case Duration: if (soxi_total ==-1) printf("%s\n", str_time(secs)); break;
+    case Duration_secs: if (soxi_total ==-1) printf("%f\n", secs); break;
     case Bits: printf("%u\n", ft->encoding.bits_per_sample); break;
+    case Bitrate: {
+      struct stat st;    /* ft->fp may validly be NULL, so stat not fstat */
+      if (!stat(filename, &st) && (st.st_mode & S_IFMT) == S_IFREG)
+        printf("%s\n", lsx_sigfigs3((size_t)(8. * st.st_size / secs + .5)));
+      else puts("0");
+      break;
+    }
     case Encoding: printf("%s\n", sox_encodings_info[ft->encoding.encoding].desc); break;
     case Annotation: if (ft->oob.comments) {
       sox_comments_t p = ft->oob.comments;
@@ -2253,9 +2271,10 @@ static int soxi1(soxi_t * type, char * filename)
 
 static int soxi(int argc, char * const * argv)
 {
-  static char const opts[] = "trcsdbea?V::";
+  static char const opts[] = "trcsdDbBea?TV::";
   soxi_t type = Full;
   int opt, num_errors = 0;
+  sox_bool do_total = sox_false;
 
   while ((opt = getopt(argc, argv, opts)) > 0) /* act only on last option */
     if (opt == 'V') {
@@ -2271,13 +2290,36 @@ static int soxi(int argc, char * const * argv)
         }
         sox_globals.verbosity = (unsigned)i;
       }
-    } else type = 1 + (strchr(opts, opt) - opts);
-  if (type > Annotation)
-    printf("Usage: soxi [-V[level]] [-t|-r|-c|-s|-d|-b|-e|-a] infile1 ...\n");
-  else for (; optind < argc; ++optind) {
+    } 
+    else if (opt == 'T')
+      do_total = sox_true;
+    else type = 1 + (strchr(opts, opt) - opts);
+  if (type > Annotation) {
+    printf("Usage: soxi [-V[level]] [-T] [-t|-r|-c|-s|-d|-D|-b|-B|-e|-a] infile1 ...\n");
+    return -1;
+  }
+  if (type == Full)
+    do_total = sox_true;
+  else if (do_total && (type < Samples || type > Duration_secs)) {
+    fprintf(stderr, "soxi: ignoring -T; n/a with other given option");
+    do_total = sox_false;
+  }
+  soxi_total = -!do_total;
+  for (; optind < argc; ++optind) {
     if (sox_is_playlist(argv[optind]))
       num_errors += (sox_parse_playlist((sox_playlist_callback_t)soxi1, &type, argv[optind]) != SOX_SUCCESS);
     else num_errors += soxi1(&type, argv[optind]);
+  }
+  if (type == Full) {
+    if (soxi_file_count > 1 && soxi_total > 0)
+      printf("Total Duration of %u files: %s\n", soxi_file_count, str_time(soxi_total));
+  }
+  else if (do_total) {
+    if (soxi_total < 0)
+      puts("0");
+    else if (type == Duration)
+      printf("%s\n", str_time(soxi_total));
+    else printf("%f\n", soxi_total);
   }
   return num_errors;
 }
