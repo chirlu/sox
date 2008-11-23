@@ -38,7 +38,7 @@ if test "$with_libltdl" != "no"; then
     dnl Force off using libltdl on targets that are know to have
     dnl problems.
     case $target in
-      *os2*)
+      *cygwin* | *mingw* | *os2*)
         using_libltdl=no
         ;;
     esac
