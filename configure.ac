@@ -2,6 +2,8 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(SoX, 14.2.0, sox-devel@lists.sourceforge.net)
 
+m4_ifdef([AC_CONFIG_MACRO_DIR], [AC_CONFIG_MACRO_DIR([m4])])
+
 dnl Find target architecture
 AC_CANONICAL_TARGET
 
@@ -19,7 +21,7 @@ AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
-# Increase version when binary compatibility with previous version is broken
+dnl Increase version when binary compatibility with previous version is broken
 SHLIB_VERSION=1:0:0
 AC_SUBST(SHLIB_VERSION)
 
@@ -36,25 +38,32 @@ if test "$with_libltdl" != "no"; then
     dnl Force off using libltdl on targets that are know to have
     dnl problems.
     case $target in
-      *cygwin* | *os2*)
+      *os2*)
         using_libltdl=no
         ;;
     esac
 fi
 
 if test "$using_libltdl" != "no"; then
-  AC_LIBLTDL_INSTALLABLE
-  AC_LIBTOOL_DLOPEN
+  AC_CHECK_HEADERS(ltdl.h, 
+                   AC_CHECK_LIB(ltdl, lt_dlinit, LIBLTDL="$LIBLTDL -lltdl",
+                                using_libltdl=no), using_libltdl=no)
 fi
-AC_PROG_LIBTOOL
-AC_SUBST(LIBTOOL_DEPS)
-if test "$using_libltdl" != "no"; then
-  AC_WITH_LTDL
-  AC_SUBST(LIBLTDL)
-  AC_SUBST(LTDLINCL)
-  AC_CHECK_HEADERS(ltdl.h, AC_DEFINE([HAVE_LIBLTDL], 1, [Define to 1 if you have libltdl]), [using_libltdl=no])
+if test "$using_libltdl" = yes; then
+   AC_DEFINE([HAVE_LIBLTDL], 1, [Define to 1 if you have libltdl])
 fi
 AM_CONDITIONAL(HAVE_LIBLTDL, test x$using_libltdl = xyes)
+AC_SUBST(LIBLTDL)
+
+AC_LIBTOOL_DLOPEN
+case $target in
+  *cygwin* | *mingw*)
+  AC_LIBTOOL_WIN32_DLL
+  LDFLAGS="$LDFLAGS -no-undefined"
+   ;;
+esac
+AC_PROG_LIBTOOL
+AC_SUBST(LIBTOOL_DEPS)
 
 AC_ARG_WITH(pkgconfigdir,
     AC_HELP_STRING([--with-pkgconfigdir],
@@ -149,14 +158,14 @@ dnl Large File Support
 AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
 if test "$ac_cv_sys_file_offset_bits" = "64"; then
-  # This is either a 64-bit platform or a 32-bit platform
-  # that supports large files.
-  # There are to many broken glibc+kernel's out there that
-  # detect 64-bit off_t on 32-bit system and require
-  # _LARGEFILE_SOURCE to make fseeko() go into 64-bit mode.
-  # Force defining _LARGEFILE_SOURCE always.  My assumption
-  # is its harmlessly ignored on 64-bit platforms and platforms
-  # that chose other solutions.
+  dnl This is either a 64-bit platform or a 32-bit platform
+  dnl that supports large files.
+  dnl There are to many broken glibc+kernel's out there that
+  dnl detect 64-bit off_t on 32-bit system and require
+  dnl _LARGEFILE_SOURCE to make fseeko() go into 64-bit mode.
+  dnl Force defining _LARGEFILE_SOURCE always.  My assumption
+  dnl is its harmlessly ignored on 64-bit platforms and platforms
+  dnl that chose other solutions.
   AC_MSG_NOTICE(Forcing _LARGEFILE_SOURCE to be safe since off_t is 64 bits)
   AC_DEFINE(_LARGEFILE_SOURCE, 1)
 fi
