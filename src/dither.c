@@ -25,10 +25,6 @@
 
 #define PREC effp->out_signal.precision
 
-#define RAND_CONST 140359821
-static int32_t rand_ = ~RAND_CONST;
-#define RAND_ (rand_ = rand_ * RAND_CONST + 1)
-
 typedef enum {Pdf_rectangular, Pdf_triangular, Pdf_gaussian} pdf_type_t;
 static lsx_enum_item const pdf_types[] = {
   LSX_ENUM_ITEM(Pdf_,rectangular)
@@ -190,7 +186,7 @@ static int flow_no_shape(sox_effect_t * effp, const sox_sample_t * ibuf,
   int dummy = 0;
 
   while (len--) {
-    double d = *ibuf++ + p->am0 * RAND_ + p->am1 * RAND_;
+    double d = *ibuf++ + p->am0 * RANQD1 + p->am1 * RANQD1;
     *obuf++ = SOX_ROUND_CLIP_COUNT(d, dummy);
   }
   return SOX_SUCCESS;

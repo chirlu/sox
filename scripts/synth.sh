@@ -29,7 +29,7 @@ Bb0="pl %-23 pl %-16 pl %-11 pl %-7 pl %-4 pl %1"
 o="overdrive 40 gain -8"
 e="delay 0 .02 .04 .06 .08 .1 remix - $o fade 0"
 s="$sox -q -n -p synth 0 0 0 80 87"
-l="$sox -q -n -p synth 0 0 0 80 0"
+l="$sox -q -n -p synth 0 0 0 80 0 0"
 
 $play -m -v .8 \
 "|$sox \
@@ -41,7 +41,7 @@ equalizer 9500 10 8 \
 equalizer 7000 10 8 \
 equalizer 5200 10 8 \
 equalizer 3800 10 8 \
-equalizer 1500 10 8 pad 0 .21 remix 1 1 reverb 20 repeat 59" \
+equalizer 1500 10 8 pad 0 .21 remix 1 1 reverb 10 repeat 56" \
 "|$sox \
 \"|$sox -n -p trim 0 1.4\" \
 \"|$s $G0 $e 2.6 .1 bend .5,200,.2\" \
@@ -63,15 +63,17 @@ equalizer 1500 10 8 pad 0 .21 remix 1 1 reverb 20 repeat 59" \
 \"|$l pl %10 $o trim 0 .5 bend .2,-300,.1\" \
 \"|$l pl %5 $o trim 0 .5 bend .2,-200,.1\" \
 \"|$l pl %0 $o fade 0 .55 .1 bend .2,-200,.1\" \
-\"|$l pl %12 $o trim 0 5.95\" \
+\"|$l pl %0 $o fade 0 2 .1\" \
+\"|$sox -n -p trim 0 3.95\" \
 \"|$l pl %12 $o trim 0 .5 bend .2,-200,.1\" \
 \"|$l pl %12 $o trim 0 .5 bend .2,-200,.1\" \
-\"|$l pl %12 $o trim 0 .5 bend .2,-200,.1\" \
-\"|$l pl %12 $o fade 0 .6 .1 bend .2,-200,.1\" \
-\"|$l pl %12 $o trim 0 1.95 bend .3,-100,1\" \
+\"|$l pl %12 $o fade 0 .8 .1 bend .2,-200,.1\" \
+\"|$l pl %12 $o trim 0 .3 bend .1,-200,.1\" \
+\"|$l pl %12 $o trim 0 1.95 bend .3,-50,1\" \
 \"|$l pl %10 $o trim 0 2 bend .3,-50,1\" \
-\"|$l pl %9 $o trim 0 2 gain -3 \" \
-\"|$l pl %8 $o trim 0 2 gain -6 \" \
+\"|$l pl %9 $o trim 0 2 gain -3\" \
+\"|$l pl %8 $o fade h 0 1 .3\" \
+\"|$l pl %8 $o fade h 0 1 .1 gain 1.5\" \
 \"|$l pl %2 pl %7 delay 0 .02 remix - $o trim 0 .25\" \
 \"|$l pl %-5 $o trim 0 .25\" \
 \"|$l pl %-5 $o trim 0 .25\" \

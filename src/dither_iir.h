@@ -8,7 +8,7 @@ static int NAME(sox_effect_t * effp, const sox_sample_t * ibuf,
   int dummy = 0;
 
   while (len--) {
-    double r = p->am0 * RAND_ + p->am1 * RAND_;
+    double r = p->am0 * RANQD1 + p->am1 * RANQD1;
     double error, d, output = 0;
     int j = 0;
     CONVOLVE

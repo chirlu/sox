@@ -92,7 +92,8 @@
 #endif
 
 /* Numerical Recipes in C, p. 284 */
-#define ranqd1(x) ((x) = 1664525L * (x) + 1013904223L)
+#define ranqd1(x) ((x) = 1664525L * (x) + 1013904223L) /* int32_t x */
+#define dranqd1(x) (ranqd1(x) * (1. / (65536. * 32768.))) /* [-1,1) */
 
 #ifdef WORDS_BIGENDIAN
 #define MACHINE_IS_BIGENDIAN 1

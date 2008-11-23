@@ -39,7 +39,8 @@ Other bug fixes:
 
 Internal improvements:
 
-  o 
+  o Rationalise use of and make repeatable across different platforms
+    pseudo random number generators.  (robs)
 
 
 sox-14.2.0	2008-11-09

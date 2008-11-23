@@ -179,7 +179,8 @@ typedef struct { /* Global parameters (for effects & formats) */
  * to perform file I/O.  It can be useful to pass in similar sized
  * data to get max performance.
  */
-  size_t   bufsiz, input_bufsiz;
+  size_t       bufsiz, input_bufsiz;
+  int32_t      ranqd1; /* Can be used to re-seed libSoX's PRNG */
 
 /* private: */
   char const * stdin_in_use_by;

@@ -13,9 +13,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#define RAND (2. * rand() * (1. / RAND_MAX) - 1)
-#define RAND_ ranqd1(r) * (1. / (65536. * 32768.)) /* [-1,1) */
-
 typedef enum {
   synth_sine,
   synth_square,
@@ -405,7 +402,8 @@ static int start(sox_effect_t * effp)
       chan->buffer = malloc(chan->buffer_len * sizeof(*chan->buffer));
       chan->buffer[0] = 0;
       for (j = 1; j < chan->buffer_len; dc += chan->buffer[j++])
-        do chan->buffer[j] = chan->buffer[j - 1] + RAND_ * colour;
+        do chan->buffer[j] =
+            chan->buffer[j - 1] + (chan->p3 == 0? DRANQD1:dranqd1(r)) * colour;
         while (fabs(chan->buffer[j]) > 1);
       for (dc /= chan->buffer_len, j = 0; j < chan->buffer_len; ++j)
         chan->buffer[j] = range_limit(chan->buffer[j] - dc, -1, 1) * a;
@@ -570,11 +568,11 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
         }
       } else switch (chan->type) {
         case synth_whitenoise:
-          synth_out = RAND;
+          synth_out = DRANQD1;
           break;
 
         case synth_tpdfnoise:
-          synth_out = .5 * (RAND + RAND);
+          synth_out = .5 * (DRANQD1 + DRANQD1);
           break;
 
         case synth_pinknoise:
@@ -582,7 +580,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
           break;
 
         case synth_brownnoise:
-          do synth_out = chan->last_out + RAND * (1. / 16);
+          do synth_out = chan->last_out + DRANQD1 * (1. / 16);
           while (fabs(synth_out) > 1);
           chan->last_out = synth_out;
           break;

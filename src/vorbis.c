@@ -305,7 +305,7 @@ static int startwrite(sox_format_t * ft)
   vorbis_analysis_init(&ve->vd, &ve->vi);
   vorbis_block_init(&ve->vd, &ve->vb);
 
-  ogg_stream_init(&ve->os, rand());     /* Random serial number */
+  ogg_stream_init(&ve->os, INT_MAX & (int)RANQD1);  /* Random serial number */
 
   if (write_vorbis_header(ft, ve) == HEADER_ERROR) {
     lsx_fail_errno(ft, SOX_EHDR,
