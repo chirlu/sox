@@ -32,6 +32,9 @@ Other bug fixes:
 
   o Fix [2262177] SoX build could fail with parse /etc/issue error.  (robs)
   o Fix reading AIFF files with pad bytes in COMT chunks. (Joe Holt)
+  o Fix AIFF file length bug to stop reading trash data on files that
+    have extra chunks at end of file. (Joe Holt)
+  o Fix file length being 4 bytes short for AIFF sowt CD tracks. (Joe Holt)
 
 Internal improvements:
 
