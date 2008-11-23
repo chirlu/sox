@@ -149,7 +149,8 @@ int lsx_aiffstartread(sox_format_t * ft)
                                 /* Need to endian swap all the data */
                                 is_sowt = 1;
                             }
-                            else if (strncmp(buf, "NONE", (size_t)4) != 0)
+                            else if (strncmp(buf, "NONE", (size_t)4) != 0 &&
+                                     strncmp(buf, "twos", (size_t)4) != 0)
                             {
                                 buf[4] = 0;
                                 lsx_fail_errno(ft,SOX_EHDR,"AIFC files that contain compressed data are not supported: %s",buf);
