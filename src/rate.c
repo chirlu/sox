@@ -15,8 +15,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* Based upon the techniques described in `The Quest For The Perfect Resampler'
- * by Laurent De Soras; http://ldesoras.free.fr/doc/articles/resampler-en.pdf */
+/* Inspired by, and builds upon some of the ideas presented in:
+ * `The Quest For The Perfect Resampler' by Laurent De Soras;
+ * http://ldesoras.free.fr/doc/articles/resampler-en.pdf */
 
 #ifdef NDEBUG /* Enable assert always. */
 #undef NDEBUG /* Must undef above assert.h or other that might include it. */
