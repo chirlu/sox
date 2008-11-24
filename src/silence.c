@@ -220,48 +220,54 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
 
 static int sox_silence_start(sox_effect_t * effp)
 {
-        priv_t *       silence = (priv_t *) effp->priv;
+    priv_t *silence = (priv_t *)effp->priv;
 
-        /* When you want to remove silence, small window sizes are
-         * better or else RMS will look like non-silence at
-         * aburpt changes from load to silence.
-         */
-        silence->window_size = (effp->in_signal.rate / 50) *
-                               effp->in_signal.channels;
-        silence->window = lsx_malloc(silence->window_size * sizeof(double));
+    /* When you want to remove silence, small window sizes are
+     * better or else RMS will look like non-silence at
+     * aburpt changes from load to silence.
+     */
+    silence->window_size = (effp->in_signal.rate / 50) * 
+        effp->in_signal.channels;
+    silence->window = lsx_malloc(silence->window_size * sizeof(double));
 
-        clear_rms(effp);
+    clear_rms(effp);
 
-        /* Now that we know sample rate, reparse duration. */
-        if (silence->start)
-        {
-            if (lsx_parsesamples(effp->in_signal.rate, silence->start_duration_str,
-                                &silence->start_duration, 's') == NULL)
-              return lsx_usage(effp);
-        }
-        if (silence->stop)
-        {
-            if (lsx_parsesamples(effp->in_signal.rate,silence->stop_duration_str,
-                                &silence->stop_duration,'s') == NULL)
-              return lsx_usage(effp);
-        }
+    /* Now that we know sample rate, reparse duration. */
+    if (silence->start)
+    {
+        if (lsx_parsesamples(effp->in_signal.rate, silence->start_duration_str,
+                             &silence->start_duration, 's') == NULL)
+            return lsx_usage(effp);
+        /* Align to multiple of channels */
+        silence->start_duration += (silence->start_duration % 
+                                    effp->in_signal.channels);
+    }
+    if (silence->stop)
+    {
+        if (lsx_parsesamples(effp->in_signal.rate,silence->stop_duration_str,
+                             &silence->stop_duration,'s') == NULL)
+            return lsx_usage(effp);
+        /* Align to multiple of channels */
+        silence->stop_duration += (silence->stop_duration % 
+                                   effp->in_signal.channels);
+    }
 
-        if (silence->start)
-            silence->mode = SILENCE_TRIM;
-        else
-            silence->mode = SILENCE_COPY;
+    if (silence->start)
+        silence->mode = SILENCE_TRIM;
+    else
+        silence->mode = SILENCE_COPY;
 
-        silence->start_holdoff = lsx_malloc(sizeof(sox_sample_t)*silence->start_duration);
-        silence->start_holdoff_offset = 0;
-        silence->start_holdoff_end = 0;
-        silence->start_found_periods = 0;
+    silence->start_holdoff = lsx_malloc(sizeof(sox_sample_t)*silence->start_duration);
+    silence->start_holdoff_offset = 0;
+    silence->start_holdoff_end = 0;
+    silence->start_found_periods = 0;
 
-        silence->stop_holdoff = lsx_malloc(sizeof(sox_sample_t)*silence->stop_duration);
-        silence->stop_holdoff_offset = 0;
-        silence->stop_holdoff_end = 0;
-        silence->stop_found_periods = 0;
+    silence->stop_holdoff = lsx_malloc(sizeof(sox_sample_t)*silence->stop_duration);
+    silence->stop_holdoff_offset = 0;
+    silence->stop_holdoff_end = 0;
+    silence->stop_found_periods = 0;
 
-        return(SOX_SUCCESS);
+    return(SOX_SUCCESS);
 }
 
 static int aboveThreshold(sox_effect_t * effp, sox_sample_t value, double threshold, int unit)
@@ -658,12 +664,13 @@ static int sox_silence_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *os
 
 static int sox_silence_stop(sox_effect_t * effp)
 {
-    priv_t * silence = (priv_t *) effp->priv;
+  priv_t * silence = (priv_t *) effp->priv;
 
-    free(silence->window);
-    free(silence->start_holdoff);
-    free(silence->stop_holdoff);
-    return(SOX_SUCCESS);
+  free(silence->window);
+  free(silence->start_holdoff);
+  free(silence->stop_holdoff);
+
+  return(SOX_SUCCESS);
 }
 
 static int kill(sox_effect_t * effp)
@@ -672,6 +679,7 @@ static int kill(sox_effect_t * effp)
 
   free(silence->start_duration_str);
   free(silence->stop_duration_str);
+
   return SOX_SUCCESS;
 }
 

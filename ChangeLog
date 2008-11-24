@@ -23,6 +23,7 @@ Effects:
   o New `pluck' and `tpdf' types for `synth'.  (robs)
   o Can now set common parameters for multiple `synth' channels.  (robs)
   o Fix `repeat' sometimes stopping repeating too soon.  (robs)
+  o Fixe [2332343] 'silence" segfault with certain lengths. (cbagwell)
 
 Other new features:
 
