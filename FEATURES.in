@@ -91,7 +91,7 @@ The audio effects/tools included in this release are as follows:
 
 * Mixing effects
 ** mixer: Mix up to 4 channels in certain ways
-** remix: Produce arbirarily mixed output channels
+** remix: Produce arbitrarily mixed output channels
 ** swap: Swap stereo channels
 
 * Pitch/tempo effects
