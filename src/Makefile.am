@@ -128,6 +128,11 @@ libsox_fmt_maud_la_SOURCES = maud.c
 libsox_fmt_maud_la_LIBADD = libsox.la
 libsox_fmt_prc_la_SOURCES = prc.c
 libsox_fmt_prc_la_LIBADD = libsox.la
+if HAVE_PULSEAUDIO
+libsox_fmt_pulseaudio_la_SOURCES = pulseaudio.c
+libsox_fmt_pulseaudio_la_LIBADD = libsox.la @PULSEAUDIO_LIBS@
+pkglib_LTLIBRARIES += libsox_fmt_pulseaudio.la
+endif
 libsox_fmt_sf_la_SOURCES = sf.c
 libsox_fmt_sf_la_LIBADD = libsox.la
 libsox_fmt_smp_la_SOURCES = smp.c
@@ -330,6 +335,11 @@ if HAVE_COREAUDIO
     libsox_la_SOURCES += coreaudio.c
     libsox_la_LIBADD += @COREAUDIO_LIBS@
     sox_LDADD += @COREAUDIO_LIBS@
+endif
+if HAVE_PULSEAUDIO
+    libsox_la_SOURCES += pulseaudio.c
+    libsox_la_LIBADD += @PULSEAUDIO_LIBS@
+    sox_LDADD += @PULSEAUDIO_LIBS@
 endif
 if HAVE_WAVPACK
     libsox_la_SOURCES += wavpack.c

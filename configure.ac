@@ -264,6 +264,21 @@ fi
 AM_CONDITIONAL(HAVE_COREAUDIO, test x$enable_coreaudio = xyes)
 AC_SUBST(COREAUDIO_LIBS)
 
+dnl Check for Pulse Audio
+AC_MSG_CHECKING([whether to try building Pulse Audio driver])
+AC_ARG_ENABLE(pulseaudio,
+    AC_HELP_STRING([--disable-pulseaudio], [Don't build Pulse Audio driver.]),,enable_pulseaudio=yes)
+AC_MSG_RESULT($enable_pulseaudio)
+if test "$enable_pulseaudio" = "yes"; then
+    AC_CHECK_HEADERS(pulse/simple.h, [PULSEAUDIO_LIBS="$PULSEAUDIO_LIBS -lpulse -lpulse-simple"], enable_pulseaudio=no)
+fi
+if test "$enable_pulseaudio" = yes; then
+   AC_DEFINE(HAVE_PULSEAUDIO, 1, [Define to 1 if you have Pulse Audio.])
+   audio_driver_found=yes
+fi
+AM_CONDITIONAL(HAVE_PULSEAUDIO, test x$enable_pulseaudio = xyes)
+AC_SUBST(PULSEAUDIO_LIBS)
+
 dnl Check if we want to disable all symlinks
 AC_MSG_CHECKING([whether to enable symlinks])
 AC_ARG_ENABLE(symlinks,
@@ -619,6 +634,7 @@ echo "libao driver...................... $enable_libao"
 echo "OSS driver........................ $enable_oss"
 echo "SUN audio driver.................. $enable_sun_audio"
 echo "CoreAudio driver.................. $enable_coreaudio"
+echo "Pulse Audio driver................ $enable_pulseaudio"
 echo "symlinks enabled.................. $enable_symlinks"
 echo "play and rec symlinks............. $enable_playrec_symlinks"
 echo "libgsm............................ $gsm_option"

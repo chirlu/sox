@@ -104,6 +104,21 @@ static int setup(sox_format_t *ft, int is_input)
     return SOX_EOF;
   }
 
+  /* If user doesn't specify, default to some reasonable values.
+   * Since this is mainly for recording case, default to typical
+   * 16-bit values to prevent saving larger files then average user
+   * wants.  Power users can override to 32-bit if they wish.
+   */
+  if (ft->signal.channels == 0)
+    ft->signal.channels = 2;
+  if (ft->signal.rate == 0)
+    ft->signal.rate = 44100;
+  if (ft->encoding.bits_per_sample == 0)
+  {
+    ft->encoding.bits_per_sample = 16;
+    ft->encoding.encoding = SOX_ENCODING_SIGN2;
+  }
+
   /* TODO: My limited experience with hardware can only get floats working which a fixed sample
    * rate and stereo.  I know that is a limitiation of audio device I have so this may not be
    * standard operating orders.  If some hardware supports setting sample rates and channel counts
