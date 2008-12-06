@@ -29,6 +29,7 @@ Other new features:
 
   o New bitrate, time in seconds, & total options for soxi.  (robs)
   o Added ability to create shared DLL's on cygwin (cbagwell)
+  o Grouped files, e.g. play -r 6k "*.vox" plays all at 6k.  (robs)
 
 Other bug fixes:
 

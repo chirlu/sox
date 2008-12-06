@@ -34,6 +34,10 @@
 #include <sys/types.h>
 #include <time.h>
 
+#ifdef HAVE_GLOB_H
+  #include <glob.h>
+#endif
+
 #ifdef HAVE_IO_H
   #include <io.h>
 #endif
@@ -112,6 +116,7 @@ typedef struct {
   double volume;
   double replay_gain;
   sox_oob_t oob;
+  sox_bool no_glob;
 
   sox_format_t * ft;  /* libSoX file descriptor */
   size_t volume_clips;
@@ -1640,6 +1645,7 @@ static void usage(char const * message)
 "--add-comment TEXT       Append output file comment",
 "--comment TEXT           Specify comment text for the output file",
 "--comment-file FILENAME  File containing comment text for the output file",
+"--no-glob                Don't `glob' wildcard match the following filename",
 ""};
 
   if (!(sox_globals.verbosity > 2)) {
@@ -1804,6 +1810,7 @@ static struct option long_options[] =
     {"interactive"     ,       no_argument, NULL, 0},
     {"help-effect"     , required_argument, NULL, 0},
     {"help-format"     , required_argument, NULL, 0},
+    {"no-glob"         ,       no_argument, NULL, 0},
     {"plot"            , required_argument, NULL, 0},
     {"replay-gain"     , required_argument, NULL, 0},
     {"version"         ,       no_argument, NULL, 0},
@@ -1970,19 +1977,26 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
         break;
 
       case 10:
-        sox_effects_globals.plot = enum_option(option_index, plot_methods);
+        f->no_glob = sox_true;
         break;
 
       case 11:
-        replay_gain_mode = enum_option(option_index, rg_modes);
+        sox_effects_globals.plot = enum_option(option_index, plot_methods);
         break;
 
       case 12:
+        replay_gain_mode = enum_option(option_index, rg_modes);
+        break;
+
+      case 13:
         display_SoX_version(stdout);
         exit(0);
         break;
 
       case 14:
+        break;
+
+      case 15:
         effects_filename = strdup(optarg);
         break;
 
@@ -2178,6 +2192,34 @@ static int add_file(file_t const * const opts, char const * const filename)
   return 0;
 }
 
+#if HAVE_GLOB_H
+#ifndef GLOB_BRACE
+#define GLOB_BRACE 0
+#endif
+#ifndef GLOB_TILDE
+#define GLOB_TILDE 0
+#endif
+static int add_glob_file(file_t const * const opts, char const * const filename)
+{
+  glob_t globbuf;
+  size_t i;
+
+  if (opts->no_glob)
+    return add_file(opts, filename);
+
+  if (glob(filename, GLOB_BRACE | GLOB_TILDE | GLOB_NOCHECK, NULL, &globbuf)) {
+    lsx_fail("glob: %s", strerror(errno));
+    exit(1);
+  }
+  for (i = 0; i < globbuf.gl_pathc; ++i)
+    add_file(opts, globbuf.gl_pathv[i]);
+  globfree(&globbuf);
+  return 0;
+}
+#else
+  #define add_glob_file add_file
+#endif
+
 static void init_file(file_t * f)
 {
   memset(f, 0, sizeof(*f));
@@ -2213,7 +2255,7 @@ static void parse_options_and_filenames(int argc, char **argv)
     else if (optind >= argc || sox_find_effect(argv[optind]))
       break;
     else if (!sox_is_playlist(argv[optind]))
-      add_file(&opts, argv[optind++]);
+      add_glob_file(&opts, argv[optind++]);
     else if (sox_parse_playlist((sox_playlist_callback_t)add_file, &opts, argv[optind++]) != SOX_SUCCESS)
       exit(1);
   }

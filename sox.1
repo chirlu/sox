@@ -572,6 +572,25 @@ format (see
 below and
 .BR soxformat (7)).
 .TP
+\fB\(dq\fIwildcard-filename\fB\(dq\fR
+Specifies that filename `globbing' (wild-card matching) should be performed
+by SoX instead of the shell.  This allows a single set of file options to be
+applied to a group of files.  For example, if the current directory contains
+three `vox' files: file1.vox, file2.vox, and file3.vox, then
+.EX
+  play --rate 6k *.vox
+.EE
+will be expanded by the `shell' (in most environments) to
+.EX
+  play --rate 6k file1.vox file2.vox file3.vox
+.EE
+which will treat only the first vox file as having a sample rate of 6k; but
+with
+.EX
+  play --rate 6k "*.vox"
+.EE
+the given sample rate option will be applied to all three vox files.
+.TP
 \fB\-p\fR, \fB\-\-sox\-pipe\fR
 This can be used in place of an output filename to specify that
 the SoX command should be used as in input pipe to another SoX command.
@@ -820,7 +839,7 @@ working with headerless file formats or when specifying a format
 for the output file that is different to that of the input file.
 .TP
 \fB\-b\fR \fIBITS\fR, \fB\-\-bits\fR \fIBITS\fR
-The number of bits in each encoded sample.
+The number of bits (a.k.a. bit-depth) in each encoded sample.
 Not applicable to complex encodings, e.g. MP3, GSM.
 Not necessary with encodings that have a fixed number of bits, e.g.
 A/\(*m-law, ADPCM.
@@ -911,6 +930,15 @@ header.
 Aliases for specifying the encoding types
 \fBsigned-integer\fR/\fBunsigned-integer\fR/\fBfloating-point\fR/\fBmu-law\fR/\fBa-law\fR/\fBoki-adpcm\fR/\fBima-adpcm\fR/\fBms-adpcm\fR/\fBgsm-full-rate\fR
 respectively.
+.TP
+\fB\-\-no\-glob\fR
+Specifies that filename `globbing' (wild-card matching) should not be
+performed by SoX on the following filename.  For example, if the current
+directory contains the two files `five-seconds.wav' and `five*.wav', then
+.EX
+  play --no-glob "five*.wav"
+.EE
+can be used to play just the single file `five*.wav'.
 .TP
 \fB\-r, \fB\-\-rate\fR \fIRATE\fR[\fBk\fR]
 Gives the sample rate in Hz (or kHz if appended with `k') of the file.
@@ -1375,7 +1403,7 @@ The following example might be used to make a piece of music with both
 quiet and loud passages suitable for listening to in a noisy environment
 such as a moving vehicle:
 .EX
-	sox asz.au asz-car.au compand 0.3,1 6:-70,-60,-20 -5 -90 0.2
+  sox asz.au asz-car.au compand 0.3,1 6:-70,-60,-20 -5 -90 0.2
 .EE
 The transfer function (`6:\-70,...') says that very soft sounds (below
 \-70dB) will remain unchanged.  This will stop the compander from
@@ -1391,13 +1419,24 @@ The \-90 (dB) for the initial volume will work fine for a clip that starts
 with near silence, and the delay of 0\*d2 (seconds) has the effect of causing
 the compander to react a bit more quickly to sudden volume changes.
 .SP
+In this example, compand is being used as a noise-gate for when the
+noise is at a lower level than the signal:
+.EX
+  play infile compand .1,.2 -inf,-50.1,-inf,-50,-50 0 -90 .1
+.EE
+Here is another noise-gate, this time for when the
+noise is at a higher level than the signal (making it, in some ways,
+similar to squelch):
+.EX
+  play infile compand .1,.1 -45.1,-45,-inf,0,-inf 45 -90 .1
+.EE
 This effect supports the \fB\-\-plot\fR global option (for the transfer function).
 .SP
 See also
 .B mcompand
 for a multiple-band companding effect.
 .TP
-\fBcontrast [\fIenhancement-amount (75)\fR]
+\fBcontrast \fR[\fIenhancement-amount\fR(75)]
 Comparable with compression, this effect modifies an audio signal to
 make it sound louder.
 .I enhancement-amount
