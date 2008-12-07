@@ -53,7 +53,7 @@ o Install cmake (http://www.cmake.org/HTML/Download.html)
 o Install any optional libraries to use with SoX
 o Unpack the SoX sources (...tar.gz) to say c:\sox
 o Type cd c:\sox
-o Type cmake .
+o Type cmake -G "compiler" .   (type cmake --help for list of compilers)
 
 This should generate project build files for use with Visual C.
 
@@ -67,29 +67,19 @@ may require pkg-config to be installed to be properly detected.
 
 SoX can detect and use the following libraries:
 
-  Ogg Vorbis - http://www.vorbis.com
-
-  Lame MP3 encoder - http://lame.sourceforge.net
-
-  MAD MP3 decoder - http://www.underbit.com/products/mad
-
-  FLAC - http://flac.sourceforge.net
-
-  AMR-NB/WB - http://www.penguin.cz/~utx/amr
-
-  libsndfile - http://www.mega-nerd.com/libsndfile
-
-  ffmpeg - http://ffmpeg.mplayerhq.hu
-
-  libao - http://xiph.org/ao
-
-  Secret Rabbit Code - http://www.mega-nerd.com/SRC
-
-  LADSPA - http://www.ladspa.org
-
-  WavPack - http://www.wavpack.com
-
-  PNG - http://www.libpng.org/pub/png
+AMR-NB/WB          http://www.penguin.cz/~utx/amr        See library web page
+AO                 http://xiph.org/ao                    GPL
+ffmpeg             http://ffmpeg.mplayerhq.hu            LGPL
+FLAC               http://flac.sourceforge.net           BSD
+LADSPA             http://www.ladspa.org                 LGPL + plugins' licence
+Lame MP3 encoder   http://lame.sourceforge.net           LGPL
+MAD MP3 decoder    http://www.underbit.com/products/mad  GPL
+Magic              http://www.darwinsys.com/file         GPL
+Ogg Vorbis         http://www.vorbis.com                 BSD
+PNG                http://www.libpng.org/pub/png         zlib (BSD-like)
+Secret Rabbit Code http://www.mega-nerd.com/SRC          GPL
+Sndfile            http://www.mega-nerd.com/libsndfile   LGPL
+WavPack            http://www.wavpack.com                BSD
   
 
 Configuring Optional Compile Features (POSIX system)

@@ -13,7 +13,8 @@ SoX is licensed under the GNU GPL and GNU LGPL.  To be precise, the 'sox'
 and 'soxi' programs are distributed under the GPL, while the library
 'libsox' (in which most of SoX's functionality resides) is dual-licensed.
 Note that some optional components of libsox are GPL only: if you use these,
-you must use libsox under the GPL.
+you must use libsox under the GPL.  See INSTALL for the list of optional
+components and their licences.
 
 If this distribution is of source code (as opposed to pre-built binaries),
 then you will need to compile and install SoX as described in the 'INSTALL'
