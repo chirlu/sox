@@ -15,53 +15,14 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define sox_flanger_usage \
-  "[delay depth regen width speed shape phase interp]"
-/*
-  "\n                  .\n" \
-  "                 /|regen\n" \
-  "                / |\n" \
-  "            +--(  |------------+\n" \
-  "            |   \\ |            |   .\n" \
-  "           _V_   \\|  _______   |   |\\ width   ___\n" \
-  "          |   |   ' |       |  |   | \\       |   |\n" \
-  "      +-->| + |---->| DELAY |--+-->|  )----->|   |\n" \
-  "      |   |___|     |_______|      | /       |   |\n" \
-  "      |           delay : depth    |/        |   |\n" \
-  "  In  |                 : interp   '         |   | Out\n" \
-  "  --->+               __:__                  | + |--->\n" \
-  "      |              |     |speed            |   |\n" \
-  "      |              |  ~  |shape            |   |\n" \
-  "      |              |_____|phase            |   |\n" \
-  "      +------------------------------------->|   |\n" \
-  "                                             |___|\n" \
-  "\n" \
-  "       RANGE DEFAULT DESCRIPTION\n" \
-  "delay   0 10    0    base delay in milliseconds\n" \
-  "depth   0 10    2    added swept delay in milliseconds\n" \
-  "regen -95 +95   0    percentage regeneration (delayed signal feedback)\n" \
-  "width   0 100   71   percentage of delayed signal mixed with original\n" \
-  "speed  0.1 10  0.5   sweeps per second (Hz) \n" \
-  "shape    --    sin   swept wave shape: sine|triangle\n" \
-  "phase   0 100   25   swept wave percentage phase-shift for multi-channel\n" \
-  "                     (e.g. stereo) flange; 0 = 100 = same phase on each channel\n" \
-  "interp   --    lin   delay-line interpolation: linear|quadratic"
-*/
-
 /* TODO: Slide in the delay at the start? */
-
-
 
 #include "sox_i.h"
 #include <string.h>
 
-
-
 typedef enum {INTERP_LINEAR, INTERP_QUADRATIC} interp_t;
 
 #define MAX_CHANNELS 4
-
-
 
 typedef struct {
   /* Parameters */
@@ -98,7 +59,7 @@ static lsx_enum_item const interp_enum[] = {
 
 
 
-static int sox_flanger_getopts(sox_effect_t * effp, int argc, char *argv[])
+static int getopts(sox_effect_t * effp, int argc, char *argv[])
 {
   priv_t * p = (priv_t *) effp->priv;
 
@@ -109,7 +70,7 @@ static int sox_flanger_getopts(sox_effect_t * effp, int argc, char *argv[])
   p->channel_phase= 25;
 
   do { /* break-able block */
-    NUMERIC_PARAMETER(delay_min    , 0  , 10 )
+    NUMERIC_PARAMETER(delay_min    , 0  , 30 )
     NUMERIC_PARAMETER(delay_depth  , 0  , 10 )
     NUMERIC_PARAMETER(feedback_gain,-95 , 95 )
     NUMERIC_PARAMETER(delay_gain   , 0  , 100)
@@ -140,12 +101,19 @@ static int sox_flanger_getopts(sox_effect_t * effp, int argc, char *argv[])
       p->channel_phase,
       interp_enum[p->interpolation].text);
 
+  /* Scale to unity: */
+  p->feedback_gain /= 100;
+  p->delay_gain    /= 100;
+  p->channel_phase /= 100;
+  p->delay_min     /= 1000;
+  p->delay_depth   /= 1000;
+
   return SOX_SUCCESS;
 }
 
 
 
-static int sox_flanger_start(sox_effect_t * effp)
+static int start(sox_effect_t * effp)
 {
   priv_t * f = (priv_t *) effp->priv;
   int c, channels = effp->in_signal.channels;
@@ -154,11 +122,6 @@ static int sox_flanger_start(sox_effect_t * effp)
     lsx_fail("Can not operate with more than %i channels", MAX_CHANNELS);
     return SOX_EOF;
   }
-
-  /* Scale percentages to unity: */
-  f->feedback_gain /= 100;
-  f->delay_gain    /= 100;
-  f->channel_phase /= 100;
 
   /* Balance output: */
   f->in_gain = 1 / (1 + f->delay_gain);
@@ -172,7 +135,7 @@ static int sox_flanger_start(sox_effect_t * effp)
 
   /* Create the delay buffers, one for each channel: */
   f->delay_buf_length =
-    (f->delay_min + f->delay_depth) / 1000 * effp->in_signal.rate + 0.5;
+    (f->delay_min + f->delay_depth) * effp->in_signal.rate + 0.5;
   ++f->delay_buf_length;  /* Need 0 to n, i.e. n + 1. */
   ++f->delay_buf_length;  /* Quadratic interpolator needs one more. */
   for (c = 0; c < channels; ++c)
@@ -186,8 +149,8 @@ static int sox_flanger_start(sox_effect_t * effp)
       SOX_FLOAT,
       f->lfo,
       f->lfo_length,
-      (double)(size_t)(f->delay_min / 1000 * effp->in_signal.rate + .5),
-      (double)(f->delay_buf_length - 2),
+      floor(f->delay_min * effp->in_signal.rate + .5),
+      f->delay_buf_length - 2.,
       3 * M_PI_2);  /* Start the sweep at minimum delay (for mono at least) */
 
   lsx_debug("delay_buf_length=%lu lfo_length=%lu\n",
@@ -198,7 +161,7 @@ static int sox_flanger_start(sox_effect_t * effp)
 
 
 
-static int sox_flanger_flow(sox_effect_t * effp, sox_sample_t const * ibuf,
+static int flow(sox_effect_t * effp, sox_sample_t const * ibuf,
     sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * f = (priv_t *) effp->priv;
@@ -253,7 +216,7 @@ static int sox_flanger_flow(sox_effect_t * effp, sox_sample_t const * ibuf,
 
 
 
-static int sox_flanger_stop(sox_effect_t * effp)
+static int stop(sox_effect_t * effp)
 {
   priv_t * f = (priv_t *) effp->priv;
   int c, channels = effp->in_signal.channels;
@@ -270,21 +233,42 @@ static int sox_flanger_stop(sox_effect_t * effp)
 
 
 
-static sox_effect_handler_t sox_flanger_effect = {
-  "flanger",
-  sox_flanger_usage,
-  SOX_EFF_MCHAN,
-  sox_flanger_getopts,
-  sox_flanger_start,
-  sox_flanger_flow,
-  NULL,
-  sox_flanger_stop,
-  NULL, sizeof(priv_t)
-};
-
-
-
 sox_effect_handler_t const * sox_flanger_effect_fn(void)
 {
-  return &sox_flanger_effect;
+  static sox_effect_handler_t handler = {
+    "flanger", NULL, SOX_EFF_MCHAN,
+    getopts, start, flow, NULL, stop, NULL, sizeof(priv_t)};
+  static char const * lines[] = {
+    "[delay depth regen width speed shape phase interp]",
+    "                  .",
+    "                 /|regen",
+    "                / |",
+    "            +--(  |------------+",
+    "            |   \\ |            |   .",
+    "           _V_   \\|  _______   |   |\\ width   ___",
+    "          |   |   ' |       |  |   | \\       |   |",
+    "      +-->| + |---->| DELAY |--+-->|  )----->|   |",
+    "      |   |___|     |_______|      | /       |   |",
+    "      |           delay : depth    |/        |   |",
+    "  In  |                 : interp   '         |   | Out",
+    "  --->+               __:__                  | + |--->",
+    "      |              |     |speed            |   |",
+    "      |              |  ~  |shape            |   |",
+    "      |              |_____|phase            |   |",
+    "      +------------------------------------->|   |",
+    "                                             |___|",
+    "       RANGE DEFAULT DESCRIPTION",
+    "delay   0 30    0    base delay in milliseconds",
+    "depth   0 10    2    added swept delay in milliseconds",
+    "regen -95 +95   0    percentage regeneration (delayed signal feedback)",
+    "width   0 100   71   percentage of delayed signal mixed with original",
+    "speed  0.1 10  0.5   sweeps per second (Hz) ",
+    "shape    --    sin   swept wave shape: sine|triangle",
+    "phase   0 100   25   swept wave percentage phase-shift for multi-channel",
+    "                     (e.g. stereo) flange; 0 = 100 = same phase on each channel",
+    "interp   --    lin   delay-line interpolation: linear|quadratic"
+  };
+  static char * usage;
+  handler.usage = lsx_usage_lines(&usage, lines, array_length(lines));
+  return &handler;
 }
