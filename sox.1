@@ -778,6 +778,13 @@ of the meter if this is below 6dB.
 This option is enabled by default when using
 SoX to play or record audio.
 .TP
+\fB\-\-temp\fI DIRECTORY\fR
+Specify that any temporary files should be created in the given
+.IR DIRECTORY .
+This can be useful if there are permission or free-space problems with the
+default location; in which case, using `\fB\-\-temp .\fR' is often a good
+solution.
+.TP
 \fB\-\-version\fR
 Show SoX's version number and exit.
 .IP \fB\-V\fB[\fIlevel\fB]\fP

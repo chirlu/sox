@@ -16,6 +16,10 @@ File formats:
   o Slight improvement to A-law/u-law conversion accuracy: round LSB
     instead of truncating.  (robs)
   o Fix [2028181] w64 float format incompatibility.  (Tim Munro)
+  o Fix reading AIFF files with pad bytes in COMT chunks. (Joe Holt)
+  o Fix AIFF file length bug to stop reading trash data on files that
+    have extra chunks at end of file. (Joe Holt)
+  o Fix file length being 4 bytes short for AIFF sowt CD tracks. (Joe Holt)
 
 Effects:
 
@@ -23,21 +27,20 @@ Effects:
   o New `pluck' and `tpdf' types for `synth'.  (robs)
   o Can now set common parameters for multiple `synth' channels.  (robs)
   o Fix `repeat' sometimes stopping repeating too soon.  (robs)
-  o Fixe [2332343] 'silence" segfault with certain lengths. (cbagwell)
+  o Fix [2332343] 'silence' segfault with certain lengths. (cbagwell)
+  o Fix temporary file problems in Windows (cygwin) with normalise and
+    other effects.  (robs)
 
 Other new features:
 
   o New bitrate, time in seconds, & total options for soxi.  (robs)
   o Added ability to create shared DLL's on cygwin (cbagwell)
   o Grouped files, e.g. play -r 6k "*.vox" plays all at 6k.  (robs)
+  o New `--temp DIRECTORY' option.  (robs)
 
 Other bug fixes:
 
   o Fix [2262177] SoX build could fail with parse /etc/issue error.  (robs)
-  o Fix reading AIFF files with pad bytes in COMT chunks. (Joe Holt)
-  o Fix AIFF file length bug to stop reading trash data on files that
-    have extra chunks at end of file. (Joe Holt)
-  o Fix file length being 4 bytes short for AIFF sowt CD tracks. (Joe Holt)
 
 Internal improvements:
 
