@@ -51,6 +51,8 @@ assert_static(sizeof(off_t) == _FILE_OFFSET_BITS >> 3, OFF_T_BUILD_PROBLEM);
 #define FMT_size_t "lu"
 #endif
 
+FILE * lsx_tmpfile(void);
+
 void lsx_debug_more(char const * fmt, ...) PRINTF;
 void lsx_debug_most(char const * fmt, ...) PRINTF;
 

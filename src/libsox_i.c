@@ -1,13 +1,65 @@
 /* libSoX internal functions that apply to both formats and effects
  * All public functions & data are prefixed with lsx_ .
  *
- * Copyright 1998-2008 Chris Bagwell and SoX Contributors
- * Copyright 1991 Lance Norskog And Sundry Contributors
+ * Copyright (c) 2008 robs@users.sourceforge.net
  *
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained.
- * Lance Norskog And Sundry Contributors are not responsible for
- * the consequences of using this software.
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or (at
+ * your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+
 #include "sox_i.h"
+
+#ifdef HAVE_IO_H
+  #include <io.h>
+#endif
+
+#ifdef HAVE_UNISTD_H
+  #include <unistd.h>
+  #define MKTEMP_FLAGS O_RDWR|O_TRUNC|O_CREAT, S_IREAD|S_IWRITE
+#else
+  #define MKTEMP_FLAGS _O_RDWR|_O_TRUNC|_O_CREAT|_O_BINARY|_O_TEMPORARY, _S_IREAD|_S_IWRITE
+#endif
+
+#ifndef HAVE_MKSTEMP
+  #include <fcntl.h>
+  #include <sys/types.h>
+  #include <sys/stat.h>
+  #define mkstemp(t) open(mktemp(t), MKTEMP_FLAGS)
+  #define FAKE_MKSTEMP "fake "
+#else
+  #define FAKE_MKSTEMP
+#endif
+
+FILE * lsx_tmpfile(void)
+{
+  if (sox_globals.tmp_path) {
+    char const * const end = "/libSoX.tmp.XXXXXX";
+    char * name = lsx_malloc(strlen(sox_globals.tmp_path) + strlen(end) + 1);
+    int fildes;
+    strcpy(name, sox_globals.tmp_path);
+    strcat(name, end);
+    fildes = mkstemp(name);
+#ifdef HAVE_UNISTD_H
+    lsx_debug(FAKE_MKSTEMP "mkstemp, name=%s (unlinked)", name);
+    unlink(name);
+#else
+    lsx_debug(FAKE_MKSTEMP "mkstemp, name=%s (O_TEMPORARY)", name);
+#endif
+    free(name);
+    return fildes == -1? NULL : fdopen(fildes, "w+");
+  }
+  lsx_debug("tmpfile()");
+  return tmpfile();
+}

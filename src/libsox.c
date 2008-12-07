@@ -49,7 +49,7 @@ sox_globals_t sox_globals = {
   8192,
   0,
   0,
-  NULL, NULL, NULL};
+  NULL, NULL, NULL, NULL};
 
 void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap)
 {

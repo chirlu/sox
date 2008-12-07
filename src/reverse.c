@@ -7,7 +7,7 @@
  */
 
 /*
- * "reverse" effect, uses a temporary file created by tmpfile().
+ * "reverse" effect, uses a temporary file created by lsx_tmpfile().
  */
 
 #include "sox_i.h"
@@ -22,7 +22,7 @@ static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
   p->pos = 0;
-  p->tmp_file = tmpfile();
+  p->tmp_file = lsx_tmpfile();
   if (p->tmp_file == NULL) {
     lsx_fail("can't create temporary file: %s", strerror(errno));
     return SOX_EOF;
@@ -73,7 +73,7 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 static int stop(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  fclose(p->tmp_file); /* auto-deleted by tmpfile */
+  fclose(p->tmp_file); /* auto-deleted by lsx_tmpfile */
   return SOX_SUCCESS;
 }
 

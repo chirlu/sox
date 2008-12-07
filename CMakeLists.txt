@@ -53,6 +53,7 @@ check_include_files("unistd.h"           HAVE_UNISTD_H)
 
 check_function_exists("fseeko"           HAVE_FSEEKO)
 check_function_exists("gettimeofday"     HAVE_GETTIMEOFDAY)
+check_function_exists("mkstemp"          HAVE_MKSTEMP)
 check_function_exists("popen"            HAVE_POPEN)
 check_function_exists("strcasecmp"       HAVE_STRCASECMP)
 check_function_exists("strrstr"          HAVE_STRRSTR)

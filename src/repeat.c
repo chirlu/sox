@@ -42,7 +42,7 @@ static int start(sox_effect_t * effp)
   if (p->repeats == 0)
     return SOX_EFF_NULL;
 
-  if ((p->tmp_file = tmpfile()) == NULL) {
+  if ((p->tmp_file = lsx_tmpfile()) == NULL) {
     lsx_fail("can't create temporary file: %s", strerror(errno));
     return SOX_EOF;
   }

@@ -1617,6 +1617,7 @@ static void usage(char const * message)
 "--replay-gain track|album|off  Default: off (sox, rec), track (play)",
 "-R                       Use default random numbers (same on each run of SoX)",
 "-S, --show-progress      Display progress while processing audio data",
+"--temp DIRECTORY         Specify the directory to use temporary files",
 "--version                Display version number of SoX and exit",
 "-V[LEVEL]                Increment or set verbosity level (default 2); levels:",
 "                           1: failure messages",
@@ -1816,6 +1817,7 @@ static struct option long_options[] =
     {"version"         ,       no_argument, NULL, 0},
     {"output"          , required_argument, NULL, 0},
     {"effects-file"    , required_argument, NULL, 0},
+    {"temp"            , required_argument, NULL, 0},
 
     {"bits"            , required_argument, NULL, 'b'},
     {"channels"        , required_argument, NULL, 'c'},
@@ -1998,6 +2000,10 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 
       case 15:
         effects_filename = strdup(optarg);
+        break;
+
+      case 16:
+        sox_globals.tmp_path = strdup(optarg);
         break;
 
       }
@@ -2407,6 +2413,15 @@ static int strends(char const * str, char const * end)
   return str_len >= end_len && !strcmp(str + str_len - end_len, end);
 }
 
+#ifdef __CYGWIN__
+static char * check_dir(char * name)
+{
+  struct stat st;
+  return !name || stat(name, &st) || (st.st_mode & S_IFMT) != S_IFDIR?
+      NULL : name;
+}
+#endif
+
 int main(int argc, char **argv)
 {
   size_t i;
@@ -2441,6 +2456,20 @@ int main(int argc, char **argv)
 #endif
 
   parse_options_and_filenames(argc, argv);
+
+#ifdef __CYGWIN__
+  if (sox_globals.tmp_path && !*sox_globals.tmp_path) {
+    free(sox_globals.tmp_path);
+    sox_globals.tmp_path = NULL;
+  }
+  else if (!sox_globals.tmp_path) {
+    if (!(sox_globals.tmp_path = check_dir(getenv("TEMP"))))
+      if (!(sox_globals.tmp_path = check_dir(getenv("TMP"))))
+        if (!(sox_globals.tmp_path = check_dir("/tmp")))
+          sox_globals.tmp_path = ".";
+    sox_globals.tmp_path = lsx_strdup(sox_globals.tmp_path);
+  }
+#endif
 
   if (sox_globals.verbosity > 2)
     display_SoX_version(stderr);

@@ -43,6 +43,7 @@
 #define stat _stat
 #define strdup _strdup
 #define timeb _timeb
+#define unlink _unlink
 #endif
 
 #if defined(DOS) || defined(WIN32) || defined(__NT__) || defined(__DJGPP__) || defined(__OS2__)
