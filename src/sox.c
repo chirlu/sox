@@ -2361,7 +2361,7 @@ static int soxi(int argc, char * const * argv)
   }
   if (type == Full) {
     if (soxi_file_count > 1 && soxi_total > 0)
-      printf("Total Duration of %u files: %s\n", soxi_file_count, str_time(soxi_total));
+      printf("Total Duration of %u files: %s\n", (unsigned)soxi_file_count, str_time(soxi_total));
   }
   else if (do_total) {
     if (soxi_total < 0)

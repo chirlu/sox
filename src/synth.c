@@ -67,7 +67,7 @@ static lsx_enum_item const combine_type[] = {
 
 #define PINK_MAX_RANDOM_ROWS   (30)
 #define PINK_RANDOM_BITS       (24)
-#define PINK_RANDOM_SHIFT      ((sizeof(long)*8)-PINK_RANDOM_BITS)
+#define PINK_RANDOM_SHIFT      ((sizeof(int32_t)*8)-PINK_RANDOM_BITS)
 
 typedef struct {
   long pink_Rows[PINK_MAX_RANDOM_ROWS];
