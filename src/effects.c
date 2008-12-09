@@ -196,8 +196,8 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
 {
   sox_effect_t * effp1 = &chain->effects[n - 1][0];
   sox_effect_t * effp = &chain->effects[n][0];
-  int effstatus = SOX_SUCCESS;
-  size_t i, f;
+  int effstatus = SOX_SUCCESS, f;
+  size_t i;
   const sox_sample_t *ibuf;
   size_t idone = effp1->oend - effp1->obeg;
   size_t obeg = sox_globals.bufsiz - effp->oend;
@@ -215,10 +215,11 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
 
     ibuf = &effp1->obuf[effp1->obeg];
     for (i = 0; i < idone; i += effp->flows)
-      for (f = 0; f < effp->flows; ++f)
+      for (f = 0; f < (int)effp->flows; ++f)
         chain->ibufc[f][i / effp->flows] = *ibuf++;
 
-    for (f = 0; f < effp->flows; ++f) {
+    #pragma omp parallel for
+    for (f = 0; f < (int)effp->flows; ++f) {
       size_t idonec = idone / effp->flows;
       size_t odonec = obeg / effp->flows;
       int eff_status_c = effp->handler.flow(&chain->effects[n][f],
@@ -235,7 +236,7 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
     }
 
     for (i = 0; i < odone_last; ++i)
-      for (f = 0; f < effp->flows; ++f)
+      for (f = 0; f < (int)effp->flows; ++f)
         *obuf++ = chain->obufc[f][i];
 
     idone = f * idone_last;

@@ -14,6 +14,8 @@ if(CMAKE_COMPILER_IS_GNUCC)
     add_definitions(-Wtraditional-conversion)
   endif(${ver} LESS 403)
   add_definitions(-Werror)
+  add_definitions(-fopenmp)
+  set(optional_libs ${optional_libs} gomp)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 if (NOT EXTERNAL_GSM)

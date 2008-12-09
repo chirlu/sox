@@ -284,6 +284,9 @@ libsox_la_LIBADD = @PNG_LIBS@ @SAMPLERATE_LIBS@
 if HAVE_MAGIC
 libsox_la_LIBADD += @MAGIC_LIBS@
 endif
+if HAVE_GOMP
+libsox_la_LIBADD += @GOMP_LIBS@
+endif
 
 libsox_la_CFLAGS = @WARN_CFLAGS@  @SAMPLERATE_CFLAGS@
 libsox_la_LDFLAGS = @APP_LDFLAGS@ -version-info @SHLIB_VERSION@
@@ -300,7 +303,6 @@ else
     ima_rw.c ima_rw.h wav.c wve.c xa.c nulfile.c f4-fmt.c f8-fmt.c
 libsox_la_LIBADD += @GSM_LIBS@ @LIBGSM_LIBADD@
 libsox_la_LIBADD += @LPC10_LIBS@ @LIBLPC10_LIBADD@
-
 
 sox_LDADD += @GSM_LIBS@ @LIBGSM_LIBADD@
 sox_LDADD += @LPC10_LIBS@ @LIBLPC10_LIBADD@

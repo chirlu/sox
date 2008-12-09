@@ -180,6 +180,23 @@ if test "$enable_silent_libtool" = "yes"; then
 fi
 AC_SUBST(LIBTOOLFLAGS)
    
+dnl Check for GOMP
+AC_MSG_CHECKING([whether to use GOMP])
+AC_ARG_ENABLE(gomp,
+    AC_HELP_STRING([--disable-gomp], [Don't use GOMP.]),,enable_gomp=yes)
+AC_MSG_RESULT($enable_gomp)
+if test "$enable_gomp" = "yes"; then
+    AC_CHECK_HEADERS(omp.h,
+        AC_CHECK_LIB(gomp, omp_get_thread_num, GOMP_LIBS="$GOMP_LIBS -lgomp", enable_gomp=no),
+        enable_gomp=no)
+fi
+if test "$enable_gomp" = yes; then
+   AC_DEFINE(HAVE_GOMP, 1, [Define to 1 if you have GOMP.])
+   CFLAGS="$CFLAGS -fopenmp"
+fi
+AM_CONDITIONAL(HAVE_GOMP, test x$enable_gomp = xyes)
+AC_SUBST(GOMP_LIBS)
+
 audio_driver_found=no  
     
 dnl Check for ALSA
@@ -629,6 +646,7 @@ echo
 echo "Distro name ...................... $DISTRO"
 echo "Debugging build................... $enable_debug"
 echo "External module support........... $using_libltdl"
+echo "GOMP support...................... $enable_gomp"
 echo "ALSA driver....................... $enable_alsa"
 echo "libao driver...................... $enable_libao"
 echo "OSS driver........................ $enable_oss"
