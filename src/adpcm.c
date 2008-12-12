@@ -152,11 +152,11 @@ const char *lsx_ms_adpcm_block_expand_i(
                 while (op < top) {
                         b = *ip++;
                         tmp = op;
-                        *op++ = AdpcmDecode(b >> 4, state+ch, tmp[-chans], tmp[-(2*chans)]);
+                        *op++ = AdpcmDecode(b >> 4, state+ch, tmp[-(int)chans], tmp[-(int)(2*chans)]);
                         if (++ch == chans) ch = 0;
                         /* ch = ++ch % chans; */
                         tmp = op;
-                        *op++ = AdpcmDecode(b&0x0f, state+ch, tmp[-chans], tmp[-(2*chans)]);
+                        *op++ = AdpcmDecode(b&0x0f, state+ch, tmp[-(int)chans], tmp[-(int)(2*chans)]);
                         if (++ch == chans) ch = 0;
                         /* ch = ++ch % chans; */
                 }

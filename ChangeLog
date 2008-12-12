@@ -20,6 +20,7 @@ File formats:
   o Fix AIFF file length bug to stop reading trash data on files that
     have extra chunks at end of file. (Joe Holt)
   o Fix file length being 4 bytes short for AIFF sowt CD tracks. (Joe Holt)
+  o Fix [2404566] segfault when converting from MS ADPCM wav file.  (robs)
 
 Effects:
 
