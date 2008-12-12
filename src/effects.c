@@ -224,10 +224,12 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
       size_t odonec = obeg / effp->flows;
       int eff_status_c = effp->handler.flow(&chain->effects[n][f],
           chain->ibufc[f], chain->obufc[f], &idonec, &odonec);
+#ifndef HAVE_GOMP
       if (f && (idonec != idone_last || odonec != odone_last)) {
         lsx_fail("flowed asymmetrically!");
         effstatus = SOX_EOF;
       }
+#endif
       idone_last = idonec;
       odone_last = odonec;
 
