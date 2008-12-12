@@ -183,7 +183,7 @@ AC_SUBST(LIBTOOLFLAGS)
 dnl Check for GOMP
 AC_MSG_CHECKING([whether to use GOMP])
 AC_ARG_ENABLE(gomp,
-    AC_HELP_STRING([--disable-gomp], [Don't use GOMP.]),,enable_gomp=yes)
+    AC_HELP_STRING([--enable-gomp], [Use GOMP.]),,enable_gomp=no)
 AC_MSG_RESULT($enable_gomp)
 if test "$enable_gomp" = "yes"; then
     AC_CHECK_HEADERS(omp.h,
@@ -646,7 +646,7 @@ echo
 echo "Distro name ...................... $DISTRO"
 echo "Debugging build................... $enable_debug"
 echo "External module support........... $using_libltdl"
-echo "GOMP support...................... $enable_gomp"
+echo "GOMP support (experimental)....... $enable_gomp"
 echo "ALSA driver....................... $enable_alsa"
 echo "libao driver...................... $enable_libao"
 echo "OSS driver........................ $enable_oss"
