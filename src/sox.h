@@ -97,9 +97,8 @@ typedef int32_t sox_sample_t;
  * the upper-most bit then treating them as signed integers.
  */
 
-/* Temporary variables to prevent multiple evaluation of macro arguments: */
-static sox_sample_t sox_macro_temp_sample UNUSED;
-static double sox_macro_temp_double UNUSED;
+#define SOX_SAMPLE_LOCALS sox_sample_t sox_macro_temp_sample UNUSED; \
+  double sox_macro_temp_double UNUSED
 
 #define SOX_SAMPLE_NEG SOX_INT_MIN(32)
 #define SOX_SAMPLE_TO_UNSIGNED(bits,d,clips) \
@@ -395,6 +394,10 @@ struct sox_format {
 #define SOX_FILE_BIG_END (SOX_FILE_ENDIAN | SOX_FILE_ENDBIG)
 
 int sox_format_init(void);
+void sox_format_quit(void);
+
+int sox_init(void);
+int sox_quit(void);
 
 typedef const sox_format_handler_t *(*sox_format_fn_t)(void);
 
@@ -429,7 +432,6 @@ int sox_close(sox_format_t * ft);
 int sox_seek(sox_format_t * ft, uint64_t offset, int whence);
 
 sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev);
-void sox_format_quit(void);
 
 /*
  * Structures for effects.

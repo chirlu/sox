@@ -406,6 +406,7 @@ static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t sa
     int i,j;
     ptrdiff_t done = 0;
     size_t written;
+    SOX_SAMPLE_LOCALS;
 
     /* NOTE: This logic assumes that "short int" is 16-bits
      * on all platforms.  It happens to be for all that I know
@@ -442,9 +443,7 @@ static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t sa
     {
         j=0;
         for (i=0; i<nsamples; i++)
-        {
             buffer_l[i]=SOX_SAMPLE_TO_SIGNED_16BIT(buf[j++], ft->clips);
-        }
     }
 
     mp3buffer_size = 1.25 * nsamples + 7200;

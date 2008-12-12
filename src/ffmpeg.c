@@ -406,6 +406,7 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
   do {
     /* If output frame is not full, copy data into it */
     if (ffmpeg->samples_index < ffmpeg->audio_input_frame_size) {
+      SOX_SAMPLE_LOCALS;
       for (; nread < len && ffmpeg->samples_index < ffmpeg->audio_input_frame_size; nread++)
         ffmpeg->samples[ffmpeg->samples_index++] = SOX_SAMPLE_TO_SIGNED_16BIT(buf[nread], ft->clips);
     }

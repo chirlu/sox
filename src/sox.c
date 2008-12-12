@@ -20,7 +20,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "soxconfig.h"
+#include "soxomp.h"  /* Make this 1st in list (for soxconfig) */
 #include "sox.h"
 #include "util.h"
 
@@ -168,6 +168,10 @@ static sox_bool user_skip = sox_false;
 static sox_bool user_restart_eff = sox_false;
 static int success = 0;
 static sox_sample_t omax[2], omin[2];
+
+/* Multi-processing */
+
+static sox_bool single_threaded = sox_false;
 
 
 /* Cleanup atexit() function, hence always called. */
@@ -1516,12 +1520,18 @@ static void display_SoX_version(FILE * file)
 #elif defined __SUNPRO_C
     fprintf(file, "sun c: %x\n", __SUNPRO_C);
 #endif
-    fprintf(file, "arch:  %lu%lu%lu%lu %lu%lu %lu%lu %c\n",
+    fprintf(file, "arch:  %lu%lu%lu%lu %lu%lu %lu%lu %c %s\n",
         (unsigned long)sizeof(char), (unsigned long)sizeof(short),
         (unsigned long)sizeof(long), (unsigned long)sizeof(off_t),
         (unsigned long)sizeof(float), (unsigned long)sizeof(double),
         (unsigned long)sizeof(int *), (unsigned long)sizeof(int (*)(void)),
-        "LB"[MACHINE_IS_BIGENDIAN]);
+        "LB"[MACHINE_IS_BIGENDIAN],
+#ifdef HAVE_OPENMP
+        "OMP"
+#else
+        ""
+#endif
+        );
   }
 }
 
@@ -1818,6 +1828,7 @@ static struct option long_options[] =
     {"output"          , required_argument, NULL, 0},
     {"effects-file"    , required_argument, NULL, 0},
     {"temp"            , required_argument, NULL, 0},
+    {"single-threaded" ,       no_argument, NULL, 0},
 
     {"bits"            , required_argument, NULL, 'b'},
     {"channels"        , required_argument, NULL, 'c'},
@@ -2004,6 +2015,10 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 
       case 16:
         sox_globals.tmp_path = strdup(optarg);
+        break;
+
+      case 17:
+        single_threaded = sox_true;
         break;
 
       }
@@ -2443,7 +2458,7 @@ int main(int argc, char **argv)
   else if (strends(myname, "soxi"))
     sox_mode = sox_soxi;
 
-  if (sox_format_init() != SOX_SUCCESS)
+  if (sox_init() != SOX_SUCCESS)
     exit(1);
 
   if (sox_mode == sox_soxi)
@@ -2469,6 +2484,11 @@ int main(int argc, char **argv)
           sox_globals.tmp_path = ".";
     sox_globals.tmp_path = lsx_strdup(sox_globals.tmp_path);
   }
+#endif
+
+#ifdef HAVE_OPENMP
+  if (single_threaded)
+   omp_set_num_threads(1);
 #endif
 
   if (sox_globals.verbosity > 2)

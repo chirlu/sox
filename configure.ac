@@ -183,7 +183,7 @@ AC_SUBST(LIBTOOLFLAGS)
 dnl Check for GOMP
 AC_MSG_CHECKING([whether to use GOMP])
 AC_ARG_ENABLE(gomp,
-    AC_HELP_STRING([--enable-gomp], [Use GOMP.]),,enable_gomp=no)
+    AC_HELP_STRING([--disable-gomp], [Don't use GOMP.]),,enable_gomp=yes)
 AC_MSG_RESULT($enable_gomp)
 if test "$enable_gomp" = "yes"; then
     AC_CHECK_HEADERS(omp.h,
@@ -191,10 +191,10 @@ if test "$enable_gomp" = "yes"; then
         enable_gomp=no)
 fi
 if test "$enable_gomp" = yes; then
-   AC_DEFINE(HAVE_GOMP, 1, [Define to 1 if you have GOMP.])
+   AC_DEFINE(HAVE_OPENMP, 1, [Define to 1 if you have GOMP.])
    CFLAGS="$CFLAGS -fopenmp"
 fi
-AM_CONDITIONAL(HAVE_GOMP, test x$enable_gomp = xyes)
+AM_CONDITIONAL(HAVE_OPENMP, test x$enable_gomp = xyes)
 AC_SUBST(GOMP_LIBS)
 
 audio_driver_found=no  

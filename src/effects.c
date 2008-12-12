@@ -218,13 +218,15 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
       for (f = 0; f < (int)effp->flows; ++f)
         chain->ibufc[f][i / effp->flows] = *ibuf++;
 
+#ifdef HAVE_OPENMP
     #pragma omp parallel for
+#endif
     for (f = 0; f < (int)effp->flows; ++f) {
       size_t idonec = idone / effp->flows;
       size_t odonec = obeg / effp->flows;
       int eff_status_c = effp->handler.flow(&chain->effects[n][f],
           chain->ibufc[f], chain->obufc[f], &idonec, &odonec);
-#ifndef HAVE_GOMP
+#ifndef HAVE_OPENMP
       if (f && (idonec != idone_last || odonec != odone_last)) {
         lsx_fail("flowed asymmetrically!");
         effstatus = SOX_EOF;

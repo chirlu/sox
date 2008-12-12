@@ -152,6 +152,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 {
   priv_t * p = (priv_t *)effp->priv;
   size_t c, idone = 0, odone = 0;
+  SOX_SAMPLE_LOCALS;
   *isamp /= effp->in_signal.channels;
   *osamp /= effp->in_signal.channels;
 

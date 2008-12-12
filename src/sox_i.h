@@ -13,7 +13,7 @@
 #ifndef SOX_I_H
 #define SOX_I_H
 
-#include "soxconfig.h"
+#include "soxomp.h"  /* Make this 1st in list (for soxconfig) */
 #include "sox.h"
 #include "util.h"
 
@@ -265,5 +265,8 @@ char * lsx_usage_lines(char * * usage, char const * const * lines, size_t n);
 }
 
 int lsx_effect_set_imin(sox_effect_t * effp, size_t imin);
+
+int lsx_effects_init(void);
+int lsx_effects_quit(void);
 
 #endif

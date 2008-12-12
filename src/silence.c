@@ -280,6 +280,7 @@ static int aboveThreshold(sox_effect_t * effp, sox_sample_t value, double thresh
     /* Only consider the original bits when looking for silence */
     switch(effp->in_signal.precision)
     {
+        SOX_SAMPLE_LOCALS;
         case 8:
             value = SOX_SAMPLE_TO_SIGNED_8BIT(value, dummy_clipped_count);
             ratio = (double)abs(value) / (double)SOX_INT8_MAX;

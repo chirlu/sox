@@ -230,6 +230,7 @@ static int process_window(sox_effect_t * effp, priv_t * data, unsigned chan_num,
     int use = min(len, WINDOWSIZE)-min(len,(WINDOWSIZE/2));
     chandata_t *chan = &(data->chandata[chan_num]);
     int first = (chan->lastwindow == NULL);
+    SOX_SAMPLE_LOCALS;
 
     if ((nextwindow = lsx_calloc(WINDOWSIZE, sizeof(float))) == NULL)
         return SOX_EOF;
@@ -283,6 +284,7 @@ static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_
 
     /* Reduce noise on every channel. */
     for (i = 0; i < tracks; i ++) {
+        SOX_SAMPLE_LOCALS;
         chandata_t* chan = &(data->chandata[i]);
         size_t j;
 

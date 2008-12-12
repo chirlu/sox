@@ -153,6 +153,7 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
   size_t nread = 0;
 
   while (nread < len) {
+    SOX_SAMPLE_LOCALS;
     /* Read more data if buffer is empty */
     if (lpc->samples == LPC10_SAMPLES_PER_FRAME) {
       INT32 bits[LPC10_BITS_IN_COMPRESSED_FRAME];
@@ -178,6 +179,7 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
 
   while (len > 0) {
     while (len > 0 && lpc->samples < LPC10_SAMPLES_PER_FRAME) {
+      SOX_SAMPLE_LOCALS;
       lpc->speech[lpc->samples++] = SOX_SAMPLE_TO_FLOAT_32BIT(buf[nwritten++], ft->clips);
       len--;
     }

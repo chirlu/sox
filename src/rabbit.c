@@ -114,6 +114,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
   size_t isamples0 = d->input_frames * channels;
   size_t isamples = isamples0 + *isamp;
   size_t osamples = isamples * (d->src_ratio + 0.01) + 8;
+  SOX_SAMPLE_LOCALS;
 
   if (osamples > *osamp) {
     osamples = *osamp;

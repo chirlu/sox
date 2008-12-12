@@ -23,6 +23,7 @@
 #cmakedefine HAVE_MKSTEMP             1
 #cmakedefine HAVE_OGG_SPEEX           1
 #cmakedefine HAVE_OGG_VORBIS          1
+#cmakedefine HAVE_OPENMP              1
 #cmakedefine HAVE_POPEN               1
 #cmakedefine HAVE_PNG                 1
 #cmakedefine HAVE_SAMPLERATE_H        1

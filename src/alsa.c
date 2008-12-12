@@ -536,12 +536,14 @@ static int startwrite(sox_format_t * ft)
 
 static void sox_ub_write_buf(char* buf1, sox_sample_t const * buf2, size_t len, sox_bool swap UNUSED, size_t * clips)
 {
+    SOX_SAMPLE_LOCALS;
     while (len--)
         *(uint8_t *)buf1++ = SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf2++, *clips);
 }
 
 static void sox_sb_write_buf(char *buf1, sox_sample_t const * buf2, size_t len, sox_bool swap UNUSED, size_t * clips)
 {
+    SOX_SAMPLE_LOCALS;
     while (len--)
         *(int8_t *)buf1++ = SOX_SAMPLE_TO_SIGNED_8BIT(*buf2++, *clips);
 }
@@ -550,6 +552,7 @@ static void sox_uw_write_buf(char *buf1, sox_sample_t const * buf2, size_t len, 
 {
     while (len--)
     {
+        SOX_SAMPLE_LOCALS;
         uint16_t datum = SOX_SAMPLE_TO_UNSIGNED_16BIT(*buf2++, *clips);
         if (swap)
             datum = lsx_swapw(datum);
@@ -562,6 +565,7 @@ static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, size_t len, 
 {
     while (len--)
     {
+        SOX_SAMPLE_LOCALS;
         int16_t datum = SOX_SAMPLE_TO_SIGNED_16BIT(*buf2++, *clips);
         if (swap)
             datum = lsx_swapw(datum);

@@ -85,3 +85,14 @@ SOX_MESSAGE_FUNCTION(lsx_debug_most , 6)
 
 #undef SOX_MESSAGE_FUNCTION
 
+int sox_init(void)
+{
+  sox_format_init();
+  return lsx_effects_init();
+}
+
+int sox_quit(void)
+{
+  sox_format_quit();
+  return lsx_effects_quit();
+}

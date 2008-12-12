@@ -63,6 +63,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     return SOX_EOF;
   }
   if (p->balance) for (len = *isamp; len; --len, ++ibuf) {
+    SOX_SAMPLE_LOCALS;
     size_t dummy = 0;
     double d = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf, dummy);
     p->rms += sqr(d);

@@ -436,6 +436,7 @@ static size_t write_samples(sox_format_t * const ft, sox_sample_t const * const 
   unsigned i;
 
   for (i = 0; i < len; ++i) {
+    SOX_SAMPLE_LOCALS;
     long pcm = SOX_SAMPLE_TO_SIGNED_32BIT(sampleBuffer[i], ft->clips);
     p->decoded_samples[i] = pcm >> (32 - p->bits_per_sample);
     switch (p->bits_per_sample) {

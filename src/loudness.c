@@ -161,6 +161,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   priv_t * p = (priv_t *)effp->priv;
   size_t i, odone = min(*osamp, (size_t)fifo_occupancy(&p->output_fifo));
   double const * s = fifo_read(&p->output_fifo, (int)odone, NULL);
+  SOX_SAMPLE_LOCALS;
 
   for (i = 0; i < odone; ++i)
     *obuf++ = SOX_FLOAT_64BIT_TO_SAMPLE(*s++, effp->clips);

@@ -163,6 +163,7 @@ int main()
   size_t clips = 0;
 
   double d;
+  SOX_SAMPLE_LOCALS;
 
   TEST_UINT(8)
   TEST_UINT(16)

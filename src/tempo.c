@@ -264,6 +264,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   priv_t * p = (priv_t *)effp->priv;
   size_t i, odone = *osamp /= effp->in_signal.channels;
   float const * s = tempo_output(p->tempo, NULL, &odone);
+  SOX_SAMPLE_LOCALS;
 
   for (i = 0; i < odone * effp->in_signal.channels; ++i)
     *obuf++ = SOX_FLOAT_32BIT_TO_SAMPLE(*s++, effp->clips);

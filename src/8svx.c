@@ -254,6 +254,7 @@ static int startwrite(sox_format_t * ft)
 static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
         priv_t * p = (priv_t * ) ft->priv;
+        SOX_SAMPLE_LOCALS;
 
         unsigned char datum;
         size_t done = 0, i;

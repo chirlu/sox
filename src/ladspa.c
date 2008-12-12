@@ -230,6 +230,7 @@ static int sox_ladspa_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
 
   if (len) {
     LADSPA_Data *buf = lsx_malloc(sizeof(LADSPA_Data) * len);
+    SOX_SAMPLE_LOCALS;
 
     /* Insert input if effect takes it */
     if (l_st->input_port != ULONG_MAX) {

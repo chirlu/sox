@@ -213,6 +213,7 @@ static size_t read_samples(sox_format_t *ft, sox_sample_t *buf, size_t nsamp)
   size_t samp_left;
   OSStatus status;
   float *p;
+  SOX_SAMPLE_LOCALS;
 
   if (!ac->device_started)
   {
@@ -263,6 +264,7 @@ static size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, size_t ns
   size_t samp_left;
   OSStatus status;
   float *p;
+  SOX_SAMPLE_LOCALS;
 
   if (!ac->device_started)
   {

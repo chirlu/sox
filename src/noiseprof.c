@@ -124,6 +124,7 @@ static int sox_noiseprof_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox
 
   /* Collect data for every channel. */
   for (i = 0; i < chans; i ++) {
+    SOX_SAMPLE_LOCALS;
     chandata_t * chan = &(p->chandata[i]);
     for (j = 0; j < n; j ++)
       chan->window[j + p->bufdata] =

@@ -150,6 +150,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 
   /* main processing loop */
   for (i = 0; i < len; i++) {
+    SOX_SAMPLE_LOCALS;
     ++p->in_pos;
 
     /* As long as we have not yet collected enough data just read in */

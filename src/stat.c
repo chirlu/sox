@@ -140,6 +140,7 @@ static int sox_stat_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
 
     if (stat->fft) {
       for (x = 0; x < len; x++) {
+        SOX_SAMPLE_LOCALS;
         stat->re_in[stat->fft_offset++] = SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[x], effp->clips);
 
         if (stat->fft_offset >= stat->fft_size) {

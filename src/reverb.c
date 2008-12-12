@@ -219,6 +219,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 {
   priv_t * p = (priv_t *)effp->priv;
   size_t c, i, w, len = min(*isamp / p->ichannels, *osamp / p->ochannels);
+  SOX_SAMPLE_LOCALS;
 
   *isamp = len * p->ichannels, *osamp = len * p->ochannels;
   for (c = 0; c < p->ichannels; ++c)

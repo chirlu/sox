@@ -623,6 +623,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 {
   priv_t * p = (priv_t *)effp->priv;
   size_t i, odone = *osamp;
+  SOX_SAMPLE_LOCALS;
 
   sample_t const * s = rate_output(&p->rate, NULL, &odone);
   for (i = 0; i < odone; ++i) *obuf++ = TO_SOX(*s++, effp->clips);

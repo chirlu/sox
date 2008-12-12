@@ -79,6 +79,7 @@ static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, size_t len, 
 {
     while (len--)
     {
+        SOX_SAMPLE_LOCALS;
         uint16_t datum = SOX_SAMPLE_TO_SIGNED_16BIT(*buf2++, *clips);
         if (swap)
             datum = lsx_swapw(datum);
