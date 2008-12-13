@@ -28,16 +28,16 @@ add_custom_command(
 
 # Format with: !xargs echo|tr ' ' '\n'|sort|column|expand|sed 's/^/  /'
 set(effects_srcs
-  bend            earwax          mixer           rate            stat
-  biquad          echo            noiseprof       remix           stretch
-  biquads         echos           noisered        repeat          swap
-  chorus          fade            normalise       resample        synth
-  compand         fft4g           output          reverb          tempo
-  compandt        filter          overdrive       reverse         tremolo
-  contrast        flanger         pad             silence         trim
-  dcshift         input           pan             skeleff         vol
-  delay           loudness        phaser          speed effects_i_dsp
-  dither          mcompand        polyphas        splice
+  bend            dither          lowfir          phaser          speed
+  biquad          earwax          mcompand        polyphas        splice
+  biquads         echo            mixer           rate            stat
+  chorus          echos           noiseprof       remix           stretch
+  compand         fade            noisered        repeat          swap
+  compandt        fft4g           normalise       resample        synth
+  contrast        filter          output          reverb          tempo
+  dcshift         flanger         overdrive       reverse         tremolo
+  delay           input           pad             silence         trim
+  dft_filter      loudness        pan             skeleff         vol
 )
 set(formats_srcs
   8svx            dat             ima-fmt         s3-fmt          u3-fmt
@@ -54,11 +54,11 @@ set(formats_srcs
   cvsd-fmt        htk             s2-fmt          u2-fmt
 )
 add_library(lib${PROJECT_NAME}
-  effects                 ${formats_srcs}         ${optional_srcs}
-  effects_i               getopt                  soxstdint
+  effects                 formats_i               libsox_i
+  effects_i               ${formats_srcs}         ${optional_srcs}
+  effects_i_dsp           getopt                  soxstdint
   ${effects_srcs}         getopt1                 util
   formats                 libsox                  xmalloc
-  formats_i               libsox_i
 )
 add_executable(${PROJECT_NAME} ${PROJECT_NAME}.c)
 target_link_libraries(${PROJECT_NAME} lib${PROJECT_NAME} lpc10 ${optional_libs})

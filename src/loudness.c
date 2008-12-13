@@ -16,28 +16,20 @@
  */
 
 #include "sox_i.h"
-#include "fft4g.h"
-#define  FIFO_SIZE_T int
-#include "fifo.h"
+#include "dft_filter.h"
 #include <string.h>
 
 typedef struct {
-  int        dft_length, num_taps;
-  double   * coefs;
-} filter_t;
-
-typedef struct {
+  dft_filter_priv_t base;
   double     delta, start;
   int        n;
-  size_t     samples_in, samples_out;
-  fifo_t     input_fifo, output_fifo;
-  filter_t   filter, * filter_ptr;
 } priv_t;
 
 static int create(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *)effp->priv;
-  p->filter_ptr = &p->filter;
+  dft_filter_priv_t * b = &p->base;
+  b->filter_ptr = &b->filter;
   p->delta = -10;
   p->start = 65;
   p->n = 1023;
@@ -104,119 +96,36 @@ static double * make_filter(int n, double start, double delta, double rate)
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *) effp->priv;
-  int i, half = p->n / 2, dft_length = lsx_set_dft_length(p->n);
-  double * h;
+  dft_filter_filter_t * f = p->base.filter_ptr;
 
   if (p->delta == 0)
     return SOX_EFF_NULL;
 
-  if (!p->filter_ptr->num_taps) {
-    h = make_filter(p->n, p->start, p->delta, effp->in_signal.rate);
-    p->filter_ptr->coefs = lsx_calloc(dft_length, sizeof(*p->filter_ptr->coefs));
+  if (!f->num_taps) {
+    double * h = make_filter(p->n, p->start, p->delta, effp->in_signal.rate);
+    int i, dft_length = lsx_set_dft_length(p->n);
+    f->coefs = lsx_calloc(dft_length, sizeof(*f->coefs));
     for (i = 0; i < p->n; ++i)
-      p->filter_ptr->coefs[(i + dft_length - p->n + 1) & (dft_length - 1)]
+      f->coefs[(i + dft_length - p->n + 1) & (dft_length - 1)]
           = h[i] / dft_length * 2;
     free(h);
-    p->filter_ptr->num_taps = p->n;
-    p->filter_ptr->dft_length = dft_length;
-    lsx_safe_rdft(dft_length, 1, p->filter_ptr->coefs);
+    f->num_taps = p->n;
+    f->post_peak = f->num_taps / 2;
+    f->dft_length = dft_length;
+    lsx_safe_rdft(dft_length, 1, f->coefs);
   }
-  fifo_create(&p->input_fifo, (int)sizeof(double));
-  memset(fifo_reserve(&p->input_fifo, half), 0, sizeof(double) * half);
-  fifo_create(&p->output_fifo, (int)sizeof(double));
-  return SOX_SUCCESS;
-}
-
-static void filter(priv_t * p)
-{
-  int i, num_in = max(0, fifo_occupancy(&p->input_fifo));
-  filter_t const * f = p->filter_ptr;
-  int const overlap = f->num_taps - 1;
-  double * output;
-
-  while (num_in >= f->dft_length) {
-    double const * input = fifo_read_ptr(&p->input_fifo);
-    fifo_read(&p->input_fifo, f->dft_length - overlap, NULL);
-    num_in -= f->dft_length - overlap;
-
-    output = fifo_reserve(&p->output_fifo, f->dft_length);
-    fifo_trim_by(&p->output_fifo, overlap);
-    memcpy(output, input, f->dft_length * sizeof(*output));
-
-    lsx_rdft(f->dft_length, 1, output, lsx_fft_br, lsx_fft_sc);
-    output[0] *= f->coefs[0];
-    output[1] *= f->coefs[1];
-    for (i = 2; i < f->dft_length; i += 2) {
-      double tmp = output[i];
-      output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
-      output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
-    }
-    lsx_rdft(f->dft_length, -1, output, lsx_fft_br, lsx_fft_sc);
-  }
-}
-
-static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
-                sox_sample_t * obuf, size_t * isamp, size_t * osamp)
-{
-  priv_t * p = (priv_t *)effp->priv;
-  size_t i, odone = min(*osamp, (size_t)fifo_occupancy(&p->output_fifo));
-  double const * s = fifo_read(&p->output_fifo, (int)odone, NULL);
-  SOX_SAMPLE_LOCALS;
-
-  for (i = 0; i < odone; ++i)
-    *obuf++ = SOX_FLOAT_64BIT_TO_SAMPLE(*s++, effp->clips);
-  p->samples_out += odone;
-
-  if (*isamp && odone < *osamp) {
-    double * t = fifo_write(&p->input_fifo, (int)*isamp, NULL);
-    p->samples_in += (int)*isamp;
-
-    for (i = *isamp; i; --i)
-      *t++ = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf++, effp->clips);
-    filter(p);
-  }
-  else *isamp = 0;
-  *osamp = odone;
-  return SOX_SUCCESS;
-}
-
-static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
-{
-  priv_t * p = (priv_t *)effp->priv;
-  static size_t isamp = 0;
-  size_t samples_out = p->samples_in;
-  size_t remaining = samples_out - p->samples_out;
-  double * buff = lsx_calloc(1024, sizeof(*buff));
-
-  if ((int)remaining > 0) {
-    while ((size_t)fifo_occupancy(&p->output_fifo) < remaining) {
-      fifo_write(&p->input_fifo, 1024, buff);
-      p->samples_in += 1024;
-      filter(p);
-    }
-    fifo_trim_to(&p->output_fifo, (int)remaining);
-    p->samples_in = 0;
-  }
-  free(buff);
-  return flow(effp, 0, obuf, &isamp, osamp);
-}
-
-static int stop(sox_effect_t * effp)
-{
-  priv_t * p = (priv_t *) effp->priv;
-
-  fifo_delete(&p->input_fifo);
-  fifo_delete(&p->output_fifo);
-  free(p->filter_ptr->coefs);
-  memset(p->filter_ptr, 0, sizeof(*p->filter_ptr));
-  return SOX_SUCCESS;
+  return sox_dft_filter_effect_fn()->start(effp);
 }
 
 sox_effect_handler_t const * sox_loudness_effect_fn(void)
 {
-  static sox_effect_handler_t handler = {
-    "loudness", "[gain [ref]]", 0,
-    create, start, flow, drain, stop, NULL, sizeof(priv_t)
-  };
+  static sox_effect_handler_t handler;
+  handler = *sox_dft_filter_effect_fn();
+  handler.name = "loudness";
+  handler.usage = "[gain [ref]]";
+  handler.flags &= ~SOX_EFF_DEPRECATED;
+  handler.getopts = create;
+  handler.start = start;
+  handler.priv_size = sizeof(priv_t);
   return &handler;
 }

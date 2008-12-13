@@ -1,7 +1,7 @@
 /* Implements a libSoX internal interface for implementing effects.
  * All public functions & data are prefixed with lsx_ .
  *
- * (c) 2005-8 Chris Bagwell and SoX contributors
+ * Copyright (c) 2005-8 Chris Bagwell and SoX contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by

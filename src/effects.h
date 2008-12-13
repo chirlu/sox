@@ -27,6 +27,7 @@
   EFFECT(dcshift)
   EFFECT(deemph)
   EFFECT(delay)
+  EFFECT(dft_filter)
   EFFECT(dither)
   EFFECT(earwax)
   EFFECT(echo)
@@ -43,6 +44,7 @@
   EFFECT(ladspa)
 #endif
   EFFECT(loudness)
+  EFFECT(lowfir)
   EFFECT(lowpass)
   EFFECT(mcompand)
   EFFECT(mixer)
