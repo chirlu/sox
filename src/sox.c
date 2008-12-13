@@ -1627,6 +1627,7 @@ static void usage(char const * message)
 "--replay-gain track|album|off  Default: off (sox, rec), track (play)",
 "-R                       Use default random numbers (same on each run of SoX)",
 "-S, --show-progress      Display progress while processing audio data",
+"--single-threaded        Disable parallel effects channels processing",
 "--temp DIRECTORY         Specify the directory to use for temporary files",
 "--version                Display version number of SoX and exit",
 "-V[LEVEL]                Increment or set verbosity level (default 2); levels:",

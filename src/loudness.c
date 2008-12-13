@@ -47,7 +47,7 @@ static int create(sox_effect_t * effp, int argc, char **argv)
     NUMERIC_PARAMETER(n    ,127 ,2047)
   } while (0);
   p->n = 2 * p->n + 1;
-  return argc?  lsx_usage(effp) : SOX_SUCCESS;
+  return argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static double * make_filter(int n, double start, double delta, double rate)

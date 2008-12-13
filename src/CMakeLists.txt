@@ -36,7 +36,7 @@ set(effects_srcs
   compandt        filter          overdrive       reverse         tremolo
   contrast        flanger         pad             silence         trim
   dcshift         input           pan             skeleff         vol
-  delay           loudness        phaser          speed
+  delay           loudness        phaser          speed effects_i_dsp
   dither          mcompand        polyphas        splice
 )
 set(formats_srcs

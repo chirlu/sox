@@ -187,123 +187,6 @@ static void double_sample(stage_t * p, fifo_t * output_fifo)
   }
 }
 
-static double * make_lpf(int num_taps, double Fc, double beta, double scale)
-{
-  double * h = malloc(num_taps * sizeof(*h)), sum = 0;
-  int i, m = num_taps - 1;
-  assert(Fc >= 0 && Fc <= 1);
-  for (i = 0; i <= m / 2; ++i) {
-    double x = M_PI * (i - .5 * m), y = 2. * i / m - 1;
-    h[i] = x? sin(Fc * x) / x : Fc;
-    sum += h[i] *= lsx_bessel_I_0(beta * sqrt(1 - y * y));
-    if (m - i != i)
-      sum += h[m - i] = h[i];
-  }
-  for (i = 0; i < num_taps; ++i) h[i] *= scale / sum;
-  return h;
-}
-
-#define TO_6dB .5869
-#define TO_3dB ((2/3.) * (.5 + TO_6dB))
-#define MAX_TBW0 36.
-#define MAX_TBW0A (MAX_TBW0 / (1 + TO_3dB))
-#define MAX_TBW3 floor(MAX_TBW0 * TO_3dB)
-#define MAX_TBW3A floor(MAX_TBW0A * TO_3dB)
-
-static double * design_lpf(
-    double Fp,      /* End of pass-band; ~= 0.01dB point */
-    double Fc,      /* Start of stop-band */
-    double Fn,      /* Nyquist freq; e.g. 0.5, 1, PI */
-    sox_bool allow_aliasing,
-    double att,     /* Stop-band attenuation in dB */
-    int * num_taps, /* (Single phase.)  0: value will be estimated */
-    int k)          /* Number of phases; 0 for single-phase */
-{
-  double tr_bw, beta;
-
-  if (allow_aliasing)
-    Fc += (Fc - Fp) * TO_3dB;
-  Fp /= Fn, Fc /= Fn;        /* Normalise to Fn = 1 */
-  tr_bw = TO_6dB * (Fc - Fp); /* Transition band-width: 6dB to stop points */
-
-  if (*num_taps == 0) {        /* TODO this could be cleaner, esp. for k != 0 */
-    double n160 = (.0425* att - 1.4) /  tr_bw;    /* Half order for att = 160 */
-    int n = n160 * (16.556 / (att - 39.6) + .8625) + .5;  /* For att [80,160) */
-    *num_taps = k? 2 * n : 2 * (n + (n & 1)) + 1; /* =1 %4 (0 phase 1/2 band) */
-  }
-  assert(att >= 80);
-  beta = att < 100 ? .1102 * (att - 8.7) : .1117 * att - 1.11;
-  if (k)
-    *num_taps = *num_taps * k - 1;
-  else k = 1;
-  return make_lpf(*num_taps, (Fc - tr_bw) / k, beta, (double)k);
-}
-
-static void fir_to_phase(double * * h, int * len,
-    int * post_len, double phase0)
-{
-  double * work, phase = (phase0 > 50 ? 100 - phase0 : phase0) / 50;
-  int work_len, begin, end, peak = 0, i = *len;
-
-  for (work_len = 32; i > 1; work_len <<= 1, i >>= 1);
-  work = calloc(work_len, sizeof(*work));
-  for (i = 0; i < *len; ++i) work[i] = (*h)[i];
-
-  lsx_safe_rdft(work_len, 1, work); /* Cepstral: */
-  work[0] = log(fabs(work[0])), work[1] = log(fabs(work[1]));
-  for (i = 2; i < work_len; i += 2) {
-    work[i] = log(sqrt(sqr(work[i]) + sqr(work[i + 1])));
-    work[i + 1] = 0;
-  }
-  lsx_safe_rdft(work_len, -1, work);
-  for (i = 0; i < work_len; ++i) work[i] *= 2. / work_len;
-  for (i = 1; i < work_len / 2; ++i) { /* Window to reject acausal components */
-    work[i] *= 2;
-    work[i + work_len / 2] = 0;
-  }
-  lsx_safe_rdft(work_len, 1, work);
-
-  /* Some filters require phase unwrapping at this point.  Ours give dis-
-   * continuities only in the stop band, so no need to unwrap in this case. */
-
-  for (i = 2; i < work_len; i += 2) /* Interpolate between linear & min phase */
-    work[i + 1] = phase * M_PI * .5 * i + (1 - phase) * work[i + 1];
-
-  work[0] = exp(work[0]), work[1] = exp(work[1]);
-  for (i = 2; i < work_len; i += 2) {
-    double x = exp(work[i]);
-    work[i    ] = x * cos(work[i + 1]);
-    work[i + 1] = x * sin(work[i + 1]);
-  }
-  lsx_safe_rdft(work_len, -1, work);
-  for (i = 0; i < work_len; ++i) work[i] *= 2. / work_len;
-
-  for (i = 1; i < work_len; ++i) if (work[i] > work[peak])  /* Find peak pos. */
-    peak = i;                                           /* N.B. peak val. > 0 */
-
-  if (phase == 0)
-    begin = 0;
-  else if (phase == 1)
-    begin = 1 + (work_len - *len) / 2;
-  else {
-    if (peak < work_len / 4) { /* Low phases can wrap impulse, so unwrap: */
-      memmove(work + work_len / 4, work, work_len / 2 * sizeof(*work));
-      memmove(work, work + work_len * 3 / 4, work_len / 4 * sizeof(*work));
-      peak += work_len / 4;
-    }
-    begin = (.997 - (2 - phase) * .22) * *len + .5;
-    end   = (.997 + (0 - phase) * .22) * *len + .5;
-    begin = peak - begin - (begin & 1);
-    end   = peak + 1 + end + (end & 1);
-    *len = end - begin;
-    *h = realloc(*h, *len * sizeof(**h));
-  }
-  for (i = 0; i < *len; ++i)
-    (*h)[i] = work[begin + (phase0 > 50 ? *len - 1 - i : i)];
-  *post_len = phase0 > 50 ? peak - begin : begin + *len - (peak + 1);
-  free(work);
-}
-
 static void half_band_filter_init(rate_shared_t * p, unsigned which,
     int num_taps, sample_t const h[], double Fp, double atten, int multiplier,
     double phase, sox_bool allow_aliasing)
@@ -324,10 +207,10 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
   else {
     /* Adjustment to negate att degradation with intermediate phase */
     double att = phase && phase != 50 && phase != 100? atten * (34./33) : atten;
-    double * h = design_lpf(Fp, 1., 2., allow_aliasing, att, &num_taps, 0);
+    double * h = lsx_design_lpf(Fp, 1., 2., allow_aliasing, att, &num_taps, 0);
 
     if (phase != 50)
-      fir_to_phase(&h, &num_taps, &f->post_peak, phase);
+      lsx_fir_to_phase(&h, &num_taps, &f->post_peak, phase);
     else f->post_peak = num_taps / 2;
 
     dft_length = lsx_set_dft_length(num_taps);
@@ -422,8 +305,8 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     f1 = &f->interp[interp_order];
     if (!last_stage.shared->poly_fir_coefs) {
       int num_taps = 0, phases = divisor == 1? (1 << f1->phase_bits) : divisor;
-      raw_coef_t * coefs =
-          design_lpf(f->pass, f->stop, 1., sox_false, f->att, &num_taps, phases);
+      raw_coef_t * coefs = lsx_design_lpf(
+          f->pass, f->stop, 1., sox_false, f->att, &num_taps, phases);
       assert(num_taps == f->num_coefs * phases - 1);
       last_stage.shared->poly_fir_coefs =
           prepare_coefs(coefs, f->num_coefs, phases, interp_order, mult);
@@ -445,8 +328,8 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
       {0, NULL, .931, 110}, {0, NULL, .931, 125}, {0, NULL, .931, 170}};
     filter_t const * f = &filters[quality - Low];
     double att = allow_aliasing? (34./33)* f->a : f->a; /* negate att degrade */
-    double bw = bandwidth? 1 - (1 - bandwidth / 100) / TO_3dB : f->bw;
-    double min = 1 - (allow_aliasing? MAX_TBW0A : MAX_TBW0) / 100;
+    double bw = bandwidth? 1 - (1 - bandwidth / 100) / LSX_TO_3dB : f->bw;
+    double min = 1 - (allow_aliasing? LSX_MAX_TBW0A : LSX_MAX_TBW0) / 100;
     assert((size_t)(quality - Low) < array_length(filters));
     half_band_filter_init(shared, p->upsample, f->len, f->h, bw, att, mult, phase, allow_aliasing);
     if (p->upsample) {
@@ -573,7 +456,7 @@ static int create(sox_effect_t * effp, int argc, char **argv)
   while ((c = getopt(argc, argv, opts)) != -1) switch (c) {
     GETOPT_NUMERIC('i', coef_interp, 1 , 3)
     GETOPT_NUMERIC('p', phase,  0 , 100)
-    GETOPT_NUMERIC('b', bandwidth,  100 - MAX_TBW3, 99.7)
+    GETOPT_NUMERIC('b', bandwidth,  100 - LSX_MAX_TBW3, 99.7)
     case 'M': p->phase =  0; break;
     case 'I': p->phase = 25; break;
     case 'L': p->phase = 50; break;
@@ -589,8 +472,8 @@ static int create(sox_effect_t * effp, int argc, char **argv)
     return SOX_EOF;
   }
 
-  if (p->bandwidth && p->bandwidth < 100 - MAX_TBW3A && p->allow_aliasing) {
-    lsx_fail("minimum allowed bandwidth with aliasing is %g%%", 100 - MAX_TBW3A);
+  if (p->bandwidth && p->bandwidth < 100 - LSX_MAX_TBW3A && p->allow_aliasing) {
+    lsx_fail("minimum allowed bandwidth with aliasing is %g%%", 100 - LSX_MAX_TBW3A);
     return SOX_EOF;
   }
 

@@ -85,6 +85,8 @@ double lsx_bessel_I_0(double x);
 int lsx_set_dft_length(int num_taps);
 extern int * lsx_fft_br;
 extern double * lsx_fft_sc;
+void init_fft_cache(void);
+void clear_fft_cache(void);
 void lsx_safe_rdft(int len, int type, double * d);
 void lsx_safe_cdft(int len, int type, double * d);
 void lsx_power_spectrum(int n, double const * in, double * out);
@@ -97,6 +99,23 @@ void lsx_apply_blackman(double h[], const int num_points, double alpha);
 void lsx_apply_blackman_nutall(double h[], const int num_points);
 double lsx_kaiser_beta(double att);
 void lsx_apply_kaiser(double h[], const int num_points, double beta);
+double * lsx_make_lpf(int num_taps, double Fc, double beta, double scale);
+double * lsx_design_lpf(
+    double Fp,      /* End of pass-band; ~= 0.01dB point */
+    double Fc,      /* Start of stop-band */
+    double Fn,      /* Nyquist freq; e.g. 0.5, 1, PI */
+    sox_bool allow_aliasing,
+    double att,     /* Stop-band attenuation in dB */
+    int * num_taps, /* (Single phase.)  0: value will be estimated */
+    int k);         /* Number of phases; 0 for single-phase */
+void lsx_fir_to_phase(double * * h, int * len,
+    int * post_len, double phase0);
+#define LSX_TO_6dB .5869
+#define LSX_TO_3dB ((2/3.) * (.5 + LSX_TO_6dB))
+#define LSX_MAX_TBW0 36.
+#define LSX_MAX_TBW0A (LSX_MAX_TBW0 / (1 + LSX_TO_3dB))
+#define LSX_MAX_TBW3 floor(LSX_MAX_TBW0 * LSX_TO_3dB)
+#define LSX_MAX_TBW3A floor(LSX_MAX_TBW0A * LSX_TO_3dB)
 
 #ifndef HAVE_STRCASECMP
 int strcasecmp(const char *s1, const char *s2);
