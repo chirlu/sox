@@ -28,9 +28,12 @@ Effects:
   o New `pluck' and `tpdf' types for `synth'.  (robs)
   o Can now set common parameters for multiple `synth' channels.  (robs)
   o Fix `repeat' sometimes stopping repeating too soon.  (robs)
+  o Fix `repeat' sometimes repeating wrong audio segments.  (robs)
   o Fix [2332343] 'silence' segfault with certain lengths. (cbagwell)
   o Fix temporary file problems in Windows (cygwin) with normalise and
     other effects.  (robs)
+  o Parallel effects channel processing on some hyper-threading/mult-core
+    architectures.  (robs)
 
 Other new features:
 

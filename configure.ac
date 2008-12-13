@@ -646,7 +646,7 @@ echo
 echo "Distro name ...................... $DISTRO"
 echo "Debugging build................... $enable_debug"
 echo "External module support........... $using_libltdl"
-echo "GOMP support (experimental)....... $enable_gomp"
+echo "GOMP support...................... $enable_gomp"
 echo "ALSA driver....................... $enable_alsa"
 echo "libao driver...................... $enable_libao"
 echo "OSS driver........................ $enable_oss"
