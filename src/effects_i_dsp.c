@@ -278,18 +278,24 @@ double * lsx_design_lpf(
   if (allow_aliasing)
     Fc += (Fc - Fp) * LSX_TO_3dB;
   Fp /= Fn, Fc /= Fn;        /* Normalise to Fn = 1 */
-  tr_bw = LSX_TO_6dB * (Fc - Fp); /* Transition band-width: 6dB to stop points */
+  tr_bw = LSX_TO_6dB * (Fc-Fp); /* Transition band-width: 6dB to stop points */
 
   if (*num_taps == 0) {        /* TODO this could be cleaner, esp. for k != 0 */
-    double n160 = (.0425* att - 1.4) /  tr_bw;    /* Half order for att = 160 */
-    int n = n160 * (16.556 / (att - 39.6) + .8625) + .5;  /* For att [80,160) */
+    int n;
+    if (att <= 80)
+      n = .25 / M_PI * (att - 7.95) / (2.285 * tr_bw) + .5;
+    else {
+      double n160 = (.0425* att - 1.4) / tr_bw;   /* Half order for att = 160 */
+      n = n160 * (16.556 / (att - 39.6) + .8625) + .5;  /* For att [80,160) */
+    }
     *num_taps = k? 2 * n : 2 * (n + (n & 1)) + 1; /* =1 %4 (0 phase 1/2 band) */
   }
-  assert(att >= 80);
-  beta = att < 100 ? .1102 * (att - 8.7) : .1117 * att - 1.11;
+  beta = att < 21 ? 0 : att < 50 ? .5842 * pow((att - 21), .4) + .07886 *
+      (att - 21) : att < 100 ? .1102 * (att - 8.7) : .1117 * att - 1.11;
   if (k)
     *num_taps = *num_taps * k - 1;
   else k = 1;
+  lsx_debug("%i %g %g %g %g", *num_taps, Fp, tr_bw, Fc, beta);
   return lsx_make_lpf(*num_taps, (Fc - tr_bw) / k, beta, (double)k);
 }
 
@@ -300,7 +306,7 @@ void lsx_fir_to_phase(double * * h, int * len,
   int work_len, begin, end, peak = 0, i = *len;
 
   for (work_len = 32; i > 1; work_len <<= 1, i >>= 1);
-  work = calloc(work_len, sizeof(*work));
+  work = calloc((size_t)work_len /* + 2 */, sizeof(*work)); /* +2: (UN)PACK */
   for (i = 0; i < *len; ++i) work[i] = (*h)[i];
 
   lsx_safe_rdft(work_len, 1, work); /* Cepstral: */
@@ -319,6 +325,12 @@ void lsx_fir_to_phase(double * * h, int * len,
 
   /* Some filters require phase unwrapping at this point.  Ours give dis-
    * continuities only in the stop band, so no need to unwrap in this case. */
+#if 0
+  UNPACK(work, work_len);
+  unwrap_phase(work, work_len);
+  PACK(work, work_len);
+  octave_out(stdout, work, work_len);
+#endif
 
   for (i = 2; i < work_len; i += 2) /* Interpolate between linear & min phase */
     work[i + 1] = phase * M_PI * .5 * i + (1 - phase) * work[i + 1];
@@ -335,6 +347,7 @@ void lsx_fir_to_phase(double * * h, int * len,
   for (i = 1; i < work_len; ++i) if (work[i] > work[peak])  /* Find peak pos. */
     peak = i;                                           /* N.B. peak val. > 0 */
 
+  lsx_debug("peak-pos=%i", peak);
   if (phase == 0)
     begin = 0;
   else if (phase == 1)

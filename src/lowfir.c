@@ -71,7 +71,7 @@ sox_effect_handler_t const * sox_lowfir_effect_fn(void)
   handler = *sox_dft_filter_effect_fn();
   handler.name = "lowfir";
   handler.usage = "[options]";
-  handler.flags &= ~SOX_EFF_DEPRECATED;
+  handler.flags |= SOX_EFF_DEPRECATED;
   handler.getopts = create;
   handler.priv_size = sizeof(priv_t);
   return &handler;

@@ -123,7 +123,6 @@ sox_effect_handler_t const * sox_loudness_effect_fn(void)
   handler = *sox_dft_filter_effect_fn();
   handler.name = "loudness";
   handler.usage = "[gain [ref]]";
-  handler.flags &= ~SOX_EFF_DEPRECATED;
   handler.getopts = create;
   handler.start = start;
   handler.priv_size = sizeof(priv_t);
