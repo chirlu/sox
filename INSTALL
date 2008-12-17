@@ -36,14 +36,23 @@ Optionally, to test the executable:
 modularly SoX can't use its format and effect modules until
 it is installed.)
 
+In addition, there are several optional make targets that can be used
+(run as "make target").  They include: pdf, html, install-pdf,
+install-html.
+
 There are several optional parameters that you may pass to the
 configure script to customize SoX for your applications. Run
 
 	./configure --help
 
-for a complete list of options.  In addition, there are several
-optional make targets that can be used (run as "make target").
-They include: pdf, html, install-pdf, install-html
+for a complete list of options.
+
+If you are building SoX for a `distribution' (i.e. the build will be
+used by others), please use --with-distro to identify the distribution
+as this information is useful in helping to diagnose SoX bug reports.
+For example,
+
+	./configure --with-distro='Super Linux OS 6.1'
 
 
 Compiling using Microsoft's Visual C
