@@ -2520,7 +2520,9 @@ int main(int argc, char **argv)
   }
   if (ofile->volume != HUGE_VAL)
     usage("-v can be given only for an input file;\n"
-            "\tuse `vol' to set the output file volume");
+            "\tuse the `gain' or `vol' effect to set the output file volume");
+  if (ofile->signal.length != SOX_UNSPEC)
+    usage("--ignore-length can be given only for an input file");
 
   signal(SIGINT, SIG_IGN); /* So child pipes aren't killed by track skip */
   for (i = 0; i < input_count; i++) {
