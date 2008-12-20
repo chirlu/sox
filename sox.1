@@ -787,6 +787,9 @@ solution.
 .TP
 \fB\-\-version\fR
 Show SoX's version number and exit.
+.TP
+\fB\-\-single-threaded\fR
+Disable parallel effects channel processing (where supported).
 .IP \fB\-V\fB[\fIlevel\fB]\fP
 Set verbosity.
 SoX displays messages on the console (stderr) according to the following
@@ -827,6 +830,11 @@ sets it to 0.
 These options apply only to input files and may precede only input
 filenames on the command line.
 .TP
+\fB\-\-ignore-length\fR
+Override an (incorrect) audio length given in an audio file's header; if
+this option is given, then SoX will keep reading audio until it reaches
+the end of the input file.
+.TP
 \fB\-v\fR, \fB\-\-volume\fR \fIFACTOR\fR
 Adjust volume by a factor of \fIFACTOR\fR.
 This is a linear (amplitude) adjustment, so a number less than 1
@@ -834,11 +842,12 @@ decreases the volume; greater than 1 increases it.  If a negative number
 is given, then in addition to the volume adjustment, the audio signal
 will be inverted.
 .SP
-See also the \fBstat\fR effect for information on how to find
-the maximum volume of an audio file; this can be used to help select
-suitable values for this option.
-.SP
-See also \fBInput File Balancing\fR above.
+See also the \fBstat\fR (with \dB\-v\fR),
+.BR norm ,
+.BR vol ,
+and
+.B gain
+effects; and see \fBInput File Balancing\fR above.
 .SS Input & Output File Format Options
 These options apply to the input or output file whose name they
 immediately precede on the command line and are used mainly when

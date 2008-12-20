@@ -15,12 +15,15 @@ File formats:
 
   o Slight improvement to A-law/u-law conversion accuracy: round LSB
     instead of truncating.  (robs)
+  o New `--ignore-length' option to ignore length in input file
+    header (for simple encodings); instead, read to end of file.  (robs)
   o Fix [2028181] w64 float format incompatibility.  (Tim Munro)
   o Fix reading AIFF files with pad bytes in COMT chunks. (Joe Holt)
   o Fix AIFF file length bug to stop reading trash data on files that
     have extra chunks at end of file. (Joe Holt)
   o Fix file length being 4 bytes short for AIFF sowt CD tracks. (Joe Holt)
   o Fix [2404566] segfault when converting from MS ADPCM wav file.  (robs)
+  o Fix slight FLAC seek inaccuracy e.g. when using `trim' effect.  (robs)
 
 Effects:
 
@@ -33,7 +36,7 @@ Effects:
   o Fix temporary file problems in Windows (cygwin) with normalise and
     other effects.  (robs)
   o Parallel effects channel processing on some hyper-threading/mult-core
-    architectures.  (robs)
+    architectures.  New `--single-threaded' option to disable this.  (robs)
 
 Other new features:
 
