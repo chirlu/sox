@@ -481,16 +481,11 @@ static int stop_write(sox_format_t * const ft)
 
 
 
-/*
- * N.B.  Do not call this function with offset=0 when file-pointer
- * is already 0 or a block of decoded FLAC data will be discarded.
- */
 static int seek(sox_format_t * ft, uint64_t offset)
 {
   priv_t * p = (priv_t *)ft->priv;
-  int result = ft->mode == 'r' && FLAC__stream_decoder_seek_absolute(p->decoder, (FLAC__uint64)(offset / ft->signal.channels)) ?  SOX_SUCCESS : SOX_EOF;
   p->wide_sample_number = p->number_of_wide_samples = 0;
-  return result;
+  return ft->mode == 'r' && FLAC__stream_decoder_seek_absolute(p->decoder, (FLAC__uint64)(offset / ft->signal.channels)) ?  SOX_SUCCESS : SOX_EOF;
 }
 
 
