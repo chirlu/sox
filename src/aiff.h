@@ -14,18 +14,9 @@
  * (usable for japanese-data-broadcasting, specified by ARIB STD-B24.)
  */
 
-typedef struct {
-    size_t nsamples;  /* number of 1-channel samples read or written */
-                         /* Decrements for read increments for write */
-    size_t dataStart; /* need to for seeking */
-} aiff_priv_t;
-
-int lsx_aiffseek(sox_format_t * ft, uint64_t offset);
 int lsx_aiffstartread(sox_format_t * ft);
-size_t lsx_aiffread(sox_format_t * ft, sox_sample_t *buf, size_t len);
 int lsx_aiffstopread(sox_format_t * ft);
 int lsx_aiffstartwrite(sox_format_t * ft);
-size_t lsx_aiffwrite(sox_format_t * ft, const sox_sample_t *buf, size_t len);
 int lsx_aiffstopwrite(sox_format_t * ft);
 int lsx_aifcstartwrite(sox_format_t * ft);
 int lsx_aifcstopwrite(sox_format_t * ft);

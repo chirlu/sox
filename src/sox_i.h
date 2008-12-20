@@ -215,7 +215,7 @@ typedef struct sox_formats_globals { /* Global parameters (for formats) */
 
 int lsx_check_read_params(sox_format_t * ft, unsigned channels,
     sox_rate_t rate, sox_encoding_t encoding, unsigned bits_per_sample,
-    off_t num_samples);
+    off_t num_samples, sox_bool check_length);
 sox_sample_t lsx_sample_max(sox_encodinginfo_t const * encoding);
 #define SOX_FORMAT_HANDLER(name) \
 sox_format_handler_t const * sox_##name##_format_fn(void); \

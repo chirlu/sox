@@ -808,15 +808,20 @@ error:
 
 size_t sox_read(sox_format_t * ft, sox_sample_t * buf, size_t len)
 {
-  size_t actual = ft->handler.read? (*ft->handler.read)(ft, buf, len) : 0;
-  return (actual > len? 0 : actual);
+  size_t actual;
+  if (ft->signal.length != SOX_UNSPEC)
+    len = min(len, ft->signal.length - ft->olength);
+  actual = ft->handler.read? (*ft->handler.read)(ft, buf, len) : 0;
+  actual = actual > len? 0 : actual;
+  ft->olength += actual;
+  return actual;
 }
 
 size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
-  size_t ret = ft->handler.write? (*ft->handler.write)(ft, buf, len) : 0;
-  ft->olength += ret;
-  return ret;
+  size_t actual = ft->handler.write? (*ft->handler.write)(ft, buf, len) : 0;
+  ft->olength += actual;
+  return actual;
 }
 
 int sox_close(sox_format_t * ft)

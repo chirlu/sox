@@ -26,9 +26,9 @@ SOX_FORMAT_HANDLER(aifc)
   static sox_format_handler_t const sox_aifc_format = {SOX_LIB_VERSION_CODE,
     "AIFF-C (not compressed, linear), defined in DAVIC 1.4 Part 9 Annex B",
     names, SOX_FILE_BIG_END,
-    lsx_aiffstartread, lsx_aiffread, lsx_aiffstopread,
-    lsx_aifcstartwrite, lsx_aiffwrite, lsx_aifcstopwrite,
-    lsx_aiffseek, write_encodings, NULL, sizeof(aiff_priv_t)
+    lsx_aiffstartread, lsx_rawread, lsx_aiffstopread,
+    lsx_aifcstartwrite, lsx_rawwrite, lsx_aifcstopwrite,
+    lsx_rawseek, write_encodings, NULL, 0
   };
   return &sox_aifc_format;
 }

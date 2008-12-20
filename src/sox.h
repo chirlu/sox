@@ -191,11 +191,13 @@ extern sox_globals_t sox_globals;
 
 typedef double sox_rate_t;
 
-typedef struct { /* Signal parameters; 0 if unknown */
+#define SOX_UNSPEC 0
+#define SOX_IGNORE_LENGTH (size_t)(-1)
+typedef struct { /* Signal parameters; SOX_UNSPEC if unknown */
   sox_rate_t       rate;         /* sampling rate */
   unsigned         channels;     /* number of sound channels */
   unsigned         precision;    /* in bits */
-  size_t       length;       /* samples * chans in file; 0 if unknown */
+  size_t           length;       /* samples * chans in file */
 } sox_signalinfo_t;
 
 typedef enum {

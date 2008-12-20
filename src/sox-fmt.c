@@ -68,7 +68,7 @@ static int startread(sox_format_t * ft)
   lsx_seeki(ft, (off_t)(headers_bytes - FIXED_HDR - comments_bytes), SEEK_CUR);
 
   return lsx_check_read_params(
-      ft, num_channels, rate, SOX_ENCODING_SIGN2, 32, (off_t)num_samples);
+      ft, num_channels, rate, SOX_ENCODING_SIGN2, 32, (off_t)num_samples, sox_true);
 }
 
 static int write_header(sox_format_t * ft)

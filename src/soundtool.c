@@ -39,7 +39,7 @@ static int start_read(sox_format_t * ft)
   }
   comments[text_field_len] = '\0'; /* Be defensive against incorrect files */
   sox_append_comments(&ft->oob.comments, comments);
-  return lsx_check_read_params(ft, 1, (sox_rate_t)rate, SOX_ENCODING_UNSIGNED, 8, (off_t)0);
+  return lsx_check_read_params(ft, 1, (sox_rate_t)rate, SOX_ENCODING_UNSIGNED, 8, (off_t)nsamples, sox_true);
 }
 
 static int write_header(sox_format_t * ft)

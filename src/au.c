@@ -187,9 +187,9 @@ static int startread(sox_format_t * ft)
     free(buf);
   }
   if (data_size == SUN_UNSPEC)
-    data_size = 0;  /* libSoX uses 0 for unspecified */
-  return lsx_check_read_params(ft, channels, (sox_rate_t)rate,
-      encoding, bits_per_sample, div_bits(data_size, bits_per_sample));
+    data_size = SOX_UNSPEC;
+  return lsx_check_read_params(ft, channels, (sox_rate_t)rate, encoding,
+      bits_per_sample, div_bits(data_size, bits_per_sample), sox_true);
 }
 
 static int write_header(sox_format_t * ft)
@@ -202,7 +202,7 @@ static int write_header(sox_format_t * ft)
   sox_bool error  = sox_false
   ||lsx_writechars(ft, id[i].str, sizeof(id[i].str))
   ||lsx_writedw(ft, FIXED_HDR + (unsigned)info_len)
-  ||lsx_writedw(ft, (unsigned) (size? size*(ft->encoding.bits_per_sample >> 3) : SUN_UNSPEC))
+  ||lsx_writedw(ft, (unsigned) (size != SOX_UNSPEC? size*(ft->encoding.bits_per_sample >> 3) : SUN_UNSPEC))
   ||lsx_writedw(ft, ft_enc(ft->encoding.bits_per_sample, ft->encoding.encoding))
   ||lsx_writedw(ft, (unsigned)(ft->signal.rate + .5))
   ||lsx_writedw(ft, ft->signal.channels)

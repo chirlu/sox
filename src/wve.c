@@ -35,7 +35,7 @@ static int start_read(sox_format_t * ft)
     lsx_fail_errno(ft, SOX_EHDR, "wve: can't find Psion identifier");
     return SOX_EOF;
   }
-  return lsx_check_read_params(ft, 1, 8000., SOX_ENCODING_ALAW, 8, (off_t)num_samples);
+  return lsx_check_read_params(ft, 1, 8000., SOX_ENCODING_ALAW, 8, (off_t)num_samples, sox_true);
 }
 
 static int write_header(sox_format_t * ft)

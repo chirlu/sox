@@ -47,9 +47,10 @@ void lsx_set_signal_defaults(sox_signalinfo_t * signal)
 }
 
 int lsx_check_read_params(sox_format_t * ft, unsigned channels,
-    sox_rate_t rate, sox_encoding_t encoding, unsigned bits_per_sample, off_t length)
+    sox_rate_t rate, sox_encoding_t encoding, unsigned bits_per_sample,
+    off_t num_samples, sox_bool check_length)
 {
-  ft->signal.length = length;
+  ft->signal.length = ft->signal.length == SOX_IGNORE_LENGTH? SOX_UNSPEC : num_samples;
 
   if (ft->seekable)
     ft->data_start = lsx_tell(ft);
@@ -70,12 +71,12 @@ int lsx_check_read_params(sox_format_t * ft, unsigned channels,
     lsx_warn("`%s': overriding encoding size", ft->filename);
   ft->encoding.bits_per_sample = bits_per_sample;
 
-  if (ft->encoding.bits_per_sample && lsx_filelength(ft)) {
+  if (check_length && ft->encoding.bits_per_sample && lsx_filelength(ft)) {
     off_t calculated_length = div_bits(lsx_filelength(ft) - ft->data_start, ft->encoding.bits_per_sample);
     if (!ft->signal.length)
       ft->signal.length = calculated_length;
-    else if (length != calculated_length)
-      lsx_warn("`%s': file header gives the total number of samples as %u but file length indicates the number is in fact %u", ft->filename, (unsigned)length, (unsigned)calculated_length); /* FIXME: casts */
+    else if (num_samples != calculated_length)
+      lsx_warn("`%s': file header gives the total number of samples as %u but file length indicates the number is in fact %u", ft->filename, (unsigned)num_samples, (unsigned)calculated_length); /* FIXME: casts */
   }
 
   if (sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample))
@@ -171,6 +172,7 @@ int lsx_error(sox_format_t * ft)
 void lsx_rewind(sox_format_t * ft)
 {
   rewind(ft->fp);
+  ft->tell_off = 0;
 }
 
 void lsx_clearerr(sox_format_t * ft)

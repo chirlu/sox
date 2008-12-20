@@ -1641,6 +1641,7 @@ static void usage(char const * message)
 "overriden by any of various means including providing output format options.",
 "",
 "-v|--volume FACTOR       Input file volume adjustment factor (real number)",
+"--ignore-length          Ignore input file length given in header; read to EOF",
 "-t|--type FILETYPE       File type of audio",
 "-s/-u/-f/-U/-A/-i/-a/-g  Encoding type=signed-integer/unsigned-integer/floating-",
 "                         point/mu-law/a-law/ima-adpcm/ms-adpcm/gsm-full-rate",
@@ -1830,6 +1831,7 @@ static struct option long_options[] =
     {"effects-file"    , required_argument, NULL, 0},
     {"temp"            , required_argument, NULL, 0},
     {"single-threaded" ,       no_argument, NULL, 0},
+    {"ignore-length"   ,       no_argument, NULL, 0},
 
     {"bits"            , required_argument, NULL, 'b'},
     {"channels"        , required_argument, NULL, 'c'},
@@ -2020,6 +2022,10 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 
       case 17:
         single_threaded = sox_true;
+        break;
+
+      case 18:
+        f->signal.length = SOX_IGNORE_LENGTH;
         break;
 
       }

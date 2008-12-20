@@ -439,7 +439,7 @@ static int startread(sox_format_t * ft)
     uint32_t      dwLoopPos;
 
     ft->sox_errno = SOX_SUCCESS;
-    wav->ignoreSize = 0;
+    wav->ignoreSize = ft->signal.length == SOX_IGNORE_LENGTH;
 
     if (lsx_reads(ft, magic, (size_t)4) == SOX_EOF || (strncmp("RIFF", magic, (size_t)4) != 0 &&
                                              strncmp("RIFX", magic, (size_t)4) != 0))
@@ -844,7 +844,7 @@ static int startread(sox_format_t * ft)
      * not mistakenly depend on it.
      */
     if (wav->ignoreSize)
-      ft->signal.length = 0;
+      ft->signal.length = SOX_UNSPEC;
 
     lsx_debug("Reading Wave file: %s format, %d channel%s, %d samp/sec",
            wav_format_str(wav->formatTag), ft->signal.channels,

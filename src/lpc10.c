@@ -131,7 +131,7 @@ static int startread(sox_format_t * ft)
     return SOX_EOF;
   }
   lpc->samples = LPC10_SAMPLES_PER_FRAME;
-  return lsx_check_read_params(ft, 1, 8000., SOX_ENCODING_LPC10, 0, (off_t)0);
+  return lsx_check_read_params(ft, 1, 8000., SOX_ENCODING_LPC10, 0, (off_t)0, sox_false);
 }
 
 static int startwrite(sox_format_t * ft)

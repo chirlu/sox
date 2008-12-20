@@ -42,8 +42,8 @@ static int start_read(sox_format_t * ft)
     lsx_fail_errno(ft, SOX_EFMT, "unsupported HTK type `%s' (0%o)", str[n], parmKind);
     return SOX_EOF;
   }
-  return lsx_check_read_params(ft, 1, 1e7 / period_100ns,
-      SOX_ENCODING_SIGN2, (unsigned)bytes_per_sample << 3, (off_t)num_samples);
+  return lsx_check_read_params(ft, 1, 1e7 / period_100ns, SOX_ENCODING_SIGN2,
+      (unsigned)bytes_per_sample << 3, (off_t)num_samples, sox_true);
 }
 
 static int write_header(sox_format_t * ft)
