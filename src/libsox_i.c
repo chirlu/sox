@@ -27,16 +27,16 @@
 
 #ifdef HAVE_UNISTD_H
   #include <unistd.h>
-  #define MKTEMP_FLAGS O_RDWR|O_TRUNC|O_CREAT, S_IREAD|S_IWRITE
-#else
-  #define MKTEMP_FLAGS _O_RDWR|_O_TRUNC|_O_CREAT|_O_BINARY|_O_TEMPORARY, _S_IREAD|_S_IWRITE
+  #define MKTEMP_X 0
+#else /* win32 */
+  #define MKTEMP_X _O_BINARY|_O_TEMPORARY
 #endif
 
 #ifndef HAVE_MKSTEMP
   #include <fcntl.h>
   #include <sys/types.h>
   #include <sys/stat.h>
-  #define mkstemp(t) open(mktemp(t), MKTEMP_FLAGS)
+  #define mkstemp(t) open(mktemp(t), MKTEMP_X|O_RDWR|O_TRUNC|O_CREAT, S_IREAD|S_IWRITE)
   #define FAKE_MKSTEMP "fake "
 #else
   #define FAKE_MKSTEMP
@@ -45,6 +45,7 @@
 FILE * lsx_tmpfile(void)
 {
   if (sox_globals.tmp_path) {
+    /* Emulate tmpfile (delete on close); tmp dir is given tmp_path: */
     char const * const end = "/libSoX.tmp.XXXXXX";
     char * name = lsx_malloc(strlen(sox_globals.tmp_path) + strlen(end) + 1);
     int fildes;
@@ -60,6 +61,8 @@ FILE * lsx_tmpfile(void)
     free(name);
     return fildes == -1? NULL : fdopen(fildes, "w+");
   }
+
+  /* Use standard tmpfile (delete on close); tmp dir is undefined: */
   lsx_debug("tmpfile()");
   return tmpfile();
 }
