@@ -285,7 +285,7 @@ libsox_la_LIBADD = @PNG_LIBS@ @SAMPLERATE_LIBS@
 if HAVE_MAGIC
 libsox_la_LIBADD += @MAGIC_LIBS@
 endif
-if HAVE_GOMP
+if HAVE_OPENMP
 libsox_la_LIBADD += @GOMP_LIBS@
 endif
 
