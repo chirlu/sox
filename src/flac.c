@@ -58,6 +58,8 @@ typedef struct {
 
   FLAC__StreamDecoder * decoder;
   FLAC__bool eof;
+  sox_bool seek_pending;
+  uint64_t seek_offset;
 
   /* Encode buffer: */
   FLAC__int32 * decoded_samples;
@@ -124,6 +126,7 @@ static FLAC__StreamDecoderWriteStatus FLAC__frame_decode_callback(FLAC__StreamDe
     return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
   }
 
+  /* FIXME: We're skating on thin ice here: buffer may be on the stack! */
   p->decoded_wide_samples = buffer;
   p->number_of_wide_samples = frame->header.blocksize;
   p->wide_sample_number = 0;
@@ -194,12 +197,18 @@ static size_t read_samples(sox_format_t * const ft, sox_sample_t * sampleBuffer,
   priv_t * p = (priv_t *)ft->priv;
   size_t actual = 0;
 
+  if (p->seek_pending) {
+    p->seek_pending = sox_false; 
+    p->wide_sample_number = p->number_of_wide_samples = 0;
+    if (!FLAC__stream_decoder_seek_absolute(p->decoder, (FLAC__uint64)(p->seek_offset / ft->signal.channels)))
+      return 0;
+  }
   while (!p->eof && actual < requested) {
     if (p->wide_sample_number >= p->number_of_wide_samples)
       FLAC__stream_decoder_process_single(p->decoder);
     if (p->wide_sample_number >= p->number_of_wide_samples)
       p->eof = sox_true;
-    else {
+    else { /* FIXME: this block should really be inside the decode callback */
       unsigned channel;
 
       for (channel = 0; channel < p->channels; channel++, actual++) {
@@ -484,9 +493,11 @@ static int stop_write(sox_format_t * const ft)
 static int seek(sox_format_t * ft, uint64_t offset)
 {
   priv_t * p = (priv_t *)ft->priv;
-  p->wide_sample_number = p->number_of_wide_samples = 0;
-  return ft->mode == 'r' && FLAC__stream_decoder_seek_absolute(p->decoder, (FLAC__uint64)(offset / ft->signal.channels)) ?  SOX_SUCCESS : SOX_EOF;
+  p->seek_offset = offset;
+  p->seek_pending = sox_true;
+  return ft->mode == 'r' ? SOX_SUCCESS : SOX_EOF;
 }
+
 
 
 SOX_FORMAT_HANDLER(flac)
