@@ -195,6 +195,8 @@ static sox_bool single_threaded = sox_false;
 static struct termios original_termios;
 #endif
 
+static sox_bool stdin_is_a_tty;
+
 
 /* Cleanup atexit() function, hence always called. */
 static void cleanup(void)
@@ -223,7 +225,7 @@ static void cleanup(void)
   }
 
 #ifdef HAVE_TERMIOS_H
-  if (isatty(fileno(stdin)))
+  if (stdin_is_a_tty)
     tcsetattr(fileno(stdin), TCSANOW, &original_termios);
 #endif
 
@@ -1181,7 +1183,7 @@ static void adjust_volume(int delta)
 
 static int update_status(sox_bool all_done)
 {
-  while (isatty(fileno(stdin)) && kbhit()) {
+  if (stdin_is_a_tty) while (kbhit()) {
     int ch = getchar();
 
 #ifdef INTERACTIVE
@@ -1256,7 +1258,7 @@ static sox_bool overwrite_permitted(char const * filename)
     return sox_true;
   }
   lsx_warn("Output file `%s' already exists", filename);
-  if (!isatty(fileno(stdin)))
+  if (!stdin_is_a_tty)
     return sox_false;
   do fprintf(stderr, "%s sox: overwrite `%s' (y/n)? ", myname, filename);
   while (scanf(" %c%*[^\n]", &c) != 1 || !strchr("yYnN", c));
@@ -2558,8 +2560,11 @@ int main(int argc, char **argv)
   if (sox_init() != SOX_SUCCESS)
     exit(1);
 
+  stdin_is_a_tty = isatty(fileno(stdin));
+  errno = 0; /* Both isatty & fileno may set errno. */
+
 #ifdef HAVE_TERMIOS_H /* so we can be fully interactive. */
-  if (isatty(fileno(stdin))) {
+  if (stdin_is_a_tty) {
     struct termios modified_termios;
 
     tcgetattr(fileno(stdin), &original_termios);
