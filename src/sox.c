@@ -25,6 +25,7 @@
 #include "util.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <math.h>
 #include <signal.h>
 #include <stdio.h>
@@ -40,6 +41,26 @@
 
 #ifdef HAVE_IO_H
   #include <io.h>
+#endif
+
+#ifdef HAVE_SUN_AUDIOIO_H
+  #include <sun/audioio.h>
+  #define HAVE_AUDIOIO_H 1
+#else
+#ifdef HAVE_SYS_AUDIOIO_H
+  #include <sys/audioio.h>
+  #define HAVE_AUDIOIO_H 1
+#endif
+#endif
+
+#ifdef HAVE_SYS_SOUNDCARD_H
+  #include <sys/soundcard.h>
+  #define HAVE_SOUNDCARD_H 1
+#else
+#ifdef HAVE_MACHINE_SOUNDCARD_H
+  #include <machine/soundcard.h>
+  #define HAVE_SOUNDCARD_H 1
+#endif
 #endif
 
 #ifdef HAVE_SYS_TIME_H
@@ -68,11 +89,7 @@
   #define TIME_FRAC 1e3
 #endif
 
-/*#define INTERACTIVE 1 */
-#ifdef INTERACTIVE
-#include <unistd.h>
-#include <fcntl.h>
-#endif
+/*#define INTERACTIVE 1*/
 
 /* We are playing games with getopt aliases so this needs to be included after
  * unistd.h to prevent aliasing OS's version of getopt.
@@ -173,6 +190,11 @@ static sox_sample_t omax[2], omin[2];
 
 static sox_bool single_threaded = sox_false;
 
+#ifdef HAVE_TERMIOS_H
+#include <termios.h>
+static struct termios original_termios;
+#endif
+
 
 /* Cleanup atexit() function, hence always called. */
 static void cleanup(void)
@@ -199,6 +221,11 @@ static void cleanup(void)
     }
     free(ofile);
   }
+
+#ifdef HAVE_TERMIOS_H
+  if (isatty(fileno(stdin)))
+    tcsetattr(fileno(stdin), TCSANOW, &original_termios);
+#endif
 
   sox_format_quit();
 }
@@ -1088,13 +1115,76 @@ static void display_status(sox_bool all_done)
     fputc('\n', stderr);
 }
 
+#ifdef HAVE_TERMIOS_H
+static int kbhit(void)
+{
+  struct timeval time_val = {0, 0};
+  fd_set fdset;
+
+  FD_ZERO(&fdset);
+  FD_SET(fileno(stdin), &fdset);
+  select(fileno(stdin) + 1, &fdset, NULL, NULL, &time_val);
+  return FD_ISSET(fileno(stdin), &fdset);
+}
+#elif !defined(_MSC_VER)
+#define kbhit() 0
+#endif
+
+#ifdef HAVE_SOUNDCARD_H
+#include <sys/ioctl.h>
+static void adjust_volume(int delta)
+{
+  char * from_env = getenv("MIXERDEV");
+  int vol1 = 0, vol2 = 0, fd = open(from_env? from_env : "/dev/mixer", O_RDWR);
+  if (fd >= 0) {
+    if (ioctl(fd, MIXER_READ(SOUND_MIXER_PCM), &vol1) != -1) {
+      int side1 = vol1 & 0xff, side2 = (vol1 >> 8) & 0xff;
+      delta = delta < 0?  max(delta, -min(side1, side2)) :
+          min(delta, 100 - max(side1, side2));
+      vol2 = ((side2 + delta) << 8) + side1 + delta;
+      lsx_debug("%04x %04x", vol1, vol2);
+      if (vol1 != vol2 && ioctl(fd, MIXER_WRITE(SOUND_MIXER_PCM), &vol2) < 0)
+        vol2 = vol1;
+    }
+    close(fd);
+  }
+  if (vol1 == vol2)
+    putc('\a', stderr);
+}
+#elif defined(HAVE_AUDIOIO_H)
+static void adjust_volume(int delta)
+{
+  int vol1 = 0, vol2 = 0, fd = fileno(ofile->ft->fp);
+  if (fd >= 0) {
+    audio_info_t audio_info;
+    if (ioctl(fd, AUDIO_GETINFO, &audio_info) >= 0) {
+      vol1 = (audio_info.play.gain * 100 + (AUDIO_MAX_GAIN >> 1)) / AUDIO_MAX_GAIN;
+      vol2 = range_limit(vol1 + delta, 0, 100);
+      AUDIO_INITINFO(&audio_info);
+      audio_info.play.gain = (vol2 * AUDIO_MAX_GAIN + 50) / 100;
+      audio_info.output_muted = 0;
+      lsx_debug("%04x %04x", vol1, vol2);
+      if (vol1 != vol2 && ioctl(fd, AUDIO_SETINFO, &audio_info) < 0)
+        vol2 = vol1;
+    }
+  }
+  if (vol1 == vol2)
+    putc('\a', stderr);
+}
+#else
+static void adjust_volume(int delta)
+{
+  (void)delta;
+  putc('\a', stderr);
+}
+#endif
+
 static int update_status(sox_bool all_done)
 {
-#ifdef INTERACTIVE
-  char ch = fgetc(stdin);
+  while (isatty(fileno(stdin)) && kbhit()) {
+    int ch = getchar();
 
-  if (ch != -1)
-  {
+#ifdef INTERACTIVE
     if (files[current_input]->ft->handler.seek && 
         files[current_input]->ft->seekable)
     {
@@ -1122,8 +1212,12 @@ static int update_status(sox_bool all_done)
         user_restart_eff = sox_true;
       }
     }
-  }
 #endif
+    switch (ch) {
+      case 'u': adjust_volume(+7); break;
+      case 'd': adjust_volume(-7); break;
+    }
+  }
 
   display_status(all_done || user_abort);
   return (user_abort || user_restart_eff) ? SOX_EOF : SOX_SUCCESS;
@@ -2447,12 +2541,8 @@ static char * check_dir(char * name)
 int main(int argc, char **argv)
 {
   size_t i;
-#ifdef INTERACTIVE
-  int flags;
-#endif
 
   myname = argv[0];
-  atexit(cleanup);
   sox_globals.output_message_handler = output_message;
 
   if (strends(myname, "play")) {
@@ -2468,14 +2558,22 @@ int main(int argc, char **argv)
   if (sox_init() != SOX_SUCCESS)
     exit(1);
 
+#ifdef HAVE_TERMIOS_H /* so we can be fully interactive. */
+  if (isatty(fileno(stdin))) {
+    struct termios modified_termios;
+
+    tcgetattr(fileno(stdin), &original_termios);
+    modified_termios = original_termios;
+    modified_termios.c_lflag &= ~(ICANON | ECHO);
+    modified_termios.c_cc[VMIN] = modified_termios.c_cc[VTIME] = 0;
+    tcsetattr(fileno(stdin), TCSANOW, &modified_termios);
+  }
+#endif
+
+  atexit(cleanup);
+
   if (sox_mode == sox_soxi)
     exit(soxi(argc, argv));
-
-#ifdef INTERACTIVE
-  /* Turn off blocking on stdin so we can be fully interactive. */
-  flags = fcntl(STDIN_FILENO, F_GETFL);
-  fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
-#endif
 
   parse_options_and_filenames(argc, argv);
 

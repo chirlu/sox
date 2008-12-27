@@ -41,6 +41,7 @@
 #cmakedefine HAVE_SYS_TIME_H          1
 #cmakedefine HAVE_SYS_TYPES_H         1
 #cmakedefine HAVE_SYS_UTSNAME_H       1
+#cmakedefine HAVE_TERMIOS_H           1
 #cmakedefine HAVE_UNISTD_H            1
 #cmakedefine HAVE_VSNPRINTF           1
 #cmakedefine HAVE_WAVPACK             1
