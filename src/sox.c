@@ -104,20 +104,22 @@ static enum {sox_sox, sox_play, sox_rec, sox_soxi} sox_mode;
 
 /* gopts */
 
-static enum {sox_sequence, sox_concatenate, sox_mix, sox_mix_power, sox_merge, sox_multiply}
-    combine_method = sox_concatenate;
+static enum {
+  sox_sequence, sox_concatenate, sox_mix, sox_mix_power,
+  sox_merge, sox_multiply, sox_default
+} combine_method = sox_default;
 static enum { sox_single, sox_multiple } output_method = sox_single;
 #define is_serial(m) ((m) <= sox_concatenate)
 #define is_parallel(m) (!is_serial(m))
 static sox_bool interactive = sox_false;
 static sox_bool uservolume = sox_false;
-typedef enum {RG_off, RG_track, RG_album} rg_mode;
+typedef enum {RG_off, RG_track, RG_album, RG_default} rg_mode;
 static lsx_enum_item const rg_modes[] = {
   LSX_ENUM_ITEM(RG_,off)
   LSX_ENUM_ITEM(RG_,track)
   LSX_ENUM_ITEM(RG_,album)
   {0, 0}};
-static rg_mode replay_gain_mode = RG_off;
+static rg_mode replay_gain_mode = RG_default;
 static sox_option_t show_progress = SOX_OPTION_DEFAULT;
 
 
@@ -195,7 +197,7 @@ static sox_bool single_threaded = sox_false;
 static struct termios original_termios;
 #endif
 
-static sox_bool stdin_is_a_tty;
+static sox_bool stdin_is_a_tty, is_player;
 
 
 /* Cleanup atexit() function, hence always called. */
@@ -315,7 +317,7 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
   sox_bool show_type = sox_true;
   size_t i;
 
-  if (sox_mode == sox_play && sox_globals.verbosity < 3) {
+  if (is_player && sox_globals.verbosity < 3) {
     play_file_info(ft, f, full);
     return;
   }
@@ -927,7 +929,7 @@ static void add_effects(sox_effects_chain_t *chain)
   sox_signalinfo_t signal = combiner_signal;
   unsigned i;
   sox_effect_t * effp;
-  char * rate_arg = sox_mode != sox_play? NULL :
+  char * rate_arg = sox_mode != is_player? NULL :
     (rate_arg = getenv("PLAY_RATE_ARG"))? rate_arg : "-l";
 
   /* 1st `effect' in the chain is the input combiner_signal.
@@ -2547,11 +2549,8 @@ int main(int argc, char **argv)
   myname = argv[0];
   sox_globals.output_message_handler = output_message;
 
-  if (strends(myname, "play")) {
+  if (strends(myname, "play"))
     sox_mode = sox_play;
-    replay_gain_mode = RG_track;
-    combine_method = sox_sequence;
-  }
   else if (strends(myname, "rec"))
     sox_mode = sox_rec;
   else if (strends(myname, "soxi"))
@@ -2582,14 +2581,17 @@ int main(int argc, char **argv)
 
   parse_options_and_filenames(argc, argv);
 
-#ifdef __CYGWIN__
+#ifdef __CYGWIN__  /* Workarounds for a couple of cygwin problems: */
+  /* Allow command-line --temp "" to specify default behaviour: */
   if (sox_globals.tmp_path && !*sox_globals.tmp_path) {
     free(sox_globals.tmp_path);
     sox_globals.tmp_path = NULL;
   }
   else if (!sox_globals.tmp_path) {
+    /* cygwin tmpfile does not use std. windows env. vars, so we do here: */
     if (!(sox_globals.tmp_path = check_dir(getenv("TEMP"))))
       if (!(sox_globals.tmp_path = check_dir(getenv("TMP"))))
+        /* Std. values for T(E)MP don't work in cygwin shell so try these: */
         if (!(sox_globals.tmp_path = check_dir("/tmp")))
           sox_globals.tmp_path = ".";
     sox_globals.tmp_path = lsx_strdup(sox_globals.tmp_path);
@@ -2605,6 +2607,16 @@ int main(int argc, char **argv)
     display_SoX_version(stderr);
 
   input_count = file_count ? file_count - 1 : 0;
+
+  {
+    sox_format_handler_t const * handler =
+      sox_write_handler(ofile->filename, ofile->filetype, NULL);
+    is_player = handler &&
+      (handler->flags & SOX_FILE_DEVICE) && !(handler->flags & SOX_FILE_PHONY);
+  }
+
+  if (combine_method == sox_default)
+    combine_method = is_player? sox_sequence : sox_concatenate;
 
   /* Allow e.g. known length processing in this case */
   if (combine_method == sox_sequence && input_count == 1)
@@ -2655,18 +2667,21 @@ int main(int argc, char **argv)
         (files[j]->ft->handler.flags & SOX_FILE_PHONY) == 0)
       show_progress = SOX_OPTION_YES;
   }
-  /* Simple heuristic to determine if replay-gain should be in album mode */
-  if (sox_mode == sox_play && replay_gain_mode == RG_track && input_count > 1 &&
+
+  if (replay_gain_mode == RG_default)
+    replay_gain_mode = is_player?
+      input_count > 1 &&               /* Simple heuristic to determine if */
+      cmp_comment_text(                /* replay-gain should be in album mode */
+          sox_find_comment(files[0]->ft->oob.comments, "artist"),
+          sox_find_comment(files[1]->ft->oob.comments, "artist")) &&
       cmp_comment_text(
-        sox_find_comment(files[0]->ft->oob.comments, "artist"),
-        sox_find_comment(files[1]->ft->oob.comments, "artist")) &&
-      cmp_comment_text(
-        sox_find_comment(files[0]->ft->oob.comments, "album"),
-        sox_find_comment(files[1]->ft->oob.comments, "album")))
-    replay_gain_mode = RG_album;
+          sox_find_comment(files[0]->ft->oob.comments, "album"),
+          sox_find_comment(files[1]->ft->oob.comments, "album"))?
+      RG_album : RG_track : RG_off;
 
   for (i = 0; i < input_count; i++)
     set_replay_gain(files[i]->ft->oob.comments, files[i]);
+
   signal(SIGINT, SIG_DFL);
 
   init_eff_chains();

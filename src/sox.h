@@ -419,6 +419,10 @@ sox_bool sox_format_supports_encoding(
     char               const * path,
     char               const * filetype,
     sox_encodinginfo_t const * encoding);
+sox_format_handler_t const * sox_write_handler(
+    char               const * path,
+    char               const * filetype,
+    char               const * * filetype1);
 sox_format_t * sox_open_write(
     char               const * path,
     sox_signalinfo_t   const * signal,

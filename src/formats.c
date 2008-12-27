@@ -687,12 +687,44 @@ static void set_output_format(sox_format_t * ft)
   #undef enc_arg
 }
 
+sox_format_handler_t const * sox_write_handler(
+    char               const * path,
+    char               const * filetype,
+    char               const * * filetype1)
+{
+  sox_format_handler_t const * handler;
+  if (filetype) {
+    if (!(handler = sox_find_format(filetype, sox_false))) {
+      lsx_fail("no handler for given file type `%s'", filetype);
+      return NULL;
+    }
+  }
+  else if (path) {
+    if (!(filetype = lsx_find_file_extension(path))) {
+      lsx_fail("can't determine type of `%s'", path);
+      return NULL;
+    }
+    if (!(handler = sox_find_format(filetype, sox_true))) {
+      lsx_fail("no handler for file extension `%s'", filetype);
+      return NULL;
+    }
+  }
+  else return NULL;
+  if (!handler->startwrite && !handler->write) {
+    lsx_fail("file type `%s' isn't writeable", filetype);
+    return NULL;
+  }
+  if (filetype1)
+    *filetype1 = filetype;
+  return handler;
+}
+
 sox_format_t * sox_open_write(
     char               const * path,
     sox_signalinfo_t   const * signal,
     sox_encodinginfo_t const * encoding,
     char               const * filetype,
-    sox_oob_t    const * oob,
+    sox_oob_t          const * oob,
     sox_bool           (*overwrite_permitted)(const char *filename))
 {
   sox_format_t * ft = lsx_calloc(sizeof(*ft), 1);
@@ -703,28 +735,10 @@ sox_format_t * sox_open_write(
     goto error;
   }
 
-  if (filetype) {
-    if (!(handler = sox_find_format(filetype, sox_false))) {
-      lsx_fail("no handler for given file type `%s'", filetype);
-      goto error;
-    }
-    ft->handler = *handler;
-  }
-  else {
-    if (!(filetype = lsx_find_file_extension(path))) {
-      lsx_fail("can't determine type of `%s'", path);
-      goto error;
-    }
-    if (!(handler = sox_find_format(filetype, sox_true))) {
-      lsx_fail("no handler for file extension `%s'", filetype);
-      goto error;
-    }
-    ft->handler = *handler;
-  }
-  if (!ft->handler.startwrite && !ft->handler.write) {
-    lsx_fail("file type `%s' isn't writeable", filetype);
+  if (!(handler = sox_write_handler(path, filetype, &filetype)))
     goto error;
-  }
+
+  ft->handler = *handler;
 
   if (!(ft->handler.flags & SOX_FILE_NOSTDIO)) {
     if (!strcmp(path, "-")) { /* Use stdout if the filename is "-" */
