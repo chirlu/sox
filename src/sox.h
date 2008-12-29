@@ -39,15 +39,14 @@ const char *sox_version(void);   /* Returns version number */
 #define SOX_SUCCESS 0
 #define SOX_EOF (-1)             /* End Of File or other error */
 
-/* libSoX specific error codes.  The rest directly map from errno. */
-#define SOX_EHDR 2000            /* Invalid Audio Header */
-#define SOX_EFMT 2001            /* Unsupported data format */
-#define SOX_ERATE 2002           /* Unsupported rate for format */
-#define SOX_ENOMEM 2003          /* Can't alloc memory */
-#define SOX_EPERM 2004           /* Operation not permitted */
-#define SOX_ENOTSUP 2005         /* Operation not supported */
-#define SOX_EINVAL 2006          /* Invalid argument */
-#define SOX_EFFMT 2007           /* Unsupported file format */
+enum { /* libSoX specific error codes.  The rest directly map from errno. */
+  SOX_EHDR = 2000,     /* Invalid Audio Header */
+  SOX_EFMT,            /* Unsupported data format */
+  SOX_ENOMEM,          /* Can't alloc memory */
+  SOX_EPERM,           /* Operation not permitted */
+  SOX_ENOTSUP,         /* Operation not supported */
+  SOX_EINVAL           /* Invalid argument */
+};
 
 /* Boolean type, assignment (but not necessarily binary) compatible with
  * C++ bool */
@@ -452,7 +451,7 @@ sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev)
 #define SOX_EFF_MCHAN    16          /* Effect can handle multi-channel */
 #define SOX_EFF_NULL     32          /* Effect does nothing */
 #define SOX_EFF_DEPRECATED 64        /* Effect is living on borrowed time */
-#define SOX_EFF_GETOPT   128         /* Effect uses getopt */
+#define SOX_EFF_GETOPT   128         /* FIXME eliminate: Effect uses getopt */
 
 typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot} sox_plot_t;
 typedef struct sox_effect sox_effect_t;
@@ -541,6 +540,7 @@ typedef int (* sox_playlist_callback_t)(void *, char *);
 sox_bool sox_is_playlist(char const * filename);
 int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * const listname);
 
+char const * sox_strerror(int sox_errno);
 void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap);
 
 /* WARNING BEGIN

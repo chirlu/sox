@@ -140,7 +140,7 @@ static int startread(sox_format_t * ft)
 
         if (rate == 0)
         {
-                lsx_fail_errno(ft, SOX_ERATE, "Invalid sample rate");
+                lsx_fail_errno(ft, SOX_EHDR, "Invalid sample rate");
                 return(SOX_EOF);
         }
         if (strncmp(buf,"BODY",(size_t)4) != 0)

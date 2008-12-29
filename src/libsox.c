@@ -43,13 +43,35 @@ static void output_message(
 }
 
 sox_globals_t sox_globals = {
-  2,
-  output_message,
-  sox_false,
-  8192,
-  0,
-  0,
-  NULL, NULL, NULL, NULL};
+  2,               /* unsigned     verbosity */
+  output_message,  /* sox_output_message_handler */
+  sox_false,       /* sox_bool     repeatable */
+  8192,            /* size_t       bufsiz */
+  0,               /* size_t       input_bufsiz */
+  0,               /* int32_t      ranqd1 */
+  NULL,            /* char const * stdin_in_use_by */
+  NULL,            /* char const * stdout_in_use_by */
+  NULL,            /* char const * subsystem */
+  NULL             /* char       * tmp_path */
+};
+
+char const * sox_strerror(int sox_errno)
+{
+  static char const * const errors[] = {
+    "Invalid Audio Header",
+    "Unsupported data format",
+    "Can't allocate memory",
+    "Operation not permitted",
+    "Operation not supported",
+    "Invalid argument",
+  };
+  if (sox_errno < SOX_EHDR)
+    return strerror(sox_errno);
+  sox_errno -= SOX_EHDR;
+  if (sox_errno < 0 || (size_t)sox_errno >= array_length(errors))
+    return "Unknown error";
+  return errors[sox_errno];
+}
 
 void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap)
 {

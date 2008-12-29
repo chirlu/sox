@@ -392,23 +392,6 @@ static void report_file_info(file_t * f)
     display_file_info(f->ft, f, sox_true);
 }
 
-static void display_error(sox_format_t * ft)
-{
-  static char const * const sox_strerror[] = {
-    "Invalid Audio Header",
-    "Unsupported data format",
-    "Unsupported rate for format",
-    "Can't alloc memory",
-    "Operation not permitted",
-    "Operation not supported",
-    "Invalid argument",
-    "Unsupported file format",
-  };
-  lsx_fail("%s: %s: %s", ft->filename, ft->sox_errstr,
-      ft->sox_errno < SOX_EHDR?
-      strerror(ft->sox_errno) : sox_strerror[ft->sox_errno - SOX_EHDR]);
-}
-
 static void progress_to_next_input_file(file_t * f)
 {
   if (user_skip) {
@@ -435,7 +418,8 @@ static size_t sox_read_wide(sox_format_t * ft, sox_sample_t * buf, size_t max)
   size_t len = max / combiner_signal.channels;
   len = sox_read(ft, buf, len * ft->signal.channels) / ft->signal.channels;
   if (!len && ft->sox_errno)
-    display_error(ft);
+    lsx_fail("%s: %s: %s",
+        ft->filename, ft->sox_errstr, sox_strerror(ft->sox_errno));
   return len;
 }
 
@@ -597,7 +581,8 @@ static int output_flow(sox_effect_t *effp, sox_sample_t const * ibuf,
   output_eof = (len != *isamp) ? sox_true: sox_false;
   if (len != *isamp) {
     if (ofile->ft->sox_errno)
-      display_error(ofile->ft);
+      lsx_fail("%s: %s: %s", ofile->ft->filename,
+          ofile->ft->sox_errstr, sox_strerror(ofile->ft->sox_errno));
     return SOX_EOF;
   }
   return SOX_SUCCESS;
