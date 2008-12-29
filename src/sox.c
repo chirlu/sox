@@ -2586,7 +2586,7 @@ int main(int argc, char **argv)
 
   input_count = file_count ? file_count - 1 : 0;
 
-  {
+  if (file_count) {
     sox_format_handler_t const * handler =
       sox_write_handler(ofile->filename, ofile->filetype, NULL);
     is_player = handler &&
