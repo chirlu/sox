@@ -907,8 +907,8 @@ static void add_effects(sox_effects_chain_t *chain)
   sox_signalinfo_t signal = combiner_signal;
   unsigned i;
   sox_effect_t * effp;
-  char * rate_arg = sox_mode != is_player? NULL :
-    (rate_arg = getenv("PLAY_RATE_ARG"))? rate_arg : "-l";
+  char * rate_arg =
+    is_player ? (rate_arg = getenv("PLAY_RATE_ARG")) ? rate_arg : "-l" : NULL;
 
   /* 1st `effect' in the chain is the input combiner_signal.
    * add it only if its not there from a previous run.
