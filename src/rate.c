@@ -620,7 +620,7 @@ static int polyphase_getopts(sox_effect_t * effp, int argc, char * * argv)
   args[2] = arg;
   sprintf(arg, "%f", bandwidth);
   return argc? lsx_usage(effp) : 
-    sox_rate_effect_fn()->getopts(effp, array_length(args), args);
+    sox_rate_effect_fn()->getopts(effp, (int)array_length(args), args);
 }
 
 sox_effect_handler_t const * sox_polyphase_effect_fn(void)
