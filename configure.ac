@@ -587,21 +587,6 @@ fi
 AM_CONDITIONAL(HAVE_PNG, test x$using_png = xyes)
 AC_SUBST(PNG_LIBS)
 
-dnl Test for libsamplerate.
-AC_ARG_WITH(samplerate,
-    AC_HELP_STRING([--without-samplerate],
-        [Don't try to use libsamplerate (aka Secret Rabbit Code)]))
-using_samplerate=no
-if test "$with_samplerate" != "no"; then
-    using_samplerate=yes
-    SOX_PATH_SAMPLERATE(, using_samplerate=no)
-    if test "$with_samplerate" = "yes" -a "$using_samplerate" = "no"; then
-        AC_MSG_FAILURE([cannot find libsamplerate])
-    fi
-fi
-AC_SUBST(SAMPLERATE_CFLAGS)
-AC_SUBST(SAMPLERATE_LIBS)
-
 dnl Test for LADSPA
 AC_ARG_WITH(ladspa,
     AC_HELP_STRING([--without-ladspa], [Don't try to use LADSPA]))
@@ -670,7 +655,6 @@ echo "AMR-NB format..................... $using_amr_nb"
 echo "WavPack format.................... $using_wavpack"
 echo "LADSPA effects.................... $using_ladspa"
 echo "PNG support....................... $using_png"
-echo "Secret Rabbit Code resampling..... $using_samplerate"
 echo "pkg-config location............... $pkgconfig_option"
 echo
 echo "Configure finished.  Do 'make && make install' to compile and install SoX."

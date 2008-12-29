@@ -48,21 +48,6 @@ char * lsx_usage_lines(char * * usage, char const * const * lines, size_t n)
   return *usage;
 }
 
-/* here for linear interp.  might be useful for other things */
-unsigned lsx_gcd(unsigned a, unsigned b)
-{
-  if (b == 0)
-    return a;
-  else
-    return lsx_gcd(b, a % b);
-}
-
-unsigned lsx_lcm(unsigned a, unsigned b)
-{
-  /* parenthesize this way to avoid unsigned overflow in product term */
-  return a * (b / lsx_gcd(a, b));
-}
-
 lsx_enum_item const lsx_wave_enum[] = {
   LSX_ENUM_ITEM(SOX_WAVE_,SINE)
   LSX_ENUM_ITEM(SOX_WAVE_,TRIANGLE)

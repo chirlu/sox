@@ -2682,10 +2682,8 @@ int main(int argc, char **argv)
     exit(0);
   }
 
-  if (!sox_globals.repeatable) { /* Re-seed PRNG? */
+  if (!sox_globals.repeatable) /* Re-seed PRNG? */
     sox_globals.ranqd1 = (int32_t)time(NULL);
-    srand((unsigned int)sox_globals.ranqd1); /* srand only for polyphase */
-  }
 
   /* Save things that sox_sequence needs to be reinitialised for each segued
    * block of input files.*/

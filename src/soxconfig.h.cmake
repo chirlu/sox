@@ -26,7 +26,6 @@
 #cmakedefine HAVE_OPENMP              1
 #cmakedefine HAVE_POPEN               1
 #cmakedefine HAVE_PNG                 1
-#cmakedefine HAVE_SAMPLERATE_H        1
 #cmakedefine HAVE_SNDFILE_1_0_12      1
 #cmakedefine HAVE_SNDFILE             1
 #cmakedefine HAVE_STDINT_H            1

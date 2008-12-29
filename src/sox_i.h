@@ -73,9 +73,6 @@ void lsx_generate_wave_table(
 char const * lsx_parsesamples(sox_rate_t rate, const char *str, size_t *samples, int def);
 double lsx_parse_frequency(char const * text, char * * end_ptr);
 
-unsigned lsx_gcd(unsigned a, unsigned b);
-unsigned lsx_lcm(unsigned a, unsigned b);
-
 void lsx_prepare_spline3(double const * x, double const * y, int n,
     double start_1d, double end_1d, double * y_2d);
 double lsx_spline3(double const * x, double const * y, double const * y_2d,

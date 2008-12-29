@@ -562,3 +562,125 @@ sox_effect_handler_t const * sox_rate_effect_fn(void)
   handler.usage = lsx_usage_lines(&usage, lines, array_length(lines));
   return &handler;
 }
+
+/*------------------- emulation of the old `rabbit' effect -------------------*/
+
+static int rabbit_getopts(sox_effect_t * effp, int argc, char * * argv)
+{
+  static char const * const qualities[] = {"-v", "-h", "-l", "-q", "-q"};
+  char quality[2] = "0", dummy;     /* To check for extraneous chars. */
+  char * args[] = {0, 0, 0};
+  int argc2 = 2;
+
+  if (argc > 1) {
+    int n = sscanf(argv[1], "-c%1[0-4] %c", quality, &dummy);
+    if (n > 1)
+      return lsx_usage(effp);
+    if (n == 1)
+      --argc, ++argv;
+  }
+
+  args[0] = argv[0];
+  args[1] = (char *)qualities[quality[0] - '0'];
+  if (argc > 1) {
+    args[2] = argv[1];
+    --argc, ++argv;
+    ++argc2;
+  }
+  return argc > 1? lsx_usage(effp) : 
+    sox_rate_effect_fn()->getopts(effp, argc2, args);
+}
+
+sox_effect_handler_t const * sox_rabbit_effect_fn(void)
+{
+  static sox_effect_handler_t handler;
+  handler = *sox_rate_effect_fn();
+  handler.name = "rabbit";
+  handler.usage = "[-c0|-c1|-c2|-c3|-c4] [rate]";
+  handler.getopts = rabbit_getopts;
+  handler.flags |= SOX_EFF_DEPRECATED;
+  return &handler;
+}
+
+/*------------------ emulation of the old `polyphase' effect -----------------*/
+
+static int polyphase_getopts(sox_effect_t * effp, int argc, char * * argv)
+{
+  char arg[100], * args[] = {0, "-vb", 0};
+  double bandwidth = 95;
+
+  for (--argc, ++argv; argc >= 2; argc -= 2, argv += 2)
+    if (!strcmp(argv[0], "-cutoff"))
+      bandwidth = 100 * atof(argv[1]);
+    else if (strcmp(argv[0], "-w") && strcmp(argv[0], "-width")) {
+      lsx_fail("unknown parameter: %s %s", argv[0], argv[1]);
+      return SOX_EOF;
+    }
+  args[0] = argv[0];
+  args[2] = arg;
+  sprintf(arg, "%f", bandwidth);
+  return argc? lsx_usage(effp) : 
+    sox_rate_effect_fn()->getopts(effp, array_length(args), args);
+}
+
+sox_effect_handler_t const * sox_polyphase_effect_fn(void)
+{
+  static sox_effect_handler_t handler;
+  handler = *sox_rate_effect_fn();
+  handler.name = "polyphase";
+  handler.usage = "-cutoff factor    Cutoff frequency 0 to 1, default 0.95";
+  handler.getopts = polyphase_getopts;
+  handler.flags |= SOX_EFF_DEPRECATED;
+  return &handler;
+}
+
+/*------------------ emulation of the old `resample' effect ------------------*/
+
+static int resample_getopts(sox_effect_t * effp, int argc, char * * argv)
+{
+  char arg[100], * args[] = {0, 0, "-b", 0};
+  double bandwidth = .8;
+  char const * quality = NULL;
+
+  --argc, ++argv;
+  if (argc) {
+    if (!strcmp(argv[0], "-qs")) {
+      quality = "-h";
+      --argc, ++argv;
+    }
+    else if (!strcmp(argv[0], "-q")) {
+      bandwidth = .875;
+      quality = "-v";
+      --argc, ++argv;
+    }
+    else if (!strcmp(argv[0], "-ql")) {
+      bandwidth = .94;
+      quality = "-v";
+      --argc, ++argv;
+    }
+  }
+  if (argc) {
+    if (sscanf(argv[0], "%lf", &bandwidth) != 1)
+      return lsx_usage(effp);
+    if (!quality)
+      quality = "-m";
+  }
+
+  args[0] = argv[0];
+  args[1] = (char *)(quality? quality : "-l");
+  args[3] = arg;
+  sprintf(arg, "%f", 100 * bandwidth);
+  return argc > 2 ? lsx_usage(effp) : 
+    sox_rate_effect_fn()->getopts(effp, quality? 4 : 2, args);
+}
+
+sox_effect_handler_t const * sox_resample_effect_fn(void)
+{
+  static sox_effect_handler_t handler;
+  handler = *sox_rate_effect_fn();
+  handler.name = "resample";
+  handler.usage = "[ -qs | -q | -ql ] [ rolloff [ beta ] ]",
+  handler.getopts = resample_getopts;
+  handler.flags |= SOX_EFF_DEPRECATED;
+  return &handler;
+}

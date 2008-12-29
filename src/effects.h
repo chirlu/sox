@@ -59,9 +59,7 @@
   EFFECT(phaser)
   EFFECT(pitch)
   EFFECT(polyphase)
-#ifdef HAVE_SAMPLERATE_H
   EFFECT(rabbit)
-#endif
   EFFECT(rate)
   EFFECT(remix)
   EFFECT(repeat)

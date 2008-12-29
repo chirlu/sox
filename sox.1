@@ -2288,13 +2288,6 @@ and
 effects all use the
 .B rate
 effect at their core.
-.SP
-See also
-.BR resample ,
-.B polyphase
-and
-.B rabbit
-for other sample-rate changing effects.
 .TP
 \fBremix\fR [\fB\-a\fR\^|\^\fB\-m\fR\^|\^\fB\-p\fR] <\fIout-spec\fR>
 \fIout-spec\fR	= \fIin-spec\fR{\fB,\fIin-spec\fR} | \fB0\fR
@@ -3232,140 +3225,19 @@ The
 .I direction
 is a value from \-1 to 1.  \-1 represents
 far left and 1 represents far right.
-.TP
+.PP
 \fBpolyphase\fR [\fB\-w nut\fR\^|\^\fBham\fR] [\fB\-width \fIn\fR] [\fB\-cut-off \fIc\fR]
-Change the sampling rate using `polyphase interpolation', a DSP algorithm.
-\fBpolyphase\fR copes with only certain rational fraction resampling ratios,
-and, compared with the \fBrate\fR effect, is generally slow, memory intensive,
-and has poorer stop-band rejection.
-.SP
-If the \fB\-w\fR parameter is \fBnut\fR, then a Blackman-Nuttall (~90 dB
-stop-band) window will be used; \fBham\fR selects a Hamming (~43
-dB stop-band) window.  The default is Blackman-Nuttall.
-.SP
-The \fB\-width\fR parameter specifies the (approximate) width of the filter. The default is 1024 samples, which produces reasonable results.
-.SP
-The \fB\-cut-off\fR value (\fIc\fR) specifies the filter cut-off frequency in terms of fraction of
-frequency bandwidth, also know as the Nyquist frequency.  See
-the \fBresample\fR effect for
-further information on Nyquist frequency.  If up-sampling, then this is the
-fraction of the original signal
-that should go through.  If down-sampling, this is the fraction of the
-signal left after down-sampling.  The default is 0\*d95.
-.SP
-See also
-.BR rate ,
-.B rabbit
-and
-.B resample
-for other sample-rate changing effects.
-.TP
+.br
 \fBrabbit\fR [\fB\-c0\fR\^|\^\fB\-c1\fR\^|\^\fB\-c2\fR\^|\^\fB\-c3\fR\^|\^\fB\-c4\fR]
-Change the sampling rate using libsamplerate, also known as `Secret Rabbit
-Code'.  This effect is optional and, due to licence issues,
-is not included in all versions of SoX.
-Compared with the \fBrate\fR effect, \fBrabbit\fR is very slow.
-.SP
-See http://www.mega-nerd.com/SRC for details of the algorithms.  Algorithms
-0 through 2 are progressively faster and lower quality versions of the
-sinc algorithm; the default is \fB\-c0\fR.
-Algorithm 3 is zero-order hold, and 4 is linear interpolation.
-.SP
-See also
-.BR rate ,
-.B polyphase
-and
-.B resample
-for other sample-rate changing effects, and see
-\fBresample\fR for more discussion of resampling.
-.TP
+.br
 \fBresample\fR [\fB\-qs\fR\^|\^\fB\-q\fR\^|\^\fB\-ql\fR] [\fIrolloff\fR [\fIbeta\fR]]
-Change the sampling rate using simulated analog filtration.
-Compared with the \fBrate\fR effect, \fBresample\fR is slow, and has poorer
-stop-band rejection.
-Only the low quality option works with all resampling ratios.
-.SP
-By default, linear interpolation of the filter coefficients is used,
-with a window width about 45 samples at the lower of the two rates.
-This gives an accuracy of about 16 bits, but insufficient stop-band rejection
-in the case that you want to have roll-off greater than about 0\*d8 of
-the Nyquist frequency.
-.SP
-The \fB\-q*\fR options will change the default values for roll-off and beta
-as well as use quadratic interpolation of filter
-coefficients, resulting in about 24 bits precision.
-The \fB\-qs\fR, \fB\-q\fR, or \fB\-ql\fR options specify increased accuracy
-at the cost of lower execution speed.  It is optional to specify
-roll-off and beta parameters when using the \fB\-q*\fR options.
-.SP
-Following is a table of the reasonable defaults which are built-in to
-SoX:
-.SP
-.TS
-center box;
-cB cB cB cB cB
-c c n c c
-cB c n c c.
-Option	Window	Roll-off	Beta	Interpolation
-(none)	45	0\*d80	16	linear
-\-qs	45	0\*d80	16	quadratic
-\-q	75	0\*d875	16	quadratic
-\-ql	149	0\*d94	16	quadratic
-.TE
-.DT
-.SP
-\fB\-qs\fR, \fB\-q\fR, or \fB\-ql\fR use window lengths of 45, 75, or 149
-samples, respectively, at the lower sample-rate of the two files.
-This means progressively sharper stop-band rejection, at proportionally
-slower execution times.
-.SP
-\fIrolloff\fR refers to the cut-off frequency of the
-low pass filter and is given in terms of the
-Nyquist frequency for the lower sample rate.  rolloff therefore should
-be something between 0 and 1, in practise 0\*d8\-0\*d95.  The defaults are
-indicated above.
-.SP
-The \fINyquist frequency\fR is equal to half the sample rate.  Logically,
-this is because the A/D converter needs at least 2 samples to detect 1
-cycle at the Nyquist frequency.  Frequencies higher then the Nyquist
-will actually appear as lower frequencies to the A/D converter and
-is called aliasing.  Normally, A/D converts run the signal through
-a lowpass filter first to avoid these problems.
-.SP
-Similar problems will happen in software when reducing the sample rate of
-an audio file (frequencies above the new Nyquist frequency can be aliased
-to lower frequencies).  Therefore, a good resample effect
-will remove all frequency information above the new Nyquist frequency.
-.SP
-The \fIrolloff\fR refers to how close to the Nyquist frequency this cut-off
-is, with closer being better.  When increasing the sample rate of an
-audio file you would not expect to have any frequencies exist that are
-past the original Nyquist frequency.  Because of resampling properties, it
-is common to have aliasing artifacts created above the old
-Nyquist frequency.  In that case the \fIrolloff\fR refers to how close
-to the original Nyquist frequency to use a highpass filter to remove
-these artifacts, with closer also being better.
-.SP
-The \fIbeta\fR, if unspecified, defaults to 16.  This selects a Kaiser window.
-You can select a Blackman-Nuttall window by specifying anything \(<= 2 here.
-For more discussion of beta, look under the \fBfilter\fR effect.
-.SP
-Default parameters are, as indicated above, Kaiser window of length 45,
-roll-off 0\*d80, beta 16, linear interpolation.
-.SP
-Note: \fB\-qs\fR is only slightly slower, but more accurate for
-16-bit or higher precision.
-.SP
-See also
-.BR rate ,
-.B polyphase
-and
-.B rabbit
-for other sample-rate changing effects.
-There is a detailed analysis of
-\fBresample\fR and \fBpolyphase\fR at
-http://leute.server.de/wilde/resample.html; see \fBrabbit\fR for a
-pointer to its own documentation.
+.if t .sp -.5
+.if n .sp -1
+.TP
+\ 
+Formerly sample-rate-changing effects in their own right, these are now just aliases for the
+.B rate
+effect.
 .SH DIAGNOSTICS
 Exit status is 0 for no error, 1 if there is a problem with the
 command-line parameters, or 2 if an error occurs during file processing.

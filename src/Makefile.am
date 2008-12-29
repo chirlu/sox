@@ -270,8 +270,8 @@ libsox_la_SOURCES += \
 	effects_i.c fade.c fft4g.c fft4g.h fifo.h filter.c flanger.c input.c \
 	ladspa.c loudness.c mcompand.c mcompand_xover.h mixer.c noiseprof.c \
 	noisered.c noisered.h normalise.c output.c pad.c pan.c phaser.c \
-	polyphas.c rabbit.c rate.c rate_filters.h rate_half_fir.h \
-	rate_poly_fir0.h rate_poly_fir.h remix.c repeat.c resample.c reverb.c \
+	rate.c rate_filters.h rate_half_fir.h \
+	rate_poly_fir0.h rate_poly_fir.h remix.c repeat.c reverb.c \
 	reverse.c silence.c skeleff.c speed.c splice.c stat.c swap.c stretch.c \
 	synth.c tempo.c tremolo.c trim.c vol.c overdrive.c effects_i_dsp.c \
 	dft_filter.c dft_filter.h lowfir.c
@@ -281,7 +281,7 @@ endif
 
 # Libraries required by libsox for file handlers, effects, or utils;
 # regardless if libltdl is used or not.
-libsox_la_LIBADD = @PNG_LIBS@ @SAMPLERATE_LIBS@
+libsox_la_LIBADD = @PNG_LIBS@
 if HAVE_MAGIC
 libsox_la_LIBADD += @MAGIC_LIBS@
 endif
@@ -289,7 +289,7 @@ if HAVE_OPENMP
 libsox_la_LIBADD += @GOMP_LIBS@
 endif
 
-libsox_la_CFLAGS = @WARN_CFLAGS@  @SAMPLERATE_CFLAGS@
+libsox_la_CFLAGS = @WARN_CFLAGS@
 libsox_la_LDFLAGS = @APP_LDFLAGS@ -version-info @SHLIB_VERSION@
 
 if HAVE_LIBLTDL

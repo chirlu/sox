@@ -4,12 +4,40 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
-sox-14.x.x	200x-xx-xx
+sox-14.x.x	2009-xx-xx
 ----------
 
-Deprecation status:
+Previously deprecated features that have been removed in this release:
 
-  Unchanged from 14.2.0
+  Deprec-  Feature    [O(ption)]
+  ated in  [F(ormat)] [E(ffect)]   Replacement
+  -------  ----------------------  ----------------------
+  14.1.0   E resample *            ~= rate
+  14.1.0   E polyphase *           ~= rate
+  14.1.0   E rabbit *              ~= rate
+  14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1
+
+  * But interface retained as an alias for `rate'.
+
+Previously deprecated features (to be removed in future):
+
+  Deprec-  Feature    [O(ption)]                           Removal
+  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
+  -------  ----------------------  ----------------------  -------
+  14.2.0   E key alias             pitch                   2009-05-29
+  14.2.0   E pan                   ~= mixer/remix          2009-05-29
+  14.1.0   E resample alias        rate                    14.x.x + 6 months
+  14.1.0   E polyphase alias       rate                    14.x.x + 6 months
+  14.1.0   E rabbit alias          rate                    14.x.x + 6 months
+  14.1.0   F wve (native)          wve (libsndfile)        2009-07-29
+  14.1.0   Behaviour whereby       soxi                    2009-07-29
+           sox -V file(s) -n
+           doesn't read to EOF.
+
+LibSoX interface changes:
+
+  o Use of sox_effect_options() is now mandatory when initialising an
+    effect (see example0.c for an example of this).
 
 File formats:
 
@@ -55,11 +83,6 @@ Internal improvements:
     pseudo random number generators.  (robs)
   o Rationalise effects' options interface (getopt compatible).  (robs)
 
-LibSoX interface changes:
-
-  o Use of sox_effect_options() is now mandatory when initialising an
-    effect (see example0.c for an example of this).
-
 
 sox-14.2.0	2008-11-09
 ----------
@@ -70,28 +93,6 @@ Previously deprecated features that have been removed in this release:
   ated in  [F(ormat)] [E(ffect)]   Replacement
   -------  ----------------------  ----------------------
   14.0.0   E pitch                 new pitch = old key
-
-Previously deprecated features (to be removed in future):
-
-  Deprec-  Feature    [O(ption)]                           Removal
-  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
-  -------  ----------------------  ----------------------  -------
-  14.1.0   E resample              ~= rate                 2009-01-29
-  14.1.0   E polyphase             ~= rate                 2009-01-29
-  14.1.0   E rabbit                ~= rate                 2009-01-29
-  14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1         2009-01-29
-  14.1.0   F wve (native)          wve (libsndfile)        2009-07-29
-  14.1.0   Behaviour whereby       soxi                    2009-07-29
-           sox -V file(s) -n
-           doesn't read to EOF.
-
-Newly deprecated features (to be removed in future):
-
-  Deprec-  Feature    [O(ption)]                           Removal
-  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
-  -------  ----------------------  ----------------------  -------
-  14.2.0   E key                   renamed to pitch        14.2.0 + 6 months
-  14.2.0   E pan                   ~= mixer/remix          14.2.0 + 6 months
 
 File formats:
 
@@ -190,28 +191,6 @@ Previously deprecated features that have been removed in this release:
   13.0.0   E mask                  dither
   13.0.0   E vibro                 ~= tremolo
   13.0.0   F auto                  Becomes internal only
-
-Previously deprecated features (to be removed in future):
-
-  Deprec-  Feature    [O(ption)]                           Removal
-  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
-  -------  ----------------------  ----------------------  -------
-  14.0.0   E stretch               ~= tempo                2008-09-11
-  14.0.0   E pitch                 ~= key                  2008-09-11
-
-Newly deprecated features (to be removed in future):
-
-  Deprec-  Feature    [O(ption)]                           Removal
-  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
-  -------  ----------------------  ----------------------  -------
-  14.1.0   F wve (native)          wve (libsndfile)        14.1.0 + 1 year
-  14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1         14.1.0 + 6 months
-  14.1.0   E resample              ~= rate                 14.1.0 + 1 year
-  14.1.0   E polyphase             ~= rate                 14.1.0 + 1 year
-  14.1.0   E rabbit                ~= rate                 14.1.0 + 1 year
-  14.1.0   Behaviour whereby       soxi                    14.1.0 + 1 year
-           sox -V file(s) -n
-           doesn't read to EOF.
 
 File formats:
 
