@@ -618,9 +618,6 @@ static void add_effect(sox_effects_chain_t *chain, char const *name,
 
   effp = sox_create_effect(sox_find_effect(name)); /* Should always succeed. */
 
-  if (!effp)
-    lsx_fail("Failed creating effect.  Out of Memory?\n");
-
   if (effp->handler.flags & SOX_EFF_DEPRECATED)
     lsx_warn("effect `%s' is deprecated; see sox(1) for an alternative", 
              effp->handler.name);
@@ -896,23 +893,19 @@ static void create_user_effects(void)
   unsigned i;
   sox_effect_t *effp;
 
-  for (i = 0; i < nuser_effects[current_eff_chain]; i++) 
-  {
-      effp = sox_create_effect(sox_find_effect(user_effargs[current_eff_chain][i].name));
+  for (i = 0; i < nuser_effects[current_eff_chain]; i++) {
+    effp = sox_create_effect(sox_find_effect(user_effargs[current_eff_chain][i].name));
 
-      if (!effp)
-        lsx_fail("Failed creating effect.  Out of Memory?\n");
+    if (effp->handler.flags & SOX_EFF_DEPRECATED)
+      lsx_warn("effect `%s' is deprecated; see sox(1) for an alternative", 
+          effp->handler.name);
 
-      if (effp->handler.flags & SOX_EFF_DEPRECATED)
-        lsx_warn("effect `%s' is deprecated; see sox(1) for an alternative", 
-                 effp->handler.name);
+    /* The failing effect should have displayed an error message */
+    if (sox_effect_options(effp, user_effargs[current_eff_chain][i].argc, 
+          user_effargs[current_eff_chain][i].argv) == SOX_EOF)
+      exit(1);
 
-      /* The failing effect should have displayed an error message */
-      if (sox_effect_options(effp, user_effargs[current_eff_chain][i].argc, 
-                             user_effargs[current_eff_chain][i].argv) == SOX_EOF)
-        exit(1);
-
-      user_efftab[i] = effp;
+    user_efftab[i] = effp;
   }
 }
 
@@ -1185,7 +1178,7 @@ static void adjust_volume(int delta)
 
 static int update_status(sox_bool all_done)
 {
-  if (stdin_is_a_tty) while (kbhit()) {
+  if (stdin_is_a_tty && is_player) while (kbhit()) {
     int ch = getchar();
 
 #ifdef INTERACTIVE
