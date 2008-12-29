@@ -53,6 +53,12 @@ Internal improvements:
 
   o Rationalise use of and make repeatable across different platforms
     pseudo random number generators.  (robs)
+  o Rationalise effects' options interface (getopt compatible).  (robs)
+
+LibSoX interface changes:
+
+  o Use of sox_effect_options() is now mandatory when initialising an
+    effect (see example0.c for an example of this).
 
 
 sox-14.2.0	2008-11-09
