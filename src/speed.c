@@ -28,12 +28,13 @@ typedef struct {
   double factor;
 } priv_t;
 
-static int getopts(sox_effect_t * effp, int n, char * * argv)
+static int getopts(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *) effp->priv;
   sox_bool is_cents = sox_false;
 
-  if (n == 1) {
+  --argc, ++argv;
+  if (argc == 1) {
     char c, dummy;
     int scanned = sscanf(*argv, "%lf%c %c", &p->factor, &c, &dummy);
     if (scanned == 1 || (scanned == 2 && c == 'c')) {

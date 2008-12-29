@@ -69,6 +69,7 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
   p->decay     = .4;
   p->mod_speed = .5;
 
+  --argc, ++argv;
   do { /* break-able block */
     NUMERIC_PARAMETER(in_gain  , .0, 1)
     NUMERIC_PARAMETER(out_gain , .0, 1e9)

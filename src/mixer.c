@@ -38,11 +38,12 @@ typedef struct {
 /*
  * Process options
  */
-static int getopts(sox_effect_t * effp, int n, char **argv)
+static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
     priv_t * mixer = (priv_t *) effp->priv;
     double* pans = &mixer->sources[0][0];
     int i;
+  --argc, ++argv;
 
     for (i = 0;  i < 16;  i++)
         pans[i] = 0.0;
@@ -52,7 +53,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
     /* Parse parameters.  Since we don't yet know the number of */
     /* input and output channels, we'll record the information for */
     /* later. */
-    if (n == 1) {
+    if (argc == 1) {
         if      (!strcmp(argv[0], "-l")) mixer->mix = 'l';
         else if (!strcmp(argv[0], "-r")) mixer->mix = 'r';
         else if (!strcmp(argv[0], "-f")) mixer->mix = 'f';
@@ -82,7 +83,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
             mixer->num_pans = commas + 1;
         }
     }
-    else if (n == 0) {
+    else if (argc == 0) {
         mixer->mix = MIX_CENTER;
     }
     else
@@ -538,10 +539,11 @@ sox_effect_handler_t const * sox_mixer_effect_fn(void)
   return &handler;
 }
 
-static int oops_getopts(sox_effect_t * effp, int argc, char * * argv UNUSED)
+static int oops_getopts(sox_effect_t * effp, int argc, char * * argv)
 {
-  char * args[] = {"1,1,-1,-1"};
-  return argc? lsx_usage(effp) : sox_mixer_effect_fn()->getopts(effp, (int)array_length(args), args);
+  char * args[] = {0, "1,1,-1,-1"};
+  args[0] = argv[0];
+  return --argc? lsx_usage(effp) : sox_mixer_effect_fn()->getopts(effp, (int)array_length(args), args);
 }
 
 sox_effect_handler_t const * sox_oops_effect_fn(void)

@@ -37,13 +37,14 @@ typedef struct {double direction;} priv_t; /* from left (-1.0) to right (1.0) */
 /*
  * Process options
  */
-static int sox_pan_getopts(sox_effect_t * effp, int n, char **argv)
+static int sox_pan_getopts(sox_effect_t * effp, int argc, char **argv)
 {
     priv_t * pan = (priv_t *) effp->priv;
+  --argc, ++argv;
 
     pan->direction = 0.0; /* default is no change */
 
-    if (n && (!sscanf(argv[0], "%lf", &pan->direction) ||
+    if (argc && (!sscanf(argv[0], "%lf", &pan->direction) ||
               pan->direction < -1.0 || pan->direction > 1.0))
       return lsx_usage(effp);
 

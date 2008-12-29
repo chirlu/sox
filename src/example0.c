@@ -56,19 +56,19 @@ int main(int argc, char * argv[])
    * samples; in this case, we use the built-in handler that inputs
    * data from an audio file */
   e = sox_create_effect(sox_find_effect("input"));
-  args[0] = (char *)in, assert(e->handler.getopts(e, 1, args) == SOX_SUCCESS);
+  args[0] = (char *)in, assert(sox_effect_options(e, 1, args) == SOX_SUCCESS);
   /* This becomes the first `effect' in the chain */
   assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
 
   /* Create the `vol' effect, and initialise it with the desired parameters: */
   e = sox_create_effect(sox_find_effect("vol"));
-  args[0] = "3dB", assert(e->handler.getopts(e, 1, args) == SOX_SUCCESS);
+  args[0] = "3dB", assert(sox_effect_options(e, 1, args) == SOX_SUCCESS);
   /* Add the effect to the end of the effects processing chain: */
   assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
 
   /* Create the `flanger' effect, and initialise it with default parameters: */
   e = sox_create_effect(sox_find_effect("flanger"));
-  assert(e->handler.getopts(e, 0, NULL) == SOX_SUCCESS);
+  assert(sox_effect_options(e, 0, NULL) == SOX_SUCCESS);
   /* Add the effect to the end of the effects processing chain: */
   assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
 
@@ -76,7 +76,7 @@ int main(int argc, char * argv[])
    * samples; in this case, we use the built-in handler that outputs
    * data to an audio file */
   e = sox_create_effect(sox_find_effect("output"));
-  args[0] = (char *)out, assert(e->handler.getopts(e, 1, args) == SOX_SUCCESS);
+  args[0] = (char *)out, assert(sox_effect_options(e, 1, args) == SOX_SUCCESS);
   assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
 
   /* Flow samples through the effects processing chain until EOF is reached */

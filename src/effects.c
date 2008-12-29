@@ -60,7 +60,7 @@ static int default_drain(sox_effect_t * effp UNUSED, sox_sample_t *obuf UNUSED, 
 /* Check that no parameters have been given */
 static int default_getopts(sox_effect_t * effp, int argc, char **argv UNUSED)
 {
-  return argc? lsx_usage(effp) : SOX_SUCCESS;
+  return --argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 /* Partially initialise the effect structure; signal info will come later */
@@ -86,11 +86,13 @@ int sox_effect_options(sox_effect_t *effp, int argc, char * const argv[])
 {
   int result, callers_optind = optind, callers_opterr = opterr;
 
-  if (effp->handler.flags & SOX_EFF_GETOPT)
-    --argv, ++argc; /* FIXME: push this processing back up the stack */
+  char * * argv2 = lsx_malloc((argc + 1) * sizeof(*argv2));
+  argv2[0] = (char *)effp->handler.name;
+  memcpy(argv2 + 1, argv, argc * sizeof(*argv2));
   optind = 1, opterr = 0;
-  result = effp->handler.getopts(effp, argc, (char * *)argv);
+  result = effp->handler.getopts(effp, argc + 1, argv2);
   optind = callers_optind, opterr = callers_opterr;
+  free(argv2);
   return result;
 } /* sox_effect_options */
 

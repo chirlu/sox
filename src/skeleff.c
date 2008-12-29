@@ -29,14 +29,16 @@ typedef struct {
  * initialization now: effp->in_signal & effp->out_signal are not
  * yet filled in.
  */
-static int getopts(sox_effect_t * effp, int n, char UNUSED **argv)
+static int getopts(sox_effect_t * effp, int argc, char UNUSED **argv)
 {
   priv_t * UNUSED p = (priv_t *)effp->priv;
 
-  if (n && n != 1)
+  if (argc != 2)
     return lsx_usage(effp);
 
-  return SOX_SUCCESS;
+  p->localdata = atoi(argv[1]);
+
+  return p->localdata > 0 ? SOX_SUCCESS : SOX_EOF;
 }
 
 /*

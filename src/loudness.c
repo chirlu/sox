@@ -33,6 +33,7 @@ static int create(sox_effect_t * effp, int argc, char **argv)
   p->delta = -10;
   p->start = 65;
   p->n = 1023;
+  --argc, ++argv;
   do {                    /* break-able block */
     NUMERIC_PARAMETER(delta,-50 , 15) /* FIXME expand range */
     NUMERIC_PARAMETER(start, 50 , 75) /* FIXME expand range */

@@ -42,6 +42,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   char *    type_ptr = type_string;
   char      dummy;             /* To check for extraneous chars. */
   sox_bool  have_type;
+  --argc, ++argv;
 
   vol->gain = 1;               /* Default is no change. */
   vol->uselimiter = sox_false; /* Default is no limiter. */
@@ -184,11 +185,12 @@ sox_effect_handler_t const * sox_vol_effect_fn(void)
 
 static int gain_getopts(sox_effect_t * effp, int argc, char * * argv)
 {
-  char * args[] = {0, "dB"};
+  char * args[] = {0, 0, "dB"};
 
-  if (argc != 1)
+  if (argc != 2)
     return lsx_usage(effp);
   args[0] = argv[0];
+  args[1] = argv[1];
   return sox_vol_effect_fn()->getopts(effp, (int)array_length(args), args);
 }
 

@@ -60,14 +60,15 @@ typedef struct {
   int delay_buf_full;       /* Shows buffer situation (important for drain) */
 } priv_t;
 
-static int getopts(sox_effect_t * effp, int n, char * * argv)
+static int getopts(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * l = (priv_t *) effp->priv;
   char * s;
   char dummy;     /* To check for extraneous chars. */
   unsigned pairs, i, j, commas;
 
-  if (n < 2 || n > 5)
+  --argc, ++argv;
+  if (argc < 2 || argc > 5)
     return lsx_usage(effp);
 
   /* Start by checking the attack and decay rates */
@@ -95,7 +96,7 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
     }
   }
 
-  if (!lsx_compandt_parse(&l->transfer_fn, argv[1], n>2 ? argv[2] : 0))
+  if (!lsx_compandt_parse(&l->transfer_fn, argv[1], argc>2 ? argv[2] : 0))
     return SOX_EOF;
 
   /* Set the initial "volume" to be attibuted to the input channels.
@@ -103,7 +104,7 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
      result if the user has seleced a long attack time */
   for (i = 0; i < l->expectedChannels; ++i) {
     double init_vol_dB = 0;
-    if (n > 3 && sscanf(argv[3], "%lf %c", &init_vol_dB, &dummy) != 1) {
+    if (argc > 3 && sscanf(argv[3], "%lf %c", &init_vol_dB, &dummy) != 1) {
       lsx_fail("syntax error trying to read initial volume");
       return SOX_EOF;
     } else if (init_vol_dB > 0) {
@@ -114,7 +115,7 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
   }
 
   /* If there is a delay, store it. */
-  if (n > 4 && sscanf(argv[4], "%lf %c", &l->delay, &dummy) != 1) {
+  if (argc > 4 && sscanf(argv[4], "%lf %c", &l->delay, &dummy) != 1) {
     lsx_fail("syntax error trying to read delay value");
     return SOX_EOF;
   } else if (l->delay < 0) {

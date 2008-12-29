@@ -160,23 +160,24 @@ static int parse_subarg(char *s, char **subargv, size_t *subargc) {
       return SOX_SUCCESS;
 }
 
-static int getopts(sox_effect_t * effp, int n, char **argv)
+static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   char *subargv[6], *cp;
   size_t subargc, i, len;
 
   priv_t * c = (priv_t *) effp->priv;
+  --argc, ++argv;
 
   c->band_buf1 = c->band_buf2 = c->band_buf3 = 0;
   c->band_buf_len = 0;
 
   /* how many bands? */
-  if (! (n&1)) {
-    lsx_fail("mcompand accepts only an odd number of arguments:\n"
+  if (! (argc&1)) {
+    lsx_fail("mcompand accepts only an odd number of arguments:\argc"
             "  mcompand quoted_compand_args [crossover_freq quoted_compand_args [...]");
     return SOX_EOF;
   }
-  c->nBands = (n+1)>>1;
+  c->nBands = (argc+1)>>1;
 
   c->bands = lsx_calloc(c->nBands, sizeof(comp_band_t));
 

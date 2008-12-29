@@ -23,17 +23,18 @@ typedef struct {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-static int sox_swap_getopts(sox_effect_t * effp, int n, char **argv)
+static int sox_swap_getopts(sox_effect_t * effp, int argc, char **argv)
 {
     priv_t * swap = (priv_t *) effp->priv;
+  --argc, ++argv;
 
     swap->order[0] = swap->order[1] = swap->order[2] = swap->order[3] = 0;
-    if (n)
+    if (argc)
     {
         swap->def_opts = 0;
-        if (n != 2 && n != 4)
+        if (argc != 2 && argc != 4)
           return lsx_usage(effp);
-        else if (n == 2)
+        else if (argc == 2)
         {
             sscanf(argv[0],"%d",&swap->order[0]);
             sscanf(argv[1],"%d",&swap->order[1]);

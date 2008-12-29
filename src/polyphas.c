@@ -59,15 +59,16 @@ typedef struct {
 /*
  * Process options
  */
-static int sox_poly_getopts(sox_effect_t * effp, int n, char **argv)
+static int sox_poly_getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * rate = (priv_t *) effp->priv;
+  --argc, ++argv;
 
   rate->win_type = 0;           /* 0: nuttall, 1: hamming */
   rate->win_width = 1024;
   rate->cutoff = 0.95;
 
-  while (n >= 2) {
+  while (argc >= 2) {
     /* Window type check */
     if(!strcmp(argv[0], "-w")) {
       if(!strcmp(argv[1], "ham"))
@@ -75,7 +76,7 @@ static int sox_poly_getopts(sox_effect_t * effp, int n, char **argv)
       if(!strcmp(argv[1], "nut"))
         rate->win_type = 0;
       argv += 2;
-      n -= 2;
+      argc -= 2;
       continue;
     }
 
@@ -83,7 +84,7 @@ static int sox_poly_getopts(sox_effect_t * effp, int n, char **argv)
     if(!strcmp(argv[0], "-width")) {
         rate->win_width = atoi(argv[1]);
       argv += 2;
-      n -= 2;
+      argc -= 2;
       continue;
     }
 
@@ -91,7 +92,7 @@ static int sox_poly_getopts(sox_effect_t * effp, int n, char **argv)
     if(!strcmp(argv[0], "-cutoff")) {
       rate->cutoff = atof(argv[1]);
       argv += 2;
-      n -= 2;
+      argc -= 2;
       continue;
     }
 

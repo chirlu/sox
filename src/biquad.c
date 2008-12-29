@@ -31,19 +31,20 @@ static char const * const width_str[] = {
 static char const all_width_types[] = "hkboqs";
 
 
-int lsx_biquad_getopts(sox_effect_t * effp, int n, char **argv,
+int lsx_biquad_getopts(sox_effect_t * effp, int argc, char **argv,
     int min_args, int max_args, int fc_pos, int width_pos, int gain_pos,
     char const * allowed_width_types, filter_t filter_type)
 {
   priv_t * p = (priv_t *)effp->priv;
   char width_type = *allowed_width_types;
   char dummy, * dummy_p;     /* To check for extraneous chars. */
+  --argc, ++argv;
 
   p->filter_type = filter_type;
-  if (n < min_args || n > max_args ||
-      (n > fc_pos    && ((p->fc = lsx_parse_frequency(argv[fc_pos], &dummy_p)) <= 0 || *dummy_p)) ||
-      (n > width_pos && ((unsigned)(sscanf(argv[width_pos], "%lf%c %c", &p->width, &width_type, &dummy)-1) > 1 || p->width <= 0)) ||
-      (n > gain_pos  && sscanf(argv[gain_pos], "%lf %c", &p->gain, &dummy) != 1) ||
+  if (argc < min_args || argc > max_args ||
+      (argc > fc_pos    && ((p->fc = lsx_parse_frequency(argv[fc_pos], &dummy_p)) <= 0 || *dummy_p)) ||
+      (argc > width_pos && ((unsigned)(sscanf(argv[width_pos], "%lf%c %c", &p->width, &width_type, &dummy)-1) > 1 || p->width <= 0)) ||
+      (argc > gain_pos  && sscanf(argv[gain_pos], "%lf %c", &p->gain, &dummy) != 1) ||
       !strchr(allowed_width_types, width_type) || (width_type == 's' && p->width > 1))
     return lsx_usage(effp);
   p->width_type = strchr(all_width_types, width_type) - all_width_types;

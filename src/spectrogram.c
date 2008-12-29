@@ -494,8 +494,7 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_spectrogram_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "spectrogram", NULL, SOX_EFF_GETOPT,
-    getopts, start, flow, drain, stop, NULL, sizeof(priv_t)};
+    "spectrogram", 0, 0, getopts, start, flow, drain, stop, 0, sizeof(priv_t)};
   static char const * lines[] = {
     "[options]",
     "\t-x num\tX-axis pixels/second, default 100",

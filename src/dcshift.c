@@ -25,19 +25,20 @@ typedef struct {
 /*
  * Process options: dcshift (double) type (amplitude, power, dB)
  */
-static int sox_dcshift_getopts(sox_effect_t * effp, int n, char **argv)
+static int sox_dcshift_getopts(sox_effect_t * effp, int argc, char **argv)
 {
     priv_t * dcs = (priv_t *) effp->priv;
     dcs->dcshift = 1.0; /* default is no change */
     dcs->uselimiter = 0; /* default is no limiter */
 
-    if (n < 1)
+  --argc, ++argv;
+    if (argc < 1)
       return lsx_usage(effp);
 
-    if (n && (!sscanf(argv[0], "%lf", &dcs->dcshift)))
+    if (argc && (!sscanf(argv[0], "%lf", &dcs->dcshift)))
       return lsx_usage(effp);
 
-    if (n>1)
+    if (argc>1)
     {
         if (!sscanf(argv[1], "%lf", &dcs->limitergain))
           return lsx_usage(effp);

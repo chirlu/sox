@@ -23,6 +23,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
   p->contrast = 75;
+  --argc, ++argv;
   do {NUMERIC_PARAMETER(contrast, 0, 100)} while (0);
   p->contrast /= 750; /* shift range to 0 to 0.1333, default 0.1 */
   return argc? lsx_usage(effp) : SOX_SUCCESS;

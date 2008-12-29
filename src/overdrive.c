@@ -24,6 +24,7 @@ typedef struct {
 static int create(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
+  --argc, ++argv;
   p->gain = p->colour = 20;
   do {
     NUMERIC_PARAMETER(gain, 0, 100)

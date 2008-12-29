@@ -76,22 +76,23 @@ static void clear_rms(sox_effect_t * effp)
     silence->rms_sum = 0;
 }
 
-static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
+static int sox_silence_getopts(sox_effect_t * effp, int argc, char **argv)
 {
     priv_t *   silence = (priv_t *) effp->priv;
     int parse_count;
+  --argc, ++argv;
 
     /* check for option switches */
     silence->leave_silence = sox_false;
-    if (n > 0)
+    if (argc > 0)
     {
         if (!strcmp("-l", *argv)) {
-            n--; argv++;
+            argc--; argv++;
             silence->leave_silence = sox_true;
         }
     }
 
-    if (n < 1)
+    if (argc < 1)
       return lsx_usage(effp);
 
     /* Parse data related to trimming front side */
@@ -104,12 +105,12 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
         return(SOX_EOF);
     }
     argv++;
-    n--;
+    argc--;
 
     if (silence->start_periods > 0)
     {
         silence->start = sox_true;
-        if (n < 2)
+        if (argc < 2)
           return lsx_usage(effp);
 
         /* We do not know the sample rate so we can not fully
@@ -131,14 +132,14 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
             silence->start_unit = '%';
 
         argv++; argv++;
-        n--; n--;
+        argc--; argc--;
     }
 
     silence->stop = sox_false;
     /* Parse data needed for trimming of backside */
-    if (n > 0)
+    if (argc > 0)
     {
-        if (n < 3)
+        if (argc < 3)
           return lsx_usage(effp);
         if (sscanf(argv[0], "%d", &silence->stop_periods) != 1)
           return lsx_usage(effp);
@@ -151,7 +152,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
             silence->restart = 0;
         silence->stop = sox_true;
         argv++;
-        n--;
+        argc--;
 
         /* We do not know the sample rate so we can not fully
          * parse the duration info yet.  So save argument off
@@ -172,7 +173,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
             silence->stop_unit = '%';
 
         argv++; argv++;
-        n--; n--;
+        argc--; argc--;
     }
 
     /* Error checking */

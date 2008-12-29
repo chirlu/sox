@@ -62,20 +62,21 @@ typedef struct {
 /*
  * Process options
  */
-static int sox_echos_getopts(sox_effect_t * effp, int n, char **argv)
+static int sox_echos_getopts(sox_effect_t * effp, int argc, char **argv)
 {
         priv_t * echos = (priv_t *) effp->priv;
         int i;
 
         echos->num_delays = 0;
 
-        if ((n < 4) || (n % 2))
+  --argc, ++argv;
+        if ((argc < 4) || (argc % 2))
           return lsx_usage(effp);
 
         i = 0;
         sscanf(argv[i++], "%f", &echos->in_gain);
         sscanf(argv[i++], "%f", &echos->out_gain);
-        while (i < n) {
+        while (i < argc) {
                 /* Linux bug and it's cleaner. */
                 sscanf(argv[i++], "%f", &echos->delay[echos->num_delays]);
                 sscanf(argv[i++], "%f", &echos->decay[echos->num_delays]);

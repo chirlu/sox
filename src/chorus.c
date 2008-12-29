@@ -89,20 +89,21 @@ typedef struct {
 /*
  * Process options
  */
-static int sox_chorus_getopts(sox_effect_t * effp, int n, char **argv)
+static int sox_chorus_getopts(sox_effect_t * effp, int argc, char **argv)
 {
         priv_t * chorus = (priv_t *) effp->priv;
         int i;
+  --argc, ++argv;
 
         chorus->num_chorus = 0;
         i = 0;
 
-        if ( ( n < 7 ) || (( n - 2 ) % 5 ) )
+        if ( ( argc < 7 ) || (( argc - 2 ) % 5 ) )
           return lsx_usage(effp);
 
         sscanf(argv[i++], "%f", &chorus->in_gain);
         sscanf(argv[i++], "%f", &chorus->out_gain);
-        while ( i < n ) {
+        while ( i < argc ) {
                 if ( chorus->num_chorus > MAX_CHORUS )
                 {
                         lsx_fail("chorus: to many delays, use less than %i delays", MAX_CHORUS);

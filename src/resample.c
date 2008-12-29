@@ -130,9 +130,10 @@ static long SrcEX(priv_t * r, long Nx);
 /*
  * Process options
  */
-static int getopts(sox_effect_t * effp, int n, char **argv)
+static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
         priv_t * r = (priv_t *) effp->priv;
+  --argc, ++argv;
 
         /* These defaults are conservative with respect to aliasing. */
         r->rolloff = 0.80;
@@ -140,26 +141,26 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
         r->quadr = 0;
         r->Nmult = 45;
 
-        if (n >= 1) {
+        if (argc >= 1) {
                 if (!strcmp(argv[0], "-qs")) {
                         r->quadr = 1;
-                        n--; argv++;
+                        argc--; argv++;
                 }
                 else if (!strcmp(argv[0], "-q")) {
                         r->rolloff = 0.875;
                         r->quadr = 1;
                         r->Nmult = 75;
-                        n--; argv++;
+                        argc--; argv++;
                 }
                 else if (!strcmp(argv[0], "-ql")) {
                         r->rolloff = 0.94;
                         r->quadr = 1;
                         r->Nmult = 149;
-                        n--; argv++;
+                        argc--; argv++;
                 }
         }
 
-        if ((n >= 1) && (sscanf(argv[0], "%lf", &r->rolloff) != 1)) {
+        if ((argc >= 1) && (sscanf(argv[0], "%lf", &r->rolloff) != 1)) {
           return lsx_usage(effp);
         } else if ((r->rolloff <= 0.01) || (r->rolloff >= 1.0)) {
           lsx_fail("rolloff factor (%f) no good, should be 0.01<x<1.0", r->rolloff);
@@ -167,7 +168,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
         }
 
 
-        if ((n >= 2) && !sscanf(argv[1], "%lf", &r->beta)) {
+        if ((argc >= 2) && !sscanf(argv[1], "%lf", &r->beta)) {
           return lsx_usage(effp);
         } else if (r->beta <= 2.0) {
         	r->beta = 0;

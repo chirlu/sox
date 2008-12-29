@@ -176,6 +176,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   p->reverberance = p->hf_damping = 50; /* Set non-zero defaults */
   p->stereo_depth = p->room_scale = 100;
 
+  --argc, ++argv;
   p->wet_only = argc && (!strcmp(*argv, "-w") || !strcmp(*argv, "--wet-only"))
     && (--argc, ++argv, sox_true);
   do {  /* break-able block */

@@ -15,6 +15,12 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+/* This is W.I.P. hence marked SOX_EFF_DEPRECATED for now.
+ * Need to add other filter types (and rename file), and add a decent
+ * user interface.  When this is done, it should be a more user-friendly
+ * & more capable version of the `filter' effect.
+ */
+
 #include "sox_i.h"
 #include "dft_filter.h"
 #include <string.h>
@@ -33,6 +39,7 @@ static int create(sox_effect_t * effp, int argc, char **argv)
   double * h;
   int i;
   b->filter_ptr = &b->filter;
+  --argc, ++argv;
   do {                    /* break-able block */
     NUMERIC_PARAMETER(Fp, 0, 100);
     NUMERIC_PARAMETER(Fc, 0, 100);

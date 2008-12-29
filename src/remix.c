@@ -101,6 +101,7 @@ static int parse(sox_effect_t * effp, char * * argv, unsigned channels)
 static int create(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
+  --argc, ++argv;
   if (argc && !strcmp(*argv, "-m")) p->mode = manual   , ++argv, --argc;
   if (argc && !strcmp(*argv, "-a")) p->mode = automatic, ++argv, --argc;
   if (argc && !strcmp(*argv, "-p")) p->mix_power = sox_true, ++argv, --argc;

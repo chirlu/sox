@@ -41,6 +41,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * r = (priv_t *) effp->priv;
   char dummy;     /* To check for extraneous chars. */
+  --argc, ++argv;
 
   r->converter_type = SRC_SINC_BEST_QUALITY;
 

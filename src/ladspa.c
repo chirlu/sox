@@ -81,21 +81,22 @@ static LADSPA_Data ladspa_default(const LADSPA_PortRangeHint *p)
 /*
  * Process options
  */
-static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
+static int sox_ladspa_getopts(sox_effect_t *effp, int argc, char **argv)
 {
   priv_t * l_st = (priv_t *)effp->priv;
   char *path;
   union {LADSPA_Descriptor_Function fn; lt_ptr ptr;} ltptr;
   unsigned long index = 0, i;
   double arg;
+  --argc, ++argv;
 
   l_st->input_port = ULONG_MAX;
   l_st->output_port = ULONG_MAX;
 
   /* Get module name */
-  if (n >= 1) {
+  if (argc >= 1) {
     l_st->name = argv[0];
-    n--; argv++;
+    argc--; argv++;
   }
 
   /* Load module */
@@ -126,14 +127,14 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
 
   /* If more than one plugin, or first argument is not a number, try
      to use first argument as plugin label. */
-  if (n > 0 && (ltptr.fn(1UL) != NULL || !sscanf(argv[0], "%lf", &arg))) {
+  if (argc > 0 && (ltptr.fn(1UL) != NULL || !sscanf(argv[0], "%lf", &arg))) {
     while (l_st->desc && strcmp(l_st->desc->Label, argv[0]) != 0)
       l_st->desc = ltptr.fn(++index);
     if (l_st->desc == NULL) {
       lsx_fail("no plugin called `%s' found", argv[0]);
       return SOX_EOF;
     } else
-      n--; argv++;
+      argc--; argv++;
   }
 
   /* Scan the ports to check there's one input and one output */
@@ -166,7 +167,7 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
         l_st->output_port = i;
       }
     } else {                    /* Control port */
-      if (n == 0) {
+      if (argc == 0) {
         if (!LADSPA_IS_HINT_HAS_DEFAULT(l_st->desc->PortRangeHints[i].HintDescriptor)) {
           lsx_fail("not enough arguments for control ports");
           return SOX_EOF;
@@ -178,13 +179,13 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
           return lsx_usage(effp);
         l_st->control[i] = (LADSPA_Data)arg;
         lsx_debug("argument for port %lu is %f", i, l_st->control[i]);
-        n--; argv++;
+        argc--; argv++;
       }
     }
   }
 
   /* Stop if we have any unused arguments */
-  return n? lsx_usage(effp) : SOX_SUCCESS;
+  return argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 /*

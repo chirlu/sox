@@ -67,20 +67,21 @@ typedef struct {
 /*
  * Process options
  */
-static int sox_echo_getopts(sox_effect_t * effp, int n, char **argv)
+static int sox_echo_getopts(sox_effect_t * effp, int argc, char **argv)
 {
         priv_t * echo = (priv_t *) effp->priv;
         int i;
 
+  --argc, ++argv;
         echo->num_delays = 0;
 
-        if ((n < 4) || (n % 2))
+        if ((argc < 4) || (argc % 2))
           return lsx_usage(effp);
 
         i = 0;
         sscanf(argv[i++], "%f", &echo->in_gain);
         sscanf(argv[i++], "%f", &echo->out_gain);
-        while (i < n) {
+        while (i < argc) {
                 if ( echo->num_delays >= MAX_ECHOS )
                         lsx_fail("echo: to many delays, use less than %i delays",
                                 MAX_ECHOS);

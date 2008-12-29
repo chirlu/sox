@@ -539,8 +539,7 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_rate_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "rate", 0, SOX_EFF_RATE | SOX_EFF_GETOPT,
-    create, start, flow, drain, stop, 0, sizeof(priv_t)
+    "rate", 0, SOX_EFF_RATE, create, start, flow, drain, stop, 0, sizeof(priv_t)
   };
   static char const * lines[] = {
     "[-q|-l|-m|-h|-v] [override-options] RATE[k]",

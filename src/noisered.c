@@ -60,6 +60,7 @@ static void FFT(unsigned NumSamples,
 static int sox_noisered_getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *) effp->priv;
+  --argc, ++argv;
 
   if (argc > 0) {
     p->profile_filename = argv[0];

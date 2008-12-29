@@ -17,21 +17,22 @@
 
 #include "sox_i.h"
 
-static int getopts(sox_effect_t * effp, int n, char * * argv)
+static int getopts(sox_effect_t * effp, int argc, char * * argv)
 {
   double speed, depth = 40;
   char dummy;     /* To check for extraneous chars. */
   char offset[100];
-  char * args[] = {"sine", "fmod", 0, 0, "25"};
+  char * args[] = {0, "sine", "fmod", 0, 0, "25"};
 
-  if (n < 1 || n > 2 ||
-      sscanf(argv[0], "%lf %c", &speed, &dummy) != 1 || speed < 0 ||
-      (n > 1 && sscanf(argv[1], "%lf %c", &depth, &dummy) != 1) ||
+  if (argc < 2 || argc > 3 ||
+      sscanf(argv[1], "%lf %c", &speed, &dummy) != 1 || speed < 0 ||
+      (argc > 2 && sscanf(argv[2], "%lf %c", &depth, &dummy) != 1) ||
       depth <= 0 || depth > 100)
     return lsx_usage(effp);
-  args[2] = argv[0];
+  args[0] = argv[0];
+  args[3] = argv[1];
   sprintf(offset, "%g", 100 - depth / 2);
-  args[3] = offset;
+  args[4] = offset;
   return sox_synth_effect_fn()->getopts(effp, (int)array_length(args), args);
 }
 

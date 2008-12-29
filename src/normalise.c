@@ -31,6 +31,7 @@ typedef struct {
 static int create(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
+  --argc, ++argv;
   if (argc && !strcmp(*argv, "-i")) p->individual = sox_true, ++argv, --argc;
   if (argc && !strcmp(*argv, "-b")) p->balance = sox_true, ++argv, --argc;
   do {NUMERIC_PARAMETER(level, -100, 0)} while (0);

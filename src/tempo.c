@@ -300,7 +300,7 @@ sox_effect_handler_t const * sox_tempo_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "tempo", "[-q] factor [segment-ms [search-ms [overlap-ms]]]",
-    SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_GETOPT,
+    SOX_EFF_MCHAN | SOX_EFF_LENGTH,
     getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
   return &handler;
@@ -311,7 +311,7 @@ sox_effect_handler_t const * sox_tempo_effect_fn(void)
 static int pitch_getopts(sox_effect_t * effp, int argc, char **argv)
 {
   double d;
-  char dummy, arg[100], **argv2 = malloc(argc * sizeof(*argv2));
+  char dummy, arg[100], **argv2 = lsx_malloc(argc * sizeof(*argv2));
   int result, pos = (argc > 1 && !strcmp(argv[1], "-q"))? 2 : 1;
 
   if (argc <= pos || sscanf(argv[pos], "%lf %c", &d, &dummy) != 1)

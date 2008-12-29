@@ -270,7 +270,7 @@ sox_effect_handler_t const * sox_dither_effect_fn(void)
     "\n           modified-e-weighted, improved-e-weighted, gesemann,"
     "\n           shibata, low-shibata, high-shibata."
     "\n  depth    Noise depth; 0.5 to 1; default 1",
-    SOX_EFF_GETOPT | SOX_EFF_PREC, getopts, start, flow, 0, 0, 0, sizeof(priv_t)
+    SOX_EFF_PREC, getopts, start, flow, 0, 0, 0, sizeof(priv_t)
   };
   return &handler;
 }

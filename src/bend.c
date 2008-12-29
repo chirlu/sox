@@ -109,7 +109,7 @@ static int create(sox_effect_t * effp, int argc, char **argv)
   argc -= optind, argv += optind;
 
   p->bends = lsx_calloc(p->nbends = argc, sizeof(*p->bends));
-  return parse(effp, argv, 1e6);     /* No rate yet; parse with dummy */
+  return parse(effp, argv, 0.);     /* No rate yet; parse with dummy */
 }
 
 static int start(sox_effect_t * effp)
@@ -295,8 +295,8 @@ static int kill(sox_effect_t * effp)
 sox_effect_handler_t const *sox_bend_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "bend", "[-f frame-rate(25)] [-o over-sample(16)] {delay,cents,duration}", SOX_EFF_GETOPT,
-    create, start, flow, 0, stop, kill, sizeof(priv_t)
+    "bend", "[-f frame-rate(25)] [-o over-sample(16)] {delay,cents,duration}",
+    0, create, start, flow, 0, stop, kill, sizeof(priv_t)
   };
   return &handler;
 }

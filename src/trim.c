@@ -26,14 +26,15 @@ typedef struct {
 /*
  * Process options
  */
-static int sox_trim_getopts(sox_effect_t * effp, int n, char **argv)
+static int sox_trim_getopts(sox_effect_t * effp, int argc, char **argv)
 {
     priv_t * trim = (priv_t *) effp->priv;
+  --argc, ++argv;
 
     /* Do not know sample rate yet so hold off on completely parsing
      * time related strings.
      */
-    switch (n) {
+    switch (argc) {
         case 2:
             trim->length_str = lsx_malloc(strlen(argv[1])+1);
             strcpy(trim->length_str,argv[1]);

@@ -42,9 +42,10 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   size_t delay, max_samples = 0;
   unsigned i;
 
+  --argc, ++argv;
   p->argv = lsx_calloc(p->argc = argc, sizeof(*p->argv));
   for (i = 0; i < p->argc; ++i) {
-    char const * next = lsx_parsesamples(96000., p->argv[i] = lsx_strdup(argv[i]), &delay, 't');
+    char const * next = lsx_parsesamples(1e5, p->argv[i] = lsx_strdup(argv[i]), &delay, 't');
     if (!next || *next) {
       kill(effp);
       return lsx_usage(effp);

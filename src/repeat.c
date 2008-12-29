@@ -28,6 +28,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
   p->num_repeats = 1;
+  --argc, ++argv;
   do {NUMERIC_PARAMETER(num_repeats, 0, UINT_MAX - 1)} while (0);
   return argc? lsx_usage(effp) : SOX_SUCCESS;
 }

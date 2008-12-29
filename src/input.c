@@ -22,7 +22,7 @@ typedef struct {sox_format_t * file;} priv_t;
 static int getopts(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
-  if (argc != 1 || !(p->file = (sox_format_t *)argv[0]) || p->file->mode != 'r')
+  if (argc != 2 || !(p->file = (sox_format_t *)argv[1]) || p->file->mode != 'r')
     return SOX_EOF;
   return SOX_SUCCESS;
 }

@@ -55,11 +55,12 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
   return SOX_SUCCESS;
 }
 
-static int create(sox_effect_t * effp, int n, char * * argv)
+static int create(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
-  p->pads = lsx_calloc(p->npads = n, sizeof(*p->pads));
-  return parse(effp, argv, 96000.); /* No rate yet; parse with dummy */
+  --argc, ++argv;
+  p->pads = lsx_calloc(p->npads = argc, sizeof(*p->pads));
+  return parse(effp, argv, 1e5); /* No rate yet; parse with dummy */
 }
 
 static int start(sox_effect_t * effp)

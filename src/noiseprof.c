@@ -42,13 +42,14 @@ typedef struct {
 /*
  * Get the filename, if any. We don't open it until sox_noiseprof_start.
  */
-static int sox_noiseprof_getopts(sox_effect_t * effp, int n, char **argv)
+static int sox_noiseprof_getopts(sox_effect_t * effp, int argc, char **argv)
 {
     priv_t * data = (priv_t *) effp->priv;
+  --argc, ++argv;
 
-    if (n == 1) {
+    if (argc == 1) {
         data->output_filename = argv[0];
-    } else if (n > 1)
+    } else if (argc > 1)
       return lsx_usage(effp);
 
     return (SOX_SUCCESS);

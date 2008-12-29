@@ -41,14 +41,15 @@ static double fade_gain(size_t index, size_t range, int fadetype);
  * The 'info' fields are not yet filled in.
  */
 
-static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
+static int sox_fade_getopts(sox_effect_t * effp, int argc, char **argv)
 {
 
     priv_t * fade = (priv_t *) effp->priv;
     char t_char[2];
     int t_argno;
+  --argc, ++argv;
 
-    if (n < 1 || n > 4)
+    if (argc < 1 || argc > 4)
          return lsx_usage(effp);
 
     /* because sample rate is unavailable at this point we store the
@@ -61,7 +62,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
         fade->out_fadetype = *t_char;
 
         argv++;
-        n--;
+        argc--;
     }
     else
     {
@@ -78,7 +79,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
 
     fade->out_start_str = fade->out_stop_str = 0;
 
-    for (t_argno = 1; t_argno < n && t_argno < 3; t_argno++)
+    for (t_argno = 1; t_argno < argc && t_argno < 3; t_argno++)
     {
         /* See if there is fade-in/fade-out times/curves specified. */
         if(t_argno == 1)

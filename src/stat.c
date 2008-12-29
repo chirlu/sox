@@ -40,7 +40,7 @@ typedef struct {
 /*
  * Process options
  */
-static int sox_stat_getopts(sox_effect_t * effp, int n, char **argv)
+static int sox_stat_getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * stat = (priv_t *) effp->priv;
 
@@ -49,15 +49,16 @@ static int sox_stat_getopts(sox_effect_t * effp, int n, char **argv)
   stat->srms = 0;
   stat->fft = 0;
 
-  for (; n > 0; n--, argv++) {
+  --argc, ++argv;
+  for (; argc > 0; argc--, argv++) {
     if (!(strcmp(*argv, "-v")))
       stat->volume = 1;
     else if (!(strcmp(*argv, "-s"))) {
-      if (n <= 1) {
+      if (argc <= 1) {
         lsx_fail("-s option: invalid argument");
         return SOX_EOF;
       }
-      n--, argv++;              /* Move to next argument. */
+      argc--, argv++;              /* Move to next argument. */
       if (!sscanf(*argv, "%lf", &stat->scale)) {
         lsx_fail("-s option: invalid argument");
         return SOX_EOF;

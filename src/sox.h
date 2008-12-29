@@ -451,7 +451,6 @@ sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev)
 #define SOX_EFF_MCHAN    16          /* Effect can handle multi-channel */
 #define SOX_EFF_NULL     32          /* Effect does nothing */
 #define SOX_EFF_DEPRECATED 64        /* Effect is living on borrowed time */
-#define SOX_EFF_GETOPT   128         /* FIXME eliminate: Effect uses getopt */
 
 typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot} sox_plot_t;
 typedef struct sox_effect sox_effect_t;

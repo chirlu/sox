@@ -56,25 +56,26 @@ typedef struct {
 /*
  * Process options
  */
-static int getopts(sox_effect_t * effp, int n, char **argv)
+static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *) effp->priv;
+  --argc, ++argv;
 
   /* default options */
   p->factor = 1.0; /* default is no change */
   p->window = DEFAULT_STRETCH_WINDOW;
 
-  if (n > 0 && !sscanf(argv[0], "%lf", &p->factor)) {
+  if (argc > 0 && !sscanf(argv[0], "%lf", &p->factor)) {
     lsx_fail("error while parsing factor");
     return lsx_usage(effp);
   }
 
-  if (n > 1 && !sscanf(argv[1], "%lf", &p->window)) {
+  if (argc > 1 && !sscanf(argv[1], "%lf", &p->window)) {
     lsx_fail("error while parsing window size");
     return lsx_usage(effp);
   }
 
-  if (n > 2) {
+  if (argc > 2) {
     switch (argv[2][0]) {
     case 'l':
     case 'L':
@@ -89,7 +90,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
   p->shift = (p->factor <= 1.0) ?
     DEFAULT_FAST_SHIFT_RATIO: DEFAULT_SLOW_SHIFT_RATIO;
 
-  if (n > 3 && !sscanf(argv[3], "%lf", &p->shift)) {
+  if (argc > 3 && !sscanf(argv[3], "%lf", &p->shift)) {
     lsx_fail("error while parsing shift ratio");
     return lsx_usage(effp);
   }
@@ -108,7 +109,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
   if (p->fading > 0.5)
     p->fading = 0.5;
 
-  if (n > 4 && !sscanf(argv[4], "%lf", &p->fading)) {
+  if (argc > 4 && !sscanf(argv[4], "%lf", &p->fading)) {
     lsx_fail("error while parsing fading ratio");
     return lsx_usage(effp);
   }

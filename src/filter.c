@@ -161,15 +161,16 @@ static void FiltWin(priv_t * f, long Nx);
 /*
  * Process options
  */
-static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
+static int sox_filter_getopts(sox_effect_t * effp, int argc, char **argv)
 {
         priv_t * f = (priv_t *) effp->priv;
+  --argc, ++argv;
 
         f->beta = 16;  /* Kaiser window, beta 16 */
         f->Nwin = 128;
 
         f->freq0 = f->freq1 = 0;
-        if (n >= 1) {
+        if (argc >= 1) {
                 char *p;
                 p = argv[0];
                 if (*p != '-') {
@@ -185,14 +186,14 @@ static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
         if (f->freq0 == 0 && f->freq1 == 0)
           return lsx_usage(effp);
 
-        if ((n >= 2) && !sscanf(argv[1], "%ld", &f->Nwin))
+        if ((argc >= 2) && !sscanf(argv[1], "%ld", &f->Nwin))
           return lsx_usage(effp);
         else if (f->Nwin < 4) {
                 lsx_fail("filter: window length (%ld) <4 is too short", f->Nwin);
                 return (SOX_EOF);
         }
 
-        if ((n >= 3) && !sscanf(argv[2], "%lf", &f->beta))
+        if ((argc >= 3) && !sscanf(argv[2], "%lf", &f->beta))
           return lsx_usage(effp);
 
         lsx_debug("filter opts: %g-%g, window-len %ld, beta %f", f->freq0, f->freq1, f->Nwin, f->beta);

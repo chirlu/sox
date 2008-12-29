@@ -62,6 +62,7 @@ static lsx_enum_item const interp_enum[] = {
 static int getopts(sox_effect_t * effp, int argc, char *argv[])
 {
   priv_t * p = (priv_t *) effp->priv;
+  --argc, ++argv;
 
   /* Set non-zero defaults: */
   p->delay_depth  = 2;

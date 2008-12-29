@@ -267,13 +267,14 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   priv_t * synth = (priv_t *) effp->priv;
   channel_t master, * chan = &master;
   int argn = 0;
+  --argc, ++argv;
 
   /* Get duration if given (if first arg starts with digit) */
   if (argc && (isdigit((int)argv[argn][0]) || argv[argn][0] == '.')) {
     synth->length_str = lsx_malloc(strlen(argv[argn]) + 1);
     strcpy(synth->length_str, argv[argn]);
     /* Do a dummy parse of to see if it will fail */
-    if (lsx_parsesamples(9e9, synth->length_str, &synth->samples_to_do, 't') == NULL)
+    if (lsx_parsesamples(0., synth->length_str, &synth->samples_to_do, 't') == NULL)
       return lsx_usage(effp);
     argn++;
   }
