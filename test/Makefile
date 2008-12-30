@@ -3,28 +3,20 @@
 # Uncomment the following if you need a specific compiler.
 #CC=gcc
 
-CFLAGS:=-O2 -Wall -L../
+CFLAGS:=-O2 -Wall
 LDFLAGS:=-s
 LIBS:=-lm
 
-all: ding model lding lmodel corr
+all: model lmodel corr
 
 corr: corr.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
-
-ding: ding.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
 
 model: model.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
 
-lding: ding.c
-	$(CC) $(CFLAGS) -DLSAMPL $(LDFLAGS) -o $@ $< $(LIBS)
-
 lmodel: model.c
 	$(CC) $(CFLAGS) -DLSAMPL $(LDFLAGS) -o $@ $< $(LIBS)
 
 clean:
-	rm -f ding lding model lmodel corr *~ A B
-	rm -rf d
-
+	rm -f model lmodel corr *~ A B

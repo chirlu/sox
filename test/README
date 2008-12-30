@@ -1,19 +1,17 @@
-Here are some helper programs for checking filter and
-rate conversion accuracy of sox.  The programs in the
-test subdirectory which I (Stanley J. Brooks) wrote are
-covered by the GPL.  See the Copyright file for details.
-Sox itself is not covered by the GPL, but something similar.
+Here are some helper programs for checking filter and rate conversion
+accuracy of sox.  The programs in the test subdirectory which I
+(Stanley J. Brooks) wrote are covered by the GPL.  See the
+../LICENSE.GPL file for details.  Sox is also covered by the GPL.
 
-To use this stuff, first cd to this test subdirectory
-and run make, which should produce the ding,lding,
-model, and lmodel executables.
+To use this stuff, first cd to this test subdirectory and run make,
+which should produce the corr, model, and lmodel executables.
 
 Now to test something...
 
 Say you want to compare the 'band' effect to the 'filter' effect...
 
-./ltest band 800 200 >A
-./ltest filter 600-1000 >B
+./ltest.pl band 800 200 >A
+./ltest.pl filter 600-1000 >B
 gnuplot responseAB
 
 plots the response curves with y being power-gain in dB,
@@ -24,8 +22,8 @@ rate conversion from 8000 ->22050 samples per second,
 with linear (default) interpolation versus -qs quadratic
 interpolation with Nuttall window...
 
-./ltest -l resample >A
-./ltest -l resample -qs 0.80 0 >B
+./ltest.pl -l resample >A
+./ltest.pl -l resample -qs 0.80 0 >B
 gnuplot plotAB
 
 The script wtest.pl is for testing sox's adpcm and gsm wav support.
@@ -37,7 +35,8 @@ It accepts one of these options:
     -g  Use sox wav-gsm6.10
 If using sox, you may also append an optional effect, eg:
     ./wtest -g filter 0-3500 >A
-will apply a lowpass filter with 6dB corner at 3500 Hz before the compression phase.
+will apply a lowpass filter with 6dB corner at 3500 Hz before the
+compression phase.
 
 Then, as above, 'gnuplot plotA' will graph dB gain and dB error-level
 vs. freq for you.
@@ -55,8 +54,8 @@ I hope. just change the ($rate0,$rate1)=(8000,22050) line near the top.
 
 What ltest does:
 
-It uses the 'ding' program to synthesize a sineusoid input file for the
-frequencies 0.00 0.01 ... 0.99 of the Nyquist frequency.  This input
+It uses sox to synthesize a sineusoid input file for the
+frequencies 0.01 ... 0.99 of the Nyquist frequency.  This input
 has:
      400 samples samples of silence,
     4000 samples with smooth envelope rising to volume -v0.5
