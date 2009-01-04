@@ -518,6 +518,7 @@ static int startread(sox_format_t * ft)
         return SOX_EOF;
       }
       wav->formatTag = subFormatTag;
+      lsx_report("EXTENSIBLE");
     }
 
     switch (wav->formatTag)
