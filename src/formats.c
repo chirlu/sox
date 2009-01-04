@@ -825,9 +825,9 @@ sox_format_t * sox_open_write(
 
   if ((ft->handler.flags & SOX_FILE_DEVICE) && signal) {
     if (signal->rate && signal->rate != ft->signal.rate)
-      lsx_warn("can't set sample rate %g; using %g", signal->rate, ft->signal.rate);
+      lsx_report("can't set sample rate %g; using %g", signal->rate, ft->signal.rate);
     if (signal->channels && signal->channels != ft->signal.channels)
-      lsx_warn("can't set %u channels; using %u", signal->channels, ft->signal.channels);
+      lsx_report("can't set %u channels; using %u", signal->channels, ft->signal.channels);
   }
   return ft;
 
