@@ -24,10 +24,6 @@
 
 #include <FLAC/all.h>
 
-/* Workaround for flac versions < 1.1.2 */
-#define FLAC__metadata_object_vorbiscomment_append_comment(object, entry, copy)\
-  FLAC__metadata_object_vorbiscomment_insert_comment(object, object->data.vorbis_comment.num_comments, entry, copy)
-
 #if !defined(FLAC_API_VERSION_CURRENT)
 #define FLAC_API_VERSION_CURRENT 7
 #define FLAC__StreamDecoder FLAC__FileDecoder
