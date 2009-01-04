@@ -39,11 +39,16 @@ void lsx_fail_errno(sox_format_t * ft, int sox_errno, const char *fmt, ...)
   ft->sox_errstr[255] = '\0';
 }
 
-void lsx_set_signal_defaults(sox_signalinfo_t * signal)
+void lsx_set_signal_defaults(sox_format_t * ft)
 {
-  if (!signal->rate     ) signal->rate      = SOX_DEFAULT_RATE;
-  if (!signal->precision) signal->precision = SOX_DEFAULT_PRECISION;
-  if (!signal->channels ) signal->channels  = SOX_DEFAULT_CHANNELS;
+  if (!ft->signal.rate     ) ft->signal.rate      = SOX_DEFAULT_RATE;
+  if (!ft->signal.precision) ft->signal.precision = SOX_DEFAULT_PRECISION;
+  if (!ft->signal.channels ) ft->signal.channels  = SOX_DEFAULT_CHANNELS;
+
+  if (!ft->encoding.bits_per_sample)
+    ft->encoding.bits_per_sample = ft->signal.precision;
+  if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
+    ft->encoding.encoding = SOX_ENCODING_SIGN2;
 }
 
 int lsx_check_read_params(sox_format_t * ft, unsigned channels,

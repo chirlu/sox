@@ -188,8 +188,6 @@ static int sox_sunstartwrite(sox_format_t * ft)
 #endif
     char simple_hw=0;
 
-    lsx_set_signal_defaults(&ft->signal);
-
     /* Hard-code for now. */
     file->count = 0;
     file->pos = 0;

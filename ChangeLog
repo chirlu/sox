@@ -41,6 +41,8 @@ LibSoX interface changes:
 
 File formats:
 
+  o 24-bit support for ALSA driver.  (robs)
+  o Warn if ALSA under/overrun.  (robs)
   o Slight improvement to A-law/u-law conversion accuracy: round LSB
     instead of truncating.  (robs)
   o New `--ignore-length' option to ignore length in input file

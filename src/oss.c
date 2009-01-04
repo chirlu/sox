@@ -45,9 +45,7 @@ static int ossinit(sox_format_t * ft)
     int sampletype, samplesize, dsp_stereo;
     int tmp, rc;
     priv_t *file = (priv_t *)ft->priv;
-    sox_signalinfo_t client_signal = ft->signal;
 
-    lsx_set_signal_defaults(&ft->signal);
     if (ft->encoding.bits_per_sample == 8) {
         sampletype = AFMT_U8;
         samplesize = 8;
@@ -156,11 +154,7 @@ static int ossinit(sox_format_t * ft)
     }
 
     if (tmp != dsp_stereo)
-    {
-      if (client_signal.channels != 0)
-        lsx_warn("Sound card appears to support only %d channels.  Overriding format", tmp+1);
         ft->signal.channels = tmp + 1;
-    }
 
     tmp = ft->signal.rate;
     if (ioctl (fileno(ft->fp), SNDCTL_DSP_SPEED, &tmp) < 0 ||
@@ -174,12 +168,8 @@ static int ossinit(sox_format_t * ft)
          * we can't hear anyways.
          */
         if ((int)ft->signal.rate - tmp > (tmp * .01) ||
-            tmp - (int)ft->signal.rate > (tmp * .01)) {
-          if (client_signal.rate != 0)
-            lsx_warn("Unable to set audio speed to %g (set to %d)",
-                     ft->signal.rate, tmp);
+            tmp - (int)ft->signal.rate > (tmp * .01))
             ft->signal.rate = tmp;
-        }
     }
 
     /* Find out block size to use last because the driver could compute

@@ -477,6 +477,9 @@ sox_format_t * sox_open_read(
   else sox_init_encodinginfo(&ft->encoding);
   set_endiannesses(ft);
 
+  if ((ft->handler.flags & SOX_FILE_DEVICE) && !(ft->handler.flags & SOX_FILE_PHONY))
+    lsx_set_signal_defaults(ft);
+
   ft->priv = lsx_calloc(1, ft->handler.priv_size);
   /* Read and write starters can change their formats. */
   if (ft->handler.startread && (*ft->handler.startread)(ft) != SOX_SUCCESS) {
@@ -485,14 +488,23 @@ sox_format_t * sox_open_read(
   }
 
   /* Fill in some defaults: */
-  if (!ft->signal.precision)
+  if (sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample))
     ft->signal.precision = sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample);
   if (!(ft->handler.flags & SOX_FILE_PHONY) && !ft->signal.channels)
     ft->signal.channels = 1;
 
-  if (sox_checkformat(ft) == SOX_SUCCESS)
-    return ft;
-  lsx_fail("bad input format for %s `%s': %s", type, ft->filename, ft->sox_errstr);
+  if (sox_checkformat(ft) != SOX_SUCCESS) {
+    lsx_fail("bad input format for %s `%s': %s", type, ft->filename, ft->sox_errstr);
+    goto error;
+  }
+
+  if (signal) {
+    if (signal->rate && signal->rate != ft->signal.rate)
+      lsx_warn("can't set sample rate %g; using %g", signal->rate, ft->signal.rate);
+    if (signal->channels && signal->channels != ft->signal.channels)
+      lsx_warn("can't set %u channels; using %u", signal->channels, ft->signal.channels);
+  }
+  return ft;
 
 error:
   if (ft->fp && ft->fp != stdin)
@@ -806,9 +818,18 @@ sox_format_t * sox_open_write(
     goto error;
   }
 
-  if (sox_checkformat(ft) == SOX_SUCCESS)
-    return ft;
-  lsx_fail("bad format for output file `%s': %s", ft->filename, ft->sox_errstr);
+  if (sox_checkformat(ft) != SOX_SUCCESS) {
+    lsx_fail("bad format for output file `%s': %s", ft->filename, ft->sox_errstr);
+    goto error;
+  }
+
+  if ((ft->handler.flags & SOX_FILE_DEVICE) && signal) {
+    if (signal->rate && signal->rate != ft->signal.rate)
+      lsx_warn("can't set sample rate %g; using %g", signal->rate, ft->signal.rate);
+    if (signal->channels && signal->channels != ft->signal.channels)
+      lsx_warn("can't set %u channels; using %u", signal->channels, ft->signal.channels);
+  }
+  return ft;
 
 error:
   if (ft->fp && ft->fp != stdout)

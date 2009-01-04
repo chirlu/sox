@@ -2631,9 +2631,13 @@ int main(int argc, char **argv)
       f->volume = 1.0 / sqrt((double)input_count);
 
     if (sox_mode == sox_rec && !j) {       /* Set the recording parameters: */
-      if (input_count > 1)                 /* from the (just openned) next */
+      if (input_count > 1) {               /* from the (just openned) next */
         f->signal = files[1]->ft->signal;  /* input file, or from the output */
-      else f->signal = files[1]->signal;   /* file (which is not open yet). */
+        f->encoding = files[1]->ft->encoding;
+      } else {
+        f->signal = files[1]->signal;      /* file (which is not open yet). */
+        f->encoding = files[1]->encoding;
+      }
     }
     files[j]->ft = sox_open_read(f->filename, &f->signal, &f->encoding, f->filetype);
     if (!files[j]->ft)
