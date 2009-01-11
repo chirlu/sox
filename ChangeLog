@@ -2,7 +2,7 @@ Change History
 --------------
 
 This file contains a list of all changes starting after the release of
-sox-11gamma.
+sox-11gamma, followed by a list of prior authors and features.
 
 sox-14.x.x	2009-xx-xx
 ----------
@@ -407,7 +407,6 @@ sox-14.0.0	2007-09-11
   o Added cmake build files for Win32.  (robs)
 
 
-
 sox-13.0.0	2007-02-11
 ----------
 
@@ -534,8 +533,10 @@ sox-13.0.0	2007-02-11
   o Removed the old internally invoked (but mentioned in the man page)
     copy effect.  (robs)
 
+
 sox-12.18.2	2006-09-03
 -----------
+
   o Adding in Debian's disk full fix (#313206).
   o Finally got rid of reference to cleanup() function in
     library.  Applications are now required to detect
@@ -558,6 +559,7 @@ sox-12.18.2	2006-09-03
     just the internal one.  Vladimir Nadvornik
   o Updates to nul file handler to prevent crashes during output.
     Martin Panter (1482869)
+
 
 sox-12.18.1	2006-05-07
 ------------
@@ -596,6 +598,7 @@ sox-12.18.1	2006-05-07
     two back-to-back reverse effects to work.
   o Added support for multiple channels in .dat files.
     (1366634) tomchristie
+
 
 sox-12.17.9	2005-12-05
 -----------
@@ -648,8 +651,10 @@ sox-12.17.9	2005-12-05
   o Allow aborting SoX with SIGTERM, along with previous SIGINT.
     Norman Ramsey.
 
+
 sox-12.17.8	2005-08-22
 -----------
+
   o noisered effect had compile problems with some compilers.
   o "-x" option was being ignored since 12.17.7.
   o Stuart Brady added support for reading and writing RIFX files (big
@@ -667,8 +672,10 @@ sox-12.17.8	2005-08-22
   o In AIFF files, fixed problem were short comments should cause
     AIFF handler to get confused and become misaligned.
 
+
 sox-12.17.7	2004-12-20
 -----------
+
   o Christian Weisgerber sent patches to man page fixes
     and patches for sunaudio driver on openbsd.
   o Default volume for soxmix wrongly set to 0 instead
@@ -695,8 +702,10 @@ sox-12.17.7	2004-12-20
     to determine what the noise is (like background hiss on
     cassette tapes).
 
+
 sox-12.17.6	2004-10-13
 -----------
+
   o Changed comment code to always use copies of strings to
     fix bug in WAV handlering freeing argv[] memory.
   o Use calloc() to create ft_t structures so that all
@@ -752,8 +761,10 @@ sox-12.17.6	2004-10-13
   o WAV with GSM data now always pads data to even number of bytes.
   o Added support for writing 32-bit audio to AIFF.
 
+
 sox-12.17.5	2004-08-15
 -----------
+
   o Thomas Klausner sent in patches to compile audio drivers under
     NetBSD.
   o Rahul Powar pointed out a memory leak in the WAV file handler.
@@ -791,8 +802,10 @@ sox-12.17.5	2004-08-15
   o Rearrange link order of ogg vorbis libraries so that they
     can be compiled as static. (Christian Weisgerbr)
 
+
 sox-12.17.4	2003-03-22
 -----------
+
   o Peter Nyhlen fixed a problem with reading Comments in Ogg Vorbis files.
   o Added install target to allow installing libgsm from main Makefile.
     Leigh Smith.
@@ -836,8 +849,10 @@ sox-12.17.4	2003-03-22
     Forte compiler happy.
   o Added support for ALSA 0.9 driver. Jimen Ching
 
+
 sox-12.17.3	2001-12-15
 -----------
+
   o Removed check that prevented pan from being invoked when the
     input and output channels were the same.
   o Ciaran Anscomb added a flush to sunaudio driver after changing
@@ -900,8 +915,10 @@ sox-12.17.3	2001-12-15
     support as well as able to read in VOC files using a pipe.  More
     examples added to soxexam file.
 
+
 sox-12.17.2	2001-09-15
 -----------
+
   o Daniel Culbert found and fixed a bug in the polyphase effect
     that occurs on platforms that rand() can return large values.
     The bug resulted in polyphase resampling an audio file to a
@@ -966,8 +983,10 @@ sox-12.17.2	2001-09-15
     Also have auto handler now use file extensions if it can't figure
     it out.
 
+
 sox-12.17.1	2000-11-19
 -----------
+
   o Andreas Kies fixed a bug were we were not detecting correctly
     if an output file was seekable.
   o Fixed a bug in the mask effect introduced in 12.17.  If the libc
@@ -997,8 +1016,10 @@ sox-12.17.1	2000-11-19
     man pages.  Changed effect so that it computed the time the
     same way that the fade effect does.
 
+
 sox-12.17	2000-09-08
 ---------
+
   o Sox can now read and write w98 compatible gsm .wav files,
     if compiled properly with libgsm.  Thanks go to Stuart
     Daines <sjd.u-net.com> for the gsm-wav patches.
@@ -1019,12 +1040,12 @@ sox-12.17	2000-09-08
     fast with floating arithmetic as the old (buggy) version
     was with 16-bit integer arithmetic.  The older version
     in sox-12.16 shifted frequencies slightly and was less
-    accurate.
-  o Extensive rewrite of polyphas.c, should be faster and use
-    less memory now.  The sox-12.16 polyphase code had some bugs.
+    accurate.  (Stan Brooks)
+  o Extensive rewrite of polyphas.c, should be faster and use less memory
+    now.  The sox-12.16 polyphase code had some bugs.  (Stan Brooks)
   o New effect 'filter' which is a high-quality DSP lowpass/
     highpass/bandpass filter using windowed sinc function
-    methods, like polyphase and resample.
+    methods, like polyphase and resample.  (Stan Brooks)
   o Jan Paul Schmidt added new low/high/bandpass and bandlimit
     filters to sox.  They have much better results then the old
     versions of low/high/bandpass.  The new effects are all
@@ -1075,6 +1096,7 @@ sox-12.17	2000-09-08
   o Curt Zirzow added a trim effect to trim off audio data.
   o Updated ALSA driver to support new interface. Jimen Ching
 
+
 sox-12.16	1999-07-13
 ---------
 
@@ -1122,6 +1144,7 @@ sox-12.16	1999-07-13
   o Fixed core dump when writting AIFF files with no comments.
     (Olaf Pueschel)
 
+
 sox-12.15	1998-10-01
 ---------
 
@@ -1159,6 +1182,7 @@ sox-12.15	1998-10-01
   o Can use "-e" without an effect again.
   o Added -g and -a options for new style support of GSM and ADPCM.  Added
     error checking to various formats to avoid allowing these types.
+
 
 sox-12.14	1998-05-15
 ---------
@@ -1203,6 +1227,7 @@ sox-12.14	1998-05-15
   o There is a known bug in hcom's compress() function.  It is allocating
     memory that can't be free'd under some OS's.  It causes a core dump.
 
+
 sox-11gamma-cb3	1997-03-28
 ---------------
 
@@ -1227,6 +1252,7 @@ have changed:
   o  Added new sound format, cvsd (Continuously Variable Slope Delta)
      from Thomas Sailer (sailer@ife.ee.ethz.ch).
 
+
 sox-11gamma-cb2	1996-10-04
 ---------------
 
@@ -1238,7 +1264,6 @@ standing bug in Sox that could DELETE your /dev/* file if the
 program was aborted for reason such as invalid audio file.  Special
 thanks for Bryan Franklin for sending in a patch when I was
 to busy to even look for it.
-
 
   o  Better play support for 8-bit stereo voc files.  New support
      for outputing both 8-bit and 16-bit stereo voc files.
@@ -1261,3 +1286,68 @@ to busy to even look for it.
      "mixer" for Linux) then you will want to edit the play and rec
      to use this.  The current support for it is only in example
      form of how it can be done.
+
+
+List of earlier SoX Contributors
+--------------------------------
+Covering the time from its creation (Jul '91) until sox-11gamma (Feb '95):
+
+  o Lance Norskog		thinman at netcom.com
+	Creator & maintenance
+  o Guido Van Rossum		guido at cwi.nl
+	AU, AIFF, AUTO, HCOM, reverse, many bug fixes
+  o Jef Poskanzer		jef at well.sf.ca.us
+	original code for u-law and delay line
+  o Bill Neisius		bill%solaria at hac2arpa.hac.com 
+	DOS port, 8SVX, Sounder, Soundtool formats
+	Apollo fixes, stat with auto-picker
+  o Rick Richardson		rick at digibd.com
+	WAV and SB driver handlers, fixes
+  o David Champion		dgc3 at midway.uchicago.edu
+	Amiga port 
+  o Pace Willisson		pace at blitz.com
+	Fixes for ESIX
+  o Leigh Smith			leigh at psychok.dialix.oz.au
+	SMP and comment movement support.
+  o David Sanderson		dws at ssec.wisc.edu
+	AIX3.1 fixes
+  o Glenn Lewis			glewis at pcocd2.intel.com
+	AIFF chunking fixes
+  o Brian Campbell		brianc at quantum.qnx.com
+	QNX port and 16-bit fixes
+  o Chris Adams			gt8741 at prism.gatech.edu
+	DOS port fixes
+  o John Kohl			jtkohl at kolvir.elcr.ca.us
+	BSD386 port, VOC stereo support
+  o Ken Kubo			ken at hmcvax.claremont.edu
+	VMS port, VOC stereo support
+  o Frank Gadegast 		phade at cs.tu-berlin.de
+	Microsoft C 7.0 & C Borland 3.0 ports
+  o David Elliot		dce at scmc.sony.com
+	CD-R format support
+  o David Sears			dns at essnj3.essnjay.com
+	Linux support
+  o Tom Littlejohn		tlit at seq1.loc.gov
+	Raw textual data
+  o Boisy G. Pitre 		boisy at microware.com
+	OS9 port
+  o Sun Microsystems, Guido Van Rossum
+	CCITT G.711, G.721, G.723 implementation
+  o Graeme Gill			graeme at labtam.labtam.oz.au
+	A-LAW format, Good .WAV handling, avg channel expansion
+  o Allen Grider		grider at hfsi.hfsi.com
+	VOC stereo mode, WAV file handling
+  o Michel Fingerhut 		Michel.Fingerhut at ircam.fr
+	Upgrade 'sf' format to current IRCAM format.  Float file support.
+  o Chris Knight
+	Achimedes Acorn support
+  o Richard Caley 		R.Caley at ed.ac.uk
+	Psion WVE handler
+  o Lutz Vieweg			lkv at mania.RoBIN.de
+	MAUD (Amiga) file handler
+  o Tim Gardner			timg at tpi.com
+	Windows NT port for V7
+  o Jimen Ching 		jiching at wiliki.eng.hawaii.edu
+	Libst porting bugs
+  o Lauren Weinstein		lauren at vortex.com
+	DOS porting, scripts, professional use

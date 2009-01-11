@@ -284,8 +284,30 @@ fail.
 stopwrite
 Fix up any file header, or do what needs to be done.
 .SH EFFECTS
-An effects loop has one input and one output stream.
-It has 5 routines.
+Each effect runs with one input and one output stream.
+An effect's implementation comprises six functions that may be called
+to the follow flow diagram:
+.EX
+LOOP (invocations with different parameters)
+  getopts
+  LOOP (invocations with the same parameters)
+    LOOP (channels)
+      start
+    LOOP (whilst there is input audio to process)
+      LOOP (channels)
+        flow
+    LOOP (whilst there is output audio to generate)
+      LOOP (channels)
+        drain
+    LOOP (channels)
+      stop
+  kill
+.EE
+Notes: For some effects, some of the functions may not be needed and can
+be NULL.  An effect that is marked `MCHAN' does not use the LOOP
+(channels) lines and must therefore perform multiple channel processing
+inside the affected functions.  Multiple effect instances may be
+processed (according to the above flow diagram) in parallel.
 .TP 20
 getopts
 is called with a character string argument list for the effect.
@@ -315,19 +337,26 @@ If it fills the buffer, it will be called again, etc.
 The echo effect uses this to fade away.
 .TP 20
 stop
-is called when there are no more input samples to process.
-.I stop
-may generate output samples on its own.
-See echo.c for how to do this, 
-and see that what it does is absolutely bogus.
+is called when there are no more input samples and no more output
+samples to process.
+It is typically used to release or close resources (e.g. allocated
+memory or temporary files) that were set-up in
+.IR start .
+See echo.c for an example.
+.TP 20
+kill
+is called to allow resources allocated by
+.I getopts
+to be released.
+See pad.c for an example.
 .SH LINKING
-The method of linking against libsox and libsfx depends on how SoX was
+The method of linking against libsox depends on how SoX was
 built on your system. For a static build, just link against the
 libraries as normal. For a dynamic build, you should use libtool to
 link with the correct linker flags. See the libtool manual for
 details; basically, you use it as:
 .SP
-	libtool --mode=link gcc -o prog /path/to/libsox.la /path/to/libsfx.la
+	libtool --mode=link gcc -o prog /path/to/libsox.la
 .SP
 .SH BUGS
 This manual page is both incomplete and out of date.
@@ -337,8 +366,9 @@ This manual page is both incomplete and out of date.
 .SP
 example*.c in the SoX source distribution.
 .SH LICENSE
+Copyright 1998\-2009 by Chris Bagwell and SoX Contributors.
+.br
 Copyright 1991 Lance Norskog and Sundry Contributors.
-Copyright 1998\-2007 by Chris Bagwell and SoX Contributors.
 .SP
 This library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -351,5 +381,5 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Lesser General Public License for more details.
 .SH AUTHORS
 Chris Bagwell (cbagwell@users.sourceforge.net).
-Other authors and contributors are listed in the AUTHORS file that
+Other authors and contributors are listed in the ChangeLog file that
 is distributed with the source code.
