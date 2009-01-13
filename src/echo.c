@@ -236,9 +236,6 @@ static int sox_echo_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp
             return SOX_SUCCESS;
 }
 
-/*
- * Clean up reverb effect.
- */
 static int sox_echo_stop(sox_effect_t * effp)
 {
         priv_t * echo = (priv_t *) effp->priv;
