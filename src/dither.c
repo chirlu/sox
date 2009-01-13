@@ -24,6 +24,10 @@
 #include <assert.h>
 
 #define PREC effp->out_signal.precision
+#define SOX_ROUND_PREC_CLIP_COUNT(d, clips) \
+  ((d) < 0? (d) <= SOX_SAMPLE_MIN - 0.5? ++(clips), SOX_SAMPLE_MIN: (d) - 0.5 \
+  : (d) >= SOX_SAMPLE_MAX - (1 << (31-PREC)) + 0.5? \
+  ++(clips), SOX_SAMPLE_MAX - (1 << (31-PREC)): (d) + 0.5)
 
 typedef enum {Pdf_rectangular, Pdf_triangular, Pdf_gaussian} pdf_type_t;
 static lsx_enum_item const pdf_types[] = {
@@ -50,8 +54,9 @@ static lsx_enum_item const filter_names[] = {
 
 typedef struct {
   sox_rate_t  rate;
-  enum {fir, iir} type ;
+  enum {fir, iir} type;
   size_t len;
+  double gain;
   double const * coefs;
   filter_name_t name;
 } filter_t;
@@ -68,7 +73,7 @@ static double const shi48[] = {
   3.7067542076110839844,  -1.0495119094848632812,  -1.1830236911773681641,   2.1126792430877685547,
  -1.9094531536102294922,   0.99913084506988525391, -0.17090806365013122559, -0.32615602016448974609,
   0.39127644896507263184, -0.26876461505889892578,  0.097676105797290802002,-0.023473845794796943665,
-}; /* 48k, N=16, amp=18 */
+};
 
 static double const shi44[] = {
   2.6773197650909423828,  -4.8308925628662109375,   6.570110321044921875,   -7.4572014808654785156,
@@ -76,42 +81,42 @@ static double const shi44[] = {
  -2.9537565708160400391,   4.0800385475158691406,  -4.1845216751098632812,   3.3311812877655029297,
  -2.1179926395416259766,   0.879302978515625,      -0.031759146600961685181,-0.42382788658142089844,
   0.47882103919982910156, -0.35490813851356506348,  0.17496839165687561035, -0.060908168554306030273,
-}; /* 44.1k, N=20, amp=27 */
+};
 
 static double const shi38[] = {
   1.6335992813110351562,  -2.2615492343902587891,   2.4077029228210449219,  -2.6341717243194580078,
   2.1440362930297851562,  -1.8153258562088012695,   1.0816224813461303711,  -0.70302653312683105469,
   0.15991993248462677002,  0.041549518704414367676,-0.29416576027870178223,  0.2518316805362701416,
  -0.27766478061676025391,  0.15785403549671173096, -0.10165894031524658203,  0.016833892092108726501,
-}; /* 37.8k, N=16 */
+};
 
 static double const shi32[] = {
   0.82901298999786376953, -0.98922657966613769531,  0.59825712442398071289, -1.0028809309005737305,
   0.59938216209411621094, -0.79502451419830322266,  0.42723315954208374023, -0.54492527246475219727,
   0.30792605876922607422, -0.36871799826622009277,  0.18792048096656799316, -0.2261127084493637085,
   0.10573341697454452515, -0.11435490846633911133,  0.038800679147243499756,-0.040842197835445404053,
-}; /* 32k, N=16 */
+};
 
 static double const shi22[] = {
   0.065229974687099456787,-0.54981261491775512695, -0.40278548002243041992, -0.31783768534660339355,
  -0.28201797604560852051, -0.16985194385051727295, -0.15433363616466522217, -0.12507140636444091797,
  -0.08903945237398147583, -0.064410120248794555664,-0.047146003693342208862,-0.032805237919092178345,
  -0.028495194390416145325,-0.011695005930960178375,-0.011831838637590408325,
-}; /* 22.05k, N=15 */
+};
 
 static double const shl48[] = {
   2.3925774097442626953,  -3.4350297451019287109,   3.1853709220886230469,  -1.8117271661758422852,
  -0.20124770700931549072,  1.4759907722473144531,  -1.7210904359817504883,   0.97746700048446655273,
  -0.13790138065814971924, -0.38185903429985046387,  0.27421241998672485352,  0.066584214568138122559,
  -0.35223302245140075684,  0.37672343850135803223, -0.23964276909828186035,  0.068674825131893157959,
-}; /* 48k, N=16, amp=10 */
+};
 
 static double const shl44[] = {
   2.0833916664123535156,  -3.0418450832366943359,   3.2047898769378662109,  -2.7571926116943359375,
   1.4978630542755126953,  -0.3427594602108001709,  -0.71733748912811279297,  1.0737057924270629883,
  -1.0225815773010253906,   0.56649994850158691406, -0.20968692004680633545, -0.065378531813621520996,
   0.10322438180446624756, -0.067442022264003753662,-0.00495197344571352005,
-}; /* 44.1k, N=15, amp=9 */
+};
 
 static double const shh44[] = {
    3.0259189605712890625, -6.0268716812133789062,   9.195003509521484375,  -11.824929237365722656,
@@ -119,24 +124,24 @@ static double const shh44[] = {
    1.1393624544143676758,  2.4484779834747314453,  -4.9719839096069335938,   6.0392003059387207031,
   -5.9359521865844726562,  4.903278350830078125,   -3.5527443885803222656,   2.1909697055816650391,
   -1.1672389507293701172,  0.4903914332389831543,  -0.16519790887832641602,  0.023217858746647834778,
-}; /* 44.1k, N=20 */
+};
 
 static const filter_t filters[] = {
-  {44100, fir,  5, lip44, Shape_lipshitz},
-  {46000, fir,  9, fwe44, Shape_f_weighted},
-  {46000, fir,  9, mew44, Shape_modified_e_weighted},
-  {46000, fir,  9, iew44, Shape_improved_e_weighted},
-  {48000, iir,  4, ges48, Shape_gesemann},
-  {44100, iir,  4, ges44, Shape_gesemann},
-  {48000, fir, 16, shi48, Shape_shibata},
-  {44100, fir, 20, shi44, Shape_shibata},
-  {37800, fir, 16, shi38, Shape_shibata},
-  {32000, fir, 16, shi32, Shape_shibata},
-  {22050, fir, 15, shi22, Shape_shibata},
-  {48000, fir, 16, shl48, Shape_low_shibata},
-  {44100, fir, 15, shl44, Shape_low_shibata},
-  {44100, fir, 20, shh44, Shape_high_shibata},
-  {    0, fir,  0,  NULL, Shape_none},
+  {44100, fir,  5, 19.6, lip44, Shape_lipshitz},
+  {46000, fir,  9, 26.6, fwe44, Shape_f_weighted},
+  {46000, fir,  9, 14.6, mew44, Shape_modified_e_weighted},
+  {46000, fir,  9, 30.6, iew44, Shape_improved_e_weighted},
+  {48000, iir,  4, 21.0, ges48, Shape_gesemann},
+  {44100, iir,  4, 21.2, ges44, Shape_gesemann},
+  {48000, fir, 16, 28.8, shi48, Shape_shibata},
+  {44100, fir, 20, 32.5, shi44, Shape_shibata},
+  {37800, fir, 16, 22.7, shi38, Shape_shibata},
+  {32000, fir, 16, 15.7, shi32, Shape_shibata},
+  {22050, fir, 15,  9.0, shi22, Shape_shibata},
+  {48000, fir, 16, 23.5, shl48, Shape_low_shibata},
+  {44100, fir, 15, 23.0, shl44, Shape_low_shibata},
+  {44100, fir, 20, 37.5, shh44, Shape_high_shibata},
+  {    0, fir,  0,  0.0,  NULL, Shape_none},
 };
 
 #define MAX_N 30
@@ -181,13 +186,12 @@ static int flow_no_shape(sox_effect_t * effp, const sox_sample_t * ibuf,
     sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-
   size_t len = *isamp = *osamp = min(*isamp, *osamp);
-  int dummy = 0;
 
   while (len--) {
-    double d = *ibuf++ + p->am0 * RANQD1 + p->am1 * RANQD1;
-    *obuf++ = SOX_ROUND_CLIP_COUNT(d, dummy);
+    double d = *ibuf++ + floor(p->am0 * RANQD1) + floor(p->am1 * RANQD1);
+    SOX_SAMPLE_CLIP_COUNT(d, effp->clips);
+    *obuf++ = d;
   }
   return SOX_SUCCESS;
 }
@@ -218,8 +222,9 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
+  double mult = 1;
 
-  if (PREC >= 24)
+  if (PREC > 24)
     return SOX_EFF_NULL;   /* Dithering not needed at this resolution */
 
   if (!p->filter_name)
@@ -245,9 +250,14 @@ static int start(sox_effect_t * effp)
       default: assert(sox_false);
     }
     p->coefs = f->coefs;
+    mult = dB_to_linear(f->gain);
   }
   p->am1 = p->depth / (1 << PREC);
   p->am0 = (p->pdf == Pdf_triangular) * p->am1;
+
+  if (effp->flow == 0 && effp->in_signal.mult)
+    *effp->in_signal.mult *= 1 - (p->am0 + p->am1) * mult;
+
   lsx_debug("pdf=%s filter=%s depth=%g", lsx_find_enum_value(p->pdf, pdf_types)->text, lsx_find_enum_value(p->filter_name, filter_names)->text, p->depth);
   return SOX_SUCCESS;
 }
