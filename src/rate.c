@@ -494,6 +494,9 @@ static int start(sox_effect_t * effp)
   if (effp->in_signal.rate == out_rate)
     return SOX_EFF_NULL;
 
+  if (effp->flow == 0 && effp->in_signal.mult)
+    *effp->in_signal.mult *= .705; /* 1/(2/sinc(pi/3)-1); see De Soras 4.1.2 */
+
   effp->out_signal.channels = effp->in_signal.channels;
   effp->out_signal.rate = out_rate;
   rate_init(&p->rate, p->shared_ptr, effp->in_signal.rate / out_rate,
