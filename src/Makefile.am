@@ -244,6 +244,11 @@ libsox_fmt_oss_la_SOURCES = oss.c
 libsox_fmt_oss_la_LIBADD = libsox.la @OSS_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_oss.la
 endif
+if HAVE_SNDIO
+libsox_fmt_sndio_la_SOURCES = sndio.c
+libsox_fmt_sndio_la_LIBADD = libsox.la @SNDIO_LIBS@
+pkglib_LTLIBRARIES += libsox_fmt_sndio.la
+endif
 if HAVE_SUN_AUDIO
 libsox_fmt_sunau_la_SOURCES = sunaudio.c
 libsox_fmt_sunau_la_LIBADD = libsox.la
@@ -373,6 +378,11 @@ if HAVE_OSS
     libsox_la_SOURCES += oss.c
     libsox_la_LIBADD += @OSS_LIBS@
     sox_LDADD += @OSS_LIBS@
+endif
+if HAVE_SNDIO
+    libsox_la_SOURCES += sndio.c
+    libsox_la_LIBADD += @SNDIO_LIBS@
+    sox_LDADD += @SNDIO_LIBS@
 endif
 if HAVE_SUN_AUDIO
     libsox_la_SOURCES += sunaudio.c

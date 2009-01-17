@@ -87,6 +87,9 @@
 #if defined(HAVE_SYS_SOUNDCARD_H) || defined(HAVE_MACHINE_SOUNDCARD_H)
   FORMAT(oss)
 #endif
+#if defined HAVE_SNDIO
+  FORMAT(sndio)
+#endif
 #if defined HAVE_SNDFILE
   FORMAT(sndfile)
   #if defined HAVE_SNDFILE_1_0_12

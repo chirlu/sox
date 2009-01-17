@@ -1,4 +1,4 @@
-#define PACKAGE_VERSION "14.2.0"
+#define PACKAGE_VERSION "14.3.0"
 
 #cmakedefine EXTERNAL_GSM             1
 #cmakedefine HAVE_ALSA                1
@@ -28,6 +28,7 @@
 #cmakedefine HAVE_PNG                 1
 #cmakedefine HAVE_SNDFILE_1_0_12      1
 #cmakedefine HAVE_SNDFILE             1
+#cmakedefine HAVE_SNDIO               1
 #cmakedefine HAVE_STDINT_H            1
 #cmakedefine HAVE_STRCASECMP          1
 #cmakedefine HAVE_STRINGS_H           1

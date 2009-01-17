@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(SoX, 14.2.0, sox-devel@lists.sourceforge.net)
+AC_INIT(SoX, 14.3.0, sox-devel@lists.sourceforge.net)
 
 m4_ifdef([AC_CONFIG_MACRO_DIR], [AC_CONFIG_MACRO_DIR([m4])])
 
@@ -250,6 +250,23 @@ if test "$enable_oss" = yes; then
 fi
 AM_CONDITIONAL(HAVE_OSS, test x$enable_oss = xyes)
 AC_SUBST(OSS_LIBS)
+
+dnl Check for sndio
+AC_MSG_CHECKING([whether to try building sndio sound driver])
+AC_ARG_ENABLE(sndio,
+    AC_HELP_STRING([--disable-sndio], [Don't build sndio sound driver.]),,enable_sndio=yes)
+AC_MSG_RESULT($enable_sndio)
+if test "$enable_sndio" = "yes"; then
+    AC_CHECK_HEADERS(sndio.h,
+        [AC_CHECK_LIB(sndio, sio_open, SNDIO_LIBS="$SNDIO_LIBS -lsndio")],
+        enable_sndio=no)
+fi
+if test "$enable_sndio" = yes; then
+   AC_DEFINE(HAVE_SNDIO, 1, [Define to 1 if you have sndio.])
+   audio_driver_found=yes
+fi
+AM_CONDITIONAL(HAVE_SNDIO, test x$enable_sndio = xyes)
+AC_SUBST(SNDIO_LIBS)
 
 dnl Check for Sun audio
 AC_MSG_CHECKING([whether to try building Sun audio driver])
@@ -635,6 +652,7 @@ echo "GOMP support...................... $enable_gomp"
 echo "ALSA driver....................... $enable_alsa"
 echo "libao driver...................... $enable_libao"
 echo "OSS driver........................ $enable_oss"
+echo "sndio driver...................... $enable_sndio"
 echo "SUN audio driver.................. $enable_sun_audio"
 echo "CoreAudio driver.................. $enable_coreaudio"
 echo "Pulse Audio driver................ $enable_pulseaudio"

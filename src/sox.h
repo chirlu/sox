@@ -32,7 +32,7 @@
  * Please do not count on these numbers being in sync.
  */
 #define SOX_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
-#define SOX_LIB_VERSION_CODE SOX_LIB_VERSION(14, 2, 0)
+#define SOX_LIB_VERSION_CODE SOX_LIB_VERSION(14, 3, 0)
 
 const char *sox_version(void);   /* Returns version number */
 

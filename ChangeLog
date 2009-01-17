@@ -4,7 +4,8 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma, followed by a list of prior authors and features.
 
-sox-14.x.x	2009-xx-xx
+
+sox-14.3.0	2009-xx-xx
 ----------
 
 Previously deprecated features that have been removed in this release:
@@ -19,6 +20,13 @@ Previously deprecated features that have been removed in this release:
 
   * But interface retained as an alias for `rate'.
 
+Newly deprecated features (to be removed in future):
+
+  Deprec-  Feature    [O(ption)]                           Removal
+  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
+  -------  ----------------------  ----------------------  -------
+  14.3.0   F flac: libFLAC 1.1.2,3 libFLAC > 1.1.3         14.3.0 + 6 months
+
 Previously deprecated features (to be removed in future):
 
   Deprec-  Feature    [O(ption)]                           Removal
@@ -26,9 +34,9 @@ Previously deprecated features (to be removed in future):
   -------  ----------------------  ----------------------  -------
   14.2.0   E key alias             pitch                   2009-05-29
   14.2.0   E pan                   ~= mixer/remix          2009-05-29
-  14.1.0   E resample alias        rate                    14.x.x + 6 months
-  14.1.0   E polyphase alias       rate                    14.x.x + 6 months
-  14.1.0   E rabbit alias          rate                    14.x.x + 6 months
+  14.1.0   E resample alias        rate                    14.3.0 + 1 year
+  14.1.0   E polyphase alias       rate                    14.3.0 + 1 year
+  14.1.0   E rabbit alias          rate                    14.3.0 + 1 year
   14.1.0   F wve (native)          wve (libsndfile)        2009-07-29
   14.1.0   Behaviour whereby       soxi                    2009-07-29
            sox -V file(s) -n
@@ -41,12 +49,8 @@ LibSoX interface changes:
 
 File formats:
 
-  o 24-bit support for ALSA driver.  (robs)
-  o Warn if ALSA under/overrun.  (robs)
   o Slight improvement to A-law/u-law conversion accuracy: round LSB
     instead of truncating.  (robs)
-  o New `--ignore-length' option to ignore length in input file
-    header (for simple encodings); instead, read to end of file.  (robs)
   o Fix [2028181] w64 float format incompatibility.  (Tim Munro)
   o Fix reading AIFF files with pad bytes in COMT chunks. (Joe Holt)
   o Fix AIFF file length bug to stop reading trash data on files that
@@ -60,6 +64,7 @@ Effects:
   o New `overdrive' effect.  (robs)
   o New `pluck' and `tpdf' types for `synth'.  (robs)
   o Can now set common parameters for multiple `synth' channels.  (robs)
+  o Fix [2487589] `dither' clipping detection & handling.  (robs)
   o Fix `repeat' sometimes stopping repeating too soon.  (robs)
   o Fix `repeat' sometimes repeating wrong audio segments.  (robs)
   o Fix [2332343] 'silence' segfault with certain lengths. (cbagwell)
@@ -70,10 +75,15 @@ Effects:
 
 Other new features:
 
-  o New bitrate, time in seconds, & total options for soxi.  (robs)
+  o New native OpenBSD audio handler for play/recording.  (Alexandre Ratchov)
+  o 24-bit support for ALSA handler.  (robs)
+  o Warn if ALSA under/overrun.  (robs)
+  o New `--ignore-length' option to ignore length in input file
+    header (for simple encodings); instead, read to end of file.  (robs)
   o Added ability to create shared DLL's on cygwin (cbagwell)
   o Grouped files, e.g. play -r 6k "*.vox" plays all at 6k.  (robs)
   o New `--temp DIRECTORY' option.  (robs)
+  o New bitrate, time in seconds, & total options for soxi.  (robs)
 
 Other bug fixes:
 
