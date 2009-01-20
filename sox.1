@@ -714,8 +714,8 @@ For the first given effect that supports the selected plotting program,
 SoX will output commands to plot the effect's transfer function, and
 then exit without actually processing any audio.  E.g.
 .EX
-	sox --plot octave input-file -n highpass 1320 > plot.m
-	octave plot.m
+	sox --plot octave input-file -n highpass 1320 > highpass.plt
+	octave highpass.plt
 .EE
 .TP
 \fB\-q\fR, \fB\-\-no\-show\-progress\fR
@@ -1003,7 +1003,7 @@ contains a specific endianness identifier, or for an output file that
 is actually an audio device.
 .SP
 .B N.B.
-Unlike normal format characteristics, the endianness (byte, nibble, &
+Unlike other format characteristics, the endianness (byte, nibble, &
 bit ordering) of the input file is not automatically used for the output
 file; so, for example, when the following is run on a little-endian system:
 .EX
@@ -1435,7 +1435,7 @@ The \-90 (dB) for the initial volume will work fine for a clip that starts
 with near silence, and the delay of 0\*d2 (seconds) has the effect of causing
 the compander to react a bit more quickly to sudden volume changes.
 .SP
-In this example, compand is being used as a noise-gate for when the
+In the following example, compand is being used as a noise-gate for when the
 noise is at a lower level than the signal:
 .EX
   play infile compand .1,.2 -inf,-50.1,-inf,-50,-50 0 -90 .1
