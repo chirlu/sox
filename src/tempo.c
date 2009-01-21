@@ -272,7 +272,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   if (*isamp && odone < *osamp) {
     float * t = tempo_input(p->tempo, NULL, *isamp / effp->in_signal.channels);
     for (i = *isamp; i; --i)
-      *t++ = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++, effp->clips);
+      *t++ = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++);
     tempo_process(p->tempo);
   }
   else *isamp = 0;

@@ -212,6 +212,9 @@ static int start(sox_effect_t * effp)
     &p->chan[i].reverb, effp->in_signal.rate, p->wet_gain_dB, p->room_scale,
     p->reverberance, p->hf_damping, p->pre_delay_ms, p->stereo_depth,
     effp->global_info->global_info->bufsiz / p->ochannels, p->chan[i].wet);
+
+  if (effp->in_signal.mult)
+    *effp->in_signal.mult /= !p->wet_only + 2 * dB_to_linear(max(0,p->wet_gain_dB));
   return SOX_SUCCESS;
 }
 
@@ -226,7 +229,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   for (c = 0; c < p->ichannels; ++c)
     p->chan[c].dry = fifo_write(&p->chan[c].reverb.input_fifo, len, 0);
   for (i = 0; i < len; ++i) for (c = 0; c < p->ichannels; ++c)
-    p->chan[c].dry[i] = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++, effp->clips);
+    p->chan[c].dry[i] = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++);
   for (c = 0; c < p->ichannels; ++c)
     reverb_process(&p->chan[c].reverb, len);
   if (p->ichannels == 2) for (i = 0; i < len; ++i) for (w = 0; w < 2; ++w) {

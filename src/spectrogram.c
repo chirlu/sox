@@ -186,21 +186,20 @@ static int flow(sox_effect_t * effp,
     size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  size_t len = min(*isamp, *osamp), dummy = 0; /* No need to clip count */
+  size_t len = min(*isamp, *osamp);
   int i;
 
   memcpy(obuf, ibuf, len * sizeof(*obuf)); /* Pass on audio unaffected */
   *isamp = *osamp = len;
 
   while (sox_true) {
-    SOX_SAMPLE_LOCALS;
     if (p->read == p->step_size) {
       memmove(p->buf, p->buf + p->step_size,
           (p->dft_size - p->step_size) * sizeof(*p->buf));
       p->read = 0;
     }
     for (; len && p->read < p->step_size; --len, ++p->read, --p->end)
-      p->buf[p->dft_size - p->step_size + p->read] = FROM_SOX(*ibuf++, dummy);
+      p->buf[p->dft_size - p->step_size + p->read] = FROM_SOX(*ibuf++);
     if (p->read != p->step_size)
       break;
 
@@ -494,7 +493,7 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_spectrogram_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "spectrogram", 0, 0, getopts, start, flow, drain, stop, 0, sizeof(priv_t)};
+    "spectrogram", 0, SOX_EFF_MODIFY, getopts, start, flow, drain, stop, 0, sizeof(priv_t)};
   static char const * lines[] = {
     "[options]",
     "\t-x num\tX-axis pixels/second, default 100",

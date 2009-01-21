@@ -18,11 +18,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#define LSX_EFF_ALIAS
 #include "sox_i.h"
 #include <string.h>
-
-#undef lsx_fail
-#define lsx_fail sox_globals.subsystem=effp->handler.name,lsx_fail
 
 int lsx_usage(sox_effect_t * effp)
 {

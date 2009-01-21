@@ -141,8 +141,7 @@ static int sox_stat_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
 
     if (stat->fft) {
       for (x = 0; x < len; x++) {
-        SOX_SAMPLE_LOCALS;
-        stat->re_in[stat->fft_offset++] = SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[x], effp->clips);
+        stat->re_in[stat->fft_offset++] = SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[x]);
 
         if (stat->fft_offset >= stat->fft_size) {
           stat->fft_offset = 0;
@@ -321,7 +320,7 @@ static int sox_stat_stop(sox_effect_t * effp)
 static sox_effect_handler_t sox_stat_effect = {
   "stat",
   "[ -s N ] [ -rms ] [-freq] [ -v ] [ -d ]",
-  SOX_EFF_MCHAN,
+  SOX_EFF_MCHAN | SOX_EFF_MODIFY,
   sox_stat_getopts,
   sox_stat_start,
   sox_stat_flow,

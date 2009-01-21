@@ -275,27 +275,25 @@ static int aboveThreshold(sox_effect_t * effp, sox_sample_t value, double thresh
 {
     double ratio;
     int rc;
-    sox_sample_t dummy_clipped_count = 0;
 
     /* When scaling low bit data, noise values got scaled way up */
     /* Only consider the original bits when looking for silence */
     switch(effp->in_signal.precision)
     {
-        SOX_SAMPLE_LOCALS;
         case 8:
-            value = SOX_SAMPLE_TO_SIGNED_8BIT(value, dummy_clipped_count);
+            value = SOX_SAMPLE_TO_SIGNED_8BIT(value);
             ratio = (double)abs(value) / (double)SOX_INT8_MAX;
             break;
         case 16:
-            value = SOX_SAMPLE_TO_SIGNED_16BIT(value, dummy_clipped_count);
+            value = SOX_SAMPLE_TO_SIGNED_16BIT(value);
             ratio = (double)abs(value) / (double)SOX_INT16_MAX;
             break;
         case 24:
-            value = SOX_SAMPLE_TO_SIGNED_24BIT(value, dummy_clipped_count);
+            value = SOX_SAMPLE_TO_SIGNED_24BIT(value);
             ratio = (double)abs(value) / (double)SOX_INT24_MAX;
             break;
         case 32:
-            value = SOX_SAMPLE_TO_SIGNED_32BIT(value,);
+            value = SOX_SAMPLE_TO_SIGNED_32BIT(value);
             ratio = (double)abs(value) / (double)SOX_INT32_MAX;
             break;
         default:

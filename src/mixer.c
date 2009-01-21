@@ -485,6 +485,19 @@ static int start(sox_effect_t * effp)
          }
      }
 
+     if (effp->in_signal.mult) {
+       double max_sum = 0;
+
+       for (j = 0; j < (int)effp->out_signal.channels; ++j) {
+         double sum = 0;
+         for (i = 0; i < (int)effp->in_signal.channels; ++i)
+           sum += fabs(mixer->sources[mixer->mix == MIX_CENTER? 0 : i][j]);
+         max_sum = max(max_sum, sum);
+       }
+       if (max_sum > 1)
+         *effp->in_signal.mult /= max_sum;
+     }
+
      if (effp->in_signal.channels != effp->out_signal.channels)
        return SOX_SUCCESS;
 

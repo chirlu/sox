@@ -173,7 +173,7 @@ static sox_effect_handler_t sox_dcshift_effect = {
    "shift [ limitergain ]\n"
    "       The peak limiter has a gain much less than 1.0 (ie 0.05 or 0.02) which is only\n"
    "       used on peaks to prevent clipping. (default is no limiter)",
-   SOX_EFF_MCHAN,
+   SOX_EFF_MCHAN | SOX_EFF_GAIN,
    sox_dcshift_getopts,
    sox_dcshift_start,
    sox_dcshift_flow,

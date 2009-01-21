@@ -104,14 +104,14 @@ static size_t sox_datread(sox_format_t * ft, sox_sample_t *buf, size_t nsamp)
       /* Read a complete set of channels */
       sscanf(inpstr," %*s%n", &inpPtr);
       for (i=0; i<ft->signal.channels; i++) {
+        SOX_SAMPLE_LOCALS;
         retc = sscanf(&inpstr[inpPtr]," %lg%n", &sampval, &inpPtrInc);
         inpPtr += inpPtrInc;
         if (retc != 1) {
           lsx_fail_errno(ft,SOX_EOF,"Unable to read sample.");
           return 0;
         }
-        sampval *= SOX_SAMPLE_MAX;
-        *buf++ = SOX_ROUND_CLIP_COUNT(sampval, ft->clips);
+        *buf++ = SOX_FLOAT_64BIT_TO_SAMPLE(sampval, ft->clips);
         done++;
       }
     }
@@ -135,8 +135,7 @@ static size_t sox_datwrite(sox_format_t * ft, const sox_sample_t *buf, size_t ns
       sprintf(s," %15.8g ",dat->timevalue);
       lsx_writes(ft, s);
       for (i=0; i<ft->signal.channels; i++) {
-        SOX_SAMPLE_LOCALS;
-        sampval = SOX_SAMPLE_TO_FLOAT_64BIT(*buf++, ft->clips);
+        sampval = SOX_SAMPLE_TO_FLOAT_64BIT(*buf++);
         sprintf(s," %15.8g", sampval);
         lsx_writes(ft, s);
         done++;

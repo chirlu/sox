@@ -277,9 +277,8 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
   }
 
   for (i = 0; i < len; i++) {
-    SOX_SAMPLE_LOCALS;
     datum = *buf++;
-    p->data[p->pos++] = SOX_SAMPLE_TO_UNSIGNED_8BIT(datum, ft->clips);
+    p->data[p->pos++] = SOX_SAMPLE_TO_UNSIGNED_8BIT(datum);
   }
 
   return len;

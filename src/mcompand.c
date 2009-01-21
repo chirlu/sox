@@ -492,7 +492,7 @@ const sox_effect_handler_t *sox_mcompand_effect_fn(void)
     "  attack1,decay1[,attack2,decay2...]\n"
     "                 in-dB1,out-dB1[,in-dB2,out-dB2...]\n"
     "                [ gain [ initial-volume [ delay ] ] ]",
-    SOX_EFF_MCHAN,
+    SOX_EFF_MCHAN | SOX_EFF_GAIN,
     getopts, start, flow, drain, stop, kill, sizeof(priv_t)
   };
 

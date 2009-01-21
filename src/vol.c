@@ -178,28 +178,7 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_vol_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "vol", vol_usage, SOX_EFF_MCHAN, getopts, start, flow, 0, stop, 0, sizeof(priv_t)
+    "vol", vol_usage, SOX_EFF_MCHAN | SOX_EFF_GAIN, getopts, start, flow, 0, stop, 0, sizeof(priv_t)
   };
-  return &handler;
-}
-
-static int gain_getopts(sox_effect_t * effp, int argc, char * * argv)
-{
-  char * args[] = {0, 0, "dB"};
-
-  if (argc != 2)
-    return lsx_usage(effp);
-  args[0] = argv[0];
-  args[1] = argv[1];
-  return sox_vol_effect_fn()->getopts(effp, (int)array_length(args), args);
-}
-
-sox_effect_handler_t const * sox_gain_effect_fn(void)
-{
-  static sox_effect_handler_t handler;
-  handler = *sox_vol_effect_fn();
-  handler.name = "gain";
-  handler.usage = "dB-gain";
-  handler.getopts = gain_getopts;
   return &handler;
 }

@@ -82,15 +82,14 @@ int main(int argc, char * argv[])
   /* Read in and process blocks of audio for the selected period or until EOF: */
   for (blocks = 0; sox_read(in, buf, block_size) == block_size && blocks * block_period < period; ++blocks) {
     double left = 0, right = 0;
-    size_t i, clips = 0;
+    size_t i;
     static const char line[] = "===================================";
     int l, r;
 
     for (i = 0; i < block_size; ++i) {
-      SOX_SAMPLE_LOCALS;
       /* convert the sample from SoX's internal format to a `double' for
        * processing in this application: */
-      double sample = SOX_SAMPLE_TO_FLOAT_64BIT(buf[i], clips);
+      double sample = SOX_SAMPLE_TO_FLOAT_64BIT(buf[i]);
 
       /* The samples for each channel are interleaved; in this example
        * we allow only stereo audio, so the left channel audio can be found in

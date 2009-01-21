@@ -90,14 +90,6 @@ int lsx_check_read_params(sox_format_t * ft, unsigned channels,
   return SOX_EOF;
 }
 
-sox_sample_t lsx_sample_max(sox_encodinginfo_t const * encoding)
-{
-  unsigned precision = encoding->encoding == SOX_ENCODING_FLOAT?
-    SOX_SAMPLE_PRECISION : sox_precision(encoding->encoding, encoding->bits_per_sample);
-  unsigned shift = SOX_SAMPLE_PRECISION - min(precision, SOX_SAMPLE_PRECISION);
-  return (SOX_SAMPLE_MAX >> shift) << shift;
-}
-
 /* Read in a buffer of data of length len bytes.
  * Returns number of bytes read.
  */

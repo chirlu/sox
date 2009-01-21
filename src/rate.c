@@ -494,7 +494,7 @@ static int start(sox_effect_t * effp)
   if (effp->in_signal.rate == out_rate)
     return SOX_EFF_NULL;
 
-  if (effp->flow == 0 && effp->in_signal.mult)
+  if (effp->in_signal.mult)
     *effp->in_signal.mult *= .705; /* 1/(2/sinc(pi/3)-1); see De Soras 4.1.2 */
 
   effp->out_signal.channels = effp->in_signal.channels;
@@ -516,7 +516,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 
   if (*isamp && odone < *osamp) {
     sample_t * t = rate_input(&p->rate, NULL, *isamp);
-    for (i = *isamp; i; --i) *t++ = FROM_SOX(*ibuf++, effp->clips);
+    for (i = *isamp; i; --i) *t++ = FROM_SOX(*ibuf++);
     rate_process(&p->rate);
   }
   else *isamp = 0;

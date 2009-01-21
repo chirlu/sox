@@ -25,6 +25,7 @@ Newly deprecated features (to be removed in future):
   Deprec-  Feature    [O(ption)]                           Removal
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
   -------  ----------------------  ----------------------  -------
+  14.3.0   E norm -b, norm -i      gain -B, gain -en       14.3.0 + 1 year
   14.3.0   F flac: libFLAC 1.1.2,3 libFLAC > 1.1.3         14.3.0 + 6 months
 
 Previously deprecated features (to be removed in future):
@@ -59,11 +60,18 @@ File formats:
   o Fix [2404566] segfault when converting from MS ADPCM wav file.  (robs)
   o Fix slight FLAC seek inaccuracy e.g. when using `trim' effect.  (robs)
 
+Audio device drivers:
+
+  o New native OpenBSD audio handler for play/recording.  (Alexandre Ratchov)
+  o 24-bit support for ALSA handler.  (robs)
+  o Warn if ALSA under/overrun.  (robs)
+
 Effects:
 
   o New `overdrive' effect.  (robs)
   o New `pluck' and `tpdf' types for `synth'.  (robs)
   o Can now set common parameters for multiple `synth' channels.  (robs)
+  o Richer gain/normalise options.  (robs)
   o Fix [2487589] `dither' clipping detection & handling.  (robs)
   o Fix `repeat' sometimes stopping repeating too soon.  (robs)
   o Fix `repeat' sometimes repeating wrong audio segments.  (robs)
@@ -75,14 +83,13 @@ Effects:
 
 Other new features:
 
-  o New native OpenBSD audio handler for play/recording.  (Alexandre Ratchov)
-  o 24-bit support for ALSA handler.  (robs)
-  o Warn if ALSA under/overrun.  (robs)
+  o Added ability to create shared DLL's on cygwin (cbagwell)
+  o New `--guard' & `--norm' options; use temporary files to guard against
+    clipping for many, but not currently all, effects.  (robs)
   o New `--ignore-length' option to ignore length in input file
     header (for simple encodings); instead, read to end of file.  (robs)
-  o Added ability to create shared DLL's on cygwin (cbagwell)
-  o Grouped files, e.g. play -r 6k "*.vox" plays all at 6k.  (robs)
   o New `--temp DIRECTORY' option.  (robs)
+  o Grouped files, e.g. play -r 6k "*.vox" plays all at 6k.  (robs)
   o New bitrate, time in seconds, & total options for soxi.  (robs)
 
 Other bug fixes:

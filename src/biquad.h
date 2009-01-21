@@ -18,6 +18,7 @@
 #ifndef biquad_included
 #define biquad_included
 
+#define LSX_EFF_ALIAS
 #include "sox_i.h"
 
 typedef enum {
@@ -73,8 +74,5 @@ int lsx_biquad_getopts(sox_effect_t * effp, int n, char **argv,
 int lsx_biquad_start(sox_effect_t * effp);
 int lsx_biquad_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                         size_t *isamp, size_t *osamp);
-
-#undef lsx_fail
-#define lsx_fail sox_globals.subsystem=effp->handler.name,lsx_fail
 
 #endif

@@ -116,7 +116,7 @@ static int sox_noiseprof_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox
                     size_t *isamp, size_t *osamp)
 {
   priv_t * p = (priv_t *) effp->priv;
-  size_t samp = min(*isamp, *osamp), dummy = 0; /* No need to clip count */
+  size_t samp = min(*isamp, *osamp);
   size_t chans = effp->in_signal.channels;
   size_t i, j, n = min(samp / chans, WINDOWSIZE - p->bufdata);
 
@@ -125,11 +125,10 @@ static int sox_noiseprof_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox
 
   /* Collect data for every channel. */
   for (i = 0; i < chans; i ++) {
-    SOX_SAMPLE_LOCALS;
     chandata_t * chan = &(p->chandata[i]);
     for (j = 0; j < n; j ++)
       chan->window[j + p->bufdata] =
-        SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i + j * chans], dummy);
+        SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i + j * chans]);
     if (n + p->bufdata == WINDOWSIZE)
       collect_data(chan);
   }
@@ -208,7 +207,7 @@ static int sox_noiseprof_stop(sox_effect_t * effp)
 static sox_effect_handler_t sox_noiseprof_effect = {
   "noiseprof",
   "[profile-file]",
-  SOX_EFF_MCHAN,
+  SOX_EFF_MCHAN | SOX_EFF_MODIFY,
   sox_noiseprof_getopts,
   sox_noiseprof_start,
   sox_noiseprof_flow,

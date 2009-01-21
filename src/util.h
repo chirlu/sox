@@ -31,14 +31,22 @@
 
 #ifdef _MSC_VER
 #define __STDC__ 1
-#define S_IFMT   _S_IFMT
-#define S_IFREG  _S_IFREG
 #define O_BINARY _O_BINARY
+#define O_CREAT _O_CREAT
+#define O_RDWR _O_RDWR
+#define O_TRUNC _O_TRUNC
+#define S_IFMT _S_IFMT
+#define S_IFREG _S_IFREG
+#define S_IREAD _S_IREAD
+#define S_IWRITE _S_IWRITE
+#define fdopen _fdopen
 #define fstat _fstat
 #define ftime _ftime
 #define inline __inline
 #define isatty _isatty
+#define mktemp _mktemp
 #define off_t _off_t
+#define open _open
 #define popen _popen
 #define stat _stat
 #define strdup _strdup
@@ -91,6 +99,8 @@
 #ifndef M_SQRT2
 #define M_SQRT2  sqrt(2.)
 #endif
+
+#define sign(x) ((x) < 0? -1 : 1)
 
 /* Numerical Recipes in C, p. 284 */
 #define ranqd1(x) ((x) = 1664525L * (x) + 1013904223L) /* int32_t x */

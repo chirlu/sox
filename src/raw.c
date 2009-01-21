@@ -14,8 +14,8 @@ typedef uint16_t uint14_t;
 typedef uint16_t uint13_t;
 #define SOX_ULAW_BYTE_TO_SAMPLE(d,clips)   SOX_SIGNED_16BIT_TO_SAMPLE(sox_ulaw2linear16(d),clips)
 #define SOX_ALAW_BYTE_TO_SAMPLE(d,clips)   SOX_SIGNED_16BIT_TO_SAMPLE(sox_alaw2linear16(d),clips)
-#define SOX_SAMPLE_TO_ULAW_BYTE(d,c) sox_14linear2ulaw(SOX_SAMPLE_TO_UNSIGNED(14,d,c) - 0x2000)
-#define SOX_SAMPLE_TO_ALAW_BYTE(d,c) sox_13linear2alaw(SOX_SAMPLE_TO_UNSIGNED(13,d,c) - 0x1000)
+#define SOX_SAMPLE_TO_ULAW_BYTE(d) sox_14linear2ulaw(SOX_SAMPLE_TO_UNSIGNED(14,d) - 0x2000)
+#define SOX_SAMPLE_TO_ALAW_BYTE(d) sox_13linear2alaw(SOX_SAMPLE_TO_UNSIGNED(13,d) - 0x1000)
 
 int lsx_rawseek(sox_format_t * ft, uint64_t offset)
 {
@@ -95,11 +95,10 @@ READ_SAMPLES_FUNC(df, sizeof(double), su, double, double, SOX_FLOAT_64BIT_TO_SAM
   static size_t sox_write_ ## sign ## type ## _samples( \
       sox_format_t * ft, sox_sample_t const * buf, size_t len) \
   { \
-    SOX_SAMPLE_LOCALS; \
     size_t n, nwritten; \
     ctype *data = lsx_malloc(sizeof(ctype) * len); \
     for (n = 0; n < len; n++) \
-      data[n] = cast(buf[n], ft->clips); \
+      data[n] = cast(buf[n]); \
     nwritten = lsx_write_ ## type ## _buf(ft, (uctype *)data, len); \
     free(data); \
     return nwritten; \

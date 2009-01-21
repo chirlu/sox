@@ -1,9 +1,9 @@
 /* SoX - The Swiss Army Knife of Audio Manipulation.
  *
- * This is the main function for the command line sox program.
+ * This is the main function for the SoX command line programs.
  *
+ * Copyright 1998-2009 Chris Bagwell and SoX contributors
  * Copyright 1991 Lance Norskog And Sundry Contributors
- * Copyright 1998-2008 Chris Bagwell and SoX contributors
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -133,6 +133,7 @@ typedef struct {
   sox_signalinfo_t signal;
   sox_encodinginfo_t encoding;
   double volume;
+  sox_sample_t offset;
   double replay_gain;
   sox_oob_t oob;
   sox_bool no_glob;
@@ -197,8 +198,7 @@ static sox_bool single_threaded = sox_false;
 static struct termios original_termios;
 #endif
 
-static sox_bool stdin_is_a_tty, is_player;
-
+static sox_bool stdin_is_a_tty, is_player, is_guarded, do_guarded_norm;
 
 /* Cleanup atexit() function, hence always called. */
 static void cleanup(void)
@@ -214,7 +214,7 @@ static void cleanup(void)
   }
 
   if (file_count) {
-    if (ofile->ft) {                  
+    if (ofile->ft) {
       if (!success && ofile->ft->fp) {   /* If we failed part way through */
         struct stat st;                  /* writing a normal file, remove it. */
         fstat(fileno(ofile->ft->fp), &st);
@@ -405,13 +405,14 @@ static void progress_to_next_input_file(file_t * f)
     display_file_info(f->ft, f, sox_false);
   if (f->volume == HUGE_VAL)
     f->volume = 1;
+  if (f->encoding.half_bit && f->ft->signal.precision < 32)
+    f->offset = 1 << (31 - f->ft->signal.precision);
   if (f->replay_gain != HUGE_VAL)
     f->volume *= pow(10.0, f->replay_gain / 20);
   f->ft->sox_errno = errno = 0;
 }
 
 /* Read up to max `wide' samples.  A wide sample contains one sample per channel
-            printf("effect %d obeg = %d oend = %d\n", e, effects_chain->effects[e]->obeg, effects_chain->effects[e]->oend);
  * from the input audio. */
 static size_t sox_read_wide(sox_format_t * ft, sox_sample_t * buf, size_t max)
 {
@@ -427,11 +428,12 @@ static void balance_input(sox_sample_t * buf, size_t ws, file_t * f)
 {
   size_t s = ws * f->ft->signal.channels;
 
-  if (f->volume != 1)
-    while (s--) {
-      double d = f->volume * *buf;
-      *buf++ = SOX_ROUND_CLIP_COUNT(d, f->volume_clips);
-    }
+  if (f->volume == 1 && f->offset !=0 ) while (s--)
+    *buf++ -= f->offset;
+  else if (f->volume != 1 || f->offset !=0 ) while (s--) {
+    double d = f->volume * (*buf - f->offset);
+    *buf++ = SOX_ROUND_CLIP_COUNT(d, f->volume_clips);
+  }
 }
 
 /* The input combiner: contains one sample buffer per input file, but only
@@ -557,12 +559,24 @@ static sox_effect_handler_t const * input_combiner_effect_fn(void)
   return &handler;
 }
 
+static int ostart(sox_effect_t *effp)
+{
+  (void)effp;
+  if (effp->out_encoding->half_bit && effp->out_signal.precision < 32)
+    ofile->offset = 1 << (31 - ofile->ft->signal.precision);
+  return SOX_SUCCESS;
+}
+
 static int output_flow(sox_effect_t *effp, sox_sample_t const * ibuf,
     sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
+  sox_sample_t const * buf;
   size_t len;
 
   (void)effp, (void)obuf;
+  if (ofile->offset != 0 ) for (buf = ibuf, len = *isamp; len; --len, ++buf)
+    *(sox_sample_t *)buf = *buf >= SOX_SAMPLE_MAX - ofile->offset?
+      SOX_SAMPLE_MAX : *buf + ofile->offset;
   if (show_progress) for (len = 0; len < *isamp; len += effp->in_signal.channels) {
     omax[0] = max(omax[0], ibuf[len]);
     omin[0] = min(omin[0], ibuf[len]);
@@ -591,26 +605,49 @@ static int output_flow(sox_effect_t *effp, sox_sample_t const * ibuf,
 static sox_effect_handler_t const * output_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "output", 0, SOX_EFF_MCHAN, NULL, NULL, output_flow, NULL, NULL, NULL, 0
+    "output", 0, SOX_EFF_MCHAN, NULL, ostart, output_flow, NULL, NULL, NULL, 0
   };
   return &handler;
 }
 
-static void add_effect(sox_effects_chain_t *chain, char const *name, 
-                       int argc, char *argv[], sox_signalinfo_t *signal)
+static void auto_effect(sox_effects_chain_t *, char const *, int, char **,
+    sox_signalinfo_t *, int *);
+
+static int add_effect(sox_effects_chain_t * chain, sox_effect_t * effp,
+    sox_signalinfo_t * in, sox_signalinfo_t const * out, int * guard) {
+  int no_guard = -1;
+  switch (*guard) {
+    case 0: if (!(effp->handler.flags & SOX_EFF_GAIN)) {
+      char * arg = "-h";
+      auto_effect(chain, "gain", 1, &arg, in, &no_guard);
+      ++*guard;
+    }
+    break;
+    case 1: if (effp->handler.flags & SOX_EFF_GAIN) {
+      char * arg = "-r";
+      auto_effect(chain, "gain", 1, &arg, in, &no_guard);
+      --*guard;
+    }
+    break;
+    case 2: if (!(effp->handler.flags & SOX_EFF_MODIFY)) {
+      lsx_fail("effects that modify audio must not follow dither");
+      exit(1);
+    }
+  }
+  return sox_add_effect(chain, effp, in, out);
+}
+
+static void auto_effect(sox_effects_chain_t *chain, char const *name, int argc,
+    char *argv[], sox_signalinfo_t *signal, int * guard)
 {
   sox_effect_t * effp;
 
   effp = sox_create_effect(sox_find_effect(name)); /* Should always succeed. */
 
-  if (effp->handler.flags & SOX_EFF_DEPRECATED)
-    lsx_warn("effect `%s' is deprecated; see sox(1) for an alternative", 
-             effp->handler.name);
-
   if (sox_effect_options(effp, argc, argv) == SOX_EOF)
     exit(1); /* The failing effect should have displayed an error message */
-  
-  if (sox_add_effect(chain, effp, signal, &ofile->ft->signal) != SOX_SUCCESS)
+
+  if (add_effect(chain, effp, signal, &ofile->ft->signal, guard) != SOX_SUCCESS)
     exit(2); /* The effects chain should have displayed an error message */
 }
 
@@ -621,7 +658,7 @@ static void init_eff_chains(void)
   nuser_effects[0] = 0;
 } /* init_eff_chains */
 
-/* add_eff_chain() - NOTE: this only adds memory for one 
+/* add_eff_chain() - NOTE: this only adds memory for one
  * additional effects chain beyond value of eff_chain_count.  It
  * does not unconditionally increase size of effects chain.
  */
@@ -639,9 +676,9 @@ static void delete_eff_chains(void)
   unsigned j;
   int i, k;
 
-  for (i = 0; i < eff_chain_count; i++) 
+  for (i = 0; i < eff_chain_count; i++)
   {
-    for (j = 0; j < nuser_effects[i]; j++) 
+    for (j = 0; j < nuser_effects[i]; j++)
     {
       if (user_effargs[i][j].name)
         free(user_effargs[i][j].name);
@@ -665,7 +702,7 @@ static void delete_eff_chains(void)
 
 static sox_bool is_pseudo_effect(char *s)
 {
-  if (strcmp("newfile", s) == 0 || 
+  if (strcmp("newfile", s) == 0 ||
       strcmp("restart", s) == 0 ||
       strcmp(":", s) == 0)
     return sox_true;
@@ -700,7 +737,7 @@ static void parse_effects(int argc, char **argv)
       optind++;
       continue;
     }
-    
+
     if (strcmp(argv[optind], "newfile") == 0)
     {
       /* Start a new effect chain for newfile if user doesn't
@@ -739,7 +776,7 @@ static void parse_effects(int argc, char **argv)
 
     optind += j; /* Skip past the effect arguments */
     nuser_effects[eff_chain_count]++;
-    if (newline_mode) 
+    if (newline_mode)
     {
       output_method = sox_multiple;
       eff_chain_count++;
@@ -865,9 +902,9 @@ static void read_user_effects(char *filename)
 /* Creates users effects and passes in user specified options.
  * This is done without putting anything into the effects chain
  * because an effect may set the effp->in_format and we may want
- * to copy that back into the input/combiner before opening and 
- * inserting it.  
- * Similarly, we may want to use effp->out_format to override the 
+ * to copy that back into the input/combiner before opening and
+ * inserting it.
+ * Similarly, we may want to use effp->out_format to override the
  * default values of output file before we open it.
  * To keep things simple, we create all user effects.  Later, when
  * we add them, some may already be in the chain and we will need to free
@@ -882,11 +919,11 @@ static void create_user_effects(void)
     effp = sox_create_effect(sox_find_effect(user_effargs[current_eff_chain][i].name));
 
     if (effp->handler.flags & SOX_EFF_DEPRECATED)
-      lsx_warn("effect `%s' is deprecated; see sox(1) for an alternative", 
+      lsx_warn("effect `%s' is deprecated; see sox(1) for an alternative",
           effp->handler.name);
 
     /* The failing effect should have displayed an error message */
-    if (sox_effect_options(effp, user_effargs[current_eff_chain][i].argc, 
+    if (sox_effect_options(effp, user_effargs[current_eff_chain][i].argc,
           user_effargs[current_eff_chain][i].argv) == SOX_EOF)
       exit(1);
 
@@ -905,38 +942,50 @@ static void create_user_effects(void)
 static void add_effects(sox_effects_chain_t *chain)
 {
   sox_signalinfo_t signal = combiner_signal;
+  int guard = is_guarded - 1;
   unsigned i;
   sox_effect_t * effp;
   char * rate_arg =
     is_player ? (rate_arg = getenv("PLAY_RATE_ARG")) ? rate_arg : "-l" : NULL;
 
   /* 1st `effect' in the chain is the input combiner_signal.
-   * add it only if its not there from a previous run.
-   */
-  if (chain->length == 0)
-  {
+   * add it only if its not there from a previous run.  */
+  if (chain->length == 0) {
     effp = sox_create_effect(input_combiner_effect_fn());
     sox_add_effect(chain, effp, &signal, &ofile->ft->signal);
   }
 
-  /* Add auto effects if appropriate; add user specified effects */
-  for (i = 0; i < nuser_effects[current_eff_chain]; i++) {
-    /* Effects chain should have displayed an error message */
-    if (sox_add_effect(chain, user_efftab[i], 
-                       &signal, &ofile->ft->signal) != SOX_SUCCESS)
-      exit(2);
-  }
+  /* Add user specified effects; stop before `dither' */
+  for (i = 0; i < nuser_effects[current_eff_chain] &&
+      strcmp(user_efftab[i]->handler.name, "dither"); i++)
+    if (add_effect(chain, user_efftab[i], &signal, &ofile->ft->signal,
+          &guard) != SOX_SUCCESS)
+      exit(2); /* Effects chain should have displayed an error message */
 
   /* Add auto effects if still needed at this point */
-  if (signal.rate != ofile->ft->signal.rate)
-  {
-    add_effect(chain, "rate", rate_arg != NULL, &rate_arg, &signal); /* Must be up-sampling */
-  }
+  if (signal.channels < ofile->ft->signal.channels &&
+      signal.rate != ofile->ft->signal.rate)
+    auto_effect(chain, "rate", rate_arg != NULL, &rate_arg, &signal, &guard);
   if (signal.channels != ofile->ft->signal.channels)
-  {
-    add_effect(chain, "mixer", 0, NULL, &signal); /* Must be increasing channels */
+    auto_effect(chain, "mixer", 0, NULL, &signal, &guard);
+  if (signal.rate != ofile->ft->signal.rate)
+    auto_effect(chain, "rate", rate_arg != NULL, &rate_arg, &signal, &guard);
+
+  if (is_guarded && (do_guarded_norm || !(signal.mult && *signal.mult == 1))) {
+    char * arg = do_guarded_norm? "-nh" : guard? "-rh" : "-h";
+    int no_guard = -1;
+    auto_effect(chain, "gain", 1, &arg, &signal, &no_guard);
+    guard = 1;
   }
-    
+
+  /* Add user specified effects from `dither' onwards */
+  for (; i < nuser_effects[current_eff_chain]; i++, guard = 2) {
+    if (add_effect(chain, user_efftab[i], &signal, &ofile->ft->signal,
+          &guard) != SOX_SUCCESS)
+      exit(2); /* Effects chain should have displayed an error message */
+    chain->out_enc->half_bit = sox_false;
+  }
+
   if (!save_output_eff)
   {
     /* Last `effect' in the chain is the output file */
@@ -981,15 +1030,15 @@ static int advance_eff_chain(void)
     /* Effect chain stopped so advance to next effect chain but
      * quite if no more chains exist.
      */
-    else if (++current_eff_chain >= eff_chain_count) 
+    else if (++current_eff_chain >= eff_chain_count)
       return SOX_EOF;
 
-    while (nuser_effects[current_eff_chain] == 1 && 
+    while (nuser_effects[current_eff_chain] == 1 &&
            is_pseudo_effect(user_effargs[current_eff_chain][0].name))
     {
       if (strcmp("newfile", user_effargs[current_eff_chain][0].name) == 0)
       {
-        if (++current_eff_chain >= eff_chain_count) 
+        if (++current_eff_chain >= eff_chain_count)
           return SOX_EOF;
         reuse_output = sox_false;
       }
@@ -1167,7 +1216,7 @@ static int update_status(sox_bool all_done)
     int ch = getchar();
 
 #ifdef INTERACTIVE
-    if (files[current_input]->ft->handler.seek && 
+    if (files[current_input]->ft->handler.seek &&
         files[current_input]->ft->seekable)
     {
       if (ch == '>')
@@ -1408,7 +1457,7 @@ static void calculate_combiner_signal_parameters(void)
    */
   for (i = 0; i < input_count; i++) {
     unsigned j;
-    for (j =0; j < nuser_effects[current_eff_chain] && 
+    for (j =0; j < nuser_effects[current_eff_chain] &&
                !files[i]->ft->signal.channels; ++j)
       files[i]->ft->signal.channels = user_efftab[j]->in_signal.channels;
     /* For historical reasons, default to one channel if not specified. */
@@ -1520,7 +1569,7 @@ static void set_combiner_and_output_encoding_parameters(void)
   /* Determine the output file encoding attributes; set from user options
    * if given: */
   ofile->encoding = ofile_encoding_options;
- 
+
   /* Get unspecified output file encoding attributes from the input file and
    * set the output file to the resultant encoding if this is supported by the
    * output file type; if not, the output file handler should select an
@@ -1548,7 +1597,7 @@ static int process(void)
   open_output_file();
 
   if (!effects_chain)
-    effects_chain = sox_create_effects_chain(&combiner_encoding, 
+    effects_chain = sox_create_effects_chain(&combiner_encoding,
                                              &ofile->ft->encoding);
   add_effects(effects_chain);
 
@@ -1564,7 +1613,7 @@ static int process(void)
    *    effect chains.
    * For case #2, something else must decide when to stop processing.
    */
-  if ((input_eof && current_input < input_count) || 
+  if ((input_eof && current_input < input_count) ||
       (!output_eof && current_eff_chain < eff_chain_count))
     flow_status = SOX_SUCCESS;
 
@@ -1691,6 +1740,7 @@ static void usage(char const * message)
 "--combine concatenate    Concatenate multiple input files (default for sox, rec)",
 "--combine sequence       Sequence multiple input files (default for play)",
 "--effects-file FILENAME  File containing effects and options",
+"-G, --guard              Use temporary files to guard against clipping",
 "-h, --help               Display version number and usage information",
 "--help-effect NAME       Show usage of effect NAME, or NAME=all for all",
 "--help-format NAME       Show info on format NAME, or NAME=all for all",
@@ -1698,6 +1748,7 @@ static void usage(char const * message)
 "--interactive            Prompt to overwrite output file",
 "-m, --combine mix        Mix multiple input files (instead of concatenating)",
 "-M, --combine merge      Merge multiple input files (instead of concatenating)",
+"--norm                   Guard (see --guard) & normalise",
 "--plot gnuplot|octave    Generate script to plot response of filter effect",
 "-q, --no-show-progress   Run in quiet mode; opposite of -S",
 "--replay-gain track|album|off  Default: off (sox, rec), track (play)",
@@ -1728,6 +1779,7 @@ static void usage(char const * message)
 "-X|--reverse-bits        Encoded bit-order",
 "--endian little|big|swap Encoded byte-order; swap means opposite to default",
 "-L/-B/-x                 Short options for the above",
+"-0                       PCM encoding is 0 biased (offset by half a bit)",
 "-c|--channels CHANNELS   Number of channels of audio data; e.g. 2 = stereo",
 "-r|--rate RATE           Sample rate of audio",
 "-C|--compression FACTOR  Compression factor for output format",
@@ -1885,7 +1937,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
   free(text);
 }
 
-static char *getoptstr = "+ab:c:de:fghimnopqr:st:uv:xABC:LMNRSTUV::X12348";
+static char *getoptstr = "+ab:c:de:fghimnopqr:st:uv:xABC:GLMNRSTUV::X012348";
 
 static struct option long_options[] =
   {
@@ -1908,6 +1960,7 @@ static struct option long_options[] =
     {"temp"            , required_argument, NULL, 0},
     {"single-threaded" ,       no_argument, NULL, 0},
     {"ignore-length"   ,       no_argument, NULL, 0},
+    {"norm"            ,       no_argument, NULL, 0},
 
     {"bits"            , required_argument, NULL, 'b'},
     {"channels"        , required_argument, NULL, 'c'},
@@ -1924,6 +1977,7 @@ static struct option long_options[] =
     {"show-progress"   ,       no_argument, NULL, 'S'},
     {"type"            , required_argument, NULL, 't'},
     {"volume"          , required_argument, NULL, 'v'},
+    {"guard"           ,       no_argument, NULL, 'G'},
 
     {NULL, 0, NULL, 0}
   };
@@ -2056,57 +2110,25 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
         sox_globals.input_bufsiz = i;
         break;
 
-      case 7:
-        interactive = sox_true;
-        break;
-
-      case 8:
-        usage_effect(optarg);
-        break;
-
-      case 9:
-        usage_format(optarg);
-        break;
-
-      case 10:
-        f->no_glob = sox_true;
-        break;
-
+      case 7: interactive = sox_true; break;
+      case 8: usage_effect(optarg); break;
+      case 9: usage_format(optarg); break;
+      case 10: f->no_glob = sox_true; break;
       case 11:
         sox_effects_globals.plot = enum_option(option_index, plot_methods);
         break;
-
-      case 12:
-        replay_gain_mode = enum_option(option_index, rg_modes);
-        break;
-
-      case 13:
-        display_SoX_version(stdout);
-        exit(0);
-        break;
-
-      case 14:
-        break;
-
-      case 15:
-        effects_filename = strdup(optarg);
-        break;
-
-      case 16:
-        sox_globals.tmp_path = strdup(optarg);
-        break;
-
-      case 17:
-        single_threaded = sox_true;
-        break;
-
-      case 18:
-        f->signal.length = SOX_IGNORE_LENGTH;
-        break;
-
+      case 12: replay_gain_mode = enum_option(option_index, rg_modes); break;
+      case 13: display_SoX_version(stdout); exit(0); break;
+      case 14: break;
+      case 15: effects_filename = strdup(optarg); break;
+      case 16: sox_globals.tmp_path = strdup(optarg); break;
+      case 17: single_threaded = sox_true; break;
+      case 18: f->signal.length = SOX_IGNORE_LENGTH; break;
+      case 19: do_guarded_norm = is_guarded = sox_true; break;
       }
       break;
 
+    case 'G': is_guarded = sox_true; break;
     case 'm': combine_method = sox_mix; break;
     case 'M': combine_method = sox_merge; break;
     case 'T': combine_method = sox_multiply; break;
@@ -2119,7 +2141,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       return c;
       break;
 
-    case 'h': 
+    case 'h':
       usage(NULL);
       break;
 
@@ -2143,6 +2165,8 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       f->signal.rate *= k == 'k'? 1000. : 1.;
       break;
     }
+
+    case '0': f->encoding.half_bit = sox_true; break;
 
     case 'v':
       if (sscanf(optarg, "%lf %c", &f->volume, &dummy) != 1) {
@@ -2444,7 +2468,7 @@ static int soxi(int argc, char * const * argv)
         }
         sox_globals.verbosity = (unsigned)i;
       }
-    } 
+    }
     else if (opt == 'T')
       do_total = sox_true;
     else type = 1 + (strchr(opts, opt) - opts);
@@ -2512,12 +2536,6 @@ static sox_bool cmp_comment_text(char const * c1, char const * c2)
   return c1 && c2 && !strcasecmp(c1, c2);
 }
 
-static int strends(char const * str, char const * end)
-{
-  size_t str_len = strlen(str), end_len = strlen(end);
-  return str_len >= end_len && !strcmp(str + str_len - end_len, end);
-}
-
 #ifdef __CYGWIN__
 static char * check_dir(char * name)
 {
@@ -2534,11 +2552,11 @@ int main(int argc, char **argv)
   myname = argv[0];
   sox_globals.output_message_handler = output_message;
 
-  if (strends(myname, "play"))
+  if (lsx_strends(myname, "play"))
     sox_mode = sox_play;
-  else if (strends(myname, "rec"))
+  else if (lsx_strends(myname, "rec"))
     sox_mode = sox_rec;
-  else if (strends(myname, "soxi"))
+  else if (lsx_strends(myname, "soxi"))
     sox_mode = sox_soxi;
 
   if (sox_init() != SOX_SUCCESS)
@@ -2686,7 +2704,7 @@ int main(int argc, char **argv)
   }
 
   /* Not the best way for users to do this; now deprecated in favour of soxi. */
-  if (!show_progress && !nuser_effects[current_eff_chain] && 
+  if (!show_progress && !nuser_effects[current_eff_chain] &&
       ofile->filetype && !strcmp(ofile->filetype, "null")) {
     for (i = 0; i < input_count; i++)
       report_file_info(files[i]);
@@ -2703,7 +2721,7 @@ int main(int argc, char **argv)
 
   /* If user specified an effects filename then use that file
    * to load user effects.  Free any previously specified options
-   * from the command line.  
+   * from the command line.
    */
   if (effects_filename)
   {

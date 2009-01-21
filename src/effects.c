@@ -15,6 +15,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#define LSX_EFF_ALIAS
 #include "sox_i.h"
 #include "getopt.h"
 #include <assert.h>
@@ -22,12 +23,6 @@
 #ifdef HAVE_STRINGS_H
   #include <strings.h>
 #endif
-
-
-#undef lsx_fail
-#undef lsx_report
-#define lsx_fail sox_globals.subsystem=effp->handler.name,lsx_fail
-#define lsx_report sox_globals.subsystem=effp->handler.name,lsx_report
 
 #define DEBUG_EFFECTS_CHAIN 0
 
@@ -99,7 +94,7 @@ int sox_effect_options(sox_effect_t *effp, int argc, char * const argv[])
 /* Effects chain: */
 
 sox_effects_chain_t * sox_create_effects_chain(
-    sox_encodinginfo_t const * in_enc, sox_encodinginfo_t const * out_enc)
+    sox_encodinginfo_t const * in_enc, sox_encodinginfo_t * out_enc)
 {
   sox_effects_chain_t * result = lsx_calloc(1, sizeof(sox_effects_chain_t));
   result->global_info = sox_effects_globals;
@@ -150,6 +145,8 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
     effp->out_signal.rate = in->rate;
   if (!(effp->handler.flags & SOX_EFF_PREC))
     effp->out_signal.precision = in->precision;
+  if (!(effp->handler.flags & SOX_EFF_GAIN))
+    effp->out_signal.mult = in->mult;
 
   effp->flows =
     (effp->handler.flags & SOX_EFF_MCHAN)? 1 : effp->in_signal.channels;
@@ -167,6 +164,8 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
     free(eff0.priv);
     return SOX_EOF;
   }
+  if (in->mult)
+    lsx_debug("mult=%g", *in->mult);
 
   *in = effp->out_signal;
 

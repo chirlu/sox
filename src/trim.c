@@ -172,7 +172,7 @@ void sox_trim_clear_start(sox_effect_t * effp)
 const sox_effect_handler_t *sox_trim_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "trim", "start [length]", SOX_EFF_MCHAN|SOX_EFF_LENGTH,
+    "trim", "start [length]", SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_MODIFY,
     sox_trim_getopts, sox_trim_start, sox_trim_flow,
     NULL, NULL, kill, sizeof(priv_t)
   };

@@ -333,7 +333,7 @@ static int sox_chorus_stop(sox_effect_t * effp)
 static sox_effect_handler_t sox_chorus_effect = {
   "chorus",
   "gain-in gain-out delay decay speed depth [ -s | -t ]",
-  SOX_EFF_LENGTH,
+  SOX_EFF_LENGTH | SOX_EFF_GAIN,
   sox_chorus_getopts,
   sox_chorus_start,
   sox_chorus_flow,

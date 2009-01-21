@@ -164,7 +164,7 @@ static int start(sox_effect_t * effp)
   priv_t * p = (priv_t *)effp->priv;
   double w0 = 2 * M_PI * p->fc / effp->in_signal.rate;
   double A  = exp(p->gain / 40 * log(10.));
-  double alpha = 0;
+  double alpha = 0, mult = dB_to_linear(max(p->gain, 0));
 
   if (w0 > M_PI) {
     lsx_fail("frequency must be less than half the sample-rate (Nyquist rate)");
@@ -362,8 +362,11 @@ static int start(sox_effect_t * effp)
       {double g = dB_to_linear(19.9 - linear_to_dB(
             (p->b0 + p->b1 + p->b2) / (p->a0 + p->a1 + p->a2)));
       p->b0 *= g; p->b1 *= g; p->b2 *= g;}
+      mult = dB_to_linear(19.9);
       break;
   }
+  if (effp->in_signal.mult)
+    *effp->in_signal.mult /= mult;
   return lsx_biquad_start(effp);
 }
 

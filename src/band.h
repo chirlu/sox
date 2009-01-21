@@ -40,7 +40,8 @@
 
   p->a2 = exp(-2 * M_PI * bw_Hz / effp->in_signal.rate);
   p->a1 = -4 * p->a2 / (1 + p->a2) * cos(2 * M_PI * p->fc / effp->in_signal.rate);
-  if (p->filter_type == filter_BPF_SPK_N)
-    p->b0 = sqrt(((1+p->a2) * (1+p->a2) - p->a1*p->a1) * (1-p->a2) / (1+p->a2));
-  else
-    p->b0 = sqrt(1 - p->a1 * p->a1 / (4 * p->a2)) * (1 - p->a2);
+  p->b0 = sqrt(1 - p->a1 * p->a1 / (4 * p->a2)) * (1 - p->a2);
+  if (p->filter_type == filter_BPF_SPK_N) {
+    mult = sqrt(((1+p->a2) * (1+p->a2) - p->a1*p->a1) * (1-p->a2) / (1+p->a2)) / p->b0;
+    p->b0 *= mult;
+  }

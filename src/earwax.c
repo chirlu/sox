@@ -62,6 +62,8 @@ static int start(sox_effect_t * effp)
     return SOX_EOF;
   }
   memset(p->tap, 0, NUMTAPS * sizeof(*p->tap)); /* zero tap memory */
+  if (effp->in_signal.mult)
+    *effp->in_signal.mult *= dB_to_linear(-4.4);
   return SOX_SUCCESS;
 }
 

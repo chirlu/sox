@@ -200,8 +200,6 @@ skip_check () {
 
 # Run tests
 
-${builddir}/sox_sample_test || exit 1
-
 skip_check caf flac mat4 mat5 paf w64 wv
 
 vectors=0

@@ -95,6 +95,19 @@ static int parse(sox_effect_t * effp, char * * argv, unsigned channels)
         p->out_specs[i].in_specs[j].multiplier = (p->mode == automatic || (p->mode == semi && !mul_spec)) ? mult : 1;
   }
   effp->out_signal.channels = p->num_out_channels;
+
+  if (effp->in_signal.mult) {
+    double max_sum = 0;
+
+    for (j = 0; j < effp->out_signal.channels; j++) {
+      double sum = 0;
+      for (i = 0; i < p->out_specs[j].num_in_channels; i++)
+        sum += fabs(p->out_specs[j].in_specs[i].multiplier);
+      max_sum = max(max_sum, sum);
+    }
+    if (max_sum > 1)
+      *effp->in_signal.mult /= max_sum;
+  }
   return SOX_SUCCESS;
 }
 

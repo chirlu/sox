@@ -28,7 +28,7 @@ endif
 #########################
 
 bin_PROGRAMS = sox
-EXTRA_PROGRAMS = example0 example1 example2 sox_sample_test
+EXTRA_PROGRAMS = example0 example1 example2
 lib_LTLIBRARIES = libsox.la
 include_HEADERS = sox.h
 nodist_include_HEADERS = soxstdint.h
@@ -37,7 +37,6 @@ sox_LDADD = libsox.la
 example0_SOURCES = example0.c
 example1_SOURCES = example1.c
 example2_SOURCES = example2.c
-sox_sample_test_SOURCES = sox_sample_test.c sox_sample_test.h
 
 ###############################################
 # libsox - Dynamic Libraries for File Formats #
@@ -274,7 +273,7 @@ libsox_la_SOURCES += \
 	dither_fir.h dither_iir.h earwax.c echo.c echos.c effects.c effects.h \
 	effects_i.c fade.c fft4g.c fft4g.h fifo.h filter.c flanger.c input.c \
 	ladspa.c loudness.c mcompand.c mcompand_xover.h mixer.c noiseprof.c \
-	noisered.c noisered.h normalise.c output.c pad.c pan.c phaser.c \
+	noisered.c noisered.h gain.c output.c pad.c pan.c phaser.c \
 	rate.c rate_filters.h rate_half_fir.h \
 	rate_poly_fir0.h rate_poly_fir.h remix.c repeat.c reverb.c \
 	reverse.c silence.c skeleff.c speed.c splice.c stat.c swap.c stretch.c \
@@ -400,7 +399,7 @@ EXTRA_DIST = monkey.au monkey.wav \
 	     CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake \
 	     tests.sh testall.sh tests.bat testall.bat test-comments
 
-all: sox$(EXEEXT) play rec soxi sox_sample_test$(EXEEXT) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT)
+all: sox$(EXEEXT) play rec soxi example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT)
 
 play rec: sox$(EXEEXT)
 	if test "$(PLAYRECLINKS)" = "yes"; then	\
@@ -430,7 +429,6 @@ uninstall-hook:
 
 clean-local:
 	$(RM) play rec soxi
-	$(RM) sox_sample_test$(EXEEXT)
 	$(RM) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT)
 
 distclean-local:

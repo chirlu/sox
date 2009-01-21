@@ -37,6 +37,12 @@ int strncasecmp(char const * s1, char const * s2, size_t n)
 }
 #endif
 
+sox_bool lsx_strends(char const * str, char const * end)
+{
+  size_t str_len = strlen(str), end_len = strlen(end);
+  return str_len >= end_len && !strcmp(str + str_len - end_len, end);
+}
+
 char const * lsx_find_file_extension(char const * pathname)
 {
   /* First, chop off any path portions of filename.  This

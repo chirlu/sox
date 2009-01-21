@@ -331,10 +331,9 @@ static size_t wavgsmwrite(sox_format_t * ft, const sox_sample_t *buf, size_t len
     ft->sox_errno = SOX_SUCCESS;
 
     while (done < len) {
-        SOX_SAMPLE_LOCALS;
         while ((wav->gsmindex < 160*2) && (done < len))
             wav->gsmsample[(wav->gsmindex)++] =
-                SOX_SAMPLE_TO_SIGNED_16BIT(buf[done++], ft->clips);
+                SOX_SAMPLE_TO_SIGNED_16BIT(buf[done++]);
 
         if (wav->gsmindex < 160*2)
             break;

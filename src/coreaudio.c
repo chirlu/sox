@@ -285,7 +285,7 @@ static size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, size_t ns
   p = &ac->buffer[ac->buf_offset];
 
   while (samp_left--)
-    *p++ = SOX_SAMPLE_TO_FLOAT_32BIT(*buf++, ft->clips);
+    *p++ = SOX_SAMPLE_TO_FLOAT_32BIT(*buf++);
 
   ac->buf_offset += len;
 

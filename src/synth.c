@@ -168,7 +168,6 @@ typedef struct {
   char *        length_str;
   channel_t *      getopts_channels;
   size_t    getopts_nchannels;
-  sox_sample_t  max;
   size_t    samples_done;
   size_t    samples_to_do;
   channel_t *      channels;
@@ -378,7 +377,6 @@ static int start(sox_effect_t * effp)
   priv_t * synth = (priv_t *) effp->priv;
   size_t i, j;
 
-  synth->max = lsx_sample_max(effp->out_encoding);
   synth->samples_done = 0;
 
   if (synth->length_str)
@@ -438,9 +436,6 @@ static int start(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-
-
-#define sign(d) ((d) < 0? -1. : 1.)
 #define elapsed_time_s synth->samples_done / effp->in_signal.rate
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * obuf,
@@ -607,11 +602,12 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
       synth_out = synth_out * (1 - fabs(chan->offset)) + chan->offset;
 
       switch (chan->combine) {
-        case synth_create: *obuf++ =  synth_out * synth->max; break;
-        case synth_mix   : *obuf++ = (synth_out * synth->max + synth_input) * 0.5; break;
-        case synth_amod  : *obuf++ = (synth_out + 1) * synth_input * 0.5; break;
-        case synth_fmod  : *obuf++ =  synth_out * synth_input; break;
+        case synth_create: synth_out *=  SOX_SAMPLE_MAX; break;
+        case synth_mix   : synth_out = (synth_out * SOX_SAMPLE_MAX + synth_input) * 0.5; break;
+        case synth_amod  : synth_out = (synth_out + 1) * synth_input * 0.5; break;
+        case synth_fmod  : synth_out *=  synth_input; break;
       }
+      *obuf++ = floor(synth_out + .5);
     }
     if (++synth->samples_done == synth->samples_to_do)
       result = SOX_EOF;
@@ -649,7 +645,7 @@ const sox_effect_handler_t *sox_synth_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "synth", "[len] {type [combine] [[%]freq[k][:|+|/|-[%]freq2[k]] [off [ph [p1 [p2 [p3]]]]]]}",
-    SOX_EFF_MCHAN | SOX_EFF_PREC |SOX_EFF_LENGTH,
+    SOX_EFF_MCHAN | SOX_EFF_PREC |SOX_EFF_LENGTH | SOX_EFF_GAIN,
     getopts, start, flow, 0, stop, kill, sizeof(priv_t)
   };
   return &handler;

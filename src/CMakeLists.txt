@@ -28,16 +28,16 @@ add_custom_command(
 
 # Format with: !xargs echo|tr ' ' '\n'|sort|column|expand|sed 's/^/  /'
 set(effects_srcs
-  bend            dither          lowfir          phaser          stat
-  biquad          earwax          mcompand        rate            stretch
-  biquads         echo            mixer           remix           swap
-  chorus          echos           noiseprof       repeat          synth
-  compand         fade            noisered        reverb          tempo
-  compandt        fft4g           normalise       reverse         tremolo
+  bend            dither          loudness        phaser          stat
+  biquad          earwax          lowfir          rate            stretch
+  biquads         echo            mcompand        remix           swap
+  chorus          echos           mixer           repeat          synth
+  compand         fade            noiseprof       reverb          tempo
+  compandt        fft4g           noisered        reverse         tremolo
   contrast        filter          output          silence         trim
   dcshift         flanger         overdrive       skeleff         vol
-  delay           input           pad             speed
-  dft_filter      loudness        pan             splice
+  delay           gain            pad             speed
+  dft_filter      input           pan             splice
 )
 set(formats_srcs
   8svx            dat             ima-fmt         s3-fmt          u3-fmt
@@ -62,7 +62,6 @@ add_library(lib${PROJECT_NAME}
 )
 add_executable(${PROJECT_NAME} ${PROJECT_NAME}.c)
 target_link_libraries(${PROJECT_NAME} lib${PROJECT_NAME} lpc10 ${optional_libs})
-add_executable(sox_sample_test sox_sample_test.c)
 add_executable(example0 example0.c)
 target_link_libraries(example0 lib${PROJECT_NAME} lpc10 ${optional_libs})
 add_executable(example1 example1.c)

@@ -1,6 +1,6 @@
 /* libSoX Library Public Interface
  *
- * Copyright 1999-2008 Chris Bagwell and SoX Contributors.
+ * Copyright 1999-2009 Chris Bagwell and SoX Contributors.
  *
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained.
@@ -12,6 +12,7 @@
 #define SOX_H
 
 #include <limits.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stddef.h> /* Ensure NULL etc. are available throughout SoX */
 #include <stdio.h>
@@ -75,40 +76,32 @@ typedef int32_t sox_sample_t;
 
 /*                Conversions: Linear PCM <--> sox_sample_t
  *
- *   I/O       I/O     sox_sample_t Clips?    I/O     sox_sample_t Clips?
- *  Format   Minimum     Minimum     I O    Maximum     Maximum     I O
- *  ------  ---------  ------------ -- --   --------  ------------ -- --
- *  Float      -1     -1.00000000047 y y       1           1        y n
- *  Int8      -128        -128       n n      127     127.9999999   n y
- *  Int16    -32768      -32768      n n     32767    32767.99998   n y
- *  Int24   -8388608    -8388608     n n    8388607   8388607.996   n y
- *  Int32  -2147483648 -2147483648   n n   2147483647 2147483647    n n
+ *   I/O       I/O     sox_sample_t    I/O     sox_sample_t
+ *  Format   Minimum     Minimum     Maximum     Maximum
+ *  ------  ---------  ------------  --------  ------------
+ *  Float      -1          -1           1       1 - 5e-10
+ *  Int8      -128        -127.5       127     127.4999999
+ *  Int16    -32768      -32767.5     32767    32767.49998
+ *  Int24   -8388608    -8388607.5   8388607   8388607.496
+ *  Int32  -2147483648 -2147483648  2147483647 2147483647
  *
  * Conversions are as accurate as possible (with rounding).
  *
  * Rounding: halves toward +inf, all others to nearest integer.
  *
- * Clips? shows whether on not there is the possibility of a conversion
- * clipping to the minimum or maximum value when inputing from or outputing
- * to a given type.
+ * The only possibility of clipping on conversion is when inputting Float.
  *
  * Unsigned integers are converted to and from signed integers by flipping
  * the upper-most bit then treating them as signed integers.
  */
 
-#define SOX_SAMPLE_LOCALS sox_sample_t sox_macro_temp_sample UNUSED; \
-  double sox_macro_temp_double UNUSED
+#define SOX_SAMPLE_LOCALS double sox_macro_temp_double UNUSED
 
 #define SOX_SAMPLE_NEG SOX_INT_MIN(32)
-#define SOX_SAMPLE_TO_UNSIGNED(bits,d,clips) \
-  (uint##bits##_t)( \
-    sox_macro_temp_sample=(d), \
-    sox_macro_temp_sample>(sox_sample_t)(SOX_SAMPLE_MAX-(1U<<(31-bits)))? \
-      ++(clips),SOX_UINT_MAX(bits): \
-      ((uint32_t)(sox_macro_temp_sample^SOX_SAMPLE_NEG)+(1U<<(31-bits)))>>(32-bits))
-#define SOX_SAMPLE_TO_SIGNED(bits,d,clips) \
-  (int##bits##_t)(SOX_SAMPLE_TO_UNSIGNED(bits,d,clips)^SOX_INT_MIN(bits))
-#define SOX_SIGNED_TO_SAMPLE(bits,d)((sox_sample_t)(d)<<(32-bits))
+#define SOX_SAMPLE_TO_UNSIGNED(bits,d) \
+  (uint##bits##_t)(((uint32_t)((d)^SOX_SAMPLE_NEG))>>(32-bits))
+#define SOX_SAMPLE_TO_SIGNED(bits,d) (int##bits##_t)(((uint32_t)(d))>>(32-bits))
+#define SOX_SIGNED_TO_SAMPLE(bits,d)(((sox_sample_t)(d)<<(32-bits))+(1<<(31-bits)))
 #define SOX_UNSIGNED_TO_SAMPLE(bits,d)(SOX_SIGNED_TO_SAMPLE(bits,d)^SOX_SAMPLE_NEG)
 
 #define SOX_UNSIGNED_8BIT_TO_SAMPLE(d,clips) SOX_UNSIGNED_TO_SAMPLE(8,d)
@@ -120,17 +113,17 @@ typedef int32_t sox_sample_t;
 #define SOX_UNSIGNED_32BIT_TO_SAMPLE(d,clips) ((sox_sample_t)(d)^SOX_SAMPLE_NEG)
 #define SOX_SIGNED_32BIT_TO_SAMPLE(d,clips) (sox_sample_t)(d)
 #define SOX_FLOAT_32BIT_TO_SAMPLE SOX_FLOAT_64BIT_TO_SAMPLE
-#define SOX_FLOAT_64BIT_TO_SAMPLE(d,clips) (sox_macro_temp_double=(d),sox_macro_temp_double<-1?++(clips),(-SOX_SAMPLE_MAX):sox_macro_temp_double>1?++(clips),SOX_SAMPLE_MAX:(sox_sample_t)((uint32_t)((double)(sox_macro_temp_double)*SOX_SAMPLE_MAX+(SOX_SAMPLE_MAX+.5))-SOX_SAMPLE_MAX))
-#define SOX_SAMPLE_TO_UNSIGNED_8BIT(d,clips) SOX_SAMPLE_TO_UNSIGNED(8,d,clips)
-#define SOX_SAMPLE_TO_SIGNED_8BIT(d,clips) SOX_SAMPLE_TO_SIGNED(8,d,clips)
-#define SOX_SAMPLE_TO_UNSIGNED_16BIT(d,clips) SOX_SAMPLE_TO_UNSIGNED(16,d,clips)
-#define SOX_SAMPLE_TO_SIGNED_16BIT(d,clips) SOX_SAMPLE_TO_SIGNED(16,d,clips)
-#define SOX_SAMPLE_TO_UNSIGNED_24BIT(d,clips) SOX_SAMPLE_TO_UNSIGNED(24,d,clips)
-#define SOX_SAMPLE_TO_SIGNED_24BIT(d,clips) SOX_SAMPLE_TO_SIGNED(24,d,clips)
-#define SOX_SAMPLE_TO_UNSIGNED_32BIT(d,clips) (uint32_t)((d)^SOX_SAMPLE_NEG)
-#define SOX_SAMPLE_TO_SIGNED_32BIT(d,clips) (int32_t)(d)
+#define SOX_FLOAT_64BIT_TO_SAMPLE(d,clips) (sox_macro_temp_double=(d)*(SOX_SAMPLE_MAX+1.)+.5,sox_macro_temp_double<SOX_SAMPLE_MIN?++(clips),SOX_SAMPLE_MIN:sox_macro_temp_double>=SOX_SAMPLE_MAX+1.?sox_macro_temp_double>SOX_SAMPLE_MAX+1.5?++(clips),SOX_SAMPLE_MAX:SOX_SAMPLE_MAX:(sox_sample_t)floor(sox_macro_temp_double))
+#define SOX_SAMPLE_TO_UNSIGNED_8BIT(d) SOX_SAMPLE_TO_UNSIGNED(8,d)
+#define SOX_SAMPLE_TO_SIGNED_8BIT(d) SOX_SAMPLE_TO_SIGNED(8,d)
+#define SOX_SAMPLE_TO_UNSIGNED_16BIT(d) SOX_SAMPLE_TO_UNSIGNED(16,d)
+#define SOX_SAMPLE_TO_SIGNED_16BIT(d) SOX_SAMPLE_TO_SIGNED(16,d)
+#define SOX_SAMPLE_TO_UNSIGNED_24BIT(d) SOX_SAMPLE_TO_UNSIGNED(24,d)
+#define SOX_SAMPLE_TO_SIGNED_24BIT(d) SOX_SAMPLE_TO_SIGNED(24,d)
+#define SOX_SAMPLE_TO_UNSIGNED_32BIT(d) (uint32_t)((d)^SOX_SAMPLE_NEG)
+#define SOX_SAMPLE_TO_SIGNED_32BIT(d) (int32_t)(d)
 #define SOX_SAMPLE_TO_FLOAT_32BIT SOX_SAMPLE_TO_FLOAT_64BIT
-#define SOX_SAMPLE_TO_FLOAT_64BIT(d,clips) (sox_macro_temp_sample=(d),sox_macro_temp_sample==SOX_SAMPLE_MIN?++(clips),-1.0:((double)(sox_macro_temp_sample)*(1.0/SOX_SAMPLE_MAX)))
+#define SOX_SAMPLE_TO_FLOAT_64BIT(d) ((d)*(1./(SOX_SAMPLE_MAX+1.)))
 
 
 
@@ -250,6 +243,7 @@ typedef enum {SOX_OPTION_NO, SOX_OPTION_YES, SOX_OPTION_DEFAULT} sox_option_t;
 typedef struct { /* Encoding parameters */
   sox_encoding_t encoding; /* format of sample numbers */
   unsigned bits_per_sample;  /* 0 if unknown or variable; uncompressed value if lossless; compressed value if lossy */
+  sox_bool half_bit;
   double compression;      /* compression factor (where applicable) */
 
   /* If these 3 variables are set to DEFAULT, then, during
@@ -452,6 +446,8 @@ sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev)
 #define SOX_EFF_MCHAN    16          /* Effect can handle multi-channel */
 #define SOX_EFF_NULL     32          /* Effect does nothing */
 #define SOX_EFF_DEPRECATED 64        /* Effect is living on borrowed time */
+#define SOX_EFF_GAIN     128         /* Effect does not support gain -r */
+#define SOX_EFF_MODIFY   256         /* Effect does not modify samples */
 
 typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot} sox_plot_t;
 typedef struct sox_effect sox_effect_t;
@@ -508,11 +504,11 @@ struct sox_effects_chain {
   sox_sample_t **ibufc, **obufc; /* Channel interleave buffers */
   sox_effects_globals_t global_info;
   sox_encodinginfo_t const * in_enc;
-  sox_encodinginfo_t const * out_enc;
+  sox_encodinginfo_t * out_enc;
 };
 typedef struct sox_effects_chain sox_effects_chain_t;
 sox_effects_chain_t * sox_create_effects_chain(
-    sox_encodinginfo_t const * in_enc, sox_encodinginfo_t const * out_enc);
+    sox_encodinginfo_t const * in_enc, sox_encodinginfo_t * out_enc);
 void sox_delete_effects_chain(sox_effects_chain_t *ecp);
 int sox_add_effect( sox_effects_chain_t * chain, sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out);
 int sox_flow_effects(sox_effects_chain_t *, int (* callback)(sox_bool all_done));
@@ -565,6 +561,7 @@ typedef struct {char const *text; unsigned value;} lsx_enum_item;
 lsx_enum_item const * lsx_find_enum_text(char const * text, lsx_enum_item const * lsx_enum_items);
 lsx_enum_item const * lsx_find_enum_value(unsigned value, lsx_enum_item const * lsx_enum_items);
 int lsx_enum_option(int c, lsx_enum_item const * items);
+sox_bool lsx_strends(char const * str, char const * end);
 char const * lsx_find_file_extension(char const * pathname);
 char const * lsx_sigfigs3(size_t number);
 char const * lsx_sigfigs3p(double percentage);

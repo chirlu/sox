@@ -428,6 +428,7 @@ sox_format_t * sox_open_read(
         if (magic)
           filetype = magic_file(magic, path);
         if (filetype && (
+              lsx_strends(filetype, "/unknown") ||
               !strcmp(filetype, "application/octet-stream") ||
               !strncmp(filetype, "text/plain", (size_t)10) ))
           filetype = NULL;
