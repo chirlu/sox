@@ -120,13 +120,14 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t * buf, size_t 
   int result;
 
   for (i = 0; i < len; ++i) switch (ft->encoding.bits_per_sample) {
-    case  8: obuf[i] = SOX_SAMPLE_TO_SIGNED_8BIT(buf[i]); break;
-    case 16: obuf[i] = SOX_SAMPLE_TO_SIGNED_16BIT(buf[i]); break;
-    case 24: obuf[i] = SOX_SAMPLE_TO_SIGNED_24BIT(buf[i]) << 8;
+    SOX_SAMPLE_LOCALS;
+    case  8: obuf[i] = SOX_SAMPLE_TO_SIGNED_8BIT(buf[i], ft->clips); break;
+    case 16: obuf[i] = SOX_SAMPLE_TO_SIGNED_16BIT(buf[i], ft->clips); break;
+    case 24: obuf[i] = SOX_SAMPLE_TO_SIGNED_24BIT(buf[i], ft->clips) << 8;
              obuf[i] >>= 8; break;
     case 32: obuf[i] = ft->encoding.encoding == SOX_ENCODING_WAVPACKF?
-      SOX_SAMPLE_TO_SIGNED_24BIT(*(float *)&buf[i]) :
-      SOX_SAMPLE_TO_SIGNED_32BIT(buf[i]);
+      SOX_SAMPLE_TO_SIGNED_24BIT(*(float *)&buf[i], ft->clips) :
+      SOX_SAMPLE_TO_SIGNED_32BIT(buf[i], ft->clips);
       break;
   }
   result = WavpackPackSamples(p->codec, obuf, (uint32_t) len / ft->signal.channels);

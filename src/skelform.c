@@ -159,8 +159,9 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
   switch (ft->encoding.bits_per_sample) {
   case 8:
     switch (ft->encoding.encoding) {
+    SOX_SAMPLE_LOCALS;
     case SOX_ENCODING_UNSIGNED:
-      while (done < len && lsx_writeb(ft, SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++)) == SOX_SUCCESS)
+      while (done < len && lsx_writeb(ft, SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++, ft->clips)) == SOX_SUCCESS)
         ++done;
       break;
     default:

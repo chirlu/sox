@@ -516,7 +516,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 
   if (*isamp && odone < *osamp) {
     sample_t * t = rate_input(&p->rate, NULL, *isamp);
-    for (i = *isamp; i; --i) *t++ = FROM_SOX(*ibuf++);
+    for (i = *isamp; i; --i) *t++ = FROM_SOX(*ibuf++,);
     rate_process(&p->rate);
   }
   else *isamp = 0;

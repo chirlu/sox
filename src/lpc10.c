@@ -179,7 +179,8 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
 
   while (len > 0) {
     while (len > 0 && lpc->samples < LPC10_SAMPLES_PER_FRAME) {
-      lpc->speech[lpc->samples++] = SOX_SAMPLE_TO_FLOAT_32BIT(buf[nwritten++]);
+      SOX_SAMPLE_LOCALS;
+      lpc->speech[lpc->samples++] = SOX_SAMPLE_TO_FLOAT_32BIT(buf[nwritten++], ft->clips);
       len--;
     }
 

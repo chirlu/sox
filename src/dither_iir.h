@@ -12,9 +12,9 @@ static int NAME(sox_effect_t * effp, const sox_sample_t * ibuf,
     int j = 0;
     CONVOLVE
     assert(j == N);
-    d = *ibuf++ + p->offset - output;
-    *obuf = SOX_ROUND_CLIP_COUNT(d + r, effp->clips);
-    error = (*obuf++ & (-1 << (32-PREC))) + (1 << (31-PREC)) - d;
+    d = *ibuf++ - output;
+    *obuf = SOX_ROUND_PREC_CLIP_COUNT(d + r, effp->clips);
+    error = ((*obuf++ + (1 << (31-p->prec))) & (-1 << (32-p->prec))) - d;
     p->pos = p->pos? p->pos - 1 : p->pos - 1 + N;
     p->previous_errors[p->pos + N] = p->previous_errors[p->pos] = error;
     p->previous_outputs[p->pos + N] = p->previous_outputs[p->pos] = output;

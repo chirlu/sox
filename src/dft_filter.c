@@ -79,7 +79,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     p->samples_in += (int)*isamp;
 
     for (i = *isamp; i; --i)
-      *t++ = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf++);
+      *t++ = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf++, effp->clips);
     filter(p);
   }
   else *isamp = 0;

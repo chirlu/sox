@@ -80,7 +80,7 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_reverse_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "reverse", NULL, 0, NULL, start, flow, drain, stop, NULL, sizeof(priv_t)
+    "reverse", NULL, SOX_EFF_MODIFY, NULL, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
   return &handler;
 }

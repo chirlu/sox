@@ -347,13 +347,14 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t * buf,
       /* Read the data in the file */
       if (v->size <= 4) {
         if (!v->adpcm.setup.sign) {
+          SOX_SAMPLE_LOCALS;
           if (lsx_readb(ft, &uc) == SOX_EOF) {
             lsx_warn("VOC input: short file");
             v->block_remaining = 0;
             return done;
           }
           *buf = SOX_UNSIGNED_8BIT_TO_SAMPLE(uc,);
-          lsx_adpcm_init(&v->adpcm, 6 - v->size, SOX_SAMPLE_TO_SIGNED_16BIT(*buf));
+          lsx_adpcm_init(&v->adpcm, 6 - v->size, SOX_SAMPLE_TO_SIGNED_16BIT(*buf, ft->clips));
           ++buf;
           --v->block_remaining;
           ++done;
@@ -489,11 +490,12 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t * buf,
   }
   v->samples += len;
   while (done < len) {
+    SOX_SAMPLE_LOCALS;
     if (ft->encoding.bits_per_sample == 8) {
-      uc = SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++);
+      uc = SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++, ft->clips);
       lsx_writeb(ft, uc);
     } else {
-      sw = (int) SOX_SAMPLE_TO_SIGNED_16BIT(*buf++);
+      sw = (int) SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips);
       lsx_writesw(ft, sw);
     }
     done++;

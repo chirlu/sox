@@ -285,6 +285,7 @@ static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_
 
     /* Reduce noise on every channel. */
     for (i = 0; i < tracks; i ++) {
+        SOX_SAMPLE_LOCALS;
         chandata_t* chan = &(data->chandata[i]);
         size_t j;
 
@@ -293,7 +294,7 @@ static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_
 
         for (j = 0; j < ncopy; j ++)
             chan->window[oldbuf + j] =
-                SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i + tracks * j]);
+                SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i + tracks * j], effp->clips);
 
         if (!whole_window)
             continue;

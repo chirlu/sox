@@ -441,21 +441,22 @@ static size_t write_samples(sox_format_t * const ft, sox_sample_t const * const 
   unsigned i;
 
   for (i = 0; i < len; ++i) {
-    long pcm = SOX_SAMPLE_TO_SIGNED_32BIT(sampleBuffer[i]);
+    SOX_SAMPLE_LOCALS;
+    long pcm = SOX_SAMPLE_TO_SIGNED_32BIT(sampleBuffer[i], ft->clips);
     p->decoded_samples[i] = pcm >> (32 - p->bits_per_sample);
     switch (p->bits_per_sample) {
       case  8: p->decoded_samples[i] =
-          SOX_SAMPLE_TO_SIGNED_8BIT(sampleBuffer[i]);
+          SOX_SAMPLE_TO_SIGNED_8BIT(sampleBuffer[i], ft->clips);
         break;
       case 16: p->decoded_samples[i] =
-          SOX_SAMPLE_TO_SIGNED_16BIT(sampleBuffer[i]);
+          SOX_SAMPLE_TO_SIGNED_16BIT(sampleBuffer[i], ft->clips);
         break;
       case 24: p->decoded_samples[i] = /* sign extension: */
-          SOX_SAMPLE_TO_SIGNED_24BIT(sampleBuffer[i]) << 8;
+          SOX_SAMPLE_TO_SIGNED_24BIT(sampleBuffer[i],ft->clips) << 8;
         p->decoded_samples[i] >>= 8;
         break;
       case 32: p->decoded_samples[i] =
-          SOX_SAMPLE_TO_SIGNED_32BIT(sampleBuffer[i]);
+          SOX_SAMPLE_TO_SIGNED_32BIT(sampleBuffer[i],ft->clips);
         break;
     }
   }

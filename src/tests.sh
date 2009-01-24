@@ -89,7 +89,7 @@ convertToAndFrom () {
         getFormat         $1; format2Ext=$formatExt; format2Text=$formatText; format2Flags=$formatFlags
         execute ${bindir}/sox $verbose -R -r $rate -c $channels -n $format1Flags input.$format1Ext synth $samples's' sin 300-3300 noise trapezium
         execute ${bindir}/sox $verbose -R -r $rate -c $channels $format1Flags input.$format1Ext $format2Flags intermediate.$format2Ext
-        execute ${bindir}/sox $verbose -R -r $rate -c $channels $format2Flags intermediate.$format2Ext $format1Flags output.$format1Ext
+        execute ${bindir}/sox $verbose -RD -r $rate -c $channels $format2Flags intermediate.$format2Ext $format1Flags output.$format1Ext
         intermediateReference=vectors/intermediate`echo "$channels $rate $format1Flags $format1Ext $format2Flags"|tr " " "_"`.$format2Ext
 
 	# Uncomment to generate new reference files
@@ -172,21 +172,20 @@ do_singlechannel_formats () {
 
 # Reading and writing performance test
 timeIO () {
+  ${bindir}/sox -c $channels -r $rate -n tmp.sox synth $samples's' saw 0:`expr $rate / 2` noise brown vol .9
   while [ $# != 0 ]; do
-      if [ "${skip}x" != "x" ] ; then
-        from_skip=`echo ${skip} | grep ${1}`
-      fi
-      if [ "${from_skip}x" = "x" ] ; then
-        getFormat $1;
-        echo ${bindir}/sox -c $channels -r $rate -n $formatFlags input.$1 synth $samples's' sin 300-3300 noise trapezium
-        echo time ${bindir}/sox $verbose -r $rate -c $channels $formatFlags input.$1 $formatFlags output.$1
-        ${bindir}/sox -c $channels -r $rate -n $formatFlags input.$1 synth $samples's' sin 300-3300 noise trapezium
-        time ${bindir}/sox $verbose -r $rate -c $channels $formatFlags input.$1 $formatFlags output.$1
-
-        rm -f input.$1 output.$1
-      fi
-      shift
+    if [ "${skip}x" != "x" ] ; then
+      from_skip=`echo ${skip} | grep ${1}`
+    fi
+    if [ "${from_skip}x" = "x" ] ; then
+      getFormat $1;
+      echo "TIME \"$formatText\" channels=$channels samples=$samples write, read:"
+      time ${bindir}/sox $verbose -D tmp.sox $formatFlags -t $1 - | \
+      time ${bindir}/sox $verbose -t $1 -c $channels -r $rate - -t sox /dev/null
+    fi
+    shift
   done
+  rm tmp.sox
 }
 
 # Don't try to test un-built formats
@@ -199,6 +198,8 @@ skip_check () {
 
 
 # Run tests
+
+${builddir}/sox_sample_test || exit 1
 
 skip_check caf flac mat4 mat5 paf w64 wv
 
@@ -246,8 +247,8 @@ rm output.u1
 echo "Checked $vectors vectors"
 
 channels=2
-samples=10000000
-timeIO s1 u1 s2 u2 s3 u3 s4 u4 f4 f8 au wav aiff aifc caf sph # FIXME?: flac dat
+samples=1e7
+timeIO s1 u1 s2 u2 s3 u3 s4 u4 f4 f8 au wav aiff aifc sph # FIXME?: caf flac dat
 
 test -n "$skip" && echo "Skipped: $skip"
 

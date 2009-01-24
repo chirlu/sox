@@ -94,7 +94,7 @@ int sox_effect_options(sox_effect_t *effp, int argc, char * const argv[])
 /* Effects chain: */
 
 sox_effects_chain_t * sox_create_effects_chain(
-    sox_encodinginfo_t const * in_enc, sox_encodinginfo_t * out_enc)
+    sox_encodinginfo_t const * in_enc, sox_encodinginfo_t const * out_enc)
 {
   sox_effects_chain_t * result = lsx_calloc(1, sizeof(sox_effects_chain_t));
   result->global_info = sox_effects_globals;
@@ -144,7 +144,8 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
   if (!(effp->handler.flags & SOX_EFF_RATE))
     effp->out_signal.rate = in->rate;
   if (!(effp->handler.flags & SOX_EFF_PREC))
-    effp->out_signal.precision = in->precision;
+    effp->out_signal.precision = (effp->handler.flags & SOX_EFF_MODIFY)?
+        in->precision : SOX_SAMPLE_PRECISION;
   if (!(effp->handler.flags & SOX_EFF_GAIN))
     effp->out_signal.mult = in->mult;
 
@@ -152,8 +153,8 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
     (effp->handler.flags & SOX_EFF_MCHAN)? 1 : effp->in_signal.channels;
   effp->clips = 0;
   effp->imin = 0;
-  eff0 = *effp;
-  eff0.priv = lsx_memdup(eff0.priv, eff0.handler.priv_size);
+  eff0 = *effp, eff0.priv = lsx_memdup(eff0.priv, eff0.handler.priv_size);
+  eff0.in_signal.mult = NULL; /* Only used in channel 0 */
   ret = start(effp);
   if (ret == SOX_EFF_NULL) {
     lsx_report("has no effect in this configuration");

@@ -95,19 +95,6 @@ static int parse(sox_effect_t * effp, char * * argv, unsigned channels)
         p->out_specs[i].in_specs[j].multiplier = (p->mode == automatic || (p->mode == semi && !mul_spec)) ? mult : 1;
   }
   effp->out_signal.channels = p->num_out_channels;
-
-  if (effp->in_signal.mult) {
-    double max_sum = 0;
-
-    for (j = 0; j < effp->out_signal.channels; j++) {
-      double sum = 0;
-      for (i = 0; i < p->out_specs[j].num_in_channels; i++)
-        sum += fabs(p->out_specs[j].in_specs[i].multiplier);
-      max_sum = max(max_sum, sum);
-    }
-    if (max_sum > 1)
-      *effp->in_signal.mult /= max_sum;
-  }
   return SOX_SUCCESS;
 }
 
@@ -125,11 +112,29 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
+  double max_sum = 0;
+  unsigned i, j;
+  int non_integer = 0;
+
   parse(effp, NULL, effp->in_signal.channels);
   if (effp->in_signal.channels < p->min_in_channels) {
     lsx_fail("too few input channels");
     return SOX_EOF;
   }
+
+  for (j = 0; j < effp->out_signal.channels; j++) {
+    double sum = 0;
+    for (i = 0; i < p->out_specs[j].num_in_channels; i++) {
+      double mult = p->out_specs[j].in_specs[i].multiplier;
+      sum += fabs(mult);
+      non_integer += floor(mult) != mult;
+    }
+    max_sum = max(max_sum, sum);
+  }
+  if (effp->in_signal.mult && max_sum > 1)
+    *effp->in_signal.mult /= max_sum;
+  if (!non_integer)
+    effp->out_signal.precision = effp->in_signal.precision;
   return SOX_SUCCESS;
 }
 
@@ -167,7 +172,7 @@ sox_effect_handler_t const * sox_remix_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "remix", "[-m|-a] [-p] <0|in-chan[v|d|i volume]{,in-chan[v|d|i volume]}>",
-    SOX_EFF_MCHAN | SOX_EFF_CHAN, create, start, flow, NULL, NULL, kill, sizeof(priv_t)
+    SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_GAIN, create, start, flow, NULL, NULL, kill, sizeof(priv_t)
   };
   return &handler;
 }

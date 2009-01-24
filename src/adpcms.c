@@ -251,7 +251,8 @@ size_t lsx_adpcm_write(sox_format_t * ft, adpcm_io_t * state, const sox_sample_t
   short word;
 
   while (count < length) {
-    word = SOX_SAMPLE_TO_SIGNED_16BIT(*buffer++);
+    SOX_SAMPLE_LOCALS;
+    word = SOX_SAMPLE_TO_SIGNED_16BIT(*buffer++, ft->clips);
 
     byte <<= 4;
     byte |= lsx_adpcm_encode(word, &state->encoder) & 0x0F;

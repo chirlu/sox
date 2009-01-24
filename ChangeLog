@@ -90,6 +90,7 @@ Other new features:
     header (for simple encodings); instead, read to end of file.  (robs)
   o New `--temp DIRECTORY' option.  (robs)
   o Grouped files, e.g. play -r 6k "*.vox" plays all at 6k.  (robs)
+  o Automatically `dither'; new `--no-dither' option to disable this.  (robs)
   o New bitrate, time in seconds, & total options for soxi.  (robs)
 
 Other bug fixes:

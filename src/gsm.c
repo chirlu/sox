@@ -195,9 +195,10 @@ static size_t sox_gsmwrite(sox_format_t * ft, const sox_sample_t *buf, size_t sa
 
         while (done < samp)
         {
+                SOX_SAMPLE_LOCALS;
                 while ((p->samplePtr < p->sampleTop) && (done < samp))
                         *(p->samplePtr)++ =
-                            SOX_SAMPLE_TO_SIGNED_16BIT(buf[done++]);
+                            SOX_SAMPLE_TO_SIGNED_16BIT(buf[done++], ft->clips);
 
                 if (p->samplePtr == p->sampleTop)
                 {

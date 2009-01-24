@@ -74,11 +74,12 @@ static int startwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, size_t len, sox_bool swap)
+static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, size_t len, sox_bool swap, size_t * clips)
 {
     while (len--)
     {
-        uint16_t datum = SOX_SAMPLE_TO_SIGNED_16BIT(*buf2++);
+        SOX_SAMPLE_LOCALS;
+        uint16_t datum = SOX_SAMPLE_TO_SIGNED_16BIT(*buf2++, *clips);
         if (swap)
             datum = lsx_swapw(datum);
         *(uint16_t *)buf1 = datum;
@@ -96,7 +97,8 @@ static size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, size_t le
 
   aobuf_size = (ft->encoding.bits_per_sample >> 3) * len;
 
-  sox_sw_write_buf(ao->buf, buf, len, ft->encoding.reverse_bytes);
+  sox_sw_write_buf(ao->buf, buf, len, ft->encoding.reverse_bytes,
+                   &(ft->clips));
   if (ao_play(ao->device, (void *)ao->buf, aobuf_size) == 0)
     return 0;
 

@@ -175,6 +175,7 @@ void lsx_rewind(sox_format_t * ft)
 void lsx_clearerr(sox_format_t * ft)
 {
   clearerr(ft->fp);
+  ft->sox_errno = 0;
 }
 
 int lsx_unreadb(sox_format_t * ft, unsigned b)

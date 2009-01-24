@@ -21,13 +21,11 @@
 #include <string.h>
 
 typedef struct {
-  sox_bool      do_equalise, do_balance, do_balance_no_clip;
+  sox_bool      do_equalise, do_balance, do_balance_no_clip, do_limiter;
   sox_bool      do_restore, make_headroom, do_normalise, do_scan;
   double        fixed_gain; /* Valid only in channel 0 */
 
-  double        mult;
-  double        restore;
-  double        rms;
+  double        mult, restore, rms, limiter;
   off_t         num_samples;
   sox_sample_t  min, max;
   FILE          * tmp_file;
@@ -46,6 +44,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
       case 'b': p->do_scan = p->do_balance_no_clip = sox_true; break;
       case 'r': p->do_scan = p->do_restore = sox_true; break;
       case 'h': p->make_headroom = sox_true; break;
+      case 'l': p->do_limiter = sox_true; break;
       default: lsx_fail("invalid option `-%c'", *q); return lsx_usage(effp);
     }
   if ((p->do_equalise + p->do_balance + p->do_balance_no_clip + p->do_restore)/ sox_true > 1) {
@@ -54,6 +53,10 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   }
   if (p->do_normalise && p->do_restore) {
     lsx_fail("Only one of -n, -r may be given");
+    return SOX_EOF;
+  }
+  if (p->do_limiter && p->make_headroom) {
+    lsx_fail("Only one of -l, -h may be given");
     return SOX_EOF;
   }
   do {NUMERIC_PARAMETER(fixed_gain, -HUGE_VAL, HUGE_VAL)} while (0);
@@ -85,6 +88,10 @@ static int start(sox_effect_t * effp)
       return SOX_EOF;
     }
   }
+  if (p->do_limiter)
+    p->limiter = (1 - 1 / p->fixed_gain) * (1. / SOX_SAMPLE_MAX);
+  else if (p->fixed_gain == floor(p->fixed_gain) && !p->do_scan)
+    effp->out_signal.precision = effp->in_signal.precision;
   return SOX_SUCCESS;
 }
 
@@ -92,6 +99,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
+  SOX_SAMPLE_LOCALS;
   size_t len;
 
   if (p->do_scan) {
@@ -101,13 +109,13 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     }
     if (p->do_balance && !p->do_normalise)
       for (len = *isamp; len; --len, ++ibuf) {
-        double d = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf);
+        double d = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf, effp->clips);
         p->rms += sqr(d);
         ++p->num_samples;
       }
     else if (p->do_balance || p->do_balance_no_clip)
       for (len = *isamp; len; --len, ++ibuf) {
-        double d = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf);
+        double d = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf, effp->clips);
         p->rms += sqr(d);
         ++p->num_samples;
         p->max = max(p->max, *ibuf);
@@ -122,8 +130,13 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   else {
     double mult = ((priv_t *)(effp - effp->flow)->priv)->fixed_gain;
     len = *isamp = *osamp = min(*isamp, *osamp);
-    for (; len; --len, ++ibuf)
+    if (!p->do_limiter) for (; len; --len, ++ibuf)
       *obuf++ = SOX_ROUND_CLIP_COUNT(*ibuf * mult, effp->clips);
+    else for (; len; --len, ++ibuf) {
+      double d = *ibuf * mult;
+      *obuf++ = d < 0 ? 1 / (1 / d - p->limiter) - .5 :
+                d > 0 ? 1 / (1 / d + p->limiter) + .5 : 0;
+    }
   }
   return SOX_SUCCESS;
 }
@@ -191,10 +204,13 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
       lsx_fail("error reading temporary file: %s", strerror(errno));
       result = SOX_EOF;
     }
-    if (p->mult > 1) for (*osamp = len; len; --len, ++obuf)
+    if (!p->do_limiter) for (*osamp = len; len; --len, ++obuf)
       *obuf = SOX_ROUND_CLIP_COUNT(*obuf * p->mult, effp->clips);
-    else for (*osamp = len; len; --len, ++obuf)
-      *obuf = floor(*obuf * p->mult + .5);
+    else for (*osamp = len; len; --len) {
+      double d = *obuf * p->mult;
+      *obuf++ = d < 0 ? 1 / (1 / d - p->limiter) - .5 :
+                d > 0 ? 1 / (1 / d + p->limiter) + .5 : 0;
+    }
   }
   else *osamp = 0;
   return result;
@@ -211,7 +227,7 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_gain_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "gain", "[-e|-b|-B|-r] [-n] [-h] [gain-dB]", SOX_EFF_GAIN,
+    "gain", "[-e|-b|-B|-r] [-n] [-l|-h] [gain-dB]", SOX_EFF_GAIN,
     create, start, flow, drain, stop, NULL, sizeof(priv_t)};
   return &handler;
 }

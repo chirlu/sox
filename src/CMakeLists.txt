@@ -62,6 +62,7 @@ add_library(lib${PROJECT_NAME}
 )
 add_executable(${PROJECT_NAME} ${PROJECT_NAME}.c)
 target_link_libraries(${PROJECT_NAME} lib${PROJECT_NAME} lpc10 ${optional_libs})
+add_executable(sox_sample_test sox_sample_test.c)
 add_executable(example0 example0.c)
 target_link_libraries(example0 lib${PROJECT_NAME} lpc10 ${optional_libs})
 add_executable(example1 example1.c)

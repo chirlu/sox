@@ -154,7 +154,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     ++p->in_pos;
 
     /* As long as we have not yet collected enough data just read in */
-    p->gInFIFO[p->gRover] = SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i]);
+    p->gInFIFO[p->gRover] = SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i], effp->clips);
     obuf[i] = SOX_FLOAT_32BIT_TO_SAMPLE(
         p->gOutFIFO[p->gRover - inFifoLatency], effp->clips);
     p->gRover++;

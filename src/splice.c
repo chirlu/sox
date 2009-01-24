@@ -185,7 +185,7 @@ buffering:
           break;
         }
         for (c = 0; c < effp->in_signal.channels; ++c)
-          p->buffer[p->buffer_pos++] = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++);
+          p->buffer[p->buffer_pos++] = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++, effp->clips);
       }
       break;
     }

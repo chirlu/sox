@@ -135,7 +135,8 @@ static size_t sox_datwrite(sox_format_t * ft, const sox_sample_t *buf, size_t ns
       sprintf(s," %15.8g ",dat->timevalue);
       lsx_writes(ft, s);
       for (i=0; i<ft->signal.channels; i++) {
-        sampval = SOX_SAMPLE_TO_FLOAT_64BIT(*buf++);
+        SOX_SAMPLE_LOCALS;
+        sampval = SOX_SAMPLE_TO_FLOAT_64BIT(*buf++, ft->clips);
         sprintf(s," %15.8g", sampval);
         lsx_writes(ft, s);
         done++;

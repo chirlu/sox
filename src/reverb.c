@@ -229,7 +229,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   for (c = 0; c < p->ichannels; ++c)
     p->chan[c].dry = fifo_write(&p->chan[c].reverb.input_fifo, len, 0);
   for (i = 0; i < len; ++i) for (c = 0; c < p->ichannels; ++c)
-    p->chan[c].dry[i] = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++);
+    p->chan[c].dry[i] = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++, effp->clips);
   for (c = 0; c < p->ichannels; ++c)
     reverb_process(&p->chan[c].reverb, len);
   if (p->ichannels == 2) for (i = 0; i < len; ++i) for (w = 0; w < 2; ++w) {

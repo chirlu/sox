@@ -23,7 +23,12 @@
 #include "getopt.h"
 #include <assert.h>
 
-#define PREC effp->out_signal.precision
+#undef RANQD1
+#define RANQD1 ranqd1(p->ranqd1)
+#define SOX_ROUND_PREC_CLIP_COUNT(d, clips) \
+  ((d) < 0? (d) <= SOX_SAMPLE_MIN - 0.5? ++(clips), SOX_SAMPLE_MIN: (d) - 0.5 \
+  : (d) >= SOX_SAMPLE_MAX - (1 << (31-p->prec)) + 0.5? \
+  ++(clips), SOX_SAMPLE_MAX - (1 << (31-p->prec)): (d) + 0.5)
 
 typedef enum {Pdf_rectangular, Pdf_triangular, Pdf_gaussian} pdf_type_t;
 static lsx_enum_item const pdf_types[] = {
@@ -130,7 +135,7 @@ static const filter_t filters[] = {
   {48000, iir,  4, 21.0, ges48, Shape_gesemann},
   {44100, iir,  4, 21.2, ges44, Shape_gesemann},
   {48000, fir, 16, 28.8, shi48, Shape_shibata},
-  {44100, fir, 20, 32.6, shi44, Shape_shibata},
+  {44100, fir, 20, 32.3, shi44, Shape_shibata},
   {37800, fir, 16, 22.7, shi38, Shape_shibata},
   {32000, fir, 16, 15.7, shi32, Shape_shibata},
   {22050, fir, 15,  9.0, shi22, Shape_shibata},
@@ -145,12 +150,13 @@ static const filter_t filters[] = {
 typedef struct {
   pdf_type_t    pdf;
   filter_name_t filter_name;
+  sox_bool      reseed;
   double        am0, am1, depth;
   double        previous_errors[MAX_N * 2];
   double        previous_outputs[MAX_N * 2];
-  size_t        pos;
+  size_t        pos, prec;
+  int32_t       ranqd1;
   double const * coefs;
-  sox_sample_t  offset;
   int           (*flow)(sox_effect_t *, const sox_sample_t *, sox_sample_t *, size_t *, size_t *);
 } priv_t;
 
@@ -186,7 +192,7 @@ static int flow_no_shape(sox_effect_t * effp, const sox_sample_t * ibuf,
   size_t len = *isamp = *osamp = min(*isamp, *osamp);
 
   while (len--) {
-    double d = *ibuf++ + p->offset + floor(p->am0 * RANQD1) + floor(p->am1 * RANQD1);
+    double d = *ibuf++ + floor(p->am0 * RANQD1) + floor(p->am1 * RANQD1);
     SOX_SAMPLE_CLIP_COUNT(d, effp->clips);
     *obuf++ = d;
   }
@@ -199,7 +205,8 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
   int c;
 
   p->pdf = Pdf_triangular;
-  while ((c = getopt(argc, argv, "+rtsf:")) != -1) switch (c) {
+  while ((c = getopt(argc, argv, "+Rrtsf:")) != -1) switch (c) {
+    case 'R': p->reseed = sox_true; break;
     case 'r': p->pdf = Pdf_rectangular; break;
     case 't': p->pdf = Pdf_triangular ; break;
     case 's': p->filter_name = Shape_shibata; break;
@@ -221,8 +228,10 @@ static int start(sox_effect_t * effp)
   priv_t * p = (priv_t *)effp->priv;
   double mult = 1;
 
-  if (PREC > 24)
+  p->prec = effp->out_signal.precision;
+  if (effp->in_signal.precision <= p->prec || p->prec > 24)
     return SOX_EFF_NULL;   /* Dithering not needed at this resolution */
+  effp->out_signal.precision = effp->in_signal.precision;
 
   p->flow = flow_no_shape;
   if (p->filter_name) {
@@ -249,14 +258,12 @@ static int start(sox_effect_t * effp)
       mult = dB_to_linear(f->gain);
     }
   }
-  p->am1 = p->depth / (1 << PREC);
+  p->ranqd1 = p->reseed? ranqd1(sox_globals.ranqd1) : 0;
+  p->am1 = p->depth / (1 << p->prec);
   p->am0 = (p->pdf == Pdf_triangular) * p->am1;
-  if (effp->out_encoding->half_bit && PREC < 32)
-    p->offset = 1 << (31 - PREC);
 
-  if (effp->flow == 0 && effp->in_signal.mult)
-    *effp->in_signal.mult *=
-      1 - (p->offset * (1./SOX_SAMPLE_MAX) + p->am0 + p->am1) * mult;
+  if (effp->in_signal.mult)
+    *effp->in_signal.mult *= 1 - (p->am0 + p->am1) * mult;
 
   lsx_debug("pdf=%s filter=%s depth=%g", lsx_find_enum_value(p->pdf, pdf_types)->text, lsx_find_enum_value(p->filter_name, filter_names)->text, p->depth);
   return SOX_SUCCESS;
@@ -273,6 +280,7 @@ sox_effect_handler_t const * sox_dither_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "dither", "[-r|-t] [-s|-f filter] [depth]"
+    "\n  -R       Re-seed PRNG"
     "\n  -r       Rectangular PDF"
     "\n  -t       Triangular PDF (default)"
     "\n  -s       Shape noise (with shibata filter)"

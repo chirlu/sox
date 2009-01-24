@@ -546,11 +546,13 @@ sox_effect_handler_t const * sox_mixer_effect_fn(void)
   static sox_effect_handler_t handler = {
     "mixer",
     "[ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
-    SOX_EFF_MCHAN | SOX_EFF_CHAN,
+    SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_GAIN,
     getopts, start, flow, 0, 0, 0, sizeof(priv_t)
   };
   return &handler;
 }
+
+/*------------------------------- oops effect --------------------------------*/
 
 static int oops_getopts(sox_effect_t * effp, int argc, char * * argv)
 {

@@ -187,44 +187,45 @@ static size_t write_(sox_format_t * ft, sox_sample_t const * buf, size_t len)
   priv_t             * p = (priv_t *)ft->priv;
   size_t             done, i, n;
   snd_pcm_sframes_t  actual;
+  SOX_SAMPLE_LOCALS;
 
   for (done = 0; done < len; done += n) {
     i = n = min(len - done, p->buf_len);
     switch (p->format) {
       case SND_PCM_FORMAT_S8: {
         int8_t * buf1 = (int8_t *)p->buf;
-        while (i--) *buf1++ = SOX_SAMPLE_TO_SIGNED_8BIT(*buf++);
+        while (i--) *buf1++ = SOX_SAMPLE_TO_SIGNED_8BIT(*buf++, ft->clips);
         break;
       }
       case SND_PCM_FORMAT_U8: {
         uint8_t * buf1 = (uint8_t *)p->buf;
-        while (i--) *buf1++ = SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++);
+        while (i--) *buf1++ = SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++, ft->clips);
         break;
       }
       case SND_PCM_FORMAT_S16: {
         int16_t * buf1 = (int16_t *)p->buf;
         if (ft->encoding.reverse_bytes) while (i--)
-          *buf1++ = lsx_swapw(SOX_SAMPLE_TO_SIGNED_16BIT(*buf++));
+          *buf1++ = lsx_swapw(SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips));
         else
-          while (i--) *buf1++ = SOX_SAMPLE_TO_SIGNED_16BIT(*buf++);
+          while (i--) *buf1++ = SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips);
         break;
       }
       case SND_PCM_FORMAT_U16: {
         uint16_t * buf1 = (uint16_t *)p->buf;
         if (ft->encoding.reverse_bytes) while (i--)
-          *buf1++ = lsx_swapw(SOX_SAMPLE_TO_UNSIGNED_16BIT(*buf++));
+          *buf1++ = lsx_swapw(SOX_SAMPLE_TO_UNSIGNED_16BIT(*buf++, ft->clips));
         else
-          while (i--) *buf1++ = SOX_SAMPLE_TO_UNSIGNED_16BIT(*buf++);
+          while (i--) *buf1++ = SOX_SAMPLE_TO_UNSIGNED_16BIT(*buf++, ft->clips);
         break;
       }
       case SND_PCM_FORMAT_S24: {
         int24_t * buf1 = (int24_t *)p->buf;
-        while (i--) *buf1++ = SOX_SAMPLE_TO_SIGNED_24BIT(*buf++);
+        while (i--) *buf1++ = SOX_SAMPLE_TO_SIGNED_24BIT(*buf++, ft->clips);
         break;
       }
       case SND_PCM_FORMAT_U24: {
         uint24_t * buf1 = (uint24_t *)p->buf;
-        while (i--) *buf1++ = SOX_SAMPLE_TO_UNSIGNED_24BIT(*buf++);
+        while (i--) *buf1++ = SOX_SAMPLE_TO_UNSIGNED_24BIT(*buf++, ft->clips);
         break;
       }
     }

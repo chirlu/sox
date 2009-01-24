@@ -119,7 +119,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
 sox_effect_handler_t const * sox_delay_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "delay", "{length}", SOX_EFF_LENGTH,
+    "delay", "{length}", SOX_EFF_LENGTH | SOX_EFF_MODIFY,
     create, start, flow, drain, stop, kill, sizeof(priv_t)
   };
   return &handler;

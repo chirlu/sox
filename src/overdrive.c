@@ -52,7 +52,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   size_t dummy = 0, len = *isamp = *osamp = min(*isamp, *osamp);
   while (len--) {
     SOX_SAMPLE_LOCALS;
-    double d = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf++), d0 = d;
+    double d = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf++, dummy), d0 = d;
     d *= p->gain;
     d += p->colour;
     d = d < -1? -2./3 : d > 1? 2./3 : d - d * d * d * (1./3);

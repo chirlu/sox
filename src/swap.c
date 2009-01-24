@@ -181,7 +181,7 @@ static int sox_swap_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
 const sox_effect_handler_t *sox_swap_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "swap", "[1 2 | 1 2 3 4]", SOX_EFF_MCHAN,
+    "swap", "[1 2 | 1 2 3 4]", SOX_EFF_MCHAN | SOX_EFF_MODIFY,
     sox_swap_getopts, sox_swap_start, sox_swap_flow,
     NULL, NULL, NULL, sizeof(priv_t)
   };

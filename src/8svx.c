@@ -254,6 +254,7 @@ static int startwrite(sox_format_t * ft)
 static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t len)
 {
         priv_t * p = (priv_t * ) ft->priv;
+        SOX_SAMPLE_LOCALS;
 
         unsigned char datum;
         size_t done = 0, i;
@@ -262,7 +263,7 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
 
         while(done < len) {
                 for (i = 0; i < ft->signal.channels; i++) {
-                        datum = SOX_SAMPLE_TO_SIGNED_8BIT(*buf++);
+                        datum = SOX_SAMPLE_TO_SIGNED_8BIT(*buf++, ft->clips);
                         /* FIXME: Needs to pass ft struct and not FILE */
                         putc(datum, p->ch[i]);
                 }

@@ -193,13 +193,14 @@ static int flow(sox_effect_t * effp,
   *isamp = *osamp = len;
 
   while (sox_true) {
+    SOX_SAMPLE_LOCALS;
     if (p->read == p->step_size) {
       memmove(p->buf, p->buf + p->step_size,
           (p->dft_size - p->step_size) * sizeof(*p->buf));
       p->read = 0;
     }
     for (; len && p->read < p->step_size; --len, ++p->read, --p->end)
-      p->buf[p->dft_size - p->step_size + p->read] = FROM_SOX(*ibuf++);
+      p->buf[p->dft_size - p->step_size + p->read] = FROM_SOX(*ibuf++,);
     if (p->read != p->step_size)
       break;
 

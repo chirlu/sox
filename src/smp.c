@@ -368,7 +368,8 @@ static size_t sox_smpwrite(sox_format_t * ft, const sox_sample_t *buf, size_t le
         size_t done = 0;
 
         while(done < len) {
-                datum = (int) SOX_SAMPLE_TO_SIGNED_16BIT(*buf++);
+                SOX_SAMPLE_LOCALS;
+                datum = (int) SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips);
                 lsx_writew(ft, (uint16_t)datum);
                 smp->NoOfSamps++;
                 done++;

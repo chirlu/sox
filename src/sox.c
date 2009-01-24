@@ -133,7 +133,6 @@ typedef struct {
   sox_signalinfo_t signal;
   sox_encodinginfo_t encoding;
   double volume;
-  sox_sample_t offset;
   double replay_gain;
   sox_oob_t oob;
   sox_bool no_glob;
@@ -198,7 +197,7 @@ static sox_bool single_threaded = sox_false;
 static struct termios original_termios;
 #endif
 
-static sox_bool stdin_is_a_tty, is_player, is_guarded, do_guarded_norm;
+static sox_bool stdin_is_a_tty, is_player, is_guarded, do_guarded_norm, no_dither;
 
 /* Cleanup atexit() function, hence always called. */
 static void cleanup(void)
@@ -405,8 +404,6 @@ static void progress_to_next_input_file(file_t * f)
     display_file_info(f->ft, f, sox_false);
   if (f->volume == HUGE_VAL)
     f->volume = 1;
-  if (f->encoding.half_bit && f->ft->signal.precision < 32)
-    f->offset = 1 << (31 - f->ft->signal.precision);
   if (f->replay_gain != HUGE_VAL)
     f->volume *= pow(10.0, f->replay_gain / 20);
   f->ft->sox_errno = errno = 0;
@@ -428,10 +425,8 @@ static void balance_input(sox_sample_t * buf, size_t ws, file_t * f)
 {
   size_t s = ws * f->ft->signal.channels;
 
-  if (f->volume == 1 && f->offset !=0 ) while (s--)
-    *buf++ -= f->offset;
-  else if (f->volume != 1 || f->offset !=0 ) while (s--) {
-    double d = f->volume * (*buf - f->offset);
+  if (f->volume != 1) while (s--) {
+    double d = f->volume * *buf;
     *buf++ = SOX_ROUND_CLIP_COUNT(d, f->volume_clips);
   }
 }
@@ -552,8 +547,8 @@ static int combiner_stop(sox_effect_t *effp)
 
 static sox_effect_handler_t const * input_combiner_effect_fn(void)
 {
-  static sox_effect_handler_t handler = {
-    "input", 0, SOX_EFF_MCHAN, 0, combiner_start, 0, combiner_drain,
+  static sox_effect_handler_t handler = { "input", 0, SOX_EFF_MCHAN |
+    SOX_EFF_MODIFY, 0, combiner_start, 0, combiner_drain,
     combiner_stop, 0, sizeof(input_combiner_t)
   };
   return &handler;
@@ -561,22 +556,18 @@ static sox_effect_handler_t const * input_combiner_effect_fn(void)
 
 static int ostart(sox_effect_t *effp)
 {
-  (void)effp;
-  if (effp->out_encoding->half_bit && effp->out_signal.precision < 32)
-    ofile->offset = 1 << (31 - ofile->ft->signal.precision);
+  unsigned prec = effp->out_signal.precision;
+  if (effp->in_signal.mult && effp->in_signal.precision > prec)
+    *effp->in_signal.mult *= 1 - (1 << (31 - prec)) * (1. / SOX_SAMPLE_MAX);
   return SOX_SUCCESS;
 }
 
 static int output_flow(sox_effect_t *effp, sox_sample_t const * ibuf,
     sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
-  sox_sample_t const * buf;
   size_t len;
 
   (void)effp, (void)obuf;
-  if (ofile->offset != 0 ) for (buf = ibuf, len = *isamp; len; --len, ++buf)
-    *(sox_sample_t *)buf = *buf >= SOX_SAMPLE_MAX - ofile->offset?
-      SOX_SAMPLE_MAX : *buf + ofile->offset;
   if (show_progress) for (len = 0; len < *isamp; len += effp->in_signal.channels) {
     omax[0] = max(omax[0], ibuf[len]);
     omin[0] = min(omin[0], ibuf[len]);
@@ -604,8 +595,8 @@ static int output_flow(sox_effect_t *effp, sox_sample_t const * ibuf,
 
 static sox_effect_handler_t const * output_effect_fn(void)
 {
-  static sox_effect_handler_t handler = {
-    "output", 0, SOX_EFF_MCHAN, NULL, ostart, output_flow, NULL, NULL, NULL, 0
+  static sox_effect_handler_t handler = {"output", 0, SOX_EFF_MCHAN |
+    SOX_EFF_MODIFY | SOX_EFF_PREC, NULL, ostart, output_flow, NULL, NULL, NULL, 0
   };
   return &handler;
 }
@@ -978,13 +969,15 @@ static void add_effects(sox_effects_chain_t *chain)
     guard = 1;
   }
 
+  if (i == nuser_effects[current_eff_chain] && !no_dither && signal.precision >
+      ofile->ft->signal.precision && ofile->ft->signal.precision <= 24)
+    auto_effect(chain, "dither", 0, NULL, &signal, &guard);
+
   /* Add user specified effects from `dither' onwards */
-  for (; i < nuser_effects[current_eff_chain]; i++, guard = 2) {
+  for (; i < nuser_effects[current_eff_chain]; i++, guard = 2)
     if (add_effect(chain, user_efftab[i], &signal, &ofile->ft->signal,
           &guard) != SOX_SUCCESS)
       exit(2); /* Effects chain should have displayed an error message */
-    chain->out_enc->half_bit = sox_false;
-  }
 
   if (!save_output_eff)
   {
@@ -1740,6 +1733,7 @@ static void usage(char const * message)
 "--combine concatenate    Concatenate multiple input files (default for sox, rec)",
 "--combine sequence       Sequence multiple input files (default for play)",
 "--effects-file FILENAME  File containing effects and options",
+"-D, --no-dither          Don't dither automatically",
 "-G, --guard              Use temporary files to guard against clipping",
 "-h, --help               Display version number and usage information",
 "--help-effect NAME       Show usage of effect NAME, or NAME=all for all",
@@ -1779,7 +1773,6 @@ static void usage(char const * message)
 "-X|--reverse-bits        Encoded bit-order",
 "--endian little|big|swap Encoded byte-order; swap means opposite to default",
 "-L/-B/-x                 Short options for the above",
-"-0                       PCM encoding is 0 biased (offset by half a bit)",
 "-c|--channels CHANNELS   Number of channels of audio data; e.g. 2 = stereo",
 "-r|--rate RATE           Sample rate of audio",
 "-C|--compression FACTOR  Compression factor for output format",
@@ -1937,7 +1930,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
   free(text);
 }
 
-static char *getoptstr = "+ab:c:de:fghimnopqr:st:uv:xABC:GLMNRSTUV::X012348";
+static char *getoptstr = "+ab:c:de:fghimnopqr:st:uv:xABC:DGLMNRSTUV::X12348";
 
 static struct option long_options[] =
   {
@@ -1966,6 +1959,7 @@ static struct option long_options[] =
     {"channels"        , required_argument, NULL, 'c'},
     {"compression"     , required_argument, NULL, 'C'},
     {"default-device"  ,       no_argument, NULL, 'd'},
+    {"no-dither"       ,       no_argument, NULL, 'D'},
     {"encoding"        , required_argument, NULL, 'e'},
     {"help"            ,       no_argument, NULL, 'h'},
     {"null"            ,       no_argument, NULL, 'n'},
@@ -2166,8 +2160,6 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       break;
     }
 
-    case '0': f->encoding.half_bit = sox_true; break;
-
     case 'v':
       if (sscanf(optarg, "%lf %c", &f->volume, &dummy) != 1) {
         lsx_fail("Volume value `%s' is not a number", optarg);
@@ -2259,6 +2251,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 
     case 'S': show_progress = SOX_OPTION_YES; break;
     case 'q': show_progress = SOX_OPTION_NO;  break;
+    case 'D': no_dither = sox_true; break;
 
     case 'V':
       if (optarg == NULL)
