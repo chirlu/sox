@@ -133,7 +133,7 @@ static size_t read_(sox_format_t * ft, sox_sample_t * buf, size_t len)
   for (done = 0; done < len; done += n) {
     do {
       n = snd_pcm_readi(p->pcm, p->buf, (len - done) / ft->signal.channels);
-      if (n < 0 && recover(ft, p->pcm, n) < 0)
+      if (n < 0 && recover(ft, p->pcm, (int)n) < 0)
         return 0;
     } while (n <= 0);
 
@@ -234,7 +234,7 @@ static size_t write_(sox_format_t * ft, sox_sample_t const * buf, size_t len)
           p->pcm, p->buf + i * NBYTES, (n - i) / ft->signal.channels);
       if (errno == EAGAIN)     /* Happens naturally; don't report it: */
         errno = 0;
-      if (actual < 0 && recover(ft, p->pcm, actual) < 0)
+      if (actual < 0 && recover(ft, p->pcm, (int)actual) < 0)
         return 0;
     } while (actual < 0);
   }
