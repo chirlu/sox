@@ -26,6 +26,7 @@ Newly deprecated features (to be removed in future):
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
   -------  ----------------------  ----------------------  -------
   14.3.0   E norm -b, norm -i      gain -B, gain -en       14.3.0 + 1 year
+  14.3.0   E filter                ~=sinc                  14.3.0 + 1 year
   14.3.0   F flac: libFLAC 1.1.2,3 libFLAC > 1.1.3         14.3.0 + 6 months
 
 Previously deprecated features (to be removed in future):
@@ -68,6 +69,7 @@ Audio device drivers:
 
 Effects:
 
+  o New `sinc' FFT filter effect; replacement for `filter'.  (robs)
   o New `overdrive' effect.  (robs)
   o New `pluck' and `tpdf' types for `synth'.  (robs)
   o Can now set common parameters for multiple `synth' channels.  (robs)

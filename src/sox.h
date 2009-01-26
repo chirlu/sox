@@ -451,7 +451,7 @@ sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev)
 #define SOX_EFF_GAIN     128         /* Effect does not support gain -r */
 #define SOX_EFF_MODIFY   256         /* Effect does not modify samples */
 
-typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot} sox_plot_t;
+typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot, sox_plot_data} sox_plot_t;
 typedef struct sox_effect sox_effect_t;
 struct sox_effects_globals { /* Global parameters (for effects) */
   sox_plot_t plot;         /* To help the user choose effect & options */

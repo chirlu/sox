@@ -279,7 +279,7 @@ libsox_la_SOURCES += \
 	rate_poly_fir0.h rate_poly_fir.h remix.c repeat.c reverb.c \
 	reverse.c silence.c skeleff.c speed.c splice.c stat.c swap.c stretch.c \
 	synth.c tempo.c tremolo.c trim.c vol.c overdrive.c effects_i_dsp.c \
-	dft_filter.c dft_filter.h lowfir.c
+	dft_filter.c dft_filter.h sinc.c
 if HAVE_PNG
     libsox_la_SOURCES += spectrogram.c
 endif

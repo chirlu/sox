@@ -227,8 +227,23 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_gain_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "gain", "[-e|-b|-B|-r] [-n] [-l|-h] [gain-dB]", SOX_EFF_GAIN,
+    "gain", NULL, SOX_EFF_GAIN,
     create, start, flow, drain, stop, NULL, sizeof(priv_t)};
+  static char const * lines[] = {
+    "[-e|-b|-B|-r] [-n] [-l|-h] [gain-dB]",
+    "-e\tEqualise channels: peak to that with max peak;",
+    "-B\tBalance channels: rms to that with max rms; no clip protection",
+    "-b\tBalance channels: rms to that with max rms; clip protection",
+    "\t  Note -Bn = -bn",
+    "-r\tReclaim headroom (as much as possible without clipping); see -h",
+    "-n\tNorm file to 0dBfs(output precision); gain-dB, if present, usually <0",
+    "-l\tUse simple limiter",
+    "-h\tApply attenuation for headroom for subsequent effects;",
+    "\t  gain-dB, if present is subject to reclaim by a subsequent gain -r",
+    "gain-dB\tApply gain in dB",
+  };
+  static char * usage;
+  handler.usage = lsx_usage_lines(&usage, lines, array_length(lines));
   return &handler;
 }
 

@@ -264,6 +264,18 @@ double * lsx_make_lpf(int num_taps, double Fc, double beta, double scale)
   return h;
 }
 
+int lsx_lpf_num_taps(double att, double tr_bw, int k)
+{                    /* TODO this could be cleaner, esp. for k != 0 */
+  int n;
+  if (att <= 80)
+    n = .25 / M_PI * (att - 7.95) / (2.285 * tr_bw) + .5;
+  else {
+    double n160 = (.0425* att - 1.4) / tr_bw;   /* Half order for att = 160 */
+    n = n160 * (16.556 / (att - 39.6) + .8625) + .5;  /* For att [80,160) */
+  }
+  return k? 2 * n : 2 * (n + (n & 1)) + 1; /* =1 %4 (0 phase 1/2 band) */
+}
+
 double * lsx_design_lpf(
     double Fp,      /* End of pass-band; ~= 0.01dB point */
     double Fc,      /* Start of stop-band */
@@ -280,18 +292,9 @@ double * lsx_design_lpf(
   Fp /= Fn, Fc /= Fn;        /* Normalise to Fn = 1 */
   tr_bw = LSX_TO_6dB * (Fc-Fp); /* Transition band-width: 6dB to stop points */
 
-  if (*num_taps == 0) {        /* TODO this could be cleaner, esp. for k != 0 */
-    int n;
-    if (att <= 80)
-      n = .25 / M_PI * (att - 7.95) / (2.285 * tr_bw) + .5;
-    else {
-      double n160 = (.0425* att - 1.4) / tr_bw;   /* Half order for att = 160 */
-      n = n160 * (16.556 / (att - 39.6) + .8625) + .5;  /* For att [80,160) */
-    }
-    *num_taps = k? 2 * n : 2 * (n + (n & 1)) + 1; /* =1 %4 (0 phase 1/2 band) */
-  }
-  beta = att < 21 ? 0 : att < 50 ? .5842 * pow((att - 21), .4) + .07886 *
-      (att - 21) : att < 100 ? .1102 * (att - 8.7) : .1117 * att - 1.11;
+  if (!*num_taps)
+    *num_taps = lsx_lpf_num_taps(att, tr_bw, k);
+  beta = lsx_kaiser_beta(att);
   if (k)
     *num_taps = *num_taps * k - 1;
   else k = 1;
@@ -299,20 +302,36 @@ double * lsx_design_lpf(
   return lsx_make_lpf(*num_taps, (Fc - tr_bw) / k, beta, (double)k);
 }
 
+#if 0
+static void printf_vector(FILE * f, double h[], int num_points)
+{
+  int i;
+  printf(
+  "# name: b\n"
+  "# type: matrix\n"
+  "# rows: %i\n"
+  "# columns: 1\n", num_points);
+  for (i = 0; i < num_points; ++i)
+    printf("%24.16e\n", h[i]);
+  exit(0);
+}
+#endif
+
 void lsx_fir_to_phase(double * * h, int * len,
     int * post_len, double phase0)
 {
   double * work, phase = (phase0 > 50 ? 100 - phase0 : phase0) / 50;
-  int work_len, begin, end, peak = 0, i = *len;
+  int work_len, begin, end, abs_peak = 0, peak = 0, i = *len;
+  double sum = 0, peak_sum = 0;
 
   for (work_len = 32; i > 1; work_len <<= 1, i >>= 1);
   work = calloc((size_t)work_len /* + 2 */, sizeof(*work)); /* +2: (UN)PACK */
   for (i = 0; i < *len; ++i) work[i] = (*h)[i];
 
   lsx_safe_rdft(work_len, 1, work); /* Cepstral: */
-  work[0] = log(fabs(work[0])), work[1] = log(fabs(work[1]));
+  work[0] = safe_log(work[0]), work[1] = safe_log(work[1]);
   for (i = 2; i < work_len; i += 2) {
-    work[i] = log(sqrt(sqr(work[i]) + sqr(work[i + 1])));
+    work[i] = safe_log(sqrt(sqr(work[i]) + sqr(work[i + 1])));
     work[i + 1] = 0;
   }
   lsx_safe_rdft(work_len, -1, work);
@@ -329,7 +348,7 @@ void lsx_fir_to_phase(double * * h, int * len,
   UNPACK(work, work_len);
   unwrap_phase(work, work_len);
   PACK(work, work_len);
-  octave_out(stdout, work, work_len);
+  printf_vector(work, work_len);
 #endif
 
   for (i = 2; i < work_len; i += 2) /* Interpolate between linear & min phase */
@@ -344,10 +363,19 @@ void lsx_fir_to_phase(double * * h, int * len,
   lsx_safe_rdft(work_len, -1, work);
   for (i = 0; i < work_len; ++i) work[i] *= 2. / work_len;
 
-  for (i = 1; i < work_len; ++i) if (work[i] > work[peak])  /* Find peak pos. */
-    peak = i;                                           /* N.B. peak val. > 0 */
-
-  lsx_debug("peak-pos=%i", peak);
+  for (i = 0; i < work_len; ++i) {  /* Find peak pos. */
+    sum += work[i];          
+    if (fabs(sum) > peak_sum) {
+      peak_sum = fabs(sum);
+      peak = i;
+    }
+    if (work[i] > work[abs_peak]) /* For debug check only */
+      abs_peak = i;
+  }
+  while (fabs(work[peak-1]) > fabs(work[peak]) && work[peak-1] * work[peak] > 0)
+    --peak;
+  lsx_debug("peak: sum@work[%i]=%g (val@work[%i]=%g)",
+      peak, peak_sum, abs_peak, work[abs_peak]);
   if (phase == 0)
     begin = 0;
   else if (phase == 1)
@@ -369,4 +397,56 @@ void lsx_fir_to_phase(double * * h, int * len,
     (*h)[i] = work[begin + (phase0 > 50 ? *len - 1 - i : i)];
   *post_len = phase0 > 50 ? peak - begin : begin + *len - (peak + 1);
   free(work);
+}
+
+void lsx_plot_fir(double * h, int num_points, sox_rate_t rate, sox_plot_t type, char const * title, double y1, double y2)
+{
+  int i, N = lsx_set_dft_length(num_points);
+  if (type == sox_plot_gnuplot) {
+    double * h1 = lsx_calloc(N, sizeof(*h1));
+    double * H = lsx_malloc((N / 2 + 1) * sizeof(*H));
+    memcpy(h1, h, sizeof(*h1) * num_points);
+    lsx_power_spectrum(N, h1, H);
+    printf(
+        "# gnuplot file\n"
+        "set title '%s'\n"
+        "set xlabel 'Frequency (Hz)'\n"
+        "set ylabel 'Amplitude Response (dB)'\n"
+        "set grid xtics ytics\n"
+        "set key off\n"
+        "plot '-' with lines\n"
+        , title);
+    for (i = 0; i <= N/2; ++i)
+      printf("%g %g\n", i * rate / N, 10 * log10(H[i]));
+    printf(
+        "e\n"
+        "pause -1 'Hit return to continue'\n");
+    free(H);
+    free(h1);
+  }
+  else if (type == sox_plot_octave) {
+    printf("%% GNU Octave file (may also work with MATLAB(R) )\nb=[");
+    for (i = 0; i < num_points; ++i)
+      printf("%24.16e\n", h[i]);
+    printf("];\n"
+        "[h,w]=freqz(b,1,%i);\n"
+        "plot(%g*w/pi,20*log10(h))\n"
+        "title('%s')\n"
+        "xlabel('Frequency (Hz)')\n"
+        "ylabel('Amplitude Response (dB)')\n"
+        "grid on\n"
+        "axis([0 %g %g %g])\n"
+        "disp('Hit return to continue')\n"
+        "pause\n"
+        , N, rate * .5, title, rate * .5, y1, y2);
+  }
+  else if (type == sox_plot_data) {
+    printf("# %s\n"
+        "# name: b\n"
+        "# type: matrix\n"
+        "# rows: %i\n"
+        "# columns: 1\n", title, num_points);
+    for (i = 0; i < num_points; ++i)
+      printf("%24.16e\n", h[i]);
+  }
 }

@@ -108,6 +108,7 @@ void lsx_apply_blackman_nutall(double h[], const int num_points);
 double lsx_kaiser_beta(double att);
 void lsx_apply_kaiser(double h[], const int num_points, double beta);
 double * lsx_make_lpf(int num_taps, double Fc, double beta, double scale);
+int lsx_lpf_num_taps(double att, double tr_bw, int k);
 double * lsx_design_lpf(
     double Fp,      /* End of pass-band; ~= 0.01dB point */
     double Fc,      /* Start of stop-band */
@@ -124,6 +125,7 @@ void lsx_fir_to_phase(double * * h, int * len,
 #define LSX_MAX_TBW0A (LSX_MAX_TBW0 / (1 + LSX_TO_3dB))
 #define LSX_MAX_TBW3 floor(LSX_MAX_TBW0 * LSX_TO_3dB)
 #define LSX_MAX_TBW3A floor(LSX_MAX_TBW0A * LSX_TO_3dB)
+void lsx_plot_fir(double * h, int num_points, sox_rate_t rate, sox_plot_t type, char const * title, double y1, double y2);
 
 #ifndef HAVE_STRCASECMP
 int strcasecmp(const char *s1, const char *s2);

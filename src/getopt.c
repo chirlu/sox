@@ -900,7 +900,7 @@ _getopt_internal (
     char *temp = my_index (optstring, c);
 
     /* Increment `optind' when we start to process its last character.  */
-    if (*nextchar == '\0')
+    if (temp && *nextchar == '\0') /* SoX */
       ++optind;
 
     if (temp == NULL || c == ':')
@@ -944,6 +944,7 @@ _getopt_internal (
               }
 #endif
           }
+        nextchar = (char *) "";  /* SoX */
         optopt = c;
         return '?';
       }

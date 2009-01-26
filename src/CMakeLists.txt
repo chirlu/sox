@@ -28,16 +28,16 @@ add_custom_command(
 
 # Format with: !xargs echo|tr ' ' '\n'|sort|column|expand|sed 's/^/  /'
 set(effects_srcs
-  bend            dither          loudness        phaser          stat
-  biquad          earwax          lowfir          rate            stretch
-  biquads         echo            mcompand        remix           swap
-  chorus          echos           mixer           repeat          synth
-  compand         fade            noiseprof       reverb          tempo
-  compandt        fft4g           noisered        reverse         tremolo
-  contrast        filter          output          silence         trim
-  dcshift         flanger         overdrive       skeleff         vol
-  delay           gain            pad             speed
-  dft_filter      input           pan             splice
+  bend            dither          loudness        rate            stat
+  biquad          earwax          mcompand        remix           stretch
+  biquads         echo            mixer           repeat          swap
+  chorus          echos           noiseprof       reverb          synth
+  compand         fade            noisered        reverse         tempo
+  compandt        fft4g           output          silence         tremolo
+  contrast        filter          overdrive       sinc            trim
+  dcshift         flanger         pad             skeleff         vol
+  delay           gain            pan             speed
+  dft_filter      input           phaser          splice
 )
 set(formats_srcs
   8svx            dat             ima-fmt         s3-fmt          u3-fmt

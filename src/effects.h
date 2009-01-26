@@ -44,7 +44,6 @@
   EFFECT(ladspa)
 #endif
   EFFECT(loudness)
-  EFFECT(lowfir)
   EFFECT(lowpass)
   EFFECT(mcompand)
   EFFECT(mixer)
@@ -68,6 +67,7 @@
   EFFECT(reverse)
   EFFECT(riaa)
   EFFECT(silence)
+  EFFECT(sinc)
 #ifdef HAVE_PNG
   EFFECT(spectrogram)
 #endif

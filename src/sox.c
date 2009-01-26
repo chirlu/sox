@@ -2005,6 +2005,7 @@ static lsx_enum_item const plot_methods[] = {
   LSX_ENUM_ITEM(sox_plot_,off)
   LSX_ENUM_ITEM(sox_plot_,octave)
   LSX_ENUM_ITEM(sox_plot_,gnuplot)
+  LSX_ENUM_ITEM(sox_plot_,data)
   {0, 0}};
 
 enum {
