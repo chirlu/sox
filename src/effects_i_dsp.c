@@ -355,7 +355,6 @@ void lsx_fir_to_phase(double * * h, int * len,
 
   /* Some filters require phase unwrapping at this point.  Ours give dis-
    * continuities only in the stop band, so no need to unwrap in this case. */
-
 #if 0
   LSX_UNPACK(work, work_len);
   unwrap_phase(work, work_len);
