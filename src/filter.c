@@ -97,7 +97,7 @@ static void LpFilter(double *c, long N, double frq, double Beta, long Num)
    if (Beta>2) { /* Apply Kaiser window to filter coeffs: */
       double IBeta = 1.0/lsx_bessel_I_0(Beta);
       for (i=1; i<N; i++) {
-         double x = (double)i / (double)(N);
+         double x = (double)i / (double)(N-1);
          c[i] *= lsx_bessel_I_0(Beta*sqrt(1.0-x*x)) * IBeta;
       }
    } else { /* Apply Nuttall window: */
