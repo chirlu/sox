@@ -29,3 +29,7 @@ void lsx_dfst_f(int, float *, float *, int *, float *);
 
 #define dft_br_len(l) (2 + (1 << (int)(log(l / 2 + .5) / log(2.)) / 2))
 #define dft_sc_len(l) (l / 2)
+
+/* Over-allocate h by 2 to use these macros */
+#define LSX_PACK(h, n)   h[1] = h[n]
+#define LSX_UNPACK(h, n) h[n] = h[1], h[n + 1] = h[1] = 0;

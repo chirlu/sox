@@ -248,19 +248,21 @@ void lsx_apply_kaiser(double h[], const int num_points, double beta)
   }
 }
 
-double * lsx_make_lpf(int num_taps, double Fc, double beta, double scale)
+double * lsx_make_lpf(int num_taps, double Fc, double beta, double scale, sox_bool dc_norm)
 {
-  double * h = malloc(num_taps * sizeof(*h)), sum = 0;
   int i, m = num_taps - 1;
+  double * h = malloc(num_taps * sizeof(*h)), sum = 0;
+  double mult = scale / lsx_bessel_I_0(beta);
   assert(Fc >= 0 && Fc <= 1);
+  lsx_debug("make_lpf(n=%i, Fc=%g beta=%g dc-norm=%i scale=%g)", num_taps, Fc, beta, dc_norm, scale);
   for (i = 0; i <= m / 2; ++i) {
     double x = M_PI * (i - .5 * m), y = 2. * i / m - 1;
     h[i] = x? sin(Fc * x) / x : Fc;
-    sum += h[i] *= lsx_bessel_I_0(beta * sqrt(1 - y * y));
+    sum += h[i] *= lsx_bessel_I_0(beta * sqrt(1 - y * y)) * mult;
     if (m - i != i)
       sum += h[m - i] = h[i];
   }
-  for (i = 0; i < num_taps; ++i) h[i] *= scale / sum;
+  for (i = 0; dc_norm && i < num_taps; ++i) h[i] *= scale / sum;
   return h;
 }
 
@@ -298,24 +300,33 @@ double * lsx_design_lpf(
   if (k)
     *num_taps = *num_taps * k - 1;
   else k = 1;
-  lsx_debug("%i %g %g %g %g", *num_taps, Fp, tr_bw, Fc, beta);
-  return lsx_make_lpf(*num_taps, (Fc - tr_bw) / k, beta, (double)k);
+  lsx_debug("%g %g %g", Fp, tr_bw, Fc);
+  return lsx_make_lpf(*num_taps, (Fc - tr_bw) / k, beta, (double)k, sox_true);
 }
 
 #if 0
-static void printf_vector(FILE * f, double h[], int num_points)
+static void printf_vector(double h[], int num_points)
 {
   int i;
   printf(
   "# name: b\n"
   "# type: matrix\n"
   "# rows: %i\n"
-  "# columns: 1\n", num_points);
-  for (i = 0; i < num_points; ++i)
-    printf("%24.16e\n", h[i]);
+  "# columns: 1\n", num_points / 2);
+  for (i = 0; i < num_points; i += 2)
+    printf("%24.16e\n", h[i + 1]);
   exit(0);
 }
 #endif
+
+static double safe_log(double x)
+{
+  assert(x >= 0);
+  if (x)
+    return log(x);
+  lsx_debug("log(0)");
+  return -26;
+}
 
 void lsx_fir_to_phase(double * * h, int * len,
     int * post_len, double phase0)
@@ -329,7 +340,7 @@ void lsx_fir_to_phase(double * * h, int * len,
   for (i = 0; i < *len; ++i) work[i] = (*h)[i];
 
   lsx_safe_rdft(work_len, 1, work); /* Cepstral: */
-  work[0] = safe_log(work[0]), work[1] = safe_log(work[1]);
+  work[0] = safe_log(fabs(work[0])), work[1] = safe_log(fabs(work[1]));
   for (i = 2; i < work_len; i += 2) {
     work[i] = safe_log(sqrt(sqr(work[i]) + sqr(work[i + 1])));
     work[i + 1] = 0;
@@ -344,11 +355,12 @@ void lsx_fir_to_phase(double * * h, int * len,
 
   /* Some filters require phase unwrapping at this point.  Ours give dis-
    * continuities only in the stop band, so no need to unwrap in this case. */
+
 #if 0
-  UNPACK(work, work_len);
+  LSX_UNPACK(work, work_len);
   unwrap_phase(work, work_len);
-  PACK(work, work_len);
-  printf_vector(work, work_len);
+  printf_vector(work, work_len + 2);
+  LSX_PACK(work, work_len);
 #endif
 
   for (i = 2; i < work_len; i += 2) /* Interpolate between linear & min phase */

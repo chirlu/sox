@@ -107,7 +107,7 @@ void lsx_apply_blackman(double h[], const int num_points, double alpha);
 void lsx_apply_blackman_nutall(double h[], const int num_points);
 double lsx_kaiser_beta(double att);
 void lsx_apply_kaiser(double h[], const int num_points, double beta);
-double * lsx_make_lpf(int num_taps, double Fc, double beta, double scale);
+double * lsx_make_lpf(int num_taps, double Fc, double beta, double scale, sox_bool dc_norm);
 int lsx_lpf_num_taps(double att, double tr_bw, int k);
 double * lsx_design_lpf(
     double Fp,      /* End of pass-band; ~= 0.01dB point */

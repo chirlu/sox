@@ -114,7 +114,6 @@
 
 #define sqr(a) ((a) * (a))
 #define sign(x) ((x) < 0? -1 : 1)
-#define safe_log(x) ((x) <= 0? -99 : log(x)) /* exp --> 0 (for single prec.) */
 
 /* Numerical Recipes in C, p. 284 */
 #define ranqd1(x) ((x) = 1664525L * (x) + 1013904223L) /* int32_t x */
