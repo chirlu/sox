@@ -77,14 +77,13 @@ static void invert(double * h, int n)
   h[(n - 1) / 2] += 1;
 }
 
-static double * lpf(double Fn, double Fc, double tbw, int * num_taps, double att, double * beta, double phase, sox_bool round)
+static double * lpf(double Fn, double Fc, double tbw, int * num_taps, double att, double * beta, sox_bool round)
 {
   if ((Fc /= Fn) <= 0 || Fc >= 1) {
     *num_taps = 0;
     return NULL;
   }
   att = att? att : 120;
-  att = phase && phase != 50 && phase != 100? 34./33 * att : att;
   *beta = *beta < 0? lsx_kaiser_beta(att) : *beta;
   if (!*num_taps) {
     int n = lsx_lpf_num_taps(att, (tbw? tbw / Fn : .05) * .5, 0);
@@ -93,7 +92,7 @@ static double * lpf(double Fn, double Fc, double tbw, int * num_taps, double att
       *num_taps = 1 + 2 * (int)((int)((*num_taps / 2) * Fc + .5) / Fc + .5);
     lsx_report("num taps = %i (from %i)", *num_taps, n);
   }
-  return lsx_make_lpf(*num_taps | 1, Fc, *beta, 1., sox_false);
+  return lsx_make_lpf(*num_taps |= 1, Fc, *beta, 1., sox_false);
 }
 
 static int start(sox_effect_t * effp)
@@ -110,26 +109,29 @@ static int start(sox_effect_t * effp)
       lsx_fail("filter frequency must be less than sample-rate / 2");
       return SOX_EOF;
     }
-    h[0] = lpf(Fn, p->Fc0, p->tbw0, &p->num_taps[0], p->att, &p->beta, p->phase, p->round);
+    h[0] = lpf(Fn, p->Fc0, p->tbw0, &p->num_taps[0], p->att, &p->beta,p->round);
     if (h[0]) invert(h[0], p->num_taps[0]);
-    h[1] = lpf(Fn, p->Fc1, p->tbw1, &p->num_taps[1], p->att, &p->beta, p->phase, p->round);
+    h[1] = lpf(Fn, p->Fc1, p->tbw1, &p->num_taps[1], p->att, &p->beta,p->round);
+
     longer = p->num_taps[1] > p->num_taps[0];
     f->num_taps = p->num_taps[longer];
     if (h[0] && h[1]) {
       for (i = 0; i < p->num_taps[!longer]; ++i)
         h[longer][i + (f->num_taps - p->num_taps[!longer])/2] += h[!longer][i];
-      free(h[!longer]);
+
       if (p->Fc0 < p->Fc1)
         invert(h[longer], f->num_taps);
+
+      free(h[!longer]);
     }
     if (p->phase != 50)
       lsx_fir_to_phase(&h[longer], &f->num_taps, &f->post_peak, p->phase);
     else f->post_peak = f->num_taps / 2;
-    lsx_debug("%i %i %g%%", f->num_taps, f->post_peak,
-        100 - 100. * f->post_peak / (f->num_taps - 1));
+
     if (effp->global_info->plot != sox_plot_off) {
       char title[100];
-      sprintf(title, "SoX effect: sinc filter freq=%g-%g", p->Fc0, p->Fc1? p->Fc1 : Fn);
+      sprintf(title, "SoX effect: sinc filter freq=%g-%g",
+          p->Fc0, p->Fc1? p->Fc1 : Fn);
       lsx_plot_fir(h[longer], f->num_taps, effp->in_signal.rate,
           effp->global_info->plot, title, -p->beta * 10 - 25, 5.);
       return SOX_EOF;

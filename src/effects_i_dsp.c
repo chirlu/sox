@@ -304,21 +304,6 @@ double * lsx_design_lpf(
   return lsx_make_lpf(*num_taps, (Fc - tr_bw) / k, beta, (double)k, sox_true);
 }
 
-#if 0
-static void printf_vector(double h[], int num_points)
-{
-  int i;
-  printf(
-  "# name: b\n"
-  "# type: matrix\n"
-  "# rows: %i\n"
-  "# columns: 1\n", num_points / 2);
-  for (i = 0; i < num_points; i += 2)
-    printf("%24.16e\n", h[i + 1]);
-  exit(0);
-}
-#endif
-
 static double safe_log(double x)
 {
   assert(x >= 0);
@@ -328,86 +313,97 @@ static double safe_log(double x)
   return -26;
 }
 
-void lsx_fir_to_phase(double * * h, int * len,
-    int * post_len, double phase0)
+void lsx_fir_to_phase(double * * h, int * len, int * post_len, double phase)
 {
-  double * work, phase = (phase0 > 50 ? 100 - phase0 : phase0) / 50;
-  int work_len, begin, end, abs_peak = 0, peak = 0, i = *len;
-  double sum = 0, peak_sum = 0;
+  double * pi_wraps, * work, phase1 = (phase > 50 ? 100 - phase : phase) / 50;
+  int i, work_len, begin, end, imp_peak = 0, peak = 0;
+  double imp_sum = 0, peak_imp_sum = 0;
+  double prev_angle2 = 0, cum_2pi = 0, prev_angle1 = 0, cum_1pi = 0;
 
-  for (work_len = 32; i > 1; work_len <<= 1, i >>= 1);
-  work = calloc((size_t)work_len /* + 2 */, sizeof(*work)); /* +2: (UN)PACK */
-  for (i = 0; i < *len; ++i) work[i] = (*h)[i];
+  for (i = *len, work_len = 2 * 2 * 8; i > 1; work_len <<= 1, i >>= 1);
 
+  work = lsx_calloc((size_t)work_len + 2, sizeof(*work)); /* +2: (UN)PACK */
+  pi_wraps = lsx_malloc((((size_t)work_len + 2) / 2) * sizeof(*pi_wraps));
+
+  memcpy(work, *h, *len * sizeof(*work));
   lsx_safe_rdft(work_len, 1, work); /* Cepstral: */
-  work[0] = safe_log(fabs(work[0])), work[1] = safe_log(fabs(work[1]));
-  for (i = 2; i < work_len; i += 2) {
+  LSX_UNPACK(work, work_len);
+
+  for (i = 0; i <= work_len; i += 2) {
+    double angle = atan2(work[i + 1], work[i]);
+    double detect = 2 * M_PI;
+    double delta = angle - prev_angle2;
+    double adjust = detect * ((delta < -detect * .7) - (delta > detect * .7));
+    prev_angle2 = angle;
+    cum_2pi += adjust;
+    angle += cum_2pi;
+    detect = M_PI;
+    delta = angle - prev_angle1;
+    adjust = detect * ((delta < -detect * .7) - (delta > detect * .7));
+    prev_angle1 = angle;
+    cum_1pi += fabs(adjust); /* fabs for when 2pi and 1pi have combined */
+    pi_wraps[i >> 1] = cum_1pi;
+
     work[i] = safe_log(sqrt(sqr(work[i]) + sqr(work[i + 1])));
     work[i + 1] = 0;
   }
+  LSX_PACK(work, work_len);
   lsx_safe_rdft(work_len, -1, work);
   for (i = 0; i < work_len; ++i) work[i] *= 2. / work_len;
+
   for (i = 1; i < work_len / 2; ++i) { /* Window to reject acausal components */
     work[i] *= 2;
     work[i + work_len / 2] = 0;
   }
   lsx_safe_rdft(work_len, 1, work);
 
-  /* Some filters require phase unwrapping at this point.  Ours give dis-
-   * continuities only in the stop band, so no need to unwrap in this case. */
-#if 0
-  LSX_UNPACK(work, work_len);
-  unwrap_phase(work, work_len);
-  printf_vector(work, work_len + 2);
-  LSX_PACK(work, work_len);
-#endif
-
   for (i = 2; i < work_len; i += 2) /* Interpolate between linear & min phase */
-    work[i + 1] = phase * M_PI * .5 * i + (1 - phase) * work[i + 1];
-
+    work[i + 1] = phase1 * i / work_len * pi_wraps[work_len >> 1] +
+        (1 - phase1) * (work[i + 1] + pi_wraps[i >> 1]) - pi_wraps[i >> 1];
+        
   work[0] = exp(work[0]), work[1] = exp(work[1]);
   for (i = 2; i < work_len; i += 2) {
     double x = exp(work[i]);
     work[i    ] = x * cos(work[i + 1]);
     work[i + 1] = x * sin(work[i + 1]);
   }
+
   lsx_safe_rdft(work_len, -1, work);
   for (i = 0; i < work_len; ++i) work[i] *= 2. / work_len;
 
-  for (i = 0; i < work_len; ++i) {  /* Find peak pos. */
-    sum += work[i];          
-    if (fabs(sum) > peak_sum) {
-      peak_sum = fabs(sum);
+  /* Find peak pos. */
+  for (i = 0; i <= (int)(pi_wraps[work_len >> 1] / M_PI + .5); ++i) {
+    imp_sum += work[i];          
+    if (fabs(imp_sum) > fabs(peak_imp_sum)) {
+      peak_imp_sum = imp_sum;
       peak = i;
     }
-    if (work[i] > work[abs_peak]) /* For debug check only */
-      abs_peak = i;
+    if (work[i] > work[imp_peak]) /* For debug check only */
+      imp_peak = i;
   }
-  while (fabs(work[peak-1]) > fabs(work[peak]) && work[peak-1] * work[peak] > 0)
+  while (peak && fabs(work[peak-1]) > fabs(work[peak]) && work[peak-1] * work[peak] > 0)
     --peak;
-  lsx_debug("peak: sum@work[%i]=%g (val@work[%i]=%g)",
-      peak, peak_sum, abs_peak, work[abs_peak]);
-  if (phase == 0)
+
+  if (!phase1)
     begin = 0;
-  else if (phase == 1)
-    begin = 1 + (work_len - *len) / 2;
+  else if (phase1 == 1)
+    begin = peak - *len / 2;
   else {
-    if (peak < work_len / 4) { /* Low phases can wrap impulse, so unwrap: */
-      memmove(work + work_len / 4, work, work_len / 2 * sizeof(*work));
-      memmove(work, work + work_len * 3 / 4, work_len / 4 * sizeof(*work));
-      peak += work_len / 4;
-    }
-    begin = (.997 - (2 - phase) * .22) * *len + .5;
-    end   = (.997 + (0 - phase) * .22) * *len + .5;
+    begin = (.997 - (2 - phase1) * .22) * *len + .5;
+    end   = (.997 + (0 - phase1) * .22) * *len + .5;
     begin = peak - begin - (begin & 1);
     end   = peak + 1 + end + (end & 1);
     *len = end - begin;
     *h = realloc(*h, *len * sizeof(**h));
   }
-  for (i = 0; i < *len; ++i)
-    (*h)[i] = work[begin + (phase0 > 50 ? *len - 1 - i : i)];
-  *post_len = phase0 > 50 ? peak - begin : begin + *len - (peak + 1);
-  free(work);
+  for (i = 0; i < *len; ++i) (*h)[i] =
+    work[(begin + (phase > 50 ? *len - 1 - i : i) + work_len) & (work_len - 1)];
+  *post_len = phase > 50 ? peak - begin : begin + *len - (peak + 1);
+
+  lsx_debug("nPI=%g peak-sum@%i=%g (val@%i=%g); len=%i post=%i (%g%%)",
+      pi_wraps[work_len >> 1] / M_PI, peak, peak_imp_sum, imp_peak,
+      work[imp_peak], *len, *post_len, 100 - 100. * *post_len / (*len - 1));
+  free(pi_wraps), free(work);
 }
 
 void lsx_plot_fir(double * h, int num_points, sox_rate_t rate, sox_plot_t type, char const * title, double y1, double y2)

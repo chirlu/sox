@@ -188,7 +188,7 @@ static void double_sample(stage_t * p, fifo_t * output_fifo)
 }
 
 static void half_band_filter_init(rate_shared_t * p, unsigned which,
-    int num_taps, sample_t const h[], double Fp, double atten, int multiplier,
+    int num_taps, sample_t const h[], double Fp, double att, int multiplier,
     double phase, sox_bool allow_aliasing)
 {
   half_band_t * f = &p->half_band[which];
@@ -205,8 +205,6 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
     f->post_peak = num_taps / 2;
   }
   else {
-    /* Adjustment to negate att degradation with intermediate phase */
-    double att = phase && phase != 50 && phase != 100? atten * (34./33) : atten;
     double * h = lsx_design_lpf(Fp, 1., 2., allow_aliasing, att, &num_taps, 0);
 
     if (phase != 50)
@@ -223,8 +221,8 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
   assert(num_taps & 1);
   f->num_taps = num_taps;
   f->dft_length = dft_length;
-  lsx_debug("fir_len=%i dft_length=%i Fp=%g atten=%g mult=%i",
-      num_taps, dft_length, Fp, atten, multiplier);
+  lsx_debug("fir_len=%i dft_length=%i Fp=%g att=%g mult=%i",
+      num_taps, dft_length, Fp, att, multiplier);
   lsx_safe_rdft(dft_length, 1, f->coefs);
 }
 
