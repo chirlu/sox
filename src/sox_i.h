@@ -180,10 +180,15 @@ int lsx_readqw(sox_format_t * ft, uint64_t * udw);
 int lsx_readf(sox_format_t * ft, float * f);
 int lsx_readw(sox_format_t * ft, uint16_t * uw);
 
+#if 1 /* FIXME: use defines */
 UNUSED static int lsx_readsb(sox_format_t * ft, int8_t * sb)
-  {return lsx_readb(ft, (uint8_t *)sb);}
+{return lsx_readb(ft, (uint8_t *)sb);}
 UNUSED static int lsx_readsw(sox_format_t * ft, int16_t * sw)
-  {return lsx_readw(ft, (uint16_t *)sw);}
+{return lsx_readw(ft, (uint16_t *)sw);}
+#else
+#define lsx_readsb(ft, sb) lsx_readb(ft, (uint8_t *)sb)
+#define lsx_readsw(ft, sw) lsx_readb(ft, (uint16_t *)sw)
+#endif
 
 int lsx_write3(sox_format_t * ft, unsigned u3);
 int lsx_writeb(sox_format_t * ft, unsigned ub);
