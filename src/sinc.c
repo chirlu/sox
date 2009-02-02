@@ -151,7 +151,7 @@ sox_effect_handler_t const * sox_sinc_effect_fn(void)
   static sox_effect_handler_t handler;
   handler = *sox_dft_filter_effect_fn();
   handler.name = "sinc";
-  handler.usage = "[-a att] [-p phase|-M|-I|-L] [-t tbw|-n taps] [freqHP][-freqLP [-t ...|-n ...]]";
+  handler.usage = "[-a att|-b beta] [-p phase|-M|-I|-L] [-t tbw|-n taps] [freqHP][-freqLP [-t tbw|-n taps]]";
   handler.getopts = create;
   handler.start = start;
   handler.priv_size = sizeof(priv_t);

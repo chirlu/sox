@@ -93,6 +93,8 @@ Other new features:
   o New `--temp DIRECTORY' option.  (robs)
   o Grouped files, e.g. play -r 6k "*.vox" plays all at 6k.  (robs)
   o Automatically `dither'; new `--no-dither' option to disable this.  (robs)
+  o Can now use `u' & `d' keys to adjust volume whilst playing audio (on some
+    systems).  (robs)
   o New bitrate, time in seconds, & total options for soxi.  (robs)
 
 Other bug fixes:

@@ -54,16 +54,16 @@ The audio effects/tools included in this release are as follows:
 ** band: SPKit resonator band-pass IIR filter
 ** bass: Tone control: RBJ shelving biquad IIR filter
 ** equalizer: RBJ peaking equalisation biquad IIR filter
-** filter: JOS low/high/band pass FIR filter with many taps
 ** highpass: High-pass filter: Single pole or RBJ biquad IIR
 ** lowpass: Low-pass filter: single pole or RBJ biquad IIR
+** sinc: Sinc-windowed low/high-pass/band-pass/reject FIR
 ** treble: Tone control: RBJ shelving biquad IIR filter
 
 * Production effects
 ** chorus: Make a single instrument sound like many
 ** delay: Delay one or more channels
 ** echo: Add an echo
-** echos: Add a sequence of echoes
+** echos: Add a sequence of echos
 ** flanger: Stereo flanger
 ** overdrive: Non-linear distortion
 ** phaser: Phase shifter
@@ -77,10 +77,10 @@ The audio effects/tools included in this release are as follows:
 ** contrast: Phase contrast volume enhancement
 ** dcshift: Apply or remove DC offset
 ** fade: Apply a fade-in and/or fade-out to the audio
-** gain: Apply gain or attenuation
+** gain: Apply gain or attenuation; normalise/equalise/balance/headroom
 ** loudness: Gain control with ISO 226 loudness compensation
 ** mcompand: Multi-band compression/expansion/limiting
-** norm: Normalise to 0dB (or other), or fix imbalance
+** norm: Normalise to 0dB (or other)
 ** vol: Adjust audio volume
 
 * Editting effects

@@ -236,7 +236,7 @@ T}
 For all files, SoX will exit with an error
 if the file type cannot be determined; command-line format options may
 need to be added or changed to resolve the problem.
-.SS Play, Rec, & Default Audio Devices
+.SS Play & Rec
 Some systems provide more than one type of (SoX-compatible) audio
 driver, e.g. ALSA & OSS, or SUNAU & AO.
 Systems can also have more than one audio device (a.k.a. `sound card').
@@ -297,6 +297,18 @@ to the desired quality option, e.g.
 (Note that the syntax of the
 .B set
 command may vary from system to system.)
+.TS
+center;
+c8 c8 c.
+*	*	*
+.TE
+.DT
+.SP
+On some systems, SoX allows audio playback volume to be adjusted whilst
+using
+.BR play ;
+where supported, this is achieved by tapping the `u' & `d' keys during
+playback.
 .SP
 To help with setting a suitable recording level, SoX includes a simple VU
 meter which can be invoked (before making the actual recording) as follows:
@@ -485,12 +497,12 @@ This behavior can be changed by specifying the pseudo-effect 'newfile'
 within the effects list.  SoX will then enter multiple output mode.
 
 In multiple output mode, a new file is created when the effects
-prior to the 'newfile' indicate they are done.  
+prior to the 'newfile' indicate they are done.
 The effects chain listed after 'newfile'
 is then started up and its output is saved to the new file.
 
 In multiple output mode, a unique number will automatically be appended
-to the end of all filenames.  If the filename has an extension 
+to the end of all filenames.  If the filename has an extension
 then the number is inserted before the extension.  This behavior can
 be customized by placing a %n anywhere in the filename where the
 number should be substituted.  An optional number can be placed after
@@ -502,7 +514,7 @@ specified before the 'newfile'. If end of file is
 reached before the effects chain stops itself then no new file
 will be created as it would be empty.
 
-The following is an example of splitting the first 60 seconds of an input 
+The following is an example of splitting the first 60 seconds of an input
 file in to two 30 second files and ignoring the rest.
 .EX
 	sox song.wav ringtone%1n.wav trim 0 30 : newfile : trim 0 30
@@ -642,17 +654,6 @@ drivers.
 These options can be specified on the command line at any point
 before the first effect name.
 .TP
-\fB\-h\fR, \fB\-\-help\fR
-Show version number and usage information.
-.TP
-\fB\-\-help\-effect=\fINAME\fR
-Show usage information on the specified effect.  The name
-\fBall\fR can be used to show usage on all effects.
-.TP
-\fB\-\-help\-format=\fINAME\fR
-Show information about the specified file format.  The name
-\fBall\fR can be used to show information on all formats.
-.TP
 \fB\-\-buffer\fR \fBBYTES\fR, \fB\-\-input\-buffer\fR \fBBYTES\fR
 Set the size in bytes of the buffers used for processing audio (default 8192).
 .B \-\-buffer
@@ -670,9 +671,34 @@ the current input file.
 \fB\-\--effects\-file=\fIFILENAME\fR
 Use FILENAME to obtain all effects and their arguments.
 The file is parsed as if the values were specified on the
-command line.  A new line can be used in place of the special ":" marker 
-to separate effect chains.  This option causes any effects specified on 
+command line.  A new line can be used in place of the special ":" marker
+to separate effect chains.  This option causes any effects specified on
 the command line to be discarded.
+.TP
+\fB\-G\fR, \fB\-\-guard\fR
+Automatically invoke the
+.B gain
+effect to guard against clipping. E.g.
+.EX
+	sox -G infile -b 16 outfile rate 44100 dither -s
+.EE
+See also
+.BR \-V,
+.BR \-\-norm,
+and the
+.B gain
+effect.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Show version number and usage information.
+.TP
+\fB\-\-help\-effect=\fINAME\fR
+Show usage information on the specified effect.  The name
+\fBall\fR can be used to show usage on all effects.
+.TP
+\fB\-\-help\-format=\fINAME\fR
+Show information about the specified file format.  The name
+\fBall\fR can be used to show information on all formats.
 .TP
 \fB\-\-interactive\fR
 Prompt before overwriting an existing file with the same name as that
@@ -701,6 +727,30 @@ selects `merge'.
 .SP
 See \fBInput File Combining\fR above for a description of the different
 combining methods.
+.TP
+\fB\-\-no\-dither\fR
+SoX, by default, automatically invokes the dither effect (with TPDF) when reducing
+bit-depth.  This option can be given to prevent this behaviour.
+.SP
+See also
+.B \-V
+and the
+.B dither
+effect.
+.TP
+\fB\-\-norm\fR
+Automatically invoke the
+.B gain
+effect to guard against clipping, and to normalise the audio. E.g.
+.EX
+	sox --norm infile -b 16 outfile rate 44100 dither -s
+.EE
+See also
+.BR \-V,
+.BR \-G,
+and the
+.B gain
+effect.
 .TP
 \fB\-\-plot gnuplot\fR\^|\^\fBoctave\fR\^|\^\fBoff\fR
 If not set to
@@ -789,9 +839,13 @@ solution.
 Show SoX's version number and exit.
 .TP
 \fB\-\-single-threaded\fR
-Disable parallel effects channel processing (where supported).
+On some hyper-threading/mult-core architectures,
+SoX has support for parallel effects channel processing.
+This option can be given to disable parallel processing. 
 .IP \fB\-V\fB[\fIlevel\fB]\fP
-Set verbosity.
+Set verbosity\*mthis is particularly useful for seeing how any automatic
+effects have been invoked by SoX.
+.SP
 SoX displays messages on the console (stderr) according to the following
 verbosity levels:
 .IP
@@ -1099,20 +1153,20 @@ that are buffered by effects to the left of the terminating effect
 will be discarded.  The amount of samples discarded is related to the
 .B --buffer
 option and it should be keep small, relative to the sample rate, if
-the terminating effect can not be first.  Further information on 
-stopping effects can be found in the 
+the terminating effect can not be first.  Further information on
+stopping effects can be found in the
 .B Stopping SoX
 section.
 .SP
 There are a few pseudo-effects that aid using multiple effects chains.
-These include 
+These include
 .B newfile
 which will start writing to a new output file before moving to the
-next effects chain and 
+next effects chain and
 .B restart
 which will move back to the first effects chain.  Pseudo-effects
 must be specified as the first effect in a chain and as the only
-effect in a chain (they must have a 
+effect in a chain (they must have a
 .B :
 before and after they are specified).
 .SP
@@ -1709,36 +1763,6 @@ to the sample count (for example `8000s').
 .SP
 An optional \fItype\fR can be specified to change the type of envelope.  Choices are \fBq\fR for quarter of a sine wave, \fBh\fR for half a sine wave, \fBt\fR for linear slope, \fBl\fR for logarithmic, and \fBp\fR for inverted parabola.  The default is logarithmic.
 .TP
-\fBfilter\fR [\fIlow\fR]\fB\-\fR[\fIhigh\fR] [\fIwindow-len\fR [\fIbeta\fR]]
-Apply a sinc-windowed lowpass, highpass, or bandpass filter of given
-window length to the signal.
-\fIlow\fR refers to the frequency of the lower 6dB corner of the filter.
-\fIhigh\fR refers to the frequency of the upper 6dB corner of the filter.
-.SP
-A low-pass filter is obtained by leaving \fIlow\fR unspecified, or 0.
-A high-pass filter is obtained by leaving \fIhigh\fR unspecified, or 0,
-or greater than or equal to the Nyquist frequency.
-.SP
-The \fIwindow-len\fR, if unspecified, defaults to 128.
-Longer windows give a sharper cut-off, smaller windows a more gradual cut-off.
-.SP
-The \fIbeta\fR parameter
-determines the type of filter window used.  Any value greater than 2 is
-the beta for a Kaiser window.  Beta \(<= 2 selects a Blackman-Nuttall window.
-If unspecified, the default is a Kaiser window with beta 16.
-.SP
-In the case of Kaiser window (beta > 2), lower betas produce a
-somewhat faster transition from pass-band to stop-band, at the cost of
-noticeable artifacts. A beta of 16 is the default, beta less than 10
-is not recommended. If you want a sharper cut-off, don't use low
-beta's, use a longer sample window. A Blackman-Nuttall window is selected by
-specifying any `beta' \(<= 2, and the Blackman-Nuttall window has somewhat
-steeper cut-off than the default Kaiser window. You will probably not
-need to use the beta parameter at all, unless you are just curious
-about comparing the effects of Blackman-Nuttall vs. Kaiser windows.
-.SP
-This effect supports the \fB\-\-plot\fR global option.
-.TP
 \fBflanger\fR [\fIdelay depth regen width speed shape phase interp\fR]
 Apply a flanging effect to the audio.
 See [3] for a detailed description of flanging.
@@ -1773,14 +1797,136 @@ T}
 .TE
 .DT
 .TP
-\fBgain \fIdB-gain\fR
-Apply an amplification or an attenuation to the audio signal.  The
-signal level is adjusted by the given number of dB\*mpositive amplifies
-(beware of Clipping), negative attenuates.
+\fBgain \fR[\fB\-e\fR|\fB\-B\fR|\fB\-b\fR|\fB\-r\fR] [\fB\-n\fR] [\fB\-l\fR|\fB\-h\fR] [\fIgain-dB\fR]
+Apply amplification or attenuation to the audio signal, or, in some
+cases, to some of its channels.
+Note that use of any of
+.BR \-e ,
+.BR \-B ,
+.BR \-b ,
+.BR \-r ,
+or
+.B \-n
+requires temporary file space to store the audio to be processed, so may
+be unsuitable for use with `streamed' audio.
+.SP
+Without other options,
+.I gain-dB
+is used to adjust the signal power level by the given number of dB:
+positive amplifies (beware of Clipping), negative attenuates.  With
+other options, the
+.I gain-dB
+amplification or attenuation is (logically) applied after the processing due to those options.
+.SP
+Given the
+.B \-e
+option, the levels of the audio channels of a multi-channel file are `equalised', i.e.
+gain is applied to all channels other than that with the highest peak
+level, such that all channels atain the same peak level
+(but, without also giving
+.BR \-n ,
+the audio is not `normalised').
+.SP
+The
+.B \-B
+(balance) option is similar to
+.BR \-e ,
+but with
+.BR \-B,
+the RMS level is used instead of the peak level.
+.B \-B
+might be used to correct stereo imbalance caused by an imperfect record
+turntable cartridge.   Note
+that unlike
+.BR \-e ,
+.B \-B
+might cause some clipping.
+.SP
+.B \-b
+is similar to
+.B \-B
+but has clipping protection, i.e.  if necessary to prevent clipping
+whilst balancing, attenuation is applied to all channels.
+Note, however, that in conjunction with
+.BR \-n ,
+.B \-B
+and
+.B \-b
+are synonomous.
+.SP
+The
+.B \-r
+option is used in conjuction with a prior invocation of
+.B gain
+with the
+.B \-h
+option\*msee below for details.
+.SP
+The
+.B \-n
+option normalises the audio to 0dB FSD; it is often used in conjuction with a negative
+.I gain-dB
+to the effect that the audio is normalised to a given level below 0dB.
+For example,
+.EX
+	sox infile outfile gain -n
+.EE
+normalises to 0dB, and
+.EX
+	sox infile outfile gain -n -3
+.EE
+normalises to \-3dB.
+.SP
+The
+.B \-l
+option invokes a simple limiter, e.g.
+.EX
+	sox infile outfile gain -l 6
+.SP
+will apply 6dB of gain but never clip.  Note that limiting more than a
+few dBs more than occasionally (in a piece of audio) is not recommended
+as it can cause audible distortion.
+.SP
+The
+.B \-h
+option is used to apply gain to provide head-room for subsequent
+processing.  For example, with
+.EX
+	sox infile outfile gain -h bass +6
+.EE
+6dB of attenuation will be applied prior to the bass boosting effect
+thus ensuring that it will not clip.  Of course, with bass, it is
+obvious how much headroom will be needed, but with other effects (e.g.
+rate, dither) it is not always as clear.  Another advantage of using
+\fBgain \-h\fR rather than an explicit attenuation, is that if the
+headroom is not used by subsequent effects, it can be reclaimed with
+\fBgain -r\fR, for example:
+.EX
+	sox infile outfile gain -h bass +6 rate 44100 gain -r
+.EE
+The above effects chain guarantees never to clip nor amplify;
+it attenuates if necessary to prevent clipping, but by only as
+much as is needed to do so.
+.SP
+Output formatting (dithering and bit-depth reduction) also requires
+headroom (which cannot be `reclaimed'), e.g.
+.EX
+	sox infile outfile gain -h bass +6 rate 44100 gain -rh dither
+.EE
+Here, the second
+.B gain
+invocation, reclaims as much of the headroom as it can from the
+preceding effects, but retains as much headroom as is needed for
+subsequent processing.
+The SoX global option
+.B \-G
+can be given to automatically invoke \fBgain \-h\fR and \fBgain -r\fR.
 .SP
 See also the
+.B norm
+and
 .B vol
-effect.
+effects.
 .TP
 \fBhighpass\fR\^|\^\fBlowpass\fR [\fB\-1\fR|\fB\-2\fR] \fIfrequency\fR[\fBk\fR]\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR\^|\^\fBk\fR]]
 Apply a high-pass or low-pass filter with 3dB point \fIfrequency\fR.
@@ -1969,55 +2115,19 @@ using a pipe, e.g.
 	sox noisy.au -n trim 0 1 noiseprof | play noisy.au noisered
 .EE
 .TP
-\fBnorm\fR [\fB\-i\fR\^|\^\fB\-b\fR] [\fIlevel\fR]
-Normalise audio to 0dB FSD, to a given level relative to 0dB, or normalise
-the balance of multi-channel audio.
-Requires temporary file space to store the audio to be normalised.
+\fBnorm\fR [\fIdB-level\fR]
+Normalise the audio.
+.B norm
+is just an alias for \fBgain \-n\fR; see the
+.B gain
+effect for details.
 .SP
-To create a normalised copy of an audio file,
-.EX
-	sox infile outfile norm
-.EE
-can be used, though note that if `infile' has a simple encoding (e.g.
-PCM), then
-.EX
-	sox infile outfile vol \`sox infile -n stat -v 2>&1\`
-.EE
-(on systems that support this construct) might be quicker to execute
-(though perhaps not to type!) as it doesn't require a temporary file.
-.SP
-For a more complex example, suppose that `effect1' performs some unknown
-or unpredictable attenuation and that `effect2' requires up to 10dB of
-headroom, then
-.EX
-	sox infile outfile effect1 norm -10 effect2 norm
-.EE
-gives both effect2 and the output file the highest possible signal
-levels.
-.SP
-Normally, audio is normalised based on the level of the channel with
-the highest peak level, which means that whilst all channels are adjusted,
-only one channel attains
-the normalised level.  If the
+Note that \fBnorm\fR's
 .B \-i
-option is given, then each channel is treated individually and
-will attain the normalised level.
-.SP
-If the
+and
 .B \-b
-option is given (with a multi-channel audio file), then the audio
-channels will be balanced; i.e. the RMS level of each channel will be
-normalised to that of the channel with the highest RMS level.  This can
-be used, for example, to correct stereo imbalance.  Note that
-.B \-b
-can cause clipping.
-.SP
-In most cases,
-.B norm \-3
-should be the maximum level used at the output file (to leave headroom
-for playback-resampling, etc.).  See also the discussions of
-.B Clipping
-and Replay Gain above.
+options are deprecated (having been superseded by \fBgain \-en\fR and
+\fBgain \-B\fR respectively) and will be removed in a future release.
 .TP
 \fBoops\fR
 Out Of Phase Stereo effect.
@@ -2272,7 +2382,7 @@ file.
 	sox input.wav -b 24 output.aiff rate -v -L -b 90 48k
 .EE
 very high quality resampling; overrides: linear phase, band-width 90%;
-to 48k sample rate; store output to 24-bit AIFF file. 
+to 48k sample rate; store output to 24-bit AIFF file.
 .TS
 center;
 c8 c8 c.
@@ -2556,6 +2666,39 @@ that does not contain the delay at the start which usually occurs between
 .EX
 	rec \fIparameters filename other-effects\fR silence 1 5 2%
 .EE
+.TP
+\fBsinc\fR [\fB\-a\fI att\fR\^|\^\fB\-b\fI beta\fR] [\fB\-p\fI phase\fR\^|\^\fB\-M\fR\^|\^\fB\-I\fR\^|\^\fB\-L\fR] [\fB\-t\fI tbw\fR\^|\^\fB\-n\fI taps\fR] [\fIfreqHP\fR][\fB\-\fIfreqLP\fR [\fB\-t\fR tbw\^|\^\fB\-n\fR taps]]
+Apply a sinc kaiser-windowed low-pass, high-pass, band-pass, or band-reject filter
+to the signal.
+The \fIfreqHP\fR and \fIfreqLP\fR parameters give the frequencies of the
+6dB points of a high-pass and low-pass filter that may be invoked
+individually, or together.  If both are
+given, then \fIfreqHP\fR < \fIfreqLP\fR creates a band-pass filter,
+\fIfreqHP\fR > \fIfreqLP\fR creates a band-reject filter.
+.SP
+The default stop-band attenuation of 120dB can be overriden with
+\fB\-a\fR; alternatively, the kaiser-window `beta' parameter can be
+given directly with \fB\-b\fR.
+.SP
+The default transition band-width of 5% of the total band can be overriden with
+\fB\-t\fR; alternatively, the number of filter taps can be
+given directly with \fB\-n\fR.
+.SP
+If both \fIfreqHP\fR and \fIfreqLP\fR are given, then a \fB\-t\fR or
+\fB\-n\fR option given to the left of the frequencies applies to both
+frequencies; one of these options given to the right of the frequencies
+applies only to \fIfreqLP\fR.
+.SP
+The
+.BR \-p ,
+.BR \-M ,
+.BR \-I ,
+and
+.B \-L
+options control the filter's phase response; see the \fBrate\fR effect
+for details.
+.SP
+This effect supports the \fB\-\-plot\fR global option.
 .TP
 \fBspeed \fIfactor\fR[\fBc\fR]
 Adjust the audio speed (pitch and tempo together).  \fIfactor\fR
@@ -2945,7 +3088,7 @@ See also the
 .B tempo
 effect.
 .TP
-\fBsynth\fR [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR] [[\fB%\fR]\fIfreq\fR[\fBk\fR][\fB:\fR\^|\^\fB+\fR\^|\^\fB/\fR\^|\^\fB\-\fR[\fB%\fR]\fIfreq2\fR[\fBk\fR]]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
+\fBsynth\fR [\fB\-n\fR] [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR] [[\fB%\fR]\fIfreq\fR[\fBk\fR][\fB:\fR\^|\^\fB+\fR\^|\^\fB/\fR\^|\^\fB\-\fR[\fB%\fR]\fIfreq2\fR[\fBk\fR]]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
 This effect can be used to generate fixed or swept frequency audio tones
 with various wave shapes, or to generate wide-band noise of various
 `colours'.
@@ -3000,10 +3143,18 @@ or with a (Bourne shell) loop, the whole guitar:
 .B N.B.
 This effect generates audio at maximum volume (0dBFS), which means that there
 is a high chance of clipping when using the audio subsequently, so
-in most cases, you will want to follow this effect with the \fBgain\fR
+in many cases, you will want to follow this effect with the \fBgain\fR
 effect to prevent this from happening. (See also
 .B Clipping
 above.)
+Note that, by default, the
+.B synth
+effect incorporates the functionality of \fBgain \-h\fR (see the
+.B gain
+effect for details);
+.BR synth 's
+.B \-n
+option may be given to disable this behaviour.
 .SP
 A detailed description of each
 .B synth
@@ -3206,6 +3357,39 @@ for a dynamic-range compression/expansion/limiting effect.
 The following effects have been renamed or have their functionality
 included in another effect; they continue to work in this version of
 SoX but may be removed in future.
+.TP
+\fBfilter\fR [\fIlow\fR]\fB\-\fR[\fIhigh\fR] [\fIwindow-len\fR [\fIbeta\fR]]
+Apply a sinc-windowed lowpass, highpass, or bandpass filter of given
+window length to the signal.
+This effect has been superseded by the \fBsinc\fR effect.
+Compared with `sinc', `filter' is slower and has fewer capabilities.
+.SP
+\fIlow\fR refers to the frequency of the lower 6dB corner of the filter.
+\fIhigh\fR refers to the frequency of the upper 6dB corner of the filter.
+.SP
+A low-pass filter is obtained by leaving \fIlow\fR unspecified, or 0.
+A high-pass filter is obtained by leaving \fIhigh\fR unspecified, or 0,
+or greater than or equal to the Nyquist frequency.
+.SP
+The \fIwindow-len\fR, if unspecified, defaults to 128.
+Longer windows give a sharper cut-off, smaller windows a more gradual cut-off.
+.SP
+The \fIbeta\fR parameter
+determines the type of filter window used.  Any value greater than 2 is
+the beta for a Kaiser window.  Beta \(<= 2 selects a Blackman-Nuttall window.
+If unspecified, the default is a Kaiser window with beta 16.
+.SP
+In the case of Kaiser window (beta > 2), lower betas produce a
+somewhat faster transition from pass-band to stop-band, at the cost of
+noticeable artifacts. A beta of 16 is the default, beta less than 10
+is not recommended. If you want a sharper cut-off, don't use low
+beta's, use a longer sample window. A Blackman-Nuttall window is selected by
+specifying any `beta' \(<= 2, and the Blackman-Nuttall window has somewhat
+steeper cut-off than the default Kaiser window. You will probably not
+need to use the beta parameter at all, unless you are just curious
+about comparing the effects of Blackman-Nuttall vs. Kaiser windows.
+.SP
+This effect supports the \fB\-\-plot\fR global option.
 .TP
 \fBkey \fR[\fB\-q\fR] \fIshift\fR [\fIsegment\fR [\fIsearch\fR [\fIoverlap\fR]]]
 Change the audio key (i.e. pitch but not tempo).

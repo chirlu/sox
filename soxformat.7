@@ -492,6 +492,16 @@ This is a pseudo-type that forces libsndfile to be used. For writing files, the
 actual file type is then taken from the output file name; for reading
 them, it is deduced from the file.
 .TP
+\fBsndio\fR (optional)
+OpenBSD audio device driver; supports both playing and recording audio.
+.EX
+	sox infile -t sndio
+.EE
+See also
+.BR play (1)
+and
+.BR rec (1).
+.TP
 .B .sndr
 Sounder files.
 An MS-DOS/Windows format from the early '90s.
