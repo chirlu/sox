@@ -7,3 +7,4 @@ libtool ltmain.sh
 sox*.tar.gz
 *.txt *.pdf *.html
 sox.pc
+README
