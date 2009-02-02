@@ -237,7 +237,7 @@ static int sox_ladspa_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
     if (l_st->input_port != ULONG_MAX) {
       /* Copy the input; FIXME: Assume LADSPA_Data == float! */
       for (i = 0; i < len; i++)
-        buf[i] = SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i]);
+        buf[i] = SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i], effp->clips);
 
       /* Connect the input port */
       l_st->desc->connect_port(l_st->handle, l_st->input_port, buf);
