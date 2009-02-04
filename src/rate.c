@@ -26,8 +26,7 @@
 #include "sox_i.h"
 #include "fft4g.h"
 #include "getopt.h"
-#define  FIFO_SIZE_T int
-#include "fifo.h"
+#include "dft_filter.h"
 #include <assert.h>
 #include <string.h>
 
@@ -69,14 +68,9 @@ static sample_t * prepare_coefs(raw_coef_t const * coefs, int num_coefs,
   return result;
 }
 
-typedef struct {
-  int        dft_length, num_taps, post_peak;
-  sample_t   * coefs;
-} half_band_t;      /* Note: not half-band as in symmetric about Fn/2 (Fs/4) */
-
 typedef struct {    /* Data that are shared between channels and filters */
   sample_t   * poly_fir_coefs;
-  half_band_t half_band[2];    /* [0]: halve; [1]: down/up: halve/double */
+  dft_filter_t half_band[2];    /* [0]: halve; [1]: down/up: halve/double */
 } rate_shared_t;
 
 struct stage;
@@ -130,7 +124,7 @@ static void half_sample(stage_t * p, fifo_t * output_fifo)
   sample_t * output;
   int i, j, num_in = max(0, fifo_occupancy(&p->fifo));
   rate_shared_t const * s = p->shared;
-  half_band_t const * f = &s->half_band[p->which];
+  dft_filter_t const * f = &s->half_band[p->which];
   int const overlap = f->num_taps - 1;
 
   while (num_in >= f->dft_length) {
@@ -162,7 +156,7 @@ static void double_sample(stage_t * p, fifo_t * output_fifo)
   sample_t * output;
   int i, j, num_in = max(0, fifo_occupancy(&p->fifo));
   rate_shared_t const * s = p->shared;
-  half_band_t const * f = &s->half_band[1];
+  dft_filter_t const * f = &s->half_band[1];
   int const overlap = f->num_taps - 1;
 
   while (num_in > f->dft_length >> 1) {
@@ -191,7 +185,7 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
     int num_taps, sample_t const h[], double Fp, double att, int multiplier,
     double phase, sox_bool allow_aliasing)
 {
-  half_band_t * f = &p->half_band[which];
+  dft_filter_t * f = &p->half_band[which];
   int dft_length, i;
 
   if (f->num_taps)

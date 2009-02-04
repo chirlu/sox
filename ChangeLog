@@ -70,6 +70,7 @@ Audio device drivers:
 Effects:
 
   o New `sinc' FFT filter effect; replacement for `filter'.  (robs)
+  o New `fir' filter effect using external coefficients file.  (robs)
   o New `overdrive' effect.  (robs)
   o New `pluck' and `tpdf' types for `synth'.  (robs)
   o Can now set common parameters for multiple `synth' channels.  (robs)

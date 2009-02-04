@@ -306,6 +306,25 @@ double lsx_parse_frequency(char const * text, char * * end_ptr)
   return result < 0 ? -1 : result;
 }
 
+FILE * lsx_open_input_file(sox_effect_t * effp, char const * filename)
+{
+  FILE * file;
+
+  if (!filename || !strcmp(filename, "-")) {
+    if (effp->global_info->global_info->stdin_in_use_by) {
+      lsx_fail("stdin already in use by '%s'", effp->global_info->global_info->stdin_in_use_by);
+      return NULL;
+    }
+    effp->global_info->global_info->stdin_in_use_by = effp->handler.name;
+    file = stdin;
+  }
+  else if (!(file = fopen(filename, "r"))) {
+    lsx_fail("couldn't open file %s: %s", filename, strerror(errno));
+    return NULL;
+  }
+  return file;
+}
+
 int lsx_effects_init(void)
 {
   init_fft_cache();

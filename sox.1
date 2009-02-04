@@ -1763,6 +1763,32 @@ to the sample count (for example `8000s').
 .SP
 An optional \fItype\fR can be specified to change the type of envelope.  Choices are \fBq\fR for quarter of a sine wave, \fBh\fR for half a sine wave, \fBt\fR for linear slope, \fBl\fR for logarithmic, and \fBp\fR for inverted parabola.  The default is logarithmic.
 .TP
+\fBfir\fR [\fIcoefs-file\fR\^|\^\fIcoefs\fR]
+Use SoX's FFT convolution engine with given FIR filter
+coefficients.
+If a single argument is given then this is treated as the name of a file
+containing the filter coefficients (white-space separated; may contain
+`#' comments).  If the given filename is `\-', or if no argument is
+given, then the coefficients are read from the `standard input' (stdin);
+otherwise, coefficients may be given on the command line.
+Examples:
+.EX
+  sox infile outfile fir 0.0195 -0.082 0.234 0.891 -0.145 0.043
+.EE
+.EX
+  sox infile outfile fir coefs.txt
+.EE
+with coefs.txt containing
+.EX
+  # HP filter
+  # freq=10000
+    1.2311233052619888e-01
+   -4.4777096106211783e-01
+    5.1031563346705155e-01
+   -6.6502926320995331e-02
+  ...
+.EE
+.TP
 \fBflanger\fR [\fIdelay depth regen width speed shape phase interp\fR]
 Apply a flanging effect to the audio.
 See [3] for a detailed description of flanging.
@@ -1852,7 +1878,7 @@ Note, however, that in conjunction with
 .B \-B
 and
 .B \-b
-are synonomous.
+are synonymous.
 .SP
 The
 .B \-r
@@ -1882,7 +1908,7 @@ The
 option invokes a simple limiter, e.g.
 .EX
 	sox infile outfile gain -l 6
-.SP
+.EE
 will apply 6dB of gain but never clip.  Note that limiting more than a
 few dBs more than occasionally (in a piece of audio) is not recommended
 as it can cause audible distortion.

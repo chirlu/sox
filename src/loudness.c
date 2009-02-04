@@ -78,7 +78,7 @@ static double * make_filter(int n, double start, double delta, double rate)
   work = lsx_calloc(work_len, sizeof(*work));
   h = lsx_calloc(n, sizeof(*h));
 
-  for (i = 1; i <= work_len / 2; ++i) {
+  for (i = 0; i <= work_len / 2; ++i) {
     double f = rate * i / work_len;
     double spl1 = f < 1? spl[0] : lsx_spline3(fs, spl, d, (int)LEN, log(f));
     work[i < work_len / 2 ? 2 * i : 1] = dB_to_linear(spl1);
@@ -97,23 +97,21 @@ static double * make_filter(int n, double start, double delta, double rate)
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *) effp->priv;
-  dft_filter_filter_t * f = p->base.filter_ptr;
+  dft_filter_t * f = p->base.filter_ptr;
 
   if (p->delta == 0)
     return SOX_EFF_NULL;
 
   if (!f->num_taps) {
     double * h = make_filter(p->n, p->start, p->delta, effp->in_signal.rate);
-    int i, dft_length = lsx_set_dft_length(p->n);
-    f->coefs = lsx_calloc(dft_length, sizeof(*f->coefs));
-    for (i = 0; i < p->n; ++i)
-      f->coefs[(i + dft_length - p->n + 1) & (dft_length - 1)]
-          = h[i] / dft_length * 2;
-    free(h);
-    f->num_taps = p->n;
-    f->post_peak = f->num_taps / 2;
-    f->dft_length = dft_length;
-    lsx_safe_rdft(dft_length, 1, f->coefs);
+    if (effp->global_info->plot != sox_plot_off) {
+      char title[100];
+      sprintf(title, "SoX effect: loudness %g (%g)", p->delta, p->start);
+      lsx_plot_fir(h, p->n, effp->in_signal.rate,
+          effp->global_info->plot, title, p->delta - 5, 0.);
+      return SOX_EOF;
+    }
+    lsx_set_dft_filter(f, h, p->n, p->n >> 1);
   }
   return sox_dft_filter_effect_fn()->start(effp);
 }

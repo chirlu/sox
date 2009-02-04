@@ -86,7 +86,10 @@ static int sox_noisered_start(sox_effect_t * effp)
     size_t fchannels = 0;
     size_t channels = effp->in_signal.channels;
     size_t i;
-    FILE* ifp;
+    FILE * ifp = lsx_open_input_file(effp, data->profile_filename);
+
+    if (!ifp)
+      return SOX_EOF;
 
     data->chandata = lsx_calloc(channels, sizeof(*(data->chandata)));
     data->bufdata = 0;
@@ -95,22 +98,6 @@ static int sox_noisered_start(sox_effect_t * effp)
         data->chandata[i].smoothing = lsx_calloc(FREQCOUNT, sizeof(float));
         data->chandata[i].lastwindow = NULL;
     }
-
-    /* Here we actually open the input file. */
-    if (!data->profile_filename || !strcmp(data->profile_filename, "-")) {
-      if (effp->global_info->global_info->stdin_in_use_by) {
-        lsx_fail("stdin already in use by '%s'", effp->global_info->global_info->stdin_in_use_by);
-        return SOX_EOF;
-      }
-      effp->global_info->global_info->stdin_in_use_by = effp->handler.name;
-      ifp = stdin;
-    }
-    else if ((ifp = fopen(data->profile_filename, "r")) == NULL) {
-        lsx_fail("Couldn't open profile file %s: %s",
-                data->profile_filename, strerror(errno));
-        return SOX_EOF;
-    }
-
     while (1) {
         unsigned long i1_ul;
         size_t i1;
@@ -127,7 +114,7 @@ static int sox_noisered_start(sox_effect_t * effp)
         data->chandata[fchannels].noisegate[0] = f1;
         for (i = 1; i < FREQCOUNT; i ++) {
             if (1 != fscanf(ifp, ", %f", &f1)) {
-                lsx_fail("noisered: Not enough datums for channel %lu "
+                lsx_fail("noisered: Not enough data for channel %lu "
                         "(expected %d, got %lu)", (unsigned long)fchannels, FREQCOUNT, (unsigned long)i);
                 return SOX_EOF;
             }

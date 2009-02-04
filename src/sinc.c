@@ -98,50 +98,46 @@ static double * lpf(double Fn, double Fc, double tbw, int * num_taps, double att
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  dft_filter_filter_t * f = p->base.filter_ptr;
+  dft_filter_t * f = p->base.filter_ptr;
 
   if (!f->num_taps) {
     double Fn = effp->in_signal.rate * .5;
     double * h[2];
-    int i, longer;
+    int i, n, post_peak, longer;
 
     if (p->Fc0 >= Fn || p->Fc1 >= Fn) {
       lsx_fail("filter frequency must be less than sample-rate / 2");
       return SOX_EOF;
     }
     h[0] = lpf(Fn, p->Fc0, p->tbw0, &p->num_taps[0], p->att, &p->beta,p->round);
-    if (h[0]) invert(h[0], p->num_taps[0]);
     h[1] = lpf(Fn, p->Fc1, p->tbw1, &p->num_taps[1], p->att, &p->beta,p->round);
+    if (h[0])
+      invert(h[0], p->num_taps[0]);
 
     longer = p->num_taps[1] > p->num_taps[0];
-    f->num_taps = p->num_taps[longer];
+    n = p->num_taps[longer];
     if (h[0] && h[1]) {
       for (i = 0; i < p->num_taps[!longer]; ++i)
-        h[longer][i + (f->num_taps - p->num_taps[!longer])/2] += h[!longer][i];
+        h[longer][i + (n - p->num_taps[!longer])/2] += h[!longer][i];
 
       if (p->Fc0 < p->Fc1)
-        invert(h[longer], f->num_taps);
+        invert(h[longer], n);
 
       free(h[!longer]);
     }
     if (p->phase != 50)
-      lsx_fir_to_phase(&h[longer], &f->num_taps, &f->post_peak, p->phase);
-    else f->post_peak = f->num_taps / 2;
+      lsx_fir_to_phase(&h[longer], &n, &post_peak, p->phase);
+    else post_peak = n >> 1;
 
     if (effp->global_info->plot != sox_plot_off) {
       char title[100];
       sprintf(title, "SoX effect: sinc filter freq=%g-%g",
           p->Fc0, p->Fc1? p->Fc1 : Fn);
-      lsx_plot_fir(h[longer], f->num_taps, effp->in_signal.rate,
+      lsx_plot_fir(h[longer], n, effp->in_signal.rate,
           effp->global_info->plot, title, -p->beta * 10 - 25, 5.);
       return SOX_EOF;
     }
-    f->dft_length = lsx_set_dft_length(f->num_taps);
-    f->coefs = lsx_calloc(f->dft_length, sizeof(*f->coefs));
-    for (i = 0; i < f->num_taps; ++i)
-      f->coefs[(i + f->dft_length - f->num_taps + 1) & (f->dft_length - 1)] = h[longer][i] / f->dft_length * 2;
-    free(h[longer]);
-    lsx_safe_rdft(f->dft_length, 1, f->coefs);
+    lsx_set_dft_filter(f, h[longer], n, post_peak);
   }
   return sox_dft_filter_effect_fn()->start(effp);
 }

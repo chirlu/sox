@@ -28,5 +28,7 @@ void * lsx_realloc(void * ptr, size_t newsize);
 #define lsx_calloc(n,s) ((n)*(s)? memset(lsx_malloc((n)*(s)),0,(n)*(s)) : NULL)
 #define lsx_strdup(p) ((p)? strcpy((char *)lsx_malloc(strlen(p) + 1), p) : NULL)
 #define lsx_memdup(p,s) ((p)? memcpy(lsx_malloc(s), p, s) : NULL)
+#define lsx_valloc(v,n)  v = lsx_malloc((n)*sizeof(*(v)))
+#define lsx_revalloc(v,n)  v = lsx_realloc(v, (n)*sizeof(*(v)))
 
 #endif

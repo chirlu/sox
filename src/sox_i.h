@@ -83,6 +83,7 @@ void lsx_generate_wave_table(
     double phase);      /* Phase at 1st point; 0..2pi. (e.g. pi/2 for cosine) */
 char const * lsx_parsesamples(sox_rate_t rate, const char *str, size_t *samples, int def);
 double lsx_parse_frequency(char const * text, char * * end_ptr);
+FILE * lsx_open_input_file(sox_effect_t * effp, char const * filename);
 
 void lsx_prepare_spline3(double const * x, double const * y, int n,
     double start_1d, double end_1d, double * y_2d);

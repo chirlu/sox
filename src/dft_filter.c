@@ -20,8 +20,21 @@
 #include "dft_filter.h"
 #include <string.h>
 
-typedef dft_filter_filter_t filter_t;
+typedef dft_filter_t filter_t;
 typedef dft_filter_priv_t priv_t;
+
+void lsx_set_dft_filter(dft_filter_t *f, double *h, int n, int post_peak)
+{
+  int i;
+  f->num_taps = n;
+  f->post_peak = post_peak;
+  f->dft_length = lsx_set_dft_length(f->num_taps);
+  f->coefs = lsx_calloc(f->dft_length, sizeof(*f->coefs));
+  for (i = 0; i < f->num_taps; ++i)
+    f->coefs[(i + f->dft_length - f->num_taps + 1) & (f->dft_length - 1)] = h[i] / f->dft_length * 2;
+  lsx_safe_rdft(f->dft_length, 1, f->coefs);
+  free(h);
+}
 
 static int start(sox_effect_t * effp)
 {
