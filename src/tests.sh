@@ -171,8 +171,10 @@ do_singlechannel_formats () {
 }
 
 # Reading and writing performance test
+time="/usr/bin/time -p"
 timeIO () {
-  ${bindir}/sox -c $channels -r $rate -n tmp.sox synth $samples's' saw 0:`expr $rate / 2` noise brown vol .9
+  echo TIME synth
+  $time ${bindir}/sox -c $channels -r $rate -n tmp.sox synth $samples's' saw 0:`expr $rate / 2` noise brown vol .9
   while [ $# != 0 ]; do
     if [ "${skip}x" != "x" ] ; then
       from_skip=`echo ${skip} | grep ${1}`
@@ -180,8 +182,8 @@ timeIO () {
     if [ "${from_skip}x" = "x" ] ; then
       getFormat $1;
       echo "TIME \"$formatText\" channels=$channels samples=$samples write, read:"
-      time ${bindir}/sox $verbose -D tmp.sox $formatFlags -t $1 - | \
-      time ${bindir}/sox $verbose -t $1 -c $channels -r $rate - -t sox /dev/null
+      ($time ${bindir}/sox $verbose -D tmp.sox $formatFlags -t $1 -) | \
+      ($time ${bindir}/sox $verbose -t $1 -c $channels -r $rate - -t sox /dev/null)
     fi
     shift
   done
