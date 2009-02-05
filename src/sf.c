@@ -112,7 +112,7 @@ static int startread(sox_format_t * ft)
   if (lsx_skipbytes(ft, FIXED_HDR - (size_t)lsx_tell(ft)))
     return SOX_EOF;
 
-  return lsx_check_read_params(ft, channels, rate, encoding, bits_per_sample, (off_t)0, sox_false);
+  return lsx_check_read_params(ft, channels, rate, encoding, bits_per_sample, (off_t)0, sox_true);
 }
 
 static int write_header(sox_format_t * ft)

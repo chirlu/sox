@@ -20,7 +20,7 @@
 
 static int start(sox_format_t * ft)
 {
-  return lsx_check_read_params(ft, 2, 44100., SOX_ENCODING_SIGN2, 16, (off_t)0, sox_false);
+  return lsx_check_read_params(ft, 2, 44100., SOX_ENCODING_SIGN2, 16, (off_t)0, sox_true);
 }
 
 static int stopwrite(sox_format_t * ft)
