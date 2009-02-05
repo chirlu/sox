@@ -101,7 +101,7 @@ the \fBvol\fR and \fBdither\fR effects.
 .EX
 	sox -r 8k -u -b 8 -c 1 voice-memo.raw voice-memo.wav
 .EE
-converts `raw' (a.k.a. `headerless') audio to a self-descibing file format,
+converts `raw' (a.k.a. `headerless') audio to a self-describing file format,
 .EX
 	sox slow.aiff fixed.aiff speed 1.027
 .EE
@@ -282,12 +282,12 @@ audio output device, SoX will automatically invoke the \fBrate\fR effect
 to perform the necessary sample rate conversion.  For
 compatibility with old hardware, here, the
 default \fBrate\fR quality level is set to `low'; however, this
-can be changed if desired, by explicitly specifing the \fBrate\fR
+can be changed if desired, by explicitly specifying the \fBrate\fR
 effect with a different quality level, e.g.
 .EX
 	play ... rate -m
 .EE
-or by setting the environment varible
+or by setting the environment variable
 .B PLAY_RATE_ARG
 to the desired quality option, e.g.
 .EX
@@ -350,7 +350,7 @@ losses in audio fidelity.  E.g. with
 .EE
 SoX first decompresses the input MP3 file, then applies the
 .B trim
-effect, and finally creates the output MP3 file by recompressing the
+effect, and finally creates the output MP3 file by re-compressing the
 audio\*mwith a possible reduction in fidelity above that which
 occurred when the input file was created.
 Hence, if what is ultimately desired is lossily compressed audio, it is
@@ -373,7 +373,7 @@ effect to increase the audio volume, but could also occur with many
 other effects, when converting one format to another, and even when
 simply playing the audio.
 .SP
-Playing an audio file often involves re-sampling, and processing by
+Playing an audio file often involves resampling, and processing by
 analogue components that can introduce a small DC offset and/or
 amplification, all of which can produce distortion if the audio signal
 level was initially too close to the clipping point.
@@ -430,7 +430,7 @@ output file.  The number of channels in each input file need not be the
 same, however, SoX will issue a warning if they are not and some
 channels in the output file will not contain audio from every input
 file.  A mixed audio file cannot be un-mixed (without reference to the
-orignal input files).
+original input files).
 .SP
 If the `merge' combining method is selected, then two or
 more input files must be given and will be merged together to form the
@@ -488,12 +488,12 @@ This is achieved by balancing using a factor of
 \(S1/\s-2\(srn\s+2 instead of \(S1/\s-2n\s+2.
 Note that this balancing factor does not guarantee that no clipping will occur,
 however, in many cases, the number of clips will be low and the resultant
-distortion imperceptable.
+distortion imperceptible.
 .SS Output Files
-SoX's default behavior is to take one or more input files and
+SoX's default behaviour is to take one or more input files and
 write them to a single output file.
 
-This behavior can be changed by specifying the pseudo-effect 'newfile'
+This behaviour can be changed by specifying the pseudo-effect 'newfile'
 within the effects list.  SoX will then enter multiple output mode.
 
 In multiple output mode, a new file is created when the effects
@@ -503,7 +503,7 @@ is then started up and its output is saved to the new file.
 
 In multiple output mode, a unique number will automatically be appended
 to the end of all filenames.  If the filename has an extension
-then the number is inserted before the extension.  This behavior can
+then the number is inserted before the extension.  This behaviour can
 be customized by placing a %n anywhere in the filename where the
 number should be substituted.  An optional number can be placed after
 the % to indicate a minimum fixed width for the number.
@@ -839,7 +839,7 @@ solution.
 Show SoX's version number and exit.
 .TP
 \fB\-\-single-threaded\fR
-On some hyper-threading/mult-core architectures,
+On some hyper-threading/multi-core architectures,
 SoX has support for parallel effects channel processing.
 This option can be given to disable parallel processing. 
 .IP \fB\-V\fB[\fIlevel\fB]\fP
@@ -1346,7 +1346,7 @@ and
 parameters may be used to adjust these parameters and thus control the
 smoothness of the changes in pitch.
 .SP
-For example, an initial tone is generated, then bent three times, yeilding
+For example, an initial tone is generated, then bent three times, yielding
 four different notes in total:
 .EX
 	play -n synth 2.5 sin 667 gain 1 \\
@@ -1524,7 +1524,7 @@ effect as follows:
 .TP
 \fBdcshift \fIshift\fR [\fIlimitergain\fR]
 DC Shift the audio, with basic linear amplitude formula.
-This is most useful if your audio tends to not be centered around
+This is most useful if your audio tends to not be centred around
 a value of 0.  Shifting it back will allow you to get the most volume
 adjustments without clipping.
 .SP
@@ -1605,7 +1605,7 @@ and this plays a guitar chord:
 	  %-2 delay 0 .05 .1 .15 .2 .25 remix - fade 0 4 .1 norm -1
 .EE
 .TP
-\fBdither\fR [\fB\-r\fR|\fB\-t\fR] [\fB\-s\fR|\fB\-f \fIfilter\fR] [\fIdepth\fR]
+\fBdither\fR [\fB\-R\fR] [\fB\-r\fR\^|\^\fB\-t\fR] [\fB\-s\fR\^|\^\fB\-f \fIfilter\fR] [\fIdepth\fR]
 Apply dithering to the audio.
 Dithering deliberately adds a small amount of noise to the signal
 in order to mask audible quantization effects that
@@ -1625,7 +1625,7 @@ option, it is possible to select a particular noise-shaping filter from
 the following list: lipshitz, f-weighted, modified-e-weighted,
 improved-e-weighted, gesemann, shibata, low-shibata, high-shibata.
 Note that most filter types are available only with 44100Hz sample rate.
-The filter types are distiguished by the following properties:
+The filter types are distinguished by the following properties:
 audibility of noise, level of (inaudible, but in some circumstances,
 otherwise problematic) shaped high frequency noise, and
 processing speed.
@@ -1636,6 +1636,12 @@ the optional \fIdepth\fR parameter (0.5 to 1) is a (linear or voltage)
 multiplier of this amount.  Reducing this value reduces the audibility
 of the added white noise, but correspondingly creates residual
 quantization noise, so it should not normally be changed.
+.SP
+If
+.B \-R
+option is given, then the pseudo-random number generator used to
+generate the white noise will be `reseeded', i.e. the generated noise
+will be different between invocations.
 .SP
 This effect should not be followed by any other effect that
 affects the audio.
@@ -1657,7 +1663,7 @@ Echoes are reflected sound and can occur naturally amongst mountains
 effects emulate this behaviour and are often used to help fill
 out the sound of a single instrument or vocal.  The time difference
 between the original signal and the reflection is the `delay' (time),
-and the loudness of the relected signal is the `decay'.  Multiple echoes
+and the loudness of the reflected signal is the `decay'.  Multiple echoes
 can have different delays and decays.
 .SP
 Each given
@@ -1848,7 +1854,7 @@ Given the
 .B \-e
 option, the levels of the audio channels of a multi-channel file are `equalised', i.e.
 gain is applied to all channels other than that with the highest peak
-level, such that all channels atain the same peak level
+level, such that all channels attain the same peak level
 (but, without also giving
 .BR \-n ,
 the audio is not `normalised').
@@ -1882,7 +1888,7 @@ are synonymous.
 .SP
 The
 .B \-r
-option is used in conjuction with a prior invocation of
+option is used in conjunction with a prior invocation of
 .B gain
 with the
 .B \-h
@@ -1890,7 +1896,7 @@ option\*msee below for details.
 .SP
 The
 .B \-n
-option normalises the audio to 0dB FSD; it is often used in conjuction with a negative
+option normalises the audio to 0dB FSD; it is often used in conjunction with a negative
 .I gain-dB
 to the effect that the audio is normalised to a given level below 0dB.
 For example,
@@ -1979,7 +1985,7 @@ argument is the plugin module, the second the name of the plugin (a
 module can contain more than one plugin) and any other arguments are
 for the control ports of the plugin. Missing arguments are supplied by
 default values if possible. Only plugins with at most one audio input
-and one audio output port can be used.  If found, the environment varible
+and one audio output port can be used.  If found, the environment variable
 LADSPA_PATH will be used as search path for plugins.
 .TP
 \fBloudness\fR [\fIgain\fR [\fIreference\fR]]
@@ -2033,7 +2039,7 @@ companding is typically used in FM radio:
 .EE
 The audio file is played with a simulated FM radio sound (or broadcast
 signal condition if the lowpass filter at the end is skipped).
-Note that the pipeline is set up with US-style 75us preemphasis.
+Note that the pipeline is set up with US-style 75us pre-emphasis.
 .SP
 See also
 .B compand
@@ -2165,7 +2171,7 @@ of removing most or all of the vocals from a recording.
 \fBoverdrive\fR [\fIgain\fR(20) [\fIcolour\fR(20)]]
 Non linear distortion.
 The \fIcolour\fR parameter controls the amount of even harmonic content
-in the overdriven output.
+in the over-driven output.
 .TP
 \fBpad\fR { \fIlength\fR[\fB@\fIposition\fR] }
 Pad the audio with silence, at the beginning, the end, or any
@@ -2340,7 +2346,7 @@ quality algorithms.
 All resamplers use filters that can sometimes create `echo' (a.k.a.
 `ringing') artefacts with transient signals such as those that occur
 with `finger snaps' or other highly percussive sounds.  Such artefacts are
-much more noticable to the human ear if they occur before the transient
+much more noticeable to the human ear if they occur before the transient
 (`pre-echo') than if they occur after it (`post-echo').  Note that
 frequency of any such artefacts is related to the smaller of the
 original and new sampling rates but that if this is at least 44\*d1kHz,
@@ -2365,7 +2371,7 @@ option.  Note that phase responses between `linear' and `maximum'
 (greater than 50) are rarely useful.
 .SP
 A resampler's band-width setting determines how much of the frequency
-content of the original signal (w.r.t. the orignal sample rate when
+content of the original signal (w.r.t. the original sample rate when
 up-sampling, or the new sample rate when down-sampling) is preserved
 during conversion.  The term `pass-band' is used to refer to all frequencies
 up to the band-width point (e.g. for 44\*d1kHz sampling rate, and a
@@ -2702,11 +2708,11 @@ individually, or together.  If both are
 given, then \fIfreqHP\fR < \fIfreqLP\fR creates a band-pass filter,
 \fIfreqHP\fR > \fIfreqLP\fR creates a band-reject filter.
 .SP
-The default stop-band attenuation of 120dB can be overriden with
+The default stop-band attenuation of 120dB can be overridden with
 \fB\-a\fR; alternatively, the kaiser-window `beta' parameter can be
 given directly with \fB\-b\fR.
 .SP
-The default transition band-width of 5% of the total band can be overriden with
+The default transition band-width of 5% of the total band can be overridden with
 \fB\-t\fR; alternatively, the number of filter taps can be
 given directly with \fB\-n\fR.
 .SP
