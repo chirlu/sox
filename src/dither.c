@@ -279,7 +279,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 sox_effect_handler_t const * sox_dither_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "dither", "[-r|-t] [-s|-f filter] [depth]"
+    "dither", "[-R] [-r|-t] [-s|-f filter] [depth]"
     "\n  -R       Re-seed PRNG"
     "\n  -r       Rectangular PDF"
     "\n  -t       Triangular PDF (default)"
