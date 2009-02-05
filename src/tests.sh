@@ -171,7 +171,7 @@ do_singlechannel_formats () {
 }
 
 stderr_time () {
-  grep -vE "^real |^user |^sys " $1 1>&2
+  egrep -v "^real |^user |^sys " $1 1>&2
   grep "^user " $1 | sed "s/^user //"
 }
 
