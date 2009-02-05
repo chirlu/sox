@@ -53,6 +53,7 @@ File formats:
 
   o Slight improvement to A-law/u-law conversion accuracy: round LSB
     instead of truncating.  (robs)
+  o Fix length in wav header with multi-channel output to pipe.  (robs)
   o Fix [2028181] w64 float format incompatibility.  (Tim Munro)
   o Fix reading AIFF files with pad bytes in COMT chunks. (Joe Holt)
   o Fix AIFF file length bug to stop reading trash data on files that

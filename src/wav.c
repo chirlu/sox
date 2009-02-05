@@ -1344,7 +1344,8 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
         dwDataLength = blocksWritten * wBlockAlign;
         dwSamplesWritten = blocksWritten * wSamplesPerBlock;
     } else {    /* fixup with real length */
-        dwSamplesWritten = second_header? wav->numSamples : ft->signal.length;
+        dwSamplesWritten = 
+            second_header? wav->numSamples : ft->signal.length / wChannels;
         blocksWritten = (dwSamplesWritten+wSamplesPerBlock-1)/wSamplesPerBlock;
         dwDataLength = blocksWritten * wBlockAlign;
     }
