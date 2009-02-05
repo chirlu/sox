@@ -170,24 +170,29 @@ do_singlechannel_formats () {
   (rate=8000; convertToAndFrom al s2 u2 s4 f4 f8 dat) || exit 1 # Fixed rate
 }
 
+stderr_time () {
+  grep -vE "^real |^user |^sys " $1 1>&2
+  grep "^user " $1 | sed "s/^user //"
+}
+
 # Reading and writing performance test
 time="/usr/bin/time -p"
 timeIO () {
-  echo TIME synth
-  $time ${bindir}/sox -c $channels -r $rate -n tmp.sox synth $samples's' saw 0:`expr $rate / 2` noise brown vol .9
+  $time ${bindir}/sox -c $channels -r $rate -n tmp.sox synth $samples's' saw 0:`expr $rate / 2` noise brown vol .9 2> tmp.write
+  echo TIME synth channels=$channels samples=$samples `stderr_time tmp.write`s
   while [ $# != 0 ]; do
     if [ "${skip}x" != "x" ] ; then
       from_skip=`echo ${skip} | grep ${1}`
     fi
     if [ "${from_skip}x" = "x" ] ; then
       getFormat $1;
-      echo "TIME \"$formatText\" channels=$channels samples=$samples write, read:"
-      ($time ${bindir}/sox $verbose -D tmp.sox $formatFlags -t $1 -) | \
-      ($time ${bindir}/sox $verbose -t $1 -c $channels -r $rate - -t sox /dev/null)
+      ($time ${bindir}/sox $verbose -D tmp.sox $formatFlags -t $1 - 2> tmp.read) | \
+      ($time ${bindir}/sox $verbose -t $1 -c $channels -r $rate - -t sox /dev/null 2> tmp.write)
+      echo "TIME `printf %4s $formatText` write=`stderr_time tmp.write`s read=`stderr_time tmp.read`s"
     fi
     shift
   done
-  rm tmp.sox
+  rm tmp.sox tmp.write tmp.read
 }
 
 # Don't try to test un-built formats
