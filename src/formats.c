@@ -708,23 +708,27 @@ sox_format_handler_t const * sox_write_handler(
   sox_format_handler_t const * handler;
   if (filetype) {
     if (!(handler = sox_find_format(filetype, sox_false))) {
-      lsx_fail("no handler for given file type `%s'", filetype);
+      if (filetype1)
+        lsx_fail("no handler for given file type `%s'", filetype);
       return NULL;
     }
   }
   else if (path) {
     if (!(filetype = lsx_find_file_extension(path))) {
-      lsx_fail("can't determine type of `%s'", path);
+      if (filetype1)
+        lsx_fail("can't determine type of `%s'", path);
       return NULL;
     }
     if (!(handler = sox_find_format(filetype, sox_true))) {
-      lsx_fail("no handler for file extension `%s'", filetype);
+      if (filetype1)
+        lsx_fail("no handler for file extension `%s'", filetype);
       return NULL;
     }
   }
   else return NULL;
   if (!handler->startwrite && !handler->write) {
-    lsx_fail("file type `%s' isn't writeable", filetype);
+    if (filetype1)
+      lsx_fail("file type `%s' isn't writeable", filetype);
     return NULL;
   }
   if (filetype1)
