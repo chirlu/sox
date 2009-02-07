@@ -181,6 +181,7 @@ typedef struct { /* Global parameters (for effects & formats) */
   char const * stdout_in_use_by;
   char const * subsystem;
   char       * tmp_path;
+  sox_bool     use_magic;
 } sox_globals_t;
 extern sox_globals_t sox_globals;
 

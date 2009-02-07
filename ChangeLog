@@ -98,6 +98,8 @@ Other new features:
   o Can now use `u' & `d' keys to adjust volume whilst playing audio (on some
     systems).  (robs)
   o New bitrate, time in seconds, & total options for soxi.  (robs)
+  o `Magic' (libmagic) file type detection now selected using `--magic'
+    option (where supported).
 
 Other bug fixes:
 

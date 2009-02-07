@@ -52,7 +52,8 @@ sox_globals_t sox_globals = {
   NULL,            /* char const * stdin_in_use_by */
   NULL,            /* char const * stdout_in_use_by */
   NULL,            /* char const * subsystem */
-  NULL             /* char       * tmp_path */
+  NULL,            /* char       * tmp_path */
+  sox_false        /* sox_bool     use_magic */
 };
 
 char const * sox_strerror(int sox_errno)

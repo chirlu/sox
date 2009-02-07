@@ -1742,6 +1742,7 @@ static void usage(char const * message)
 "--interactive            Prompt to overwrite output file",
 "-m, --combine mix        Mix multiple input files (instead of concatenating)",
 "-M, --combine merge      Merge multiple input files (instead of concatenating)",
+"--magic                  Use `magic' file-type detection",
 "--norm                   Guard (see --guard) & normalise",
 "--plot gnuplot|octave    Generate script to plot response of filter effect",
 "-q, --no-show-progress   Run in quiet mode; opposite of -S",
@@ -1954,6 +1955,7 @@ static struct option long_options[] =
     {"single-threaded" ,       no_argument, NULL, 0},
     {"ignore-length"   ,       no_argument, NULL, 0},
     {"norm"            ,       no_argument, NULL, 0},
+    {"magic"           ,       no_argument, NULL, 0},
 
     {"bits"            , required_argument, NULL, 'b'},
     {"channels"        , required_argument, NULL, 'c'},
@@ -2120,6 +2122,11 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       case 17: single_threaded = sox_true; break;
       case 18: f->signal.length = SOX_IGNORE_LENGTH; break;
       case 19: do_guarded_norm = is_guarded = sox_true; break;
+#if HAVE_MAGIC
+      case 20: sox_globals.use_magic = sox_true; break;
+#else
+      case 20: lsx_warn("this build of SoX does not include `magic'"); break;
+#endif
       }
       break;
 

@@ -418,7 +418,7 @@ sox_format_t * sox_open_read(
       filetype = detect_format(ft, lsx_find_file_extension(path));
       lsx_rewind(ft);
 #if HAVE_MAGIC
-      if (!filetype) {
+      if (sox_globals.use_magic && !filetype) {
         static magic_t magic;
         if (!magic) {
           magic = magic_open(MAGIC_MIME | MAGIC_SYMLINK);
