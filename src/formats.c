@@ -1002,9 +1002,29 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
   return result;
 }
 
+/*----------------------------- Formats library ------------------------------*/
+
 #ifdef HAVE_LIBLTDL /* Plugin format handlers */
+#define sox_format_fns sox_format_fns0
+#endif
+
+#ifndef HAVE_LIBLTDL
+#define FORMAT(f) extern sox_format_handler_t const * lsx_##f##_format_fn(void);
+#include "formats.h"
+#undef FORMAT
+
+sox_format_tab_t sox_format_fns[] = {
+  #define FORMAT(f) {NULL, lsx_##f##_format_fn},
+  #include "formats.h"
+  #undef FORMAT
+  {NULL, NULL}
+};
+#endif
+
+#ifdef HAVE_LIBLTDL
 
 #include <ltdl.h>
+#undef sox_format_fns
 #define MAX_FORMATS 256 /* FIXME: Use a vector, not a fixed-size array */
 #define MAX_NAME_LEN (size_t)1024 /* FIXME: Use vasprintf */
 
@@ -1024,7 +1044,7 @@ static int init_format(const char *file, lt_ptr data)
 
   (void)data;
   if (start && (start += sizeof(prefix) - 1) < end) {
-    int ret = snprintf(fnname, MAX_NAME_LEN, "sox_%.*s_format_fn", (int)(end - start), start);
+    int ret = snprintf(fnname, MAX_NAME_LEN, "lsx_%.*s_format_fn", (int)(end - start), start);
     if (ret > 0 && ret < (int)MAX_NAME_LEN) {
       union {sox_format_fn_t fn; lt_ptr ptr;} ltptr;
       ltptr.ptr = lt_dlsym(lth, fnname);
@@ -1038,10 +1058,15 @@ static int init_format(const char *file, lt_ptr data)
 
 int sox_format_init(void) /* Find & load format handlers.  */
 {
-  sox_format_handler_t const * sox_sox_format_fn(void);
+  sox_format_handler_t const * lsx_sox_format_fn(void);
   int ret;
 
-  sox_format_fns[nformats++].fn = sox_sox_format_fn;
+#if 0
+  nformats = array_length(sox_format_fns0) - 1;
+  memcpy(sox_format_fns, sox_format_fns0, nformats * sizeof(sox_format_fns[0]));
+#else
+  sox_format_fns[nformats++].fn = lsx_sox_format_fn;
+#endif 
 
   if ((ret = lt_dlinit()) != 0) {
     lsx_fail("lt_dlinit failed with %d error(s): %s", ret, lt_dlerror());
@@ -1061,17 +1086,6 @@ void sox_format_quit(void) /* Cleanup things.  */
 }
 
 #else /* Static format handlers */
-
-#define FORMAT(f) extern sox_format_handler_t const * lsx_##f##_format_fn(void);
-#include "formats.h"
-#undef FORMAT
-
-sox_format_tab_t sox_format_fns[] = {
-  #define FORMAT(f) {NULL, lsx_##f##_format_fn},
-  #include "formats.h"
-  #undef FORMAT
-  {NULL, NULL}
-};
 
 int sox_format_init(void) {return SOX_SUCCESS;}
 void sox_format_quit(void) {}

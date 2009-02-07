@@ -458,7 +458,7 @@ void sox_delete_effects(sox_effects_chain_t * chain)
   chain->length = 0;
 }
 
-/* Effects library: */
+/*----------------------------- Effects library ------------------------------*/
 
 sox_effect_fn_t sox_effect_fns[] = {
 #define EFFECT(f) lsx_##f##_effect_fn,

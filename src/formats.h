@@ -1,4 +1,4 @@
-/* libSoX static formats list   (c) 2006-8 Chris Bagwell and SoX contributors
+/* libSoX static formats list   (c) 2006-9 Chris Bagwell and SoX contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -14,8 +14,6 @@
  * along with this library; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-/* FIXME: generate this list automatically */
 
   FORMAT(aifc)
   FORMAT(aiff)
@@ -62,6 +60,8 @@
   FORMAT(wav)
   FORMAT(wve)
   FORMAT(xa)
+
+#ifndef HAVE_LIBLTDL /* Plugin format handlers */
 
 #if defined HAVE_ALSA
   FORMAT(alsa)
@@ -115,4 +115,6 @@
 #endif
 #if defined HAVE_WAVPACK
   FORMAT(wavpack)
+#endif
+
 #endif
