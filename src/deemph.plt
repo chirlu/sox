@@ -50,61 +50,57 @@
 # First define the ideal filter:
 
 # Filter parameters
-T=1./441000.          # we use the tenfold sampling frequency
-OmegaU=1./15e-6
-OmegaL=15./50.*OmegaU
+T = 1. / 441000.          # we use the tenfold sampling frequency
+OmegaU = 1. / 15e-6
+OmegaL = 15. / 50. * OmegaU
 
 # Calculate filter coefficients
-V0=OmegaL/OmegaU
-H0=V0 - 1.
-B=V0*tan(OmegaU*T/2.)
-a1=(B - 1.)/(B + 1.)
-b0=(1.0 + (1.0 - a1) * H0/2.)
-b1=(a1 + (a1 - 1.0) * H0/2.)
+V0 = OmegaL / OmegaU
+H0 = V0 - 1.
+B = V0 * tan(OmegaU * T / 2.)
+A1 = (B - 1.) / (B + 1.)
+B0 = (1. + (1. - A1) * H0 / 2.)
+B1 = (A1 + (A1 - 1.) * H0 / 2.)
 
 # helper variables
-D=b1/b0
-o=2*pi*T
+D = B1 / B0
+O = 2 * pi * T
 
 # Ideal transfer function
-Hi(f)=b0*sqrt((1 + 2*cos(f*o)*D + D*D)/(1 + 2*cos(f*o)*a1 + a1*a1))
+Hi(f) = B0*sqrt((1 + 2*cos(f*O)*D + D*D)/(1 + 2*cos(f*O)*A1 + A1*A1))
 
-# Now use a biquad (RBJ high shelf) with sampling frequency of 44100 Hz
+# Now use a biquad (RBJ high shelf) with sampling frequency of 44100Hz
 # to approximate the ideal curve:
 
 # Filter parameters
-m_t=1./44100.
-m_gain=-9.477
-m_slope=.4845
-m_f0=5283
+t = 1. / 44100.
+gain = -9.477
+slope = .4845
+f0 = 5283
 
 # Calculate filter coefficients
-m_A=exp(m_gain/40.*log(10.))
-m_w0=2.*pi*m_f0*m_t
-m_alpha=sin(m_w0)/2.*sqrt((m_A+1./m_A)*(1./m_slope-1.)+2.)
-m_b0=m_A*((m_A+1.)+(m_A-1.)*cos(m_w0)+2.*sqrt(m_A)*m_alpha)
-m_b1=-2.*m_A*((m_A-1.)+(m_A+1.)*cos(m_w0))
-m_b2=m_A*((m_A+1.)+(m_A-1.)*cos(m_w0)-2.*sqrt(m_A)*m_alpha)
-m_a0=(m_A+1.)-(m_A-1.)*cos(m_w0)+2.*sqrt(m_A)*m_alpha
-m_a1=2.*((m_A-1.)-(m_A+1.)*cos(m_w0))
-m_a2=(m_A+1.)-(m_A-1.)*cos(m_w0)-2.*sqrt(m_A)*m_alpha
-m_b2=m_b2/m_a0
-m_b1=m_b1/m_a0
-m_b0=m_b0/m_a0
-m_a2=m_a2/m_a0
-m_a1=m_a1/m_a0
+A = exp(gain / 40. * log(10.))
+w0 = 2. * pi * f0 * t
+alpha = sin(w0) / 2. * sqrt((A + 1. / A) * (1. / slope - 1.) + 2.)
+b0 = A * ((A + 1.) + (A - 1.) * cos(w0) + 2. * sqrt(A) * alpha)
+b1 = -2. * A * ((A - 1.) + (A + 1.) * cos(w0))
+b2 = A * ((A + 1.) + (A - 1.) * cos(w0) - 2. * sqrt(A) * alpha)
+a0 = (A + 1.) - (A - 1.) * cos(w0) + 2. * sqrt(A) * alpha
+a1 = 2. * ((A - 1.) - (A + 1.) * cos(w0))
+a2 = (A + 1.) - (A - 1.) * cos(w0) - 2. * sqrt(A) * alpha
+b2 = b2 / a0
+b1 = b1 / a0
+b0 = b0 / a0
+a2 = a2 / a0
+a1 = a1 / a0
 
 # helper variables
-m_o=2*pi*m_t
+o = 2 * pi * t
 
 # Best fit transfer function
-Hb(f)=sqrt(\
-  (m_b0*m_b0 + m_b1*m_b1 + m_b2*m_b2 +\
-    2.*(m_b0*m_b1 + m_b1*m_b2)*cos(f*m_o) +\
-    2.*(m_b0*m_b2)* cos(2.*f*m_o)) /\
-  (1. + m_a1*m_a1 + m_a2*m_a2 +\
-    2.*(m_a1 + m_a1*m_a2)*cos(f*m_o) +\
-    2.*m_a2*cos(2.*f*m_o)))
+Hb(f) = sqrt((b0*b0 + b1*b1 + b2*b2 +\
+    2.*(b0*b1 + b1*b2)*cos(f*o) + 2.*(b0*b2)* cos(2.*f*o)) /\
+  (1. + a1*a1 + a2*a2 + 2.*(a1 + a1*a2)*cos(f*o) + 2.*a2*cos(2.*f*o)))
 
 # plot real, best, ideal, level with halved attenuation,
 #   level at full attentuation, 10fold magnified error
@@ -112,11 +108,11 @@ set logscale x
 set grid xtics ytics mxtics mytics
 set key left bottom
 plot [f=1000:20000] [-12:2] \
-20*log10(Hi(f)),\
-20*log10(Hb(f)),\
-20*log10(OmegaL/(2* pi*f)),\
-0.5*20*log10(V0),\
-20*log10(V0),\
-200*log10(Hb(f)/Hi(f))
+20 * log10(Hi(f)),\
+20 * log10(Hb(f)),\
+20 * log10(OmegaL/(2 * pi * f)),\
+.5 * 20 * log10(V0),\
+20 * log10(V0),\
+200 * log10(Hb(f)/Hi(f))
 
 pause -1 "Hit return to continue"
