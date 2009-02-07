@@ -407,16 +407,16 @@ case $target in
   ;;
 esac
 
-AC_ARG_WITH(flac,
-    AC_HELP_STRING([--without-flac],
-        [Don't try to use FLAC]))
+AC_ARG_WITH(flac, AC_HELP_STRING([--without-flac], [Don't try to use FLAC]),
+    [], with_flac=yes)
+AC_ARG_WITH(flac, AC_HELP_STRING([--with-flac=dyn], [Try to use FLAC dynamically]))
 using_flac=no
 if test "$with_flac" != "no"; then
-    using_flac=yes
-    dnl Note passing in OGG_LIBS.  That is because FLAC has optional
-    dnl support for OGG and if OGG libraries are found ont this
-    dnl system then its highly likely to be compiled into FLAC
-    dnl and will require these at link time.
+    using_flac=$with_flac
+    dnl  Note passing in OGG_LIBS.  That is because FLAC has optional
+    dnl  support for OGG and if OGG libraries are found on this
+    dnl  system then its highly likely to be compiled into FLAC
+    dnl  and will require these at link time.
     AC_CHECK_HEADER(FLAC/all.h,
         [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new, FLAC_LIBS="-lFLAC $FLAC_LIBS $OGG_LIBS",using_flac=no, $FLAC_LIBS $OGG_LIBS)],
         using_flac=no)
@@ -424,10 +424,14 @@ if test "$with_flac" != "no"; then
         AC_MSG_FAILURE([cannot find FLAC])
     fi
 fi
-if test "$using_flac" = yes; then
-   AC_DEFINE(HAVE_FLAC, 1, [Define to 1 if you have FLAC.])
+if test "$using_flac" != no; then
+  AC_DEFINE(HAVE_FLAC, 1, [Define to 1 if you have FLAC.])
+  if test "$using_flac" = yes; then
+    AC_DEFINE(STATIC_FLAC, 1, [Define to 1 if you have static FLAC.])
+  fi
 fi
-AM_CONDITIONAL(HAVE_FLAC, test x$using_flac = xyes)
+AM_CONDITIONAL(HAVE_FLAC, test $using_flac != no)
+AM_CONDITIONAL(STATIC_FLAC, test $using_flac = yes)
 AC_SUBST(FLAC_LIBS)
 
 dnl Check for ffmpeg libraries

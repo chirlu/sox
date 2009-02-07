@@ -61,6 +61,10 @@
   FORMAT(wve)
   FORMAT(xa)
 
+#if defined HAVE_FLAC && (defined STATIC_FLAC || !defined HAVE_LIBLTDL)
+  FORMAT(flac)
+#endif
+
 #ifndef HAVE_LIBLTDL /* Plugin format handlers */
 
 #if defined HAVE_ALSA
@@ -77,9 +81,6 @@
 #endif
 #if defined HAVE_FFMPEG
   FORMAT(ffmpeg)
-#endif
-#if defined HAVE_FLAC
-  FORMAT(flac)
 #endif
 #if defined(HAVE_MP3)
   FORMAT(mp3)

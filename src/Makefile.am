@@ -50,9 +50,11 @@ pkglib_LTLIBRARIES =
 
 # File formats
 if HAVE_FLAC
+if !STATIC_FLAC
 libsox_fmt_flac_la_SOURCES = flac.c
 libsox_fmt_flac_la_LIBADD = libsox.la @FLAC_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_flac.la
+endif
 endif
 if HAVE_FFMPEG
 libsox_fmt_ffmpeg_la_SOURCES = ffmpeg.c
@@ -206,6 +208,12 @@ libsox_la_SOURCES += raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
 libsox_la_LIBADD += @GSM_LIBS@ @LIBGSM_LIBADD@
 libsox_la_LIBADD += @LPC10_LIBS@ @LIBLPC10_LIBADD@
 
+if STATIC_FLAC
+    libsox_la_SOURCES += flac.c
+    libsox_la_LIBADD += @FLAC_LIBS@
+    sox_LDADD += @FLAC_LIBS@
+endif
+
 if HAVE_LIBLTDL
   libsox_la_CFLAGS += $(LTDLINCL) 
   libsox_la_LDFLAGS += $(LIBLTDL) 
@@ -213,11 +221,6 @@ else
 sox_LDADD += @GSM_LIBS@ @LIBGSM_LIBADD@
 sox_LDADD += @LPC10_LIBS@ @LIBLPC10_LIBADD@
 
-if HAVE_FLAC
-    libsox_la_SOURCES += flac.c
-    libsox_la_LIBADD += @FLAC_LIBS@
-    sox_LDADD += @FLAC_LIBS@
-endif
 if HAVE_FFMPEG
     libsox_la_SOURCES += ffmpeg.h ffmpeg.c
     libsox_la_LIBADD += @FFMPEG_LIBS@
