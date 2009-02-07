@@ -91,7 +91,7 @@ static int stop(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-sox_effect_handler_t const * sox_repeat_effect_fn(void)
+sox_effect_handler_t const * lsx_repeat_effect_fn(void)
 {
   static sox_effect_handler_t effect = {"repeat", "[count]",
     SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_MODIFY,

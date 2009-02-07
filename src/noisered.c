@@ -349,7 +349,7 @@ static sox_effect_handler_t sox_noisered_effect = {
   NULL, sizeof(priv_t)
 };
 
-const sox_effect_handler_t *sox_noisered_effect_fn(void)
+const sox_effect_handler_t *lsx_noisered_effect_fn(void)
 {
     return &sox_noisered_effect;
 }

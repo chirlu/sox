@@ -342,7 +342,7 @@ static sox_effect_handler_t sox_chorus_effect = {
   NULL, sizeof(priv_t)
 };
 
-const sox_effect_handler_t *sox_chorus_effect_fn(void)
+const sox_effect_handler_t *lsx_chorus_effect_fn(void)
 {
     return &sox_chorus_effect;
 }

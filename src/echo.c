@@ -257,7 +257,7 @@ static sox_effect_handler_t sox_echo_effect = {
   NULL, sizeof(priv_t)
 };
 
-const sox_effect_handler_t *sox_echo_effect_fn(void)
+const sox_effect_handler_t *lsx_echo_effect_fn(void)
 {
     return &sox_echo_effect;
 }

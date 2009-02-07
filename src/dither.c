@@ -276,7 +276,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   return p->flow(effp, ibuf, obuf, isamp, osamp);
 }
 
-sox_effect_handler_t const * sox_dither_effect_fn(void)
+sox_effect_handler_t const * lsx_dither_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "dither", "[-R] [-r|-t] [-s|-f filter] [depth]"

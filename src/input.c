@@ -47,7 +47,7 @@ static int drain(
   return *osamp? SOX_SUCCESS : SOX_EOF;
 }
 
-sox_effect_handler_t const * sox_input_effect_fn(void)
+sox_effect_handler_t const * lsx_input_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "input", NULL, SOX_EFF_MCHAN | SOX_EFF_DEPRECATED,

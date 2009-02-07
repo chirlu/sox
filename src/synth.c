@@ -647,7 +647,7 @@ static int kill(sox_effect_t * effp)
 
 
 
-const sox_effect_handler_t *sox_synth_effect_fn(void)
+const sox_effect_handler_t *lsx_synth_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "synth", "[-n] [len] {type [combine] [[%]freq[k][:|+|/|-[%]freq2[k]] [off [ph [p1 [p2 [p3]]]]]]}",

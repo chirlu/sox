@@ -234,7 +234,7 @@ static int stop(sox_effect_t * effp)
 
 
 
-sox_effect_handler_t const * sox_flanger_effect_fn(void)
+sox_effect_handler_t const * lsx_flanger_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "flanger", NULL, SOX_EFF_MCHAN,

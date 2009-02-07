@@ -169,7 +169,7 @@ void sox_trim_clear_start(sox_effect_t * effp)
     trim->start = 0;
 }
 
-const sox_effect_handler_t *sox_trim_effect_fn(void)
+const sox_effect_handler_t *lsx_trim_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "trim", "start [length]", SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_MODIFY,

@@ -541,7 +541,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
     return (SOX_SUCCESS);
 }
 
-sox_effect_handler_t const * sox_mixer_effect_fn(void)
+sox_effect_handler_t const * lsx_mixer_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "mixer",
@@ -558,13 +558,13 @@ static int oops_getopts(sox_effect_t * effp, int argc, char * * argv)
 {
   char * args[] = {0, "1,1,-1,-1"};
   args[0] = argv[0];
-  return --argc? lsx_usage(effp) : sox_mixer_effect_fn()->getopts(effp, (int)array_length(args), args);
+  return --argc? lsx_usage(effp) : lsx_mixer_effect_fn()->getopts(effp, (int)array_length(args), args);
 }
 
-sox_effect_handler_t const * sox_oops_effect_fn(void)
+sox_effect_handler_t const * lsx_oops_effect_fn(void)
 {
   static sox_effect_handler_t handler;
-  handler = *sox_mixer_effect_fn();
+  handler = *lsx_mixer_effect_fn();
   handler.name = "oops";
   handler.usage = NULL;
   handler.getopts = oops_getopts;

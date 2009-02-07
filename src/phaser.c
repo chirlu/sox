@@ -135,7 +135,7 @@ static int stop(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-sox_effect_handler_t const * sox_phaser_effect_fn(void)
+sox_effect_handler_t const * lsx_phaser_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "phaser", "gain-in gain-out delay decay speed [ -s | -t ]",

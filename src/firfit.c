@@ -117,13 +117,13 @@ static int start(sox_effect_t * effp)
       return SOX_EOF;
     lsx_set_dft_filter(f, make_filter(effp), p->n, p->n >> 1);
   }
-  return sox_dft_filter_effect_fn()->start(effp);
+  return lsx_dft_filter_effect_fn()->start(effp);
 }
 
-sox_effect_handler_t const * sox_firfit_effect_fn(void)
+sox_effect_handler_t const * lsx_firfit_effect_fn(void)
 {
   static sox_effect_handler_t handler;
-  handler = *sox_dft_filter_effect_fn();
+  handler = *lsx_dft_filter_effect_fn();
   handler.name = "firfit";
   handler.usage = "[knots-file]";
   handler.flags |= SOX_EFF_DEPRECATED;

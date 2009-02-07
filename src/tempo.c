@@ -296,7 +296,7 @@ static int stop(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-sox_effect_handler_t const * sox_tempo_effect_fn(void)
+sox_effect_handler_t const * lsx_tempo_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "tempo", "[-q] factor [segment-ms [search-ms [overlap-ms]]]",
@@ -335,10 +335,10 @@ static int pitch_start(sox_effect_t * effp)
   return result;
 }
 
-sox_effect_handler_t const * sox_pitch_effect_fn(void)
+sox_effect_handler_t const * lsx_pitch_effect_fn(void)
 {
   static sox_effect_handler_t handler;
-  handler = *sox_tempo_effect_fn();
+  handler = *lsx_tempo_effect_fn();
   handler.name = "pitch";
   handler.usage = "[-q] shift-in-cents [segment-ms [search-ms [overlap-ms]]]",
   handler.getopts = pitch_getopts;
@@ -349,10 +349,10 @@ sox_effect_handler_t const * sox_pitch_effect_fn(void)
 
 /*------------------------- key (old name for pitch) -------------------------*/
 
-sox_effect_handler_t const * sox_key_effect_fn(void)
+sox_effect_handler_t const * lsx_key_effect_fn(void)
 {
   static sox_effect_handler_t handler;
-  handler = *sox_pitch_effect_fn();
+  handler = *lsx_pitch_effect_fn();
   handler.name = "key";
   handler.flags |= SOX_EFF_DEPRECATED;
   return &handler;

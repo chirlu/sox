@@ -123,8 +123,8 @@ static int kill(sox_effect_t UNUSED * effp)
  * Function returning effect descriptor. This should be the only
  * externally visible object.
  */
-const sox_effect_handler_t *sox_skel_effect_fn(void);
-const sox_effect_handler_t *sox_skel_effect_fn(void)
+const sox_effect_handler_t *lsx_skel_effect_fn(void);
+const sox_effect_handler_t *lsx_skel_effect_fn(void)
 {
   /*
    * Effect descriptor.

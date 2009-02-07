@@ -67,13 +67,13 @@ static int start(sox_effect_t * effp)
     }
     lsx_set_dft_filter(f, p->h, p->n, p->n >> 1);
   }
-  return sox_dft_filter_effect_fn()->start(effp);
+  return lsx_dft_filter_effect_fn()->start(effp);
 }
 
-sox_effect_handler_t const * sox_fir_effect_fn(void)
+sox_effect_handler_t const * lsx_fir_effect_fn(void)
 {
   static sox_effect_handler_t handler;
-  handler = *sox_dft_filter_effect_fn();
+  handler = *lsx_dft_filter_effect_fn();
   handler.name = "fir";
   handler.usage = "[coef-file|coefs]";
   handler.getopts = create;

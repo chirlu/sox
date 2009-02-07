@@ -258,7 +258,7 @@ char * lsx_cat_comments(sox_comments_t comments);
 
 int lsx_usage(sox_effect_t * effp);
 char * lsx_usage_lines(char * * usage, char const * const * lines, size_t n);
-#define EFFECT(f) extern sox_effect_handler_t const * sox_##f##_effect_fn(void);
+#define EFFECT(f) extern sox_effect_handler_t const * lsx_##f##_effect_fn(void);
 #include "effects.h"
 #undef EFFECT
 

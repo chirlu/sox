@@ -697,7 +697,7 @@ static sox_effect_handler_t sox_silence_effect = {
   kill, sizeof(priv_t)
 };
 
-const sox_effect_handler_t *sox_silence_effect_fn(void)
+const sox_effect_handler_t *lsx_silence_effect_fn(void)
 {
     return &sox_silence_effect;
 }

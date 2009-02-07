@@ -48,7 +48,7 @@ static int flow(sox_effect_t *effp, sox_sample_t const * ibuf,
   return SOX_SUCCESS; /* All samples output successfully */
 }
 
-sox_effect_handler_t const * sox_output_effect_fn(void)
+sox_effect_handler_t const * lsx_output_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "output", NULL, SOX_EFF_MCHAN | SOX_EFF_DEPRECATED,

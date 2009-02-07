@@ -531,7 +531,7 @@ static int stop(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-sox_effect_handler_t const * sox_rate_effect_fn(void)
+sox_effect_handler_t const * lsx_rate_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "rate", 0, SOX_EFF_RATE, create, start, flow, drain, stop, 0, sizeof(priv_t)
@@ -583,13 +583,13 @@ static int rabbit_getopts(sox_effect_t * effp, int argc, char * * argv)
     ++argc2;
   }
   return argc > 1? lsx_usage(effp) : 
-    sox_rate_effect_fn()->getopts(effp, argc2, args);
+    lsx_rate_effect_fn()->getopts(effp, argc2, args);
 }
 
-sox_effect_handler_t const * sox_rabbit_effect_fn(void)
+sox_effect_handler_t const * lsx_rabbit_effect_fn(void)
 {
   static sox_effect_handler_t handler;
-  handler = *sox_rate_effect_fn();
+  handler = *lsx_rate_effect_fn();
   handler.name = "rabbit";
   handler.usage = "[-c0|-c1|-c2|-c3|-c4] [rate]";
   handler.getopts = rabbit_getopts;
@@ -615,13 +615,13 @@ static int polyphase_getopts(sox_effect_t * effp, int argc, char * * argv)
   args[2] = arg;
   sprintf(arg, "%f", bandwidth);
   return argc? lsx_usage(effp) : 
-    sox_rate_effect_fn()->getopts(effp, (int)array_length(args), args);
+    lsx_rate_effect_fn()->getopts(effp, (int)array_length(args), args);
 }
 
-sox_effect_handler_t const * sox_polyphase_effect_fn(void)
+sox_effect_handler_t const * lsx_polyphase_effect_fn(void)
 {
   static sox_effect_handler_t handler;
-  handler = *sox_rate_effect_fn();
+  handler = *lsx_rate_effect_fn();
   handler.name = "polyphase";
   handler.usage = "-cutoff factor    Cutoff frequency 0 to 1, default 0.95";
   handler.getopts = polyphase_getopts;
@@ -666,13 +666,13 @@ static int resample_getopts(sox_effect_t * effp, int argc, char * * argv)
   args[3] = arg;
   sprintf(arg, "%f", 100 * bandwidth);
   return argc > 2 ? lsx_usage(effp) : 
-    sox_rate_effect_fn()->getopts(effp, quality? 4 : 2, args);
+    lsx_rate_effect_fn()->getopts(effp, quality? 4 : 2, args);
 }
 
-sox_effect_handler_t const * sox_resample_effect_fn(void)
+sox_effect_handler_t const * lsx_resample_effect_fn(void)
 {
   static sox_effect_handler_t handler;
-  handler = *sox_rate_effect_fn();
+  handler = *lsx_rate_effect_fn();
   handler.name = "resample";
   handler.usage = "[ -qs | -q | -ql ] [ rolloff [ beta ] ]",
   handler.getopts = resample_getopts;

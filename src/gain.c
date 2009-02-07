@@ -224,7 +224,7 @@ static int stop(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-sox_effect_handler_t const * sox_gain_effect_fn(void)
+sox_effect_handler_t const * lsx_gain_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "gain", NULL, SOX_EFF_GAIN,
@@ -265,13 +265,13 @@ static int norm_getopts(sox_effect_t * effp, int argc, char * * argv)
   if (argc)
     argv2[argc2++] = *argv, --argc, ++argv;
   return argc? lsx_usage(effp) :
-    sox_gain_effect_fn()->getopts(effp, argc2, argv2);
+    lsx_gain_effect_fn()->getopts(effp, argc2, argv2);
 }
 
-sox_effect_handler_t const * sox_norm_effect_fn(void)
+sox_effect_handler_t const * lsx_norm_effect_fn(void)
 {
   static sox_effect_handler_t handler;
-  handler = *sox_gain_effect_fn();
+  handler = *lsx_gain_effect_fn();
   handler.name = "norm";
   handler.usage = "[level]";
   handler.getopts = norm_getopts;

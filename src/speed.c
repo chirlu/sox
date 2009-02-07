@@ -68,7 +68,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   return SOX_SUCCESS;
 }
 
-sox_effect_handler_t const * sox_speed_effect_fn(void)
+sox_effect_handler_t const * lsx_speed_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "speed", "factor[c]",SOX_EFF_NULL|SOX_EFF_MCHAN|SOX_EFF_RATE|SOX_EFF_LENGTH,

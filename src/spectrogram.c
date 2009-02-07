@@ -491,7 +491,7 @@ static int stop(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-sox_effect_handler_t const * sox_spectrogram_effect_fn(void)
+sox_effect_handler_t const * lsx_spectrogram_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "spectrogram", 0, SOX_EFF_MODIFY, getopts, start, flow, drain, stop, 0, sizeof(priv_t)};

@@ -272,7 +272,7 @@ static int kill(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-sox_effect_handler_t const * sox_compand_effect_fn(void)
+sox_effect_handler_t const * lsx_compand_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "compand", compand_usage, SOX_EFF_MCHAN | SOX_EFF_GAIN,

@@ -417,7 +417,7 @@ sox_effect_t *sox_pop_effect_last(sox_effects_chain_t *chain)
 
 /* Free resources related to effect.
  * Note: This currently closes down the effect which might
- * note be obvious from name.
+ * not be obvious from name.
  */
 void sox_delete_effect(sox_effect_t *effp)
 {
@@ -445,7 +445,7 @@ void sox_delete_effect_last(sox_effects_chain_t *chain)
 
 /* Remove all effects from the chain.
  * Note: This currently closes down the effect which might
- * note be obvious from name.
+ * not be obvious from name.
  */
 void sox_delete_effects(sox_effects_chain_t * chain)
 {
@@ -461,7 +461,7 @@ void sox_delete_effects(sox_effects_chain_t * chain)
 /* Effects library: */
 
 sox_effect_fn_t sox_effect_fns[] = {
-#define EFFECT(f) sox_##f##_effect_fn,
+#define EFFECT(f) lsx_##f##_effect_fn,
 #include "effects.h"
 #undef EFFECT
   NULL

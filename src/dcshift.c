@@ -182,7 +182,7 @@ static sox_effect_handler_t sox_dcshift_effect = {
   NULL, sizeof(priv_t)
 };
 
-const sox_effect_handler_t *sox_dcshift_effect_fn(void)
+const sox_effect_handler_t *lsx_dcshift_effect_fn(void)
 {
     return &sox_dcshift_effect;
 }

@@ -168,7 +168,7 @@ static int kill(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-sox_effect_handler_t const * sox_remix_effect_fn(void)
+sox_effect_handler_t const * lsx_remix_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "remix", "[-m|-a] [-p] <0|in-chan[v|d|i volume]{,in-chan[v|d|i volume]}>",

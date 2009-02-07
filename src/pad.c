@@ -132,7 +132,7 @@ static int kill(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-sox_effect_handler_t const * sox_pad_effect_fn(void)
+sox_effect_handler_t const * lsx_pad_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "pad", "{length[@position]}", SOX_EFF_MCHAN|SOX_EFF_LENGTH|SOX_EFF_MODIFY,

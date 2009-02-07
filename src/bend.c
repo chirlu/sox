@@ -292,7 +292,7 @@ static int kill(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-sox_effect_handler_t const *sox_bend_effect_fn(void)
+sox_effect_handler_t const *lsx_bend_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "bend", "[-f frame-rate(25)] [-o over-sample(16)] {delay,cents,duration}",

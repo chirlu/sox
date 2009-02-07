@@ -330,7 +330,7 @@ static sox_effect_handler_t sox_stat_effect = {
   NULL, sizeof(priv_t)
 };
 
-const sox_effect_handler_t *sox_stat_effect_fn(void)
+const sox_effect_handler_t *lsx_stat_effect_fn(void)
 {
   return &sox_stat_effect;
 }

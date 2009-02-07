@@ -371,7 +371,7 @@ static sox_effect_handler_t sox_fade_effect = {
   kill, sizeof(priv_t)
 };
 
-const sox_effect_handler_t *sox_fade_effect_fn(void)
+const sox_effect_handler_t *lsx_fade_effect_fn(void)
 {
     return &sox_fade_effect;
 }

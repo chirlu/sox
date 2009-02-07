@@ -311,7 +311,7 @@ static int stop(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-const sox_effect_handler_t *sox_stretch_effect_fn(void)
+const sox_effect_handler_t *lsx_stretch_effect_fn(void)
 {
   static const sox_effect_handler_t handler = {
     "stretch",

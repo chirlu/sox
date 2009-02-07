@@ -132,7 +132,7 @@ static int stop(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-sox_effect_handler_t const * sox_dft_filter_effect_fn(void)
+sox_effect_handler_t const * lsx_dft_filter_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     NULL, NULL, SOX_EFF_GAIN, NULL, start, flow, drain, stop, NULL, 0

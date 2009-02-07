@@ -33,13 +33,13 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
   args[3] = argv[1];
   sprintf(offset, "%g", 100 - depth / 2);
   args[4] = offset;
-  return sox_synth_effect_fn()->getopts(effp, (int)array_length(args), args);
+  return lsx_synth_effect_fn()->getopts(effp, (int)array_length(args), args);
 }
 
-sox_effect_handler_t const * sox_tremolo_effect_fn(void)
+sox_effect_handler_t const * lsx_tremolo_effect_fn(void)
 {
   static sox_effect_handler_t handler;
-  handler = *sox_synth_effect_fn();
+  handler = *lsx_synth_effect_fn();
   handler.name = "tremolo";
   handler.usage = "speed_Hz [depth_percent]";
   handler.getopts = getopts;
