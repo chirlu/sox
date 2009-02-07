@@ -442,7 +442,7 @@ sox_format_t * sox_open_read(
     else if (!(ft->handler.flags & SOX_FILE_NOSTDIO) &&
         input_bufsiz >= AUTO_DETECT_SIZE) { /* Hack to rewind pipes */
       filetype = auto_detect_format(ft, lsx_find_file_extension(path));
-#if defined _LIBC
+#if defined _NEWLIB_VERSION
       ft->fp->_p -= AUTO_DETECT_SIZE;
       ft->fp->_r += AUTO_DETECT_SIZE;
 #elif defined __GLIBC__
