@@ -1664,6 +1664,7 @@ static void display_supported_formats(void)
   char const * * format_list;
   char const * const * names;
 
+  sox_format_init();
   for (i = formats = 0; sox_format_fns[i].fn; ++i) {
     char const * const *names = sox_format_fns[i].fn()->names;
     while (*names++)

@@ -110,7 +110,6 @@ SOX_MESSAGE_FUNCTION(lsx_debug_most , 6)
 
 int sox_init(void)
 {
-  sox_format_init();
   return lsx_effects_init();
 }
 

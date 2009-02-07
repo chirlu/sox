@@ -1004,93 +1004,86 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
 
 /*----------------------------- Formats library ------------------------------*/
 
+enum {
+  #define FORMAT(f) f,
+  #include "formats.h"
+  #undef FORMAT
+  NSTATIC_FORMATS
+};
+
+static sox_bool plugins_initted = sox_false;
+
 #ifdef HAVE_LIBLTDL /* Plugin format handlers */
-#define sox_format_fns sox_format_fns0
+  #include <ltdl.h>
+  #define MAX_FORMATS (NSTATIC_FORMATS + 40)
+  #define MAX_FORMATS_1 (MAX_FORMATS + 1)
+  #define MAX_NAME_LEN (size_t)1024 /* FIXME: Use vasprintf */
+
+  static unsigned nformats = NSTATIC_FORMATS;
+
+  static int init_format(const char *file, lt_ptr data)
+  {
+    lt_dlhandle lth = lt_dlopenext(file);
+    const char *end = file + strlen(file);
+    const char prefix[] = "sox_fmt_";
+    char fnname[MAX_NAME_LEN];
+    char *start = strstr(file, prefix);
+
+    (void)data;
+    if (start && (start += sizeof(prefix) - 1) < end) {
+      int ret = snprintf(fnname, MAX_NAME_LEN, "lsx_%.*s_format_fn", (int)(end - start), start);
+      if (ret > 0 && ret < (int)MAX_NAME_LEN) {
+        union {sox_format_fn_t fn; lt_ptr ptr;} ltptr;
+        ltptr.ptr = lt_dlsym(lth, fnname);
+        lsx_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, (void *)lth, ltptr.ptr);
+        if (nformats < MAX_FORMATS && ltptr.fn && (ltptr.fn()->sox_lib_version_code & ~255) == (SOX_LIB_VERSION_CODE & ~255))
+          sox_format_fns[nformats++].fn = ltptr.fn;
+      }
+    }
+    return SOX_SUCCESS;
+  }
+#else
+  #define MAX_FORMATS_1
 #endif
 
-#ifndef HAVE_LIBLTDL
 #define FORMAT(f) extern sox_format_handler_t const * lsx_##f##_format_fn(void);
 #include "formats.h"
 #undef FORMAT
 
-sox_format_tab_t sox_format_fns[] = {
+sox_format_tab_t sox_format_fns[MAX_FORMATS_1] = {
   #define FORMAT(f) {NULL, lsx_##f##_format_fn},
   #include "formats.h"
   #undef FORMAT
   {NULL, NULL}
 };
-#endif
-
-#ifdef HAVE_LIBLTDL
-
-#include <ltdl.h>
-#undef sox_format_fns
-#define MAX_FORMATS 256 /* FIXME: Use a vector, not a fixed-size array */
-#define MAX_NAME_LEN (size_t)1024 /* FIXME: Use vasprintf */
-
-static sox_bool plugins_initted = sox_false;
-
-sox_format_tab_t sox_format_fns[MAX_FORMATS + 1];
-
-static unsigned nformats = 0;
-
-static int init_format(const char *file, lt_ptr data)
-{
-  lt_dlhandle lth = lt_dlopenext(file);
-  const char *end = file + strlen(file);
-  const char prefix[] = "sox_fmt_";
-  char fnname[MAX_NAME_LEN];
-  char *start = strstr(file, prefix);
-
-  (void)data;
-  if (start && (start += sizeof(prefix) - 1) < end) {
-    int ret = snprintf(fnname, MAX_NAME_LEN, "lsx_%.*s_format_fn", (int)(end - start), start);
-    if (ret > 0 && ret < (int)MAX_NAME_LEN) {
-      union {sox_format_fn_t fn; lt_ptr ptr;} ltptr;
-      ltptr.ptr = lt_dlsym(lth, fnname);
-      lsx_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, (void *)lth, ltptr.ptr);
-      if (nformats < MAX_FORMATS && ltptr.fn && (ltptr.fn()->sox_lib_version_code & ~255) == (SOX_LIB_VERSION_CODE & ~255))
-        sox_format_fns[nformats++].fn = ltptr.fn;
-    }
-  }
-  return SOX_SUCCESS;
-}
 
 int sox_format_init(void) /* Find & load format handlers.  */
 {
-  sox_format_handler_t const * lsx_sox_format_fn(void);
-  int ret;
-
-#if 0
-  nformats = array_length(sox_format_fns0) - 1;
-  memcpy(sox_format_fns, sox_format_fns0, nformats * sizeof(sox_format_fns[0]));
-#else
-  sox_format_fns[nformats++].fn = lsx_sox_format_fn;
-#endif 
-
-  if ((ret = lt_dlinit()) != 0) {
-    lsx_fail("lt_dlinit failed with %d error(s): %s", ret, lt_dlerror());
+  if (plugins_initted)
     return SOX_EOF;
-  }
-  plugins_initted = sox_true;
 
-  lt_dlforeachfile(PKGLIBDIR, init_format, NULL);
+  plugins_initted = sox_true;
+#ifdef HAVE_LIBLTDL
+  {
+    int error = lt_dlinit();
+    if (error) {
+      lsx_fail("lt_dlinit failed with %d error(s): %s", error, lt_dlerror());
+      return SOX_EOF;
+    }
+    lt_dlforeachfile(PKGLIBDIR, init_format, NULL);
+  }
+#endif
   return SOX_SUCCESS;
 }
 
 void sox_format_quit(void) /* Cleanup things.  */
 {
+#ifdef HAVE_LIBLTDL
   int ret;
   if (plugins_initted && (ret = lt_dlexit()) != 0)
     lsx_fail("lt_dlexit failed with %d error(s): %s", ret, lt_dlerror());
-}
-
-#else /* Static format handlers */
-
-int sox_format_init(void) {return SOX_SUCCESS;}
-void sox_format_quit(void) {}
-
 #endif
+}
 
 /* Find a named format in the formats library.
  *
@@ -1115,5 +1108,7 @@ sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev)
         if (!strcasecmp(handler->names[n], name))
           return handler;                 /* Found it. */
   }
+  if (sox_format_init() == SOX_SUCCESS)
+    return sox_find_format(name, no_dev);
   return NULL;
 }

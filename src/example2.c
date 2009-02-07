@@ -43,7 +43,7 @@ int main(int argc, char * argv[])
   uint64_t seek;
 
   /* All libSoX applications must start by initialising the SoX library */
-  assert(sox_format_init() == SOX_SUCCESS);
+  assert(sox_init() == SOX_SUCCESS);
 
   assert(argc > 1);
   ++argv, --argc; /* Move to 1st parameter */
