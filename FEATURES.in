@@ -54,7 +54,7 @@ The audio effects/tools included in this release are as follows:
 ** band: SPKit resonator band-pass IIR filter
 ** bass: Tone control: RBJ shelving biquad IIR filter
 ** equalizer: RBJ peaking equalisation biquad IIR filter
-** fir: FFT convolution FIR filter using given coefficients
+** fir: FFT convolution FIR filter using externally provided coefficients
 ** highpass: High-pass filter: Single pole or RBJ biquad IIR
 ** lowpass: Low-pass filter: single pole or RBJ biquad IIR
 ** sinc: Sinc-windowed low/high-pass/band-pass/reject FIR
