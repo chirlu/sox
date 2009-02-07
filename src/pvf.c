@@ -19,12 +19,12 @@
 
 #if defined HAVE_SNDFILE
 
-SOX_FORMAT_HANDLER(pvf)
+LSX_FORMAT_HANDLER(pvf)
 {
   static char const * const names[] = {"pvf", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 32, 16, 8,0,0};
   static sox_format_handler_t handler;
-  handler = *sox_sndfile_format_fn();
+  handler = *lsx_sndfile_format_fn();
   handler.description = "Portable Voice Format";
   handler.names = names;
   handler.write_formats = write_encodings;

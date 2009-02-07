@@ -304,7 +304,7 @@ static int stopwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(coreaudio)
+LSX_FORMAT_HANDLER(coreaudio)
 {
   static char const *const names[] = { "coreaudio", NULL };
   static unsigned const write_encodings[] = {

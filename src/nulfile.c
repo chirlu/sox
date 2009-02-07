@@ -47,7 +47,7 @@ static size_t write_samples(
   return len; /* Return number of samples "written". */
 }
 
-SOX_FORMAT_HANDLER(nul)
+LSX_FORMAT_HANDLER(nul)
 {
   static const char * const names[] = {"null", NULL};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,

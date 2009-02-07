@@ -45,7 +45,7 @@ static int write_header(sox_format_t * ft)
       || lsx_writechars(ft, ID2, sizeof(ID2))? SOX_EOF:SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(wve)
+LSX_FORMAT_HANDLER(wve)
 {
   static char const * const names[] = {"wve", NULL};
   static sox_rate_t   const write_rates[] = {8000, 0};

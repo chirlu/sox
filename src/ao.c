@@ -120,7 +120,7 @@ static int stopwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(ao)
+LSX_FORMAT_HANDLER(ao)
 {
   static char const * const names[] = {"ao", NULL};
   static unsigned const encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};

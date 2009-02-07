@@ -19,7 +19,7 @@
 #include "adpcms.h"
 #include "vox.h"
 
-SOX_FORMAT_HANDLER(ima)
+LSX_FORMAT_HANDLER(ima)
 {
   static char const * const names[] = {"ima", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_IMA_ADPCM, 4, 0, 0};

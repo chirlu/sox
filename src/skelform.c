@@ -190,7 +190,7 @@ static int seek(sox_format_t UNUSED * ft, uint64_t UNUSED offset)
   return SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(skel)
+LSX_FORMAT_HANDLER(skel)
 {
   /* Format file suffixes */
   static const char *names[] = {"skel",NULL };

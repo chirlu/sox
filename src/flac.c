@@ -496,7 +496,7 @@ static int seek(sox_format_t * ft, uint64_t offset)
 
 
 
-SOX_FORMAT_HANDLER(flac)
+LSX_FORMAT_HANDLER(flac)
 {
   static char const * const names[] = {"flac", NULL};
   static unsigned const encodings[] = {SOX_ENCODING_FLAC, 8, 16, 24, 0, 0};

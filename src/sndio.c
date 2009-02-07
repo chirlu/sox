@@ -220,7 +220,7 @@ static size_t writesamples(sox_format_t *ft, const sox_sample_t *buf, size_t len
   return len - todo;
 }
 
-SOX_FORMAT_HANDLER(sndio)
+LSX_FORMAT_HANDLER(sndio)
 {
   static char const * const names[] = {"sndio", NULL};
   static unsigned const write_encodings[] = {

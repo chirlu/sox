@@ -367,7 +367,7 @@ static int stopwrite(sox_format_t * ft)
     return(SOX_SUCCESS);
 }
 
-SOX_FORMAT_HANDLER(txw)
+LSX_FORMAT_HANDLER(txw)
 {
   static char const * const names[] = {"txw", NULL};
   static sox_rate_t   const write_rates[] = {1e5/6, 1e5/3, 1e5/2, 0};

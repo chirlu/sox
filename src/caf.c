@@ -19,7 +19,7 @@
 
 #if defined HAVE_SNDFILE_1_0_12
 
-SOX_FORMAT_HANDLER(caf)
+LSX_FORMAT_HANDLER(caf)
 {
   static char const * const names[] = {"caf", NULL};
   static unsigned const write_encodings[] = {
@@ -29,7 +29,7 @@ SOX_FORMAT_HANDLER(caf)
     SOX_ENCODING_ULAW, 8, 0,
     0};
   static sox_format_handler_t handler;
-  handler = *sox_sndfile_format_fn();
+  handler = *lsx_sndfile_format_fn();
   handler.description = "Apples's Core Audio Format";
   handler.names = names;
   handler.write_formats = write_encodings;

@@ -21,7 +21,7 @@ static int raw_start(sox_format_t * ft) {
   return lsx_rawstart(ft, sox_false, sox_false, sox_true, SOX_ENCODING_UNKNOWN, 0);
 }
 
-SOX_FORMAT_HANDLER(raw)
+LSX_FORMAT_HANDLER(raw)
 {
   static char const * const names[] = {"raw", NULL};
   static unsigned const encodings[] = {

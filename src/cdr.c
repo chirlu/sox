@@ -33,7 +33,7 @@ static int stopwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(cdr)
+LSX_FORMAT_HANDLER(cdr)
 {
   static char const * const names[] = {"cdda", "cdr", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};

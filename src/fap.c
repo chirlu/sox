@@ -19,12 +19,12 @@
 
 #if defined HAVE_SNDFILE
 
-SOX_FORMAT_HANDLER(fap)
+LSX_FORMAT_HANDLER(fap)
 {
   static char const * const names[] = {"fap", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 24, 16, 8,0,0};
   static sox_format_handler_t handler;
-  handler = *sox_sndfile_format_fn();
+  handler = *lsx_sndfile_format_fn();
   handler.description =
     "Ensoniq PARIS digitial audio editing system (little endian)";
   handler.names = names;

@@ -63,7 +63,7 @@ static int write_header(sox_format_t * ft)
       || lsx_writechars(ft, text_buf, sizeof(text_buf))?  SOX_EOF:SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(soundtool)
+LSX_FORMAT_HANDLER(soundtool)
 {
   static char const * const names[] = {"sndt", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_UNSIGNED, 8, 0, 0};

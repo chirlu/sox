@@ -58,7 +58,7 @@ static int write_header(sox_format_t * ft)
       || lsx_writew(ft, Waveform) ? SOX_EOF : SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(htk)
+LSX_FORMAT_HANDLER(htk)
 {
   static char const * const names[] = {"htk", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};

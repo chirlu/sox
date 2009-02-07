@@ -161,7 +161,7 @@ static int seek(sox_format_t * ft, uint64_t offset)
   return WavpackSeekSample(p->codec, (uint32_t) (offset / ft->signal.channels))? SOX_SUCCESS : SOX_EOF;
 }
 
-SOX_FORMAT_HANDLER(wavpack)
+LSX_FORMAT_HANDLER(wavpack)
 {
   static char const * const names[] = {"wv", NULL};
   static unsigned const write_encodings[] = {

@@ -501,7 +501,7 @@ static int startwrite(sox_format_t * ft UNUSED)
 #define stopwrite NULL
 #endif /* HAVE_LAME_LAME_H */
 
-SOX_FORMAT_HANDLER(mp3)
+LSX_FORMAT_HANDLER(mp3)
 {
   static char const * const names[] = {"mp3", "mp2", "audio/mpeg", NULL};
   static unsigned const write_encodings[] = {

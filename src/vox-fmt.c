@@ -19,7 +19,7 @@
 #include "adpcms.h"
 #include "vox.h"
 
-SOX_FORMAT_HANDLER(vox)
+LSX_FORMAT_HANDLER(vox)
 {
   static char const * const names[] = {"vox", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_OKI_ADPCM, 4, 0, 0};

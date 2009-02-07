@@ -30,7 +30,7 @@
 static char const magic[] = "#!AMR-WB\n";
 #define AMR_CODED_MAX       NB_SERIAL_MAX
 #define AMR_ENCODING        SOX_ENCODING_AMR_WB
-#define AMR_FORMAT_FN       sox_amr_wb_format_fn
+#define AMR_FORMAT_FN       lsx_amr_wb_format_fn
 #define AMR_FRAME           L_FRAME16k
 #define AMR_MODE_MAX        8
 #define AMR_NAMES           "amr-wb", "awb"

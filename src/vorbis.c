@@ -390,7 +390,7 @@ static int seek(sox_format_t * ft, uint64_t offset)
   return ov_pcm_seek(vb->vf, (ogg_int64_t)(offset / ft->signal.channels))? SOX_EOF:SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(vorbis)
+LSX_FORMAT_HANDLER(vorbis)
 {
   static const char *names[] = {"vorbis", "ogg", NULL};
   static unsigned encodings[] = {SOX_ENCODING_VORBIS, 0, 0};

@@ -134,7 +134,7 @@ static int write_header(sox_format_t * ft)
   return error? SOX_EOF: SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(sf)
+LSX_FORMAT_HANDLER(sf)
 {
   static char const * const names[] = {"sf", "ircam", NULL};
   static unsigned const write_encodings[] = {

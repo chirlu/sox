@@ -353,7 +353,7 @@ static void svxwriteheader(sox_format_t * ft, size_t nsamples)
         lsx_writedw(ft, (unsigned) nsamples); /* samples in file */
 }
 
-SOX_FORMAT_HANDLER(svx)
+LSX_FORMAT_HANDLER(svx)
 {
   static char const * const names[] = {"8svx", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 8, 0, 0};

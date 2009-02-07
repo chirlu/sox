@@ -18,7 +18,7 @@
 #include "sox_i.h"
 #include "aiff.h"
 
-SOX_FORMAT_HANDLER(aifc)
+LSX_FORMAT_HANDLER(aifc)
 {
   static char const * const names[] = {"aifc", "aiffc", NULL};
   static unsigned const write_encodings[] = {

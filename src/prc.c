@@ -429,7 +429,7 @@ static void prcwriteheader(sox_format_t * ft)
   lsx_writedw(ft, p->nbytes);    /* Number of bytes of data */
 }
 
-SOX_FORMAT_HANDLER(prc)
+LSX_FORMAT_HANDLER(prc)
 {
   static char const * const names[]           = {"prc", NULL};
   static sox_rate_t   const write_rates[]     = {8000, 0};

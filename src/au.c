@@ -212,7 +212,7 @@ static int write_header(sox_format_t * ft)
   return error? SOX_EOF: SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(au)
+LSX_FORMAT_HANDLER(au)
 {
   static char const * const names[] = {"au", "snd", NULL};
   static unsigned const write_encodings[] = {

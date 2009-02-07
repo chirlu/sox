@@ -19,7 +19,7 @@
 
 #if defined HAVE_SNDFILE
 
-SOX_FORMAT_HANDLER(mat4)
+LSX_FORMAT_HANDLER(mat4)
 {
   static char const * const names[] = {"mat4", "mat", NULL};
   static unsigned const write_encodings[] = {
@@ -27,7 +27,7 @@ SOX_FORMAT_HANDLER(mat4)
     SOX_ENCODING_FLOAT, 32, 64, 0,
     0};
   static sox_format_handler_t handler;
-  handler = *sox_sndfile_format_fn();
+  handler = *lsx_sndfile_format_fn();
   handler.description = "Gnu Octave 2.0 format";
   handler.names = names;
   handler.write_formats = write_encodings;

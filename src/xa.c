@@ -277,7 +277,7 @@ static int stopread(sox_format_t * ft)
     return SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(xa)
+LSX_FORMAT_HANDLER(xa)
 {
   static char const * const names[] = {"xa", NULL };
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,

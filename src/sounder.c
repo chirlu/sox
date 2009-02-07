@@ -40,7 +40,7 @@ static int write_header(sox_format_t * ft)
       SOX_EOF : SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(sounder)
+LSX_FORMAT_HANDLER(sounder)
 {
   static char const * const names[] = {"sndr", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_UNSIGNED, 8, 0, 0};

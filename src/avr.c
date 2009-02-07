@@ -269,7 +269,7 @@ static int stopwrite(sox_format_t * ft)
   return(SOX_SUCCESS);
 }
 
-SOX_FORMAT_HANDLER(avr)
+LSX_FORMAT_HANDLER(avr)
 {
   static char const * const names[] = { "avr", NULL };
   static unsigned const write_encodings[] = {

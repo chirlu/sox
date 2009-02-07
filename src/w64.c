@@ -19,7 +19,7 @@
 
 #if defined HAVE_SNDFILE
 
-SOX_FORMAT_HANDLER(w64)
+LSX_FORMAT_HANDLER(w64)
 {
   static char const * const names[] = {"w64", NULL};
   static unsigned const write_encodings[] = {
@@ -33,7 +33,7 @@ SOX_FORMAT_HANDLER(w64)
     SOX_ENCODING_GSM, 0,
     0};
   static sox_format_handler_t handler;
-  handler = *sox_sndfile_format_fn();
+  handler = *lsx_sndfile_format_fn();
   handler.description = "Sound Forge Audio Format";
   handler.names = names;
   handler.write_formats = write_encodings;

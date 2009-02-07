@@ -152,7 +152,7 @@ static int stopwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(pulseaudio)
+LSX_FORMAT_HANDLER(pulseaudio)
 {
   static char const *const names[] = { "pulseaudio", NULL };
   static unsigned const write_encodings[] = {

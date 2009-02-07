@@ -262,7 +262,7 @@ static int stop_write(sox_format_t * ft)
   return stop(ft);
 }
 
-SOX_FORMAT_HANDLER(alsa)
+LSX_FORMAT_HANDLER(alsa)
 {
   static char const * const names[] = {"alsa", NULL};
   static unsigned const write_encodings[] = {

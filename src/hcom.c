@@ -461,7 +461,7 @@ static int stopwrite(sox_format_t * ft)
   return rc;
 }
 
-SOX_FORMAT_HANDLER(hcom)
+LSX_FORMAT_HANDLER(hcom)
 {
   static char const * const names[]       = {"hcom", NULL};
   static sox_rate_t   const write_rates[] = {22050,22050/2,22050/3,22050/4.,0};

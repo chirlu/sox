@@ -176,7 +176,7 @@ static int write_header(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(sphere)
+LSX_FORMAT_HANDLER(sphere)
 {
   static char const *const names[] = {"sph", "nist", NULL};
   static unsigned const write_encodings[] = {

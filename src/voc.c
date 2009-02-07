@@ -772,7 +772,7 @@ static void blockstart(sox_format_t * ft)
   }
 }
 
-SOX_FORMAT_HANDLER(voc)
+LSX_FORMAT_HANDLER(voc)
 {
   static char const *const names[] = { "voc", NULL };
   static unsigned const write_encodings[] = {

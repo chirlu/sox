@@ -214,7 +214,7 @@ static int stopwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(lpc10)
+LSX_FORMAT_HANDLER(lpc10)
 {
   static char const * const names[] = {"lpc10", "lpc", NULL};
   static sox_rate_t   const write_rates[] = {8000, 0};

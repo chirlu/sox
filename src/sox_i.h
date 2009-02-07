@@ -232,9 +232,9 @@ typedef struct sox_formats_globals { /* Global parameters (for formats) */
 int lsx_check_read_params(sox_format_t * ft, unsigned channels,
     sox_rate_t rate, sox_encoding_t encoding, unsigned bits_per_sample,
     off_t num_samples, sox_bool check_length);
-#define SOX_FORMAT_HANDLER(name) \
-sox_format_handler_t const * sox_##name##_format_fn(void); \
-sox_format_handler_t const * sox_##name##_format_fn(void)
+#define LSX_FORMAT_HANDLER(name) \
+sox_format_handler_t const * lsx_##name##_format_fn(void); \
+sox_format_handler_t const * lsx_##name##_format_fn(void)
 #define div_bits(size, bits) (off_t)((double)(size) * 8 / bits)
 
 /* Raw I/O */
@@ -250,7 +250,7 @@ int lsx_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_chan
 #define lsx_rawstopread NULL
 #define lsx_rawstopwrite NULL
 
-extern sox_format_handler_t const * sox_sndfile_format_fn(void);
+extern sox_format_handler_t const * lsx_sndfile_format_fn(void);
 
 char * lsx_cat_comments(sox_comments_t comments);
 

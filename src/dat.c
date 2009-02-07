@@ -148,7 +148,7 @@ static size_t sox_datwrite(sox_format_t * ft, const sox_sample_t *buf, size_t ns
     return done;
 }
 
-SOX_FORMAT_HANDLER(dat)
+LSX_FORMAT_HANDLER(dat)
 {
   static char const * const names[] = {"dat", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_FLOAT_TEXT, 0, 0};

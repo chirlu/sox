@@ -19,12 +19,12 @@
 
 #if defined HAVE_SNDFILE
 
-SOX_FORMAT_HANDLER(xi)
+LSX_FORMAT_HANDLER(xi)
 {
   static char const * const names[] = {"xi", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_DPCM, 16, 8, 0, 0};
   static sox_format_handler_t handler;
-  handler = *sox_sndfile_format_fn();
+  handler = *lsx_sndfile_format_fn();
   handler.description = "Fasttracker 2";
   handler.names = names;
   handler.write_formats = write_encodings;

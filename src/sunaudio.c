@@ -305,7 +305,7 @@ static int sox_sunstartwrite(sox_format_t * ft)
     return (SOX_SUCCESS);
 }
 
-SOX_FORMAT_HANDLER(sunau)
+LSX_FORMAT_HANDLER(sunau)
 {
   static char const * const names[] = {"sunau", NULL};
   static unsigned const write_encodings[] = {

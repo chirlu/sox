@@ -1062,12 +1062,12 @@ void sox_format_quit(void) /* Cleanup things.  */
 
 #else /* Static format handlers */
 
-#define FORMAT(f) extern sox_format_handler_t const * sox_##f##_format_fn(void);
+#define FORMAT(f) extern sox_format_handler_t const * lsx_##f##_format_fn(void);
 #include "formats.h"
 #undef FORMAT
 
 sox_format_tab_t sox_format_fns[] = {
-  #define FORMAT(f) {NULL, sox_##f##_format_fn},
+  #define FORMAT(f) {NULL, lsx_##f##_format_fn},
   #include "formats.h"
   #undef FORMAT
   {NULL, NULL}

@@ -17,7 +17,7 @@
 
 #include "cvsd.h"
 
-SOX_FORMAT_HANDLER(cvsd)
+LSX_FORMAT_HANDLER(cvsd)
 {
   static char const * const names[] = {"cvsd", "cvs", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_CVSD, 1, 0, 0};
@@ -101,7 +101,7 @@ static size_t write(sox_format_t * ft, sox_sample_t const * buf, size_t len)
   return len;
 }
 
-SOX_FORMAT_HANDLER(cvu)
+LSX_FORMAT_HANDLER(cvu)
 {
   static char const * const names[] = {"cvu", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_CVSD, 1, 0, 0};

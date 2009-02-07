@@ -40,7 +40,7 @@
 static char const magic[] = "#!AMR\n";
 #define AMR_CODED_MAX       32                  /* max coded size */
 #define AMR_ENCODING        SOX_ENCODING_AMR_NB
-#define AMR_FORMAT_FN       sox_amr_nb_format_fn
+#define AMR_FORMAT_FN       lsx_amr_nb_format_fn
 #define AMR_FRAME           160                 /* 20ms @ 8kHz */
 #define AMR_MODE_MAX        7
 #define AMR_NAMES           "amr-nb", "anb"

@@ -19,12 +19,12 @@
 
 #if defined HAVE_SNDFILE
 
-SOX_FORMAT_HANDLER(sd2)
+LSX_FORMAT_HANDLER(sd2)
 {
   static char const * const names[] = {"sd2", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 24, 16, 8,0,0};
   static sox_format_handler_t handler;
-  handler = *sox_sndfile_format_fn();
+  handler = *lsx_sndfile_format_fn();
   handler.description = "Sound Designer II";
   handler.names = names;
   handler.write_formats = write_encodings;

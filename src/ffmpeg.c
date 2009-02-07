@@ -477,7 +477,7 @@ static int stopwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(ffmpeg)
+LSX_FORMAT_HANDLER(ffmpeg)
 {
   /* Format file suffixes */
   /* For now, comment out formats built in to SoX */

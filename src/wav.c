@@ -1629,7 +1629,7 @@ static int seek(sox_format_t * ft, uint64_t offset)
   return ft->sox_errno;
 }
 
-SOX_FORMAT_HANDLER(wav)
+LSX_FORMAT_HANDLER(wav)
 {
   static char const * const names[] = {"wav", "wavpcm", "amb", NULL};
   static unsigned const write_encodings[] = {

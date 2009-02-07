@@ -195,7 +195,7 @@ static int ossinit(sox_format_t * ft)
     return(SOX_SUCCESS);
 }
 
-SOX_FORMAT_HANDLER(oss)
+LSX_FORMAT_HANDLER(oss)
 {
   static char const * const names[] = {"ossdsp", "oss", NULL};
   static unsigned const write_encodings[] = {

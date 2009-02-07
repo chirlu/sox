@@ -401,7 +401,7 @@ static int seek(sox_format_t * ft, uint64_t offset)
   return SOX_SUCCESS;
 }
 
-SOX_FORMAT_HANDLER(sndfile)
+LSX_FORMAT_HANDLER(sndfile)
 {
   static char const * const names[] = {
     "sndfile", /* Special type to force use of sndfile for the following: */

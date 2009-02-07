@@ -315,7 +315,7 @@ static void maudwriteheader(sox_format_t * ft)
         lsx_writedw(ft, p->nsamples * (ft->encoding.bits_per_sample >> 3)); /* samples in file */
 }
 
-SOX_FORMAT_HANDLER(maud)
+LSX_FORMAT_HANDLER(maud)
 {
   static char const * const names[] = {"maud", NULL};
   static unsigned const write_encodings[] = {

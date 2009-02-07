@@ -240,7 +240,7 @@ static int sox_gsmstopwrite(sox_format_t * ft)
         return sox_gsmstopread(ft); /* destroy handles and free buffers */
 }
 
-SOX_FORMAT_HANDLER(gsm)
+LSX_FORMAT_HANDLER(gsm)
 {
   static char const * const names[] = {"gsm", NULL};
   static sox_rate_t   const write_rates[] = {8000, 0};

@@ -17,7 +17,7 @@
 
 #include "cvsd.h"
 
-SOX_FORMAT_HANDLER(dvms)
+LSX_FORMAT_HANDLER(dvms)
 {
   static char const * const names[] = {"dvms", "vms", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_CVSD, 1, 0, 0};
