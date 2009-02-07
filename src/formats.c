@@ -37,9 +37,11 @@
   #include <magic.h>
 #endif
 
-static char const * detect_format(sox_format_t * ft, char const * ext)
+#define AUTO_DETECT_SIZE 256
+
+static char const * auto_detect_format(sox_format_t * ft, char const * ext)
 {
-  char data[256];
+  char data[AUTO_DETECT_SIZE];
   size_t len = lsx_readbuf(ft, data, sizeof(data));
   #define CHECK(type, p2, l2, d2, p1, l1, d1) if (len >= p1 + l1 && \
       !memcmp(data + p1, d1, (size_t)l1) && !memcmp(data + p2, d2, (size_t)l2)) return #type;
@@ -86,6 +88,26 @@ static char const * detect_format(sox_format_t * ft, char const * ext)
   if (ext && !strcasecmp(ext, "snd"))
   CHECK(sndr  , 7, 1, ""     , 0,  2, "\0")
   #undef CHECK
+
+#if HAVE_MAGIC
+  if (sox_globals.use_magic) {
+    static magic_t magic;
+    char const * filetype = NULL;
+    if (!magic) {
+      magic = magic_open(MAGIC_MIME | MAGIC_SYMLINK);
+      if (magic)
+        magic_load(magic, NULL);
+    }
+    if (magic)
+      filetype = magic_buffer(magic, data, sizeof(data));
+    if (filetype && strcmp(filetype, "application/octet-stream") &&
+          !lsx_strends(filetype, "/unknown") &&
+          strncmp(filetype, "text/plain", (size_t)10) )
+      return filetype;
+    else if (filetype)
+      lsx_debug("libmagic detected %s", filetype);
+  }
+#endif
   return NULL;
 }
 
@@ -376,6 +398,8 @@ sox_format_t * sox_open_read(
   sox_format_handler_t const * handler;
   char const * const io_types[] = {"file", "pipe", "file URL"};
   char const * type = "";
+  size_t   input_bufsiz = sox_globals.input_bufsiz?
+      sox_globals.input_bufsiz : sox_globals.bufsiz;
 
   if (filetype) {
     if (!(handler = sox_find_format(filetype, sox_false))) {
@@ -386,9 +410,6 @@ sox_format_t * sox_open_read(
   }
 
   if (!(ft->handler.flags & SOX_FILE_NOSTDIO)) {
-    size_t   input_bufsiz = sox_globals.input_bufsiz?
-        sox_globals.input_bufsiz : sox_globals.bufsiz;
-
     if (!strcmp(path, "-")) { /* Use stdin if the filename is "-" */
       if (sox_globals.stdin_in_use_by) {
         lsx_fail("`-' (stdin) already in use by `%s'", sox_globals.stdin_in_use_by);
@@ -415,26 +436,25 @@ sox_format_t * sox_open_read(
 
   if (!filetype) {
     if (ft->seekable) {
-      filetype = detect_format(ft, lsx_find_file_extension(path));
+      filetype = auto_detect_format(ft, lsx_find_file_extension(path));
       lsx_rewind(ft);
-#if HAVE_MAGIC
-      if (sox_globals.use_magic && !filetype) {
-        static magic_t magic;
-        if (!magic) {
-          magic = magic_open(MAGIC_MIME | MAGIC_SYMLINK);
-          if (magic)
-            magic_load(magic, NULL);
-        }
-        if (magic)
-          filetype = magic_file(magic, path);
-        if (filetype && (
-              lsx_strends(filetype, "/unknown") ||
-              !strcmp(filetype, "application/octet-stream") ||
-              !strncmp(filetype, "text/plain", (size_t)10) ))
-          filetype = NULL;
-      }
-#endif
     }
+    else if (!(ft->handler.flags & SOX_FILE_NOSTDIO) &&
+        input_bufsiz >= AUTO_DETECT_SIZE) { /* Hack to rewind pipes */
+      filetype = auto_detect_format(ft, lsx_find_file_extension(path));
+#if defined _LIBC
+      ft->fp->_p -= AUTO_DETECT_SIZE;
+      ft->fp->_r += AUTO_DETECT_SIZE;
+#elif defined __GLIBC__
+      ft->fp->_IO_read_ptr = ft->fp->_IO_read_base;
+#elif defined _MSC_VER
+      ft->fp->_ptr = ft->fp->_base;
+#else
+#error Add hack here
+#endif
+      ft->tell_off = 0;
+    }
+
     if (filetype) {
       lsx_report("detected file format type `%s'", filetype);
       if (!(handler = sox_find_format(filetype, sox_false))) {

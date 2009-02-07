@@ -100,6 +100,8 @@ Other new features:
   o New bitrate, time in seconds, & total options for soxi.  (robs)
   o `Magic' (libmagic) file type detection now selected using `--magic'
     option (where supported).
+  o [2003121] In many cases, no longer need to specify -t when inputting
+    audio from a `pipe'.  (robs)
 
 Other bug fixes:
 
