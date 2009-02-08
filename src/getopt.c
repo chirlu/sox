@@ -619,6 +619,7 @@ _getopt_internal (
              that we previously skipped, so the caller will digest them.  */
           if (first_nonopt != last_nonopt)
             optind = first_nonopt;
+          nextchar = NULL;  /* SoX */
           return -1;
         }
 

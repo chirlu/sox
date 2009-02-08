@@ -111,7 +111,7 @@ static enum {
 static enum { sox_single, sox_multiple } output_method = sox_single;
 #define is_serial(m) ((m) <= sox_concatenate)
 #define is_parallel(m) (!is_serial(m))
-static sox_bool interactive = sox_false;
+static sox_bool interactive = sox_false, fully_interactive = sox_false;
 static sox_bool uservolume = sox_false;
 typedef enum {RG_off, RG_track, RG_album, RG_default} rg_mode;
 static lsx_enum_item const rg_modes[] = {
@@ -226,7 +226,7 @@ static void cleanup(void)
   }
 
 #ifdef HAVE_TERMIOS_H
-  if (stdin_is_a_tty)
+  if (fully_interactive && stdin_is_a_tty)
     tcsetattr(fileno(stdin), TCSANOW, &original_termios);
 #endif
 
@@ -1596,6 +1596,19 @@ static int process(void)
 
   optimize_trim();
 
+#ifdef HAVE_TERMIOS_H /* so we can be fully interactive. */
+  if (!fully_interactive && stdin_is_a_tty) {
+    struct termios modified_termios;
+
+    tcgetattr(fileno(stdin), &original_termios);
+    fully_interactive = sox_true;
+    modified_termios = original_termios;
+    modified_termios.c_lflag &= ~(ICANON | ECHO);
+    modified_termios.c_cc[VMIN] = modified_termios.c_cc[VTIME] = 0;
+    tcsetattr(fileno(stdin), TCSANOW, &modified_termios);
+  }
+#endif
+
   signal(SIGTERM, sigint); /* Stop gracefully, as soon as we possibly can. */
   signal(SIGINT , sigint); /* Either skip current input or behave as SIGTERM. */
   flow_status = sox_flow_effects(effects_chain, update_status);
@@ -2367,11 +2380,34 @@ static void init_file(file_t * f)
 
 static void parse_options_and_filenames(int argc, char **argv)
 {
+  char * env_opts = lsx_strdup(getenv("SOX_OPTS"));
   file_t opts, opts_none;
   init_file(&opts), init_file(&opts_none);
 
   if (sox_mode == sox_rec)
     add_file(&opts, set_default_device(&opts)), init_file(&opts);
+
+  if (env_opts) {
+    char * * argv2, * p = env_opts;
+    int argc2 = 0;
+    lsx_valloc(argv2, 1);
+    for (argv2[argc2++] = argv[0]; *p; ++p)
+      if (argc2 == 1 || *p == ' ') {
+        while (*p == ' ')
+          *p++ = '\0';
+        if (*p) {
+          lsx_revalloc(argv2, argc2 + 1);
+          argv2[argc2++] = p;
+        }
+      }
+    if (parse_gopts_and_fopts(&opts, argc2, argv2)) {
+      lsx_fail("invalid option for SOX_OPTS");
+      exit(1);
+    }
+    optind = 1, opterr = 0;
+    free(argv2);
+    free(env_opts);
+  }
 
   for (; optind < argc && !sox_find_effect(argv[optind]); init_file(&opts)) {
     char c = parse_gopts_and_fopts(&opts, argc, argv);
@@ -2566,18 +2602,6 @@ int main(int argc, char **argv)
 
   stdin_is_a_tty = isatty(fileno(stdin));
   errno = 0; /* Both isatty & fileno may set errno. */
-
-#ifdef HAVE_TERMIOS_H /* so we can be fully interactive. */
-  if (stdin_is_a_tty) {
-    struct termios modified_termios;
-
-    tcgetattr(fileno(stdin), &original_termios);
-    modified_termios = original_termios;
-    modified_termios.c_lflag &= ~(ICANON | ECHO);
-    modified_termios.c_cc[VMIN] = modified_termios.c_cc[VTIME] = 0;
-    tcsetattr(fileno(stdin), TCSANOW, &modified_termios);
-  }
-#endif
 
   atexit(cleanup);
 
