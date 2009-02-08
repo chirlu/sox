@@ -1035,7 +1035,8 @@ static sox_bool plugins_initted = sox_false;
 
 #ifdef HAVE_LIBLTDL /* Plugin format handlers */
   #include <ltdl.h>
-  #define MAX_FORMATS (NSTATIC_FORMATS + 40)
+  #define MAX_DYNAMIC_FORMATS 42
+  #define MAX_FORMATS (NSTATIC_FORMATS + MAX_DYNAMIC_FORMATS)
   #define MAX_FORMATS_1 (MAX_FORMATS + 1)
   #define MAX_NAME_LEN (size_t)1024 /* FIXME: Use vasprintf */
 
@@ -1051,16 +1052,24 @@ static sox_bool plugins_initted = sox_false;
 
     (void)data;
     if (start && (start += sizeof(prefix) - 1) < end) {
-      int ret = snprintf(fnname, MAX_NAME_LEN, "lsx_%.*s_format_fn", (int)(end - start), start);
+      int ret = snprintf(fnname, MAX_NAME_LEN,
+          "lsx_%.*s_format_fn", (int)(end - start), start);
       if (ret > 0 && ret < (int)MAX_NAME_LEN) {
         union {sox_format_fn_t fn; lt_ptr ptr;} ltptr;
         ltptr.ptr = lt_dlsym(lth, fnname);
-        lsx_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, (void *)lth, ltptr.ptr);
-        if (nformats < MAX_FORMATS && ltptr.fn && (ltptr.fn()->sox_lib_version_code & ~255) == (SOX_LIB_VERSION_CODE & ~255))
+        lsx_debug("opening format plugin `%s': library %p, entry point %p\n",
+            fnname, (void *)lth, ltptr.ptr);
+        if (ltptr.fn && (ltptr.fn()->sox_lib_version_code & ~255) ==
+            (SOX_LIB_VERSION_CODE & ~255)) { /* compatible version check */
+          if (nformats == MAX_FORMATS) {
+            lsx_warn("too many plugin formats");
+            return -1;
+          }
           sox_format_fns[nformats++].fn = ltptr.fn;
+        }
       }
     }
-    return SOX_SUCCESS;
+    return 0;
   }
 #else
   #define MAX_FORMATS_1
@@ -1107,7 +1116,7 @@ void sox_format_quit(void) /* Cleanup things.  */
 
 /* Find a named format in the formats library.
  *
- * (c) 2005-8 Chris Bagwell and SoX contributors.
+ * (c) 2005-9 Chris Bagwell and SoX contributors.
  * Copyright 1991 Lance Norskog And Sundry Contributors.
  *
  * This source code is freely redistributable and may be used for any
@@ -1128,7 +1137,7 @@ sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev)
         if (!strcasecmp(handler->names[n], name))
           return handler;                 /* Found it. */
   }
-  if (sox_format_init() == SOX_SUCCESS)
+  if (sox_format_init() == SOX_SUCCESS)   /* Try again with plugins */
     return sox_find_format(name, no_dev);
   return NULL;
 }
