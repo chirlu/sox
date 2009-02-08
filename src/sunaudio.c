@@ -22,9 +22,7 @@
 #ifdef HAVE_SUN_AUDIOIO_H
   #include <sun/audioio.h>
 #else
-#ifdef HAVE_SYS_AUDIOIO_H
   #include <sys/audioio.h>
-#endif
 #endif
 #include <errno.h>
 #if !defined(__NetBSD__) && !defined(__OpenBSD__)

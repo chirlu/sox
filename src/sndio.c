@@ -15,9 +15,9 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+#include "sox_i.h"
 #include <string.h>
 #include <sndio.h>
-#include "sox_i.h"
 
 struct sndio_priv {
   struct sio_hdl *hdl;             /* handle to speak to libsndio */
@@ -30,7 +30,7 @@ struct sndio_priv {
  * convert ``count'' samples from sox encoding to sndio encoding
  */
 static void encode(struct sio_par *par,
-    sox_sample_t *idata, unsigned char *odata, unsigned count)
+    sox_sample_t const *idata, unsigned char *odata, unsigned count)
 {
   int obnext, osnext, s, osigbit;
   unsigned oshift, obps, i;

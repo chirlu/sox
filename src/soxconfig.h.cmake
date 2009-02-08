@@ -5,6 +5,7 @@
 #cmakedefine HAVE_AMRNB               1
 #cmakedefine HAVE_AMRWB               1
 #cmakedefine HAVE_BYTESWAP_H          1
+#cmakedefine HAVE_COREAUDIO           1
 #cmakedefine HAVE_FFMPEG              1
 #cmakedefine HAVE_FLAC                1
 #cmakedefine HAVE_FSEEKO              1

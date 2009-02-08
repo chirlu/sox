@@ -208,6 +208,9 @@ libsox_la_SOURCES += raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
 libsox_la_LIBADD += @GSM_LIBS@ @LIBGSM_LIBADD@
 libsox_la_LIBADD += @LPC10_LIBS@ @LIBLPC10_LIBADD@
 
+# Uncomment for bit-rot detection on linux
+#libsox_la_SOURCES += coreaudio.c sndio.c sunaudio.c
+
 if STATIC_FLAC
     libsox_la_SOURCES += flac.c
     libsox_la_LIBADD += @FLAC_LIBS@

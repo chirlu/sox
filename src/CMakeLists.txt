@@ -53,6 +53,10 @@ set(formats_srcs
   cvsd            hcom            s1-fmt          u1-fmt
   cvsd-fmt        htk             s2-fmt          u2-fmt
 )
+
+# Uncomment for bit-rot detection on linux
+#set(formats_srcs ${formats_srcs} coreaudio sndio sunaudio)
+
 add_library(lib${PROJECT_NAME}
   effects                 formats_i               libsox_i
   effects_i               ${formats_srcs}         ${optional_srcs}
