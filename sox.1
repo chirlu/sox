@@ -361,6 +361,19 @@ formats and then convert to the lossy format only at the final stage.
 Applying multiple effects with a single SoX invocation will,
 in general, produce more accurate results than those produced using
 multiple SoX invocations; hence this is also recommended.
+.SS Dither
+Dithering is a technique used to maximise the dynamic range of audio
+stored at a particular bit-depth and is achieved by adding a small amount
+of white noise to the signal.  In most cases, SoX can determine whether
+the selected processing requires dither and will add it if appropriate.
+Use the
+.B \-V
+option to see what processing SoX has automatically added.
+To override automatic dithering, the
+.B \-D
+option may be given; to invoke dithering manually, use the
+.B dither
+effect.
 .SS Clipping
 Clipping is distortion that occurs when an audio signal
 level (or `volume') exceeds the range of the chosen representation.
