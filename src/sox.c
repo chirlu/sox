@@ -24,6 +24,7 @@
 #include "sox.h"
 #include "util.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <math.h>
@@ -121,6 +122,7 @@ static lsx_enum_item const rg_modes[] = {
   {0, 0}};
 static rg_mode replay_gain_mode = RG_default;
 static sox_option_t show_progress = SOX_OPTION_DEFAULT;
+#define SOX_OPTS "SOX_OPTS"
 
 
 /* Input & output files */
@@ -204,6 +206,11 @@ static void cleanup(void)
 {
   size_t i;
 
+  if (!success) {
+    char const * env_opts = getenv(SOX_OPTS);
+    if (env_opts)
+      lsx_report(SOX_OPTS"=%s", env_opts);
+  }
   /* Close the input and output files before exiting. */
   for (i = 0; i < input_count; i++) {
     if (files[i]->ft) {
@@ -693,12 +700,12 @@ static void delete_eff_chains(void)
 
 static sox_bool is_pseudo_effect(char *s)
 {
+  if (s)
   if (strcmp("newfile", s) == 0 ||
       strcmp("restart", s) == 0 ||
       strcmp(":", s) == 0)
     return sox_true;
-  else
-    return sox_false;
+  return sox_false;
 } /* is_pseudo_effect */
 
 static void parse_effects(int argc, char **argv)
@@ -776,67 +783,42 @@ static void parse_effects(int argc, char **argv)
   }
 } /* parse_effects */
 
-static int strtoargv(char *s, char *(*argv)[])
+static char * * strtoargv(char * s, int * argc)
 {
-    int argc = 0;
+  sox_bool quote = sox_false;    /* Quote mode (") is in effect. */
+  sox_bool esc = sox_false;      /* Escape mode (\) is in effect. */
+  char * t, * * argv = NULL;
 
-    if (!s) return 0;
+  for (*argc = 0; *s; ++*argc) {
+    for (; isspace(*s); ++s);    /* Skip past any white space. */
+    if (!*s)                     /* All done? */
+      break;
 
-    while (*s)
-    {
-        int quote_mode;
+    lsx_revalloc(argv, *argc + 1);
+    argv[*argc] = s;
 
-        /* Skip past any white space */
-        while (*s == ' ' || *s == '\t')
-            s++;
-
-        /* Stop processing if no more data */
-        if (!*s)
-            break;
-
-        /* If starts with quote then start quote mode.  This
-         * will ignore seperators until a final quote is seen.
-         * Don't put quote into the argument.
-         */
-        if (*s == '"')
-        {
-            quote_mode = 1;
-            s++;
-        }
-        else
-            quote_mode = 0;
-
-        (*argv)[argc] = s;
-
-        /* Scan for seperator and when overwrite with 0 */
-        while (*s)
-        {
-            /* Treat quote as final seperator; even if there is
-             * more data right after it.
-             * TODO: Process \" and \\ so that user can
-             * have quotes inside quotes.  Tricky to do though.
-             */
-            if (quote_mode && *s == '"')
-                break;
-
-            if (!quote_mode && (*s == ' ' || *s == '\t'))
-                break;
-            s++;
-        }
-        *s = 0;
-        s++;
-        argc += 1;
+    for (t = s; *s; ++s) {       /* End with space or nul. */
+      *t = *s;
+      if (!esc && !quote && isspace(*s))
+        break;
+      if (!esc && *s == '"')     /* Toggle quote mode. */
+        quote = !quote;
+      else if (!(esc = !esc && *s == '\\' && s[1] && (s[1] == '"' || !quote)))
+        ++t;                     /* Only advance if not an active " or \ */
     }
-
-    return argc;
-} /* strtoargv */
+    if (*s)
+      ++s;                       /* Skip the separator. */
+    *t = '\0';                   /* Overwrite separator with (or append) nul. */
+  }
+  return argv;
+}                                /* strtoargv */
 
 static void read_user_effects(char *filename)
 {
     FILE *file = fopen(filename, "rt");
     char s[FILENAME_MAX];
     int argc;
-    char *argv[FILENAME_MAX];
+    char * * argv;
     int len;
 
     /* Free any command line options and then re-initialize to
@@ -860,32 +842,34 @@ static void read_user_effects(char *filename)
       if (s[len-1] == '\n')
         s[len-1] = 0;
 
-      argc = strtoargv(s, &argv);
+      argv = strtoargv(s, &argc);
 
-      /* Make sure first option is an effect name. */
-      if (!sox_find_effect(argv[0]) && !is_pseudo_effect(argv[0]))
-      {
-        printf("Cannot find an effect called `%s'.\n", argv[0]);
-        exit(1);
-      }
+      if (argv) {
+        /* Make sure first option is an effect name. */
+        if (!sox_find_effect(argv[0]) && !is_pseudo_effect(argv[0]))
+        {
+          printf("Cannot find an effect called `%s'.\n", argv[0]);
+          exit(1);
+        }
 
-      /* parse_effects normally parses options from command line.
-       * Reset opt index so it thinks its back at beginning of
-       * main()'s argv[].
-       */
-      optind = 0;
-      parse_effects(argc, argv);
+        /* parse_effects normally parses options from command line.
+         * Reset opt index so it thinks its back at beginning of
+         * main()'s argv[].
+         */
+        optind = 0;
+        parse_effects(argc, argv);
 
-      /* Advance to next effect but only if current chain has been
-       * filled in.  This recovers from side affects of psuedo-effects.
-       */
-      if (nuser_effects[eff_chain_count] > 0)
-      {
-        eff_chain_count++;
-        add_eff_chain();
+        /* Advance to next effect but only if current chain has been
+         * filled in.  This recovers from side affects of psuedo-effects.
+         */
+        if (nuser_effects[eff_chain_count] > 0)
+        {
+          eff_chain_count++;
+          add_eff_chain();
+        }
+        free(argv);
       }
     }
-
     fclose(file);
 
 } /* read_user_effects */
@@ -1238,8 +1222,8 @@ static int update_status(sox_bool all_done)
     }
 #endif
     switch (ch) {
-      case 'u': adjust_volume(+7); break;
-      case 'd': adjust_volume(-7); break;
+      case 'V': adjust_volume(+7); break;
+      case 'v': adjust_volume(-7); break;
     }
   }
 
@@ -2380,7 +2364,7 @@ static void init_file(file_t * f)
 
 static void parse_options_and_filenames(int argc, char **argv)
 {
-  char * env_opts = lsx_strdup(getenv("SOX_OPTS"));
+  char const * env_opts = getenv(SOX_OPTS);
   file_t opts, opts_none;
   init_file(&opts), init_file(&opts_none);
 
@@ -2388,25 +2372,19 @@ static void parse_options_and_filenames(int argc, char **argv)
     add_file(&opts, set_default_device(&opts)), init_file(&opts);
 
   if (env_opts) {
-    char * * argv2, * p = env_opts;
-    int argc2 = 0;
-    lsx_valloc(argv2, 1);
-    for (argv2[argc2++] = argv[0]; *p; ++p)
-      if (argc2 == 1 || *p == ' ') {
-        while (*p == ' ')
-          *p++ = '\0';
-        if (*p) {
-          lsx_revalloc(argv2, argc2 + 1);
-          argv2[argc2++] = p;
-        }
-      }
+    char * * argv2, * str = lsx_malloc(strlen(argv[0]) + strlen(env_opts) + 2);
+    int argc2;
+    strcpy(str, argv[0]);
+    strcat(str, " ");
+    strcat(str, env_opts);
+    argv2 = strtoargv(str, &argc2);
     if (parse_gopts_and_fopts(&opts, argc2, argv2)) {
-      lsx_fail("invalid option for SOX_OPTS");
+      lsx_fail("invalid option for "SOX_OPTS);
       exit(1);
     }
     optind = 1, opterr = 0;
+    free(str);
     free(argv2);
-    free(env_opts);
   }
 
   for (; optind < argc && !sox_find_effect(argv[optind]); init_file(&opts)) {
@@ -2629,7 +2607,7 @@ int main(int argc, char **argv)
 
 #ifdef HAVE_OPENMP
   if (single_threaded)
-   omp_set_num_threads(1);
+    omp_set_num_threads(1);
 #endif
 
   if (sox_globals.verbosity > 2)
