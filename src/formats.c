@@ -464,7 +464,7 @@ sox_format_t * sox_open_read(
     }
     else {
       if (ft->io_type == lsx_io_pipe) {
-        filetype = "sox";
+        filetype = "sox"; /* With successful pipe rewind, this isn't useful */
         lsx_report("assuming input pipe `%s' has file-type `sox'", path);
       }
       else if (!(filetype = lsx_find_file_extension(path))) {

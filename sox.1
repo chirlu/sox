@@ -571,7 +571,8 @@ SoX will read audio data from `standard input' (stdin),
 and which,
 if used in place of the output filename, will cause
 SoX will send audio data to `standard output' (stdout).
-Note that when using this option, the file-type (see
+Note that when using this option for the output file, and sometimes
+when using it for an input file, the file-type (see
 .B \-t
 below) must also be given.
 .TP
@@ -585,17 +586,12 @@ example, if `genw' generates mono WAV formatted signals to its
 standard output, then the following command makes a stereo file
 from two generated signals:
 .EX
-  sox -M -t wav "|genw --imd -" -t wav "|genw --thd -" out.wav
+  sox -M "|genw --imd -" "|genw --thd -" out.wav
 .EE
-If
+For headerless (raw) audio, 
 .B \-t
-is not given then the signal is assumed (and checked) to be in SoX's
-native
-.B .sox
-format (see
-.B \-p
-below and
-.BR soxformat (7)).
+(and perhaps other format options) will need to be given, preceding the input
+command.
 .TP
 \fB\(dq\fIwildcard-filename\fB\(dq\fR
 Specifies that filename `globbing' (wild-card matching) should be performed
