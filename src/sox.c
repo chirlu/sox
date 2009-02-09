@@ -785,30 +785,28 @@ static void parse_effects(int argc, char **argv)
 
 static char * * strtoargv(char * s, int * argc)
 {
-  sox_bool quote = sox_false;    /* Quote mode (") is in effect. */
-  sox_bool esc = sox_false;      /* Escape mode (\) is in effect. */
+  sox_bool squote = sox_false;   /* Single quote mode (') is in effect. */
+  sox_bool dquote = sox_false;   /* Double quote mode (") is in effect. */
+  sox_bool esc    = sox_false;   /* Escape mode (\) is in effect. */
   char * t, * * argv = NULL;
 
-  for (*argc = 0; *s; ++*argc) {
-    for (; isspace(*s); ++s);    /* Skip past any white space. */
-    if (!*s)                     /* All done? */
-      break;
-
-    lsx_revalloc(argv, *argc + 1);
-    argv[*argc] = s;
-
-    for (t = s; *s; ++s) {       /* End with space or nul. */
-      *t = *s;
-      if (!esc && !quote && isspace(*s))
-        break;
-      if (!esc && *s == '"')     /* Toggle quote mode. */
-        quote = !quote;
-      else if (!(esc = !esc && *s == '\\' && s[1] && (s[1] == '"' || !quote)))
-        ++t;                     /* Only advance if not an active " or \ */
+  for (*argc = 0; *s;) {
+    for (; isspace(*s); ++s);    /* Skip past any (more) white space. */
+    if (*s) {                    /* Found an arg. */
+      lsx_revalloc(argv, *argc + 1);
+      argv[(*argc)++] = s;       /* Store pointer to start of arg. */
+                                 /* Find the end of the arg: */
+      for (t = s; *s && (esc || squote || dquote || !isspace(*s)); ++s)
+        if (!esc && !squote && *s == '"')
+          dquote = !dquote;      /* Toggle double quote mode. */
+        else if (!esc && !dquote && *s == '\'')
+          squote = !squote;      /* Toggle single quote mode. */
+        else if (!(esc = !esc && *s == '\\' && s[1] &&
+              (!squote && (s[1] == '"' || !dquote))))
+          *t++ = *s;             /* Only copy if not an active ', ", or \ */
+      s = *s ? s + 1 : s;        /* Skip the 1st white space char. */
+      *t = '\0';                 /* Terminate the arg. */
     }
-    if (*s)
-      ++s;                       /* Skip the separator. */
-    *t = '\0';                   /* Overwrite separator with (or append) nul. */
   }
   return argv;
 }                                /* strtoargv */
