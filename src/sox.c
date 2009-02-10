@@ -90,7 +90,7 @@
   #define TIME_FRAC 1e3
 #endif
 
-/*#define INTERACTIVE 1*/
+/*#define MORE_INTERACTIVE 1*/
 
 /* We are playing games with getopt aliases so this needs to be included after
  * unistd.h to prevent aliasing OS's version of getopt.
@@ -112,7 +112,7 @@ static enum {
 static enum { sox_single, sox_multiple } output_method = sox_single;
 #define is_serial(m) ((m) <= sox_concatenate)
 #define is_parallel(m) (!is_serial(m))
-static sox_bool interactive = sox_false, fully_interactive = sox_false;
+static sox_bool no_clobber = sox_false, interactive = sox_false;
 static sox_bool uservolume = sox_false;
 typedef enum {RG_off, RG_track, RG_album, RG_default} rg_mode;
 static lsx_enum_item const rg_modes[] = {
@@ -233,7 +233,7 @@ static void cleanup(void)
   }
 
 #ifdef HAVE_TERMIOS_H
-  if (fully_interactive && stdin_is_a_tty)
+  if (interactive)
     tcsetattr(fileno(stdin), TCSANOW, &original_termios);
 #endif
 
@@ -1187,10 +1187,10 @@ static void adjust_volume(int delta)
 
 static int update_status(sox_bool all_done)
 {
-  if (stdin_is_a_tty && is_player) while (kbhit()) {
+  if (interactive) while (kbhit()) {
     int ch = getchar();
 
-#ifdef INTERACTIVE
+#ifdef MORE_INTERACTIVE
     if (files[current_input]->ft->handler.seek &&
         files[current_input]->ft->seekable)
     {
@@ -1257,7 +1257,7 @@ static sox_bool overwrite_permitted(char const * filename)
 {
   char c;
 
-  if (!interactive) {
+  if (!no_clobber) {
     lsx_report("Overwriting `%s'", filename);
     return sox_true;
   }
@@ -1579,11 +1579,11 @@ static int process(void)
   optimize_trim();
 
 #ifdef HAVE_TERMIOS_H /* so we can be fully interactive. */
-  if (!fully_interactive && stdin_is_a_tty) {
+  if (!interactive && is_player && stdin_is_a_tty) {
     struct termios modified_termios;
 
     tcgetattr(fileno(stdin), &original_termios);
-    fully_interactive = sox_true;
+    interactive = sox_true;
     modified_termios = original_termios;
     modified_termios.c_lflag &= ~(ICANON | ECHO);
     modified_termios.c_cc[VMIN] = modified_termios.c_cc[VTIME] = 0;
@@ -2103,7 +2103,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
         sox_globals.input_bufsiz = i;
         break;
 
-      case 7: interactive = sox_true; break;
+      case 7: no_clobber = sox_true; break;
       case 8: usage_effect(optarg); break;
       case 9: usage_format(optarg); break;
       case 10: f->no_glob = sox_true; break;
