@@ -1351,10 +1351,10 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
     }
 
     if (wFormatTag == WAVE_FORMAT_GSM610)
-        dwDataLength = (dwDataLength+1) & ~1u; /*round up to even */
+        dwDataLength = (dwDataLength+1) & ~1u; /* round up to even */
 
-    if ((wFormatTag == WAVE_FORMAT_PCM && wBitsPerSample > 16 && strcmp(ft->filetype, "wavpcm")) || wChannels > 2)
-    {
+    if (wFormatTag == WAVE_FORMAT_PCM && (wBitsPerSample > 16 || wChannels > 2)
+        && strcmp(ft->filetype, "wavpcm")) {
       isExtensible = sox_true;
       wFmtSize += 2 + 22;
     }
