@@ -1,4 +1,4 @@
-#ifndef HAVE_SYS_AUDIOIO_H
+#ifndef HAVE_SUN_AUDIO
 /*
  * SoX bit-rot detection file, obtained from: Solaris 9 /usr/include/sys
  */

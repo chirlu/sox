@@ -23,6 +23,8 @@ if HAVE_DISTRO
 AM_CPPFLAGS += -DDISTRO="\"@DISTRO@\""
 endif
 
+
+
 #########################
 # SoX - the application #
 #########################
@@ -39,124 +41,7 @@ example1_SOURCES = example1.c
 example2_SOURCES = example2.c
 sox_sample_test_SOURCES = sox_sample_test.c sox_sample_test.h
 
-###############################################
-# libsox - Dynamic Libraries for File Formats #
-###############################################
 
-if HAVE_LIBLTDL
-
-# Format modules; listed first so optional ones can be added later
-pkglib_LTLIBRARIES =
-
-# File formats
-if HAVE_FLAC
-if !STATIC_FLAC
-libsox_fmt_flac_la_SOURCES = flac.c
-libsox_fmt_flac_la_LIBADD = libsox.la @FLAC_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_flac.la
-endif
-endif
-if HAVE_FFMPEG
-libsox_fmt_ffmpeg_la_SOURCES = ffmpeg.c
-libsox_fmt_ffmpeg_la_LIBADD = libsox.la @FFMPEG_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_ffmpeg.la
-endif
-if HAVE_SNDFILE
-libsox_fmt_sndfile_la_SOURCES = sndfile.c
-libsox_fmt_sndfile_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
-libsox_fmt_sndfile_la_LIBADD = libsox.la @SNDFILE_LIBS@
-libsox_fmt_caf_la_SOURCES = caf.c sndfile.c
-libsox_fmt_caf_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
-libsox_fmt_caf_la_LIBADD = libsox.la @SNDFILE_LIBS@
-libsox_fmt_mat4_la_SOURCES = mat4.c sndfile.c
-libsox_fmt_mat4_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
-libsox_fmt_mat4_la_LIBADD = libsox.la @SNDFILE_LIBS@
-libsox_fmt_mat5_la_SOURCES = mat5.c sndfile.c
-libsox_fmt_mat5_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
-libsox_fmt_mat5_la_LIBADD = libsox.la @SNDFILE_LIBS@
-libsox_fmt_paf_la_SOURCES = paf.c sndfile.c
-libsox_fmt_paf_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
-libsox_fmt_paf_la_LIBADD = libsox.la  @SNDFILE_LIBS@
-libsox_fmt_fap_la_SOURCES = fap.c sndfile.c
-libsox_fmt_fap_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
-libsox_fmt_fap_la_LIBADD = libsox.la @SNDFILE_LIBS@
-libsox_fmt_w64_la_SOURCES = w64.c sndfile.c
-libsox_fmt_w64_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
-libsox_fmt_w64_la_LIBADD = libsox.la @SNDFILE_LIBS@
-libsox_fmt_xi_la_SOURCES = xi.c sndfile.c
-libsox_fmt_wi_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
-libsox_fmt_xi_la_LIBADD = libsox.la @SNDFILE_LIBS@
-libsox_fmt_pvf_la_SOURCES = pvf.c sndfile.c
-libsox_fmt_pvf_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
-libsox_fmt_pvf_la_LIBADD = libsox.la @SNDFILE_LIBS@
-libsox_fmt_sd2_la_SOURCES = sd2.c sndfile.c
-libsox_fmt_sd2_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@
-libsox_fmt_sd2_la_LIBADD = libsox.la @SNDFILE_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_sndfile.la libsox_fmt_caf.la libsox_fmt_mat4.la libsox_fmt_mat5.la libsox_fmt_paf.la libsox_fmt_fap.la libsox_fmt_w64.la libsox_fmt_xi.la libsox_fmt_pvf.la libsox_fmt_sd2.la
-endif
-if HAVE_AMRWB
-libsox_fmt_amr_wb_la_SOURCES = amr-wb.c amr.h amr1.h amr2.h
-libsox_fmt_amr_wb_la_LIBADD = libsox.la @AMR_WB_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_amr_wb.la
-endif
-if HAVE_AMRNB
-libsox_fmt_amr_nb_la_SOURCES = amr-nb.c amr.h amr1.h amr2.h
-libsox_fmt_amr_nb_la_LIBADD = libsox.la @AMR_NB_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_amr_nb.la
-endif
-if HAVE_WAVPACK
-libsox_fmt_wavpack_la_SOURCES = wavpack.c
-libsox_fmt_wavpack_la_LIBADD = libsox.la @WAVPACK_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_wavpack.la
-endif
-if HAVE_MP3
-libsox_fmt_mp3_la_SOURCES = mp3.c mp3-duration.h
-libsox_fmt_mp3_la_LIBADD = libsox.la @MP3_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_mp3.la
-endif
-if HAVE_OGG_VORBIS
-libsox_fmt_vorbis_la_SOURCES = vorbis.c vorbis1.h
-libsox_fmt_vorbis_la_LIBADD = libsox.la @OGG_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_vorbis.la
-endif
-
-# I/O devices
-if HAVE_ALSA
-libsox_fmt_alsa_la_SOURCES = alsa.c
-libsox_fmt_alsa_la_LIBADD = libsox.la @ALSA_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_alsa.la
-endif
-if HAVE_COREAUDIO
-libsox_fmt_coreaudio_la_SOURCES = coreaudio.c
-libsox_fmt_coreaudio_la_LIBADD = libsox.la @COREAUDIO_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_coreaudio.la
-endif
-if HAVE_LIBAO
-libsox_fmt_ao_la_SOURCES = ao.c
-libsox_fmt_ao_la_LIBADD = libsox.la @AO_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_ao.la
-endif
-if HAVE_OSS
-libsox_fmt_oss_la_SOURCES = oss.c
-libsox_fmt_oss_la_LIBADD = libsox.la @OSS_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_oss.la
-endif
-if HAVE_PULSEAUDIO
-libsox_fmt_pulseaudio_la_SOURCES = pulseaudio.c
-libsox_fmt_pulseaudio_la_LIBADD = libsox.la @PULSEAUDIO_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_pulseaudio.la
-endif
-if HAVE_SNDIO
-libsox_fmt_sndio_la_SOURCES = sndio.c
-libsox_fmt_sndio_la_LIBADD = libsox.la @SNDIO_LIBS@
-pkglib_LTLIBRARIES += libsox_fmt_sndio.la
-endif
-if HAVE_SUN_AUDIO
-libsox_fmt_sunau_la_SOURCES = sunaudio.c
-libsox_fmt_sunau_la_LIBADD = libsox.la
-pkglib_LTLIBRARIES += libsox_fmt_sunau.la
-endif
-endif
 
 ######################################################
 # libsox - file format, effects, and utility library #
@@ -171,7 +56,7 @@ libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
 
 # Effects source
 libsox_la_SOURCES += \
-	band.h bend.c biquad.c biquad.h biquads.c chorus.c compand.c \
+	band.h bend.c biquad.c biquad.h biquads.c chorus.c compand.c crop.c \
 	compandt.c compandt.h contrast.c dcshift.c delay.c dft_filter.c \
 	dft_filter.h dither.c dither_fir.h dither_iir.h earwax.c echo.c \
 	echos.c effects.c effects.h effects_i.c effects_i_dsp.c fade.c fft4g.c \
@@ -192,6 +77,7 @@ libsox_la_LIBADD = @PNG_LIBS@
 if HAVE_MAGIC
 libsox_la_LIBADD += @MAGIC_LIBS@
 endif
+
 if HAVE_OPENMP
 libsox_la_LIBADD += @GOMP_LIBS@
 endif
@@ -199,110 +85,42 @@ endif
 libsox_la_CFLAGS = @WARN_CFLAGS@
 libsox_la_LDFLAGS = @APP_LDFLAGS@ -version-info @SHLIB_VERSION@
 
-libsox_la_SOURCES += raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
-  s4-fmt.c u1-fmt.c u2-fmt.c u3-fmt.c u4-fmt.c al-fmt.c la-fmt.c ul-fmt.c \
-  lu-fmt.c 8svx.c aiff-fmt.c aifc-fmt.c au.c avr.c cdr.c cvsd-fmt.c \
-  dvms-fmt.c dat.c gsm.c hcom.c htk.c lpc10.c maud.c prc.c sf.c smp.c \
-  sounder.c soundtool.c sphere.c tx16w.c voc.c vox-fmt.c ima-fmt.c adpcm.c adpcm.h \
-  ima_rw.c ima_rw.h wav.c wve.c xa.c nulfile.c f4-fmt.c f8-fmt.c
-libsox_la_LIBADD += @GSM_LIBS@ @LIBGSM_LIBADD@
-libsox_la_LIBADD += @LPC10_LIBS@ @LIBLPC10_LIBADD@
+if HAVE_LIBLTDL
+  libsox_la_CFLAGS += $(LTDLINCL) 
+  libsox_la_LDFLAGS += $(LIBLTDL) 
+endif
+
+
+
+#########################
+# libsox - File Formats #
+#########################
 
 # Uncomment for bit-rot detection on linux
 #libsox_la_SOURCES += coreaudio.c sndio.c sunaudio.c
 
-if STATIC_FLAC
-    libsox_la_SOURCES += flac.c
-    libsox_la_LIBADD += @FLAC_LIBS@
-    sox_LDADD += @FLAC_LIBS@
-endif
+libsox_la_SOURCES += raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
+  s4-fmt.c u1-fmt.c u2-fmt.c u3-fmt.c u4-fmt.c al-fmt.c la-fmt.c ul-fmt.c \
+  lu-fmt.c 8svx.c aiff-fmt.c aifc-fmt.c au.c avr.c cdr.c cvsd-fmt.c \
+  dvms-fmt.c dat.c hcom.c htk.c maud.c prc.c sf.c smp.c \
+  sounder.c soundtool.c sphere.c tx16w.c voc.c vox-fmt.c ima-fmt.c adpcm.c adpcm.h \
+  ima_rw.c ima_rw.h wav.c wve.c xa.c nulfile.c f4-fmt.c f8-fmt.c
 
-if HAVE_LIBLTDL
-  libsox_la_CFLAGS += $(LTDLINCL) 
-  libsox_la_LDFLAGS += $(LIBLTDL) 
-else
-sox_LDADD += @GSM_LIBS@ @LIBGSM_LIBADD@
-sox_LDADD += @LPC10_LIBS@ @LIBLPC10_LIBADD@
+libsox_la_LIBADD += @GSM_LIBS@ @LIBGSM_LIBADD@
+libsox_la_LIBADD += @LPC10_LIBS@ @LIBLPC10_LIBADD@
 
-if HAVE_FFMPEG
-    libsox_la_SOURCES += ffmpeg.h ffmpeg.c
-    libsox_la_LIBADD += @FFMPEG_LIBS@
-    sox_LDADD += @FFMPEG_LIBS@
-endif
-if HAVE_SNDFILE
-    libsox_la_SOURCES += sndfile.c caf.c mat4.c mat5.c paf.c fap.c w64.c xi.c pvf.c sd2.c
-    libsox_la_CFLAGS += @SNDFILE_CFLAGS@
-    libsox_la_LIBADD += @SNDFILE_LIBS@
-    sox_LDADD += @SNDFILE_LIBS@
-endif
-if HAVE_AMRWB
-    libsox_la_SOURCES += amr-wb.c amr.h amr1.h amr2.h
-    libsox_la_LIBADD += @AMR_WB_LIBS@
-    sox_LDADD += @AMR_WB_LIBS@
-endif
-if HAVE_AMRNB
-    libsox_la_SOURCES += amr-nb.c amr.h amr1.h amr2.h
-    libsox_la_LIBADD += @AMR_NB_LIBS@
-    sox_LDADD += @AMR_NB_LIBS@
-endif
-if HAVE_COREAUDIO
-    libsox_la_SOURCES += coreaudio.c
-    libsox_la_LIBADD += @COREAUDIO_LIBS@
-    sox_LDADD += @COREAUDIO_LIBS@
-endif
-if HAVE_PULSEAUDIO
-    libsox_la_SOURCES += pulseaudio.c
-    libsox_la_LIBADD += @PULSEAUDIO_LIBS@
-    sox_LDADD += @PULSEAUDIO_LIBS@
-endif
-if HAVE_WAVPACK
-    libsox_la_SOURCES += wavpack.c
-    libsox_la_LIBADD += @WAVPACK_LIBS@
-    sox_LDADD += @WAVPACK_LIBS@
-endif
-if HAVE_MP3
-    libsox_la_SOURCES += mp3.c mp3-duration.h
-    libsox_la_LIBADD += @MP3_LIBS@
-    sox_LDADD += @MP3_LIBS@
-endif
-if HAVE_OGG_VORBIS
-    libsox_la_SOURCES += vorbis.c vorbis1.h
-    libsox_la_LIBADD += @OGG_LIBS@
-    sox_LDADD += @OGG_LIBS@
-endif
-if HAVE_ALSA
-    libsox_la_SOURCES += alsa.c
-    libsox_la_LIBADD += @ALSA_LIBS@
-    sox_LDADD += @ALSA_LIBS@
-endif
-if HAVE_LIBAO
-    libsox_la_SOURCES += ao.c
-    libsox_la_LIBADD += @AO_LIBS@
-    sox_LDADD += @AO_LIBS@
-endif
-if HAVE_OSS
-    libsox_la_SOURCES += oss.c
-    libsox_la_LIBADD += @OSS_LIBS@
-    sox_LDADD += @OSS_LIBS@
-endif
-if HAVE_SNDIO
-    libsox_la_SOURCES += sndio.c
-    libsox_la_LIBADD += @SNDIO_LIBS@
-    sox_LDADD += @SNDIO_LIBS@
-endif
-if HAVE_SUN_AUDIO
-    libsox_la_SOURCES += sunaudio.c
-endif
+pkglib_LTLIBRARIES =
 
-#end !HAVE_LIBLTDL
-endif
+include optional-fmts.am
+
+
 
 # example programs will need same link options as sox does.
 example0_LDADD = ${sox_LDADD}
 example1_LDADD = ${sox_LDADD}
 example2_LDADD = ${sox_LDADD}
 
-EXTRA_DIST = monkey.au monkey.wav \
+EXTRA_DIST = monkey.au monkey.wav optional-fmts.in \
 	     CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake \
 	     tests.sh testall.sh tests.bat testall.bat test-comments
 

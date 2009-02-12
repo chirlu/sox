@@ -15,6 +15,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+/*-------------------------- Static format handlers --------------------------*/
+
   FORMAT(aifc)
   FORMAT(aiff)
   FORMAT(al)
@@ -27,12 +29,10 @@
   FORMAT(dvms)
   FORMAT(f4)
   FORMAT(f8)
-  FORMAT(gsm)
   FORMAT(hcom)
   FORMAT(htk)
   FORMAT(ima)
   FORMAT(la)
-  FORMAT(lpc10)
   FORMAT(lu)
   FORMAT(maud)
   FORMAT(nul)
@@ -61,37 +61,48 @@
   FORMAT(wve)
   FORMAT(xa)
 
+/*--------------------- Plugin or static format handlers ---------------------*/
+
+#if defined HAVE_ALSA && (defined STATIC_ALSA || !defined HAVE_LIBLTDL)
+  FORMAT(alsa)
+#endif
+#if defined HAVE_AMRNB && (defined STATIC_AMRNB || !defined HAVE_LIBLTDL)
+  FORMAT(amr_nb)
+#endif
+#if defined HAVE_AMRWB && (defined STATIC_AMRWB || !defined HAVE_LIBLTDL)
+  FORMAT(amr_wb)
+#endif
+#if defined HAVE_AO && (defined STATIC_AO || !defined HAVE_LIBLTDL)
+  FORMAT(ao)
+#endif
+#if defined HAVE_COREAUDIO && (defined STATIC_COREAUDIO || !defined HAVE_LIBLTDL)
+  FORMAT(coreaudio)
+#endif
+#if defined HAVE_FFMPEG && (defined STATIC_FFMPEG || !defined HAVE_LIBLTDL)
+  FORMAT(ffmpeg)
+#endif
 #if defined HAVE_FLAC && (defined STATIC_FLAC || !defined HAVE_LIBLTDL)
   FORMAT(flac)
 #endif
-
-#ifndef HAVE_LIBLTDL /* Plugin format handlers */
-
-#if defined HAVE_ALSA
-  FORMAT(alsa)
+#if defined HAVE_GSM && (defined STATIC_GSM || !defined HAVE_LIBLTDL)
+  FORMAT(gsm)
 #endif
-#if defined HAVE_AMRNB
-  FORMAT(amr_nb)
+#if defined HAVE_LPC10 && (defined STATIC_LPC10 || !defined HAVE_LIBLTDL)
+  FORMAT(lpc10)
 #endif
-#if defined HAVE_AMRWB
-  FORMAT(amr_wb)
-#endif
-#if defined HAVE_LIBAO
-  FORMAT(ao)
-#endif
-#if defined HAVE_FFMPEG
-  FORMAT(ffmpeg)
-#endif
-#if defined(HAVE_MP3)
+#if defined HAVE_MP3 && (defined STATIC_MP3 || !defined HAVE_LIBLTDL)
   FORMAT(mp3)
 #endif
-#if defined(HAVE_SYS_SOUNDCARD_H) || defined(HAVE_MACHINE_SOUNDCARD_H)
+#if defined HAVE_OSS && (defined STATIC_OSS || !defined HAVE_LIBLTDL)
   FORMAT(oss)
 #endif
-#if defined HAVE_SNDIO
+#if defined HAVE_PULSEAUDIO && (defined STATIC_PULSEAUDIO || !defined HAVE_LIBLTDL)
+  FORMAT(pulseaudio)
+#endif
+#if defined HAVE_SNDIO && (defined STATIC_SNDIO || !defined HAVE_LIBLTDL)
   FORMAT(sndio)
 #endif
-#if defined HAVE_SNDFILE
+#if defined HAVE_SNDFILE && (defined STATIC_SNDFILE || !defined HAVE_LIBLTDL)
   FORMAT(sndfile)
   #if defined HAVE_SNDFILE_1_0_12
   FORMAT(caf)
@@ -105,17 +116,12 @@
   FORMAT(w64)
   FORMAT(xi)
 #endif
-#if defined(HAVE_SYS_AUDIOIO_H) || defined(HAVE_SUN_AUDIOIO_H)
+#if defined HAVE_SUN_AUDIO && (defined STATIC_SUN_AUDIO || !defined HAVE_LIBLTDL)
   FORMAT(sunau)
 #endif
-#if defined(HAVE_COREAUDIO) || defined(HAVE_COREAUDIO)
-  FORMAT(coreaudio)
-#endif
-#if defined HAVE_OGG_VORBIS
+#if defined HAVE_OGG_VORBIS && (defined STATIC_OGG_VORBIS || !defined HAVE_LIBLTDL)
   FORMAT(vorbis)
 #endif
-#if defined HAVE_WAVPACK
+#if defined HAVE_WAVPACK && (defined STATIC_WAVPACK || !defined HAVE_LIBLTDL)
   FORMAT(wavpack)
-#endif
-
 #endif

@@ -45,7 +45,7 @@ if test "$with_libltdl" != "no"; then
 fi
 
 if test "$using_libltdl" != "no"; then
-  AC_CHECK_HEADERS(ltdl.h, 
+  AC_CHECK_HEADERS(ltdl.h,
                    AC_CHECK_LIB(ltdl, lt_dlinit, LIBLTDL="$LIBLTDL -lltdl",
                                 using_libltdl=no), using_libltdl=no)
 fi
@@ -98,7 +98,7 @@ fi
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = yes; then
 
-    dnl Detect gcc version.  Convert GCC version number to 
+    dnl Detect gcc version.  Convert GCC version number to
     dnl something easier to compare.
     AC_MSG_CHECKING([gcc version])
     gccver=`$CC -dumpversion`
@@ -179,8 +179,10 @@ if test "$enable_silent_libtool" = "yes"; then
     LIBTOOLFLAGS=--silent
 fi
 AC_SUBST(LIBTOOLFLAGS)
-   
-dnl Check for GOMP
+
+
+
+dnl Check for GOMP library
 AC_MSG_CHECKING([whether to use GOMP])
 AC_ARG_ENABLE(gomp,
     AC_HELP_STRING([--disable-gomp], [Don't use GOMP.]),,enable_gomp=yes)
@@ -197,262 +199,9 @@ fi
 AM_CONDITIONAL(HAVE_OPENMP, test x$enable_gomp = xyes)
 AC_SUBST(GOMP_LIBS)
 
-audio_driver_found=no  
-    
-dnl Check for ALSA
-AC_MSG_CHECKING([whether to try building ALSA sound driver])
-AC_ARG_ENABLE(alsa,
-    AC_HELP_STRING([--disable-alsa], [Don't build ALSA sound driver.]),,enable_alsa=yes)
-AC_MSG_RESULT($enable_alsa)
-if test "$enable_alsa" = "yes"; then
-    AC_CHECK_HEADERS(alsa/asoundlib.h,
-        AC_CHECK_LIB(asound, snd_pcm_open, ALSA_LIBS="$ALSA_LIBS -lasound", enable_alsa=no),
-        enable_alsa=no)
-fi
-if test "$enable_alsa" = yes; then
-   AC_DEFINE(HAVE_ALSA, 1, [Define to 1 if you have ALSA.])
-   audio_driver_found=yes
-fi
-AM_CONDITIONAL(HAVE_ALSA, test x$enable_alsa = xyes)
-AC_SUBST(ALSA_LIBS)
 
-dnl Check for libao
-AC_MSG_CHECKING([whether to try building libao sound driver])
-AC_ARG_ENABLE(libao,
-    AC_HELP_STRING([--disable-libao], [Don't build libao sound driver.]),,enable_libao=yes)
-AC_MSG_RESULT($enable_libao)
-if test "$enable_libao" = "yes"; then
-    AC_CHECK_HEADERS(ao/ao.h,
-        AC_CHECK_LIB(ao, ao_play, AO_LIBS="$AO_LIBS -lao", enable_libao=no),
-        enable_libao=no)
-fi
-if test "$enable_libao" = yes; then
-   AC_DEFINE(HAVE_LIBAO, 1, [Define to 1 if you have libao.])
-   audio_driver_found=yes
-fi
-AM_CONDITIONAL(HAVE_LIBAO, test x$enable_libao = xyes)
-AC_SUBST(AO_LIBS)
 
-dnl Check for OSS
-AC_MSG_CHECKING([whether to try building OSS sound driver])
-AC_ARG_ENABLE(oss,
-    AC_HELP_STRING([--disable-oss], [Don't build OSS sound driver.]),,enable_oss=yes)
-AC_MSG_RESULT($enable_oss)
-if test "$enable_oss" = "yes"; then
-    AC_CHECK_HEADERS(sys/soundcard.h,,
-        [AC_CHECK_HEADERS(machine/soundcard.h,
-            [AC_CHECK_LIB(ossaudio, _oss_ioctl, OSS_LIBS="$OSS_LIBS -lossaudio")],
-            enable_oss=no)])
-fi
-if test "$enable_oss" = yes; then
-   AC_DEFINE(HAVE_OSS, 1, [Define to 1 if you have OSS.])
-   audio_driver_found=yes
-fi
-AM_CONDITIONAL(HAVE_OSS, test x$enable_oss = xyes)
-AC_SUBST(OSS_LIBS)
-
-dnl Check for sndio
-AC_MSG_CHECKING([whether to try building sndio sound driver])
-AC_ARG_ENABLE(sndio,
-    AC_HELP_STRING([--disable-sndio], [Don't build sndio sound driver.]),,enable_sndio=yes)
-AC_MSG_RESULT($enable_sndio)
-if test "$enable_sndio" = "yes"; then
-    AC_CHECK_HEADERS(sndio.h,
-        [AC_CHECK_LIB(sndio, sio_open, SNDIO_LIBS="$SNDIO_LIBS -lsndio")],
-        enable_sndio=no)
-fi
-if test "$enable_sndio" = yes; then
-   AC_DEFINE(HAVE_SNDIO, 1, [Define to 1 if you have sndio.])
-   audio_driver_found=yes
-fi
-AM_CONDITIONAL(HAVE_SNDIO, test x$enable_sndio = xyes)
-AC_SUBST(SNDIO_LIBS)
-
-dnl Check for Sun audio
-AC_MSG_CHECKING([whether to try building Sun audio driver])
-AC_ARG_ENABLE(sun-audio,
-    AC_HELP_STRING([--disable-sun-audio], [Don't build Sun audio driver.]),,enable_sun_audio=yes)
-AC_MSG_RESULT($enable_sun_audio)
-if test "$enable_sun_audio" = "yes"; then
-    AC_CHECK_HEADERS(sys/audioio.h,,
-        [AC_CHECK_HEADERS(sun/audioio.h,, enable_sun_audio=no)])
-fi
-if test "$enable_sun_audio" = yes; then
-   AC_DEFINE(HAVE_SUN_AUDIO, 1, [Define to 1 if you have Sun audio.])
-   audio_driver_found=yes
-fi
-AM_CONDITIONAL(HAVE_SUN_AUDIO, test x$enable_sun_audio = xyes)
-
-dnl Check for Mac OSX CoreAudio
-AC_MSG_CHECKING([whether to try building CoreAudio driver])
-AC_ARG_ENABLE(coreaudio,
-    AC_HELP_STRING([--disable-coreaudio], [Don't build CoreAudio driver.]),,enable_coreaudio=yes)
-AC_MSG_RESULT($enable_coreaudio)
-if test "$enable_coreaudio" = "yes"; then
-    AC_CHECK_HEADERS(CoreAudio/CoreAudio.h, [COREAUDIO_LIBS="$COREAUDIO_LIBS -Wl,-framework,CoreAudio"], enable_coreaudio=no)
-fi
-if test "$enable_coreaudio" = yes; then
-   AC_DEFINE(HAVE_COREAUDIO, 1, [Define to 1 if you have CoreAudio.])
-   audio_driver_found=yes
-fi
-AM_CONDITIONAL(HAVE_COREAUDIO, test x$enable_coreaudio = xyes)
-AC_SUBST(COREAUDIO_LIBS)
-
-dnl Check for Pulse Audio
-AC_MSG_CHECKING([whether to try building Pulse Audio driver])
-AC_ARG_ENABLE(pulseaudio,
-    AC_HELP_STRING([--disable-pulseaudio], [Don't build Pulse Audio driver.]),,enable_pulseaudio=yes)
-AC_MSG_RESULT($enable_pulseaudio)
-if test "$enable_pulseaudio" = "yes"; then
-    AC_CHECK_HEADERS(pulse/simple.h, [PULSEAUDIO_LIBS="$PULSEAUDIO_LIBS -lpulse -lpulse-simple"], enable_pulseaudio=no)
-fi
-if test "$enable_pulseaudio" = yes; then
-   AC_DEFINE(HAVE_PULSEAUDIO, 1, [Define to 1 if you have Pulse Audio.])
-   audio_driver_found=yes
-fi
-AM_CONDITIONAL(HAVE_PULSEAUDIO, test x$enable_pulseaudio = xyes)
-AC_SUBST(PULSEAUDIO_LIBS)
-
-dnl Check if we want to disable all symlinks
-AC_MSG_CHECKING([whether to enable symlinks])
-AC_ARG_ENABLE(symlinks,
-    AC_HELP_STRING([--disable-symlinks], [Don't make any symlinks to sox.]),,enable_symlinks=yes)
-AC_MSG_RESULT($enable_symlinks)
-
-enable_playrec_symlinks=no
-if test "$enable_symlinks" = "yes"; then
-    SYMLINKS=yes
-    if test "$audio_driver_found" = "yes"; then
-        PLAYRECLINKS=yes
-        enable_playrec_symlinks=yes
-    fi
-fi
-AC_SUBST(SYMLINKS)
-AC_SUBST(PLAYRECLINKS)
- 
-dnl Check for libgsm
-found_libgsm=yes
-AC_CHECK_HEADERS(gsm/gsm.h, ,
-    [AC_CHECK_HEADERS(gsm.h, ,found_libgsm=no)])
-    AC_CHECK_LIB(gsm, gsm_create, GSM_LIBS="$GSM_LIBS -lgsm", found_libgsm=no)
-if test "$found_libgsm" = yes; then
-    AC_DEFINE(EXTERNAL_GSM, 1, [Define if you are using an external GSM library])
-else
-    LIBGSM_LIBADD=../libgsm/libgsm.la
-fi
-AC_SUBST(LIBGSM_LIBADD)
-AC_SUBST(GSM_LIBS)
-AM_CONDITIONAL(EXTERNAL_GSM, test x$found_libgsm = xyes)
-
-dnl Check for liblpc10
-found_liblpc10=yes
-AC_CHECK_HEADERS(lpc10.h, ,
-    [AC_CHECK_HEADERS(lpc10.h, ,found_liblpc10=no)])
-    AC_CHECK_LIB(lpc10, create_lpc10_encoder_state, LPC10_LIBS="$LPC10_LIBS -llpc10", found_liblpc10=no)
-if test "$found_liblpc10" = yes; then
-    AC_DEFINE(EXTERNAL_LPC10, 1, [Define if you are using an external LPC10 library])
-else
-    LIBLPC10_LIBADD=../lpc10/liblpc10.la
-fi
-AC_SUBST(LIBLPC10_LIBADD)
-AC_SUBST(LPC10_LIBS)
-AM_CONDITIONAL(EXTERNAL_LPC10, test x$found_liblpc10 = xyes)
-
-dnl Check for libsndfile
-AC_ARG_WITH(sndfile,
-    AC_HELP_STRING([--without-sndfile],
-    [Don't try to use libsndfile]))
-using_sndfile=no
-if test "$with_sndfile" != "no"; then
-    using_sndfile=yes
-    SOX_PATH_SNDFILE(, using_sndfile=no)
-    if test "$with_sndfile" = "yes" -a "$using_sndfile" = "no"; then
-        AC_MSG_FAILURE([cannot find libsndfile])
-    fi
-fi
-if test "$using_sndfile" = yes; then
-   AC_DEFINE(HAVE_SNDFILE, 1, [Define to 1 if you have libsndfile.])
-fi
-AM_CONDITIONAL(HAVE_SNDFILE, test x$using_sndfile = xyes)
-AC_SUBST(SNDFILE_CFLAGS)
-AC_SUBST(SNDFILE_LIBS)
-        
-dnl Check for Ogg Vorbis libraries
-AC_ARG_WITH(ogg,
-    AC_HELP_STRING([--without-ogg], 
-	[Don't try to use Ogg Vorbis]))
-using_ogg=no
-if test "$with_ogg" != "no"; then
-    using_ogg=yes
-    AC_CHECK_HEADER(vorbis/codec.h,
-        [AC_CHECK_LIB(ogg, ogg_packet_clear, OGG_LIBS="$OGG_LIBS -logg", using_ogg=no)
-        AC_CHECK_LIB(vorbis, vorbis_analysis_headerout, OGG_LIBS="-lvorbis $OGG_LIBS", using_ogg=no, $OGG_LIBS)
-        AC_CHECK_LIB(vorbisfile, ov_clear, OGG_LIBS="-lvorbisfile $OGG_LIBS", using_ogg=no, $OGG_LIBS)
-        AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr, OGG_LIBS="-lvorbisenc $OGG_LIBS", using_ogg=no, $OGG_LIBS)],
-        using_ogg=no)
-    if test "$with_ogg" = "yes" -a "$using_ogg" = "no"; then
-        AC_MSG_FAILURE([cannot find Ogg Vorbis])
-    fi
-fi
-if test "$using_ogg" = yes; then
-   AC_DEFINE(HAVE_OGG_VORBIS, 1, [Define to 1 if you have Ogg Vorbis.])
-fi
-AM_CONDITIONAL(HAVE_OGG_VORBIS, test x$using_ogg = xyes)
-AC_SUBST(OGG_LIBS)
-
-dnl Check for FLAC libraries
-case $target in
-  *mingw*)
-  FLAC_LIBS="-lwsock32"
-  ;;
-esac
-
-AC_ARG_WITH(flac, AC_HELP_STRING([--without-flac], [Don't try to use FLAC]),
-    [], with_flac=yes)
-AC_ARG_WITH(flac, AC_HELP_STRING([--with-flac=dyn], [Try to use FLAC dynamically]))
-using_flac=no
-if test "$with_flac" != "no"; then
-    using_flac=$with_flac
-    dnl  Note passing in OGG_LIBS.  That is because FLAC has optional
-    dnl  support for OGG and if OGG libraries are found on this
-    dnl  system then its highly likely to be compiled into FLAC
-    dnl  and will require these at link time.
-    AC_CHECK_HEADER(FLAC/all.h,
-        [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new, FLAC_LIBS="-lFLAC $FLAC_LIBS $OGG_LIBS",using_flac=no, $FLAC_LIBS $OGG_LIBS)],
-        using_flac=no)
-    if test "$with_flac" = "yes" -a "$using_flac" = "no"; then
-        AC_MSG_FAILURE([cannot find FLAC])
-    fi
-fi
-if test "$using_flac" != no; then
-  AC_DEFINE(HAVE_FLAC, 1, [Define to 1 if you have FLAC.])
-  if test "$using_flac" = yes; then
-    AC_DEFINE(STATIC_FLAC, 1, [Define to 1 if you have static FLAC.])
-  fi
-fi
-AM_CONDITIONAL(HAVE_FLAC, test $using_flac != no)
-AM_CONDITIONAL(STATIC_FLAC, test $using_flac = yes)
-AC_SUBST(FLAC_LIBS)
-
-dnl Check for ffmpeg libraries
-AC_ARG_WITH(ffmpeg,
-    AC_HELP_STRING([--without-ffmpeg],
-        [Don't try to use ffmpeg]))
-using_ffmpeg=no
-if test "$with_ffmpeg" != "no"; then
-    using_ffmpeg=yes
-    SOX_PATH_FFMPEG(, using_ffmpeg=no)
-    if test "$with_ffmpeg" = "yes" -a "$using_ffmpeg" = "no"; then
-        AC_MSG_FAILURE([cannot find ffmpeg])
-    fi
-fi
-if test "$using_ffmpeg" = yes; then
-   AC_DEFINE(HAVE_FFMPEG, 1, [Define to 1 if you have ffmpeg.])
-fi
-AM_CONDITIONAL(HAVE_FFMPEG, test x$using_ffmpeg = xyes)
-AC_SUBST(FFMPEG_LIBS)
-
-dnl Check for magic libraries
+dnl Check for magic library
 AC_ARG_WITH(magic,
     AC_HELP_STRING([--without-magic],
         [Don't try to use magic]))
@@ -472,121 +221,7 @@ fi
 AM_CONDITIONAL(HAVE_MAGIC, test x$using_magic = xyes)
 AC_SUBST(MAGIC_LIBS)
 
-dnl Check for MAD libraries
-AC_ARG_WITH(mad,
-    AC_HELP_STRING([--without-mad],
-        [Don't try to use MAD (MP3 Audio Decoder)]))
-using_mad=no
-if test "$with_mad" != "no"; then
-    using_mad=yes
-    AC_CHECK_HEADERS(mad.h,
-        [AC_CHECK_LIB(mad, mad_stream_buffer, MP3_LIBS="$MP3_LIBS -lmad",using_mad=no)],
-        using_mad=no)
-    if test "$with_mad" = "yes" -a "$using_mad" = "no"; then
-        AC_MSG_FAILURE([cannot find libmad])
-    fi
-fi
 
-dnl Check for id3tag libraries
-AC_ARG_WITH(id3tag,
-    AC_HELP_STRING([--without-id3tag],
-        [Don't try to use id3tag]))
-using_id3tag=no
-if test "$with_id3tag" != "no"; then
-    using_id3tag=yes
-    AC_CHECK_HEADER(id3tag.h,
-        [AC_CHECK_LIB(id3tag, id3_file_open, MP3_LIBS="$MP3_LIBS -lid3tag -lz",using_id3tag=no, -lz)],
-        using_id3tag=no)
-    if test "$with_id3tag" = "yes" -a "$using_id3tag" = "no"; then
-        AC_MSG_FAILURE([cannot find id3tag])
-    fi
-fi
-if test "$using_id3tag" = yes; then
-   AC_DEFINE(HAVE_ID3TAG, 1, [Define to 1 if you have id3tag.])
-fi
-AM_CONDITIONAL(HAVE_ID3TAG, test x$using_id3tag = xyes)
-
-dnl Test for LAME library.
-AC_ARG_WITH(lame,
-    AC_HELP_STRING([--without-lame],
-        [Don't try to use LAME (LAME Ain't an MP3 Encoder)]))
-using_lame=no
-if test "$with_lame" != "no"; then
-    using_lame=yes
-    AC_CHECK_HEADERS(lame/lame.h,,
-        [AC_CHECK_HEADERS(lame.h,, using_lame=no)])
-    AC_CHECK_LIB(mp3lame, lame_init, MP3_LIBS="$MP3_LIBS -lmp3lame",using_lame=no)
-    if test "$with_lame" = "yes" -a "$using_lame" = "no"; then
-        AC_MSG_FAILURE([cannot find LAME])
-    fi
-fi
-
-dnl MP3 library depends on libmad || LAME
-if test "$using_mad" = yes -o "$using_lame" = yes; then
-   AC_DEFINE(HAVE_MP3, 1, [Define to 1 if you have lame or mad support.])
-fi
-AM_CONDITIONAL(HAVE_MP3, test "x$using_mad" = "xyes" -o "x$using_lame" = "xyes")
-AC_SUBST(MP3_LIBS)
-
-dnl Check for amr-wb libraries
-AC_ARG_WITH(amr-wb,
-    AC_HELP_STRING([--without-amr-wb],
-        [Don't try to use amr-wb]))
-using_amr_wb=no
-if test "$with_amr_wb" != "no"; then
-    using_amr_wb=yes
-    AC_CHECK_HEADER(amrwb/dec.h,
-        [AC_CHECK_LIB(amrwb, D_IF_init, AMR_WB_LIBS="$AMR_WB_LIBS -lamrwb",using_amr_wb=no)],
-        using_amr_wb=no)
-    if test "$with_amr_wb" = "yes" -a "$using_amr_wb" = "no"; then
-        AC_MSG_FAILURE([cannot find amr-wb])
-    fi
-fi
-if test "$using_amr_wb" = yes; then
-   AC_DEFINE(HAVE_AMRWB, 1, [Define to 1 if you have AMR-WB.])
-fi
-AM_CONDITIONAL(HAVE_AMRWB, test x$using_amr_wb = xyes)
-AC_SUBST(AMR_WB_LIBS)
-
-dnl Check for amr-nb libraries
-AC_ARG_WITH(amr-nb,
-    AC_HELP_STRING([--without-amr-nb],
-        [Don't try to use amr-nb]))
-using_amr_nb=no
-if test "$with_amr_nb" != "no"; then
-    using_amr_nb=yes
-    AC_CHECK_HEADER(amrnb/sp_dec.h,
-        [AC_CHECK_LIB(amrnb, Decoder_Interface_init, AMR_NB_LIBS="$AMR_NB_LIBS -lamrnb" ,using_amr_nb=no)],
-        using_amr_nb=no)
-    if test "$with_amr_nb" = "yes" -a "$using_amr_nb" = "no"; then
-        AC_MSG_FAILURE([cannot find amr-nb])
-    fi
-fi
-if test "$using_amr_nb" = yes; then
-   AC_DEFINE(HAVE_AMRNB, 1, [Define to 1 if you have AMR-NB.])
-fi
-AM_CONDITIONAL(HAVE_AMRNB, test x$using_amr_nb = xyes)
-AC_SUBST(AMR_NB_LIBS)
-
-dnl Check for wavpack libraries
-AC_ARG_WITH(wavpack,
-    AC_HELP_STRING([--without-wavpack],
-        [Don't try to use wavpack]))
-using_wavpack=no
-if test "$with_wavpack" != "no"; then
-    using_wavpack=yes
-    AC_CHECK_HEADER(wavpack/wavpack.h,
-        [AC_CHECK_LIB(wavpack, WavpackGetSampleRate, WAVPACK_LIBS="$WAVPACK_LIBS -lwavpack" ,using_wavpack=no)],
-        using_wavpack=no)
-    if test "$with_wavpack" = "yes" -a "$using_wavpack" = "no"; then
-        AC_MSG_FAILURE([cannot find wavpack])
-    fi
-fi
-if test "$using_wavpack" = yes; then
-   AC_DEFINE(HAVE_WAVPACK, 1, [Define to 1 if you have WavPack.])
-fi
-AM_CONDITIONAL(HAVE_WAVPACK, test x$using_wavpack = xyes)
-AC_SUBST(WAVPACK_LIBS)
 
 dnl Check for png libraries
 AC_ARG_WITH(png,
@@ -608,6 +243,8 @@ fi
 AM_CONDITIONAL(HAVE_PNG, test x$using_png = xyes)
 AC_SUBST(PNG_LIBS)
 
+
+
 dnl Test for LADSPA
 AC_ARG_WITH(ladspa,
     AC_HELP_STRING([--without-ladspa], [Don't try to use LADSPA]))
@@ -624,60 +261,473 @@ AC_ARG_WITH(ladspa-path,
     AC_HELP_STRING([--with-ladspa-path], [Default search path for LADSPA plugins]))
 AC_SUBST(LADSPA_PATH)
 
+
+
+dnl Check for MAD libraries
+AC_ARG_WITH(mad,
+    AC_HELP_STRING([--without-mad],
+        [Don't try to use MAD (MP3 Audio Decoder)]))
+using_mad=no
+if test "$with_mad" != "no"; then
+    using_mad=yes
+    AC_CHECK_HEADERS(mad.h, [AC_CHECK_LIB(mad, mad_stream_buffer, MP3_LIBS="$MP3_LIBS -lmad",using_mad=no)], using_mad=no)
+    if test "$with_mad" = "yes" -a "$using_mad" = "no"; then
+        AC_MSG_FAILURE([cannot find libmad])
+    fi
+fi
+
+
+
+dnl Check for id3tag libraries
+AC_ARG_WITH(id3tag,
+    AC_HELP_STRING([--without-id3tag],
+        [Don't try to use id3tag]))
+using_id3tag=no
+if test "$with_id3tag" != "no"; then
+    using_id3tag=yes
+    AC_CHECK_HEADER(id3tag.h,
+        [AC_CHECK_LIB(id3tag, id3_file_open, MP3_LIBS="$MP3_LIBS -lid3tag -lz",using_id3tag=no, -lz)],
+        using_id3tag=no)
+    if test "$with_id3tag" = "yes" -a "$using_id3tag" = "no"; then
+        AC_MSG_FAILURE([cannot find id3tag])
+    fi
+fi
+if test "$using_id3tag" = yes; then
+   AC_DEFINE(HAVE_ID3TAG, 1, [Define to 1 if you have id3tag.])
+fi
+AM_CONDITIONAL(HAVE_ID3TAG, test x$using_id3tag = xyes)
+
+
+
+dnl Check for LAME library.
+AC_ARG_WITH(lame,
+    AC_HELP_STRING([--without-lame],
+        [Don't try to use LAME (LAME Ain't an MP3 Encoder)]))
+using_lame=no
+if test "$with_lame" != "no"; then
+    using_lame=yes
+    AC_CHECK_HEADERS(lame/lame.h,,
+        [AC_CHECK_HEADERS(lame.h,, using_lame=no)])
+    AC_CHECK_LIB(mp3lame, lame_init, MP3_LIBS="$MP3_LIBS -lmp3lame",using_lame=no)
+    if test "$with_lame" = "yes" -a "$using_lame" = "no"; then
+        AC_MSG_FAILURE([cannot find LAME])
+    fi
+fi
+
+
+
+dnl Check for FLAC libraries
+dnl  Note passing in OGG_VORBIS_LIBS.  That is because FLAC has optional
+dnl  support for OGG and if OGG libraries are found on this
+dnl  system then its highly likely to be compiled into FLAC
+dnl  and will require these at link time.
+case $target in
+  *mingw*)
+  FLAC_LIBS="-lwsock32"
+  ;;
+esac
+AC_OPTIONAL_FORMAT(flac, FLAC, FLAC/all.h, FLAC, FLAC__stream_encoder_new, "-lFLAC $FLAC_LIBS $OGG_VORBIS_LIBS", $FLAC_LIBS $OGG_VORBIS_LIBS, yes)
+
+
+
+AC_OPTIONAL_FORMAT(amrwb, AMRWB, amrwb/dec.h, amrwb, D_IF_init, "$AMR_WB_LIBS -lamrwb", [$AMR_WB_LIBS -lamrwb])
+
+
+
+AC_OPTIONAL_FORMAT(amrnb, AMRNB, amrnb/sp_dec.h, amrnb, Decoder_Interface_init, "$AMR_WB_LIBS -lamrnb", [$AMR_WB_LIBS -lamrnb])
+
+
+
+AC_OPTIONAL_FORMAT(wavpack, WAVPACK, wavpack/wavpack.h, wavpack, WavpackGetSampleRate, "$WAVPACK_LIBS -lwavpack", [$WAVPACK_LIBS -lwavpack])
+
+
+
+AC_OPTIONAL_FORMAT(sndio, SNDIO, sndio.h, sndio, sio_open, "$SNDIO_LIBS -lsndio", [$SNDIO_LIBS -lsndio],yes)
+
+
+
+AC_OPTIONAL_FORMAT(coreaudio, COREAUDIO, CoreAudio/CoreAudio.h, CoreAudio, AudioHardwareGetProperty, [$COREAUDIO_LIBS -Wl,-framework,CoreAudio], [$COREAUDIO_LIBS -Wl,-framework,CoreAudio],yes)
+
+
+
+AC_OPTIONAL_FORMAT(alsa, ALSA, alsa/asoundlib.h, asound, snd_pcm_open, "$ALSA_LIBS -lasound", [$ALSA_LIBS -lasound],yes)
+
+
+
+AC_OPTIONAL_FORMAT(ao, AO, ao/ao.h, ao, ao_play, "$AO_LIBS -lao", [$AO_LIBS -lao])
+
+
+
+AC_OPTIONAL_FORMAT(pulseaudio, PULSEAUDIO, pulse/simple.h, pulse, pa_simple_new, "$PULSEAUDIO_LIBS -lpulse -lpulse-simple", [$PULSEAUDIO_LIBS -lpulse -lpulse-simple])
+
+
+
+dnl Check for Ogg Vorbis libraries
+AC_ARG_WITH(oggvorbis, AC_HELP_STRING([--with-oggvorbis=dyn], [load oggvorbis dynamically]))
+using_oggvorbis=$with_oggvorbis
+if test "_$with_oggvorbis" = _dyn; then
+  if test $using_libltdl != yes; then
+    AC_MSG_FAILURE([not using libltdl; cannot load oggvorbis dynamically])
+  fi
+elif test "_$with_oggvorbis" = _; then
+  using_oggvorbis=yes
+elif test "_$with_oggvorbis" != _yes -a "_$with_oggvorbis" != _no; then
+  AC_MSG_FAILURE([invalid selection --with-oggvorbis=$with_oggvorbis])
+fi
+if test _$with_oggvorbis != _no; then
+  AC_CHECK_HEADER(vorbis/codec.h,
+      [AC_CHECK_LIB(ogg, ogg_packet_clear, OGG_VORBIS_LIBS="$OGG_VORBIS_LIBS -logg", using_oggvorbis=no)
+      AC_CHECK_LIB(vorbis, vorbis_analysis_headerout, OGG_VORBIS_LIBS="-lvorbis $OGG_VORBIS_LIBS", using_oggvorbis=no, $OGG_VORBIS_LIBS)
+      AC_CHECK_LIB(vorbisfile, ov_clear, OGG_VORBIS_LIBS="-lvorbisfile $OGG_VORBIS_LIBS", using_oggvorbis=no, $OGG_VORBIS_LIBS)
+      AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr, OGG_VORBIS_LIBS="-lvorbisenc $OGG_VORBIS_LIBS", using_oggvorbis=no, $OGG_VORBIS_LIBS)],
+      using_oggvorbis=no)
+  if test _$with_oggvorbis != _ -a $using_oggvorbis = no; then
+    AC_MSG_FAILURE([cannot find oggvorbis])
+  fi
+fi
+if test "$using_oggvorbis" != no; then
+  AC_DEFINE(HAVE_OGG_VORBIS, 1, [Define to 1 if you have oggvorbis.])
+  if test "$using_oggvorbis" = yes; then
+    AC_DEFINE(STATIC_OGG_VORBIS, 1, [Define to 1 if you have static oggvorbis.])
+  fi
+fi
+AM_CONDITIONAL(HAVE_OGG_VORBIS, test $using_oggvorbis != no)
+AM_CONDITIONAL(STATIC_OGG_VORBIS, test $using_oggvorbis = yes)
+AC_SUBST(OGG_VORBIS_LIBS)
+
+
+
+dnl Check for libsndfile
+AC_ARG_WITH(sndfile, AC_HELP_STRING([--with-sndfile=dyn], [load sndfile dynamically]))
+using_sndfile=$with_sndfile
+if test "_$with_sndfile" = _dyn; then
+  if test $using_libltdl != yes; then
+    AC_MSG_FAILURE([not using libltdl; cannot load sndfile dynamically])
+  fi
+elif test "_$with_sndfile" = _; then
+  using_sndfile=yes
+elif test "_$with_sndfile" != _yes -a "_$with_sndfile" != _no; then
+  AC_MSG_FAILURE([invalid selection --with-sndfile=$with_sndfile])
+fi
+if test _$with_sndfile != _no; then
+  SOX_PATH_SNDFILE(, using_sndfile=no)
+  if test _$with_sndfile != _ -a $using_sndfile = no; then
+    AC_MSG_FAILURE([cannot find sndfile])
+  fi
+fi
+if test "$using_sndfile" != no; then
+  AC_DEFINE(HAVE_SNDFILE, 1, [Define to 1 if you have sndfile.])
+  if test "$using_sndfile" = yes; then
+    AC_DEFINE(STATIC_SNDFILE, 1, [Define to 1 if you have static sndfile.])
+  fi
+fi
+AM_CONDITIONAL(HAVE_SNDFILE, test $using_sndfile != no)
+AM_CONDITIONAL(STATIC_SNDFILE, test $using_sndfile = yes)
+AC_SUBST(SNDFILE_LIBS)
+AC_SUBST(SNDFILE_CFLAGS)
+
+
+
+dnl Check for libffmpeg
+AC_ARG_WITH(ffmpeg, AC_HELP_STRING([--with-ffmpeg=dyn], [load ffmpeg dynamically]))
+using_ffmpeg=$with_ffmpeg
+if test "_$with_ffmpeg" = _dyn; then
+  if test $using_libltdl != yes; then
+    AC_MSG_FAILURE([not using libltdl; cannot load ffmpeg dynamically])
+  fi
+elif test "_$with_ffmpeg" = _; then
+  using_ffmpeg=yes
+elif test "_$with_ffmpeg" != _yes -a "_$with_ffmpeg" != _no; then
+  AC_MSG_FAILURE([invalid selection --with-ffmpeg=$with_ffmpeg])
+fi
+if test _$with_ffmpeg != _no; then
+  SOX_PATH_FFMPEG(, using_ffmpeg=no)
+  if test _$with_ffmpeg != _ -a $using_ffmpeg = no; then
+    AC_MSG_FAILURE([cannot find ffmpeg])
+  fi
+fi
+if test "$using_ffmpeg" != no; then
+  AC_DEFINE(HAVE_FFMPEG, 1, [Define to 1 if you have ffmpeg.])
+  if test "$using_ffmpeg" = yes; then
+    AC_DEFINE(STATIC_FFMPEG, 1, [Define to 1 if you have static ffmpeg.])
+  fi
+fi
+AM_CONDITIONAL(HAVE_FFMPEG, test $using_ffmpeg != no)
+AM_CONDITIONAL(STATIC_FFMPEG, test $using_ffmpeg = yes)
+AC_SUBST(FFMPEG_LIBS)
+
+
+
+dnl Check for OSS
+AC_ARG_WITH(oss, AC_HELP_STRING([--with-oss=dyn], [load oss dynamically]))
+using_oss=$with_oss
+if test "_$with_oss" = _dyn; then
+  if test $using_libltdl != yes; then
+    AC_MSG_FAILURE([not using libltdl; cannot load oss dynamically])
+  fi
+elif test "_$with_oss" = _; then
+  using_oss=yes
+elif test "_$with_oss" != _yes -a "_$with_oss" != _no; then
+  AC_MSG_FAILURE([invalid selection --with-oss=$with_oss])
+fi
+if test _$with_oss != _no; then
+  AC_CHECK_HEADERS(sys/soundcard.h,,
+      [AC_CHECK_HEADERS(machine/soundcard.h,
+	  [AC_CHECK_LIB(ossaudio, _oss_ioctl, OSS_LIBS="$OSS_LIBS -lossaudio")],
+	  enable_oss=no)])
+  if test _$with_oss != _ -a $using_oss = no; then
+    AC_MSG_FAILURE([cannot find oss])
+  fi
+fi
+if test "$using_oss" != no; then
+  AC_DEFINE(HAVE_OSS, 1, [Define to 1 if you have oss.])
+  if test "$using_oss" = yes; then
+    AC_DEFINE(STATIC_OSS, 1, [Define to 1 if you have static oss.])
+  fi
+fi
+AM_CONDITIONAL(HAVE_OSS, test $using_oss != no)
+AM_CONDITIONAL(STATIC_OSS, test $using_oss = yes)
+AC_SUBST(OSS_LIBS)
+
+
+
+dnl Check for Sun audio
+AC_ARG_WITH(sunaudio, AC_HELP_STRING([--with-sunaudio=dyn], [load sunaudio dynamically]))
+using_sunaudio=$with_sunaudio
+if test "_$with_sunaudio" = _dyn; then
+  if test $using_libltdl != yes; then
+    AC_MSG_FAILURE([not using libltdl; cannot load sunaudio dynamically])
+  fi
+elif test "_$with_sunaudio" = _; then
+  using_sunaudio=yes
+elif test "_$with_sunaudio" != _yes -a "_$with_sunaudio" != _no; then
+  AC_MSG_FAILURE([invalid selection --with-sunaudio=$with_sunaudio])
+fi
+if test _$with_sunaudio != _no; then
+  AC_CHECK_HEADERS(sys/audioio.h,,
+      [AC_CHECK_HEADERS(sun/audioio.h,, using_sunaudio=no)])
+  if test _$with_sunaudio != _ -a $using_sunaudio = no; then
+    AC_MSG_FAILURE([cannot find sunaudio])
+  fi
+fi
+if test "$using_sunaudio" != no; then
+  AC_DEFINE(HAVE_SUN_AUDIO, 1, [Define to 1 if you have sunaudio.])
+  if test "$using_sunaudio" = yes; then
+    AC_DEFINE(STATIC_SUN_AUDIO, 1, [Define to 1 if you have static sunaudio.])
+  fi
+fi
+AM_CONDITIONAL(HAVE_SUN_AUDIO, test $using_sunaudio != no)
+AM_CONDITIONAL(STATIC_SUN_AUDIO, test $using_sunaudio = yes)
+AC_SUBST(SUN_AUDIO_LIBS)
+
+
+
+dnl MP3 format depends on libmad || LAME
+AC_ARG_WITH(mp3, AC_HELP_STRING([--with-mp3=dyn], [load mp3 dynamically]))
+using_mp3=$with_mp3
+if test "_$with_mp3" = _dyn; then
+  if test $using_libltdl != yes; then
+    AC_MSG_FAILURE([not using libltdl; cannot load mp3 dynamically])
+  fi
+elif test "_$with_mp3" = _; then
+  using_mp3=yes
+elif test "_$with_mp3" != _yes -a "_$with_mp3" != _no; then
+  AC_MSG_FAILURE([invalid selection --with-mp3=$with_mp3])
+fi
+if test _$with_mp3 != _no; then
+  if test "$using_mad" != yes -a "$using_lame" != yes; then
+    using_mp3=no
+  fi
+  if test _$with_mp3 != _ -a $using_mp3 = no; then
+    AC_MSG_FAILURE([cannot find mp3])
+  fi
+fi
+if test "$using_mp3" != no; then
+  AC_DEFINE(HAVE_MP3, 1, [Define to 1 if you have mp3.])
+  if test "$using_mp3" = yes; then
+    AC_DEFINE(STATIC_MP3, 1, [Define to 1 if you have static mp3.])
+  fi
+fi
+AM_CONDITIONAL(HAVE_MP3, test $using_mp3 != no)
+AM_CONDITIONAL(STATIC_MP3, test $using_mp3 = yes)
+AC_SUBST(MP3_LIBS)
+
+
+
+dnl Check for libgsm
+found_libgsm=yes
+AC_CHECK_HEADERS(gsm/gsm.h, ,
+    [AC_CHECK_HEADERS(gsm.h, ,found_libgsm=no)])
+    AC_CHECK_LIB(gsm, gsm_create, GSM_LIBS="$GSM_LIBS -lgsm", found_libgsm=no)
+if test "$found_libgsm" = yes; then
+    AC_DEFINE(EXTERNAL_GSM, 1, [Define if you are using an external GSM library])
+else
+    LIBGSM_LIBADD=../libgsm/libgsm.la
+fi
+AM_CONDITIONAL(EXTERNAL_GSM, test x$found_libgsm = xyes)
+AC_SUBST(LIBGSM_LIBADD)
+AC_SUBST(GSM_LIBS)
+
+
+
+dnl GSM format depends on libgsm
+AC_ARG_WITH(gsm, AC_HELP_STRING([--with-gsm=dyn], [load gsm dynamically]))
+using_gsm=$with_gsm
+if test "_$with_gsm" = _dyn; then
+  if test $using_libltdl != yes; then
+    AC_MSG_FAILURE([not using libltdl; cannot load gsm dynamically])
+  fi
+elif test "_$with_gsm" = _; then
+  using_gsm=yes
+elif test "_$with_gsm" != _yes -a "_$with_gsm" != _no; then
+  AC_MSG_FAILURE([invalid selection --with-gsm=$with_gsm])
+fi
+# No need to check; GSM is always found
+if test "$using_gsm" != no; then
+  AC_DEFINE(HAVE_GSM, 1, [Define to 1 if you have gsm.])
+  if test "$using_gsm" = yes; then
+    AC_DEFINE(STATIC_GSM, 1, [Define to 1 if you have static gsm.])
+  fi
+fi
+AM_CONDITIONAL(HAVE_GSM, test $using_gsm != no)
+AM_CONDITIONAL(STATIC_GSM, test $using_gsm = yes)
+
+
+
+dnl Check for liblpc10
+found_liblpc10=yes
+AC_CHECK_HEADERS(lpc10.h, ,
+    [AC_CHECK_HEADERS(lpc10.h, ,found_liblpc10=no)])
+    AC_CHECK_LIB(lpc10, create_lpc10_encoder_state, LPC10_LIBS="$LPC10_LIBS -llpc10", found_liblpc10=no)
+if test "$found_liblpc10" = yes; then
+    AC_DEFINE(EXTERNAL_LPC10, 1, [Define if you are using an external LPC10 library])
+else
+    LIBLPC10_LIBADD=../lpc10/liblpc10.la
+fi
+AM_CONDITIONAL(EXTERNAL_LPC10, test x$found_liblpc10 = xyes)
+AC_SUBST(LIBLPC10_LIBADD)
+AC_SUBST(LPC10_LIBS)
+
+
+
+dnl LPC10 format
+AC_ARG_WITH(lpc10, AC_HELP_STRING([--with-lpc10=dyn], [load lpc10 dynamically]))
+using_lpc10=$with_lpc10
+if test "_$with_lpc10" = _dyn; then
+  if test $using_libltdl != yes; then
+    AC_MSG_FAILURE([not using libltdl; cannot load lpc10 dynamically])
+  fi
+elif test "_$with_lpc10" = _; then
+  using_lpc10=yes
+elif test "_$with_lpc10" != _yes -a "_$with_lpc10" != _no; then
+  AC_MSG_FAILURE([invalid selection --with-lpc10=$with_lpc10])
+fi
+# No need to check; LPC10 is always found
+if test "$using_lpc10" != no; then
+  AC_DEFINE(HAVE_LPC10, 1, [Define to 1 if you have lpc10.])
+  if test "$using_lpc10" = yes; then
+    AC_DEFINE(STATIC_LPC10, 1, [Define to 1 if you have static lpc10.])
+  fi
+fi
+AM_CONDITIONAL(HAVE_LPC10, test $using_lpc10 != no)
+AM_CONDITIONAL(STATIC_LPC10, test $using_lpc10 = yes)
+
+
+
+dnl Check if we want to disable all symlinks
+AC_MSG_CHECKING([whether to enable symlinks])
+AC_ARG_ENABLE(symlinks,
+    AC_HELP_STRING([--disable-symlinks], [Don't make any symlinks to sox.]),,enable_symlinks=yes)
+AC_MSG_RESULT($enable_symlinks)
+
+enable_playrec_symlinks=no
+if test "$enable_symlinks" = "yes"; then
+  SYMLINKS=yes
+  if test false \
+      -o "$enable_alsa" = yes \
+      -o "$enable_ao" = yes \
+      -o "$enable_coreaudio" = yes \
+      -o "$enable_oss" = yes \
+      -o "$enable_pulseaudio" = yes \
+      -o "$enable_sndio" = yes \
+    ; then
+    PLAYRECLINKS=yes
+    enable_playrec_symlinks=yes
+  fi
+fi
+AC_SUBST(SYMLINKS)
+AC_SUBST(PLAYRECLINKS)
+
+
+
 dnl Generate output files.
 AX_CREATE_STDINT_H(src/soxstdint.h)
 AC_CONFIG_FILES(Makefile src/Makefile libgsm/Makefile lpc10/Makefile sox.pc)
 AC_OUTPUT
 
-if test "$found_libgsm" = "yes"; then
-   gsm_option="external"
-else
-   gsm_option="in-tree"
+if test "$using_gsm" != "no"; then
+  if test "$found_libgsm" = "yes"; then
+    gsm_option="(external)"
+  else
+    gsm_option="(in-tree)"
+  fi
 fi
 
-if test "$found_liblpc10" = "yes"; then
-   lpc10_option="external"
-else
-   lpc10_option="in-tree"
+if test "$using_lpc10" != "no"; then
+  if test "$found_liblpc10" = "yes"; then
+    lpc10_option="(external)"
+  else
+    lpc10_option="(in-tree)"
+  fi
 fi
 
 if test "$using_pkgconfig" = "no"; then
-    pkgconfig_option="disabled"
+  pkgconfig_option="disabled"
 else
-    pkgconfig_option="$with_pkgconfigdir"
+  pkgconfig_option="$with_pkgconfigdir"
 fi
 
-dnl Report configuration.
+
+
+# Report configuration.
 echo
-echo "Distro name ...................... $DISTRO"
-echo "Debugging build................... $enable_debug"
-echo "External module support........... $using_libltdl"
-echo "GOMP support...................... $enable_gomp"
-echo "ALSA driver....................... $enable_alsa"
-echo "libao driver...................... $enable_libao"
-echo "OSS driver........................ $enable_oss"
-echo "sndio driver...................... $enable_sndio"
-echo "SUN audio driver.................. $enable_sun_audio"
-echo "CoreAudio driver.................. $enable_coreaudio"
-echo "Pulse Audio driver................ $enable_pulseaudio"
-echo "symlinks enabled.................. $enable_symlinks"
-echo "play and rec symlinks............. $enable_playrec_symlinks"
-echo "libgsm............................ $gsm_option"
-echo "liblpc10.......................... $lpc10_option"
-echo "libsndfile formats................ $using_sndfile"
-echo "Ogg Vorbis format................. $using_ogg"
-echo "FLAC format....................... $using_flac"
-echo "ffmpeg formats.................... $using_ffmpeg"
-echo "magic library..................... $using_magic"
-echo "MAD MP3 reader.................... $using_mad"
-echo "id3tag library.................... $using_id3tag"
-echo "LAME MP3 writer................... $using_lame"
-echo "AMR-WB format..................... $using_amr_wb"
-echo "AMR-NB format..................... $using_amr_nb"
-echo "WavPack format.................... $using_wavpack"
-echo "LADSPA effects.................... $using_ladspa"
-echo "PNG support....................... $using_png"
-echo "pkg-config location............... $pkgconfig_option"
+echo "BUILD OPTIONS"
+echo "Debugging build............$enable_debug"
+echo "Distro name ...............$DISTRO"
+echo "Dynamic loading support....$using_libltdl"
+echo "GOMP support...............$enable_gomp"
+echo "Pkg-config location........$pkgconfig_option"
+echo "Play and rec symlinks......$enable_playrec_symlinks"
+echo "Symlinks enabled...........$enable_symlinks"
+echo
+echo "OPTIONAL DEVICE DRIVERS"
+echo "ao (Xiph)..................$using_ao"
+echo "alsa (Linux)...............$using_alsa"
+echo "coreaudio (MAC OS X).......$using_coreaudio"
+echo "sndio (OpenBSD)............$using_sndio"
+echo "oss........................$using_oss"
+echo "pulseaudio.................$using_pulseaudio"
+echo "sunaudio...................$using_sunaudio"
+echo
+echo "OPTIONAL FILE FORMATS"
+echo "amrnb......................$using_amrnb"
+echo "amrwb......................$using_amrwb"
+echo "ffmpeg.....................$using_ffmpeg"
+echo "flac.......................$using_flac"
+echo "gsm........................$using_gsm $gsm_option"
+echo "lpc10......................$using_lpc10 $lpc10_option"
+echo "mp3........................$using_mp3$mp3_option"
+echo " id3tag....................$using_id3tag"
+echo " lame......................$using_lame"
+echo " mad.......................$using_mad"
+echo "oggvorbis..................$using_oggvorbis"
+echo "sndfile....................$using_sndfile"
+echo "wavpack....................$using_wavpack"
+echo
+echo "MISC OPTIONS"
+echo "ladspa effects.............$using_ladspa"
+echo "magic support..............$using_magic"
+echo "png support................$using_png"
 echo
 echo "Configure finished.  Do 'make && make install' to compile and install SoX."
 echo
