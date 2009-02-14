@@ -2619,8 +2619,16 @@ Note that this effect
 increases both the volume and the length of the audio, so to prevent clipping
 in these domains, a typical invocation might be:
 .EX
-	play dry.au gain -3 pad 0 3 reverb
+  play dry.au gain -3 pad 0 3 reverb
 .EE
+The
+.B \-w
+option can be given to select only the `wet' signal, thus allowing it to be
+processed further, independently of the `dry' signal.  E.g.
+.EX
+  play -m voice.au "|sox voice.au -p reverse reverb -w reverse"
+.EE
+for a reverse reverb effect.
 .TP
 \fBreverse\fR
 Reverse the audio completely.
