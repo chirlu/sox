@@ -1,10 +1,6 @@
 dnl $1 package name                  e.g. flac 
 dnl $2 package name in conditionals  e.g. FLAC 
-dnl $3 header name                   e.g. FLAC/all.h 
-dnl $4 check-lib name                e.g. FLAC 
-dnl $5 check-lib fn-name             e.g. FLAC__stream_encoder_new 
-dnl $6 libs1                         e.g. "-lFLAC $FLAC_LIBS $OGG_VORBIS_LIBS"
-dnl $7 libs2                         e.g. "$FLAC_LIBS $OGG_VORBIS_LIBS"
+dnl $3 using check
 
 AC_DEFUN([AC_OPTIONAL_FORMAT],
   [AC_ARG_WITH($1, AC_HELP_STRING([--with-$1=dyn], [load $1 dynamically]))
@@ -19,7 +15,7 @@ AC_DEFUN([AC_OPTIONAL_FORMAT],
     AC_MSG_FAILURE([invalid selection --with-$1=$with_$1])
   fi
   if test _$with_$1 != _no; then
-    AC_CHECK_HEADER($3, [AC_CHECK_LIB($4, $5, $2_LIBS=$6,using_$1=no, $7)], using_$1=no)
+    $3
     if test _$with_$1 != _ -a $using_$1 = no; then
       AC_MSG_FAILURE([cannot find $1])
     fi
