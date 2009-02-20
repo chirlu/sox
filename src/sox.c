@@ -2538,8 +2538,9 @@ static void set_replay_gain(sox_comments_t comments, file_t * f)
 
 static void output_message(unsigned level, const char *filename, const char *fmt, va_list ap)
 {
+  char const * const str[] = {"FAIL", "WARN", "INFO", "DBUG"};
   if (sox_globals.verbosity >= level) {
-    fprintf(stderr, "%s ", myname);
+    fprintf(stderr, "%s %s ", myname, str[min(level - 1, 3)]);
     sox_output_message(stderr, filename, fmt, ap);
     fprintf(stderr, "\n");
   }
