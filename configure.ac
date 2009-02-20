@@ -65,6 +65,8 @@ esac
 AC_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
 
+AC_ARG_WITH(dyn-default,AC_HELP_STRING([--with-dyn-default],[Default to loading optional formats dynamically]),opt_default=dyn,opt_default=yes)
+
 AC_ARG_WITH(pkgconfigdir,
     AC_HELP_STRING([--with-pkgconfigdir],
                    [location to install .pc files or "no" to disable (default=$(libdir)/pkgconfig)]))
@@ -525,7 +527,7 @@ echo "ffmpeg.....................$using_ffmpeg"
 echo "flac.......................$using_flac"
 echo "gsm........................$using_gsm $gsm_option"
 echo "lpc10......................$using_lpc10 $lpc10_option"
-echo "mp3........................$using_mp3$mp3_option"
+echo "mp3........................$using_mp3"
 echo " id3tag....................$using_id3tag"
 echo " lame......................$using_lame"
 echo " mad.......................$using_mad"

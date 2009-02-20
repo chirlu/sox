@@ -10,7 +10,7 @@ AC_DEFUN([AC_OPTIONAL_FORMAT],
       AC_MSG_FAILURE([not using libltdl; cannot load $1 dynamically])
     fi
   elif test "_$with_$1" = _; then
-    using_$1=yes
+    using_$1=$opt_default
   elif test "_$with_$1" != _yes -a "_$with_$1" != _no; then
     AC_MSG_FAILURE([invalid selection --with-$1=$with_$1])
   fi
