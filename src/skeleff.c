@@ -56,8 +56,9 @@ static int start(sox_effect_t * effp)
 }
 
 /*
- * Processed signed long samples from ibuf to obuf.
- * Return number of samples processed.
+ * Process up to *isamp samples from ibuf and produce up to *osamp samples
+ * in obuf.  Write back the actual numbers of samples to *isamp and *osamp.
+ * Return SOX_SUCCESS or, if error occurs, SOX_EOF.
  */
 static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                            size_t *isamp, size_t *osamp)
