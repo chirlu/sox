@@ -172,6 +172,7 @@ static unsigned *nuser_effects = NULL;
 static int current_eff_chain = 0;
 static int eff_chain_count = 0;
 static char *effects_filename = NULL;
+static char * play_rate_arg = NULL;
 
 /* Flowing */
 
@@ -918,8 +919,8 @@ static void add_effects(sox_effects_chain_t *chain)
   int guard = is_guarded - 1;
   unsigned i;
   sox_effect_t * effp;
-  char * rate_arg =
-    is_player ? (rate_arg = getenv("PLAY_RATE_ARG")) ? rate_arg : "-l" : NULL;
+  char * rate_arg = is_player ? play_rate_arg ? play_rate_arg :
+      (rate_arg = getenv("PLAY_RATE_ARG")) ? rate_arg : "-l" : NULL;
 
   /* 1st `effect' in the chain is the input combiner_signal.
    * add it only if its not there from a previous run.  */
@@ -1740,6 +1741,7 @@ static void usage(char const * message)
 "-M, --combine merge      Merge multiple input files (instead of concatenating)",
 "--magic                  Use `magic' file-type detection",
 "--norm                   Guard (see --guard) & normalise",
+"--play-rate-arg ARG      Default `rate' argument for auto-resample with `play'",
 "--plot gnuplot|octave    Generate script to plot response of filter effect",
 "-q, --no-show-progress   Run in quiet mode; opposite of -S",
 "--replay-gain track|album|off  Default: off (sox, rec), track (play)",
@@ -1952,6 +1954,7 @@ static struct option long_options[] =
     {"ignore-length"   ,       no_argument, NULL, 0},
     {"norm"            ,       no_argument, NULL, 0},
     {"magic"           ,       no_argument, NULL, 0},
+    {"play-rate-arg"   , required_argument, NULL, 0},
 
     {"bits"            , required_argument, NULL, 'b'},
     {"channels"        , required_argument, NULL, 'c'},
@@ -2123,6 +2126,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 #else
       case 20: lsx_warn("this build of SoX does not include `magic'"); break;
 #endif
+      case 21: play_rate_arg = strdup(optarg); break;
       }
       break;
 
