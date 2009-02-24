@@ -25,38 +25,22 @@
 
 typedef struct {
   int argc;
-  struct {sox_bool from_end; char * str; uint32_t at;} pos[2];
+  struct {int flag; char * str; uint32_t at;} pos[2];
 } priv_t;
-
-#if 0
-uint64_t sox_crop_get_start(sox_effect_t * effp)
-{
-  priv_t * p = (priv_t *)effp->priv;
-  return p->pos[0].at;
-}
-
-void sox_crop_clear_start(sox_effect_t * effp)
-{
-  priv_t * p = (priv_t *)effp->priv;
-  p->pos[0].at = 0;
-}
-#endif
 
 static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
 {
   priv_t * p = (priv_t *)effp->priv;
-  char const * s;
+  char const * s, * q;
   int i;
 
   for (i = p->argc - 1; i == 0 || i == 1; --i) {
     if (argv) /* 1st parse only */
       p->pos[i].str = lsx_strdup(argv[i]);
     s = p->pos[i].str;
-    if (*s == '-') {
-      p->pos[i].from_end = sox_true;
-      ++s;
-    }
-    if (!lsx_parsesamples(rate, s, &p->pos[i].at, 't'))
+    if (strchr("+-" + 1 - i, *s))
+      p->pos[i].flag = *s++;
+    if (!(q = lsx_parsesamples(rate, s, &p->pos[i].at, 't')) || *q)
       break;
   }
   return i >= 0 ? lsx_usage(effp) : SOX_SUCCESS;
@@ -75,11 +59,11 @@ static int start(sox_effect_t * effp)
   priv_t * p = (priv_t *)effp->priv;
   int i;
 
-  p->pos[1].at = INT32_MAX;
+  p->pos[1].at = UINT32_MAX / 2 / effp->in_signal.channels;
   parse(effp, 0, effp->in_signal.rate); /* Re-parse now rate is known */
   for (i = 0; i < 2; ++i) {
     p->pos[i].at *= effp->in_signal.channels;
-    if (p->pos[i].from_end) {
+    if (p->pos[i].flag == '-') {
       if (effp->in_signal.length == SOX_UNSPEC) {
         lsx_fail("cannot crop from end: audio length is not known");
         return SOX_EOF;
@@ -91,13 +75,26 @@ static int start(sox_effect_t * effp)
       p->pos[i].at = effp->in_signal.length - p->pos[i].at;
     }
   }
-  if (p->pos[0].at > p->pos[1].at) {
-    lsx_fail("start position must be less than stop position");
-    return SOX_EOF;
+  if (p->pos[1].flag != '+') {
+    if (p->pos[0].at > p->pos[1].at) {
+      lsx_fail("start position must be less than stop position");
+      return SOX_EOF;
+    }
+    if (!(p->pos[1].at -= p->pos[0].at))
+      p->pos[0].at = 0;
   }
-  if (!(p->pos[1].at -= p->pos[0].at))
-    p->pos[0].at = 0;
-  return p->pos[0].at || p->pos[1].at != effp->in_signal.length ? SOX_SUCCESS : SOX_EFF_NULL;
+  if (effp->in_signal.length) {
+    if (!p->pos[0].at && p->pos[1].at == effp->in_signal.length)
+      return SOX_EFF_NULL;
+    if (p->pos[0].at > effp->in_signal.length ||
+        (p->argc > 1 && p->pos[0].at + p->pos[1].at > effp->in_signal.length)) {
+      lsx_fail("audio is too short");
+      return SOX_EOF;
+    }
+    effp->out_signal.length = p->argc == 2 ?
+      p->pos[1].at : effp->in_signal.length - p->pos[0].at;
+  }
+  return SOX_SUCCESS;
 }
 
 static int flow(sox_effect_t * effp, sox_sample_t const * ibuf,
@@ -117,7 +114,7 @@ static int stop(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
   if (p->pos[0].at || (p->pos[1].at && p->argc == 2))
-    lsx_warn("input audio too short to crop as requested");
+    lsx_warn("input audio was too short to crop as requested");
   return SOX_SUCCESS;
 }
 
@@ -132,9 +129,44 @@ static int kill(sox_effect_t * effp)
 sox_effect_handler_t const * lsx_crop_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "crop", "before [from]",
+    "crop", "[-]before [[+|-]from]\n"
+      "  n\tposition relative to start\n"
+      "  -n\tposition relative to end\n"
+      "  +n\tposition relative to previous",
     SOX_EFF_MCHAN | /* SOX_EFF_LENGTH | */ SOX_EFF_MODIFY | SOX_EFF_DEPRECATED,
+
     create, start, flow, NULL, stop, kill, sizeof(priv_t)
   };
   return &handler;
 }
+
+#if 0
+size_t sox_crop_get_start(sox_effect_t * effp)
+{
+  return ((priv_t *)effp->priv)->pos[0].at;
+}
+
+void sox_crop_clear_start(sox_effect_t * effp)
+{
+  ((priv_t *)effp->priv)->pos[0].at = 0;
+}
+
+/*---------------------- emulation of the `trim' effect ----------------------*/
+
+static int trim_getopts(sox_effect_t * effp, int argc, char * * argv)
+{
+  priv_t * p = (priv_t *)effp->priv;
+  p->pos[1].flag = '+';
+  return lsx_crop_effect_fn()->getopts(effp, argc, argv);
+}
+
+sox_effect_handler_t const * lsx_trim_effect_fn(void)
+{
+  static sox_effect_handler_t handler;
+  handler = *lsx_crop_effect_fn();
+  handler.name = "trim";
+  handler.usage = "start [length]";
+  handler.getopts = trim_getopts;
+  return &handler;
+}
+#endif
