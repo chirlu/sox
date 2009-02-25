@@ -287,16 +287,9 @@ effect with a different quality level, e.g.
 .EX
 	play ... rate -m
 .EE
-or by setting the environment variable
-.B PLAY_RATE_ARG
-to the desired quality option, e.g.
-.EX
-	set PLAY_RATE_ARG=-m
-	play ...
-.EE
-(Note that the syntax of the
-.B set
-command may vary from system to system.)
+or by using the
+.B \-\-play\-rate\-arg
+option (see below).
 .TS
 center;
 c8 c8 c.
@@ -392,8 +385,10 @@ amplification, all of which can produce distortion if the audio signal
 level was initially too close to the clipping point.
 .SP
 For these reasons, it is usual to make sure that an audio
-file's signal level does not exceed around 70% of the maximum (linear)
-range available, as this will avoid the majority of clipping problems.
+file's signal level has some `headroom', i.e. it does not exceed a particular
+level below the maximum possible level for the given representation.
+Some standards bodies recommend as much as 9dB headroom, but in most cases,
+3dB (\(~~ 70% linear) will probably suffice.
 SoX's
 .B stat
 effect can assist in determining the signal level in an audio file; the
@@ -662,6 +657,22 @@ drivers.
 .SS Global Options
 These options can be specified on the command line at any point
 before the first effect name.
+.SP
+The
+.B SOX_OPTS
+environment variable can be used to provide alternative default values for
+SoX's global options.
+For example:
+.EX
+	set SOX_OPTS="--buffer 20000 --play-rate-arg -v"
+.EE
+Note that setting SOX_OPTS can potentially create unwanted changes in
+the behaviour of scripts or other programs that invoke SoX.  So SOX_OPTS
+is best used for things (such as in the given example) that reflect the
+environment in which SoX is being run.  Enabling options such as
+.B \-\-interactive
+as default might be handled better using a shell alias
+since a shell alias will not affect operation in scripts etc.
 .TP
 \fB\-\-buffer\fR \fBBYTES\fR, \fB\-\-input\-buffer\fR \fBBYTES\fR
 Set the size in bytes of the buffers used for processing audio (default 8192).
@@ -764,6 +775,12 @@ See also
 and the
 .B gain
 effect.
+.TP
+\fB\-\-play\-rate\-arg ARG\fR
+Selects a quality option to be used when the `rate' effect is automatically
+invoked whilst playing audio.  This option is typically set via the
+.B SOX_OPTS
+environment variable.
 .TP
 \fB\-\-plot gnuplot\fR\^|\^\fBoctave\fR\^|\^\fBoff\fR
 If not set to
@@ -3056,13 +3073,18 @@ Minimum delta	min(\^\(br\^\fIx\s-2\dk\u\s0\fR\^\-\^\fIx\s-2\dk\-1\u\s0\fR\^\(br\
 Mean delta	\(S1/\s-2n\-1\s+2\^\(*S\^\^\(br\^\fIx\s-2\dk\u\s0\fR\^\-\^\fIx\s-2\dk\-1\u\s0\fR\^\(br\^
 RMS delta	\(sr(\(S1/\s-2n\-1\s+2\^\(*S\^(\fIx\s-2\dk\u\s0\fR\^\-\^\fIx\s-2\dk\-1\u\s0\fR)\(S2)
 Rough frequency	\ 	In Hz.
+Peak level (dBFS)	20\^log\s-2\d10\u\s0\^max(\(br\fIx\s-2\dk\u\s0\fR\(br)	T{
+Taking the negative of this number and using it as the parameter to the
+.B gain
+effect will make the audio as loud as possible without clipping.
+Note: See the discussion on
+.B Clipping
+above for reasons why it might not be a good idea actually to do this.
+T}
 Volume Adjustment	\ 	T{
 The parameter to the
 .B vol
 effect which would make the audio as loud as possible without clipping.
-Note: See the discussion on
-.B Clipping
-above for reasons why it is rarely a good idea actually to do this.
 T}
 .TE
 .DT
