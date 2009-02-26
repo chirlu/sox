@@ -1252,6 +1252,19 @@ static void optimize_trim(void)
       }
     }
   }
+  else if (input_count == 1 && effects_chain->length > 1 && strcmp(effects_chain->effects[1][0].handler.name, "crop") == 0) {
+    if (files[0]->ft->handler.seek && files[0]->ft->seekable){
+      uint64_t offset = sox_crop_get_start(&effects_chain->effects[1][0]);
+      if (offset && sox_seek(files[0]->ft, offset, SOX_SEEK_SET) == SOX_SUCCESS) {
+        read_wide_samples = offset / files[0]->ft->signal.channels;
+        /* Assuming a failed seek stayed where it was.  If the seek worked then
+         * reset the start location of crop so that it thinks user didn't
+         * request a skip.  */
+        sox_crop_clear_start(&effects_chain->effects[1][0]);
+        lsx_debug("optimize_crop successful");
+      }
+    }
+  }
 }
 
 static sox_bool overwrite_permitted(char const * filename)
@@ -1715,7 +1728,7 @@ static void usage(char const * message)
   size_t i;
   static char const * lines[] = {
 "SPECIAL FILENAMES (infile, outfile):",
-"-                        Pipe/redirect input/output (stdin/stdout); use with -t",
+"-                        Pipe/redirect input/output (stdin/stdout); may need -t",
 "-d, --default-device     Use the default audio device (where available)",
 "-n, --null               Use the `null' file handler; e.g. with synth effect",
 "-p, --sox-pipe           Alias for `-t sox -'",
@@ -1729,8 +1742,8 @@ static void usage(char const * message)
 "--buffer BYTES           Set the size of all processing buffers (default 8192)",
 "--combine concatenate    Concatenate multiple input files (default for sox, rec)",
 "--combine sequence       Sequence multiple input files (default for play)",
-"--effects-file FILENAME  File containing effects and options",
 "-D, --no-dither          Don't dither automatically",
+"--effects-file FILENAME  File containing effects and options",
 "-G, --guard              Use temporary files to guard against clipping",
 "-h, --help               Display version number and usage information",
 "--help-effect NAME       Show usage of effect NAME, or NAME=all for all",
@@ -2489,11 +2502,10 @@ static int soxi(int argc, char * const * argv)
     }
     else if (opt == 'T')
       do_total = sox_true;
-    else type = 1 + (strchr(opts, opt) - opts);
-  if (type > Annotation) {
-    printf("Usage: soxi [-V[level]] [-T] [-t|-r|-c|-s|-d|-D|-b|-B|-e|-a] infile1 ...\n");
-    return -1;
-  }
+    else if ((type = 1 + (strchr(opts, opt) - opts)) > Annotation) {
+      printf("Usage: soxi [-V[level]] [-T] [-t|-r|-c|-s|-d|-D|-b|-B|-e|-a] infile1 ...\n");
+      return -1;
+    }
   if (type == Full)
     do_total = sox_true;
   else if (do_total && (type < Samples || type > Duration_secs)) {

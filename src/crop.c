@@ -140,7 +140,6 @@ sox_effect_handler_t const * lsx_crop_effect_fn(void)
   return &handler;
 }
 
-#if 0
 size_t sox_crop_get_start(sox_effect_t * effp)
 {
   return ((priv_t *)effp->priv)->pos[0].at;
@@ -151,6 +150,7 @@ void sox_crop_clear_start(sox_effect_t * effp)
   ((priv_t *)effp->priv)->pos[0].at = 0;
 }
 
+#if 0
 /*---------------------- emulation of the `trim' effect ----------------------*/
 
 static int trim_getopts(sox_effect_t * effp, int argc, char * * argv)

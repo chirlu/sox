@@ -534,6 +534,8 @@ void sox_delete_effects(sox_effects_chain_t *chain);
  */
 size_t sox_trim_get_start(sox_effect_t * effp);
 void sox_trim_clear_start(sox_effect_t * effp);
+size_t sox_crop_get_start(sox_effect_t * effp);
+void sox_crop_clear_start(sox_effect_t * effp);
 
 typedef int (* sox_playlist_callback_t)(void *, char *);
 sox_bool sox_is_playlist(char const * filename);
