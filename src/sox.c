@@ -1115,8 +1115,8 @@ static void display_status(sox_bool all_done)
     }
     fprintf(stderr, "\rIn:%-5s %s [%s] Out:%-5s [%6s|%-6s] %s Clip:%-5s",
       lsx_sigfigs3p(percentage), str_time(read_time), str_time(left_time),
-      lsx_sigfigs3(output_samples),
-      vu(0), vu(1), headroom(), lsx_sigfigs3(total_clips()));
+      lsx_sigfigs3((double)output_samples),
+      vu(0), vu(1), headroom(), lsx_sigfigs3((double)total_clips()));
   }
   if (all_done)
     fputc('\n', stderr);
@@ -2463,7 +2463,7 @@ static int soxi1(soxi_t const * type, char * filename)
     case Bitrate: {
       struct stat st;    /* ft->fp may validly be NULL, so stat not fstat */
       if (!stat(filename, &st) && (st.st_mode & S_IFMT) == S_IFREG)
-        printf("%s\n", lsx_sigfigs3((size_t)(8. * st.st_size / secs + .5)));
+        printf("%s\n", lsx_sigfigs3(8. * st.st_size / secs));
       else puts("0");
       break;
     }

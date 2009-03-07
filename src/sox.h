@@ -568,7 +568,7 @@ lsx_enum_item const * lsx_find_enum_value(unsigned value, lsx_enum_item const * 
 int lsx_enum_option(int c, lsx_enum_item const * items);
 sox_bool lsx_strends(char const * str, char const * end);
 char const * lsx_find_file_extension(char const * pathname);
-char const * lsx_sigfigs3(size_t number);
+char const * lsx_sigfigs3(double number);
 char const * lsx_sigfigs3p(double percentage);
 
 /* WARNING END */

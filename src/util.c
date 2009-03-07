@@ -101,18 +101,22 @@ int lsx_enum_option(int c, lsx_enum_item const * items)
   return p->value;
 }
 
-char const * lsx_sigfigs3(size_t number)
+char const * lsx_sigfigs3(double number)
 {
-  static char string[16][10];
-  static unsigned n;
-  unsigned a, b, c = 2;
-  sprintf(string[n = (n+1) & 15], "%#.3g", (double)number);
-  if (sscanf(string[n], "%u.%ue%u", &a, &b, &c) == 3)
-    a = 100*a + b;
-  switch (c%3) {
-    case 0: sprintf(string[n], "%u.%02u%c", a/100,a%100, " kMGTPE"[c/3]); break;
-    case 1: sprintf(string[n], "%u.%u%c"  , a/10 ,a%10 , " kMGTPE"[c/3]); break;
-    case 2: sprintf(string[n], "%u%c"     , a          , " kMGTPE"[c/3]); break;
+  static char const symbols[] = "\0kMGTPEZY";
+  static char string[16][10];   /* FIXME: not thread-safe */
+  static unsigned n;            /* ditto */
+  unsigned a, b, c;
+  sprintf(string[n = (n+1) & 15], "%#.3g", number);
+  switch (sscanf(string[n], "%u.%ue%u", &a, &b, &c)) {
+    case 2: if (b) return string[n]; /* Can fall through */
+    case 1: c = 2; break;
+    case 3: a = 100*a + b; break;
+  }
+  if (c < array_length(symbols) * 3 - 3) switch (c%3) {
+    case 0: sprintf(string[n], "%u.%02u%c", a/100,a%100, symbols[c/3]); break;
+    case 1: sprintf(string[n], "%u.%u%c"  , a/10 ,a%10 , symbols[c/3]); break;
+    case 2: sprintf(string[n], "%u%c"     , a          , symbols[c/3]); break;
   }
   return string[n];
 }

@@ -304,7 +304,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
           prepare_coefs(coefs, f->num_coefs, phases, interp_order, mult);
       lsx_debug("fir_len=%i phases=%i coef_interp=%i mult=%i size=%s",
           f->num_coefs, phases, interp_order, mult,
-          lsx_sigfigs3((num_taps + 1) * (interp_order + 1) * sizeof(sample_t)));
+          lsx_sigfigs3((num_taps +1.) * (interp_order + 1) * sizeof(sample_t)));
       free(coefs);
     }
     last_stage.fn = f1->fn;
