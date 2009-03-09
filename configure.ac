@@ -388,7 +388,7 @@ AC_OPTIONAL_FORMAT(sndio, SNDIO, [AC_CHECK_HEADER(sndio.h, [AC_CHECK_LIB(sndio, 
 
 
 
-AC_OPTIONAL_FORMAT(coreaudio, COREAUDIO, [AC_CHECK_HEADER(CoreAudio/CoreAudio.h, [AC_CHECK_LIB(CoreAudio, AudioHardwareGetProperty, COREAUDIO_LIBS=[$COREAUDIO_LIBS -Wl,-framework,CoreAudio],using_coreaudio=no)], using_coreaudio=no)])
+AC_OPTIONAL_FORMAT(coreaudio, COREAUDIO, [AC_CHECK_HEADER(CoreAudio/CoreAudio.h, [COREAUDIO_LIBS="$COREAUDIO_LIBS -Wl,-framework,CoreAudio"], using_coreaudio=no)])
 
 
 
