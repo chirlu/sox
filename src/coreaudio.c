@@ -260,7 +260,7 @@ static int startwrite(sox_format_t * ft)
 static size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, size_t nsamp)
 {
   priv_t *ac = (priv_t *)ft->priv;
-  size_t len = nsamp;
+  size_t len, written = 0;
   size_t samp_left;
   OSStatus status;
   float *p;
@@ -274,24 +274,29 @@ static size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, size_t ns
 
   pthread_mutex_lock(&ac->mutex);
 
-  /* Wait until there is some room to copy some samples */
-  while (ac->buf_offset >= ac->buf_size - 1)
-    pthread_cond_wait(&ac->cond, &ac->mutex);
+  do {
 
-  if (len > ac->buf_size - ac->buf_offset)
-    len = ac->buf_size - ac->buf_offset;
-  samp_left = len;
+    /* Wait until there is some room to copy some samples */
+    while (ac->buf_offset >= ac->buf_size - 1)
+      pthread_cond_wait(&ac->cond, &ac->mutex);
 
-  p = &ac->buffer[ac->buf_offset];
+    len = nsamp - written;
+    if (len > ac->buf_size - ac->buf_offset)
+      len = ac->buf_size - ac->buf_offset;
+    samp_left = len;
 
-  while (samp_left--)
-    *p++ = SOX_SAMPLE_TO_FLOAT_32BIT(*buf++, ft->clips);
+    p = &ac->buffer[ac->buf_offset];
 
-  ac->buf_offset += len;
+    while (samp_left--)
+      *p++ = SOX_SAMPLE_TO_FLOAT_32BIT(*buf++, ft->clips);
+
+    ac->buf_offset += len;
+    written += len;
+  } while (written < nsamp);
 
   pthread_mutex_unlock(&ac->mutex);
 
-  return len;
+  return written;
 }
 
 
