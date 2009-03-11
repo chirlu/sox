@@ -388,6 +388,27 @@ static FILE * xfopen(char const * identifier, char const * mode, lsx_io_type * i
   return fopen(identifier, mode);
 }
 
+/* Hack to rewind pipes (a small amount).
+ * Works by resetting the FILE buffer pointer */
+static void UNUSED rewind_pipe(FILE * fp)
+{
+#if defined _NEWLIB_VERSION
+  fp->_p -= AUTO_DETECT_SIZE;
+  fp->_r += AUTO_DETECT_SIZE;
+#elif defined __GLIBC__
+  fp->_IO_read_ptr = fp->_IO_read_base;
+#elif defined _MSC_VER
+  fp->_ptr = fp->_base;
+#else
+  /* To fix this #error, either simply remove the #error line and live without
+   * file-type detection with pipes, or add support for your compiler in the
+   * lines above.  Test with cat monkey.au | ./soxi - */
+  #error FIX NEEDED HERE
+  #define NO_REWIND_PIPE
+  (void)fp;
+#endif
+}
+
 sox_format_t * sox_open_read(
     char               const * path,
     sox_signalinfo_t   const * signal,
@@ -439,21 +460,14 @@ sox_format_t * sox_open_read(
       filetype = auto_detect_format(ft, lsx_find_file_extension(path));
       lsx_rewind(ft);
     }
+#ifndef NO_REWIND_PIPE
     else if (!(ft->handler.flags & SOX_FILE_NOSTDIO) &&
-        input_bufsiz >= AUTO_DETECT_SIZE) { /* Hack to rewind pipes */
+        input_bufsiz >= AUTO_DETECT_SIZE) {
       filetype = auto_detect_format(ft, lsx_find_file_extension(path));
-#if defined _NEWLIB_VERSION
-      ft->fp->_p -= AUTO_DETECT_SIZE;
-      ft->fp->_r += AUTO_DETECT_SIZE;
-#elif defined __GLIBC__
-      ft->fp->_IO_read_ptr = ft->fp->_IO_read_base;
-#elif defined _MSC_VER
-      ft->fp->_ptr = ft->fp->_base;
-#else
-#error Add hack here
-#endif
+      rewind_pipe(ft->fp);
       ft->tell_off = 0;
     }
+#endif
 
     if (filetype) {
       lsx_report("detected file format type `%s'", filetype);
