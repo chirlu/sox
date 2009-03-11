@@ -415,7 +415,7 @@ AC_OPTIONAL_FORMAT(ffmpeg, FFMPEG, [SOX_PATH_FFMPEG(, using_ffmpeg=no)])
 
 AC_OPTIONAL_FORMAT(oss, OSS, [AC_CHECK_HEADERS(sys/soundcard.h,,
       [AC_CHECK_HEADERS(machine/soundcard.h,
-	  [AC_CHECK_LIB(ossaudio, _oss_ioctl, OSS_LIBS="$OSS_LIBS -lossaudio", using_oss=no)],
+	  [AC_CHECK_LIB(ossaudio, _oss_ioctl, OSS_LIBS="$OSS_LIBS -lossaudio")],
 	  using_oss=no)])])
 
 
