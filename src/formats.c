@@ -397,7 +397,7 @@ static void UNUSED rewind_pipe(FILE * fp)
   fp->_r += AUTO_DETECT_SIZE;
 #elif defined __GLIBC__
   fp->_IO_read_ptr = fp->_IO_read_base;
-#elif defined _MSC_VER
+#elif defined _MSC_VER || defined __MINGW_H
   fp->_ptr = fp->_base;
 #else
   /* To fix this #error, either simply remove the #error line and live without
