@@ -149,7 +149,7 @@ static void output(priv_t const * p, double x)
       if (x < 0) {
         char buf[30];
         sprintf(buf, "%x", -i);
-        fprintf(stderr, " %*c%s", 9 - strlen(buf), '-', buf);
+        fprintf(stderr, " %*c%s", 9 - (int)strlen(buf), '-', buf);
       }
       else fprintf(stderr, " %9x", i);
     else fprintf(stderr, " %9i", i);

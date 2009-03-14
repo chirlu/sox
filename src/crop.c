@@ -16,7 +16,7 @@
  */
 
 /* This is W.I.P. hence marked SOX_EFF_DEPRECATED for now.
- * Need to change uint32_t/INT32_MAX to uint64_t/INT64_MAX (for LFS) and do
+ * Need to change size_t/INT32_MAX to uint64_t/INT64_MAX (for LFS) and do
  * proper length change tracking through the effects chain.
  */
 
@@ -25,7 +25,7 @@
 
 typedef struct {
   int argc;
-  struct {int flag; char * str; uint32_t at;} pos[2];
+  struct {int flag; char * str; size_t at;} pos[2];
 } priv_t;
 
 static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
@@ -59,7 +59,7 @@ static int start(sox_effect_t * effp)
   priv_t * p = (priv_t *)effp->priv;
   int i;
 
-  p->pos[1].at = UINT32_MAX / 2 / effp->in_signal.channels;
+  p->pos[1].at = SIZE_MAX / 2 / effp->in_signal.channels;
   parse(effp, 0, effp->in_signal.rate); /* Re-parse now rate is known */
   for (i = 0; i < 2; ++i) {
     p->pos[i].at *= effp->in_signal.channels;
