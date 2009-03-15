@@ -1,0 +1,64 @@
+#!/usr/bin/perl -w
+
+# SoX script: colourise SoX output   (c) 2009 robs@users.sourceforge.net
+# Based on colorgcc by Jamie Moyers.
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 2 of the License, or (at your
+# option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+# Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+use Term::ANSIColor; # From CPAN.
+use IPC::Open3;
+
+# Add similar lines for other non ANSI colour ttys:
+$no_colour{"dumb"} = "true";
+
+# Change these as per your preference:
+$colours{"DBUG"} = color("bold blue");
+$colours{"FAIL"} = color("bold red");
+$colours{"INFO"} = color("green");
+$colours{"WARN"} = color("bold yellow");
+$default_colour  = color("white");
+$name_colour     = color("bold cyan"); # For words between single quotes
+
+# Derive the name of the wrapped program by removing
+# the leading 'c' from the wrapper script name.
+$0 =~ m%(.*/)c(.*)$%;
+$child = "$1$2";
+@child_list = split /\s+/, $child;
+$child = $child_list[0];
+@child_args = ( @child_list[1 .. $#child_list], @ARGV );
+
+$term = $ENV{"TERM"} || "dumb";
+if (! -t STDERR || $no_colour{$term}) {
+  exec $child, @child_args or die("Couldn't exec");
+}
+
+$pid = open3('<&STDIN', '>&STDOUT', \*CHILDERR, $child, @child_args);
+
+$reset = color("reset");
+while(<CHILDERR>) {
+  if (m/^(.*?) (FAIL|WARN|INFO|DBUG) (.*)$/) {
+    $type = $2;
+    $tail = $3;
+    $colour = $colours{$type};
+    $tail =~ s/(\`|\')(.*?)\'/$reset$name_colour$2$reset$colour/g;
+    print($colour, "$type ", $reset, $colour, $tail, $reset, "\n");
+  }
+  else {
+    print("$default_colour$_$reset");
+  }
+}
+
+waitpid($pid, 0); # Get the return code of the child and exit with that.
+exit($? >> 8);
