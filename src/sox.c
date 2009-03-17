@@ -424,7 +424,7 @@ static size_t sox_read_wide(sox_format_t * ft, sox_sample_t * buf, size_t max)
   size_t len = max / combiner_signal.channels;
   len = sox_read(ft, buf, len * ft->signal.channels) / ft->signal.channels;
   if (!len && ft->sox_errno)
-    lsx_fail("%s: %s: %s",
+    lsx_fail("`%s' %s: %s",
         ft->filename, ft->sox_errstr, sox_strerror(ft->sox_errno));
   return len;
 }
@@ -594,7 +594,7 @@ static int output_flow(sox_effect_t *effp, sox_sample_t const * ibuf,
   output_eof = (len != *isamp) ? sox_true: sox_false;
   if (len != *isamp) {
     if (ofile->ft->sox_errno)
-      lsx_fail("%s: %s: %s", ofile->ft->filename,
+      lsx_fail("`%s' %s: %s", ofile->ft->filename,
           ofile->ft->sox_errstr, sox_strerror(ofile->ft->sox_errno));
     return SOX_EOF;
   }
@@ -829,11 +829,11 @@ static void read_user_effects(char *filename)
 
     if (file == NULL)
     {
-        lsx_fail("Cannot open effects file %s", filename);
+        lsx_fail("Cannot open effects file `%s'", filename);
         exit(1);
     }
 
-    lsx_report("Reading effects from file %s", filename);
+    lsx_report("Reading effects from file `%s'", filename);
 
     while (fgets(s, FILENAME_MAX, file))
     {
@@ -1800,7 +1800,7 @@ static void usage(char const * message)
   }
 
   if (message)
-    fprintf(stderr, "Failed: %s\n\n", message);  /* N.B. stderr */
+    lsx_fail("%s\n", message);  /* N.B. stderr */
 
   printf("Usage summary: [gopts] [[fopts] infile]... [fopts]%s [effect [effopts]]...\n\n",
          sox_mode == sox_play? "" : " outfile");
@@ -1917,7 +1917,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
   FILE * file = fopen(filename, "rt");
 
   if (file == NULL) {
-    lsx_fail("Cannot open comment file %s", filename);
+    lsx_fail("Cannot open comment file `%s'", filename);
     exit(1);
   }
   do {
@@ -1929,7 +1929,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
       text[i++] = c;
     }
     if (ferror(file)) {
-      lsx_fail("Error reading comment file %s", filename);
+      lsx_fail("Error reading comment file `%s'", filename);
       exit(1);
     }
     if (i) {
@@ -2764,8 +2764,8 @@ int main(int argc, char **argv)
 
   for (i = 0; i < file_count; ++i)
     if (files[i]->ft->clips != 0)
-      lsx_warn(i < input_count?"%s: input clipped %lu samples" :
-                              "%s: output clipped %lu samples; decrease volume?",
+      lsx_warn(i < input_count?"`%s' input clipped %lu samples" :
+                              "`%s' output clipped %lu samples; decrease volume?",
           (files[i]->ft->handler.flags & SOX_FILE_DEVICE)?
                        files[i]->ft->handler.names[0] : files[i]->ft->filename,
           (unsigned long)files[i]->ft->clips);
@@ -2775,7 +2775,7 @@ int main(int argc, char **argv)
 
   for (i = 0; i < file_count; i++)
     if (files[i]->volume_clips > 0)
-      lsx_warn("%s: balancing clipped %lu samples; decrease volume?",
+      lsx_warn("`%s' balancing clipped %lu samples; decrease volume?",
           files[i]->filename, (unsigned long)files[i]->volume_clips);
 
   if (show_progress) {
