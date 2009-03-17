@@ -160,18 +160,21 @@ static int startread(sox_format_t * ft)
 {
     priv_t *p = (priv_t *) ft->priv;
     size_t ReadSize;
+    sox_bool ignore_length = ft->signal.length == SOX_IGNORE_LENGTH;
 
     p->InputBuffer = NULL;
 
     p->InputBuffer=lsx_malloc(INPUT_BUFFER_SIZE);
 
+    ft->signal.length = SOX_UNSPEC;
     if (ft->seekable) {
 #if HAVE_ID3TAG && HAVE_UNISTD_H
       read_comments(ft);
       rewind(ft->fp);
       if (!ft->signal.length)
 #endif
-        ft->signal.length = mp3_duration_ms(ft->fp, p->InputBuffer);
+        if (!ignore_length)
+          ft->signal.length = mp3_duration_ms(ft->fp, p->InputBuffer);
     }
 
     mad_stream_init(&p->Stream);
@@ -242,8 +245,12 @@ static int startread(sox_format_t * ft)
     mad_timer_add(&p->Timer,p->Frame.header.duration);
     mad_synth_frame(&p->Synth,&p->Frame);
     ft->signal.rate=p->Synth.pcm.samplerate;
-    ft->signal.length = ft->signal.length * .001 * ft->signal.rate + .5;
-    ft->signal.length *= ft->signal.channels;  /* Keep separate from line above! */
+    if (ignore_length)
+      ft->signal.length = SOX_UNSPEC;
+    else {
+      ft->signal.length = ft->signal.length * .001 * ft->signal.rate + .5;
+      ft->signal.length *= ft->signal.channels;  /* Keep separate from line above! */
+    }
 
     p->cursamp = 0;
 
