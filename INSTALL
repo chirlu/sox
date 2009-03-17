@@ -6,6 +6,9 @@ It was originally developed on a UNIX/386 machine running AT&T V3.2 but
 it's currently developed under Linux.  With a little work it should work
 with most POSIX systems.
 
+Note that the `play', `rec', and `soxi' programs are in fact just copies-
+of or links-to (depending on OS) `sox'.
+
 
 Compiling using a POSIX system
 ------------------------------
