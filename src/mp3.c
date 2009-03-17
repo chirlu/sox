@@ -288,8 +288,10 @@ static size_t sox_mp3read(sox_format_t * ft, sox_sample_t *buf, size_t len)
         /* check whether input buffer needs a refill */
         if (p->Stream.error == MAD_ERROR_BUFLEN)
         {
-            if (sox_mp3_input(ft) == SOX_EOF)
-                return 0;
+            if (sox_mp3_input(ft) == SOX_EOF) {
+                lsx_debug("sox_mp3_input EOF");
+                break;
+            }
         }
 
         if (mad_frame_decode(&p->Frame,&p->Stream))
@@ -307,7 +309,7 @@ static size_t sox_mp3read(sox_format_t * ft, sox_sample_t *buf, size_t len)
                 {
                     lsx_report("unrecoverable frame level error (%s).",
                               mad_stream_errorstr(&p->Stream));
-                    return done;
+                    break;
                 }
             }
         }
