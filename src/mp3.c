@@ -486,15 +486,12 @@ static int stopwrite(sox_format_t * ft)
 {
   priv_t *p = (priv_t *) ft->priv;
   unsigned char mp3buffer[7200];
-  int written;
-  size_t written2;
+  int written = lame_encode_flush(p->gfp, mp3buffer, sizeof(mp3buffer));
 
-  if ((written=lame_encode_flush(p->gfp, mp3buffer, 7200)) <0){
-    lsx_fail_errno(ft,SOX_EOF,"Encoding failed");
-  }
-  else if (lsx_writebuf(ft, mp3buffer, written2 = written) < written2){
-    lsx_fail_errno(ft,SOX_EOF,"File write failed");
-  }
+  if (written < 0)
+    lsx_fail_errno(ft, SOX_EOF, "Encoding failed");
+  else if (lsx_writebuf(ft, mp3buffer, (size_t)written) < (size_t)written)
+    lsx_fail_errno(ft, SOX_EOF, "File write failed");
 
   lame_close(p->gfp);
   return SOX_SUCCESS;
