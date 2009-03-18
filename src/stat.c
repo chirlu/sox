@@ -228,7 +228,7 @@ static int sox_stat_drain(sox_effect_t * effp, sox_sample_t *obuf UNUSED, size_t
  */
 static int sox_stat_stop(sox_effect_t * effp)
 {
-  priv_t * stat = (priv_t *) effp->priv, stat0 = *stat;
+  priv_t * stat = (priv_t *) effp->priv;
   double amp, scale, rms = 0, freq;
   double x, ct;
 
@@ -284,7 +284,6 @@ static int sox_stat_stop(sox_effect_t * effp)
   fprintf(stderr, "RMS     delta:     %12.6f\n", sqrt(stat->dsum2/(ct-1)));
   freq = sqrt(stat->dsum2/stat->sum2)*effp->in_signal.rate/(M_PI*2);
   fprintf(stderr, "Rough   frequency: %12d\n", (int)freq);
-  fprintf(stderr, "Peak level (dBFS): %12.6f\n", 20 * log(stat0.scale * (1. / SOX_SAMPLE_MAX) * max(fabs(stat0.max), fabs(stat0.min))));
 
   if (amp>0)
     fprintf(stderr, "Volume adjustment: %12.3f\n", SOX_SAMPLE_MAX/(amp*scale));
