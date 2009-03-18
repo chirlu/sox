@@ -49,6 +49,9 @@ LibSoX interface changes:
 
   o Use of sox_effect_options() is now mandatory when initialising an
     effect (see example0.c for an example of this).
+  o sox_flow_effects() has a new (3rd) parameter: a void pointer
+    `client_data' that is passed as a new (2nd) parameter to the flow
+    callback function.  client_data may be NULL.
 
 File formats:
 
@@ -62,6 +65,7 @@ File formats:
   o Fix file length being 4 bytes short for AIFF sowt CD tracks. (Joe Holt)
   o Fix [2404566] segfault when converting from MS ADPCM wav file.  (robs)
   o Fix slight FLAC seek inaccuracy e.g. when using `trim' effect.  (robs)
+  o Fix mp3 decode sometimes being up to a block short.  (robs)
 
 Audio device drivers:
 
@@ -71,6 +75,7 @@ Audio device drivers:
 
 Effects:
 
+  o New `stats' effect; multichannel audio statistics.  (robs)
   o New `sinc' FFT filter effect; replacement for `filter'.  (robs)
   o New `fir' filter effect using external coefficients file.  (robs)
   o New `overdrive' effect.  (robs)
@@ -91,8 +96,8 @@ Other new features:
   o Added ability to create shared DLL's on cygwin (cbagwell)
   o New `--guard' & `--norm' options; use temporary files to guard against
     clipping for many, but not currently all, effects.  (robs)
-  o New `--ignore-length' option to ignore length in input file
-    header (for simple encodings); instead, read to end of file.  (robs)
+  o New `--ignore-length' option to ignore length in input file header (for
+    simple encodings & for mp3); instead, read to end of file.  (robs)
   o New `--temp DIRECTORY' option.  (robs)
   o New `--play-rate-arg ARG' option.  (robs)
   o New SOX_OPTS environment variable; can be used to provide default
