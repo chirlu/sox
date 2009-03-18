@@ -1,3 +1,19 @@
+dnl SoX autoconf macro: optional format     (c) 2009 robs@users.sourceforge.net
+dnl
+dnl This program is free software; you can redistribute it and/or modify it
+dnl under the terms of the GNU General Public License as published by the
+dnl Free Software Foundation; either version 2 of the License, or (at your
+dnl option) any later version.
+dnl
+dnl This program is distributed in the hope that it will be useful, but
+dnl WITHOUT ANY WARRANTY; without even the implied warranty of
+dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+dnl Public License for more details.
+dnl
+dnl You should have received a copy of the GNU General Public License along
+dnl with this program; if not, write to the Free Software Foundation, Inc.,
+dnl 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 dnl $1 package name                  e.g. flac 
 dnl $2 package name in conditionals  e.g. FLAC 
 dnl $3 using check
