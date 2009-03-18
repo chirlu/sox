@@ -150,7 +150,7 @@ int main(int argc, char * argv[])
   assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
 
   /* Flow samples through the effects processing chain until EOF is reached */
-  sox_flow_effects(chain, NULL);
+  sox_flow_effects(chain, NULL, NULL);
 
   /* All done; tidy up: */
   sox_delete_effects_chain(chain);

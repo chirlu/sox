@@ -514,7 +514,7 @@ sox_effects_chain_t * sox_create_effects_chain(
     sox_encodinginfo_t const * in_enc, sox_encodinginfo_t const * out_enc);
 void sox_delete_effects_chain(sox_effects_chain_t *ecp);
 int sox_add_effect( sox_effects_chain_t * chain, sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out);
-int sox_flow_effects(sox_effects_chain_t *, int (* callback)(sox_bool all_done));
+int sox_flow_effects(sox_effects_chain_t *, int (* callback)(sox_bool all_done, void * client_data), void * client_data);
 size_t sox_effects_clips(sox_effects_chain_t *);
 size_t sox_stop_effect(sox_effect_t *effp);
 void sox_push_effect_last(sox_effects_chain_t *chain, sox_effect_t *effp);

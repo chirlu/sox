@@ -1186,8 +1186,9 @@ static void adjust_volume(int delta)
 }
 #endif
 
-static int update_status(sox_bool all_done)
+static int update_status(sox_bool all_done, void * client_data)
 {
+  (void)client_data;
   if (interactive) while (kbhit()) {
     int ch = getchar();
 
@@ -1607,7 +1608,7 @@ static int process(void)
 
   signal(SIGTERM, sigint); /* Stop gracefully, as soon as we possibly can. */
   signal(SIGINT , sigint); /* Either skip current input or behave as SIGTERM. */
-  flow_status = sox_flow_effects(effects_chain, update_status);
+  flow_status = sox_flow_effects(effects_chain, update_status, NULL);
 
   /* Don't return SOX_EOF if
    * 1) input reach EOF and there are more input files to process or

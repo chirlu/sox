@@ -312,7 +312,7 @@ static int drain_effect(sox_effects_chain_t * chain, size_t n)
 }
 
 /* Flow data through the effects chain until an effect or callback gives EOF */
-int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_done))
+int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_done, void * client_data), void * client_data)
 {
   int flow_status = SOX_SUCCESS;
   size_t e, source_e = 0;               /* effect indices */
@@ -355,7 +355,7 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
     else if ((int)--e < (int)source_e)
       e = source_e;
 
-    if (callback && callback(source_e == chain->length) != SOX_SUCCESS) {
+    if (callback && callback(source_e == chain->length, client_data) != SOX_SUCCESS) {
       flow_status = SOX_EOF; /* Client has requested to stop the flow. */
       break;
     }
