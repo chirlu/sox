@@ -1635,41 +1635,40 @@ and this plays a guitar chord:
 	  %-2 delay 0 .05 .1 .15 .2 .25 remix - fade 0 4 .1 norm -1
 .EE
 .TP
-\fBdither\fR [\fB\-R\fR] [\fB\-r\fR\^|\^\fB\-t\fR] [\fB\-s\fR\^|\^\fB\-f \fIfilter\fR] [\fIdepth\fR]
+\fBdither\fR [\fB\-a\fR] [\fB\-s\fR\^|\^\fB\-f \fIfilter\fR]
 Apply dithering to the audio.
-Dithering deliberately adds a small amount of noise to the signal
-in order to mask audible quantization effects that
-can occur if the output sample size is less than 24 bits.
-The default (or with the
-.B \-t
-option) is Triangular (TPDF) white noise.
-The
-.B \-r
-option can be used to select Rectangular Probability Density Function
-(RPDF) white noise.
-Noise-shaping (only for certain sample rates) can be selected with
+Dithering deliberately adds a small amount of noise to the signal in
+order to mask audible quantization effects that can occur if the output
+sample size is less than 24 bits.  The default is to add triangular
+(TPDF) white noise.  Noise-shaping (only for certain sample rates) can
+be selected with
 .BR \-s .
 With the
 .B \-f
 option, it is possible to select a particular noise-shaping filter from
 the following list: lipshitz, f-weighted, modified-e-weighted,
-improved-e-weighted, gesemann, shibata, low-shibata, high-shibata.
-Note that most filter types are available only with 44100Hz sample rate.
-The filter types are distinguished by the following properties:
-audibility of noise, level of (inaudible, but in some circumstances,
-otherwise problematic) shaped high frequency noise, and
-processing speed.
+improved-e-weighted, gesemann, shibata, low-shibata, high-shibata.  Note
+that most filter types are available only with 44100Hz sample rate.  The
+filter types are distinguished by the following properties: audibility
+of noise, level of (inaudible, but in some circumstances, otherwise
+problematic) shaped high frequency noise, and processing speed.
 .SP
-By default, the amount of noise added is \(+-\(12 bit for RPDF, \(+-1 bit
-for TPDF;
-the optional \fIdepth\fR parameter (0.5 to 1) is a (linear or voltage)
-multiplier of this amount.  Reducing this value reduces the audibility
-of the added white noise, but correspondingly creates residual
-quantization noise, so it should not normally be changed.
+The
+.B \-a
+option enables a mode where dithering (and noise-shaping if applicable)
+are automatically enabled only when needed.  The most likely use for
+this is when applying fade in or out to an already dithered file, so
+that the redithering applies only to the faded portions.  However, auto
+dithering is not fool proof, so the fades should be carefully checked
+for any noise modulation; if this occurs, then either redither the whole
+file, or use
+.BR trim ,
+.BR fade ,
+and concatencate.
 .SP
-If
+If the SoX global option
 .B \-R
-option is given, then the pseudo-random number generator used to
+option is not given, then the pseudo-random number generator used to
 generate the white noise will be `reseeded', i.e. the generated noise
 will be different between invocations.
 .SP

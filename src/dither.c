@@ -196,11 +196,8 @@ static int flow_no_shape(sox_effect_t * effp, const sox_sample_t * ibuf,
       double d = *ibuf++ + (double)(RANQD1 >> p->prec) + (RANQD1 >> p->prec);
       d /= (1 << (32 - p->prec));
       d = (int)(d < 0? d - .5 : d + .5);
-      if (d < (-1 << (p->prec-1)))
-        ++effp->clips, *obuf = -1 << (p->prec-1);
-      else if (d > SOX_INT_MAX(p->prec))
-        ++effp->clips, *obuf = SOX_INT_MAX(p->prec);
-      else *obuf = d;
+      *obuf = d < (-1 << (p->prec-1))? ++effp->clips, -1 << (p->prec-1) :
+          d > SOX_INT_MAX(p->prec)? ++effp->clips, SOX_INT_MAX(p->prec) : d;
       *obuf++ <<= 32 - p->prec;
       if (p->dither_off)
         lsx_debug("flow %u: on  @ %u", effp->flow, (unsigned)p->num_output);
