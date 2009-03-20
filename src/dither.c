@@ -1,4 +1,4 @@
-/* Effect: dither/noise-shape     Copyright (c) 2008 robs@users.sourceforge.net
+/* Effect: dither/noise-shape   Copyright (c) 2008-9 robs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -25,17 +25,6 @@
 
 #undef RANQD1
 #define RANQD1 ranqd1(p->ranqd1)
-#define SOX_ROUND_PREC_CLIP_COUNT(d, clips) \
-  ((d) < 0? (d) <= SOX_SAMPLE_MIN - 0.5? ++(clips), SOX_SAMPLE_MIN: (d) - 0.5 \
-  : (d) >= SOX_SAMPLE_MAX - (1 << (31-p->prec)) + 0.5? \
-  ++(clips), SOX_SAMPLE_MAX - (1 << (31-p->prec)): (d) + 0.5)
-
-typedef enum {Pdf_rectangular, Pdf_triangular, Pdf_gaussian} pdf_type_t;
-static lsx_enum_item const pdf_types[] = {
-  LSX_ENUM_ITEM(Pdf_,rectangular)
-  LSX_ENUM_ITEM(Pdf_,triangular)
-  LSX_ENUM_ITEM(Pdf_,gaussian)
-  {0, 0}};
 
 typedef enum {
   Shape_none, Shape_lipshitz, Shape_f_weighted, Shape_modified_e_weighted,
@@ -70,61 +59,68 @@ static double const ges44[] = {2.2061, -.4706, -.2534, -.6214, 1.0587, .0676, -.
 static double const ges48[] = {2.2374, -.7339, -.1251, -.6033, .903, .0116, -.5853, -.2571};
 
 static double const shi48[] = {
-  2.8720729351043701172,  -5.0413231849670410156,   6.2442994117736816406,  -5.8483986854553222656,
-  3.7067542076110839844,  -1.0495119094848632812,  -1.1830236911773681641,   2.1126792430877685547,
- -1.9094531536102294922,   0.99913084506988525391, -0.17090806365013122559, -0.32615602016448974609,
-  0.39127644896507263184, -0.26876461505889892578,  0.097676105797290802002,-0.023473845794796943665,
+  2.8720729351043701172,  -5.0413231849670410156,   6.2442994117736816406,
+  -5.8483986854553222656, 3.7067542076110839844,  -1.0495119094848632812,
+  -1.1830236911773681641,   2.1126792430877685547, -1.9094531536102294922,
+  0.99913084506988525391, -0.17090806365013122559, -0.32615602016448974609,
+  0.39127644896507263184, -0.26876461505889892578,  0.097676105797290802002,
+  -0.023473845794796943665,
 };
-
 static double const shi44[] = {
-  2.6773197650909423828,  -4.8308925628662109375,   6.570110321044921875,   -7.4572014808654785156,
-  6.7263274192810058594,  -4.8481650352478027344,   2.0412089824676513672,   0.7006359100341796875,
- -2.9537565708160400391,   4.0800385475158691406,  -4.1845216751098632812,   3.3311812877655029297,
- -2.1179926395416259766,   0.879302978515625,      -0.031759146600961685181,-0.42382788658142089844,
-  0.47882103919982910156, -0.35490813851356506348,  0.17496839165687561035, -0.060908168554306030273,
+  2.6773197650909423828,  -4.8308925628662109375,   6.570110321044921875,
+  -7.4572014808654785156, 6.7263274192810058594,  -4.8481650352478027344,
+  2.0412089824676513672,   0.7006359100341796875, -2.9537565708160400391,
+  4.0800385475158691406,  -4.1845216751098632812,   3.3311812877655029297,
+  -2.1179926395416259766,   0.879302978515625,      -0.031759146600961685181,
+  -0.42382788658142089844, 0.47882103919982910156, -0.35490813851356506348,
+  0.17496839165687561035, -0.060908168554306030273,
 };
-
 static double const shi38[] = {
-  1.6335992813110351562,  -2.2615492343902587891,   2.4077029228210449219,  -2.6341717243194580078,
-  2.1440362930297851562,  -1.8153258562088012695,   1.0816224813461303711,  -0.70302653312683105469,
-  0.15991993248462677002,  0.041549518704414367676,-0.29416576027870178223,  0.2518316805362701416,
- -0.27766478061676025391,  0.15785403549671173096, -0.10165894031524658203,  0.016833892092108726501,
+  1.6335992813110351562,  -2.2615492343902587891,   2.4077029228210449219,
+  -2.6341717243194580078, 2.1440362930297851562,  -1.8153258562088012695,
+  1.0816224813461303711,  -0.70302653312683105469, 0.15991993248462677002,
+  0.041549518704414367676, -0.29416576027870178223,  0.2518316805362701416,
+  -0.27766478061676025391,  0.15785403549671173096, -0.10165894031524658203,
+  0.016833892092108726501,
 };
-
 static double const shi32[] = {
-  0.82901298999786376953, -0.98922657966613769531,  0.59825712442398071289, -1.0028809309005737305,
-  0.59938216209411621094, -0.79502451419830322266,  0.42723315954208374023, -0.54492527246475219727,
-  0.30792605876922607422, -0.36871799826622009277,  0.18792048096656799316, -0.2261127084493637085,
-  0.10573341697454452515, -0.11435490846633911133,  0.038800679147243499756,-0.040842197835445404053,
+  0.82901298999786376953, -0.98922657966613769531,  0.59825712442398071289,
+  -1.0028809309005737305, 0.59938216209411621094, -0.79502451419830322266,
+  0.42723315954208374023, -0.54492527246475219727, 0.30792605876922607422,
+  -0.36871799826622009277,  0.18792048096656799316, -0.2261127084493637085,
+  0.10573341697454452515, -0.11435490846633911133,  0.038800679147243499756,
+  -0.040842197835445404053,
 };
-
 static double const shi22[] = {
-  0.065229974687099456787,-0.54981261491775512695, -0.40278548002243041992, -0.31783768534660339355,
- -0.28201797604560852051, -0.16985194385051727295, -0.15433363616466522217, -0.12507140636444091797,
- -0.08903945237398147583, -0.064410120248794555664,-0.047146003693342208862,-0.032805237919092178345,
- -0.028495194390416145325,-0.011695005930960178375,-0.011831838637590408325,
+  0.065229974687099456787, -0.54981261491775512695, -0.40278548002243041992,
+  -0.31783768534660339355, -0.28201797604560852051, -0.16985194385051727295,
+  -0.15433363616466522217, -0.12507140636444091797, -0.08903945237398147583,
+  -0.064410120248794555664, -0.047146003693342208862, -0.032805237919092178345,
+  -0.028495194390416145325, -0.011695005930960178375, -0.011831838637590408325,
 };
-
 static double const shl48[] = {
-  2.3925774097442626953,  -3.4350297451019287109,   3.1853709220886230469,  -1.8117271661758422852,
- -0.20124770700931549072,  1.4759907722473144531,  -1.7210904359817504883,   0.97746700048446655273,
- -0.13790138065814971924, -0.38185903429985046387,  0.27421241998672485352,  0.066584214568138122559,
- -0.35223302245140075684,  0.37672343850135803223, -0.23964276909828186035,  0.068674825131893157959,
+  2.3925774097442626953,  -3.4350297451019287109,   3.1853709220886230469,
+  -1.8117271661758422852, -0.20124770700931549072,  1.4759907722473144531,
+  -1.7210904359817504883,   0.97746700048446655273, -0.13790138065814971924,
+  -0.38185903429985046387,  0.27421241998672485352,  0.066584214568138122559,
+  -0.35223302245140075684,  0.37672343850135803223, -0.23964276909828186035,
+  0.068674825131893157959,
 };
-
 static double const shl44[] = {
-  2.0833916664123535156,  -3.0418450832366943359,   3.2047898769378662109,  -2.7571926116943359375,
-  1.4978630542755126953,  -0.3427594602108001709,  -0.71733748912811279297,  1.0737057924270629883,
- -1.0225815773010253906,   0.56649994850158691406, -0.20968692004680633545, -0.065378531813621520996,
-  0.10322438180446624756, -0.067442022264003753662,-0.00495197344571352005,
+  2.0833916664123535156,  -3.0418450832366943359,   3.2047898769378662109,
+  -2.7571926116943359375, 1.4978630542755126953,  -0.3427594602108001709,
+  -0.71733748912811279297,  1.0737057924270629883, -1.0225815773010253906,
+  0.56649994850158691406, -0.20968692004680633545, -0.065378531813621520996,
+  0.10322438180446624756, -0.067442022264003753662, -0.00495197344571352005,
 };
-
 static double const shh44[] = {
-   3.0259189605712890625, -6.0268716812133789062,   9.195003509521484375,  -11.824929237365722656,
-  12.767142295837402344, -11.917946815490722656,    9.1739168167114257812,  -5.3712320327758789062,
-   1.1393624544143676758,  2.4484779834747314453,  -4.9719839096069335938,   6.0392003059387207031,
-  -5.9359521865844726562,  4.903278350830078125,   -3.5527443885803222656,   2.1909697055816650391,
-  -1.1672389507293701172,  0.4903914332389831543,  -0.16519790887832641602,  0.023217858746647834778,
+   3.0259189605712890625, -6.0268716812133789062,   9.195003509521484375,
+   -11.824929237365722656, 12.767142295837402344, -11.917946815490722656,
+   9.1739168167114257812,  -5.3712320327758789062, 1.1393624544143676758,
+   2.4484779834747314453,  -4.9719839096069335938,   6.0392003059387207031,
+   -5.9359521865844726562,  4.903278350830078125,   -3.5527443885803222656,
+   2.1909697055816650391, -1.1672389507293701172,  0.4903914332389831543,
+   -0.16519790887832641602,  0.023217858746647834778,
 };
 
 static const filter_t filters[] = {
@@ -145,45 +141,48 @@ static const filter_t filters[] = {
   {    0, fir,  0,  0.0,  NULL, Shape_none},
 };
 
-#define MAX_N 30
+#define MAX_N 20
 
 typedef struct {
-  pdf_type_t    pdf;
   filter_name_t filter_name;
-  sox_bool      reseed;
-  double        am0, am1, depth;
+  sox_bool      auto_detect;
+  double        dummy;
+
   double        previous_errors[MAX_N * 2];
   double        previous_outputs[MAX_N * 2];
-  size_t        pos, prec;
-  int32_t       ranqd1;
-  double const * coefs;
+  size_t        pos, prec, num_output;
+  int32_t       history, ranqd1;
+  double const  * coefs;
+  sox_bool      dither_off;
   int           (*flow)(sox_effect_t *, const sox_sample_t *, sox_sample_t *, size_t *, size_t *);
 } priv_t;
 
 #define CONVOLVE _ _ _ _
 #define NAME flow_iir_4
+#define IIR
 #define N 4
-#include "dither_iir.h"
+#include "dither.h"
+#undef IIR
 #define CONVOLVE _ _ _ _ _
 #define NAME flow_fir_5
 #define N 5
-#include "dither_fir.h"
+#include "dither.h"
 #define CONVOLVE _ _ _ _ _ _ _ _ _
 #define NAME flow_fir_9
 #define N 9
-#include "dither_fir.h"
+#include "dither.h"
 #define CONVOLVE _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 #define NAME flow_fir_15
 #define N 15
-#include "dither_fir.h"
+#include "dither.h"
 #define CONVOLVE _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 #define NAME flow_fir_16
 #define N 16
-#include "dither_fir.h"
+#include "dither.h"
 #define CONVOLVE _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 #define NAME flow_fir_20
 #define N 20
-#include "dither_fir.h"
+#include "dither.h"
 
 static int flow_no_shape(sox_effect_t * effp, const sox_sample_t * ibuf,
     sox_sample_t * obuf, size_t * isamp, size_t * osamp)
@@ -191,10 +190,37 @@ static int flow_no_shape(sox_effect_t * effp, const sox_sample_t * ibuf,
   priv_t * p = (priv_t *)effp->priv;
   size_t len = *isamp = *osamp = min(*isamp, *osamp);
 
-  while (len--) {
-    double d = *ibuf++ + floor(p->am0 * RANQD1) + floor(p->am1 * RANQD1);
-    SOX_SAMPLE_CLIP_COUNT(d, effp->clips);
-    *obuf++ = d;
+  if (p->auto_detect) while (len--) {
+    p->history = ((p->history << 1) + !!(*ibuf & (-1u >> p->prec)));
+    if (p->history) {
+      double d = *ibuf++ + (double)(RANQD1 >> p->prec) + (RANQD1 >> p->prec);
+      d /= (1 << (32 - p->prec));
+      d = (int)(d < 0? d - .5 : d + .5);
+      if (d < (-1 << (p->prec-1)))
+        ++effp->clips, *obuf = -1 << (p->prec-1);
+      else if (d > SOX_INT_MAX(p->prec))
+        ++effp->clips, *obuf = SOX_INT_MAX(p->prec);
+      else *obuf = d;
+      *obuf++ <<= 32 - p->prec;
+      if (p->dither_off)
+        lsx_debug("flow %u: on  @ %u", effp->flow, (unsigned)p->num_output);
+      p->dither_off = sox_false;
+    }
+    else {
+      *obuf++ = *ibuf++;
+      if (!p->dither_off)
+        lsx_debug("flow %u: off @ %u", effp->flow, (unsigned)p->num_output);
+      p->dither_off = sox_true;
+    }
+    ++p->num_output;
+  }
+  else while (len--) {
+    double d = *ibuf++ + (double)(RANQD1 >> p->prec) + (RANQD1 >> p->prec);
+    d /= (1 << (32 - p->prec));
+    d = (int)(d < 0? d - .5 : d + .5);
+    *obuf = d < (-1 << (p->prec-1))? ++effp->clips, -1 << (p->prec-1) :
+        d > SOX_INT_MAX(p->prec)? ++effp->clips, SOX_INT_MAX(p->prec) : d;
+    *obuf++ <<= 32 - p->prec;
   }
   return SOX_SUCCESS;
 }
@@ -204,11 +230,9 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
   priv_t * p = (priv_t *)effp->priv;
   int c;
 
-  p->pdf = Pdf_triangular;
-  while ((c = getopt(argc, argv, "+Rrtsf:")) != -1) switch (c) {
-    case 'R': p->reseed = sox_true; break;
-    case 'r': p->pdf = Pdf_rectangular; break;
-    case 't': p->pdf = Pdf_triangular ; break;
+  while ((c = getopt(argc, argv, "+asf:""rt")) != -1) switch (c) {
+    case 'a': p->auto_detect = sox_true; break;
+    case 'r': case 't': break; /* No longer in use */
     case 's': p->filter_name = Shape_shibata; break;
     case 'f':
       p->filter_name = lsx_enum_option(c, filter_names);
@@ -218,8 +242,7 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
     default: lsx_fail("invalid option `-%c'", optopt); return lsx_usage(effp);
   }
   argc -= optind, argv += optind;
-  p->depth = 1;
-  do {NUMERIC_PARAMETER(depth, .5, 1)} while (0);
+  do {NUMERIC_PARAMETER(dummy, 0.5, 1)} while (0); /* No longer in use */
   return argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
@@ -258,14 +281,12 @@ static int start(sox_effect_t * effp)
       mult = dB_to_linear(f->gain);
     }
   }
-  p->ranqd1 = p->reseed? ranqd1(sox_globals.ranqd1) : 0;
-  p->am1 = p->depth / (1 << p->prec);
-  p->am0 = (p->pdf == Pdf_triangular) * p->am1;
-
+  p->ranqd1 = ranqd1(sox_globals.ranqd1);
   if (effp->in_signal.mult)
-    *effp->in_signal.mult *= 1 - (p->am0 + p->am1) * mult;
+    *effp->in_signal.mult -= *effp->in_signal.mult * SOX_INT_MAX(32 - p->prec)
+      * 2 / (SOX_INT_MAX(p->prec) << (32 - p->prec)) * mult;
 
-  lsx_debug("pdf=%s filter=%s depth=%g", lsx_find_enum_value(p->pdf, pdf_types)->text, lsx_find_enum_value(p->filter_name, filter_names)->text, p->depth);
+  lsx_debug("filter=%s auto=%i", lsx_find_enum_value(p->filter_name, filter_names)->text, p->auto_detect);
   return SOX_SUCCESS;
 }
 
@@ -279,15 +300,12 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 sox_effect_handler_t const * lsx_dither_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "dither", "[-R] [-r|-t] [-s|-f filter] [depth]"
-    "\n  -R       Re-seed PRNG"
-    "\n  -r       Rectangular PDF"
-    "\n  -t       Triangular PDF (default)"
+    "dither", "[-a] [-s|-f filter]"
+    "\n  -a       Automatically turn on & off dithering as needed (use with caution!)"
     "\n  -s       Shape noise (with shibata filter)"
     "\n  -f name  Set shaping filter to one of: lipshitz, f-weighted,"
     "\n           modified-e-weighted, improved-e-weighted, gesemann,"
-    "\n           shibata, low-shibata, high-shibata."
-    "\n  depth    Noise depth; 0.5 to 1; default 1",
+    "\n           shibata, low-shibata, high-shibata.",
     SOX_EFF_PREC, getopts, start, flow, 0, 0, 0, sizeof(priv_t)
   };
   return &handler;
