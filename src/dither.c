@@ -131,14 +131,13 @@ static const filter_t filters[] = {
   {48000, iir,  4, 21.0, ges48, Shape_gesemann},
   {44100, iir,  4, 21.2, ges44, Shape_gesemann},
   {48000, fir, 16, 28.8, shi48, Shape_shibata},
-  {44100, fir, 20, 32.3, shi44, Shape_shibata},
+  {44100, fir, 20, 32.7, shi44, Shape_shibata},
   {37800, fir, 16, 22.7, shi38, Shape_shibata},
   {32000, fir, 16, 15.7, shi32, Shape_shibata},
   {22050, fir, 15,  9.0, shi22, Shape_shibata},
   {48000, fir, 16, 23.5, shl48, Shape_low_shibata},
-  {44100, fir, 15, 23.1, shl44, Shape_low_shibata},
+  {44100, fir, 15, 24.5, shl44, Shape_low_shibata},
   {44100, fir, 20, 37.5, shh44, Shape_high_shibata},
-  {    0, fir,  0,  0.0,  NULL, Shape_none},
 };
 
 #define MAX_N 20
@@ -193,12 +192,15 @@ static int flow_no_shape(sox_effect_t * effp, const sox_sample_t * ibuf,
   if (p->auto_detect) while (len--) {
     p->history = ((p->history << 1) + !!(*ibuf & (-1u >> p->prec)));
     if (p->history) {
-      double d = *ibuf++ + (double)(RANQD1 >> p->prec) + (RANQD1 >> p->prec);
-      d /= (1 << (32 - p->prec));
-      d = (int)(d < 0? d - .5 : d + .5);
-      *obuf = d < (-1 << (p->prec-1))? ++effp->clips, -1 << (p->prec-1) :
-          d > SOX_INT_MAX(p->prec)? ++effp->clips, SOX_INT_MAX(p->prec) : d;
-      *obuf++ <<= 32 - p->prec;
+      int32_t r1 = RANQD1 >> p->prec, r2 = RANQD1 >> p->prec;
+      double d = ((double)*ibuf++ + r1 + r2) / (1 << (32 - p->prec));
+      int i = d < 0? d - .5 : d + .5;
+      if (i < (-1 << (p->prec-1)))
+        ++effp->clips, *obuf = SOX_SAMPLE_MIN;
+      else if (i > (int)SOX_INT_MAX(p->prec))
+        ++effp->clips, *obuf = SOX_INT_MAX(p->prec) << (32 - p->prec);
+      else *obuf = i << (32 - p->prec);
+      ++obuf;
       if (p->dither_off)
         lsx_debug("flow %u: on  @ %u", effp->flow, (unsigned)p->num_output);
       p->dither_off = sox_false;
@@ -212,12 +214,15 @@ static int flow_no_shape(sox_effect_t * effp, const sox_sample_t * ibuf,
     ++p->num_output;
   }
   else while (len--) {
-    double d = *ibuf++ + (double)(RANQD1 >> p->prec) + (RANQD1 >> p->prec);
-    d /= (1 << (32 - p->prec));
-    d = (int)(d < 0? d - .5 : d + .5);
-    *obuf = d < (-1 << (p->prec-1))? ++effp->clips, -1 << (p->prec-1) :
-        d > SOX_INT_MAX(p->prec)? ++effp->clips, SOX_INT_MAX(p->prec) : d;
-    *obuf++ <<= 32 - p->prec;
+    int32_t r1 = RANQD1 >> p->prec, r2 = RANQD1 >> p->prec;
+    double d = ((double)*ibuf++ + r1 + r2) / (1 << (32 - p->prec));
+    int i = d < 0? d - .5 : d + .5;
+    if (i <= (-1 << (p->prec-1)))
+      ++effp->clips, *obuf = SOX_SAMPLE_MIN;
+    else if (i > (int)SOX_INT_MAX(p->prec))
+      ++effp->clips, *obuf = SOX_INT_MAX(p->prec) << (32 - p->prec);
+    else *obuf = i << (32 - p->prec);
+    ++obuf;
   }
   return SOX_SUCCESS;
 }
@@ -280,8 +285,8 @@ static int start(sox_effect_t * effp)
   }
   p->ranqd1 = ranqd1(sox_globals.ranqd1);
   if (effp->in_signal.mult)
-    *effp->in_signal.mult -= *effp->in_signal.mult * SOX_INT_MAX(32 - p->prec)
-      * 2 / (SOX_INT_MAX(p->prec) << (32 - p->prec)) * mult;
+    *effp->in_signal.mult *= (SOX_SAMPLE_MAX - (1 << (31 - p->prec)) *
+        (2 * mult + 1)) / (SOX_SAMPLE_MAX - (1 << (31 - p->prec)));
 
   lsx_debug("filter=%s auto=%i", lsx_find_enum_value(p->filter_name, filter_names)->text, p->auto_detect);
   return SOX_SUCCESS;

@@ -12,13 +12,13 @@ static int NAME(sox_effect_t * effp, const sox_sample_t * ibuf,
 
   while (len--) {
     if (!p->auto_detect || (p->history = ((p->history << 1) + !!(*ibuf & (-1u >> p->prec))))) {
-      double d1, r = (RANQD1 >> p->prec) + (RANQD1 >> p->prec);
+      int32_t r1 = RANQD1 >> p->prec, r2 = RANQD1 >> p->prec;
 #ifdef IIR
-      double d, output = 0;
+      double d1, d, output = 0;
 #else
-      double d = *ibuf++;
+      double d1, d = *ibuf++;
 #endif 
-      int j = 0;
+      int i, j = 0;
       CONVOLVE
       assert(j == N);
       p->pos = p->pos? p->pos - 1 : p->pos - 1 + N;
@@ -26,13 +26,16 @@ static int NAME(sox_effect_t * effp, const sox_sample_t * ibuf,
       d = *ibuf++ - output;
       p->previous_outputs[p->pos + N] = p->previous_outputs[p->pos] = output;
 #endif
-      d1 = (d + r) / (1 << (32 - p->prec));
-      d1 = (int)(d1 < 0? d1 - .5 : d1 + .5);
+      d1 = (d + r1 + r2) / (1 << (32 - p->prec));
+      i = d1 < 0? d1 - .5 : d1 + .5;
       p->previous_errors[p->pos + N] = p->previous_errors[p->pos] =
-          d1 * (1 << (32 - p->prec)) - d;
-      *obuf = d1 < (-1 << (p->prec-1))? ++effp->clips, -1 << (p->prec-1) :
-          d1 > SOX_INT_MAX(p->prec)? ++effp->clips, SOX_INT_MAX(p->prec) : d1;
-      *obuf++ <<= 32 - p->prec;
+          (double)i * (1 << (32 - p->prec)) - d;
+      if (i < (-1 << (p->prec-1)))
+        ++effp->clips, *obuf = SOX_SAMPLE_MIN;
+      else if (i > (int)SOX_INT_MAX(p->prec))
+        ++effp->clips, *obuf = SOX_INT_MAX(p->prec) << (32 - p->prec);
+      else *obuf = i << (32 - p->prec);
+      ++obuf;
 
       if (p->dither_off)
         lsx_debug("flow %u: on  @ %u", effp->flow, (unsigned)p->num_output);
