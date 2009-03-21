@@ -73,13 +73,13 @@ int lsx_aiffstartread(sox_format_t * ft)
 
   /* FORM chunk */
   if (lsx_reads(ft, buf, (size_t)4) == SOX_EOF || strncmp(buf, "FORM", (size_t)4) != 0) {
-    lsx_fail_errno(ft,SOX_EHDR,"AIFF header does not begin with magic word 'FORM'");
+    lsx_fail_errno(ft,SOX_EHDR,"AIFF header does not begin with magic word `FORM'");
     return(SOX_EOF);
   }
   lsx_readdw(ft, &totalsize);
   if (lsx_reads(ft, buf, (size_t)4) == SOX_EOF || (strncmp(buf, "AIFF", (size_t)4) != 0 &&
         strncmp(buf, "AIFC", (size_t)4) != 0)) {
-    lsx_fail_errno(ft,SOX_EHDR,"AIFF 'FORM' chunk does not specify 'AIFF' or 'AIFC' as type");
+    lsx_fail_errno(ft,SOX_EHDR,"AIFF `FORM' chunk does not specify `AIFF' or `AIFC' as type");
     return(SOX_EOF);
   }
 
@@ -291,7 +291,7 @@ int lsx_aiffstartread(sox_format_t * ft)
       if (lsx_eof(ft))
         break;
       buf[4] = 0;
-      lsx_debug("AIFFstartread: ignoring '%s' chunk", buf);
+      lsx_debug("AIFFstartread: ignoring `%s' chunk", buf);
       lsx_readdw(ft, &chunksize);
       if (lsx_eof(ft))
         break;
@@ -543,7 +543,7 @@ int lsx_aiffstopread(sox_format_t * ft)
                 if (lsx_eof(ft))
                         break;
                 buf[4] = '\0';
-                lsx_warn("Ignoring AIFF tail chunk: '%s', %u bytes long",
+                lsx_warn("Ignoring AIFF tail chunk: `%s', %u bytes long",
                         buf, chunksize);
                 if (! strcmp(buf, "MARK") || ! strcmp(buf, "INST"))
                         lsx_warn("       You're stripping MIDI/loop info!");

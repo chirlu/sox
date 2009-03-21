@@ -45,13 +45,13 @@ static int startread(sox_format_t * ft)
         /* read FORM chunk */
         if (lsx_reads(ft, buf, (size_t)4) == SOX_EOF || strncmp(buf, "FORM", (size_t)4) != 0)
         {
-                lsx_fail_errno(ft, SOX_EHDR, "Header did not begin with magic word 'FORM'");
+                lsx_fail_errno(ft, SOX_EHDR, "Header did not begin with magic word `FORM'");
                 return(SOX_EOF);
         }
         lsx_readdw(ft, &totalsize);
         if (lsx_reads(ft, buf, (size_t)4) == SOX_EOF || strncmp(buf, "8SVX", (size_t)4) != 0)
         {
-                lsx_fail_errno(ft, SOX_EHDR, "'FORM' chunk does not specify '8SVX' as type");
+                lsx_fail_errno(ft, SOX_EHDR, "'FORM' chunk does not specify `8SVX' as type");
                 return(SOX_EOF);
         }
 

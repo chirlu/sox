@@ -312,7 +312,7 @@ FILE * lsx_open_input_file(sox_effect_t * effp, char const * filename)
 
   if (!filename || !strcmp(filename, "-")) {
     if (effp->global_info->global_info->stdin_in_use_by) {
-      lsx_fail("stdin already in use by '%s'", effp->global_info->global_info->stdin_in_use_by);
+      lsx_fail("stdin already in use by `%s'", effp->global_info->global_info->stdin_in_use_by);
       return NULL;
     }
     effp->global_info->global_info->stdin_in_use_by = effp->handler.name;

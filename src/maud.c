@@ -54,7 +54,7 @@ static int startread(sox_format_t * ft)
         /* read FORM chunk */
         if (lsx_reads(ft, buf, (size_t)4) == SOX_EOF || strncmp(buf, "FORM", (size_t)4) != 0)
         {
-                lsx_fail_errno(ft,SOX_EHDR,"MAUD: header does not begin with magic word 'FORM'");
+                lsx_fail_errno(ft,SOX_EHDR,"MAUD: header does not begin with magic word `FORM'");
                 return (SOX_EOF);
         }
 
@@ -62,7 +62,7 @@ static int startread(sox_format_t * ft)
 
         if (lsx_reads(ft, buf, (size_t)4) == SOX_EOF || strncmp(buf, "MAUD", (size_t)4) != 0)
         {
-                lsx_fail_errno(ft,SOX_EHDR,"MAUD: 'FORM' chunk does not specify 'MAUD' as type");
+                lsx_fail_errno(ft,SOX_EHDR,"MAUD: `FORM' chunk does not specify `MAUD' as type");
                 return(SOX_EOF);
         }
 

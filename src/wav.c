@@ -973,7 +973,7 @@ static int startread(sox_format_t * ft)
                     }
                     else
                     {
-                        lsx_debug("Attempting to seek beyond unsupported chunk '%c%c%c%c' of length %d bytes", magic[0], magic[1], magic[2], magic[3], len);
+                        lsx_debug("Attempting to seek beyond unsupported chunk `%c%c%c%c' of length %d bytes", magic[0], magic[1], magic[2], magic[3], len);
                         len = (len + 1) & ~1u;
                         lsx_seeki(ft, (off_t)len, SEEK_CUR);
                     }

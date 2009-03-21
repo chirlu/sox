@@ -2052,7 +2052,7 @@ static int enum_option(int option_index, lsx_enum_item const * items)
       set = lsx_realloc(set, len += 2 + strlen(p->text));
       strcat(set, ", "); strcat(set, p->text);
     }
-    lsx_fail("--%s: '%s' is not one of: %s.",
+    lsx_fail("--%s: `%s' is not one of: %s.",
         long_options[option_index].name, optarg, set + 2);
     free(set);
     exit(1);

@@ -94,7 +94,7 @@ int lsx_enum_option(int c, lsx_enum_item const * items)
       set = lsx_realloc(set, len += 2 + strlen(p->text));
       strcat(set, ", "); strcat(set, p->text);
     }
-    lsx_fail("-%c: '%s' is not one of: %s.", c, optarg, set + 2);
+    lsx_fail("-%c: `%s' is not one of: %s.", c, optarg, set + 2);
     free(set);
     return INT_MAX;
   }

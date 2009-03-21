@@ -282,7 +282,7 @@ static int startread(sox_format_t * ft)
 
   /* Don't believe LSF's rate for raw files */
   if ((sf->sf_info->format & SF_FORMAT_TYPEMASK) == SF_FORMAT_RAW && !ft->signal.rate) {
-    lsx_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
+    lsx_warn("`%s': sample rate not specified; trying 8kHz", ft->filename);
     rate = 8000;
   }
   else rate = sf->sf_info->samplerate;

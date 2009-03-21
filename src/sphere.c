@@ -36,7 +36,7 @@ static int start_read(sox_format_t * ft)
 
   /* Magic header */
   if (lsx_reads(ft, fldname, (size_t)8) || strncmp(fldname, "NIST_1A", (size_t)7) != 0) {
-    lsx_fail_errno(ft, SOX_EHDR, "Sphere header does not begin with magic word 'NIST_1A'");
+    lsx_fail_errno(ft, SOX_EHDR, "Sphere header does not begin with magic word `NIST_1A'");
     return (SOX_EOF);
   }
 

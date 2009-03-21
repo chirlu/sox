@@ -69,7 +69,7 @@ static int sox_noiseprof_start(sox_effect_t * effp)
    * since we already use stderr for diagnostics. */
   if (!data->output_filename || !strcmp(data->output_filename, "-")) {
     if (effp->global_info->global_info->stdout_in_use_by) {
-      lsx_fail("stdout already in use by '%s'", effp->global_info->global_info->stdout_in_use_by);
+      lsx_fail("stdout already in use by `%s'", effp->global_info->global_info->stdout_in_use_by);
       return SOX_EOF;
     }
     effp->global_info->global_info->stdout_in_use_by = effp->handler.name;

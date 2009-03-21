@@ -31,19 +31,19 @@ int lsx_rawstart(sox_format_t * ft, sox_bool default_rate,
                  sox_encoding_t encoding, unsigned size)
 {
   if (default_rate && ft->signal.rate == 0) {
-    lsx_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
+    lsx_warn("`%s': sample rate not specified; trying 8kHz", ft->filename);
     ft->signal.rate = 8000;
   }
 
   if (default_channels && ft->signal.channels == 0) {
-    lsx_warn("'%s': # channels not specified; trying mono", ft->filename);
+    lsx_warn("`%s': # channels not specified; trying mono", ft->filename);
     ft->signal.channels = 1;
   }
 
   if (encoding != SOX_ENCODING_UNKNOWN) {
     if (ft->mode == 'r' && ft->encoding.encoding != SOX_ENCODING_UNKNOWN &&
         ft->encoding.encoding != encoding)
-      lsx_report("'%s': Format options overriding file-type encoding",
+      lsx_report("`%s': Format options overriding file-type encoding",
                  ft->filename);
     else
       ft->encoding.encoding = encoding;
@@ -52,7 +52,7 @@ int lsx_rawstart(sox_format_t * ft, sox_bool default_rate,
   if (size != 0) {
     if (ft->mode == 'r' && ft->encoding.bits_per_sample != 0 &&
         ft->encoding.bits_per_sample != size)
-      lsx_report("'%s': Format options overriding file-type sample-size",
+      lsx_report("`%s': Format options overriding file-type sample-size",
                  ft->filename);
     else
       ft->encoding.bits_per_sample = size;
