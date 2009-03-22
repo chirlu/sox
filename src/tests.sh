@@ -87,8 +87,8 @@ convertToAndFrom () {
       if [ "${format1_skip}x" = "x" -a "${from_skip}x" = "x" ] ; then
         getFormat ${format1}; format1Ext=$formatExt; format1Text=$formatText; format1Flags=$formatFlags
         getFormat         $1; format2Ext=$formatExt; format2Text=$formatText; format2Flags=$formatFlags
-        execute ${bindir}/sox $verbose -R -r $rate -c $channels -n $format1Flags input.$format1Ext synth $samples's' sin 300-3300 noise trapezium
-        execute ${bindir}/sox $verbose -R -r $rate -c $channels $format1Flags input.$format1Ext $format2Flags intermediate.$format2Ext
+        execute ${bindir}/sox $verbose -RD -r $rate -c $channels -n $format1Flags input.$format1Ext synth $samples's' sin 300-3300 noise trapezium
+        execute ${bindir}/sox $verbose -RD -r $rate -c $channels $format1Flags input.$format1Ext $format2Flags intermediate.$format2Ext
         execute ${bindir}/sox $verbose -RD -r $rate -c $channels $format2Flags intermediate.$format2Ext $format1Flags output.$format1Ext
         intermediateReference=vectors/intermediate`echo "$channels $rate $format1Flags $format1Ext $format2Flags"|tr " " "_"`.$format2Ext
 
