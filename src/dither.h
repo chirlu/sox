@@ -38,13 +38,13 @@ static int NAME(sox_effect_t * effp, const sox_sample_t * ibuf,
       ++obuf;
 
       if (p->dither_off)
-        lsx_debug("flow %u: on  @ %u", effp->flow, (unsigned)p->num_output);
+        lsx_debug("flow %u: on  @ %u", (unsigned)effp->flow, (unsigned)p->num_output);
       p->dither_off = sox_false;
     }
     else {
       *obuf++ = *ibuf++;
       if (!p->dither_off) {
-        lsx_debug("flow %u: off @ %u", effp->flow, (unsigned)p->num_output);
+        lsx_debug("flow %u: off @ %u", (unsigned)effp->flow, (unsigned)p->num_output);
         memset(p->previous_errors, 0, sizeof(p->previous_errors));
         memset(p->previous_outputs, 0, sizeof(p->previous_outputs));
       }
