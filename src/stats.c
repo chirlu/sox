@@ -94,16 +94,14 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 
     p->sigma_x += d;
     p->sigma_x2 += sqr(d);
-
-    if (!p->avg_sigma_x2)
-      p->avg_sigma_x2 = sqr(d);
     p->avg_sigma_x2 = p->avg_sigma_x2 * p->mult + (1 - p->mult) * sqr(d);
 
-    if (p->avg_sigma_x2 > p->max_sigma_x2)
-      p->max_sigma_x2 = p->avg_sigma_x2;
-    else if (p->avg_sigma_x2 < p->min_sigma_x2 && p->num_samples >= p->tc_samples)
-      p->min_sigma_x2 = p->avg_sigma_x2;
-
+    if (p->num_samples >= p->tc_samples) {
+      if (p->avg_sigma_x2 > p->max_sigma_x2)
+        p->max_sigma_x2 = p->avg_sigma_x2;
+      if (p->avg_sigma_x2 < p->min_sigma_x2)
+        p->min_sigma_x2 = p->avg_sigma_x2;
+    }
     p->last = d;
     p->mask |= *ibuf;
   }
