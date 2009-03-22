@@ -2731,8 +2731,11 @@ int main(int argc, char **argv)
     exit(0);
   }
 
-  if (!sox_globals.repeatable) /* Re-seed PRNG? */
-    sox_globals.ranqd1 = (int32_t)time(NULL);
+  if (!sox_globals.repeatable) {/* Re-seed PRNG? */
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    sox_globals.ranqd1 = (int32_t)(now.tv_sec - now.tv_usec);
+  }
 
   /* Save things that sox_sequence needs to be reinitialised for each segued
    * block of input files.*/

@@ -12,7 +12,7 @@ static int NAME(sox_effect_t * effp, const sox_sample_t * ibuf,
 
   while (len--) {
     if (!p->auto_detect || (p->history = ((p->history << 1) + !!(*ibuf & (-1u >> p->prec))))) {
-      int32_t r1 = RANQD1 >> p->prec, r2 = RANQD1 >> p->prec;
+      int32_t r1 = RANQD1 >> p->prec, r2 = RANQD1 >> p->prec; /* Defer add! */
 #ifdef IIR
       double d1, d, output = 0;
 #else

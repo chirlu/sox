@@ -26,7 +26,7 @@
 #undef RANQD1
 #define RANQD1 ranqd1(p->ranqd1)
 
-typedef enum {
+typedef enum { /* Collection of various filters from the net */
   Shape_none, Shape_lipshitz, Shape_f_weighted, Shape_modified_e_weighted,
   Shape_improved_e_weighted, Shape_gesemann, Shape_shibata, Shape_low_shibata, Shape_high_shibata
 } filter_name_t;
@@ -46,17 +46,22 @@ typedef struct {
   sox_rate_t  rate;
   enum {fir, iir} type;
   size_t len;
-  double gain;
+  int gain_cB; /* Chosen so clips are few if any, but not guaranteed none. */
   double const * coefs;
   filter_name_t name;
 } filter_t;
 
 static double const lip44[] = {2.033, -2.165, 1.959, -1.590, .6149};
-static double const fwe44[] = {2.412, -3.370, 3.937, -4.174, 3.353, -2.205, 1.281, -.569, .0847};
-static double const mew44[] = {1.662, -1.263, .4827, -.2913, .1268, -.1124, .03252, -.01265, -.03524};
-static double const iew44[] = {2.847, -4.685, 6.214, -7.184, 6.639, -5.032, 3.263, -1.632, .4191};
-static double const ges44[] = {2.2061, -.4706, -.2534, -.6214, 1.0587, .0676, -.6054, -.2738};
-static double const ges48[] = {2.2374, -.7339, -.1251, -.6033, .903, .0116, -.5853, -.2571};
+static double const fwe44[] = {
+  2.412, -3.370, 3.937, -4.174, 3.353, -2.205, 1.281, -.569, .0847};
+static double const mew44[] = {
+  1.662, -1.263, .4827, -.2913, .1268, -.1124, .03252, -.01265, -.03524};
+static double const iew44[] = {
+  2.847, -4.685, 6.214, -7.184, 6.639, -5.032, 3.263, -1.632, .4191};
+static double const ges44[] = {
+  2.2061, -.4706, -.2534, -.6214, 1.0587, .0676, -.6054, -.2738};
+static double const ges48[] = {
+  2.2374, -.7339, -.1251, -.6033, .903, .0116, -.5853, -.2571};
 
 static double const shi48[] = {
   2.8720729351043701172,  -5.0413231849670410156,   6.2442994117736816406,
@@ -82,21 +87,6 @@ static double const shi38[] = {
   0.041549518704414367676, -0.29416576027870178223,  0.2518316805362701416,
   -0.27766478061676025391,  0.15785403549671173096, -0.10165894031524658203,
   0.016833892092108726501,
-};
-static double const shi32[] = {
-  0.82901298999786376953, -0.98922657966613769531,  0.59825712442398071289,
-  -1.0028809309005737305, 0.59938216209411621094, -0.79502451419830322266,
-  0.42723315954208374023, -0.54492527246475219727, 0.30792605876922607422,
-  -0.36871799826622009277,  0.18792048096656799316, -0.2261127084493637085,
-  0.10573341697454452515, -0.11435490846633911133,  0.038800679147243499756,
-  -0.040842197835445404053,
-};
-static double const shi22[] = {
-  0.065229974687099456787, -0.54981261491775512695, -0.40278548002243041992,
-  -0.31783768534660339355, -0.28201797604560852051, -0.16985194385051727295,
-  -0.15433363616466522217, -0.12507140636444091797, -0.08903945237398147583,
-  -0.064410120248794555664, -0.047146003693342208862, -0.032805237919092178345,
-  -0.028495194390416145325, -0.011695005930960178375, -0.011831838637590408325,
 };
 static double const shl48[] = {
   2.3925774097442626953,  -3.4350297451019287109,   3.1853709220886230469,
@@ -124,20 +114,18 @@ static double const shh44[] = {
 };
 
 static const filter_t filters[] = {
-  {44100, fir,  5, 19.6, lip44, Shape_lipshitz},
-  {46000, fir,  9, 26.6, fwe44, Shape_f_weighted},
-  {46000, fir,  9, 14.6, mew44, Shape_modified_e_weighted},
-  {46000, fir,  9, 30.6, iew44, Shape_improved_e_weighted},
-  {48000, iir,  4, 21.0, ges48, Shape_gesemann},
-  {44100, iir,  4, 21.2, ges44, Shape_gesemann},
-  {48000, fir, 16, 28.8, shi48, Shape_shibata},
-  {44100, fir, 20, 32.7, shi44, Shape_shibata},
-  {37800, fir, 16, 22.7, shi38, Shape_shibata},
-  {32000, fir, 16, 15.7, shi32, Shape_shibata},
-  {22050, fir, 15,  9.0, shi22, Shape_shibata},
-  {48000, fir, 16, 23.5, shl48, Shape_low_shibata},
-  {44100, fir, 15, 24.5, shl44, Shape_low_shibata},
-  {44100, fir, 20, 37.5, shh44, Shape_high_shibata},
+  {44100, fir,  5, 209, lip44, Shape_lipshitz},
+  {46000, fir,  9, 270, fwe44, Shape_f_weighted},
+  {46000, fir,  9, 159, mew44, Shape_modified_e_weighted},
+  {46000, fir,  9, 320, iew44, Shape_improved_e_weighted},
+  {48000, iir,  4, 220, ges48, Shape_gesemann},
+  {44100, iir,  4, 228, ges44, Shape_gesemann},
+  {48000, fir, 16, 300, shi48, Shape_shibata},
+  {44100, fir, 20, 330, shi44, Shape_shibata},
+  {37800, fir, 16, 237, shi38, Shape_shibata},
+  {48000, fir, 16, 245, shl48, Shape_low_shibata},
+  {44100, fir, 15, 246, shl44, Shape_low_shibata},
+  {44100, fir, 20, 382, shh44, Shape_high_shibata},
 };
 
 #define MAX_N 20
@@ -251,7 +239,7 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  double mult = 1;
+  double mult = 1; /* Amount the noise shaping multiplies up the TPDF (+/-1) */
 
   p->prec = effp->out_signal.precision;
   if (effp->in_signal.precision <= p->prec || p->prec > 24)
@@ -262,9 +250,9 @@ static int start(sox_effect_t * effp)
   if (p->filter_name) {
     filter_t const * f;
 
-    for (f = filters; f->len && (f->name != p->filter_name || fabs(effp->in_signal.rate - f->rate) / f->rate > .05); ++f);
+    for (f = filters; f->len && (f->name != p->filter_name || fabs(effp->in_signal.rate - f->rate) / f->rate > .05); ++f); /* 5% leeway on frequency */
     if (!f->len) {
-      lsx_warn("no `%s' filter is available for rate %g", lsx_find_enum_value(p->filter_name, filter_names)->text, effp->in_signal.rate);
+      lsx_warn("no `%s' filter is available for rate %g; using plain TPDF", lsx_find_enum_value(p->filter_name, filter_names)->text, effp->in_signal.rate);
     }
     else {
       assert(f->len <= MAX_N);
@@ -280,15 +268,13 @@ static int start(sox_effect_t * effp)
         default: assert(sox_false);
       }
       p->coefs = f->coefs;
-      mult = dB_to_linear(f->gain);
+      mult = dB_to_linear(f->gain_cB / 10);
     }
   }
-  p->ranqd1 = ranqd1(sox_globals.ranqd1);
-  if (effp->in_signal.mult)
+  p->ranqd1 = ranqd1(sox_globals.ranqd1) + effp->flow;
+  if (effp->in_signal.mult) /* (Takes account of ostart mult (sox.c). */
     *effp->in_signal.mult *= (SOX_SAMPLE_MAX - (1 << (31 - p->prec)) *
         (2 * mult + 1)) / (SOX_SAMPLE_MAX - (1 << (31 - p->prec)));
-
-  lsx_debug("filter=%s auto=%i", lsx_find_enum_value(p->filter_name, filter_names)->text, p->auto_detect);
   return SOX_SUCCESS;
 }
 
