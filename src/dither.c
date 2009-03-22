@@ -114,7 +114,7 @@ static double const shh44[] = {
 };
 
 static const filter_t filters[] = {
-  {44100, fir,  5, 209, lip44, Shape_lipshitz},
+  {44100, fir,  5, 210, lip44, Shape_lipshitz},
   {46000, fir,  9, 270, fwe44, Shape_f_weighted},
   {46000, fir,  9, 159, mew44, Shape_modified_e_weighted},
   {46000, fir,  9, 320, iew44, Shape_improved_e_weighted},
@@ -122,10 +122,11 @@ static const filter_t filters[] = {
   {44100, iir,  4, 228, ges44, Shape_gesemann},
   {48000, fir, 16, 300, shi48, Shape_shibata},
   {44100, fir, 20, 330, shi44, Shape_shibata},
-  {37800, fir, 16, 237, shi38, Shape_shibata},
+  {37800, fir, 16, 238, shi38, Shape_shibata},
   {48000, fir, 16, 245, shl48, Shape_low_shibata},
   {44100, fir, 15, 246, shl44, Shape_low_shibata},
   {44100, fir, 20, 382, shh44, Shape_high_shibata},
+  {    0, fir,  0,   0,  NULL, Shape_none},
 };
 
 #define MAX_N 20

@@ -16,6 +16,7 @@ Previously deprecated features that have been removed in this release:
   14.1.0   E resample *            ~= rate
   14.1.0   E polyphase *           ~= rate
   14.1.0   E rabbit *              ~= rate
+  14.2.0   E dither: RPDF,scaled   dither (TPDF only)
   14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1
 
   * But interface retained as an alias for `rate'.
