@@ -359,10 +359,17 @@ static int start(sox_effect_t * effp)
         lsx_fail("Sample rate must be 44.1k, 48k, 88.2k, or 96k");
         return SOX_EOF;
       }
-      {double g = dB_to_linear(19.9 - linear_to_dB(
-            (p->b0 + p->b1 + p->b2) / (p->a0 + p->a1 + p->a2)));
-      p->b0 *= g; p->b1 *= g; p->b2 *= g;}
-      mult = dB_to_linear(19.9);
+      { /* Normalise to 0dB at 1kHz (Thanks to Glenn Davis) */
+        double y = 2 * M_PI * 1000 / effp->in_signal.rate;
+        double b_re = p->b0 + p->b1 * cos(-y) + p->b2 * cos(-2 * y);
+        double a_re = p->a0 + p->a1 * cos(-y) + p->a2 * cos(-2 * y);
+        double b_im = p->b1 * sin(-y) + p->b2 * sin(-2 * y);
+        double a_im = p->a1 * sin(-y) + p->a2 * sin(-2 * y);
+        double g = 1 / sqrt((sqr(b_re) + sqr(b_im)) / (sqr(a_re) + sqr(a_im)));
+        p->b0 *= g; p->b1 *= g; p->b2 *= g;
+      }
+      mult = (p->b0 + p->b1 + p->b2) / (p->a0 + p->a1 + p->a2);
+      lsx_debug("gain=%f", linear_to_dB(mult));
       break;
   }
   if (effp->in_signal.mult)
