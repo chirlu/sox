@@ -100,7 +100,6 @@ static float GeneratePinkNoise(PinkNoise * pink)
   long newRandom;
   long sum;
   float output;
-  static int32_t r;
 
   /* Increment and mask index. */
   pink->pink_Index = (pink->pink_Index + 1) & pink->pink_IndexMask;
@@ -122,13 +121,13 @@ static float GeneratePinkNoise(PinkNoise * pink)
      * values together. Only one changes each time.
      */
     pink->pink_RunningSum -= pink->pink_Rows[numZeros];
-    newRandom = ranqd1(r) >> PINK_RANDOM_SHIFT;
+    newRandom = RANQD1 >> PINK_RANDOM_SHIFT;
     pink->pink_RunningSum += newRandom;
     pink->pink_Rows[numZeros] = newRandom;
   }
 
   /* Add extra white noise value. */
-  newRandom = ranqd1(r) >> PINK_RANDOM_SHIFT;
+  newRandom = RANQD1 >> PINK_RANDOM_SHIFT;
   sum = pink->pink_RunningSum + newRandom;
 
   /* Scale to range of -1 to 0.9999. */
