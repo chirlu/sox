@@ -18,23 +18,23 @@
 
 #include "sox_i.h"
 
-static float difference(const float * a, const float * b, size_t length)
+static double difference(const sox_sample_t * a, const sox_sample_t * b, size_t length)
 {
-  float diff = 0;
+  double diff = 0;
   size_t i = 0;
 
-  #define _ diff += sqr(a[i] - b[i]), ++i; /* Loop optimisation */
+  #define _ diff += sqr((double)a[i] - b[i]), ++i; /* Loop optimisation */
   do {_ _ _ _ _ _ _ _} while (i < length); /* N.B. length ≡ 0 (mod 8) */
   #undef _
   return diff;
 }
 
 /* Find where the two segments are most alike over the overlap period. */
-static size_t best_overlap_position(float const * f1, float const * f2,
+static size_t best_overlap_position(sox_sample_t const * f1, sox_sample_t const * f2,
     size_t overlap, size_t search, size_t channels)
 {
   size_t i, best_pos = 0;
-  float diff, least_diff = difference(f2, f1, channels * overlap);
+  double diff, least_diff = difference(f2, f1, channels * overlap);
 
   for (i = 1; i < search; ++i) { /* linear search */
     diff = difference(f2 + channels * i, f1, channels * overlap);
@@ -44,30 +44,8 @@ static size_t best_overlap_position(float const * f1, float const * f2,
   return best_pos;
 }
 
-static void splice(const float * in1, const float * in2,
-    float * output, size_t overlap, size_t channels)
-{
-  size_t i, j, k = 0;
-  float fade_step = 1.0f / (float) overlap;
-
-  for (i = 0; i < overlap; ++i) {
-    float fade_in  = fade_step * (float) i;
-    float fade_out = 1.0f - fade_in;
-    for (j = 0; j < channels; ++j, ++k)
-      output[k] = in1[k] * fade_out + in2[k] * fade_in;
-  }
-}
-
-static size_t do_splice(float * f, size_t overlap, size_t search, size_t channels)
-{
-  size_t offset = search? best_overlap_position(
-      f, f + overlap * channels, overlap, search, channels) : 0;
-  splice(f, f + (overlap + offset) * channels,
-      f + (overlap + offset) * channels, overlap, channels);
-  return overlap + offset;
-}
-
 typedef struct {
+  sox_bool uncorrelated;
   unsigned nsplices;     /* Number of splices requested */
   struct {
     char * str;          /* Command-line argument to parse for this splice */
@@ -80,9 +58,48 @@ typedef struct {
   unsigned splices_pos;  /* Number of splices completed so far */
   size_t buffer_pos; /* Number of samples through the current splice */
   size_t max_buffer_size;
-  float * buffer;
+  sox_sample_t * buffer;
   unsigned state;
 } priv_t;
+
+static void splice(sox_effect_t * effp, const sox_sample_t * in1, const
+    sox_sample_t * in2, sox_sample_t * output, size_t overlap, size_t channels)
+{
+  priv_t * p = (priv_t *)effp->priv;
+  size_t i, j, k = 0;
+
+  if (p->uncorrelated) { /* Fade for constant RMS level (`power') */
+    double fade_step = M_PI_2 / overlap;
+    for (i = 0; i < overlap; ++i) {
+      double fade_in  = sin(i * fade_step);
+      double fade_out = cos(i * fade_step);
+      for (j = 0; j < channels; ++j, ++k) {
+        double d = in1[k] * fade_out + in2[k] * fade_in;
+        output[k] = SOX_ROUND_CLIP_COUNT(d, effp->clips); /* Might clip */
+      }
+    }
+  }
+  else {                 /* Fade for constant peak level (`gain') */
+    double fade_step = 1. / overlap;
+    for (i = 0; i < overlap; ++i) {
+      double fade_in  = fade_step * i;
+      double fade_out = 1 - fade_in;
+      for (j = 0; j < channels; ++j, ++k) {
+        double d = in1[k] * fade_out + in2[k] * fade_in;
+        output[k] = SOX_ROUND_CLIP_COUNT(d, effp->clips); /* Should not clip */
+      }
+    }
+  }
+}
+
+static size_t do_splice(sox_effect_t * effp, sox_sample_t * f, size_t overlap, size_t search, size_t channels)
+{
+  size_t offset = search? best_overlap_position(
+      f, f + overlap * channels, overlap, search, channels) : 0;
+  splice(effp, f, f + (overlap + offset) * channels,
+      f + (overlap + offset) * channels, overlap, channels);
+  return overlap + offset;
+}
 
 static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
 {
@@ -129,6 +146,8 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
   --argc, ++argv;
+  if (argc && !strcmp(*argv, "-u"))
+    --argc, ++argv, p->uncorrelated = sox_true;
   p->splices = lsx_calloc(p->nsplices = argc, sizeof(*p->splices));
   return parse(effp, argv, 1e5); /* No rate yet; parse with dummy */
 }
@@ -143,8 +162,11 @@ static int start(sox_effect_t * effp)
   p->in_pos = p->buffer_pos = p->splices_pos = 0;
   p->state = p->splices_pos != p->nsplices && p->in_pos == p->splices[p->splices_pos].start;
   for (i = 0; i < p->nsplices; ++i)
-    if (p->splices[i].overlap)
+    if (p->splices[i].overlap) {
+      if (p->uncorrelated && effp->in_signal.mult)
+        *effp->in_signal.mult *= pow(.5, .5);
       return SOX_SUCCESS;
+    }
   return SOX_EFF_NULL;
 }
 
@@ -153,7 +175,6 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 {
   priv_t * p = (priv_t *)effp->priv;
   size_t c, idone = 0, odone = 0;
-  SOX_SAMPLE_LOCALS;
   *isamp /= effp->in_signal.channels;
   *osamp /= effp->in_signal.channels;
 
@@ -176,7 +197,7 @@ buffering:
       size_t buffer_size = (2 * p->splices[p->splices_pos].overlap + p->splices[p->splices_pos].search) * effp->in_signal.channels;
       for (; idone < *isamp; ++idone, ++p->in_pos) {
         if (p->buffer_pos == buffer_size) {
-          p->buffer_pos = do_splice(p->buffer,
+          p->buffer_pos = do_splice(effp, p->buffer,
               p->splices[p->splices_pos].overlap,
               p->splices[p->splices_pos].search,
               (size_t)effp->in_signal.channels) * effp->in_signal.channels;
@@ -185,7 +206,7 @@ buffering:
           break;
         }
         for (c = 0; c < effp->in_signal.channels; ++c)
-          p->buffer[p->buffer_pos++] = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++, effp->clips);
+          p->buffer[p->buffer_pos++] = *ibuf++;
       }
       break;
     }
@@ -201,7 +222,7 @@ flushing:
           goto copying;
         }
         for (c = 0; c < effp->in_signal.channels; ++c)
-          *obuf++ = SOX_FLOAT_32BIT_TO_SAMPLE(p->buffer[p->buffer_pos++], effp->clips);
+          *obuf++ = p->buffer[p->buffer_pos++];
       }
       break;
     }
@@ -240,7 +261,13 @@ static int kill(sox_effect_t * effp)
 sox_effect_handler_t const * lsx_splice_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "splice", "{position[,excess[,leeway]]}", SOX_EFF_MCHAN|SOX_EFF_LENGTH,
+    "splice", "[-u] {position[,excess[,leeway]]}"
+    "\n  (default)  Correlated audio: fade for constant peak"
+    "\n  -u         Uncorrelated audio (e.g. cross-fade): fade for constant RMS"
+    "\n  position   The length of part 1 (including the excess)"
+    "\n  excess     At the end of part 1 & the start of part2 (default 0.005)"
+    "\n  leeway     Before part2 (default 0.005; set to 0 for cross-fade)",
+    SOX_EFF_MCHAN|SOX_EFF_LENGTH,
     create, start, flow, drain, stop, kill, sizeof(priv_t)
   };
   return &handler;
