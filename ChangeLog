@@ -48,6 +48,9 @@ Previously deprecated features (to be removed in future):
 
 LibSoX interface changes:
 
+  o sox_format_init() has been supeseded by sox_init().
+  o Removed obsolete error codes (SOX_E...); new sox_strerror()
+    function to convert error codes to text.
   o Use of sox_effect_options() is now mandatory when initialising an
     effect (see example0.c for an example of this).
   o sox_flow_effects() has a new (3rd) parameter: a void pointer
@@ -83,6 +86,8 @@ Effects:
   o New `pluck' and `tpdf' types for `synth'.  (robs)
   o Can now set common parameters for multiple `synth' channels.  (robs)
   o Richer gain/normalise options.  (robs)
+  o [2704442] Slight change to `riaa' gain: now norm'd to 0dB @ 1k
+    (previously 19.9dB @ DC).  (Glenn Davis)
   o Fix [2487589] `dither' clipping detection & handling.  (robs)
   o Fix `repeat' sometimes stopping repeating too soon.  (robs)
   o Fix `repeat' sometimes repeating wrong audio segments.  (robs)

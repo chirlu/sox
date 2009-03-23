@@ -1659,8 +1659,8 @@ option enables a mode where dithering (and noise-shaping if applicable)
 are automatically enabled only when needed.  The most likely use for
 this is when applying fade in or out to an already dithered file, so
 that the redithering applies only to the faded portions.  However, auto
-dithering is not fool proof, so the fades should be carefully checked
-for any noise modulation; if this occurs, then either redither the whole
+dithering is not fool-proof, so the fades should be carefully checked
+for any noise modulation; if this occurs, then either re-dither the whole
 file, or use
 .BR trim ,
 .BR fade ,
@@ -3072,18 +3072,13 @@ Minimum delta	min(\^\(br\^\fIx\s-2\dk\u\s0\fR\^\-\^\fIx\s-2\dk\-1\u\s0\fR\^\(br\
 Mean delta	\(S1/\s-2n\-1\s+2\^\(*S\^\^\(br\^\fIx\s-2\dk\u\s0\fR\^\-\^\fIx\s-2\dk\-1\u\s0\fR\^\(br\^
 RMS delta	\(sr(\(S1/\s-2n\-1\s+2\^\(*S\^(\fIx\s-2\dk\u\s0\fR\^\-\^\fIx\s-2\dk\-1\u\s0\fR)\(S2)
 Rough frequency	\ 	In Hz.
-Peak level (dBFS)	20\^log\s-2\d10\u\s0\^max(\(br\fIx\s-2\dk\u\s0\fR\(br)	T{
-Taking the negative of this number and using it as the parameter to the
-.B gain
-effect will make the audio as loud as possible without clipping.
-Note: See the discussion on
-.B Clipping
-above for reasons why it might not be a good idea actually to do this.
-T}
 Volume Adjustment	\ 	T{
 The parameter to the
 .B vol
 effect which would make the audio as loud as possible without clipping.
+Note: See the discussion on
+.B Clipping
+above for reasons why it is rarely a good idea actually to do this.
 T}
 .TE
 .DT

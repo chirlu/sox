@@ -110,58 +110,55 @@ const char *lsx_ms_adpcm_block_expand_i(
         int n               /* samples to decode PER channel */
 )
 {
-        const unsigned char *ip;
-        unsigned ch;
-        const char *errmsg = NULL;
-        MsState_t state[4];                                             /* One decompressor state for each channel */
+  const unsigned char *ip;
+  unsigned ch;
+  const char *errmsg = NULL;
+  MsState_t state[4];  /* One decompressor state for each channel */
 
-        /* Read the four-byte header for each channel */
-        ip = ibuff;
-        for (ch = 0; ch < chans; ch++) {
-                unsigned char bpred = *ip++;
-                if (bpred >= nCoef) {
-                        errmsg = "MSADPCM bpred >= nCoef, arbitrarily using 0\n";
-                        bpred = 0;
-                }
-                state[ch].lsx_ms_adpcm_i_coef[0] = lsx_ms_adpcm_i_coef[(int)bpred*2+0];
-                state[ch].lsx_ms_adpcm_i_coef[1] = lsx_ms_adpcm_i_coef[(int)bpred*2+1];
+  /* Read the four-byte header for each channel */
+  ip = ibuff;
+  for (ch = 0; ch < chans; ch++) {
+    unsigned char bpred = *ip++;
+    if (bpred >= nCoef) {
+      errmsg = "MSADPCM bpred >= nCoef, arbitrarily using 0\n";
+      bpred = 0;
+    }
+    state[ch].lsx_ms_adpcm_i_coef[0] = lsx_ms_adpcm_i_coef[(int)bpred*2+0];
+    state[ch].lsx_ms_adpcm_i_coef[1] = lsx_ms_adpcm_i_coef[(int)bpred*2+1];
+  }
 
-        }
+  for (ch = 0; ch < chans; ch++)
+    lsbshortldi(state[ch].step, ip);
 
-        for (ch = 0; ch < chans; ch++)
-                lsbshortldi(state[ch].step, ip);
+  /* sample1's directly into obuff */
+  for (ch = 0; ch < chans; ch++)
+    lsbshortldi(obuff[chans+ch], ip);
 
-        /* sample1's directly into obuff */
-        for (ch = 0; ch < chans; ch++)
-                lsbshortldi(obuff[chans+ch], ip);
+  /* sample2's directly into obuff */
+  for (ch = 0; ch < chans; ch++)
+    lsbshortldi(obuff[ch], ip);
 
-        /* sample2's directly into obuff */
-        for (ch = 0; ch < chans; ch++)
-                lsbshortldi(obuff[ch], ip);
+  {
+    unsigned ch;
+    unsigned char b;
+    short *op, *top, *tmp;
 
-        {
-                unsigned ch;
-                unsigned char b;
-                short *op, *top, *tmp;
+    /* already have 1st 2 samples from block-header */
+    op = obuff + 2*chans;
+    top = obuff + n*chans;
 
-                /* already have 1st 2 samples from block-header */
-                op = obuff + 2*chans;
-                top = obuff + n*chans;
-
-                ch = 0;
-                while (op < top) {
-                        b = *ip++;
-                        tmp = op;
-                        *op++ = AdpcmDecode(b >> 4, state+ch, tmp[-(int)chans], tmp[-(int)(2*chans)]);
-                        if (++ch == chans) ch = 0;
-                        /* ch = ++ch % chans; */
-                        tmp = op;
-                        *op++ = AdpcmDecode(b&0x0f, state+ch, tmp[-(int)chans], tmp[-(int)(2*chans)]);
-                        if (++ch == chans) ch = 0;
-                        /* ch = ++ch % chans; */
-                }
-        }
-        return errmsg;
+    ch = 0;
+    while (op < top) { /*** N.B. Without int casts, crashes on 64-bit arch ***/
+      b = *ip++;
+      tmp = op;
+      *op++ = AdpcmDecode(b >> 4, state+ch, tmp[-(int)chans], tmp[-(int)(2*chans)]);
+      if (++ch == chans) ch = 0;
+      tmp = op;
+      *op++ = AdpcmDecode(b&0x0f, state+ch, tmp[-(int)chans], tmp[-(int)(2*chans)]);
+      if (++ch == chans) ch = 0;
+    }
+  }
+  return errmsg;
 }
 
 static int AdpcmMashS(

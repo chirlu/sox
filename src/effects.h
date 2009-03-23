@@ -28,7 +28,7 @@
   EFFECT(dcshift)
   EFFECT(deemph)
   EFFECT(delay)
-  EFFECT(dft_filter)
+  EFFECT(dft_filter) /* abstract */
   EFFECT(dither)
   EFFECT(earwax)
   EFFECT(echo)
