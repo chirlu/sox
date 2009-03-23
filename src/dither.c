@@ -115,16 +115,16 @@ static double const shh44[] = {
 
 static const filter_t filters[] = {
   {44100, fir,  5, 210, lip44, Shape_lipshitz},
-  {46000, fir,  9, 270, fwe44, Shape_f_weighted},
+  {46000, fir,  9, 271, fwe44, Shape_f_weighted},
   {46000, fir,  9, 159, mew44, Shape_modified_e_weighted},
   {46000, fir,  9, 320, iew44, Shape_improved_e_weighted},
   {48000, iir,  4, 220, ges48, Shape_gesemann},
-  {44100, iir,  4, 228, ges44, Shape_gesemann},
+  {44100, iir,  4, 229, ges44, Shape_gesemann},
   {48000, fir, 16, 300, shi48, Shape_shibata},
   {44100, fir, 20, 330, shi44, Shape_shibata},
-  {37800, fir, 16, 238, shi38, Shape_shibata},
-  {48000, fir, 16, 245, shl48, Shape_low_shibata},
-  {44100, fir, 15, 246, shl44, Shape_low_shibata},
+  {37800, fir, 16, 240, shi38, Shape_shibata},
+  {48000, fir, 16, 249, shl48, Shape_low_shibata},
+  {44100, fir, 15, 247, shl44, Shape_low_shibata},
   {44100, fir, 20, 382, shh44, Shape_high_shibata},
   {    0, fir,  0,   0,  NULL, Shape_none},
 };
@@ -133,13 +133,13 @@ static const filter_t filters[] = {
 
 typedef struct {
   filter_name_t filter_name;
-  sox_bool      auto_detect;
+  sox_bool      auto_detect, alt_tpdf;
   double        dummy;
 
   double        previous_errors[MAX_N * 2];
   double        previous_outputs[MAX_N * 2];
   size_t        pos, prec, num_output;
-  int32_t       history, ranqd1;
+  int32_t       history, ranqd1, r;
   double const  * coefs;
   sox_bool      dither_off;
   int           (*flow)(sox_effect_t *, const sox_sample_t *, sox_sample_t *, size_t *, size_t *);
@@ -178,13 +178,13 @@ static int flow_no_shape(sox_effect_t * effp, const sox_sample_t * ibuf,
   priv_t * p = (priv_t *)effp->priv;
   size_t len = *isamp = *osamp = min(*isamp, *osamp);
 
-  if (p->auto_detect) while (len--) {
-    p->history = ((p->history << 1) + !!(*ibuf & (-1u >> p->prec)));
-    if (p->history) {
-      int32_t r1 = RANQD1 >> p->prec, r2 = RANQD1 >> p->prec;
-      double d = ((double)*ibuf++ + r1 + r2) / (1 << (32 - p->prec));
+  while (len--) {
+    if (!p->auto_detect || (p->history = ((p->history << 1) + !!(*ibuf & (-1u >> p->prec))))) {
+      int32_t r = RANQD1 >> p->prec;
+      double d = ((double)*ibuf++ + r + (p->alt_tpdf? -p->r : (RANQD1 >> p->prec))) / (1 << (32 - p->prec));
       int i = d < 0? d - .5 : d + .5;
-      if (i < (-1 << (p->prec-1)))
+      p->r = r;
+      if (i <= (-1 << (p->prec-1)))
         ++effp->clips, *obuf = SOX_SAMPLE_MIN;
       else if (i > (int)SOX_INT_MAX(p->prec))
         ++effp->clips, *obuf = SOX_INT_MAX(p->prec) << (32 - p->prec);
@@ -202,17 +202,6 @@ static int flow_no_shape(sox_effect_t * effp, const sox_sample_t * ibuf,
     }
     ++p->num_output;
   }
-  else while (len--) {
-    int32_t r1 = RANQD1 >> p->prec, r2 = RANQD1 >> p->prec;
-    double d = ((double)*ibuf++ + r1 + r2) / (1 << (32 - p->prec));
-    int i = d < 0? d - .5 : d + .5;
-    if (i <= (-1 << (p->prec-1)))
-      ++effp->clips, *obuf = SOX_SAMPLE_MIN;
-    else if (i > (int)SOX_INT_MAX(p->prec))
-      ++effp->clips, *obuf = SOX_INT_MAX(p->prec) << (32 - p->prec);
-    else *obuf = i << (32 - p->prec);
-    ++obuf;
-  }
   return SOX_SUCCESS;
 }
 
@@ -221,8 +210,9 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
   priv_t * p = (priv_t *)effp->priv;
   int c;
 
-  while ((c = getopt(argc, argv, "+asf:""rt")) != -1) switch (c) {
+  while ((c = getopt(argc, argv, "+aSsf:""rt")) != -1) switch (c) {
     case 'a': p->auto_detect = sox_true; break;
+    case 'S': p->alt_tpdf = sox_true; break;
     case 'r': case 't': break; /* No longer in use */
     case 's': p->filter_name = Shape_shibata; break;
     case 'f':
@@ -253,7 +243,10 @@ static int start(sox_effect_t * effp)
 
     for (f = filters; f->len && (f->name != p->filter_name || fabs(effp->in_signal.rate - f->rate) / f->rate > .05); ++f); /* 5% leeway on frequency */
     if (!f->len) {
-      lsx_warn("no `%s' filter is available for rate %g; using plain TPDF", lsx_find_enum_value(p->filter_name, filter_names)->text, effp->in_signal.rate);
+      p->alt_tpdf |= effp->in_signal.rate >= 22050;
+      lsx_warn("no `%s' filter is available for rate %g; using %s TPDF",
+          lsx_find_enum_value(p->filter_name, filter_names)->text,
+          effp->in_signal.rate, p->alt_tpdf? "sloped" : "plain");
     }
     else {
       assert(f->len <= MAX_N);
@@ -289,8 +282,10 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 sox_effect_handler_t const * lsx_dither_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "dither", "[-a] [-s|-f filter]"
+    "dither", "[-a] [-S|-s|-f filter]"
+    "\n  (none)   Use TPDF"
     "\n  -a       Automatically turn on & off dithering as needed (use with caution!)"
+    "\n  -S       Use sloped TPDF (without noise shaping)"
     "\n  -s       Shape noise (with shibata filter)"
     "\n  -f name  Set shaping filter to one of: lipshitz, f-weighted,"
     "\n           modified-e-weighted, improved-e-weighted, gesemann,"
