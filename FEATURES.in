@@ -84,11 +84,11 @@ The audio effects/tools included in this release are as follows:
 ** norm: Normalise to 0dB (or other)
 ** vol: Adjust audio volume
 
-* Editting effects
+* Editing effects
 ** crop: Like `trim', but can crop end without specifying length
 ** pad: Pad (usually) the ends of the audio with silence
 ** silence: Remove portions of silence from the audio
-** splice: Perform the equivalent of a crossfaded tape splice
+** splice: Perform the equivalent of a cross-faded tape splice
 ** trim: Trim the ends of the audio
 
 * Mixing effects
@@ -117,13 +117,13 @@ The audio effects/tools included in this release are as follows:
 * Analysis `effects'
 ** noiseprof: Produce a DFT profile of the audio (use with noisered)
 ** spectrogram+: graph signal level vs. frequency & time
-** stat: Enumerate audio peak & rms levels, approx. freq., etc.
+** stat: Enumerate audio peak & RMS levels, approx. freq., etc.
 ** stats: Multichannel aware `stat'
 
   + optional effect, available only if SoX is built with `libpng'.
 
 * Miscellaneous effects
-** ladspa: Apply LADSPA plugin effects e.g. cmt (Computer Music Toolkit)
+** ladspa: Apply LADSPA plug-in effects e.g. CMT (Computer Music Toolkit)
 ** synth: Synthesise/modulate audio tones or noise signals
 ** newfile: Create a new output file when an effects chain ends.
 ** restart: Restart 1st effects chain when multiple chains exist.
