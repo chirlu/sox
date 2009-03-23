@@ -25,6 +25,11 @@
 #define ushort_t unsigned short
 #define uint_t unsigned int
 #define uchar_t unsigned char
+struct timeval32
+{
+    unsigned tv_sec;
+    unsigned tv_usec;
+};
 #endif
 
 /*

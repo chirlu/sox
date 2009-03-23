@@ -127,7 +127,6 @@ enum {
   kAudioFormatFlagIsAlignedHigh = (1L << 4),
   kAudioFormatFlagIsNonInterleaved = (1L << 5),
   kAudioFormatFlagIsNonMixable = (1L << 6),
-  kAudioFormatFlagsAreAllClear = (1L << 31),
 
   kLinearPCMFormatFlagIsFloat = kAudioFormatFlagIsFloat,
   kLinearPCMFormatFlagIsBigEndian = kAudioFormatFlagIsBigEndian,
@@ -136,7 +135,6 @@ enum {
   kLinearPCMFormatFlagIsAlignedHigh = kAudioFormatFlagIsAlignedHigh,
   kLinearPCMFormatFlagIsNonInterleaved = kAudioFormatFlagIsNonInterleaved,
   kLinearPCMFormatFlagIsNonMixable = kAudioFormatFlagIsNonMixable,
-  kLinearPCMFormatFlagsAreAllClear = kAudioFormatFlagsAreAllClear,
 
   kAppleLosslessFormatFlag_16BitSourceData = 1,
   kAppleLosslessFormatFlag_20BitSourceData = 2,

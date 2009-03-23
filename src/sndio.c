@@ -179,18 +179,18 @@ static size_t readsamples(sox_format_t *ft, sox_sample_t *buf, size_t len)
   todo = len * p->par.bps;
   cpb = SNDIO_BUFSZ - (SNDIO_BUFSZ % p->par.bps);
   while (todo > 0) {
-    memcpy(p->buf, partial, pc);
+    memcpy(p->buf, partial, (size_t)pc);
     cc = cpb - pc;
     if (cc > todo)
       cc = todo;
-    n = sio_read(p->hdl, p->buf + pc, cc);
+    n = sio_read(p->hdl, p->buf + pc, (size_t)cc);
     if (n == 0 && sio_eof(p->hdl))
       break;
     n += pc;
     pc = n % p->par.bps;
     n -= pc;
-    memcpy(partial, p->buf + n, pc);
-    decode(&p->par, p->buf, buf, n / p->par.bps);
+    memcpy(partial, p->buf + n, (size_t)pc);
+    decode(&p->par, p->buf, buf, (unsigned)(n / p->par.bps));
     buf += n / p->par.bps;
     todo -= n;
   }
@@ -210,7 +210,7 @@ static size_t writesamples(sox_format_t *ft, const sox_sample_t *buf, size_t len
     if (sc > todo)
       sc = todo;
     encode(&p->par, buf, p->buf, sc);
-    n = sio_write(p->hdl, p->buf, sc * p->par.bps);
+    n = sio_write(p->hdl, p->buf, (size_t)(sc * p->par.bps));
     if (n == 0 && sio_eof(p->hdl))
       break;
     n /= p->par.bps;

@@ -167,6 +167,8 @@ static int sox_sunstartread(sox_format_t * ft)
     /* Flush any data in the buffers - its probably in the wrong format */
 #if defined(__NetBSD__) || defined(__OpenBSD__)
     ioctl(fileno(ft->fp), AUDIO_FLUSH);
+#elif defined __GLIBC__
+    ioctl(fileno(ft->fp), (unsigned long int)I_FLUSH, FLUSHR);
 #else
     ioctl(fileno(ft->fp), I_FLUSH, FLUSHR);
 #endif
