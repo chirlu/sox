@@ -2937,11 +2937,29 @@ For the ability to perform off-line processing of spectral data, see the
 .B stat
 effect.
 .TP
-\fBsplice \fR { \fIposition\fR[\fB,\fIexcess\fR[\fB,\fIleeway\fR]] }
+\fBsplice \fR [\fB\-h\fR\^|\^\fB\-t\fR\^|\^\fB\-q\fR] { \fIposition\fR[\fB,\fIexcess\fR[\fB,\fIleeway\fR]] }
 Splice together audio sections.  This effect provides two things over
 simple audio concatenation: a (usually short) cross-fade is applied at
 the join, and a wave similarity comparison is made to help determine the
 best place at which to make the join.
+.SP
+One of the options
+.BR \-h ,
+.BR \-t ,
+or
+.B \-q
+may be given to select the fade envelope as triangular (a.k.a. linear)
+(the default), half-cosine wave, or quarter-cosine wave respectively.
+.TS
+center;
+cI lI lI lI
+cB l l l.
+Type	Audio	Fade level	Transitions
+t	correlated	constant gain	abrupt
+h	correlated	constant gain	smooth
+q	uncorrelated	constant power	smooth
+.TE
+.DT
 .SP
 To perform a splice, first use the
 .B trim
@@ -2969,16 +2987,26 @@ command with the
 (\fIstart\fR) effect) at times 0:30\*d125 and 1:03\*d432.
 The following commands cut out the first verse:
 .EX
-	sox too-long.au part1.au trim 0 30.130
+  sox too-long.au part1.au trim 0 30.130
 .EE
 (5 ms excess, after the first verse starts)
 .EX
-	sox long.au part2.au trim 1:03.422
+  sox long.au part2.au trim 1:03.422
 .EE
 (5 ms excess plus 5 ms leeway, before the second verse starts)
 .EX
-	sox part1.au part2.au just-right.au splice 30.130
+  sox part1.au part2.au just-right.au splice 30.130
 .EE
+For another example, the SoX command
+.EX
+  play "|sox -n -p synth 1 sin %1" "|sox -n -p synth 1 sin %3"
+.EE
+generates and plays two notes, but there is a nasty click at the
+transition; the click can be removed by splicing instead of
+concatenating the audio, i.e. by appending \fBsplice 1\fR to the
+command. (Clicks at the beginning and end of the audio can be removed by
+\fIpreceding\fR the splice effect with \fBfade q .01 2 .01\fR).
+.SP
 Provided your arithmetic is good enough, multiple splices can be
 performed with a single
 .B splice
@@ -3001,15 +3029,6 @@ sox part1.au piece.au part2.au "$5" splice \\
 .EE
 In the above Bourne shell script,
 two splices are used to `copy and paste' audio.
-.SP
-The SoX command
-.EX
-  play "|sox -n -p synth 1 sin %1" "|sox -n -p synth 1 sin %3"
-.EE
-generates and plays two notes, but there is a nasty click at the
-transition; the click can be removed by appending \fBsplice 1\fR to the
-command. (Clicks at the beginning and end of the audio can be removed by
-\fIpreceding\fR the splice effect with \fBfade q .01 2 .01\fR).
 .TS
 center;
 c8 c8 c.
@@ -3017,13 +3036,23 @@ c8 c8 c.
 .TE
 .DT
 .SP
-It is also possible to use this effect to perform general cross-fades, e.g. to
-join two songs.
-In this case,
+It is also possible to use this effect to perform general cross-fades,
+e.g. to join two songs.  In this case,
 .I excess
-would typically be an number of seconds, and
+would typically be an number of seconds, the
+.B \-q
+option should be given to indicate that the audio is uncorrelated, and
 .I leeway
-should be set to zero.
+should be zero (which is the default if
+.B \-q
+is given).  For example, if f1.au and f2.au are audio files
+to be cross-faded, then
+.EX
+	sox f1.au f2.au out.au splice -u $(soxi -D f1.au),3
+.EE
+cross-fades the files where the point of equal loudness is 3 seconds
+before the end of f1.au, i.e. the total length of the cross-fade is
+2 x 3 = 6 seconds (Note: the $(...) notation is POSIX shell).
 .TP
 \fBstat\fR [\fB\-s \fIscale\fR] [\fB\-rms\fR] [\fB\-freq\fR] [\fB\-v\fR] [\fB\-d\fR]
 Display time and frequency domain statistical information about the audio.
