@@ -1749,6 +1749,7 @@ static void usage(char const * message)
 "-h, --help               Display version number and usage information",
 "--help-effect NAME       Show usage of effect NAME, or NAME=all for all",
 "--help-format NAME       Show info on format NAME, or NAME=all for all",
+"--i, --info              Behave as soxi(1)",
 "--input-buffer BYTES     Override the input buffer size (default: as --buffer)",
 "--interactive            Prompt to overwrite output file",
 "-m, --combine mix        Mix multiple input files (instead of concatenating)",
@@ -2590,6 +2591,10 @@ int main(int argc, char **argv)
     sox_mode = sox_rec;
   else if (lsx_strends(myname, "soxi"))
     sox_mode = sox_soxi;
+
+  if (!sox_mode && argc > 1 &&
+      (!strcmp(argv[1], "--i") || !strcmp(argv[1], "--info")))
+    --argc, ++argv, sox_mode = sox_soxi;
 
   if (sox_init() != SOX_SUCCESS)
     exit(1);
