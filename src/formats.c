@@ -946,15 +946,37 @@ static int strcaseends(char const * str, char const * end)
   return str_len >= end_len && !strcasecmp(str + str_len - end_len, end);
 }
 
+typedef enum {None, M3u, Pls} playlist_t;
+
+static playlist_t playlist_type(char const * filename)
+{
+  char * x, * p;
+  playlist_t result = None;
+
+  if (*filename == '|')
+    return result;
+  if (strcaseends(filename, ".m3u"))
+    return M3u;
+  if (strcaseends(filename, ".pls"))
+    return Pls;
+  x = lsx_strdup(filename);
+  p = strrchr(x, '?');
+  if (p) {
+    *p = '\0';
+    result = playlist_type(x);
+  }
+  free(x);
+  return result;
+}
+
 sox_bool sox_is_playlist(char const * filename)
 {
-  return *filename != '|' && 
-    (strcaseends(filename, ".m3u") || strcaseends(filename, ".pls"));
+  return playlist_type(filename) != None;
 }
 
 int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * const listname)
 {
-  sox_bool const is_pls = strcaseends(listname, ".pls");
+  sox_bool const is_pls = playlist_type(listname) == Pls;
   int const comment_char = "#;"[is_pls];
   size_t text_length = 100;
   char * text = lsx_malloc(text_length + 1);

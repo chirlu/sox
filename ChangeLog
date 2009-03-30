@@ -117,6 +117,7 @@ Other new features:
     option (where supported).
   o [2003121] In many cases, no longer need to specify -t when inputting
     audio from a `pipe'.  (robs)
+  o Support Shoutcast more URL variants.  (robs)
 
 Other bug fixes:
 
