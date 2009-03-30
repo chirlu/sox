@@ -29,7 +29,7 @@
 .SP
 .fi
 ..
-.TH SoX 1 "October 28, 2008" "sox" "Sound eXchange"
+.TH SoX 1 "March 31, 2009" "sox" "Sound eXchange"
 .SH NAME
 SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH SYNOPSIS
@@ -53,7 +53,7 @@ sources, synthesise audio, and, on many systems, act as a general
 purpose audio player or a multi-track audio recorder. It also has
 limited ability to split the input in to multiple output files.
 .SP
-Almost all SoX functionality is available using just the \fBsox\fR command,
+All SoX functionality is available using just the \fBsox\fR command,
 however, to simplify playing and recording audio, if SoX is invoked as
 \fBplay\fR the output file is automatically set to be the default sound
 device and if invoked as \fBrec\fR the default sound device is used as an
@@ -93,11 +93,11 @@ how SoX might be used.  The simple
 .EE
 translates an audio file in Sun AU format to a Microsoft WAV file, whilst
 .EX
-	sox recital.au -r 12k -b 8 -c 1 recital.wav vol 0.7 dither
+	sox recital.au -r 22050 -b 8 -c 1 recital.wav vol 0.7 fade 3
 .EE
 performs the same format translation, but also changes the audio
 sampling rate & sample size, down-mixes to mono, and applies
-the \fBvol\fR and \fBdither\fR effects.
+the \fBvol\fR and \fBfade\fR effects.
 .EX
 	sox -r 8k -u -b 8 -c 1 voice-memo.raw voice-memo.wav
 .EE
@@ -157,7 +157,8 @@ the format of audio data such that it can be processed with SoX:
 sample rate
 The sample rate in samples per second (`Hertz' or `Hz').  For
 example, digital telephony traditionally uses a sample rate of 8000\ Hz
-(8\ kHz); audio Compact Discs use 44100\ Hz (44\*d1\ kHz); Digital Audio
+(8\ kHz), though these days, 16 and even 32\ kHz are becoming more common;
+audio Compact Discs use 44100\ Hz (44\*d1\ kHz); Digital Audio
 Tape and many computer systems use 48\ kHz; professional audio systems
 typically use 96 or 192 kHz.
 .TP
@@ -303,7 +304,7 @@ using
 where supported, this is achieved by tapping the `v' & `V' keys during
 playback.
 .SP
-To help with setting a suitable recording level, SoX includes a simple VU
+To help with setting a suitable recording level, SoX includes a peak-level
 meter which can be invoked (before making the actual recording) as follows:
 .EX
 	rec -n
@@ -828,11 +829,11 @@ otherwise.
 .TP
 \fB\-S\fR, \fB\-\-show\-progress\fR
 Display input file format/header information, and processing progress as
-input file(s) percentage complete, elapsed time, and remaining time (if known;
-shown in brackets), and the number of samples written to the output file.
-Also shown is a VU meter, and an indication if clipping has occurred.  The
-VU meter shows up to two channels and is calibrated for digital audio as
-follows:
+input file(s) percentage complete, elapsed time, and remaining time (if
+known; shown in brackets), and the number of samples written to the
+output file.  Also shown is a peak-level meter, and an indication if
+clipping has occurred.  The peak-level meter shows up to two channels
+and is calibrated for digital audio as follows:
 .TS
 center box;
 cI lI lI
@@ -932,7 +933,7 @@ decreases the volume; greater than 1 increases it.  If a negative number
 is given, then in addition to the volume adjustment, the audio signal
 will be inverted.
 .SP
-See also the \fBstat\fR (with \dB\-v\fR),
+See also the \fBstat\fR (with \fB\-v\fR),
 .BR norm ,
 .BR vol ,
 and
@@ -1641,7 +1642,7 @@ and this plays a guitar chord:
 	  %-2 delay 0 .05 .1 .15 .2 .25 remix - fade 0 4 .1 norm -1
 .EE
 .TP
-\fBdither\fR [\fB\-a\fR] [\fB\-s\fR\^|\^\fB\-f \fIfilter\fR]
+\fBdither\fR [\fB\-a\fR] [\fB\-S\fR\^|\^\fB\-s\fR\^|\^\fB\-f \fIfilter\fR]
 Apply dithering to the audio.
 Dithering deliberately adds a small amount of noise to the signal in
 order to mask audible quantization effects that can occur if the output
@@ -1658,6 +1659,13 @@ that most filter types are available only with 44100Hz sample rate.  The
 filter types are distinguished by the following properties: audibility
 of noise, level of (inaudible, but in some circumstances, otherwise
 problematic) shaped high frequency noise, and processing speed.
+.SP
+The
+.B \-S
+option selects a slightly `sloped' TPDF, biased towards higher
+frequencies.  It can be used at any sampling rate but below \(~~22k,
+plain TPDF is probably better, and above \(~~ 37k, noise-shaped
+is probably better.
 .SP
 The
 .B \-a
@@ -3118,6 +3126,8 @@ T}
 .TE
 .DT
 .SP
+Note that the delta measurements are not applicable for multi-channel audio.
+.SP
 The
 .B \-s
 option can be used to scale the input data by a given factor.
@@ -3140,7 +3150,8 @@ option displays only the `Volume Adjustment' value.
 The
 .B \-freq
 option calculates the input's power spectrum (4096 point DFT) instead of the
-statistics listed above.
+statistics listed above.  This should only be used with a single channel
+audio file.
 .SP
 The
 .B \-d
@@ -3149,6 +3160,127 @@ displays a hex dump of the 32-bit signed PCM data
 audio in SoX's internal buffer.
 This is mainly used to help track down endian problems that
 sometimes occur in cross-platform versions of SoX.
+.SP
+See also the
+.B stats
+effect.
+.TP
+\fBstats\fR [\fB\-b \fIbits\fR\^|\^\fB\-x \fIbits\fR\^|\^\fB\-s \fIscale\fR] [\fB\-w \fIwindow-time\fR]
+Display time domain statistical information about the audio channels;
+audio is passed unmodified through the SoX processing chain.
+For example, for a stereo file:
+.TS
+center;
+l.
+.ft CW
+             Overall     Left      Right
+DC offset   0.000803 -0.000391  0.000803
+Min level  -0.750977 -0.750977 -0.653412
+Max level   0.708801  0.708801  0.653534
+Pk lev dB      -2.49     -2.49     -3.69
+RMS lev dB    -19.41    -19.13    -19.71
+RMS Pk dB     -13.82    -13.82    -14.38
+RMS Tr dB     -85.25    -85.25    -82.66
+Crest factor       -      6.79      6.32
+Flat factor     0.00      0.00      0.00
+Pk count           2         2         2
+Bit-depth      16/16     16/16     16/16
+Num samples    7.72M
+Length s     174.973
+Scale max   1.000000
+Window s       0.050
+.ft R
+.TE
+.DT
+.SP
+Statistics are calculated and displayed for each audio channel and, where applicable, an
+overall figure is also given.
+.SP
+.IR DC\ offset ,
+.IR Min\ level ,
+and
+.I Max\ level
+are shown, by default, normalised to \(+-1.
+If the
+.B \-b
+(bits) options is given, then these three measurements will be scaled to a signed integer
+with the given number of bits; for example, for 16 bits, the scale would be \-32768 to +32767.
+The
+.B \-x
+option behaves the same way as
+.B \-b
+except that the signed integer values are displayed in hexadecimal.
+The
+.B \-s
+option scales the three measurements by a given floating-point number.
+.SP
+.I Pk\ lev\ dB
+and
+.I RMS\ lev\ dB
+are standard peak and RMS level measured in dBFS.
+.I RMS\ Pk\ dB
+and
+.I RMS\ Tr\ dB
+are peak and trough values for RMS level measured over a short window (default 50ms).
+.SP
+.I Crest\ factor
+is the standard ratio of peak to RMS level (note: not in dB).
+.SP
+.I Flat\ factor
+is a measure of the flatness (i.e. consecutive samples with the same value) of the signal at
+its peak levels (i.e. either
+.IR Min\ level ,
+or
+.IR Max\ level ).
+.I Pk\ count
+is the number of occasions (not the number of samples) that the signal attained either
+.IR Min\ level ,
+or
+.IR Max\ level .
+.SP
+The right-hand
+.I Bit-depth
+figure is the standard definition of bit-depth i.e. bits less
+significant than the given number are fixed at zero.  The left-hand
+figure is the number of most significant bits that are fixed at zero (or
+one for negative numbers) subtracted from the right-hand figure (the
+number subtracted is directly related to
+.IR Pk\ lev\ dB ).
+.SP
+For multi-channel audio, an overall figure for each of the above
+measurements is given and derived from the channel figures as follows:
+.IR DC\ offset :
+maximum magnitude;
+.IR Max\ level ,
+.IR Pk\ lev\ dB ,
+.IR RMS\ Pk\ dB ,
+.IR Bit-depth :
+maximum;
+.IR Min\ level ,
+.IR RMS\ Tr\ dB :
+minimum;
+.IR RMS\ lev\ dB ,
+.IR Flat\ factor ,
+.IR Pk\ count :
+average;
+.IR Crest\ factor :
+not applicable.
+.SP
+.I Length\ s
+is the duration in seconds of the audio, and
+.I Num\ samples
+is equal to the sample-rate multiplied by
+.IR Length .
+.I Scale\ Max
+is the scaling applied to the first three measurements;
+specifically, it is the maximum value that could apply to
+.IR Max\ level .
+.I Window\ s
+is the length of the window used for the peak and trough RMS measurements.
+.SP
+See also the
+.B stat
+effect.
 .TP
 \fBswap\fR [\fI1 2\fR | \fI1 2 3 4\fR]
 Swap channels in multi-channel audio files.  Optionally, you may
