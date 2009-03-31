@@ -118,7 +118,8 @@ Other new features:
     option (where supported).
   o [2003121] In many cases, no longer need to specify -t when inputing
     audio from a `pipe'.  (robs)
-  o Support Shoutcast more URL variants.  (robs)
+  o Support more Shoutcast URL variants.  (robs)
+  o Added libSoX example #3: playing audio.  (robs)
 
 Other bug fixes:
 
