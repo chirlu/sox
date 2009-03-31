@@ -1,0 +1,72 @@
+SoX
+---
+
+This file contains information specific to the Win32 version of SoX.
+Please refer to the README file for general information.
+
+The binary SOX.EXE can be installed anywhere you desire.  The only
+restriction is that the included CYGWIN1.DLL must be located in the
+same directory as SOX.EXE or somewhere within your PATH.
+
+SoX Helper Applications
+-----------------------
+
+SoX also includes support for SOXI.EXE, PLAY.EXE and REC.EXE and their
+behaviors are documented in includes PDF's.  They have the same
+install restrictions as SOX.EXE.
+
+PLAY.EXE and REC.EXE are not distributed with this package to reduce
+size requirements. They are, in fact, only copies of the original
+SOX.EXE binary which changes SOX.EXE's behavior based on the
+executable's filename.
+
+If you wish to make use of these utils then you can create them
+yourself.
+
+copy sox.exe play.exe
+copy sox.exe rec.exe
+
+If you are concerned with disk space, the play and record
+functionality can be equated using the "-d" option with SOX.EXE.  The
+rough syntax is:
+
+play: sox [input files and options] -d [effects]
+rec: sox -d [output file and options] [effects]
+
+wget
+----
+
+SoX can make use of the wget command line utility to load files over
+the internet.  A binary copy of wget has been included with this
+package of SoX for your convience.
+
+For SoX to make use of wget, it must be located either in your PATH or
+within the same directory that SoX is ran from.
+
+Custom configuration of wget can be made by editing the file wget.ini
+contained in the same directory as wget.exe.
+
+Please consult wget's homepage for access to source code as well as
+further instructions on configuring.
+
+http://www.gnu.org/software/wget
+
+Acknowledgements
+----------------
+
+SOX.EXE included in this package makes use of the following projects:
+
+  SoX - http://sox.sourceforge.net
+
+  Ogg Vorbis - http://www.vorbis.com
+
+  FLAC - http://flac.sourceforge.net
+
+  libsndfile - http://www.mega-nerd.com/libsndfile
+
+  WavPack - http://www.wavpack.com
+
+  PNG - http://www.libpng.org/pub/png
+
+Enjoy,
+The SoX Development Team
