@@ -84,7 +84,7 @@ static sox_bool read_knots(sox_effect_t * effp)
   priv_t * p = (priv_t *) effp->priv;
   FILE * file = lsx_open_input_file(effp, p->filename);
   sox_bool result = sox_false;
-  int num_converted;
+  int num_converted = 1;
   char c;
 
   if (file) {
