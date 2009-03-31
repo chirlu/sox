@@ -1,6 +1,7 @@
 /* SoX - The Swiss Army Knife of Audio Manipulation.
  *
- * This is the main function for the SoX command line programs.
+ * This is the main function for the SoX command line programs:
+ *   sox, play, rec, soxi.
  *
  * Copyright 1998-2009 Chris Bagwell and SoX contributors
  * Copyright 1991 Lance Norskog And Sundry Contributors
@@ -254,10 +255,22 @@ static char const * str_time(double seconds)
   return string[i];
 }
 
+static char const * size_and_bitrate(sox_format_t * ft, char const * * text)
+{
+  struct stat st;    /* ft->fp may validly be NULL, so stat not fstat */
+  if (stat(ft->filename, &st) || (st.st_mode & S_IFMT) != S_IFREG)
+    return NULL;
+  if (ft->signal.length && ft->signal.channels && ft->signal.rate && text) {
+    double secs = ft->signal.length / ft->signal.channels / ft->signal.rate;
+    *text = lsx_sigfigs3(8. * st.st_size / secs);
+  }
+  return lsx_sigfigs3((double)st.st_size);
+}
+
 static void play_file_info(sox_format_t * ft, file_t * f, sox_bool full)
 {
   FILE * const output = sox_mode == sox_soxi? stdout : stderr;
-  char const * text;
+  char const * text, * text2 = NULL;
   char buffer[30];
   size_t ws = ft->signal.length / ft->signal.channels;
   (void)full;
@@ -268,6 +281,13 @@ static void play_file_info(sox_format_t * ft, file_t * f, sox_bool full)
     if (strcmp(ft->filename, "-") == 0 || (ft->handler.flags & SOX_FILE_DEVICE))
       fprintf(output, " (%s)", ft->handler.names[0]);
     fprintf(output, "\n\n");
+  }
+
+  if ((text = size_and_bitrate(ft, &text2))) {
+    fprintf(output, " File Size: %-10s", text);
+    if (text2)
+      fprintf(output, "Bit Rate: %s", text2);
+    fprintf(output, "\n");
   }
 
   fprintf(output, "  Encoding: %-14s", sox_encodings_info[ft->encoding.encoding].name);
@@ -348,12 +368,19 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
 
   if (ft->signal.length && ft->signal.channels && ft->signal.rate) {
     size_t ws = ft->signal.length / ft->signal.channels;
+    char const * text, * text2 = NULL;
     fprintf(output,
-      "Duration       : %s = %lu samples %c %g CDDA sectors\n",
-      str_time((double)ws / ft->signal.rate),
-      (unsigned long)ws, "~="[ft->signal.rate == 44100],
-      (double)ws / ft->signal.rate * 44100 / 588);
+        "Duration       : %s = %lu samples %c %g CDDA sectors\n",
+        str_time((double)ws / ft->signal.rate),
+        (unsigned long)ws, "~="[ft->signal.rate == 44100],
+        (double)ws / ft->signal.rate * 44100 / 588);
+    if ((text = size_and_bitrate(ft, &text2))) {
+      fprintf(output, "File Size      : %s\n", text);
+      if (text2)
+        fprintf(output, "Bit Rate       : %s\n", text2);
+    }
   }
+
   if (ft->encoding.encoding) {
     char buffer[20] = {'\0'};
     if (ft->encoding.bits_per_sample)
@@ -2441,9 +2468,10 @@ typedef enum {Full, Type, Rate, Channels, Samples, Duration, Duration_secs,
 
 static int soxi1(soxi_t const * type, char * filename)
 {
-  size_t ws;
-  double secs;
   sox_format_t * ft = sox_open_read(filename, NULL, NULL, NULL);
+  double secs;
+  size_t ws;
+  char const * text = NULL;
 
   if (!ft)
     return 1;
@@ -2462,13 +2490,7 @@ static int soxi1(soxi_t const * type, char * filename)
     case Duration: if (soxi_total ==-1) printf("%s\n", str_time(secs)); break;
     case Duration_secs: if (soxi_total ==-1) printf("%f\n", secs); break;
     case Bits: printf("%u\n", ft->encoding.bits_per_sample); break;
-    case Bitrate: {
-      struct stat st;    /* ft->fp may validly be NULL, so stat not fstat */
-      if (!stat(filename, &st) && (st.st_mode & S_IFMT) == S_IFREG)
-        printf("%s\n", lsx_sigfigs3(8. * st.st_size / secs));
-      else puts("0");
-      break;
-    }
+    case Bitrate: size_and_bitrate(ft, &text); puts(text? text : "0"); break;
     case Encoding: printf("%s\n", sox_encodings_info[ft->encoding.encoding].desc); break;
     case Annotation: if (ft->oob.comments) {
       sox_comments_t p = ft->oob.comments;
