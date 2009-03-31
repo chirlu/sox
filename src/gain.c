@@ -182,7 +182,7 @@ static void start_drain(sox_effect_t * effp)
     p->mult = min(max / p->max, (double)SOX_SAMPLE_MIN / p->min);
     if (p->do_restore) {
       if (p->restore > p->mult)
-        lsx_debug("%.3gdB not restored", linear_to_dB(p->restore / p->mult));
+        lsx_report("%.3gdB not restored", linear_to_dB(p->restore / p->mult));
       else p->mult = p->restore;
     }
     p->mult *= p->fixed_gain;
