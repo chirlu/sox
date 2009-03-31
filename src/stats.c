@@ -191,9 +191,9 @@ static int stop(sox_effect_t * effp)
     }
 
     if (n == 2)
-      fprintf(stderr, "            Over-all     Left      Right\n");
+      fprintf(stderr, "             Overall     Left      Right\n");
     else if (n) {
-      fprintf(stderr, "            Over-all");
+      fprintf(stderr, "             Overall");
       for (i = 0; i < n; ++i)
         fprintf(stderr, "     Ch%-3i", i + 1);
       fprintf(stderr, "\n");
