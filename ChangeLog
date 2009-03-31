@@ -112,7 +112,8 @@ Other new features:
   o Automatically `dither'; new `--no-dither' option to disable this.  (robs)
   o Can now use `v' & `V' keys to adjust volume whilst playing audio (on some
     systems).  (robs)
-  o New bitrate, time in seconds, & total options for soxi.  (robs)
+  o New bitrate, time in seconds, & total options for soxi; bitrate
+    and file-size display for sox.  (robs)
   o `Magic' (libmagic) file type detection now selected using `--magic'
     option (where supported).
   o [2003121] In many cases, no longer need to specify -t when inputing
@@ -122,6 +123,8 @@ Other new features:
 Other bug fixes:
 
   o Fix [2262177] SoX build could fail with parse /etc/issue error.  (robs)
+  o Fix "no handler for detected file type `application/octet-stream;
+    charset=binary'" with raw files when using libmagic.  (robs)
 
 Internal improvements:
 
