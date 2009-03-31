@@ -100,7 +100,7 @@ static char const * auto_detect_format(sox_format_t * ft, char const * ext)
     }
     if (magic)
       filetype = magic_buffer(magic, data, sizeof(data));
-    if (filetype && strcmp(filetype, "application/octet-stream") &&
+    if (filetype && strncmp(filetype, "application/octet-stream", (size_t)24) &&
           !lsx_strends(filetype, "/unknown") &&
           strncmp(filetype, "text/plain", (size_t)10) )
       return filetype;
