@@ -30,6 +30,7 @@
   EFFECT(delay)
   EFFECT(dft_filter) /* abstract */
   EFFECT(dither)
+  EFFECT(divide)
   EFFECT(earwax)
   EFFECT(echo)
   EFFECT(echos)
