@@ -115,17 +115,17 @@ static double const shh44[] = {
 
 static const filter_t filters[] = {
   {44100, fir,  5, 210, lip44, Shape_lipshitz},
-  {46000, fir,  9, 271, fwe44, Shape_f_weighted},
+  {46000, fir,  9, 272, fwe44, Shape_f_weighted},
   {46000, fir,  9, 159, mew44, Shape_modified_e_weighted},
-  {46000, fir,  9, 320, iew44, Shape_improved_e_weighted},
+  {46000, fir,  9, 321, iew44, Shape_improved_e_weighted},
   {48000, iir,  4, 220, ges48, Shape_gesemann},
-  {44100, iir,  4, 229, ges44, Shape_gesemann},
+  {44100, iir,  4, 230, ges44, Shape_gesemann},
   {48000, fir, 16, 300, shi48, Shape_shibata},
-  {44100, fir, 20, 330, shi44, Shape_shibata},
+  {44100, fir, 20, 332, shi44, Shape_shibata},
   {37800, fir, 16, 240, shi38, Shape_shibata},
-  {48000, fir, 16, 249, shl48, Shape_low_shibata},
+  {48000, fir, 16, 250, shl48, Shape_low_shibata},
   {44100, fir, 15, 247, shl44, Shape_low_shibata},
-  {44100, fir, 20, 382, shh44, Shape_high_shibata},
+  {44100, fir, 20, 383, shh44, Shape_high_shibata},
   {    0, fir,  0,   0,  NULL, Shape_none},
 };
 
