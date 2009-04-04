@@ -426,7 +426,7 @@ static void report_file_info(file_t * f)
     display_file_info(f->ft, f, sox_true);
 }
 
-static void progress_to_next_input_file(file_t * f)
+static void progress_to_next_input_file(file_t * f, sox_effect_t * effp)
 {
   if (user_skip) {
     user_skip = sox_false;
@@ -441,6 +441,8 @@ static void progress_to_next_input_file(file_t * f)
     f->volume = 1;
   if (f->replay_gain != HUGE_VAL)
     f->volume *= pow(10.0, f->replay_gain / 20);
+  if (effp && f->volume != floor(f->volume))
+    effp->out_signal.precision = SOX_SAMPLE_PRECISION;
   f->ft->sox_errno = errno = 0;
 }
 
@@ -479,13 +481,13 @@ static int combiner_start(sox_effect_t *effp)
   size_t ws, i;
 
   if (is_serial(combine_method))
-    progress_to_next_input_file(files[current_input]);
+    progress_to_next_input_file(files[current_input], effp);
   else {
     ws = 0;
     z->ibuf = lsx_malloc(input_count * sizeof(*z->ibuf));
     for (i = 0; i < input_count; i++) {
       z->ibuf[i] = lsx_malloc(sox_globals.bufsiz * sizeof(sox_sample_t));
-      progress_to_next_input_file(files[i]);
+      progress_to_next_input_file(files[i], effp);
       ws = max(ws, input_wide_samples);
     }
     input_wide_samples = ws; /* Output length is that of longest input file. */
@@ -515,7 +517,7 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, size_t * osam
         if (++current_input < input_count) {
           if (combine_method == sox_sequence && !can_segue(current_input))
             break;
-          progress_to_next_input_file(files[current_input]);
+          progress_to_next_input_file(files[current_input], NULL);
           continue;
         }
       }
