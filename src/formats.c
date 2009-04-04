@@ -1161,19 +1161,28 @@ void sox_format_quit(void) /* Cleanup things.  */
  * Lance Norskog, Sundry Contributors, Chris Bagwell and SoX contributors
  * are not responsible for the consequences of using this software.
  */
-sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev)
+sox_format_handler_t const * sox_find_format(char const * name0, sox_bool no_dev)
 {
   size_t f, n;
 
-  if (name) for (f = 0; sox_format_fns[f].fn; ++f) {
-    sox_format_handler_t const * handler = sox_format_fns[f].fn();
+  if (name0) {
+    char * name = lsx_strdup(name0);
+    char * pos = strchr(name, ';');
+    if (pos) /* Use only the 1st clause of a mime string */
+      *pos = '\0';
+    for (f = 0; sox_format_fns[f].fn; ++f) {
+      sox_format_handler_t const * handler = sox_format_fns[f].fn();
 
-    if (!(no_dev && (handler->flags & SOX_FILE_DEVICE)))
-      for (n = 0; handler->names[n]; ++n)
-        if (!strcasecmp(handler->names[n], name))
-          return handler;                 /* Found it. */
+      if (!(no_dev && (handler->flags & SOX_FILE_DEVICE)))
+        for (n = 0; handler->names[n]; ++n)
+          if (!strcasecmp(handler->names[n], name)) {
+            free(name);
+            return handler;                 /* Found it. */
+          }
+    }
+    free(name);
   }
   if (sox_format_init() == SOX_SUCCESS)   /* Try again with plugins */
-    return sox_find_format(name, no_dev);
+    return sox_find_format(name0, no_dev);
   return NULL;
 }
