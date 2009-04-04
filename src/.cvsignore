@@ -1,6 +1,6 @@
 Makefile Makefile.in
 sox_sample_test
-example0 example1 example2
+example0 example1 example2 example3
 soxconfig.h.in soxconfig.h soxstdint.h
 .deps
 stamp-h1
