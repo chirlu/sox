@@ -86,7 +86,7 @@ Input(s) \*(RA Combiner \*(RA Effects \*(RA Output(s)
 .TE
 .DT
 .SP
-To show how this works in practise, here is a selection of examples of
+To show how this works in practice, here is a selection of examples of
 how SoX might be used.  The simple
 .EX
 	sox recital.au recital.wav
@@ -1526,7 +1526,7 @@ The \-90 (dB) for the initial volume will work fine for a clip that starts
 with near silence, and the delay of 0\*d2 (seconds) has the effect of causing
 the compander to react a bit more quickly to sudden volume changes.
 .SP
-In the following example, compand is being used as a noise-gate for when the
+In the next example, compand is being used as a noise-gate for when the
 noise is at a lower level than the signal:
 .EX
   play infile compand .1,.2 -inf,-50.1,-inf,-50,-50 0 -90 .1

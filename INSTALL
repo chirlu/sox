@@ -1,17 +1,44 @@
                            SoX Installation
                            ----------------
 
-This distribution will compile and run on most commonly-used systems.
-It was originally developed on a UNIX/386 machine running AT&T V3.2 but
-it's currently developed under Linux.  With a little work it should work
-with most POSIX systems.
+SoX should compile and run on any POSIX compatible system (Linux, BSD,
+Solaris, Xcode on Mac OS X, Cygwin on MS-Windows, etc.).  Some
+non-POSIX compilers (such as MSVC) are supported via the `CMake' build
+utility.  For other compilers/systems, it is often possible to
+manually construct a custom `soxconfig.h' and `Makefile' for that
+system (the minimum requirements are 32-bit CPU, 64-bit FPU, C89
+compiler).
 
-Note that the `play', `rec', and `soxi' programs are in fact just copies-
-of or links-to (depending on OS) `sox'.
+Note that the `play', `rec', and `soxi' programs are in fact just
+copies-of or links-to (depending on OS) `sox'.
+
+SoX optionally makes use of some external libraries to obtain support
+for additional file formats and/or effects.  Optional libraries should
+be installed before compiling SoX.  The current list of supported
+libraries, where to get them (if not from your OS distribution), and
+their licence types, is as follows:
+
+AMR-NB/WB         http://www.penguin.cz/~utx/amr        See library web page
+AO                http://xiph.org/ao                    GPL
+ffmpeg            http://ffmpeg.mplayerhq.hu            LGPL
+FLAC              http://flac.sourceforge.net           BSD
+LADSPA            http://www.ladspa.org                 LGPL + plugins' licence
+Lame MP3 encoder  http://lame.sourceforge.net           LGPL
+MAD MP3 decoder   http://www.underbit.com/products/mad  GPL
+Magic             http://www.darwinsys.com/file         GPL
+Ogg Vorbis        http://www.vorbis.com                 BSD
+PNG               http://www.libpng.org/pub/png         zlib (BSD-like)
+Sndfile           http://www.mega-nerd.com/libsndfile   LGPL
+WavPack           http://www.wavpack.com                BSD
 
 
-Compiling using a POSIX system
-------------------------------
+
+Compiling and installing on a POSIX system
+------------------------------------------
+
+First install any optional libraries that you need for SoX.  Some
+libraries may require pkg-config to be installed to be properly
+detected by SoX.
 
 [Only if you're compiling the CVS sources, first make sure you have
 the GNU autotools installed (automake >= 1.9, autoconf >= 2.59) and
@@ -20,35 +47,52 @@ run
 	autoreconf -i
 ]
 
-The preferred method for compiling SoX is to use the "configure"
-scripts compatible with most UNIX systems that contain "/bin/sh" or
-equivalent (it can also be used on Windows with Cygwin).
-
-To compile and install SoX on these platforms run the following
-commands:
+To compile and install SoX (executables, libraries, manual pages) with
+a default configuration for your platform, run the following commands:
 
 	./configure
-	make
+	make -s
 	make install
 
-Optionally, to test the executable:
+There should be no errors and few, if any, warnings during the `make
+-s' stage.  Any warnings about pointer mismatch or conversion should
+be treated with deep suspicion.
+
+The `make install' command may require `root' priviliges; for example,
+on some systems, the following modification to the command is needed:
+
+	sudo make install
+
+To run a selection of tests on the installed sox executable:
 
 	make installcheck
 
-(At the moment you can't run "make check", because when built
-modularly SoX can't use its format and effect modules until
-it is installed.)
+Optionally, HTML & PDF versions of the manual pages can be built and
+installed as follows:
 
-In addition, there are several optional make targets that can be used
-(run as "make target").  They include: pdf, html, install-pdf,
-install-html.
+	make html
+	make install-html
+	make pdf
+	make install-pdf
 
-There are several optional parameters that you may pass to the
-configure script to customize SoX for your applications. Run
+Again, `root' priviliges may be needed at the install stages.
+
+
+
+Custom build options on a POSIX system
+--------------------------------------
+
+Selection of optional libraries and of other build options can be made
+by adding parameters to the `./configure' command line (above).  Run
 
 	./configure --help
 
 for a complete list of options.
+
+Each optional file-format may be configured to be loaded statically
+(the default) or dynamically.  The dynamic option may be useful for
+distribution packaging reasons -- for example, to keep separate `free'
+and `non-free' software.
 
 If you are building SoX for a `distribution' (i.e. the build will be
 used by others), please use --with-distro to identify the distribution
@@ -56,45 +100,6 @@ as this information is useful in helping to diagnose SoX bug reports.
 For example,
 
 	./configure --with-distro='Super Linux OS 6.1'
-
-
-Compiling using Microsoft's Visual C
-------------------------------------
-
-o Install cmake (http://www.cmake.org/HTML/Download.html)
-o Install any optional libraries to use with SoX
-o Unpack the SoX sources (...tar.gz) to say c:\sox
-o Type cd c:\sox
-o Type cmake -G "compiler" .   (type cmake --help for list of compilers)
-
-This should generate project build files for use with Visual C.
-
-
-Optional Compile Features
--------------------------
-
-SoX can make use of some external libraries to obtain support
-for additional file formats and/or effects.  Some optional libraries
-may require pkg-config to be installed to be properly detected.
-
-SoX can detect and use the following libraries:
-
-AMR-NB/WB          http://www.penguin.cz/~utx/amr        See library web page
-AO                 http://xiph.org/ao                    GPL
-ffmpeg             http://ffmpeg.mplayerhq.hu            LGPL
-FLAC               http://flac.sourceforge.net           BSD
-LADSPA             http://www.ladspa.org                 LGPL + plugins' licence
-Lame MP3 encoder   http://lame.sourceforge.net           LGPL
-MAD MP3 decoder    http://www.underbit.com/products/mad  GPL
-Magic              http://www.darwinsys.com/file         GPL
-Ogg Vorbis         http://www.vorbis.com                 BSD
-PNG                http://www.libpng.org/pub/png         zlib (BSD-like)
-Sndfile            http://www.mega-nerd.com/libsndfile   LGPL
-WavPack            http://www.wavpack.com                BSD
-  
-
-Configuring Optional Compile Features (POSIX system)
-----------------------------------------------------
 
 If any libraries are installed in a non-standard locations in your
 system then you can use the CPPFLAGS and LDFLAGS variables to allow
@@ -126,24 +131,25 @@ To stick with old behavior use:
 ./configure --without-libltdl
 
 
+
 Testing
 -------
 
-NOTE: If SoX was compiled with libltdl support then it will not
-run correctly from within the source file directory and must be
-first installed.  Once install, it can be ran from the source directory.
-Either install before running the following tests or configure 
-with --without-libltdl temporarily.
+N.B.: If SoX is configured and compiled to load some file-formats
+dynamically, then it will not be able to load them when running SoX
+executables from within the source file directory until after SoX has
+been installed (temporarily configuring with --without-libltdl removes
+this restriction).
 
-After successfully compiling SoX, try translating a sound file. You
-should also playback the new file to make sure it sounds like the original.  
-You can either use an external program or SoX itself if compiled with 
-playback support.  
+After successfully compiling SoX, try translating a sound file.  You
+should also playback the new file to make sure it sounds like the
+original.  You can either use an external program or SoX itself
+if compiled with playback support.
 
-To work with widest range of playback programs, you should chose a format 
-that is native to your OS; such as .wav for Windows or .aif for MacOS.  
-In the following example, we'll use .xxx as the extension of your preferred
-format.
+To work with widest range of playback programs, you should chose a
+format that is native to your OS; such as .wav for Windows or .aiff for
+MacOS.  In the following example, we'll use .xxx as the extension of
+your preferred format.
 
         cd src
 	./sox monkey.wav monkey.xxx
@@ -152,11 +158,15 @@ You may have to give the word size and rate for the file. For example,
 this command will make a sound file with a data rate of 12,500 samples
 per second and the data formatted as 2-byte (16-bit) signed integers:
 
-	./sox monkey.voc -r 12500 -2 -s monkey.xxx 
+	./sox monkey.voc -r 12500 -2 -s monkey.xxx
 
 If playback support was compiled in then it can be played like this:
 
         ./play monkey.xxx
+
+or, equivalently:
+
+        ./sox monkey.xxx -d
 
 If monkey.xxx plays properly (it's a very short monkey screech),
 congratulations! SoX works.
@@ -166,34 +176,48 @@ on a new platform then you can use the scripts "tests.sh" and
 "testall.sh" to stress SoX.
 
 
+
+Compiling using Microsoft's Visual C
+------------------------------------
+
+o Install cmake (http://www.cmake.org/HTML/Download.html)
+o Install any optional libraries to use with SoX
+o Unpack the SoX sources (...tar.gz) to say c:\sox
+o Type cd c:\sox
+o Type cmake -G "compiler" .   (type cmake --help for list of compilers)
+
+This should generate project build files for use with Visual C.
+
+
+
 Appendix: How To Compile SoX with MP3 Support on Win32
 ------------------------------------------------------
 
-The following text, untested by the SoX team, was originally written by `Enter
-AG' and released to the public domain.
+The following text, untested by the SoX team, was originally written
+by `Enter AG' and released to the public domain.
 
 = How To Compile Sox with MP3 Support =
 
 == Requirements ==
 
-The following requirements have been tested. Nevertheless, other versions may
-work as well.
+The following requirements have been tested. Nevertheless, other
+versions may work as well.
 
 o Microsoft Windows (Win32, Win2k, Win2003).
 
 o CMake (Cross Platform Make) version 2.4
-  available on [http://www.cmake.org] 
+  available on [http://www.cmake.org]
 
 o Microsoft Visual Stuio 2008 (also earlier Versions)
 
 o SoX source distribution version 14.0.1
-  available on [http://sox.sourceforge.net] 
+  available on [http://sox.sourceforge.net]
 
 o LAME source distribution version 3.97
-  available on [http://lame.sourceforge.net] 
+  available on [http://lame.sourceforge.net]
 
 o MAD source distribution version 0.15.1b
-  available on [http://www.underbit.com/products/mad/] 
+  available on [http://www.underbit.com/products/mad/]
 
 == Compilation Procedure ==
 
@@ -220,7 +244,7 @@ o Create a folder somewhere with an arbitrary name. We used the name
 		mp3lame.lib
 		mpglib.lib
 			\lame\
-				lame.h 
+				lame.h
 
 === Compilation of the MAD library ===
 

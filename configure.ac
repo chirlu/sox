@@ -534,11 +534,11 @@ echo "oggvorbis..................$using_oggvorbis"
 echo "sndfile....................$using_sndfile"
 echo "wavpack....................$using_wavpack"
 echo
-echo "MISC OPTIONS"
+echo "OTHER OPTIONS"
 echo "ladspa effects.............$using_ladspa"
 echo "magic support..............$using_magic"
 echo "png support................$using_png"
 echo "GOMP support...............$enable_gomp"
 echo
-echo "Configure finished.  Do 'make && make install' to compile and install SoX."
+echo "Configure finished.  Do 'make -s && make install' to compile and install SoX."
 echo
