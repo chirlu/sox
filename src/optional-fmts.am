@@ -62,11 +62,11 @@ endif
 
 if HAVE_FFMPEG
 if STATIC_FFMPEG
-  libsox_la_SOURCES += ffmpeg.c
+  libsox_la_SOURCES += ffmpeg.c ffmpeg.h
   libsox_la_LIBADD += @FFMPEG_LIBS@
   sox_LDADD += @FFMPEG_LIBS@
 else
-  libsox_fmt_ffmpeg_la_SOURCES = ffmpeg.c
+  libsox_fmt_ffmpeg_la_SOURCES = ffmpeg.c ffmpeg.h
   libsox_fmt_ffmpeg_la_LIBADD = libsox.la @FFMPEG_LIBS@
   pkglib_LTLIBRARIES += libsox_fmt_ffmpeg.la
 endif
