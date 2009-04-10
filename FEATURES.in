@@ -1,4 +1,4 @@
-This release handles the following audio file formats:
+The current release handles the following audio file formats:
 (:table border=0:)
 (:cellnr:)
 * Raw files in various binary formats

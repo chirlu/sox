@@ -3055,14 +3055,14 @@ e.g. to join two songs.  In this case,
 .I excess
 would typically be an number of seconds, the
 .B \-q
-option should be given to indicate that the audio is uncorrelated, and
+option would typically be given (to select an `equal power' cross-fade), and
 .I leeway
 should be zero (which is the default if
 .B \-q
 is given).  For example, if f1.au and f2.au are audio files
 to be cross-faded, then
 .EX
-	sox f1.au f2.au out.au splice -u $(soxi -D f1.au),3
+	sox f1.au f2.au out.au splice -q $(soxi -D f1.au),3
 .EE
 cross-fades the files where the point of equal loudness is 3 seconds
 before the end of f1.au, i.e. the total length of the cross-fade is
