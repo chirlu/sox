@@ -1,6 +1,25 @@
 sox (14.2.0+cvs-1) UNRELEASED; urgency=low
 
-  * CVS version (closes: #479557, #484562, #499041).
+  * CVS version.
+
+ -- Pascal Giard <evilynux@gmail.com>  Fri, 10 Apr 2009 10:48:03 -0400
+
+sox (14.2.0-2) unstable; urgency=low
+
+  * [debian/rules]: Disabled libmagic (closes: #521639, #522241).
+  * [debian/control]:
+    - Added misc-Depends to all packages.
+    - Updated version of build depend on debhelper to 7.
+    - Updated standard version to 3.8.1, no changes required.
+  * [debian/watch]: Use sourceforge.net redirector.
+  * [debian/compat]: Bumped debhelper compat version to 7.
+  * [debian/copyright]: Refer to versioned GPL-2 and LGPL-2 files.
+
+ -- Pascal Giard <pascal@debian.org>  Thu, 09 Apr 2009 23:37:14 -0400
+
+sox (14.2.0-1) unstable; urgency=low
+
+  * New upstream release (closes: #479557, #484562, #499041).
   * [debian/control]:
     - libsox1 replaces libsox0a.
     - Improved libsox1 short and long descriptions (closes: #493483).
@@ -9,7 +28,7 @@ sox (14.2.0+cvs-1) UNRELEASED; urgency=low
     - Improved libsox-fmt-base description by giving format examples.
     - Added Build-Dep on libmagic-dev.
 
- -- Pascal Giard <evilynux@gmail.com>  Sun, 02 Nov 2008 22:49:34 -0500
+ -- Pascal Giard <pascal@debian.org>  Tue, 25 Nov 2008 21:29:26 -0500
 
 sox (14.1.0-1) unstable; urgency=medium
 
