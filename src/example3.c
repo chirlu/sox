@@ -17,17 +17,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "sox.h"
-#include <stdio.h>
-#ifdef NDEBUG /* N.B. assert used with active statements so enable always */
-#undef NDEBUG
+#ifdef NDEBUG /* N.B. assert used with active statements so enable always. */
+#undef NDEBUG /* Must undef above assert.h or other that might include it. */
 #endif
-#include <assert.h>
 
-#ifdef min
-#undef min
-#endif
-#define min(a, b) ((a) <= (b) ? (a) : (b))
+#include "sox.h"
+#include "util.h"
+#include <stdio.h>
+#include <assert.h>
 
 /*
  * Example of a custom output message handler.
@@ -45,6 +42,9 @@ static void output_message(unsigned level, const char *filename, const char *fmt
 /*
  * On an alsa capable system, plays an audio file starting 10 seconds in.
  * Copes with sample-rate change if necessary.  E.g. example3 song2.ogg
+ *
+ * Can easily be changed to work with other audio device drivers supported
+ * by libSoX; e.g. "oss", "ao", etc.  See the soxformat(7) manual page.
  */
 int main(int argc, char * argv[])
 {
@@ -59,6 +59,7 @@ int main(int argc, char * argv[])
 
   assert(sox_init() == SOX_SUCCESS);
   assert(in = sox_open_read(argv[1], NULL, NULL, NULL));
+  /* Change "alsa" in this line to use an alternative audio device driver: */
   assert(out= sox_open_write("default", &in->signal, NULL, "alsa", NULL, NULL));
 
   chain = sox_create_effects_chain(&in->encoding, &out->encoding);

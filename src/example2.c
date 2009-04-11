@@ -17,13 +17,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifdef NDEBUG /* N.B. assert used with active statements so enable always. */
+#undef NDEBUG /* Must undef above assert.h or other that might include it. */
+#endif
+
 #include "sox.h"
 #include "util.h"
 #include <stdio.h>
 #include <math.h>
-#ifdef NDEBUG /* N.B. assert used with active statements so enable always */
-#undef NDEBUG
-#endif
 #include <assert.h>
 
 /*
@@ -76,10 +77,10 @@ int main(int argc, char * argv[])
   /* Allocate a block of memory to store the block of audio samples: */
   assert(buf = malloc(sizeof(sox_sample_t) * block_size));
 
-  /* This application requires that the audio has precisely 2 channels */
+  /* This example program requires that the audio has precisely 2 channels: */
   assert(in->signal.channels == 2);
 
-  /* Read in and process blocks of audio for the selected period or until EOF: */
+  /* Read and process blocks of audio for the selected period or until EOF: */
   for (blocks = 0; sox_read(in, buf, block_size) == block_size && blocks * block_period < period; ++blocks) {
     double left = 0, right = 0;
     size_t i;

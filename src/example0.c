@@ -17,11 +17,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifdef NDEBUG /* N.B. assert used with active statements so enable always. */
+#undef NDEBUG /* Must undef above assert.h or other that might include it. */
+#endif
+
 #include "sox.h"
 #include <stdio.h>
-#ifdef NDEBUG /* N.B. assert used with active statements so enable always */
-#undef NDEBUG
-#endif
 #include <assert.h>
 
 /*
