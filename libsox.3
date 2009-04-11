@@ -188,27 +188,29 @@ is returned. TODO Need to set a global error and implement sox_tell.
 .SH ERRORS
 TODO
 .SH INTERNALS
-SoX's formats and effects operate on an internal buffer format of
-signed 32-bit longs. The data processing routines are called with
+SoX's formats and effects operate with an internal sample format of
+signed 32-bit integer.  The data processing routines are called with
 buffers of these samples, and buffer sizes which refer to the number
-of samples processed, not the number of bytes. File readers translate
+of samples processed, not the number of bytes.  File readers translate
 the input samples to signed 32-bit integers and return the number of
-samples read. For example, data in linear signed byte format is
+samples read.  For example, data in linear signed byte format is
 left-shifted 24 bits.
 .P
-This does cause problems in processing the data.  
-For example:
-.br
+Representing samples as integers can cause problems when processing the audio.  
+For example, if an effect to
+mix down left and right channels into one monophonic channel
+were to use the line
+.EX
 	*obuf++ = (*ibuf++ + *ibuf++)/2;
-.br
-would
-.I not
-mix down left and right channels into one monophonic channel,
-because the resulting samples would overflow 32 bits.
-Instead, the ``avg'' effects must use:
-.br
+.EE
+distortion might occur since
+the intermediate addition can overflow 32 bits.
+The line
+.EX
 	*obuf++ = *ibuf++/2 + *ibuf++/2;
-.br
+.EE
+would get round the overflow problem (at the expense of the least significant
+bit).
 .P
 Stereo data is stored with the left and right speaker data in
 successive samples.

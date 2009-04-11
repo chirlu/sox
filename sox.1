@@ -1049,16 +1049,25 @@ can be used to play just the single file `five*.wav'.
 .TP
 \fB\-r, \fB\-\-rate\fR \fIRATE\fR[\fBk\fR]
 Gives the sample rate in Hz (or kHz if appended with `k') of the file.
-To cause the output file to have
-a different sample rate than the input file, include this option with
-the output file format options.
-.SP
-If the input and output files have
-different rates then a sample rate change effect must be run.  Since
-SoX has
-multiple rate changing effects, the user can specify which to use as an effect.
-If no rate change effect is specified then the \fBrate\fR effect will
-be chosen by default.
+For an input file, the most likely need for this option is for a `raw'
+audio file; for audio file types that store the sample rate value in
+the file header, this option is only needed in order to override
+the (presumably incorrect) value in the file header.
+For an output file, this option provides a shorthand for specifying
+that the
+.B rate
+effect should be invoked in order to change the sample rate of the
+audio signal before it is stored in the output file.
+For example, the following two commands are
+equivalent:
+.EX
+.ne 2
+	sox input.au -r 48k output.au bass -3
+	sox input.au        output.au bass -3 rate 48k
+.EE
+though the second command is more flexible as it allows
+.B rate
+options to be given, and allows the effects to be ordered arbitrarily.
 .TP
 \fB\-t\fR, \fB\-\-type\fR \fIfile-type\fR
 Gives the type of the audio file.  This is useful when the
