@@ -1098,11 +1098,11 @@ Unlike other format characteristics, the endianness (byte, nibble, &
 bit ordering) of the input file is not automatically used for the output
 file; so, for example, when the following is run on a little-endian system:
 .EX
-	sox -B audio.s2 trimmed.s2 trim 2
+	sox -B audio.s16 trimmed.s16 trim 2
 .EE
-trimmed.s2 will be created as little-endian;
+trimmed.s16 will be created as little-endian;
 .EX
-	sox -B audio.s2 -B trimmed.s2 trim 2
+	sox -B audio.s16 -B trimmed.s16 trim 2
 .EE
 must be used to preserve big-endianness in the output file.
 .SP

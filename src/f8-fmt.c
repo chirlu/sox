@@ -18,4 +18,4 @@
 #include "sox_i.h"
 #include "raw.h"
 
-RAW_FORMAT(f8, 64, 0, FLOAT)
+RAW_FORMAT1(f8, "f64", 64, 0, FLOAT)

@@ -18,4 +18,4 @@
 #include "sox_i.h"
 #include "raw.h"
 
-RAW_FORMAT3(u1, "ub", "sou", "fssd", 8, 0, UNSIGNED)
+RAW_FORMAT4(u1, "u8", "ub", "sou", "fssd", 8, 0, UNSIGNED)

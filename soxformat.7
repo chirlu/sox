@@ -58,16 +58,11 @@ and look for its name under the list:
 `AUDIO FILE FORMATS' or `AUDIO DEVICE DRIVERS'.
 .SS SOX FORMATS & DEVICE DRIVERS
 \&\fB.raw\fR (also with \fB\-t sndfile\fR),
+\&\fB.f32\fR, \fB.f64\fR,
+\&\fB.s8\fR, \fB.s16\fR, \fB.s24\fR, \fB.s32\fR,
 .br
-\&\fB.f4\fR, \fB.f8\fR,
-.br
-\&\fB.s1\fR, \fB.s2\fR, \fB.s3\fR, \fB.s4\fR,
-.br
-\&\fB.u1\fR, \fB.u2\fR, \fB.u3\fR, \fB.u4\fR,
-.br
-\&\fB.ul\fR, \fB.al\fR, \fB.lu\fR, \fB.la\fR,
-.br
-\&\fB.sb\fR, \fB.sw\fR, \fB.ub\fR, \fB.uw\fR
+\&\fB.u8\fR, \fB.u16\fR, \fB.u24\fR, \fB.u32\fR,
+\&\fB.ul\fR, \fB.al\fR, \fB.lu\fR, \fB.la\fR
 .if t .sp -.5
 .if n .sp -1
 .TP
@@ -77,20 +72,18 @@ Raw (headerless) audio files.  For
 the sample rate and the data encoding must be given using command-line
 format options; for the other listed types, the sample rate defaults to
 8kHz (but may be overridden), and the data encoding is defined by the
-given suffix.  Thus \fBf4\fR and \fBf8\fR indicate files encoded as 4
-and 8-byte (IEEE single and double precision) floating point PCM
-respectively; \fBs1\fR, \fBs2\fR, \fBs3\fR, and \fBs4\fR indicate 1,
-2, 3, and 4-byte signed integer PCM respectively; \fBu1\fR, \fBu2\fR,
-\fBu3\fR, and \fBu4\fR indicate 1, 2, 3, and 4-byte unsigned integer
-PCM respectively; \fBul\fR indicates `\(*m-law' (byte), \fBal\fR
-indicates `A-law' (byte), and \fBlu\fR and \fBla\fR are inverse bit
-order `\(*m-law' and inverse bit order `A-law' respectively.  \fBsb\fR,
-\fBsw\fR, \fBub\fR, \fBuw\fR, and \fBsl\fR are aliases for \fBs1\fR,
-\fBs2\fR, \fBu1\fR, \fBu2\fR, and \fBs4\fR respectively.  For all raw
+given suffix.  Thus \fBf32\fR and \fBf64\fR indicate files encoded as 32
+and 64-bit (IEEE single and double precision) floating point PCM
+respectively; \fBs8\fR, \fBs16\fR, \fBs24\fR, and \fBs32\fR indicate 8,
+16, 24, and 32-bit signed integer PCM respectively; \fBu8\fR, \fBu16\fR,
+\fBu24\fR, and \fBu32\fR indicate 8, 16, 24, and 32-bit unsigned integer
+PCM respectively; \fBul\fR indicates `\(*m-law' (8-bit), \fBal\fR
+indicates `A-law' (8-bit), and \fBlu\fR and \fBla\fR are inverse bit
+order `\(*m-law' and inverse bit order `A-law' respectively.  For all raw
 formats, the number of channels defaults to 1 (but may be overridden).
 .SP
 Headerless audio files on a SPARC computer are likely to be of format
-\fBul\fR;  on a Mac, they're likely to be \fBu1\fR but with a
+\fBul\fR;  on a Mac, they're likely to be \fBu8\fR but with a
 sample rate of 11025 or 22050\ Hz.
 .SP
 See
@@ -98,17 +91,34 @@ See
 and
 .B .vox
 for raw ADPCM formats.
+.PP
+\&\fB.f4\fR, \fB.f8\fR,
+\&\fB.s1\fR, \fB.s2\fR, \fB.s3\fR, \fB.s4\fR,
+.br
+\&\fB.u1\fR, \fB.u2\fR, \fB.u3\fR, \fB.u4\fR,
+\&\fB.sb\fR, \fB.sw\fR, \fB.sl\fR, \fB.ub\fR, \fB.uw\fR
+.if t .sp -.5
+.if n .sp -1
+.TP
+\ 
+Deprecated aliases for
+\fBf32\fR, \fBf64\fR, \fBs8\fR, \fBs16\fR, \fBs24\fR, \fBs32\fR,
+.br
+\fBu8\fR, \fBu16\fR, \fBu24\fR, \fBu32\fR,
+\fBs8\fR, \fBs16\fR, \fBs32\fR, \fBu8\fR, and \fBu16\fR
+respectively.
 .TP
 \&\fB.8svx\fR (also with \fB\-t sndfile\fR)
 Amiga 8SVX musical instrument description format.
 .TP
 \&\fB.aiff\fR, \fB.aif\fR (also with \fB\-t sndfile\fR)
-AIFF files used on Apple Macs as well as older Apple IIc/IIgs and SGI.
-Currently, SoX's AIFF support does not include multiple audio chunks,
+AIFF files as used on old Apple Macs, Apple IIc/IIgs and SGI.
+SoX's AIFF support does not include multiple audio chunks,
 or the 8SVX musical instrument description format.
 AIFF files are multimedia archives and
-can have multiple audio and picture chunks.
-You may need a separate archiver to work with them.
+can have multiple audio and picture chunks\*m
+you may need a separate archiver to work with them.
+With Mac OS X, AIFF has been superseded by CAF.
 .TP
 \&\fB.aiffc\fR, \fB.aifc\fR (also with \fB\-t sndfile\fR)
 AIFF-C is a format based on AIFF that was created to allow
@@ -311,7 +321,7 @@ with a whole number from 0 to 8.
 .TP
 .B .fssd
 An alias for the
-.B .u1
+.B .u8
 format.
 .TP
 \&\fB.gsm\fR (optional; also with \fB\-t sndfile\fR)
@@ -514,7 +524,7 @@ SoundTool files usually have the extension `.SND'.
 .TP
 .B .sou
 An alias for the
-.B .u1
+.B .u8
 raw format.
 .TP
 .B .sox

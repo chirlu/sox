@@ -48,3 +48,7 @@ const sox_format_handler_t *lsx_ ## id ## _format_fn(void) { \
 #define RAW_FORMAT3(id, alt1, alt2, alt3, size, flags, encoding) \
   static char const *names[] = {#id, alt1, alt2, alt3, NULL}; \
   RAW_FORMAT0(id, size, flags, encoding)
+
+#define RAW_FORMAT4(id, alt1, alt2, alt3, alt4, size, flags, encoding) \
+  static char const *names[] = {#id, alt1, alt2, alt3, alt4, NULL}; \
+  RAW_FORMAT0(id, size, flags, encoding)

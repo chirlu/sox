@@ -62,10 +62,10 @@ getFormat () {
   case $1 in
     al )  formatText="alaw" ;;
     ul )  formatText="ulaw" ;;
-    wavu1)formatText="u1 in wav";  formatFlags="-u -1"; formatExt="wav" ;;
-    s1X ) formatText="s1 (swap bits)"; formatExt="s1"; formatFlags="-X" ;;
-    s1N ) formatText="s1 (swap nibbles)"; formatExt="s1"; formatFlags="-N" ;;
-    s1XN) formatText="s1 (swap nibbles & bits)"; formatExt="s1"; formatFlags="-X -N" ;;
+    wavu8)formatText="u8 in wav";  formatFlags="-u -1"; formatExt="wav" ;;
+    s1X ) formatText="s8 (swap bits)"; formatExt="s8"; formatFlags="-X" ;;
+    s1N ) formatText="s8 (swap nibbles)"; formatExt="s8"; formatFlags="-N" ;;
+    s1XN) formatText="s8 (swap nibbles & bits)"; formatExt="s8"; formatFlags="-X -N" ;;
   esac
 }
   
@@ -121,31 +121,31 @@ convertToAndFrom () {
 }
 
 do_multichannel_formats () {
-  format1=u1
-  convertToAndFrom s1 u1 s2 u2 s3 u3 s4 u4 f4 f8 dat au wav aiff aifc flac caf sph wv sox
+  format1=u8
+  convertToAndFrom s8 u8 s16 u16 s24 u24 s32 u32 f32 f64 dat au wav aiff aifc flac caf sph wv sox
 
-  format1=s2
-  convertToAndFrom s2 u2 s3 u3 s4 u4 f4 f8 dat au wav aiff aifc flac caf sph wv sox
+  format1=s16
+  convertToAndFrom s16 u16 s24 u24 s32 u32 f32 f64 dat au wav aiff aifc flac caf sph wv sox
 
-  format1=u3
-  convertToAndFrom s3 u3 s4 u4 f4 f8 wav aiff aifc flac sph wv sox
+  format1=u24
+  convertToAndFrom s24 u24 s32 u32 f32 f64 wav aiff aifc flac sph wv sox
   (samples=23500; convertToAndFrom paf) || exit 1
 
-  format1=s4
-  convertToAndFrom s4 u4 f8 wav aiff aifc caf sph wv mat4 mat5 sox
+  format1=s32
+  convertToAndFrom s32 u32 f64 wav aiff aifc caf sph wv mat4 mat5 sox
 
   format1=al
-  convertToAndFrom al s2 u2 s4 f4 f8 dat aiff aifc flac caf w64
+  convertToAndFrom al s16 u16 s32 f32 f64 dat aiff aifc flac caf w64
 
   format1=ul
-  convertToAndFrom ul s2 u2 s4 f4 f8 dat aiff aifc flac caf sph
+  convertToAndFrom ul s16 u16 s32 f32 f64 dat aiff aifc flac caf sph
 
-  format1=wavu1
-  convertToAndFrom wavu1 aiff aifc au dat sf flac caf sph
+  format1=wavu8
+  convertToAndFrom wavu8 aiff aifc au dat sf flac caf sph
 }
 
 do_twochannel_formats () {
-  format1=wavu1
+  format1=wavu8
   convertToAndFrom avr maud
   (rate=8000; convertToAndFrom voc) || exit 1      # Fixed rate
   (samples=23492; convertToAndFrom 8svx) || exit 1 # Even number of samples only
@@ -153,21 +153,21 @@ do_twochannel_formats () {
 
 do_singlechannel_formats () {
   format1=vox
-  convertToAndFrom vox s2 u2 s3 u3 s4 u4 f4 f8 dat au wav aiff aifc flac caf sox
+  convertToAndFrom vox s16 u16 s24 u24 s32 u32 f32 f64 dat au wav aiff aifc flac caf sox
 
   format1=ima
-  convertToAndFrom ima s2 u2 s3 u3 s4 u4 f4 f8 dat au aiff aifc flac caf # FIXME: wav
+  convertToAndFrom ima s16 u16 s24 u24 s32 u32 f32 f64 dat au aiff aifc flac caf # FIXME: wav
 
-  format1=wavu1
-  convertToAndFrom smp s1 s1X s1N s1XN sndt sndr
+  format1=wavu8
+  convertToAndFrom smp s8 s1X s1N s1XN sndt sndr
   #(rate=50000; convertToAndFrom txw) || exit 1     # FIXME
   (rate=11025; convertToAndFrom hcom) || exit 1     # Fixed rates
 
   format1=wve
-  (rate=8000; convertToAndFrom al s2 u2 s4 f4 f8 dat) || exit 1 # Fixed rate
+  (rate=8000; convertToAndFrom al s16 u16 s32 f32 f64 dat) || exit 1 # Fixed rate
 
   format1=prc
-  (rate=8000; convertToAndFrom al s2 u2 s4 f4 f8 dat) || exit 1 # Fixed rate
+  (rate=8000; convertToAndFrom al s16 u16 s32 f32 f64 dat) || exit 1 # Fixed rate
 }
 
 stderr_time () {
@@ -224,7 +224,7 @@ if [ "$all" = "all" ]; then
 fi
 do_twochannel_formats
 format1=cdda         # 2-channel only
-convertToAndFrom s2 u3 aiff
+convertToAndFrom s16 u24 aiff
 
 channels=1 
 if [ "$all" = "all" ]; then
@@ -243,19 +243,19 @@ else
 fi
 fi
 
-${bindir}/sox -c 1 -r 44100 -n output.u1 synth .01 vol .5
-if [ `wc -c <output.u1` = 441 ]; then
+${bindir}/sox -c 1 -r 44100 -n output.u8 synth .01 vol .5
+if [ `wc -c <output.u8` = 441 ]; then
   echo "ok     synth size"
 else
   echo "*FAIL* synth size"
 fi
-rm output.u1
+rm output.u8
 
 echo "Checked $vectors vectors"
 
 channels=2
 samples=1e7
-timeIO s1 u1 s2 u2 s3 u3 s4 u4 f4 f8 au wav aiff aifc sph # FIXME?: caf flac dat
+timeIO s8 u8 s16 u16 s24 u24 s32 u32 f32 f64 au wav aiff aifc sph # FIXME?: caf flac dat
 
 test -n "$skip" && echo "Skipped: $skip"
 

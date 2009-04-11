@@ -18,4 +18,4 @@
 #include "sox_i.h"
 #include "raw.h"
 
-RAW_FORMAT1(s4, "sl", 32, 0, SIGN2)
+RAW_FORMAT2(s4, "s32", "sl", 32, 0, SIGN2)
