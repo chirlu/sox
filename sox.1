@@ -958,23 +958,26 @@ respectively.
 .TP
 \fB\-c\fR \fICHANNELS\fR, \fB\-\-channels\fR \fICHANNELS\fR
 The number of audio channels in the audio file; this can be any number
-greater than zero.  To cause the output file to have a different number of
-channels than the input file, include this option with the output file
-options.  If the input and output file have a different number of channels
-then the
-.B mixer
-effect must be used.  If the
-.B mixer
-effect is not specified on the
-command line it will be invoked internally with default parameters.
+greater than zero.
 .SP
-Alternatively, some effects (e.g.
-.BR synth ,
-.BR remix )
-determine what will be the number of output channels; in this case, neither
-this option nor the
-.B mixer
-effect is necessary.
+For an input file, the most likely need for this option is with a
+`raw' audio file.  For file types that store the number of
+channels in the file header, this option is only needed in order to
+override the (presumably incorrect) value in the file header.
+.SP
+For an output file, this option provides a shorthand for specifying
+that the
+.B channels
+effect should be invoked in order to change (if necessary) the number
+of channels in the audio signal to the given number of channels.  For
+example, the following two commands are equivalent:
+.EX
+.ne 2
+	sox input.au -c 1 output.au bass -3
+	sox input.au      output.au bass -3 channels 1
+.EE
+though the second command is more flexible as it allows the effects to
+be ordered arbitrarily.
 .TP
 \fB\-e \fIENCODING\fR, \fB\-\-encoding\fR \fIENCODING\fR
 The audio encoding type.
@@ -1049,23 +1052,24 @@ can be used to play just the single file `five*.wav'.
 .TP
 \fB\-r, \fB\-\-rate\fR \fIRATE\fR[\fBk\fR]
 Gives the sample rate in Hz (or kHz if appended with `k') of the file.
-For an input file, the most likely need for this option is for a `raw'
-audio file; for audio file types that store the sample rate value in
-the file header, this option is only needed in order to override
-the (presumably incorrect) value in the file header.
+.SP
+For an input file, the most likely need for this option is with a
+`raw' audio file.  For file types that store the sample rate
+value in the file header, this option is only needed in order to
+override the (presumably incorrect) value in the file header.
+.SP
 For an output file, this option provides a shorthand for specifying
 that the
 .B rate
-effect should be invoked in order to change the sample rate of the
-audio signal before it is stored in the output file.
-For example, the following two commands are
-equivalent:
+effect should be invoked in order to change (if necessary) the sample
+rate of the audio signal to the given value.  For example, the
+following two commands are equivalent:
 .EX
 .ne 2
 	sox input.au -r 48k output.au bass -3
 	sox input.au        output.au bass -3 rate 48k
 .EE
-though the second command is more flexible as it allows
+though the second form is more flexible as it allows
 .B rate
 options to be given, and allows the effects to be ordered arbitrarily.
 .TP
@@ -1403,6 +1407,33 @@ to remove it, use
 .B gain\ \-5
 in place of
 .BR gain\ 1 .
+.TP
+\fBchannels \fICHANNELS\fR
+Invoke a simple algorithm to change the number of channels in
+the audio signal to the given number
+.IR CHANNELS :
+mixing if decreasing the number of channels or duplicating if
+increasing the number of channels.
+.SP
+The
+.B channels
+effect is invoked automatically if SoX's \fB\-c\fR option specifies a
+number of channels that is different to that of the input file(s).
+Alternatively, if this effect is given explicitly, then SoX's
+.B \-c
+option need not be given.  For example, the following two commands are
+equivalent:
+.EX
+.ne 2
+	sox input.au -c 1 output.au bass -3
+	sox input.au      output.au bass -3 channels 1
+.EE
+though the second form is more flexible as it allows the effects to
+be ordered arbitrarily.
+.SP
+See also
+.B remix
+for an effect that allows channels to be mixed arbitrarily.
 .TP
 \fBchorus \fIgain-in gain-out\fR <\fIdelay decay speed depth \fB\-s\fR\^|\^\fB\-t\fR>
 Add a chorus effect to the audio.  This can make a single vocal sound
@@ -2111,11 +2142,8 @@ global option (where multiple
 .I files
 are mix-combined before entering the effects chain).
 .SP
-This effect is automatically used when the number of input
-channels differ from the number of output channels.  When reducing
-the number of channels it is possible to manually specify the
-.B mixer
-effect and use the \fB\-l\fR, \fB\-r\fR, \fB\-f\fR, \fB\-b\fR,
+When reducing the number of channels it is possible to 
+use the \fB\-l\fR, \fB\-r\fR, \fB\-f\fR, \fB\-b\fR,
 \fB\-1\fR, \fB\-2\fR, \fB\-3\fR, \fB\-4\fR, options to select only
 the left, right, front, back channel(s) or specific channel
 for the output instead of averaging the channels.

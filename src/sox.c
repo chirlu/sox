@@ -970,7 +970,7 @@ static void add_effects(sox_effects_chain_t *chain)
       signal.rate != ofile->ft->signal.rate)
     auto_effect(chain, "rate", rate_arg != NULL, &rate_arg, &signal, &guard);
   if (signal.channels != ofile->ft->signal.channels)
-    auto_effect(chain, "mixer", 0, NULL, &signal, &guard);
+    auto_effect(chain, "channels", 0, NULL, &signal, &guard);
   if (signal.rate != ofile->ft->signal.rate)
     auto_effect(chain, "rate", rate_arg != NULL, &rate_arg, &signal, &guard);
 
@@ -2224,7 +2224,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       break;
 
     case 'c':
-      if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
+      if (sscanf(optarg, "%d %c", &i, &dummy) != 1 || i <= 0) {
         lsx_fail("Channels value `%s' is not a positive integer", optarg);
         exit(1);
       }
@@ -2239,7 +2239,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       break;
 
     case 'b':
-      if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
+      if (sscanf(optarg, "%d %c", &i, &dummy) != 1 || i <= 0) {
         lsx_fail("Bits value `%s' is not a positive integer", optarg);
         exit(1);
       }
@@ -2309,7 +2309,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       if (optarg == NULL)
         ++sox_globals.verbosity;
       else {
-        if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i < 0) {
+        if (sscanf(optarg, "%d %c", &i, &dummy) != 1 || i < 0) {
           sox_globals.verbosity = 2;
           lsx_fail("Verbosity value `%s' is not a non-negative integer", optarg);
           exit(1);
@@ -2518,7 +2518,7 @@ static int soxi(int argc, char * const * argv)
       if (optarg == NULL)
         ++sox_globals.verbosity;
       else {
-        if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i < 0) {
+        if (sscanf(optarg, "%d %c", &i, &dummy) != 1 || i < 0) {
           sox_globals.verbosity = 2;
           lsx_fail("Verbosity value `%s' is not a non-negative integer", optarg);
           exit(1);

@@ -92,6 +92,7 @@ The audio effects/tools included in this release are as follows:
 ** trim: Trim the ends of the audio
 
 * Mixing effects
+** channels: Auto mix or duplicate to change number of channels
 ** mixer: Mix up to 4 channels in certain ways
 ** remix: Produce arbitrarily mixed output channels
 ** swap: Swap stereo channels

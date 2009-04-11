@@ -98,6 +98,18 @@ static int parse(sox_effect_t * effp, char * * argv, unsigned channels)
   return SOX_SUCCESS;
 }
 
+static int show(priv_t *p)
+{
+  unsigned i, j;
+
+  for (j = 0; j < p->num_out_channels; j++) {
+    lsx_debug("%i: ", j);
+    for (i = 0; i < p->out_specs[j].num_in_channels; i++)
+      lsx_debug("\t%i %g", p->out_specs[j].in_specs[i].channel_num, p->out_specs[j].in_specs[i].multiplier);
+  }
+  return SOX_SUCCESS;
+}
+
 static int create(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
@@ -135,6 +147,7 @@ static int start(sox_effect_t * effp)
     *effp->in_signal.mult /= max_sum;
   if (!non_integer)
     effp->out_signal.precision = effp->in_signal.precision;
+  show(p);
   return SOX_SUCCESS;
 }
 
@@ -172,7 +185,72 @@ sox_effect_handler_t const * lsx_remix_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "remix", "[-m|-a] [-p] <0|in-chan[v|d|i volume]{,in-chan[v|d|i volume]}>",
-    SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_GAIN, create, start, flow, NULL, NULL, kill, sizeof(priv_t)
+    SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_GAIN,
+    create, start, flow, NULL, NULL, kill, sizeof(priv_t)
   };
+  return &handler;
+}
+
+/*----------------------- The `channels' effect alias ------------------------*/
+
+static int channels_getopts(sox_effect_t * effp, int argc, char * * argv)
+{
+  priv_t * p = (priv_t *)effp->priv;
+  char dummy;     /* To check for extraneous chars. */
+
+  if (argc == 2) {
+    if (sscanf(argv[1], "%d %c", (int *)&p->num_out_channels,
+          &dummy) != 1 || (int)p->num_out_channels <= 0)
+      return lsx_usage(effp);
+    effp->out_signal.channels = p->num_out_channels;
+  }
+  else if (argc != 1)
+    return lsx_usage(effp);
+  return SOX_SUCCESS;
+}
+
+static int channels_start(sox_effect_t * effp)
+{
+  priv_t * p = (priv_t *)effp->priv;
+  unsigned num_out_channels = p->num_out_channels != 0 ? p->num_out_channels : effp->out_signal.channels;
+  unsigned i, j;
+
+  p->out_specs = lsx_calloc(num_out_channels, sizeof(*p->out_specs));
+  if (effp->in_signal.channels == num_out_channels)
+    return SOX_EFF_NULL;
+
+  if (effp->in_signal.channels > num_out_channels) {
+    for (j = 0; j < num_out_channels; j++) {
+      unsigned in_per_out = (effp->in_signal.channels + num_out_channels - 1 - j) / num_out_channels;
+      lsx_valloc(p->out_specs[j].in_specs, in_per_out);
+      p->out_specs[j].num_in_channels = in_per_out;
+      for (i = 0; i < in_per_out; ++i) {
+        p->out_specs[j].in_specs[i].channel_num = i * num_out_channels + j;
+        p->out_specs[j].in_specs[i].multiplier = 1. / in_per_out;
+      }
+    }
+    effp->out_signal.precision = SOX_SAMPLE_PRECISION;
+  }
+  else for (j = 0; j < num_out_channels; j++) {
+    lsx_valloc(p->out_specs[j].in_specs, 1);
+    p->out_specs[j].num_in_channels = 1;
+    p->out_specs[j].in_specs[0].channel_num = j % effp->in_signal.channels;
+    p->out_specs[j].in_specs[0].multiplier = 1;
+  }
+  effp->out_signal.channels = p->num_out_channels = num_out_channels;
+  show(p);
+  return SOX_SUCCESS;
+}
+
+sox_effect_handler_t const * lsx_channels_effect_fn(void)
+{
+  static sox_effect_handler_t handler;
+  handler = *lsx_remix_effect_fn();
+  handler.name = "channels";
+  handler.usage = "number";
+  handler.getopts = channels_getopts;
+  handler.start = channels_start;
+  handler.flags |= ~SOX_EFF_MODIFY;
+  handler.flags &= ~SOX_EFF_GAIN;
   return &handler;
 }

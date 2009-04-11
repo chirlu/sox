@@ -22,6 +22,7 @@
   EFFECT(bass)
   EFFECT(bend)
   EFFECT(chorus)
+  EFFECT(channels)
   EFFECT(compand)
   EFFECT(contrast)
   EFFECT(crop)
