@@ -374,7 +374,7 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
         str_time((double)ws / ft->signal.rate),
         (unsigned long)ws, "~="[ft->signal.rate == 44100],
         (double)ws / ft->signal.rate * 44100 / 588);
-    if ((text = size_and_bitrate(ft, &text2))) {
+    if (ft->mode == 'r' && (text = size_and_bitrate(ft, &text2))) {
       fprintf(output, "File Size      : %s\n", text);
       if (text2)
         fprintf(output, "Bit Rate       : %s\n", text2);
@@ -924,6 +924,12 @@ static void create_user_effects(void)
     if (effp->handler.flags & SOX_EFF_DEPRECATED)
       lsx_warn("effect `%s' is deprecated; see sox(1) for an alternative",
           effp->handler.name);
+    else if (effp->handler.flags & SOX_EFF_ALPHA)
+      lsx_warn("effect `%s' is experimental/incomplete", effp->handler.name);
+    else if (effp->handler.flags & SOX_EFF_INTERNAL) {
+      lsx_fail("`%s' is a libSoX-only effect", effp->handler.name);
+      exit(1);
+    }
 
     /* The failing effect should have displayed an error message */
     if (sox_effect_options(effp, user_effargs[current_eff_chain][i].argc,
@@ -1747,10 +1753,10 @@ static void display_supported_effects(void)
   printf("EFFECTS:");
   for (i = 0; sox_effect_fns[i]; i++) {
     e = sox_effect_fns[i]();
-    if (e && e->name && !(e->flags & SOX_EFF_DEPRECATED))
-      printf(" %s", e->name);
+    if (e && e->name)
+      printf(" %s%s", e->name, (e->flags & SOX_EFF_DEPRECATED)? "*" : (e->flags & SOX_EFF_ALPHA)? "+" : (e->flags & SOX_EFF_INTERNAL)? "#" : "");
   }
-  puts("\n");
+  puts("\n  * Deprecated effect    + Experimental effect    # LibSoX-only effect");
 }
 
 static void usage(char const * message)
@@ -1859,8 +1865,18 @@ static void usage_effect(char const * name)
 
     for (i = 0; sox_effect_fns[i]; i++) {
       const sox_effect_handler_t *e = sox_effect_fns[i]();
-      if (e && e->name && (!strcmp("all", name) || !strcmp(e->name, name)))
-        printf("%s %s\n\n", e->name, e->usage? e->usage : "");
+      if (e && e->name && (!strcmp("all", name) || !strcmp(e->name, name))) {
+        printf("%s %s\n", e->name, e->usage? e->usage : "");
+        if (e->flags & (SOX_EFF_DEPRECATED | SOX_EFF_ALPHA | SOX_EFF_INTERNAL))
+          putchar('\n');
+        if (e->flags & SOX_EFF_DEPRECATED)
+          printf("`%s' is deprecated\n", e->name);
+        if (e->flags & SOX_EFF_ALPHA)
+          printf("`%s' is experimental/incomplete\n", e->name);
+        if (e->flags & SOX_EFF_INTERNAL)
+          printf("`%s' is libSoX-only\n", e->name);
+        printf("\n\n");
+      }
     }
   }
   exit(1);
