@@ -140,6 +140,10 @@ static sox_bool parse_transfer_value(char const * text, double * value)
 {
   char dummy;     /* To check for extraneous chars. */
 
+  if (!text) {
+    lsx_fail("syntax error trying to read transfer function value");
+    return sox_false;
+  }
   if (!strcmp(text, "-inf"))
     *value = -20 * log10(-(double)SOX_SAMPLE_MIN);
   else if (sscanf(text, "%lf %c", value, &dummy) != 1) {
