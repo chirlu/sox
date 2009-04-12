@@ -15,7 +15,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* This is W.I.P. hence marked SOX_EFF_DEPRECATED for now.
+/* This is W.I.P. hence marked SOX_EFF_ALPHA for now.
  * Need to add other interpolation types e.g. linear, bspline, window types,
  * and filter length, maybe phase response type too.
  */
@@ -126,7 +126,7 @@ sox_effect_handler_t const * lsx_firfit_effect_fn(void)
   handler = *lsx_dft_filter_effect_fn();
   handler.name = "firfit";
   handler.usage = "[knots-file]";
-  handler.flags |= SOX_EFF_DEPRECATED;
+  handler.flags |= SOX_EFF_ALPHA;
   handler.getopts = create;
   handler.start = start;
   handler.priv_size = sizeof(priv_t);

@@ -15,7 +15,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* This is W.I.P. hence marked SOX_EFF_DEPRECATED for now.
+/* This is W.I.P. hence marked SOX_EFF_ALPHA for now.
  * Need to change size_t/INT32_MAX to uint64_t/INT64_MAX (for LFS) and do
  * proper length change tracking through the effects chain.
  */
@@ -133,7 +133,7 @@ sox_effect_handler_t const * lsx_crop_effect_fn(void)
       "  n\tposition relative to start\n"
       "  -n\tposition relative to end\n"
       "  +n\tposition relative to previous",
-    SOX_EFF_MCHAN | /* SOX_EFF_LENGTH | */ SOX_EFF_MODIFY | SOX_EFF_DEPRECATED,
+    SOX_EFF_MCHAN | /* SOX_EFF_LENGTH | */ SOX_EFF_MODIFY | SOX_EFF_ALPHA,
 
     create, start, flow, NULL, stop, kill, sizeof(priv_t)
   };

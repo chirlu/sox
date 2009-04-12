@@ -442,15 +442,17 @@ sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev)
 
 #define SOX_MAX_EFFECTS 20
 
-#define SOX_EFF_CHAN     1           /* Effect can alter # of channels */
-#define SOX_EFF_RATE     2           /* Effect can alter sample rate */
-#define SOX_EFF_PREC     4           /* Effect can alter sample precision */
-#define SOX_EFF_LENGTH   8           /* Effect can alter audio length */
-#define SOX_EFF_MCHAN    16          /* Effect can handle multi-channel */
-#define SOX_EFF_NULL     32          /* Effect does nothing */
-#define SOX_EFF_DEPRECATED 64        /* Effect is living on borrowed time */
-#define SOX_EFF_GAIN     128         /* Effect does not support gain -r */
-#define SOX_EFF_MODIFY   256         /* Effect does not modify samples */
+#define SOX_EFF_CHAN     1           /* Can alter # of channels */
+#define SOX_EFF_RATE     2           /* Can alter sample rate */
+#define SOX_EFF_PREC     4           /* Can alter sample precision */
+#define SOX_EFF_LENGTH   8           /* Can alter audio length */
+#define SOX_EFF_MCHAN    16          /* Can handle multi-channel */
+#define SOX_EFF_NULL     32          /* Does nothing */
+#define SOX_EFF_DEPRECATED 64        /* Is living on borrowed time */
+#define SOX_EFF_GAIN     128         /* Does not support gain -r */
+#define SOX_EFF_MODIFY   256         /* Does not modify samples */
+#define SOX_EFF_ALPHA    512         /* Is experimental/incomplete */
+#define SOX_EFF_INTERNAL 1024        /* Is in libSoX but not sox */
 
 typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot, sox_plot_data} sox_plot_t;
 typedef struct sox_effect sox_effect_t;
