@@ -1,4 +1,4 @@
-/* libSoX effect: remix   Copyright (c) 2008 robs@users.sourceforge.net
+/* libSoX effect: remix   Copyright (c) 2008-9 robs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -169,7 +169,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   return SOX_SUCCESS;
 }
 
-static int kill(sox_effect_t * effp)
+static int closedown(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
   unsigned i;
@@ -186,14 +186,14 @@ sox_effect_handler_t const * lsx_remix_effect_fn(void)
   static sox_effect_handler_t handler = {
     "remix", "[-m|-a] [-p] <0|in-chan[v|d|i volume]{,in-chan[v|d|i volume]}>",
     SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_GAIN,
-    create, start, flow, NULL, NULL, kill, sizeof(priv_t)
+    create, start, flow, NULL, NULL, closedown, sizeof(priv_t)
   };
   return &handler;
 }
 
 /*----------------------- The `channels' effect alias ------------------------*/
 
-static int channels_getopts(sox_effect_t * effp, int argc, char * * argv)
+static int channels_create(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
   char dummy;     /* To check for extraneous chars. */
@@ -212,7 +212,8 @@ static int channels_getopts(sox_effect_t * effp, int argc, char * * argv)
 static int channels_start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  unsigned num_out_channels = p->num_out_channels != 0 ? p->num_out_channels : effp->out_signal.channels;
+  unsigned num_out_channels = p->num_out_channels != 0 ?
+      p->num_out_channels : effp->out_signal.channels;
   unsigned i, j;
 
   p->out_specs = lsx_calloc(num_out_channels, sizeof(*p->out_specs));
@@ -221,7 +222,8 @@ static int channels_start(sox_effect_t * effp)
 
   if (effp->in_signal.channels > num_out_channels) {
     for (j = 0; j < num_out_channels; j++) {
-      unsigned in_per_out = (effp->in_signal.channels + num_out_channels - 1 - j) / num_out_channels;
+      unsigned in_per_out = (effp->in_signal.channels +
+          num_out_channels - 1 - j) / num_out_channels;
       lsx_valloc(p->out_specs[j].in_specs, in_per_out);
       p->out_specs[j].num_in_channels = in_per_out;
       for (i = 0; i < in_per_out; ++i) {
@@ -244,13 +246,9 @@ static int channels_start(sox_effect_t * effp)
 
 sox_effect_handler_t const * lsx_channels_effect_fn(void)
 {
-  static sox_effect_handler_t handler;
-  handler = *lsx_remix_effect_fn();
-  handler.name = "channels";
-  handler.usage = "number";
-  handler.getopts = channels_getopts;
-  handler.start = channels_start;
-  handler.flags |= ~SOX_EFF_MODIFY;
-  handler.flags &= ~SOX_EFF_GAIN;
+  static sox_effect_handler_t handler = {
+    "channels", "number", SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_MODIFY,
+    channels_create, channels_start, flow, NULL, closedown, NULL, sizeof(priv_t)
+  };
   return &handler;
 }
