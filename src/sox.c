@@ -201,17 +201,17 @@ static sox_bool single_threaded = sox_false;
 static struct termios original_termios;
 #endif
 
-static sox_bool stdin_is_a_tty, is_player, is_guarded, do_guarded_norm, no_dither;
+static sox_bool stdin_is_a_tty, is_player, is_guarded, do_guarded_norm, no_dither, reported_sox_opts;
 
 /* Cleanup atexit() function, hence always called. */
 static void cleanup(void)
 {
   size_t i;
 
-  if (!success) {
+  if (!success && !reported_sox_opts) {
     char const * env_opts = getenv(SOX_OPTS);
-    if (env_opts)
-      lsx_report(SOX_OPTS"=%s", env_opts);
+    if (env_opts && *env_opts)
+      lsx_report("used "SOX_OPTS"=%s", env_opts);
   }
   /* Close the input and output files before exiting. */
   for (i = 0; i < input_count; i++) {
@@ -1776,6 +1776,7 @@ static void usage(char const * message)
 "",
 "GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):",
 "--buffer BYTES           Set the size of all processing buffers (default 8192)",
+"--clobber                Don't prompt to overwrite output file (default)",
 "--combine concatenate    Concatenate multiple input files (default for sox, rec)",
 "--combine sequence       Sequence multiple input files (default for play)",
 "-D, --no-dither          Don't dither automatically",
@@ -1786,7 +1787,7 @@ static void usage(char const * message)
 "--help-format NAME       Show info on format NAME, or NAME=all for all",
 "--i, --info              Behave as soxi(1)",
 "--input-buffer BYTES     Override the input buffer size (default: as --buffer)",
-"--interactive            Prompt to overwrite output file",
+"--no-clobber             Prompt to overwrite output file",
 "-m, --combine mix        Mix multiple input files (instead of concatenating)",
 "-M, --combine merge      Merge multiple input files (instead of concatenating)",
 "--magic                  Use `magic' file-type detection",
@@ -2015,6 +2016,8 @@ static struct option long_options[] =
     {"norm"            ,       no_argument, NULL, 0},
     {"magic"           ,       no_argument, NULL, 0},
     {"play-rate-arg"   , required_argument, NULL, 0},
+    {"clobber"         ,       no_argument, NULL, 0},
+    {"no-clobber"      ,       no_argument, NULL, 0},
 
     {"bits"            , required_argument, NULL, 'b'},
     {"channels"        , required_argument, NULL, 'c'},
@@ -2187,6 +2190,8 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       case 20: lsx_warn("this build of SoX does not include `magic'"); break;
 #endif
       case 21: play_rate_arg = strdup(optarg); break;
+      case 22: no_clobber = sox_false; break;
+      case 23: no_clobber = sox_true; break;
       }
       break;
 
@@ -2433,7 +2438,7 @@ static void parse_options_and_filenames(int argc, char **argv)
   if (sox_mode == sox_rec)
     add_file(&opts, set_default_device(&opts)), init_file(&opts);
 
-  if (env_opts) {
+  if (env_opts && *env_opts) {
     char * * argv2, * str = lsx_malloc(strlen(argv[0]) + strlen(env_opts) + 2);
     int argc2;
     strcpy(str, argv[0]);
@@ -2471,6 +2476,10 @@ static void parse_options_and_filenames(int argc, char **argv)
       add_glob_file(&opts, argv[optind++]);
     else if (sox_parse_playlist((sox_playlist_callback_t)add_file, &opts, argv[optind++]) != SOX_SUCCESS)
       exit(1);
+  }
+  if (env_opts && *env_opts) {
+    lsx_report("using "SOX_OPTS"=%s", env_opts);
+    reported_sox_opts = sox_true;
   }
   if (sox_mode == sox_play)
     add_file(&opts, set_default_device(&opts));
