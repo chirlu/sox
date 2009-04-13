@@ -89,51 +89,51 @@ Input(s) \*(RA Combiner \*(RA Effects \*(RA Output(s)
 To show how this works in practice, here is a selection of examples of
 how SoX might be used.  The simple
 .EX
-	sox recital.au recital.wav
+  sox recital.au recital.wav
 .EE
 translates an audio file in Sun AU format to a Microsoft WAV file, whilst
 .EX
-	sox recital.au -r 22050 -b 8 -c 1 recital.wav vol 0.7 fade 3
+  sox recital.au -b 16 recital.wav channels 1 rate 16k fade 3 norm
 .EE
-performs the same format translation, but also changes the audio
-sampling rate & sample size, down-mixes to mono, and applies
-the \fBvol\fR and \fBfade\fR effects.
+performs the same format translation, but also down-mixes to mono,
+changes the sampling rate, applies a fade-in, nomalizes the signal,
+and store the result at a bit-depth of 16.
 .EX
-	sox -r 8k -u -b 8 -c 1 voice-memo.raw voice-memo.wav
+  sox -r 16k -e signed -b 8 -c 1 voice-memo.raw voice-memo.wav
 .EE
 converts `raw' (a.k.a. `headerless') audio to a self-describing file format,
 .EX
-	sox slow.aiff fixed.aiff speed 1.027
+  sox slow.aiff fixed.aiff speed 1.027
 .EE
 adjusts audio speed,
 .EX
-	sox short.au long.au longer.au
+  sox short.au long.au longer.au
 .EE
 concatenates two audio files, and
 .EX
-	sox -m music.mp3 voice.wav mixed.flac
+  sox -m music.mp3 voice.wav mixed.flac
 .EE
 mixes together two audio files.
 .EX
-	play \(dqThe Moonbeams/Greatest/*.ogg\(dq bass +3
+  play \(dqThe Moonbeams/Greatest/*.ogg\(dq bass +3
 .EE
 plays a collection of audio files whilst applying a bass boosting effect,
 .EX
-	play -n -c1 synth sin %-12 sin %-9 sin %-5 sin %-2 fade q 0.1 1 0.1
+  play -n -c1 synth sin %-12 sin %-9 sin %-5 sin %-2 fade h 0.1 1 0.1
 .EE
 plays a synthesised `A minor seventh' chord with a pipe-organ sound,
 .EX
-	rec -c 2 radio.aiff trim 0 30:00
+  rec -c 2 radio.aiff trim 0 30:00
 .EE
 records half an hour of stereo audio, and
 .EX
-	rec -M take1.aiff take1-dub.aiff
+  rec -M take1.aiff take1-dub.aiff
 .EE
 records a new track in a multi-track recording.
 .EX
-	rec -r 44100 -2 -s -p silence 1 0.50 0.1% 1 10:00 0.1% | \\
- 	  	sox -p song.ogg silence 1 0.50 0.1% 1 2.0 0.1% : \\
-		newfile : restart
+  rec -r 44100 -b 16 -s -p silence 1 0.50 0.1% 1 10:00 0.1% | \\
+     sox -p song.ogg silence 1 0.50 0.1% 1 2.0 0.1% : \\
+     newfile : restart
 .EE
 records a stream of audio such as LP/cassette and splits in to multiple
 audio files at points with 2 seconds of silence.  Also does not start
@@ -502,12 +502,12 @@ distortion imperceptible.
 SoX's default behaviour is to take one or more input files and
 write them to a single output file.
 
-This behaviour can be changed by specifying the pseudo-effect 'newfile'
+This behaviour can be changed by specifying the pseudo-effect `newfile'
 within the effects list.  SoX will then enter multiple output mode.
 
 In multiple output mode, a new file is created when the effects
-prior to the 'newfile' indicate they are done.
-The effects chain listed after 'newfile'
+prior to the `newfile' indicate they are done.
+The effects chain listed after `newfile'
 is then started up and its output is saved to the new file.
 
 In multiple output mode, a unique number will automatically be appended
@@ -519,7 +519,7 @@ the % to indicate a minimum fixed width for the number.
 
 Multiple output mode is not very useful unless an effect that will
 stop the effects chain early is
-specified before the 'newfile'. If end of file is
+specified before the `newfile'. If end of file is
 reached before the effects chain stops itself then no new file
 will be created as it would be empty.
 
@@ -562,10 +562,10 @@ in place of a normal filename on the command line:
 \fB\-\fR
 SoX can be used in simple pipeline operations by using the special
 filename `\-' which,
-if used in place of an input filename, will cause
+if used as an input filename, will cause
 SoX will read audio data from `standard input' (stdin),
 and which,
-if used in place of the output filename, will cause
+if used as the output filename, will cause
 SoX will send audio data to `standard output' (stdout).
 Note that when using this option for the output file, and sometimes
 when using it for an input file, the file-type (see
@@ -669,11 +669,22 @@ For example:
 .EE
 Note that setting SOX_OPTS can potentially create unwanted changes in
 the behaviour of scripts or other programs that invoke SoX.  So SOX_OPTS
-is best used for things (such as in the given example) that reflect the
+might best be used for things (such as in the given example) that reflect the
 environment in which SoX is being run.  Enabling options such as
-.B \-\-interactive
+.B \-\-no\-clobber
 as default might be handled better using a shell alias
 since a shell alias will not affect operation in scripts etc.
+.SP
+One way to ensure that a script can not be affected by SOX_OPTS, is to
+clear SOX_OPTS at the start of the script (but this of course loses
+the benefit of SOX_OPTS carrying some system-wide default options).  An
+alternative approach would be to explicitly invoke SoX with default
+option values, e.g.
+.EX
+  SOX_OPTS="... --no-clobber ..."
+  ...
+  sox --clobber $input $output ...
+.EE
 .TP
 \fB\-\-buffer\fR \fBBYTES\fR, \fB\-\-input\-buffer\fR \fBBYTES\fR
 Set the size in bytes of the buffers used for processing audio (default 8192).
@@ -688,6 +699,10 @@ Be aware that large values for
 .B \-\-buffer
 will cause SoX to be become slow to respond to requests to terminate or to skip
 the current input file.
+.TP
+\fB\-\-clobber\fR
+Don't prompt before overwriting an existing file with the same name as that
+given for the output file.  This is the default behaviour.
 .TP
 \fB\-\--effects\-file=\fIFILENAME\fR
 Use FILENAME to obtain all effects and their arguments.
@@ -728,22 +743,7 @@ behave as
 .BR soxi (1).
 .TP
 \fB\-\-interactive\fR
-Prompt before overwriting an existing file with the same name as that
-given for the output file.
-.SP
-.B N.B.
-Unintentionally overwriting a file is easier than you might think, for
-example, if you accidentally enter
-.EX
-	sox file1 file2 effect1 effect2 ...
-.EE
-when what you really meant was
-.EX
-	play file1 file2 effect1 effect2 ...
-.EE
-then, without this option, file2 will be overwritten.  Hence, using this
-option is strongly recommended; a `shell' alias, script, or batch file
-may be an appropriate way of permanently enabling it.
+Deprecated alias for \fB\-\-no\-clobber\fR.
 .TP
 \fB\-m\fR\^|\^\fB\-M\fR\^|\^\fB\-\-combine concatenate\fR\^|\^\fBmerge\fR\^|\^\fBmix\fR\^|\^\fBmix\-power\fR\^|\^\fBsequence\fR
 Select the input file combining method;
@@ -768,6 +768,25 @@ See also
 and the
 .B dither
 effect.
+.TP
+\fB\-\-no\-clobber\fR
+Prompt before overwriting an existing file with the same name as that
+given for the output file.
+.SP
+.B N.B.
+Unintentionally overwriting a file is easier than you might think, for
+example, if you accidentally enter
+.EX
+	sox file1 file2 effect1 effect2 ...
+.EE
+when what you really meant was
+.EX
+	play file1 file2 effect1 effect2 ...
+.EE
+then, without this option, file2 will be overwritten.  Hence, using
+this option is strongly recommended; SOX_OPTS (above), a `shell'
+alias, script, or batch file may be an appropriate way of permanently
+enabling it.
 .TP
 \fB\-\-norm\fR
 Automatically invoke the
@@ -927,11 +946,13 @@ this option is given, then SoX will keep reading audio until it reaches
 the end of the input file.
 .TP
 \fB\-v\fR, \fB\-\-volume\fR \fIFACTOR\fR
-Adjust volume by a factor of \fIFACTOR\fR.
-This is a linear (amplitude) adjustment, so a number less than 1
-decreases the volume; greater than 1 increases it.  If a negative number
-is given, then in addition to the volume adjustment, the audio signal
-will be inverted.
+Intended for use when combining multiple input files, this option
+adjusts the volume of the file that follows it on the command line by a
+factor of \fIFACTOR\fR, thus allowing it to `balanced' w.r.t. the other
+input files.  This is a linear (amplitude) adjustment, so a number
+less than 1 decreases the volume; greater than 1 increases it.  If a
+negative number is given, then in addition to the volume adjustment,
+the audio signal will be inverted.
 .SP
 See also the \fBstat\fR (with \fB\-v\fR),
 .BR norm ,
@@ -946,13 +967,25 @@ working with headerless file formats or when specifying a format
 for the output file that is different to that of the input file.
 .TP
 \fB\-b\fR \fIBITS\fR, \fB\-\-bits\fR \fIBITS\fR
-The number of bits (a.k.a. bit-depth) in each encoded sample.
-Not applicable to complex encodings, e.g. MP3, GSM.
+The number of bits (a.k.a. bit-depth or sometimes word-length) in each
+encoded sample.  Not applicable to complex encodings such as MP3 or GSM.
 Not necessary with encodings that have a fixed number of bits, e.g.
 A/\(*m-law, ADPCM.
+.SP
+For an input file, the most common use for this option is to inform
+SoX of the number of bits per sample in a `raw' (`headerless') audio
+file.
+.SP
+For an output file, this option can be used (perhaps along with
+.BR \-e )
+to set the output encoding size.  By default (i.e. if this option is
+not given),
+the output encoding size will
+(providing it is supported by the output file type)
+be set to the input encoding size.
 .TP
 \fB\-1\fR\^/\fB\-2\fR\^/\fB\-3\fR\^/\fB\-4\fR\^/\fB\-8\fR
-The number of bytes in each encoded sample.  Aliases for
+The number of bytes in each encoded sample.  Deprecated aliases for
 \fB\-b 8\fR, \fB\-b 16\fR, \fB\-b 24\fR, \fB\-b 32\fR, \fB\-b 64\fR
 respectively.
 .TP
@@ -960,10 +993,11 @@ respectively.
 The number of audio channels in the audio file; this can be any number
 greater than zero.
 .SP
-For an input file, the most likely need for this option is with a
-`raw' audio file.  For file types that store the number of
-channels in the file header, this option is only needed in order to
-override the (presumably incorrect) value in the file header.
+For an input file, the most common use for this option is to inform
+SoX of the number of channels in a `raw' (`headerless') audio file.
+Occasionally, it may be useful to use this option with a `headered'
+file, in order to override the (presumably incorrect) value in the
+header.
 .SP
 For an output file, this option provides a shorthand for specifying
 that the
@@ -976,11 +1010,23 @@ example, the following two commands are equivalent:
 	sox input.au -c 1 output.au bass -3
 	sox input.au      output.au bass -3 channels 1
 .EE
-though the second command is more flexible as it allows the effects to
+though the second form is more flexible as it allows the effects to
 be ordered arbitrarily.
 .TP
 \fB\-e \fIENCODING\fR, \fB\-\-encoding\fR \fIENCODING\fR
-The audio encoding type.
+The audio encoding type.  Sometimes needed with file-types that
+support more than one encoding type; for example, with raw, WAV, or
+AU (but not, for example, with MP3 or FLAC).
+.SP
+For an input file, the most common use for this option is to inform
+SoX of the number of the encoding of a `raw' (`headerless') audio
+file.
+.SP
+For an output file, this option can be used (perhaps along with
+.BR \-b )
+to set the output encoding type.  By default (i.e. if this option is
+not given), the output encoding type will (providing it is supported
+by the output file type) be set to the input encoding type.
 .RS
 .IP \fBsigned-integer\fR
 PCM data stored as signed (`two's complement') integers.  Commonly used
@@ -1028,13 +1074,9 @@ It is usually CPU intensive to work with GSM audio.
 .TP
 \ 
 Encoding names can be abbreviated where this would not be ambiguous;
-e.g. 'unsigned-integer' can be given as 'un', but not 'u' (ambiguous
-with 'u-law').  For reasons of forward compatibility, using
+e.g. `unsigned-integer' can be given as `un', but not `u' (ambiguous
+with `u-law').  For reasons of forward compatibility, using
 abbreviations in scripts is not recommended.
-.SP
-Note that explicitly specifying other encoding types (e.g. MP3, FLAC)
-is not necessary since they can be inferred from the file type or
-header.
 .TP
 \fB\-s\fR\^/\fB\-u\fR\^/\fB\-f\fR\^/\fB\-A\fR\^/\fB\-U\fR\^/\fB\-o\fR\^/\fB\-i\fR\^/\fB\-a\fR\^/\fB\-g\fR
 Aliases for specifying the encoding types
@@ -1053,10 +1095,11 @@ can be used to play just the single file `five*.wav'.
 \fB\-r, \fB\-\-rate\fR \fIRATE\fR[\fBk\fR]
 Gives the sample rate in Hz (or kHz if appended with `k') of the file.
 .SP
-For an input file, the most likely need for this option is with a
-`raw' audio file.  For file types that store the sample rate
-value in the file header, this option is only needed in order to
-override the (presumably incorrect) value in the file header.
+For an input file, the most common use for this option is to inform
+SoX of the sample rate of a `raw' (`headerless') audio file.
+Occasionally, it may be useful to use this option with a `headered'
+file, in order to override the (presumably incorrect) value in the
+header.
 .SP
 For an output file, this option provides a shorthand for specifying
 that the
