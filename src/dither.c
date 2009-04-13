@@ -121,10 +121,10 @@ static const filter_t filters[] = {
   {48000, iir,  4, 220, ges48, Shape_gesemann},
   {44100, iir,  4, 230, ges44, Shape_gesemann},
   {48000, fir, 16, 300, shi48, Shape_shibata},
-  {44100, fir, 20, 332, shi44, Shape_shibata},
+  {44100, fir, 20, 333, shi44, Shape_shibata},
   {37800, fir, 16, 240, shi38, Shape_shibata},
   {48000, fir, 16, 250, shl48, Shape_low_shibata},
-  {44100, fir, 15, 247, shl44, Shape_low_shibata},
+  {44100, fir, 15, 249, shl44, Shape_low_shibata},
   {44100, fir, 20, 383, shh44, Shape_high_shibata},
   {    0, fir,  0,   0,  NULL, Shape_none},
 };
