@@ -52,7 +52,7 @@ while(<CHILDERR>) {
     $type = $2;
     $tail = $3;
     $colour = $colours{$type};
-    $tail =~ s/\`(.*?)\'/`$name_colour$1$colour'/g;
+    $tail =~ s/\`(.*?)\'/`$name_colour$1$reset$colour'/g;
     print(STDERR $colour, "$type ", $reset, $colour, $tail, $reset, "\n");
   }
   else {
