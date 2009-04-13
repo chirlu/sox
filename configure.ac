@@ -513,7 +513,7 @@ echo
 echo "OPTIONAL DEVICE DRIVERS"
 echo "ao (Xiph)..................$using_ao"
 echo "alsa (Linux)...............$using_alsa"
-echo "coreaudio (MAC OS X).......$using_coreaudio"
+echo "coreaudio (Mac OS X).......$using_coreaudio"
 echo "sndio (OpenBSD)............$using_sndio"
 echo "oss........................$using_oss"
 echo "pulseaudio.................$using_pulseaudio"
