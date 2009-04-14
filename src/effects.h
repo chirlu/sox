@@ -21,6 +21,7 @@
   EFFECT(bandreject)
   EFFECT(bass)
   EFFECT(bend)
+  EFFECT(biquad)
   EFFECT(chorus)
   EFFECT(channels)
   EFFECT(compand)

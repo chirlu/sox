@@ -58,7 +58,7 @@ int lsx_biquad_getopts(sox_effect_t * effp, int argc, char **argv,
 }
 
 
-int lsx_biquad_start(sox_effect_t * effp)
+static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
   /* Simplify: */
@@ -67,6 +67,17 @@ int lsx_biquad_start(sox_effect_t * effp)
   p->b0 /= p->a0;
   p->a2 /= p->a0;
   p->a1 /= p->a0;
+
+  p->o2 = p->o1 = p->i2 = p-> i1 = 0;
+  return SOX_SUCCESS;
+}
+
+
+int lsx_biquad_start(sox_effect_t * effp)
+{
+  priv_t * p = (priv_t *)effp->priv;
+
+  start(effp);
 
   if (effp->global_info->plot == sox_plot_octave) {
     printf(
@@ -107,7 +118,6 @@ int lsx_biquad_start(sox_effect_t * effp)
       , p->b0, p->b1, p->b2, p->a1, p->a2);
     return SOX_EOF;
   }
-  p->o2 = p->o1 = p->i2 = p-> i1 = 0;
   return SOX_SUCCESS;
 }
 
@@ -124,4 +134,25 @@ int lsx_biquad_flow(sox_effect_t * effp, const sox_sample_t *ibuf,
     *obuf++ = SOX_ROUND_CLIP_COUNT(o0, effp->clips);
   }
   return SOX_SUCCESS;
+}
+
+static int create(sox_effect_t * effp, int argc, char * * argv)
+{
+  priv_t             * p = (priv_t *)effp->priv;
+  double             * d = &p->b0;
+  char               c;
+
+  --argc, ++argv;
+  if (argc == 6)
+    for (; argc && sscanf(*argv, "%lf%c", d, &c) == 1; --argc, ++argv, ++d);
+  return argc? lsx_usage(effp) : SOX_SUCCESS;
+}
+
+sox_effect_handler_t const * lsx_biquad_effect_fn(void)
+{
+  static sox_effect_handler_t handler = {
+    "biquad", "b0 b1 b2 a0 a1 a2", 0,
+    create, start, lsx_biquad_flow, NULL, NULL, NULL, sizeof(priv_t)
+  };
+  return &handler;
 }
