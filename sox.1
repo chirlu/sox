@@ -2923,14 +2923,16 @@ and shows time in the X-axis, frequency in the Y-axis, and audio signal
 magnitude in the Z-axis.  Z-axis values are represented by the colour
 (or intensity) of the pixels in the X-Y plane.
 .SP
-This effect supports only one channel; for multi-channel input files,
-use either SoX's
-.B \-c 1
-option with the output file (to obtain a spectrogram on the mix-down),
-or the
+This effect supports only one channel.
+For multi-channel input files, use the
+.B remix
+effect as either
+.B remix \-
+to obtain a spectrogram on the mix-down,
+or 
 .B remix
 .I n
-effect to select a particular channel.  Be aware though, that both of
+to select a particular channel; be aware though, that both of
 these methods affect the audio in the effects chain.
 .RS
 .IP \fB\-x\ \fInum\fR
@@ -2976,7 +2978,7 @@ invoking
 .BR spectrogram ;
 e.g.
 .EX
-  sox audio.ogg -r 4k -n rate spectrogram
+  sox audio.ogg -n rate 4k spectrogram
 .EE
 allows detailed analysis of frequencies up to 2kHz (half the sampling
 rate).
