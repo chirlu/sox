@@ -25,7 +25,7 @@ typedef struct {
   sox_bool      do_restore, make_headroom, do_normalise, do_scan;
   double        fixed_gain; /* Valid only in channel 0 */
 
-  double        mult, restore, rms, limiter;
+  double        mult, reclaim, rms, limiter;
   off_t         num_samples;
   sox_sample_t  min, max;
   FILE          * tmp_file;
@@ -71,10 +71,10 @@ static int start(sox_effect_t * effp)
   if (effp->flow == 0) {
     if (p->do_restore) {
       if (!effp->in_signal.mult || *effp->in_signal.mult >= 1) {
-        lsx_fail("can't restore level");
+        lsx_fail("can't reclaim headroom");
         return SOX_EOF;
       }
-      p->restore = 1 / *effp->in_signal.mult;
+      p->reclaim = 1 / *effp->in_signal.mult;
     }
     effp->out_signal.mult = p->make_headroom? &p->fixed_gain : NULL;
     if (!p->do_equalise && !p->do_balance && !p->do_balance_no_clip)
@@ -181,9 +181,9 @@ static void start_drain(sox_effect_t * effp)
   } else {
     p->mult = min(max / p->max, (double)SOX_SAMPLE_MIN / p->min);
     if (p->do_restore) {
-      if (p->restore > p->mult)
-        lsx_report("%.3gdB not restored", linear_to_dB(p->restore / p->mult));
-      else p->mult = p->restore;
+      if (p->reclaim > p->mult)
+        lsx_report("%.3gdB not reclaimed", linear_to_dB(p->reclaim / p->mult));
+      else p->mult = p->reclaim;
     }
     p->mult *= p->fixed_gain;
     rewind(p->tmp_file);

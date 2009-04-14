@@ -5,7 +5,8 @@ Source code, Win32 binaries, and Mac OSX binaries can be downloaded from
  
 Release highlights include:
  
-  o New effects: `stats', `sinc', `fir', `overdrive'.
+  o New filter effects: `sinc', `fir', `biquad'.
+  o Other new effects: `stats', `overdrive'.
   o New audio device handler for OpenBSD.
   o Fixed problems with temporary file on Windows.
   o Can now enable automated clipping protection for most effects.

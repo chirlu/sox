@@ -53,6 +53,7 @@ The audio effects/tools included in this release are as follows:
 ** bandreject: RBJ band-reject biquad IIR filter
 ** band: SPKit resonator band-pass IIR filter
 ** bass: Tone control: RBJ shelving biquad IIR filter
+** biquad: 2nd-order IIR filter using externally provided coefficients
 ** equalizer: RBJ peaking equalisation biquad IIR filter
 ** fir: FFT convolution FIR filter using externally provided coefficients
 ** firfit+: FFT convolution FIR filter using given freq. response (W.I.P.)

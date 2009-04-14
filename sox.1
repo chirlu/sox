@@ -144,30 +144,29 @@ N.B.  Detailed explanations of how to use \fIall\fR SoX parameters, file
 formats, and effects can be found below in this manual, and in
 .BR soxformat (7).
 .SS File Format Types
-There are two types of audio file format that SoX can work with.  The
-first is `self-describing'; these formats include a header that
-completely describes the characteristics of the audio data that follows.
-The second type is `headerless' (or `raw data'); here,
-the audio data characteristics must be described using the
-SoX command line.
+There are two types of audio file format that SoX can work with:
+`self-describing'\*mthese have a header that completely describes the
+signal and encoding attributes of the audio data that follows, and `raw'
+(or `headerless') audio\*mthe audio characteristics of these must, when
+reading a raw file, be described using the SoX command line, and, when
+writing a raw file, be described using the command line or inferred from
+those of the input file.
 .SP
-The following four characteristics are sufficient to describe
-the format of audio data such that it can be processed with SoX:
+The following four characteristics are used to describe the format of
+audio data such that it can be processed with SoX:
 .TP
 sample rate
-The sample rate in samples per second (`Hertz' or `Hz').  For
-example, digital telephony traditionally uses a sample rate of 8000\ Hz
-(8\ kHz), though these days, 16 and even 32\ kHz are becoming more common;
-audio Compact Discs use 44100\ Hz (44\*d1\ kHz); Digital Audio
-Tape and many computer systems use 48\ kHz; professional audio systems
-typically use 96 or 192 kHz.
+The sample rate in samples per second (`Hertz' or `Hz').  For example,
+digital telephony traditionally uses a sample rate of 8000\ Hz (8\ kHz),
+though these days, 16 and even 32\ kHz are becoming more common; audio
+Compact Discs use 44100\ Hz (44\*d1\ kHz); Digital Audio Tape and many
+computer systems use 48\ kHz; professional audio systems often use 96
+kHz.
 .TP
 sample size
 The number of bits used to store each sample.  The most popular is
-16-bit (two bytes); 8-bit (one byte) was popular in the early days of
-computer audio, and is still used in telephony; 24-bit (three bytes) is
-used, primarily as an intermediate format, in the professional audio
-arena.  Other sizes are also used.
+16-bit; 8-bit was popular in the early days of computer audio; 24-bit is
+used in the professional audio arena; other sizes are also used.
 .TP
 data encoding
 The way in which each audio sample is represented (or `encoded').  Some
@@ -179,12 +178,16 @@ encoding types include floating-point, \(*m-law, ADPCM, signed-integer
 PCM, and FLAC.
 .TP
 channels
-The number of audio channels contained in the file.  One (`mono') and two
-(`stereo') are widely used.
-`Surround sound' audio typically contains six or more channels.
+The number of audio channels contained in the file.  One (`mono') and
+two (`stereo') are widely used.  `Surround sound' audio typically
+contains six or more channels.
 .PP
-The term `bit-rate' is sometimes used as an overall measure of an audio
-format and may incorporate elements of all of the above.
+The term `bit-rate' is a measure of the amount of storage occupied by an
+encoded audio signal over a unit of time.  It can depend on all of the
+above and is typically denoted as a number of kilo-bits per second
+(kbps).  An A-law telephony signal has a bit-rate of 64 kbs; MP3-encoded
+stereo music typically has a bit-rate of 128\-196 kbps; FLAC-encoded
+stereo music typically has a bit-rate of 550\-760 kbps.
 .SP
 Most self-describing formats also allow textual `comments' to be
 embedded in the file that can be used to describe the audio in some way,
@@ -954,12 +957,12 @@ less than 1 decreases the volume; greater than 1 increases it.  If a
 negative number is given, then in addition to the volume adjustment,
 the audio signal will be inverted.
 .SP
-See also the \fBstat\fR (with \fB\-v\fR),
+See also the 
 .BR norm ,
 .BR vol ,
 and
 .B gain
-effects; and see \fBInput File Balancing\fR above.
+effects, and see \fBInput File Balancing\fR above.
 .SS Input & Output File Format Options
 These options apply to the input or output file whose name they
 immediately precede on the command line and are used mainly when
@@ -1019,7 +1022,7 @@ support more than one encoding type; for example, with raw, WAV, or
 AU (but not, for example, with MP3 or FLAC).
 .SP
 For an input file, the most common use for this option is to inform
-SoX of the number of the encoding of a `raw' (`headerless') audio
+SoX of the encoding of a `raw' (`headerless') audio
 file.
 .SP
 For an output file, this option can be used (perhaps along with
@@ -1027,6 +1030,8 @@ For an output file, this option can be used (perhaps along with
 to set the output encoding type.  By default (i.e. if this option is
 not given), the output encoding type will (providing it is supported
 by the output file type) be set to the input encoding type.
+.SP
+Encoding types:
 .RS
 .IP \fBsigned-integer\fR
 PCM data stored as signed (`two's complement') integers.  Commonly used
@@ -1038,7 +1043,7 @@ with an 8-bit encoding size.  A value of 0 represents maximum signal
 power.
 .IP \fBfloating-point\fR
 PCM data stored as IEEE 753 single precision (32-bit) or double
-precision (64-bit) floating-point ('real') numbers.
+precision (64-bit) floating-point (`real') numbers.
 A value of 0 represents minimum signal power.
 .IP \fBa-law\fR
 International telephony standard for logarithmic encoding to 8 bits per
@@ -1048,7 +1053,7 @@ sometimes encoded with reversed bit-ordering (see the
 option).
 .IP \fBu-law,\ mu-law\fR
 North American telephony standard for logarithmic encoding to 8 bits per
-sample.  A.k.a \(*m-law.  It has a precision equivalent to roughly
+sample.  A.k.a. \(*m-law.  It has a precision equivalent to roughly
 14-bit PCM and is
 sometimes encoded with reversed bit-ordering (see the
 .B \-X
@@ -1116,12 +1121,12 @@ though the second form is more flexible as it allows
 .B rate
 options to be given, and allows the effects to be ordered arbitrarily.
 .TP
-\fB\-t\fR, \fB\-\-type\fR \fIfile-type\fR
-Gives the type of the audio file.  This is useful when the
+\fB\-t\fR, \fB\-\-type\fR \fIFILE-TYPE\fR
+Gives the type of the audio file; this can be useful when the
 file extension is non-standard or when the type can not be determined by
 looking at the header of the file.
 .SP
-The \fB\-t\fR option can also be used to override the type implied by
+This option can also be used to override the type implied by
 an input filename extension, but if overriding with a type that has a
 header, SoX will exit with an appropriate error message if such a
 header is not actually present.
@@ -1226,12 +1231,12 @@ instrument or `voice'.  To facilitate this, the \fBremix\fR effect and
 the global SoX option \fB\-M\fR can be used to isolate then recombine
 tracks from a multi-track recording.
 .SS Multiple Effect Chains
-A single effects chain is made up of one or more effects. Audio from
-the input in ran through the chain until either the input file reaches
-end of file or an effects in the chain requests to terminate the chain.
+A single effects chain is made up of one or more effects.  Audio from
+the input runs through the chain until either the end of the input file
+is reached or an effect in the chain requests to terminate the chain.
 .SP
 SoX supports running multiple effects chain over the input audio.
-In this case, when one chain indicates it is done processing audio
+In this case, when one chain indicates it is done processing audio,
 the audio data is then sent through the next effects chain.  This
 continues until either no more effects chains exist or the input has
 reach end of file.
@@ -1451,6 +1456,11 @@ to remove it, use
 in place of
 .BR gain\ 1 .
 .TP
+\fBbiquad \fIb0 b1 b2 a0 a1 a2\fR
+Apply a biquad IIR filter with the given coefficients.
+.SP
+See http://en.wikipedia.org/wiki/Digital_biquad_filter (where a0 = 1).
+.TP
 \fBchannels \fICHANNELS\fR
 Invoke a simple algorithm to change the number of channels in
 the audio signal to the given number
@@ -1634,13 +1644,12 @@ controls the amount of the enhancement and is a number in the range 0\-100.
 Note that
 .I enhancement-amount
 = 0 still gives a significant contrast enhancement.
-.B contrast
-is often used in conjunction with the
-.B norm
-effect as follows:
-.EX
-	sox infile outfile norm -i contrast
-.EE
+.SP
+See also the
+.B compand
+and
+.B mcompand
+effects.
 .TP
 \fBdcshift \fIshift\fR [\fIlimitergain\fR]
 DC Shift the audio, with basic linear amplitude formula.
@@ -1664,6 +1673,10 @@ example:
 .EX
 	sox -n out.au synth 5 sin %0 50 highpass 10
 .EE
+.SP
+See also the
+.B stats
+effect.
 .TP
 \fBdeemph\fR
 Apply ISO 908 de-emphasis (a treble attenuation shelving filter) to
@@ -1868,14 +1881,20 @@ This effect supports the \fB\-\-plot\fR global option.
 See also \fBbass\fR and \fBtreble\fR for shelving equalisation effects.
 .TP
 \fBfade\fR [\fItype\fR] \fIfade-in-length\fR [\fIstop-time\fR [\fIfade-out-length\fR]]
-Add a fade effect to the beginning, end, or both of the audio.
+Apply a fade effect to the beginning, end, or both of the audio.
 .SP
-For fade-ins, this starts from the first sample and ramps the volume of the audio from 0 to full volume over \fIfade-in-length\fR seconds.  Specify 0 seconds if no fade-in is wanted.
+An optional \fItype\fR can be specified to select the shape of the fade
+curve:
+\fBq\fR for quarter of a sine wave, \fBh\fR for half a sine
+wave, \fBt\fR for linear (`triangular') slope, \fBl\fR for logarithmic,
+and \fBp\fR for inverted parabola.  The default is logarithmic.
+.SP
+A fade-in starts from the first sample and ramps the signal level from 0 to full volume over \fIfade-in-length\fR seconds.  Specify 0 seconds if no fade-in is wanted.
 .SP
 For fade-outs, the audio will be truncated at
 .I stop-time
 and
-the volume will be ramped from full volume down to 0 starting at
+the signal level will be ramped from full volume down to 0 starting at
 \fIfade-out-length\fR seconds before the \fIstop-time\fR.  If
 .I fade-out-length
 is not specified, it defaults to the same value as
@@ -1893,7 +1912,9 @@ To specify time periods use the format hh:mm:ss.frac format.  To specify
 using sample counts, specify the number of samples and append the letter `s'
 to the sample count (for example `8000s').
 .SP
-An optional \fItype\fR can be specified to change the type of envelope.  Choices are \fBq\fR for quarter of a sine wave, \fBh\fR for half a sine wave, \fBt\fR for linear slope, \fBl\fR for logarithmic, and \fBp\fR for inverted parabola.  The default is logarithmic.
+See also the
+.B splice
+effect.
 .TP
 \fBfir\fR [\fIcoefs-file\fR\^|\^\fIcoefs\fR]
 Use SoX's FFT convolution engine with given FIR filter
@@ -2362,6 +2383,12 @@ gives the pitch shift as positive or negative `cents' (i.e. 100ths of a
 semitone).  See the
 .B tempo
 effect for a description of the other parameters.
+.SP
+See also the
+.B speed
+and
+.B tempo
+effects.
 .TP
 \fBrate\fR [\fB\-q\fR\^|\^\fB\-l\fR\^|\^\fB\-m\fR\^|\^\fB\-h\fR\^|\^\fB\-v\fR] [override-options] \fIRATE\fR[\fBk\fR]
 Change the audio sampling rate (i.e. resample the audio) to any given
@@ -2879,6 +2906,12 @@ By default, the speed change is performed by resampling with the \fBrate\fR
 effect using its default quality/speed.  For higher quality or higher speed
 resampling, in addition to the \fBspeed\fR effect, specify
 the \fBrate\fR effect with the desired quality option.
+.SP
+See also the
+.B pitch
+and
+.B tempo
+effects.
 .TP
 \fBspectrogram \fR[options]
 Create a spectrogram of the audio.  This effect is optional; type \fBsox
@@ -3570,9 +3603,11 @@ parameter gives the segment overlap length in milliseconds (default 12).
 .SP
 See also
 .B speed
-for an effect that changes tempo and pitch together, and
+for an effect that changes tempo and pitch together,
 .B pitch
-for an effect that changes pitch without changing tempo.
+for an effect that changes tempo and pitch together, and
+.B stretch
+for an effect that changes tempo using a different algorithm.
 .TP
 \fBtreble \fIgain\fR [\fIfrequency\fR[\fBk\fR]\fR [\fIwidth\fR[\fBs\fR\^|\^\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]]]
 Apply a treble tone-control effect.
@@ -3585,20 +3620,16 @@ The tremolo frequency in Hz is given by
 and the depth as a percentage by
 .I depth
 (default 40).
-.SP
-Note: This effect is a special case of the
-.B synth
-effect.
 .TP
 \fBtrim \fIstart\fR [\fIlength\fR]
 Trim can trim off unwanted audio from the beginning and end of the
 audio.  Audio is not sent to the output stream until
 the \fIstart\fR location is reached.
 .SP
-The optional \fIlength\fR parameter tells the number of samples to output
-after the \fIstart\fR sample and is used to trim off the back side of the
+The optional \fIlength\fR parameter gives the length of audio to output
+after the \fIstart\fR sample and is thus used to trim off the end of the
 audio.  Using a value of 0 for the \fIstart\fR parameter will allow
-trimming off the back side only.
+trimming off the end only.
 .SP
 Both options can be specified using either an amount of time or an
 exact count of samples.  The format for specifying lengths in time is
@@ -3670,6 +3701,8 @@ mode, this effect will display the percentage of the audio that needed to be
 limited.
 .SP
 See also
+.B gain
+for a volume-changing effect with different capabilities, and
 .B compand
 for a dynamic-range compression/expansion/limiting effect.
 .SS Deprecated Effects
