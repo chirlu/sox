@@ -180,19 +180,21 @@ time="/usr/bin/time -p"
 timeIO () {
   $time ${bindir}/sox -c $channels -r $rate -n tmp.sox synth $samples's' saw 0:`expr $rate / 2` noise brown vol .9 2> tmp.write
   echo TIME synth channels=$channels samples=$samples `stderr_time tmp.write`s
-  while [ $# != 0 ]; do
-    if [ "${skip}x" != "x" ] ; then
-      from_skip=`echo ${skip} | grep ${1}`
-    fi
-    if [ "${from_skip}x" = "x" ] ; then
-      getFormat $1;
-      ($time ${bindir}/sox $verbose -D tmp.sox $formatFlags -t $1 - 2> tmp.read) | \
-      ($time ${bindir}/sox $verbose -t $1 -c $channels -r $rate - -t sox /dev/null 2> tmp.write)
-      echo "TIME `printf %4s $formatText` write=`stderr_time tmp.write`s read=`stderr_time tmp.read`s"
-    fi
-    shift
-  done
-  rm tmp.sox tmp.write tmp.read
+  if [ `uname` != SunOS ]; then
+    while [ $# != 0 ]; do
+      if [ "${skip}x" != "x" ] ; then
+        from_skip=`echo ${skip} | grep ${1}`
+      fi
+      if [ "${from_skip}x" = "x" ] ; then
+        getFormat $1;
+        ($time ${bindir}/sox $verbose -D tmp.sox $formatFlags -t $1 - 2> tmp.read) | \
+        ($time ${bindir}/sox $verbose -t $1 -c $channels -r $rate - -t sox /dev/null 2> tmp.write)
+        echo "TIME `printf %4s $formatText` write=`stderr_time tmp.write`s read=`stderr_time tmp.read`s"
+      fi
+      shift
+    done
+  fi
+  rm -f tmp.sox tmp.write tmp.read
 }
 
 # Don't try to test un-built formats
