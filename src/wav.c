@@ -176,7 +176,7 @@ static unsigned short  AdpcmReadBlock(sox_format_t * ft)
     errmsg = lsx_ms_adpcm_block_expand_i(ft->signal.channels, wav->nCoefs, wav->lsx_ms_adpcm_i_coefs, wav->packet, wav->samples, samplesThisBlock);
 
     if (errmsg)
-        lsx_warn(errmsg);
+        lsx_warn("%s", errmsg);
 
     return samplesThisBlock;
 }

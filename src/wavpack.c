@@ -105,7 +105,7 @@ static int start_write(sox_format_t * ft)
   config.sample_rate       = (int32_t)(ft->signal.rate + .5);
   config.flags = CONFIG_VERY_HIGH_FLAG;
   if (!WavpackSetConfiguration(p->codec, &config, ft->signal.length? (uint32_t) ft->signal.length / ft->signal.channels : (uint32_t)-1)) {
-    lsx_fail_errno(ft, SOX_EHDR, WavpackGetErrorMessage(p->codec));
+    lsx_fail_errno(ft, SOX_EHDR, "%s", WavpackGetErrorMessage(p->codec));
     return SOX_EOF;
   }
   WavpackPackInit(p->codec);
