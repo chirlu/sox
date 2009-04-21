@@ -35,15 +35,15 @@ SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH SYNOPSIS
 .nf
 \fBsox\fR [\fIglobal-options\fR] [\fIformat-options\fR] \fIinfile1\fR
-    [[\fIformat-options\fR] \fIinfile2\fR] ... [\fIformat-options\fR] \fIoutfile\fR
-    [\fIeffect\fR [\fIeffect-options\fR]] ...
+	[[\fIformat-options\fR] \fIinfile2\fR] ... [\fIformat-options\fR] \fIoutfile\fR
+	[\fIeffect\fR [\fIeffect-options\fR]] ...
 .SP
 \fBplay\fR [\fIglobal-options\fR] [\fIformat-options\fR] \fIinfile1\fR
-    [[\fIformat-options\fR] \fIinfile2\fR] ... [\fIformat-options\fR]
-    [\fIeffect\fR [\fIeffect-options\fR]] ...
+	[[\fIformat-options\fR] \fIinfile2\fR] ... [\fIformat-options\fR]
+	[\fIeffect\fR [\fIeffect-options\fR]] ...
 .SP
 \fBrec\fR [\fIglobal-options\fR] [\fIformat-options\fR] \fIoutfile\fR
-    [\fIeffect\fR [\fIeffect-options\fR]] ...
+	[\fIeffect\fR [\fIeffect-options\fR]] ...
 .fi
 .SH DESCRIPTION
 .SS Introduction
@@ -86,54 +86,55 @@ Input(s) \*(RA Combiner \*(RA Effects \*(RA Output(s)
 .TE
 .DT
 .SP
-To show how this works in practice, here is a selection of examples of
+To show how this works in practice, there follows a selection of examples of
 how SoX might be used.  The simple
 .EX
-  sox recital.au recital.wav
+   sox recital.au recital.wav
 .EE
 translates an audio file in Sun AU format to a Microsoft WAV file, whilst
 .EX
-  sox recital.au -b 16 recital.wav channels 1 rate 16k fade 3 norm
+   sox recital.au -b 16 recital.wav channels 1 rate 16k fade 3 norm
 .EE
 performs the same format translation, but also down-mixes to mono,
 changes the sampling rate, applies a fade-in, nomalizes the signal,
 and store the result at a bit-depth of 16.
 .EX
-  sox -r 16k -e signed -b 8 -c 1 voice-memo.raw voice-memo.wav
+   sox -r 16k -e signed -b 8 -c 1 voice-memo.raw voice-memo.wav
 .EE
 converts `raw' (a.k.a. `headerless') audio to a self-describing file format,
 .EX
-  sox slow.aiff fixed.aiff speed 1.027
+   sox slow.aiff fixed.aiff speed 1.027
 .EE
 adjusts audio speed,
 .EX
-  sox short.au long.au longer.au
+   sox short.wav long.wav longer.wav
 .EE
 concatenates two audio files, and
 .EX
-  sox -m music.mp3 voice.wav mixed.flac
+   sox -m music.mp3 voice.wav mixed.flac
 .EE
 mixes together two audio files.
 .EX
-  play \(dqThe Moonbeams/Greatest/*.ogg\(dq bass +3
+   play \(dqThe Moonbeams/Greatest/*.ogg\(dq bass +3
 .EE
 plays a collection of audio files whilst applying a bass boosting effect,
 .EX
-  play -n -c1 synth sin %-12 sin %-9 sin %-5 sin %-2 fade h 0.1 1 0.1
+   play -n -c1 synth sin %-12 sin %-9 sin %-5 sin %-2 fade h 0.1 1 0.1
 .EE
 plays a synthesised `A minor seventh' chord with a pipe-organ sound,
 .EX
-  rec -c 2 radio.aiff trim 0 30:00
+   rec -c 2 radio.aiff trim 0 30:00
 .EE
 records half an hour of stereo audio, and
 .EX
-  rec -M take1.aiff take1-dub.aiff
+   rec -M take1.aiff take1-dub.aiff
 .EE
 records a new track in a multi-track recording.
 .EX
-  rec -r 44100 -b 16 -s -p silence 1 0.50 0.1% 1 10:00 0.1% | \\
-     sox -p song.ogg silence 1 0.50 0.1% 1 2.0 0.1% : \\
-     newfile : restart
+.ne 3
+   rec -r 44100 -b 16 -s -p silence 1 0.50 0.1% 1 10:00 0.1% | \\
+	sox -p song.ogg silence 1 0.50 0.1% 1 2.0 0.1% : \\
+	newfile : restart
 .EE
 records a stream of audio such as LP/cassette and splits in to multiple
 audio files at points with 2 seconds of silence.  Also does not start
@@ -254,8 +255,8 @@ is not the one that is wanted, then the
 environment variable can be used to override the default.  For example
 (on many systems):
 .EX
-	set AUDIODRIVER=oss
-	play ...
+   set AUDIODRIVER=oss
+   play ...
 .EE
 For
 .BR rec ,
@@ -267,15 +268,15 @@ the
 environment variable can be used to override the default audio device;
 e.g.
 .EX
-	set AUDIODEV=/dev/dsp2
-	play ...
-	sox ... -t oss
+   set AUDIODEV=/dev/dsp2
+   play ...
+   sox ... -t oss
 .EE
 or
 .EX
-	set AUDIODEV=hw:0
-	play ...
-	sox ... -t alsa
+   set AUDIODEV=hw:0
+   play ...
+   sox ... -t alsa
 .EE
 (Note that the syntax of the
 .B set
@@ -289,7 +290,7 @@ default \fBrate\fR quality level is set to `low'; however, this
 can be changed if desired, by explicitly specifying the \fBrate\fR
 effect with a different quality level, e.g.
 .EX
-	play ... rate -m
+   play ... rate -m
 .EE
 or by using the
 .B \-\-play\-rate\-arg
@@ -310,7 +311,7 @@ playback.
 To help with setting a suitable recording level, SoX includes a peak-level
 meter which can be invoked (before making the actual recording) as follows:
 .EX
-	rec -n
+   rec -n
 .EE
 The recording level should be adjusted (using the system-provided mixer
 program, not SoX) so that the meter is \fIat most occasionally\fR full
@@ -343,7 +344,7 @@ format before performing any audio processing; this means that
 manipulating a file that is stored in a lossy format can cause further
 losses in audio fidelity.  E.g. with
 .EX
-	sox long.mp3 short.mp3 trim 10
+   sox long.mp3 short.mp3 trim 10
 .EE
 SoX first decompresses the input MP3 file, then applies the
 .B trim
@@ -401,7 +402,7 @@ or
 .B vol
 effect can be used to prevent clipping, e.g.
 .EX
-	sox dull.au bright.au gain -6 treble +6
+   sox dull.wav bright.wav gain -6 treble +6
 .EE
 guarantees that the treble boost will not clip.
 .SP
@@ -529,7 +530,7 @@ will be created as it would be empty.
 The following is an example of splitting the first 60 seconds of an input
 file in to two 30 second files and ignoring the rest.
 .EX
-	sox song.wav ringtone%1n.wav trim 0 30 : newfile : trim 0 30
+   sox song.wav ringtone%1n.wav trim 0 30 : newfile : trim 0 30
 .SS Stopping SoX
 Usually SoX will complete its processing and exit automatically once
 it has read all available audio data from the input files.
@@ -585,9 +586,9 @@ example, if `genw' generates mono WAV formatted signals to its
 standard output, then the following command makes a stereo file
 from two generated signals:
 .EX
-  sox -M "|genw --imd -" "|genw --thd -" out.wav
+   sox -M "|genw --imd -" "|genw --thd -" out.wav
 .EE
-For headerless (raw) audio, 
+For headerless (raw) audio,
 .B \-t
 (and perhaps other format options) will need to be given, preceding the input
 command.
@@ -598,16 +599,16 @@ by SoX instead of the shell.  This allows a single set of file options to be
 applied to a group of files.  For example, if the current directory contains
 three `vox' files: file1.vox, file2.vox, and file3.vox, then
 .EX
-  play --rate 6k *.vox
+   play --rate 6k *.vox
 .EE
 will be expanded by the `shell' (in most environments) to
 .EX
-  play --rate 6k file1.vox file2.vox file3.vox
+   play --rate 6k file1.vox file2.vox file3.vox
 .EE
 which will treat only the first vox file as having a sample rate of 6k; but
 with
 .EX
-  play --rate 6k "*.vox"
+   play --rate 6k "*.vox"
 .EE
 the given sample rate option will be applied to all three vox files.
 .TP
@@ -616,7 +617,7 @@ This can be used in place of an output filename to specify that
 the SoX command should be used as in input pipe to another SoX command.
 For example, the command:
 .EX
-  play "|sox -n -p synth 2" "|sox -n -p synth 2 tremolo 10" stat
+   play "|sox -n -p synth 2" "|sox -n -p synth 2 tremolo 10" stat
 .EE
 plays two `files' in succession, each with different effects.
 .SP
@@ -668,7 +669,7 @@ environment variable can be used to provide alternative default values for
 SoX's global options.
 For example:
 .EX
-	set SOX_OPTS="--buffer 20000 --play-rate-arg -v"
+   set SOX_OPTS="--buffer 20000 --play-rate-arg -v"
 .EE
 Note that setting SOX_OPTS can potentially create unwanted changes in
 the behaviour of scripts or other programs that invoke SoX.  So SOX_OPTS
@@ -684,9 +685,9 @@ the benefit of SOX_OPTS carrying some system-wide default options).  An
 alternative approach would be to explicitly invoke SoX with default
 option values, e.g.
 .EX
-  SOX_OPTS="... --no-clobber ..."
-  ...
-  sox --clobber $input $output ...
+   SOX_OPTS="... --no-clobber ..."
+   ...
+   sox --clobber $input $output ...
 .EE
 .TP
 \fB\-\-buffer\fR \fBBYTES\fR, \fB\-\-input\-buffer\fR \fBBYTES\fR
@@ -719,7 +720,7 @@ Automatically invoke the
 .B gain
 effect to guard against clipping. E.g.
 .EX
-	sox -G infile -b 16 outfile rate 44100 dither -s
+   sox -G infile -b 16 outfile rate 44100 dither -s
 .EE
 See also
 .BR \-V,
@@ -780,11 +781,11 @@ given for the output file.
 Unintentionally overwriting a file is easier than you might think, for
 example, if you accidentally enter
 .EX
-	sox file1 file2 effect1 effect2 ...
+   sox file1 file2 effect1 effect2 ...
 .EE
 when what you really meant was
 .EX
-	play file1 file2 effect1 effect2 ...
+   play file1 file2 effect1 effect2 ...
 .EE
 then, without this option, file2 will be overwritten.  Hence, using
 this option is strongly recommended; SOX_OPTS (above), a `shell'
@@ -796,7 +797,7 @@ Automatically invoke the
 .B gain
 effect to guard against clipping, and to normalise the audio. E.g.
 .EX
-	sox --norm infile -b 16 outfile rate 44100 dither -s
+   sox --norm infile -b 16 outfile rate 44100 dither -s
 .EE
 See also
 .BR \-V,
@@ -823,8 +824,8 @@ For the first given effect that supports the selected plotting program,
 SoX will output commands to plot the effect's transfer function, and
 then exit without actually processing any audio.  E.g.
 .EX
-	sox --plot octave input-file -n highpass 1320 > highpass.plt
-	octave highpass.plt
+   sox --plot octave input-file -n highpass 1320 > highpass.plt
+   octave highpass.plt
 .EE
 .TP
 \fB\-q\fR, \fB\-\-no\-show\-progress\fR
@@ -900,7 +901,7 @@ Show SoX's version number and exit.
 \fB\-\-single-threaded\fR
 On some hyper-threading/multi-core architectures,
 SoX has support for parallel effects channel processing.
-This option can be given to disable parallel processing. 
+This option can be given to disable parallel processing.
 .IP \fB\-V\fB[\fIlevel\fB]\fP
 Set verbosity\*mthis is particularly useful for seeing how any automatic
 effects have been invoked by SoX.
@@ -957,7 +958,7 @@ less than 1 decreases the volume; greater than 1 increases it.  If a
 negative number is given, then in addition to the volume adjustment,
 the audio signal will be inverted.
 .SP
-See also the 
+See also the
 .BR norm ,
 .BR vol ,
 and
@@ -1010,8 +1011,8 @@ of channels in the audio signal to the given number of channels.  For
 example, the following two commands are equivalent:
 .EX
 .ne 2
-	sox input.au -c 1 output.au bass -3
-	sox input.au      output.au bass -3 channels 1
+   sox input.wav -c 1 output.wav bass -3
+   sox input.wav      output.wav bass -3 channels 1
 .EE
 though the second form is more flexible as it allows the effects to
 be ordered arbitrarily.
@@ -1093,7 +1094,7 @@ Specifies that filename `globbing' (wild-card matching) should not be
 performed by SoX on the following filename.  For example, if the current
 directory contains the two files `five-seconds.wav' and `five*.wav', then
 .EX
-  play --no-glob "five*.wav"
+   play --no-glob "five*.wav"
 .EE
 can be used to play just the single file `five*.wav'.
 .TP
@@ -1114,8 +1115,8 @@ rate of the audio signal to the given value.  For example, the
 following two commands are equivalent:
 .EX
 .ne 2
-	sox input.au -r 48k output.au bass -3
-	sox input.au        output.au bass -3 rate 48k
+   sox input.wav -r 48k output.wav bass -3
+   sox input.wav        output.wav bass -3 rate 48k
 .EE
 though the second form is more flexible as it allows
 .B rate
@@ -1159,11 +1160,11 @@ Unlike other format characteristics, the endianness (byte, nibble, &
 bit ordering) of the input file is not automatically used for the output
 file; so, for example, when the following is run on a little-endian system:
 .EX
-	sox -B audio.s16 trimmed.s16 trim 2
+   sox -B audio.s16 trimmed.s16 trim 2
 .EE
 trimmed.s16 will be created as little-endian;
 .EX
-	sox -B audio.s16 -B trimmed.s16 trim 2
+   sox -B audio.s16 -B trimmed.s16 trim 2
 .EE
 must be used to preserve big-endianness in the output file.
 .SP
@@ -1249,7 +1250,7 @@ It is important to place the effect that will stop the chain
 as the first effect in the chain.  This is because any samples
 that are buffered by effects to the left of the terminating effect
 will be discarded.  The amount of samples discarded is related to the
-.B --buffer
+.B \-\-buffer
 option and it should be keep small, relative to the sample rate, if
 the terminating effect can not be first.  Further information on
 stopping effects can be found in the
@@ -1274,7 +1275,8 @@ will have unique number in its name as documented in
 .B Output Files
 section.
 .EX
-	sox infile.wav output.wav trim 0 30 : newfile : restart
+   sox infile.wav output.wav trim 0 30 : newfile : restart
+.EE
 .SS Common Notation And Parameters
 In the descriptions that follow,
 brackets [ ] are used to denote parameters that are optional, braces
@@ -1322,6 +1324,8 @@ To see if SoX has support for an optional effect, enter
 .B sox \-h
 and look for its name under the list: `EFFECTS'.
 .SS Supported Effects
+Note: a categorised list of the effects can be found in the
+accompanying `README' file.
 .TP
 \fBallpass\fR \fIfrequency\fR[\fBk\fR]\fI width\fR[\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]
 Apply a two-pole all-pass filter with central frequency (in Hz)
@@ -1447,8 +1451,9 @@ smoothness of the changes in pitch.
 For example, an initial tone is generated, then bent three times, yielding
 four different notes in total:
 .EX
-	play -n synth 2.5 sin 667 gain 1 \\
-		bend .35,180,.25  .15,740,.53  0,-520,.3
+.ne 2
+   play -n synth 2.5 sin 667 gain 1 \\
+	bend .35,180,.25  .15,740,.53  0,-520,.3
 .EE
 Note that the clipping that is produced in this example is deliberate;
 to remove it, use
@@ -1478,15 +1483,15 @@ option need not be given.  For example, the following two commands are
 equivalent:
 .EX
 .ne 2
-	sox input.au -c 1 output.au bass -3
-	sox input.au      output.au bass -3 channels 1
+   sox input.wav -c 1 output.wav bass -3
+   sox input.wav      output.wav bass -3 channels 1
 .EE
 though the second form is more flexible as it allows the effects to
 be ordered arbitrarily.
 .SP
 See also
 .B remix
-for an effect that allows channels to be mixed arbitrarily.
+for an effect that allows channels to be mixed/selected arbitrarily.
 .TP
 \fBchorus \fIgain-in gain-out\fR <\fIdelay decay speed depth \fB\-s\fR\^|\^\fB\-t\fR>
 Add a chorus effect to the audio.  This can make a single vocal sound
@@ -1512,17 +1517,19 @@ A typical delay is around 40ms to 60ms; the modulation speed is best
 near 0\*d25Hz and the modulation depth around 2ms.
 For example, a single delay:
 .EX
-	play guitar1.wav chorus 0.7 0.9 55 0.4 0.25 2 \-t
+   play guitar1.wav chorus 0.7 0.9 55 0.4 0.25 2 \-t
 .EE
 Two delays of the original samples:
 .EX
-	play guitar1.wav chorus 0.6 0.9 50 0.4 0.25 2 \-t \\
-		 60 0.32 0.4 1.3 \-s
+.ne 2
+   play guitar1.wav chorus 0.6 0.9 50 0.4 0.25 2 \-t \\
+	 60 0.32 0.4 1.3 \-s
 .EE
 A fuller sounding chorus (with three additional delays):
 .EX
-	play guitar1.wav chorus 0.5 0.9 50 0.4 0.25 2 \-t \\
-		 60 0.32 0.4 2.3 \-t 40 0.3 0.3 1.3 \-s
+.ne 2
+   play guitar1.wav chorus 0.5 0.9 50 0.4 0.25 2 \-t \\
+	 60 0.32 0.4 2.3 \-t 40 0.3 0.3 1.3 \-s
 .EE
 .TP
 \fBcompand \fIattack1\fB,\fIdecay1\fR{\fB,\fIattack2\fB,\fIdecay2\fR}
@@ -1603,7 +1610,7 @@ The following example might be used to make a piece of music with both
 quiet and loud passages suitable for listening to in a noisy environment
 such as a moving vehicle:
 .EX
-  sox asz.au asz-car.au compand 0.3,1 6:-70,-60,-20 -5 -90 0.2
+   sox asz.wav asz-car.wav compand 0.3,1 6:-70,-60,-20 -5 -90 0.2
 .EE
 The transfer function (`6:\-70,...') says that very soft sounds (below
 \-70dB) will remain unchanged.  This will stop the compander from
@@ -1622,13 +1629,13 @@ the compander to react a bit more quickly to sudden volume changes.
 In the next example, compand is being used as a noise-gate for when the
 noise is at a lower level than the signal:
 .EX
-  play infile compand .1,.2 -inf,-50.1,-inf,-50,-50 0 -90 .1
+   play infile compand .1,.2 -inf,-50.1,-inf,-50,-50 0 -90 .1
 .EE
 Here is another noise-gate, this time for when the
 noise is at a higher level than the signal (making it, in some ways,
 similar to squelch):
 .EX
-  play infile compand .1,.1 -45.1,-45,-inf,0,-inf 45 -90 .1
+   play infile compand .1,.1 -45.1,-45,-inf,0,-inf 45 -90 .1
 .EE
 This effect supports the \fB\-\-plot\fR global option (for the transfer function).
 .SP
@@ -1671,7 +1678,7 @@ is to use the
 filter effect at a frequency of say 10Hz, as illustrated in the following
 example:
 .EX
-	sox -n out.au synth 5 sin %0 50 highpass 10
+   sox -n output.wav synth 5 sin %0 50 highpass 10
 .EE
 .SP
 See also the
@@ -1699,15 +1706,15 @@ de-emphasised audio to a new CD (which will then play correctly on any
 CD player), or simply play the correctly de-emphasised audio files on the
 PC.  For example:
 .EX
-	sox track1.wav track1-deemph.wav deemph
+   sox track1.wav track1-deemph.wav deemph
 .EE
 and then burn track1-deemph.wav to CD, or
 .EX
-	play track1-deemph.wav
+   play track1-deemph.wav
 .EE
 or simply
 .EX
-	play track1.wav deemph
+   play track1.wav deemph
 .EE
 The de-emphasis filter is implemented as a biquad; its maximum deviation
 from the ideal response is only 0\*d06dB (up to 20kHz).
@@ -1728,14 +1735,16 @@ seconds, and leaves the second channel (and any other channels that may be
 present) un-delayed.
 The following (one long) command plays a chime sound:
 .EX
-	play -n synth sin %3 sin %-2 sin %-5 sin %-9 \\
-	  sin %-14 sin %-21 fade h .01 2 1.5 delay \\
-	  1.3 1 .76 .54 .27 remix - fade h 0 2.7 2.5 norm -1
+.ne 3
+   play -n synth sin %3 sin %-2 sin %-5 sin %-9 \\
+	sin %-14 sin %-21 fade h .01 2 1.5 delay \\
+	1.3 1 .76 .54 .27 remix - fade h 0 2.7 2.5 norm -1
 .EE
 and this plays a guitar chord:
 .EX
-	play -n synth pl %-26 pl %-22 pl %-19 pl %-14 pl %-7 pl \\
-	  %-2 delay 0 .05 .1 .15 .2 .25 remix - fade 0 4 .1 norm -1
+.ne 2
+   play -n synth pl %-26 pl %-22 pl %-19 pl %-14 pl %-7 pl \\
+	%-2 delay 0 .05 .1 .15 .2 .25 remix - fade 0 4 .1 norm -1
 .EE
 .TP
 \fBdither\fR [\fB\-a\fR] [\fB\-S\fR\^|\^\fB\-s\fR\^|\^\fB\-f \fIfilter\fR]
@@ -1817,20 +1826,20 @@ For example:
 This will make it sound as if there are twice as many instruments as are
 actually playing:
 .EX
-	play lead.aiff echo 0.8 0.88 60 0.4
+   play lead.aiff echo 0.8 0.88 60 0.4
 .EE
 If the delay is very short, then it sound like a (metallic) robot playing
 music:
 .EX
-	play lead.aiff echo 0.8 0.88 6 0.4
+   play lead.aiff echo 0.8 0.88 6 0.4
 .EE
 A longer delay will sound like an open air concert in the mountains:
 .EX
-	play lead.aiff echo 0.8 0.9 1000 0.3
+   play lead.aiff echo 0.8 0.9 1000 0.3
 .EE
 One mountain more, and:
 .EX
-	play lead.aiff echo 0.8 0.9 1000 0.3 1800 0.25
+   play lead.aiff echo 0.8 0.9 1000 0.3 1800 0.25
 .EE
 .TP
 \fBechos \fIgain-in gain-out\fR <\fIdelay decay\fR>
@@ -1849,15 +1858,15 @@ has the same effect as a single echo.
 .SP
 The sample will be bounced twice in symmetric echos:
 .EX
-	play lead.aiff echos 0.8 0.7 700 0.25 700 0.3
+   play lead.aiff echos 0.8 0.7 700 0.25 700 0.3
 .EE
 The sample will be bounced twice in asymmetric echos:
 .EX
-	play lead.aiff echos 0.8 0.7 700 0.25 900 0.3
+   play lead.aiff echos 0.8 0.7 700 0.25 900 0.3
 .EE
 The sample will sound as if played in a garage:
 .EX
-	play lead.aiff echos 0.8 0.7 40 0.25 63 0.3
+   play lead.aiff echos 0.8 0.7 40 0.25 63 0.3
 .EE
 .TP
 \fBequalizer \fIfrequency\fR[\fBk\fR]\fI width\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR\^|\^\fBk\fR] \fIgain\fR
@@ -1929,20 +1938,20 @@ given, then the coefficients are read from the `standard input' (stdin);
 otherwise, coefficients may be given on the command line.
 Examples:
 .EX
-  sox infile outfile fir 0.0195 -0.082 0.234 0.891 -0.145 0.043
+   sox infile outfile fir 0.0195 -0.082 0.234 0.891 -0.145 0.043
 .EE
 .EX
-  sox infile outfile fir coefs.txt
+   sox infile outfile fir coefs.txt
 .EE
 with coefs.txt containing
 .EX
-  # HP filter
-  # freq=10000
-    1.2311233052619888e-01
-   -4.4777096106211783e-01
-    5.1031563346705155e-01
-   -6.6502926320995331e-02
-  ...
+   # HP filter
+   # freq=10000
+     1.2311233052619888e-01
+    -4.4777096106211783e-01
+     5.1031563346705155e-01
+    -6.6502926320995331e-02
+   ...
 .EE
 .TP
 \fBflanger\fR [\fIdelay depth regen width speed shape phase interp\fR]
@@ -2051,11 +2060,11 @@ option normalises the audio to 0dB FSD; it is often used in conjunction with a n
 to the effect that the audio is normalised to a given level below 0dB.
 For example,
 .EX
-	sox infile outfile gain -n
+   sox infile outfile gain -n
 .EE
 normalises to 0dB, and
 .EX
-	sox infile outfile gain -n -3
+   sox infile outfile gain -n -3
 .EE
 normalises to \-3dB.
 .SP
@@ -2063,7 +2072,7 @@ The
 .B \-l
 option invokes a simple limiter, e.g.
 .EX
-	sox infile outfile gain -l 6
+   sox infile outfile gain -l 6
 .EE
 will apply 6dB of gain but never clip.  Note that limiting more than a
 few dBs more than occasionally (in a piece of audio) is not recommended
@@ -2077,7 +2086,7 @@ The
 option is used to apply gain to provide head-room for subsequent
 processing.  For example, with
 .EX
-	sox infile outfile gain -h bass +6
+   sox infile outfile gain -h bass +6
 .EE
 6dB of attenuation will be applied prior to the bass boosting effect
 thus ensuring that it will not clip.  Of course, with bass, it is
@@ -2087,7 +2096,7 @@ rate, dither) it is not always as clear.  Another advantage of using
 headroom is not used by subsequent effects, it can be reclaimed with
 \fBgain -r\fR, for example:
 .EX
-	sox infile outfile gain -h bass +6 rate 44100 gain -r
+   sox infile outfile gain -h bass +6 rate 44100 gain -r
 .EE
 The above effects chain guarantees never to clip nor amplify;
 it attenuates if necessary to prevent clipping, but by only as
@@ -2096,7 +2105,7 @@ much as is needed to do so.
 Output formatting (dithering and bit-depth reduction) also requires
 headroom (which cannot be `reclaimed'), e.g.
 .EX
-	sox infile outfile gain -h bass +6 rate 44100 gain -rh dither
+   sox infile outfile gain -h bass +6 rate 44100 gain -rh dither
 .EE
 Here, the second
 .B gain
@@ -2181,7 +2190,8 @@ repeated to create multiple bands.
 For example, the following (one long) command shows how multi-band
 companding is typically used in FM radio:
 .EX
-	play track1.wav gain -3 filter 8000- 32 100 mcompand \\
+.ne 8
+   play track1.wav gain -3 filter 8000- 32 100 mcompand \\
 	\(dq0.005,0.1 -47,-40,-34,-34,-17,-33\(dq 100 \\
 	\(dq0.003,0.05 -47,-40,-34,-34,-17,-33\(dq 400 \\
 	\(dq0.000625,0.0125 -47,-40,-34,-34,-15,-33\(dq 1600 \\
@@ -2209,7 +2219,7 @@ global option (where multiple
 .I files
 are mix-combined before entering the effects chain).
 .SP
-When reducing the number of channels it is possible to 
+When reducing the number of channels it is possible to
 use the \fB\-l\fR, \fB\-r\fR, \fB\-f\fR, \fB\-b\fR,
 \fB\-1\fR, \fB\-2\fR, \fB\-3\fR, \fB\-4\fR, options to select only
 the left, right, front, back channel(s) or specific channel
@@ -2267,7 +2277,7 @@ or the end of a recording.  \fBnoiseprof\fR will write out a noise
 profile to \fIprofile-file\fR, or to stdout if no \fIprofile-file\fR or
 if `\-' is given.  E.g.
 .EX
-	sox speech.au -n trim 0 1.5 noiseprof speech.noise-profile
+   sox speech.wav -n trim 0 1.5 noiseprof speech.noise-profile
 .EE
 To actually remove the noise, run SoX again, this time with the \fBnoisered\fR
 effect;
@@ -2278,7 +2288,7 @@ from
 .IR profile-file ,
 or from stdin if no \fIprofile-file\fR or if `\-' is given.  E.g.
 .EX
-	sox speech.au cleaned.au noisered speech.noise-profile 0.3
+   sox speech.wav cleaned.wav noisered speech.noise-profile 0.3
 .EE
 How much noise should be removed is specified by
 .IR amount \*ma
@@ -2294,7 +2304,7 @@ sections of the audio.
 On most systems, the two stages\*mprofiling and reduction\*mcan be combined
 using a pipe, e.g.
 .EX
-	sox noisy.au -n trim 0 1 noiseprof | play noisy.au noisered
+   sox noisy.wav -n trim 0 1 noiseprof | play noisy.wav noisered
 .EE
 .TP
 \fBnorm\fR [\fIdB-level\fR]
@@ -2363,19 +2373,19 @@ feedback, and usually no less than 0\*d1.  Gain-out is the volume of the output.
 .SP
 For example:
 .EX
-	play snare.flac phaser 0.8 0.74 3 0.4 0.5 -t
+   play snare.flac phaser 0.8 0.74 3 0.4 0.5 -t
 .EE
 Gentler:
 .EX
-	play snare.flac phaser 0.9 0.85 4 0.23 1.3 -s
+   play snare.flac phaser 0.9 0.85 4 0.23 1.3 -s
 .EE
 A popular sound:
 .EX
-	play snare.flac phaser 0.89 0.85 1 0.24 2 -t
+   play snare.flac phaser 0.89 0.85 1 0.24 2 -t
 .EE
 More severe:
 .EX
-	play snare.flac phaser 0.6 0.66 3 0.6 2 -t
+   play snare.flac phaser 0.6 0.66 3 0.6 2 -t
 .EE
 .TP
 \fBpitch \fR[\fB\-q\fR] \fIshift\fR [\fIsegment\fR [\fIsearch\fR [\fIoverlap\fR]]]
@@ -2461,8 +2471,8 @@ option need not be given.  For example, the following two commands are
 equivalent:
 .EX
 .ne 2
-	sox input.au -r 48k output.au bass -3
-	sox input.au        output.au bass -3 rate 48k
+   sox input.wav -r 48k output.wav bass -3
+   sox input.wav        output.wav bass -3 rate 48k
 .EE
 though the second command is more flexible as it allows
 .B rate
@@ -2561,15 +2571,15 @@ increases to 85%.
 .SP
 Examples:
 .EX
-	sox input.wav -b 16 output.wav rate -s -a 44100 dither
+   sox input.wav -b 16 output.wav rate -s -a 44100 dither -s
 .EE
 default (high) quality resampling; overrides: steep filter, allow
-aliasing; to 44\*d1kHz sample rate; dither output to 16-bit WAV
+aliasing; to 44\*d1kHz sample rate; noise-shaped dither to 16-bit WAV
 file.
 .EX
-	sox input.wav -b 24 output.aiff rate -v -L -b 90 48k
+   sox input.wav -b 24 output.aiff rate -v -I -b 90 48k
 .EE
-very high quality resampling; overrides: linear phase, band-width 90%;
+very high quality resampling; overrides: intermediate phase, band-width 90%;
 to 48k sample rate; store output to 24-bit AIFF file.
 .TS
 center;
@@ -2614,13 +2624,13 @@ channel-number ranges; alternatively,
 .B 0
 may be given to create a silent output channel.  For example,
 .EX
-	sox input.au output.au remix 6 7 8 0
+   sox input.wav output.wav remix 6 7 8 0
 .EE
 creates an output file with four channels, where channels 1, 2, and 3 are
 copies of channels 6, 7, and 8 in the input file, and channel 4 is silent.
 Whereas
 .EX
-	sox input.au output.au remix 1-3,7 3
+   sox input.wav output.wav remix 1-3,7 3
 .EE
 creates a (somewhat bizarre) stereo output file where the left channel
 is a mix-down of input channels 1, 2, 3, and 7, and the right channel is
@@ -2630,7 +2640,7 @@ Where a range of channels is specified, the channel numbers to the left and
 right of the hyphen are optional and default to 1 and to the number of input
 channels respectively. Thus
 .EX
-	sox input.au output.au remix -
+   sox input.wav output.wav remix -
 .EE
 performs a mix-down of all input channels to mono.
 .SP
@@ -2668,17 +2678,17 @@ The \-a (automatic)
 option however, can be given to retain the automatic scaling in this
 case.  For example,
 .EX
-	sox input.au output.au remix 1,2 3,4v0.8
+   sox input.wav output.wav remix 1,2 3,4v0.8
 .EE
 results in channel level multipliers of 0\*d5,0\*d5 1,0\*d8, whereas
 .EX
-	sox input.au output.au remix -a 1,2 3,4v0.8
+   sox input.wav output.wav remix -a 1,2 3,4v0.8
 .EE
 results in channel level multipliers of 0\*d5,0\*d5 0\*d5,0\*d8.
 .SP
 The \-m (manual) option disables all automatic volume adjustments, so
 .EX
-	sox input.au output.au remix -m 1,2 3,4v0.8
+   sox input.wav output.wav remix -m 1,2 3,4v0.8
 .EE
 results in channel level multipliers of 1,1 1,0\*d8.
 .SP
@@ -2687,10 +2697,10 @@ change; however, the only case in which this is useful is in conjunction
 with
 .BR i .
 For example, if
-.I input.au
+.I input.wav
 is stereo, then
 .EX
-	sox input.au output.au remix 1,2i
+   sox input.wav output.wav remix 1,2i
 .EE
 is a mono equivalent of the
 .B oops
@@ -2717,19 +2727,19 @@ script) is useful:
 #!/bin/sh
 chans=\`soxi -c "$1"\`
 while [ $chans -ge 1 ]; do
-  chans0=\`printf %02i $chans\`   # 2 digits hence up to 99 chans
-  out=\`echo "$1"|sed "s/\\(.*\\)\\.\\(.*\\)/\\1-$chans0.\\2/"\`
-  sox "$1" "$out" remix $chans
-  chans=\`expr $chans - 1\`
+   chans0=\`printf %02i $chans\`   # 2 digits hence up to 99 chans
+   out=\`echo "$1"|sed "s/\\(.*\\)\\.\\(.*\\)/\\1-$chans0.\\2/"\`
+   sox "$1" "$out" remix $chans
+   chans=\`expr $chans - 1\`
 done
 .EE
 If a file
-.I input.au
+.I input.wav
 containing six audio channels were given, the script would produce six
 output files:
-.IR input-01.au ,
-\fIinput-02.au\fR, ...,
-.IR input-06.au .
+.IR input-01.wav ,
+\fIinput-02.wav\fR, ...,
+.IR input-06.wav .
 .SP
 See also
 .B mixer
@@ -2759,14 +2769,14 @@ Note that this effect
 increases both the volume and the length of the audio, so to prevent clipping
 in these domains, a typical invocation might be:
 .EX
-  play dry.au gain -3 pad 0 3 reverb
+   play dry.wav gain -3 pad 0 3 reverb
 .EE
 The
 .B \-w
 option can be given to select only the `wet' signal, thus allowing it to be
 processed further, independently of the `dry' signal.  E.g.
 .EX
-  play -m voice.au "|sox voice.au -p reverse reverb -w reverse"
+   play -m voice.wav "|sox voice.wav -p reverse reverb -w reverse"
 .EE
 for a reverse reverb effect.
 .TP
@@ -2860,7 +2870,7 @@ The following example shows how this effect can be used to start a recording
 that does not contain the delay at the start which usually occurs between
 `pressing the record button' and the start of the performance:
 .EX
-	rec \fIparameters filename other-effects\fR silence 1 5 2%
+   rec \fIparameters filename other-effects\fR silence 1 5 2%
 .EE
 .TP
 \fBsinc\fR [\fB\-a\fI att\fR\^|\^\fB\-b\fI beta\fR] [\fB\-p\fI phase\fR\^|\^\fB\-M\fR\^|\^\fB\-I\fR\^|\^\fB\-L\fR] [\fB\-t\fI tbw\fR\^|\^\fB\-n\fI taps\fR] [\fIfreqHP\fR][\fB\-\fIfreqLP\fR [\fB\-t\fR tbw\^|\^\fB\-n\fR taps]]
@@ -2932,7 +2942,7 @@ For multi-channel input files, use the
 effect as either
 .B remix \-
 to obtain a spectrogram on the mix-down,
-or 
+or
 .B remix
 .I n
 to select a particular channel; be aware though, that both of
@@ -2959,7 +2969,7 @@ point later in the audio stream, first invoke the
 .B trim
 effect; e.g.
 .EX
-  sox audio.ogg -n trim 1:00 spectrogram
+   sox audio.ogg -n trim 1:00 spectrogram
 .EE
 starts the spectrogram at 1 minute through the audio.
 .IP \fB\-y\ \fInum\fR
@@ -2981,7 +2991,7 @@ invoking
 .BR spectrogram ;
 e.g.
 .EX
-  sox audio.ogg -n rate 4k spectrogram
+   sox audio.ogg -n rate 4k spectrogram
 .EE
 allows detailed analysis of frequencies up to 2kHz (half the sampling
 rate).
@@ -3057,13 +3067,13 @@ Name of the spectrogram output PNG file, default `spectrogram.png'.
 For example, let's see what the spectrogram of a swept triangular wave looks
 like:
 .EX
-	sox -n -n synth 6 tri 10k:14k spectrogram -z 100 -w k
+   sox -n -n synth 6 tri 10k:14k spectrogram -z 100 -w k
 .EE
 Append the following to the `chime' example in the
 .B delay
 effect to see its spectrogram:
 .EX
-	rate 2k spectrogram -x 200 -Z -15 -w k
+   rate 2k spectrogram -x 200 -Z -15 -w k
 .EE
 For the ability to perform off-line processing of spectral data, see the
 .B stat
@@ -3119,19 +3129,19 @@ command with the
 (\fIstart\fR) effect) at times 0:30\*d125 and 1:03\*d432.
 The following commands cut out the first verse:
 .EX
-  sox too-long.au part1.au trim 0 30.130
+   sox too-long.wav part1.wav trim 0 30.130
 .EE
 (5 ms excess, after the first verse starts)
 .EX
-  sox long.au part2.au trim 1:03.422
+   sox long.wav part2.wav trim 1:03.422
 .EE
 (5 ms excess plus 5 ms leeway, before the second verse starts)
 .EX
-  sox part1.au part2.au just-right.au splice 30.130
+   sox part1.wav part2.wav just-right.wav splice 30.130
 .EE
 For another example, the SoX command
 .EX
-  play "|sox -n -p synth 1 sin %1" "|sox -n -p synth 1 sin %3"
+   play "|sox -n -p synth 1 sin %1" "|sox -n -p synth 1 sin %3"
 .EE
 generates and plays two notes, but there is a nasty click at the
 transition; the click can be removed by splicing instead of
@@ -3151,13 +3161,13 @@ invocation.  For example:
 rate=\`soxi -r "$1"\`
 e=\`expr $rate '*' 5 / 1000\`  # Using default excess
 l=$e                         # and leeway.
-sox "$1" piece.au trim \`expr $2 - $e - $l\`s \\
-	\`expr $3 - $2 + $e + $l + $e\`s
-sox "$1" part1.au trim 0 \`expr $4 + $e\`s
-sox "$1" part2.au trim \`expr $4 + $3 - $2 - $e - $l\`s
-sox part1.au piece.au part2.au "$5" splice \\
-	\`expr $4 + $e\`s \\
-	\`expr $4 + $e + $3 - $2 + $e + $l + $e\`s
+sox "$1" piece.wav trim \`expr $2 - $e - $l\`s \\
+   \`expr $3 - $2 + $e + $l + $e\`s
+sox "$1" part1.wav trim 0 \`expr $4 + $e\`s
+sox "$1" part2.wav trim \`expr $4 + $3 - $2 - $e - $l\`s
+sox part1.wav piece.wav part2.wav "$5" splice \\
+   \`expr $4 + $e\`s \\
+   \`expr $4 + $e + $3 - $2 + $e + $l + $e\`s
 .EE
 In the above Bourne shell script,
 two splices are used to `copy and paste' audio.
@@ -3177,13 +3187,13 @@ option would typically be given (to select an `equal power' cross-fade), and
 .I leeway
 should be zero (which is the default if
 .B \-q
-is given).  For example, if f1.au and f2.au are audio files
+is given).  For example, if f1.wav and f2.wav are audio files
 to be cross-faded, then
 .EX
-	sox f1.au f2.au out.au splice -q $(soxi -D f1.au),3
+   sox f1.wav f2.wav out.wav splice -q $(soxi -D f1.wav),3
 .EE
 cross-fades the files where the point of equal loudness is 3 seconds
-before the end of f1.au, i.e. the total length of the cross-fade is
+before the end of f1.wav, i.e. the total length of the cross-fade is
 2 x 3 = 6 seconds (Note: the $(...) notation is POSIX shell).
 .TP
 \fBstat\fR [\fB\-s \fIscale\fR] [\fB\-rms\fR] [\fB\-freq\fR] [\fB\-v\fR] [\fB\-d\fR]
@@ -3467,35 +3477,37 @@ effect that can has an associated length).
 For example, the following produces a 3 second, 48kHz,
 audio file containing a sine-wave swept from 300 to 3300\ Hz:
 .EX
-	sox -n output.au synth 3 sine 300-3300
+   sox -n output.wav synth 3 sine 300-3300
 .EE
 and this produces an 8\ kHz version:
 .EX
-	sox -r 8000 -n output.au synth 3 sine 300-3300
+   sox -r 8000 -n output.wav synth 3 sine 300-3300
 .EE
 Multiple channels can be synthesised by specifying the set of
 parameters shown between braces multiple times;
 the following puts the swept tone in the left channel and adds `brown'
 noise in the right:
 .EX
-	sox -n output.au synth 3 sine 300-3300 brownnoise
+   sox -n output.wav synth 3 sine 300-3300 brownnoise
 .EE
 The following example shows how two synth effects can be cascaded
 to create a more complex waveform:
 .EX
-	sox -n output.au synth 0\*d5 sine 200-500 \(rs
-		synth 0\*d5 sine fmod 700-100
+.ne 2
+   sox -n output.wav synth 0.5 sine 200-500 \\
+	synth 0.5 sine fmod 700-100
 .EE
 Frequencies can also be given as a number of musical semitones relative
 to `middle A' (440\ Hz) by prefixing a `%' character;  for example, the
 following could be used to help tune a guitar's low `E' string:
 .EX
-	play -n synth 4 pluck %-29
+   play -n synth 4 pluck %-29
 .EE
 or with a (Bourne shell) loop, the whole guitar:
 .EX
-	for s in -29 -24 -19 -14 -10 -5; do \\
-		play -n synth 4 pluck %$s repeat 2; done
+.ne 2
+   for s in -29 -24 -19 -14 -10 -5; do \\
+	play -n synth 4 pluck %$s repeat 2; done
 .EE
 .B N.B.
 This effect generates audio at maximum volume (0dBFS), which means that there
