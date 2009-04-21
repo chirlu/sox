@@ -5,8 +5,8 @@ This file contains information specific to the Win32 version of SoX.
 Please refer to the README file for general information.
 
 The binary SOX.EXE can be installed anywhere you desire.  The only
-restriction is that the included CYGWIN1.DLL must be located in the
-same directory as SOX.EXE or somewhere within your PATH.
+restriction is that the included CYGWIN1.DLL and CYGGOMP-1.DLL must be 
+located in the same directory as SOX.EXE or somewhere within your PATH.
 
 SoX Helper Applications
 -----------------------
