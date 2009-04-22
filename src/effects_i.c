@@ -273,9 +273,21 @@ int main(int argc, char * * argv)
  *
  * calculated by freq = 440Hz * 2**(note/12)
  */
-static double calc_note_freq(double note)
+static double calc_note_freq(double note, int key)
 {
-  return 440.0 * pow(2.0, note / 12.0);
+  if (key != INT_MAX) {                         /* Just intonation. */
+    static const int n[] = {16, 9, 6, 5, 4, 7}; /* Numerator. */
+    static const int d[] = {15, 8, 5, 4, 3, 5}; /* Denominator. */
+    static double j[13];                        /* Just semitones */
+    int i, m = floor(note);
+
+    if (!j[1]) for (i = 1; i <= 12; ++i)
+      j[i] = i <= 6? log((double)n[i - 1] / d[i - 1]) / log(2.) : 1 - j[12 - i];
+    note -= m;
+    m -= key = m - ((INT_MAX / 2 - ((INT_MAX / 2) % 12) + m - key) % 12);
+    return 440 * pow(2., key / 12. + j[m] + (j[m + 1] - j[m]) * note);
+  }
+  return 440 * pow(2., note / 12);
 }
 
 /* Read string 'text' and convert to frequency.
@@ -284,7 +296,7 @@ static double calc_note_freq(double note)
  * note is calculated.
  * Return -1 on error.
  */
-double lsx_parse_frequency(char const * text, char * * end_ptr)
+double lsx_parse_frequency_k(char const * text, char * * end_ptr, int key)
 {
   double result;
 
@@ -292,7 +304,7 @@ double lsx_parse_frequency(char const * text, char * * end_ptr)
     result = strtod(text + 1, end_ptr);
     if (*end_ptr == text + 1)
       return -1;
-    return calc_note_freq(result);
+    return calc_note_freq(result, key);
   }
   result = strtod(text, end_ptr);
   if (end_ptr) {

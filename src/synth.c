@@ -266,10 +266,16 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *) effp->priv;
   channel_t master, * chan = &master;
-  int argn = 0;
+  int key = INT_MAX, argn = 0;
+  char dummy;
   --argc, ++argv;
 
   if (argc && !strcmp(*argv, "-n")) p->no_headroom = sox_true, ++argv, --argc;
+
+  if (argc > 1 && !strcmp(*argv, "-j") && sscanf(argv[1], "%i %c", &key, &dummy) == 1) {
+    argc -= 2;
+    argv += 2;
+  }
 
   /* Get duration if given (if first arg starts with digit) */
   if (argc && (isdigit((int)argv[argn][0]) || argv[argn][0] == '.')) {
@@ -320,14 +326,14 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
         argv[argn][0] == '.' || argv[argn][0] == '%') {
       static const char sweeps[] = ":+/-";
 
-      chan->freq2 = chan->freq = lsx_parse_frequency(argv[argn], &end_ptr);
+      chan->freq2 = chan->freq = lsx_parse_frequency_k(argv[argn], &end_ptr, key);
       if (chan->freq < 0) {
         lsx_fail("invalid freq");
         return SOX_EOF;
       }
       if (*end_ptr && strchr(sweeps, *end_ptr)) {         /* freq2 given? */
         chan->sweep = strchr(sweeps, *end_ptr) - sweeps;
-        chan->freq2 = lsx_parse_frequency(end_ptr + 1, &end_ptr);
+        chan->freq2 = lsx_parse_frequency_k(end_ptr + 1, &end_ptr, key);
         if (chan->freq2 < 0) {
           lsx_fail("invalid freq2");
           return SOX_EOF;
@@ -649,7 +655,7 @@ static int kill(sox_effect_t * effp)
 const sox_effect_handler_t *lsx_synth_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "synth", "[-n] [len] {type [combine] [[%]freq[k][:|+|/|-[%]freq2[k]] [off [ph [p1 [p2 [p3]]]]]]}",
+    "synth", "[-j KEY] [-n] [len] {type [combine] [[%]freq[k][:|+|/|-[%]freq2[k]] [off [ph [p1 [p2 [p3]]]]]]}",
     SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_GAIN,
     getopts, start, flow, 0, stop, kill, sizeof(priv_t)
   };
