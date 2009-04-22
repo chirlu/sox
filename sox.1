@@ -3497,9 +3497,10 @@ to create a more complex waveform:
    sox -n output.wav synth 0.5 sine 200-500 \\
 	synth 0.5 sine fmod 700-100
 .EE
-Frequencies can also be given as a number of musical semitones relative
-to `middle A' (440\ Hz) by prefixing a `%' character;  for example, the
-following could be used to help tune a guitar's low `E' string:
+Frequencies can also be given as a number of equal temperament semitones
+relative to `middle A' (440\ Hz) by prefixing a `%' character;  for
+example, the following could be used to help tune a guitar's low `E'
+string:
 .EX
    play -n synth 4 pluck %-29
 .EE
@@ -3509,6 +3510,9 @@ or with a (Bourne shell) loop, the whole guitar:
    for s in -29 -24 -19 -14 -10 -5; do \\
 	play -n synth 4 pluck %$s repeat 2; done
 .EE
+Note that, at this time, temperaments other than equal can only be
+obtained by using the frequency notation.
+.SP
 .B N.B.
 This effect generates audio at maximum volume (0dBFS), which means that there
 is a high chance of clipping when using the audio subsequently, so
@@ -3544,8 +3548,8 @@ for specifying sample counts is the number of samples with the letter
 (frequency modulation); default=create
 .SP
 \fIfreq\fR/\fIfreq2\fR are the frequencies at the beginning/end of
-synthesis in Hz or, if preceded with `%', semitones relative to A
-(440\ Hz); for both, default=%0.  If
+synthesis in Hz or, if preceded with `%', equal temperament semitones
+relative to A (440\ Hz); for both, default=%0.  If
 .I freq2
 is given, then
 .I len
