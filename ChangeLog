@@ -96,6 +96,7 @@ Effects:
   o Fix [2332343] 'silence' segfault with certain lengths. (cbagwell)
   o Fix temporary file problems in Windows (cygwin) with normalise and
     other effects.  (robs)
+  o Fix [2779041] spectrogram PNG file is invalid on Windows.  (robs)
   o Parallel effects channel processing on some hyper-threading/mult-core
     architectures.  New `--single-threaded' option to disable this.  (robs)
 

@@ -22,7 +22,7 @@ Release highlights include:
   o Can now auto-detect file-type even when inputing from a pipe.
 
 For the complete list of changes, see the ChangeLog at
-  http://sox.cvs.sourceforge.net/sox/sox/ChangeLog?revision=1.223&view=markup
+  http://sox.cvs.sourceforge.net/sox/sox/ChangeLog?revision=1.224&view=markup
 
 Thanks to all who contributed to this release.
 

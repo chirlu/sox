@@ -385,7 +385,7 @@ static int axis(double to, int max_steps, double * limit, char * * prefix)
 static int stop(sox_effect_t * effp)
 {
   priv_t *    p        = (priv_t *) effp->priv;
-  FILE *      file     = fopen(p->out_name, "w");
+  FILE *      file     = fopen(p->out_name, "wb");
   uLong       font_len = 96 * font_y;
   int         rows     = below + p->rows + 30 + 20 * !!p->title;
   int         cols     = left + p->cols + between + spectrum_width + right;
