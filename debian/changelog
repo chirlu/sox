@@ -1,8 +1,19 @@
-sox (14.2.0+cvs-1) UNRELEASED; urgency=low
+sox (14.3.0+cvs-1) UNRELEASED; urgency=low
 
   * CVS version.
+  * [debian/control]:
+    - Added build depend on libpulse-dev.
+    - Added PulseAudio package.
+  * [debian/rules]:
+    - Added distro name.
+    - Added dynamic library configure flag.
+    - Reenabled libmagic as it's not used by default anymore.
+    - Explicitly disabled amrwb and amrnb.
+    - Removed now useless --disable-rpath flag.
+  * [debian/libsox-fmt-pulse.dirs,debian/libsox-fmt-pulse.install]:
+    - Added PulseAudio library.
 
- -- Pascal Giard <evilynux@gmail.com>  Fri, 10 Apr 2009 10:48:03 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Fri, 24 Apr 2009 10:17:03 -0400
 
 sox (14.2.0-2) unstable; urgency=low
 
