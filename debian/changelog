@@ -12,6 +12,8 @@ sox (14.3.0+cvs-1) UNRELEASED; urgency=low
     - Removed now useless --disable-rpath flag.
   * [debian/libsox-fmt-pulse.dirs,debian/libsox-fmt-pulse.install]:
     - Added PulseAudio library.
+  * [debian/libsox-fmt-base.install]:
+    - Removed formats libraries that are now included in libsox.
 
  -- Pascal Giard <evilynux@gmail.com>  Fri, 24 Apr 2009 10:17:03 -0400
 
