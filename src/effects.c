@@ -198,7 +198,7 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
 {
   sox_effect_t * effp1 = &chain->effects[n - 1][0];
   sox_effect_t * effp = &chain->effects[n][0];
-  int effstatus = SOX_SUCCESS, f;
+  int effstatus = SOX_SUCCESS, f = 0;
   size_t i;
   const sox_sample_t *ibuf;
   size_t idone = effp1->oend - effp1->obeg;
@@ -233,9 +233,14 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
         lsx_fail("flowed asymmetrically!");
         effstatus = SOX_EOF;
       }
-#endif
       idone_last = idonec;
       odone_last = odonec;
+#else
+      if (!f) {
+        idone_last = idonec;
+        odone_last = odonec;
+      }
+#endif
 
       if (eff_status_c != SOX_SUCCESS)
         effstatus = SOX_EOF;
@@ -245,8 +250,8 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
       for (f = 0; f < (int)effp->flows; ++f)
         *obuf++ = chain->obufc[f][i];
 
-    idone = f * idone_last;
-    obeg = f * odone_last;
+    idone = effp->flows * idone_last;
+    obeg = effp->flows * odone_last;
   }
 #if DEBUG_EFFECTS_CHAIN
   lsx_report("flow:  %5u%5u%5u%5u", pre_idone, pre_odone, idone, obeg);

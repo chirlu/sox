@@ -706,9 +706,9 @@ static void makect(int nc, int *ip, double *c)
 /* -------- child routines -------- */
 
 
-static void bitrv2(int n, int *ip, double *a)
+static void bitrv2(int n, int *ip0, double *a)
 {
-    int j, j1, k, k1, l, m, m2;
+    int j, j1, k, k1, l, m, m2, ip[256];
     double xr, xi, yr, yi;
     
     ip[0] = 0;
@@ -806,9 +806,9 @@ static void bitrv2(int n, int *ip, double *a)
 }
 
 
-static void bitrv2conj(int n, int *ip, double *a)
+static void bitrv2conj(int n, int *ip0, double *a)
 {
-    int j, j1, k, k1, l, m, m2;
+    int j, j1, k, k1, l, m, m2, ip[256];
     double xr, xi, yr, yi;
     
     ip[0] = 0;
