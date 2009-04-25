@@ -61,7 +61,7 @@
 #define WAVE_FORMAT_EXTENSIBLE          (0xfffeU)
 
 /* To allow padding to samplesPerBlock. Works, but currently never true. */
-static size_t pad_nsamps = sox_false;
+static const size_t pad_nsamps = sox_false;
 
 /* Private data for .wav file */
 typedef struct {

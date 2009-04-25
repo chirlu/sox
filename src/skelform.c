@@ -196,7 +196,7 @@ LSX_FORMAT_HANDLER(skel)
   static const char *names[] = {"skel",NULL };
 
   /* Encoding types and sizes that this handler can write */
-  static unsigned encodings[] = {
+  static const unsigned encodings[] = {
     SOX_ENCODING_SIGN2, 16, 0,
     SOX_ENCODING_UNSIGNED, 8, 0,
     0};

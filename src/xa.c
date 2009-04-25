@@ -62,7 +62,7 @@ typedef struct {
 } priv_t;
 
 /* coefficients for EA ADPCM */
-static int32_t EA_ADPCM_Table[]= {
+static const int32_t EA_ADPCM_Table[]= {
     0, 240,  460,  392,
     0,   0, -208, -220,
     0,   1,    3,    4,

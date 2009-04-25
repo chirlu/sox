@@ -52,23 +52,23 @@
 #include "g72x.h"
 #include "g711.h"
 
-static short qtab_721[7] = {-124, 80, 178, 246, 300, 349, 400};
+static const short qtab_721[7] = {-124, 80, 178, 246, 300, 349, 400};
 /*
  * Maps G.721 code word to reconstructed scale factor normalized log
  * magnitude values.
  */
-static short	_dqlntab[16] = {-2048, 4, 135, 213, 273, 323, 373, 425,
+static const short	_dqlntab[16] = {-2048, 4, 135, 213, 273, 323, 373, 425,
 				425, 373, 323, 273, 213, 135, 4, -2048};
 
 /* Maps G.721 code word to log of scale factor multiplier. */
-static short	_witab[16] = {-12, 18, 41, 64, 112, 198, 355, 1122,
+static const short	_witab[16] = {-12, 18, 41, 64, 112, 198, 355, 1122,
 				1122, 355, 198, 112, 64, 41, 18, -12};
 /*
  * Maps G.721 code words to a set of values whose long and short
  * term averages are computed and then compared to give an indication
  * how stationary (steady state) the signal is.
  */
-static short	_fitab[16] = {0, 0, 0, 0x200, 0x200, 0x200, 0x600, 0xE00,
+static const short	_fitab[16] = {0, 0, 0, 0x200, 0x200, 0x200, 0x600, 0xE00,
 				0xE00, 0x600, 0x200, 0x200, 0x200, 0, 0, 0};
 
 /*

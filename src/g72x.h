@@ -129,7 +129,7 @@ int predictor_pole(struct g72x_state *state_ptr);
 int step_size(struct g72x_state *state_ptr);
 int quantize(int d,
 	     int y,
-	     short *table,
+	     short const *table,
 	     int size);
 int reconstruct(int sign,
 		int dqln,
@@ -147,11 +147,11 @@ int tandem_adjust_alaw(int sr,
 		       int y,
 		       int i,
 		       int sign,
-		       short *qtab);
+		       short const *qtab);
 int tandem_adjust_ulaw(int sr,
 		       int se,
 		       int y,
 		       int i,
 		       int sign,
-		       short *qtab);
+		       short const *qtab);
 #endif /* !_G72X_H */

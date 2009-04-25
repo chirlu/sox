@@ -44,19 +44,19 @@
  * Maps G.723_24 code word to reconstructed scale factor normalized log
  * magnitude values.
  */
-static short	_dqlntab[8] = {-2048, 135, 273, 373, 373, 273, 135, -2048};
+static const short	_dqlntab[8] = {-2048, 135, 273, 373, 373, 273, 135, -2048};
 
 /* Maps G.723_24 code word to log of scale factor multiplier. */
-static short	_witab[8] = {-128, 960, 4384, 18624, 18624, 4384, 960, -128};
+static const short	_witab[8] = {-128, 960, 4384, 18624, 18624, 4384, 960, -128};
 
 /*
  * Maps G.723_24 code words to a set of values whose long and short
  * term averages are computed and then compared to give an indication
  * how stationary (steady state) the signal is.
  */
-static short	_fitab[8] = {0, 0x200, 0x400, 0xE00, 0xE00, 0x400, 0x200, 0};
+static const short	_fitab[8] = {0, 0x200, 0x400, 0xE00, 0xE00, 0x400, 0x200, 0};
 
-static short qtab_723_24[3] = {8, 218, 331};
+static const short qtab_723_24[3] = {8, 218, 331};
 
 /*
  * g723_24_encoder()

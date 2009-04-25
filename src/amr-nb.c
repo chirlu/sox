@@ -51,5 +51,5 @@ static char const magic[] = "#!AMR\n";
 #define E_IF_encode         Encoder_Interface_Encode
 #define E_IF_exit           Encoder_Interface_exit
 #define E_IF_init()         Encoder_Interface_init(1)
-static unsigned block_size[] = {13,14,16,18,20,21,27,32,6,1,1,1,1,1,1,1};
+static const unsigned block_size[] = {13,14,16,18,20,21,27,32,6,1,1,1,1,1,1,1};
 #include "amr.h"

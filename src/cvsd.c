@@ -47,7 +47,7 @@ static int debug_count = 0;
 
 /* ---------------------------------------------------------------------- */
 
-static float float_conv(float *fp1, float *fp2,int n)
+static float float_conv(float const *fp1, float const *fp2,int n)
 {
         float res = 0;
         for(; n > 0; n--)

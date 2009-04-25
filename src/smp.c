@@ -66,7 +66,7 @@ typedef struct {
   char comment[COMMENTLEN + NAMELEN + 3];
 } priv_t;
 
-static char *SVmagic = "SOUND SAMPLE DATA ", *SVvers = "2.1 ";
+static char const *SVmagic = "SOUND SAMPLE DATA ", *SVvers = "2.1 ";
 
 /*
  * Read the SampleVision trailer structure.

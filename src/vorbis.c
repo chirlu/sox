@@ -393,7 +393,7 @@ static int seek(sox_format_t * ft, uint64_t offset)
 LSX_FORMAT_HANDLER(vorbis)
 {
   static const char *names[] = {"vorbis", "ogg", NULL};
-  static unsigned encodings[] = {SOX_ENCODING_VORBIS, 0, 0};
+  static const unsigned encodings[] = {SOX_ENCODING_VORBIS, 0, 0};
   static sox_format_handler_t handler = {SOX_LIB_VERSION_CODE,
     "Xiph.org's ogg-vorbis lossy compression", names, 0,
     startread, read_samples, stopread,

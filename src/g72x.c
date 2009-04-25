@@ -97,7 +97,7 @@ static inline int log2plus1(int val)
  *
  * Using linear search for simple coding.
  */
-static int quan(int val, short *table, int size)
+static int quan(int val, short const *table, int size)
 {
         int             i;
 
@@ -222,7 +222,7 @@ int step_size(struct g72x_state *state_ptr)
  * size scale factor division operation is done in the log base 2 domain
  * as a subtraction.
  */
-int quantize(int d, int y, short *table, int size)
+int quantize(int d, int y, short const *table, int size)
 {
         short           dqm;    /* Magnitude of 'd' */
         short           exp;    /* Integer part of base 2 log of 'd' */
@@ -496,7 +496,7 @@ void update(int code_size, int y, int wi, int fi, int dq, int sr,
  * Return:
  *      adjusted A-law or u-law compressed sample.
  */
-int tandem_adjust_alaw(int sr, int se, int y, int i, int sign, short *qtab)
+int tandem_adjust_alaw(int sr, int se, int y, int i, int sign, short const *qtab)
 {
         unsigned char   sp;     /* A-law compressed 8-bit code */
         short           dx;     /* prediction error */
@@ -538,7 +538,7 @@ int tandem_adjust_alaw(int sr, int se, int y, int i, int sign, short *qtab)
         }
 }
 
-int tandem_adjust_ulaw(int sr, int se, int y, int i, int sign, short *qtab)
+int tandem_adjust_ulaw(int sr, int se, int y, int i, int sign, short const *qtab)
 {
         unsigned char   sp;     /* u-law compressed 8-bit code */
         short           dx;     /* prediction error */

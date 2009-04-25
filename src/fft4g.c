@@ -308,16 +308,16 @@ Appendix :
 
 static void bitrv2conj(int n, int *ip, double *a);
 static void bitrv2(int n, int *ip, double *a);
-static void cft1st(int n, double *a, double *w);
-static void cftbsub(int n, double *a, double *w);
-static void cftfsub(int n, double *a, double *w);
-static void cftmdl(int n, int l, double *a, double *w);
-static void dctsub(int n, double *a, int nc, double *c);
-static void dstsub(int n, double *a, int nc, double *c);
+static void cft1st(int n, double *a, double const *w);
+static void cftbsub(int n, double *a, double const *w);
+static void cftfsub(int n, double *a, double const *w);
+static void cftmdl(int n, int l, double *a, double const *w);
+static void dctsub(int n, double *a, int nc, double const *c);
+static void dstsub(int n, double *a, int nc, double const *c);
 static void makect(int nc, int *ip, double *c);
 static void makewt(int nw, int *ip, double *w);
-static void rftbsub(int n, double *a, int nc, double *c);
-static void rftfsub(int n, double *a, int nc, double *c);
+static void rftbsub(int n, double *a, int nc, double const *c);
+static void rftfsub(int n, double *a, int nc, double const *c);
 
 
 void cdft(int n, int isgn, double *a, int *ip, double *w)
@@ -915,7 +915,7 @@ static void bitrv2conj(int n, int *ip, double *a)
 }
 
 
-static void cftfsub(int n, double *a, double *w)
+static void cftfsub(int n, double *a, double const *w)
 {
     int j, j1, j2, j3, l;
     double x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
@@ -965,7 +965,7 @@ static void cftfsub(int n, double *a, double *w)
 }
 
 
-static void cftbsub(int n, double *a, double *w)
+static void cftbsub(int n, double *a, double const *w)
 {
     int j, j1, j2, j3, l;
     double x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
@@ -1015,7 +1015,7 @@ static void cftbsub(int n, double *a, double *w)
 }
 
 
-static void cft1st(int n, double *a, double *w)
+static void cft1st(int n, double *a, double const *w)
 {
     int j, k1, k2;
     double wk1r, wk1i, wk2r, wk2i, wk3r, wk3i;
@@ -1120,7 +1120,7 @@ static void cft1st(int n, double *a, double *w)
 }
 
 
-static void cftmdl(int n, int l, double *a, double *w)
+static void cftmdl(int n, int l, double *a, double const *w)
 {
     int j, j1, j2, j3, k, k1, k2, m, m2;
     double wk1r, wk1i, wk2r, wk2i, wk3r, wk3i;
@@ -1247,7 +1247,7 @@ static void cftmdl(int n, int l, double *a, double *w)
 }
 
 
-static void rftfsub(int n, double *a, int nc, double *c)
+static void rftfsub(int n, double *a, int nc, double const *c)
 {
     int j, k, kk, ks, m;
     double wkr, wki, xr, xi, yr, yi;
@@ -1272,7 +1272,7 @@ static void rftfsub(int n, double *a, int nc, double *c)
 }
 
 
-static void rftbsub(int n, double *a, int nc, double *c)
+static void rftbsub(int n, double *a, int nc, double const *c)
 {
     int j, k, kk, ks, m;
     double wkr, wki, xr, xi, yr, yi;
@@ -1299,7 +1299,7 @@ static void rftbsub(int n, double *a, int nc, double *c)
 }
 
 
-static void dctsub(int n, double *a, int nc, double *c)
+static void dctsub(int n, double *a, int nc, double const *c)
 {
     int j, k, kk, ks, m;
     double wkr, wki, xr;
@@ -1320,7 +1320,7 @@ static void dctsub(int n, double *a, int nc, double *c)
 }
 
 
-static void dstsub(int n, double *a, int nc, double *c)
+static void dstsub(int n, double *a, int nc, double const *c)
 {
     int j, k, kk, ks, m;
     double wkr, wki, xr;
