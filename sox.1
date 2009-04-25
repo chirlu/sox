@@ -764,8 +764,18 @@ If SoX has been built with the optional `libmagic' library, then this
 option can be given to enable its use in helping to detect audio file types.
 .TP
 \fB\-D\fR, \fB\-\-no\-dither\fR
-SoX, by default, automatically invokes the dither effect (with TPDF) when reducing
-bit-depth.  This option can be given to prevent this behaviour.
+Disable automatic dither on bit-depth reduction.
+By default, SoX automatically invokes the dither effect (with TPDF)
+in the following circumstances:
+bit-depth reduction has been specified explicitly using a
+command-line option, the output file format supports only bit-depths
+lower than that of the input file format, or, as is the case with
+many effects, effects processing has increased bit-depth within the
+effects processing chain (e.g.
+.B vol 0.25
+requires two additional bits in which to losslessly store its
+results; in order to store the output at the same depth as the input,
+dithering is used to remove the additional bits).
 .SP
 See also
 .B \-V
