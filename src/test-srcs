@@ -18,15 +18,10 @@ TIME=/tmp/$BASE-time-$$.wav
 
 test_converters () {
   # Create input file
-  $SOX -r $1 -n -twavpcm $IN synth 20 sin 0:`expr $1 / 2` gain -2 
+  $SOX -c 2 -r $1 -n -twavpcm $IN synth 20 sin 0:`expr $1 / 2` gain -2 
   for src in \
-      "polyphase" \
-      "rabbit -c0" \
-      "rabbit -c1" \
       "rate -h" \
       "rate -v" \
-      "resample -q" \
-      "resample -ql" \
       "ssrc" \
       "ssrc_hp" \
       ; do
@@ -36,7 +31,7 @@ test_converters () {
       *)     time -f %U -o $TIME $SOX $IN -r $2 $OUT $src;;
     esac
     t=`cat $TIME`
-    $SOX $OUT -n spectrogram \
+    $SOX $OUT -n remix - spectrogram \
       -x 30 -z $RANGE -w kaiser \
       -t "$1->$2: $src" -c "${t}s user time" \
       -o "$1_$2_`echo $src | tr ' ' '_'`.png"
