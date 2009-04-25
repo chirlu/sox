@@ -29,7 +29,7 @@
 .SP
 .fi
 ..
-.TH SoX 1 "March 31, 2009" "sox" "Sound eXchange"
+.TH SoX 1 "April 25, 2009" "sox" "Sound eXchange"
 .SH NAME
 SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH SYNOPSIS
@@ -1095,9 +1095,11 @@ with `u-law').  For reasons of forward compatibility, using
 abbreviations in scripts is not recommended.
 .TP
 \fB\-s\fR\^/\fB\-u\fR\^/\fB\-f\fR\^/\fB\-A\fR\^/\fB\-U\fR\^/\fB\-o\fR\^/\fB\-i\fR\^/\fB\-a\fR\^/\fB\-g\fR
-Aliases for specifying the encoding types
+Deprecated aliases for specifying the encoding types
 \fBsigned-integer\fR, \fBunsigned-integer\fR, \fBfloating-point\fR, \fBmu-law\fR, \fBa-law\fR, \fBoki-adpcm\fR, \fBima-adpcm\fR, \fBms-adpcm\fR, \fBgsm-full-rate\fR
-respectively.
+respectively (see
+.B \-e
+above).
 .TP
 \fB\-\-no\-glob\fR
 Specifies that filename `globbing' (wild-card matching) should not be
@@ -2507,7 +2509,7 @@ center box;
 lB lw52.
 \-M/\-I/\-L	Phase response = minimum/intermediate/linear
 \-s	Steep filter (band-width = 99%)
-\-a	Allow aliasing above the pass-band
+\-a	Allow aliasing/imaging above the pass-band
 \-b\ 74\-99\*d7	Any band-width %
 \-p\ 0\-100	T{
 .na
@@ -2567,12 +2569,12 @@ recommended for normal use as they can cause excessive transient echo.
 .SP
 If the
 .B \-a
-option is given, then aliasing above the pass-band is allowed.  For
+option is given, then aliasing/imaging above the pass-band is allowed.  For
 example, with 44\*d1kHz sampling rate, and a
 resampling band-width of 95%, this means that frequency content above
 21kHz can be distorted; however, since this is above the pass-band (i.e.
 above the highest frequency of interest/audibility), this may not be a
-problem.  The benefits of allowing aliasing are reduced processing time,
+problem.  The benefits of allowing aliasing/imaging are reduced processing time,
 and reduced (by almost half) transient echo artefacts.
 Note that if this option is given, then
 the minimum band-width allowable with
