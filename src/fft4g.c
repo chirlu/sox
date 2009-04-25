@@ -711,6 +711,7 @@ static void bitrv2(int n, int *ip0, double *a)
     int j, j1, k, k1, l, m, m2, ip[256];
     double xr, xi, yr, yi;
     
+    (void)ip0;
     ip[0] = 0;
     l = n;
     m = 1;
@@ -811,6 +812,7 @@ static void bitrv2conj(int n, int *ip0, double *a)
     int j, j1, k, k1, l, m, m2, ip[256];
     double xr, xi, yr, yi;
     
+    (void)ip0;
     ip[0] = 0;
     l = n;
     m = 1;
