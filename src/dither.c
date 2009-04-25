@@ -115,16 +115,16 @@ static double const shh44[] = {
 
 static const filter_t filters[] = {
   {44100, fir,  5, 210, lip44, Shape_lipshitz},
-  {46000, fir,  9, 272, fwe44, Shape_f_weighted},
-  {46000, fir,  9, 159, mew44, Shape_modified_e_weighted},
+  {46000, fir,  9, 276, fwe44, Shape_f_weighted},
+  {46000, fir,  9, 160, mew44, Shape_modified_e_weighted},
   {46000, fir,  9, 321, iew44, Shape_improved_e_weighted},
   {48000, iir,  4, 220, ges48, Shape_gesemann},
   {44100, iir,  4, 230, ges44, Shape_gesemann},
-  {48000, fir, 16, 300, shi48, Shape_shibata},
+  {48000, fir, 16, 301, shi48, Shape_shibata},
   {44100, fir, 20, 333, shi44, Shape_shibata},
   {37800, fir, 16, 240, shi38, Shape_shibata},
   {48000, fir, 16, 250, shl48, Shape_low_shibata},
-  {44100, fir, 15, 249, shl44, Shape_low_shibata},
+  {44100, fir, 15, 250, shl44, Shape_low_shibata},
   {44100, fir, 20, 383, shh44, Shape_high_shibata},
   {    0, fir,  0,   0,  NULL, Shape_none},
 };
@@ -244,9 +244,10 @@ static int start(sox_effect_t * effp)
     for (f = filters; f->len && (f->name != p->filter_name || fabs(effp->in_signal.rate - f->rate) / f->rate > .05); ++f); /* 5% leeway on frequency */
     if (!f->len) {
       p->alt_tpdf |= effp->in_signal.rate >= 22050;
-      lsx_warn("no `%s' filter is available for rate %g; using %s TPDF",
-          lsx_find_enum_value(p->filter_name, filter_names)->text,
-          effp->in_signal.rate, p->alt_tpdf? "sloped" : "plain");
+      if (!effp->flow)
+        lsx_warn("no `%s' filter is available for rate %g; using %s TPDF",
+            lsx_find_enum_value(p->filter_name, filter_names)->text,
+            effp->in_signal.rate, p->alt_tpdf? "sloped" : "plain");
     }
     else {
       assert(f->len <= MAX_N);
