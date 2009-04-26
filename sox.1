@@ -1135,14 +1135,19 @@ though the second form is more flexible as it allows
 options to be given, and allows the effects to be ordered arbitrarily.
 .TP
 \fB\-t\fR, \fB\-\-type\fR \fIFILE-TYPE\fR
-Gives the type of the audio file; this can be useful when the
-file extension is non-standard or when the type can not be determined by
-looking at the header of the file.
-.SP
-This option can also be used to override the type implied by
-an input filename extension, but if overriding with a type that has a
-header, SoX will exit with an appropriate error message if such a
-header is not actually present.
+Gives the type of the audio file.  For both input and output files,
+this option is commonly used to inform SoX of the type a `headerless'
+audio file\*me.g. raw, mp3\*mwhere the actual/desired type cannot be
+determined from a given filename extension.  For example:
+.EX
+   another-command | sox -t mp3 - output.wav
+
+   sox input.wav -t raw output.bin
+.EE
+It can also be used to override the type implied by an input filename
+extension, but if overriding with a type that has a header, SoX will
+exit with an appropriate error message if such a header is not
+actually present.
 .SP
 See
 .BR soxformat (7)
@@ -3206,7 +3211,7 @@ to be cross-faded, then
 .EE
 cross-fades the files where the point of equal loudness is 3 seconds
 before the end of f1.wav, i.e. the total length of the cross-fade is
-2 x 3 = 6 seconds (Note: the $(...) notation is POSIX shell).
+2 \(mu 3 = 6 seconds (Note: the $(...) notation is POSIX shell).
 .TP
 \fBstat\fR [\fB\-s \fIscale\fR] [\fB\-rms\fR] [\fB\-freq\fR] [\fB\-v\fR] [\fB\-d\fR]
 Display time and frequency domain statistical information about the audio.
