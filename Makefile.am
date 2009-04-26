@@ -12,6 +12,7 @@ RM = rm -f
 dist_man_MANS = sox.1 soxi.1 soxformat.7 libsox.3
 EXTRA_DIST = sox.txt soxi.txt soxformat.txt libsox.txt \
 	     CMakeLists.txt sox.pc.in LICENSE.GPL LICENSE.LGPL \
+	     cygbuild README.win32 scripts/batch-example.bat \
 	     README.sh FEATURES.in
 
 if HAVE_PKGCONFIG
