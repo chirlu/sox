@@ -1,9 +1,60 @@
 #!/bin/sh
+#
+# This script will automates the steps used to producing a static win32
+# package of SoX.
+#
+# It requires cygwin with gcc-4 and zip packages installed.  Also, it 
+# requires to already have several external libraries already installed
+# under /usr/local.
+#
+# Since directory name in package is based on current directory name,
+# it should be ran from that *.tar.gz distribution.
+#
+# And last, it will optional package a wget compiled with VC++ instead
+# of cygwin version (which has no DLL's to distribute) if found
+# in wget-1.11.4 directory.  If not found, it will distribute the
+# cygwin version and various DLL's it requires.
+#
+# Various notes:
+#
+# Script makes use of "-static" option to tell compiler to prefer static
+# external libraries. Some libtool versions (2.2.7a?) will cause
+# linker to ignore -static if a lib*.la is found and it defines
+# a dynamic version of the library.  Work arounds include to only
+# install static libraries, delete the lib*.la file, or edit the
+# lib*.la file and set dlnames and library_names variables to empty
+# string ("").
+#
+# The following command lines were used to generate the static external
+# libraries SoX ships with.
+#
+# cd libpng-1.2.32
+#./configure --disable-shared --enable-static;make;make install
+#
+# cd ../wavpack-4.50.1
+#./configure --disable-shared --enable-static;make;make install
+#
+# cd ../flac-1.2.1
+#./configure --disable-shared --enable-static;make;make install
+#
+# cd ../libogg-1.1.3
+#./configure --disable-shared --enable-static;make;make install
+#
+# cd ../libvorbis-1.2.0
+#./configure --disable-shared --enable-static;make;make install
+#
+# cd ../libsndfile-1.0.19
+#./configure --disable-shared --enable-static;make;make install
 
+# Some versions of autoconf (2.63?) seem to get easily confused about
+# CPP variable. If you see warning messages about header files
+# rejected by preprocessor then its most likely from that.
+# Force the value of CPP=cpp works around that bug.
 if [ $# -ne 0 -o ! -r Makefile ]; then
   ./configure \
+    --disable-shared \
     --without-mp3 \
-    CC=gcc-4 \
+    CC=gcc-4 CPP=cpp\
     CPPFLAGS=-I/usr/local/include \
     LDFLAGS="-static -L/usr/local/lib" \
     $*
@@ -20,8 +71,13 @@ for f in ChangeLog LICENSE.GPL README README.win32; do
   unix2dos $dir/$f.txt
 done
 
-binaries=$(for f in `cygcheck src/sox /usr/bin/wget|dos2unix`
+binaries=$(for f in `cygcheck src/sox|dos2unix`
     do cygpath -u $f; done|sort|uniq|grep -v ^/cygdrive/)
+
+if test ! -r "../wget-1.11.4/wget.exe"; then
+  binaries+=$(for f in `cygcheck /usr/bin/wget|dos2unix`
+      do cygpath -u $f; done|sort|uniq|grep -v ^/cygdrive/)
+fi
 
 cp -p \
   $binaries \
@@ -34,7 +90,12 @@ cp -p \
 
 unix2dos $dir/batch-example.bat
 
-cp -p /etc/wgetrc $dir/wget.ini
+if test ! -r "../wget-1.11.4/wget.exe"; then
+  cp -p /etc/wgetrc $dir/wget.ini
+  chmod +r $dir/wget.ini
+else
+  cp ../wget-1.11.4/wget.ini $dir
+fi
 
 zip -r $dir.zip $dir
 rm -rf $dir

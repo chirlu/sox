@@ -57,7 +57,9 @@ http://www.gnu.org/software/wget
 Acknowledgements
 ----------------
 
-SOX.EXE included in this package makes use of the following projects:
+SOX.EXE included in this package makes use of the following projects.
+See the cygbuild script included with the source code package for
+further information on how it was compiled and packaged.
 
   SoX - http://sox.sourceforge.net
 
