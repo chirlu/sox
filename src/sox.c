@@ -988,7 +988,7 @@ static void add_effects(sox_effects_chain_t *chain)
   }
 
   if (i == nuser_effects[current_eff_chain] && !no_dither && signal.precision >
-      ofile->ft->signal.precision && ofile->ft->signal.precision <= 24)
+      ofile->ft->signal.precision && ofile->ft->signal.precision < 24)
     auto_effect(chain, "dither", 0, NULL, &signal, &guard);
 
   /* Add user specified effects from `dither' onwards */
