@@ -1011,9 +1011,12 @@ static void add_effects(sox_effects_chain_t *chain)
   }
 
   for (i = 0; i < chain->length; ++i) {
+    char const * format = sox_globals.verbosity > 3?
+      "effects chain: %-10s %gHz %u channels %u bits %s" :
+      "effects chain: %-10s %gHz %u channels";
     sox_effect_t const * effp = &chain->effects[i][0];
-    lsx_report("effects chain: %-10s %gHz %u channels %u bits %s",
-        effp->handler.name, effp->in_signal.rate, effp->in_signal.channels, effp->in_signal.precision,
+    lsx_report(format, effp->handler.name, effp->out_signal.rate,
+        effp->out_signal.channels, effp->out_signal.precision,
         (effp->handler.flags & SOX_EFF_MCHAN)? "(multi)" : "");
   }
 }
