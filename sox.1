@@ -86,7 +86,11 @@ Input(s) \*(RA Combiner \*(RA Effects \*(RA Output(s)
 .TE
 .DT
 .SP
-To show how this works in practice, there follows a selection of examples of
+Note however, that on the SoX command line, the positions of the
+Output(s) and the Effects are swapped w.r.t. the logical flow just
+shown.  Note also that whilst options pertaining to files are placed
+before their respective file name, the opposite is true for effects.
+To show how this works in practice, here is a selection of examples of
 how SoX might be used.  The simple
 .EX
    sox recital.au recital.wav
@@ -95,9 +99,9 @@ translates an audio file in Sun AU format to a Microsoft WAV file, whilst
 .EX
    sox recital.au -b 16 recital.wav channels 1 rate 16k fade 3 norm
 .EE
-performs the same format translation, but also down-mixes to mono,
-changes the sampling rate, applies a fade-in, nomalizes the signal,
-and store the result at a bit-depth of 16.
+performs the same format translation, but also applies four effects
+(down-mix to one channel, sample rate change, fade-in, nomalize),
+and stores the result at a bit-depth of 16.
 .EX
    sox -r 16k -e signed -b 8 -c 1 voice-memo.raw voice-memo.wav
 .EE
@@ -129,7 +133,7 @@ records half an hour of stereo audio, and
 .EX
    rec -M take1.aiff take1-dub.aiff
 .EE
-records a new track in a multi-track recording.
+records a new track in a multi-track recording.  Finally,
 .EX
 .ne 3
    rec -r 44100 -b 16 -s -p silence 1 0.50 0.1% 1 10:00 0.1% | \\
@@ -137,21 +141,24 @@ records a new track in a multi-track recording.
 	newfile : restart
 .EE
 records a stream of audio such as LP/cassette and splits in to multiple
-audio files at points with 2 seconds of silence.  Also does not start
+audio files at points with 2 seconds of silence.  Also, it does not start
 recording until it detects audio is playing and stops after it sees
 10 minutes of silence.
 .SP
-N.B.  Detailed explanations of how to use \fIall\fR SoX parameters, file
-formats, and effects can be found below in this manual, and in
-.BR soxformat (7).
+N.B.  The above is just an overview of SoX's capabilities; detailed
+explanations of how to use \fIall\fR SoX parameters, file formats, and
+effects can be found below in this manual, in
+.BR soxformat (7),
+and in
+.BR soxi (1).
 .SS File Format Types
 There are two types of audio file format that SoX can work with:
-`self-describing'\*mthese have a header that completely describes the
-signal and encoding attributes of the audio data that follows, and `raw'
-(or `headerless') audio\*mthe audio characteristics of these must, when
-reading a raw file, be described using the SoX command line, and, when
-writing a raw file, be described using the command line or inferred from
-those of the input file.
+`self-describing'\*mthese (e.g. WAV, FLAC) have a header that
+completely describes the signal and encoding attributes of the audio
+data that follows, and `raw' (or `headerless') audio\*mthe audio
+characteristics of these must, when reading a raw file, be described
+using the SoX command line, and, when writing a raw file, be set using
+the command line (or inferred from those of the input file).
 .SP
 The following four characteristics are used to describe the format of
 audio data such that it can be processed with SoX:
@@ -165,9 +172,10 @@ computer systems use 48\ kHz; professional audio systems often use 96
 kHz.
 .TP
 sample size
-The number of bits used to store each sample.  The most popular is
-16-bit; 8-bit was popular in the early days of computer audio; 24-bit is
-used in the professional audio arena; other sizes are also used.
+The number of bits used to store each sample.  Today, 16-bit is
+commonly used; 8-bit was popular in the early days of computer
+audio; 24-bit is used in the professional audio arena; other sizes are
+also used.
 .TP
 data encoding
 The way in which each audio sample is represented (or `encoded').  Some
@@ -176,7 +184,7 @@ some `compress' the audio data, i.e. the stored audio data takes up less
 space (i.e. disk-space or transmission band-width) than the other format
 parameters and the number of samples would imply.  Commonly-used
 encoding types include floating-point, \(*m-law, ADPCM, signed-integer
-PCM, and FLAC.
+PCM, MP3, and FLAC.
 .TP
 channels
 The number of audio channels contained in the file.  One (`mono') and
@@ -213,35 +221,57 @@ individual characteristics may be determined or set using different mechanisms.
 .SP
 To determine the format of an input file, SoX will use, in order of
 precedence and as given or available:
-.SP
-.TS
-tab (@);
-l l l.
-@1.@Command-line format options.
-@2.@The contents of the file header.
-@3.@The filename extension.
-.TE
-.DT
-.SP
+.IP 1. 4
+Command-line format options.
+.IP 2. 4
+The contents of the file header.
+.IP 3. 4
+The filename extension.
+.PP
 To set the output file format, SoX will use, in order of
 precedence and as given or available:
-.SP
-.TS
-tab (@);
-l l lw(6i).
-@1.@Command-line format options.
-@2.@The filename extension.
-@3.@T{
+.IP 1. 4
+Command-line format options.
+.IP 2. 4
+The filename extension.
+.IP 3. 4
 The input file format characteristics, or the closest
 to them that is supported by the output file type.
-T}
-.TE
-.DT
-.SP
+.PP
 For all files, SoX will exit with an error
 if the file type cannot be determined; command-line format options may
 need to be added or changed to resolve the problem.
 .SS Play & Rec
+The
+.B play
+and
+.B rec
+commands are provided so that basic playing and
+recording is as simple as
+.EX
+  play existing-file.wav
+.EE
+and
+.EX
+  rec new-file.wav
+.EE
+These two commands are functionally equivalent to
+.EX
+  sox existing-file.wav -d
+.EE
+and
+.EX
+  sox -d new-file.wav
+.EE
+Of course, further options and effects (as described below) can be
+added to either form of the command.
+.TS
+center;
+c8 c8 c.
+*	*	*
+.TE
+.DT
+.SP
 Some systems provide more than one type of (SoX-compatible) audio
 driver, e.g. ALSA & OSS, or SUNAU & AO.
 Systems can also have more than one audio device (a.k.a. `sound card').
@@ -274,13 +304,12 @@ e.g.
 .EE
 or
 .EX
-   set AUDIODEV=hw:0
+   set AUDIODEV=hw:soundwave,1,2
    play ...
    sox ... -t alsa
 .EE
-(Note that the syntax of the
-.B set
-command may vary from system to system.)
+Note that the way of setting environment variables varies from system
+to system\*mfor some specific examples, see `SOX_OPTS' below.
 .SP
 When playing a file with a sample rate that is not supported by the
 audio output device, SoX will automatically invoke the \fBrate\fR effect
@@ -361,15 +390,39 @@ in general, produce more accurate results than those produced using
 multiple SoX invocations; hence this is also recommended.
 .SS Dither
 Dithering is a technique used to maximise the dynamic range of audio
-stored at a particular bit-depth and is achieved by adding a small amount
-of white noise to the signal.  In most cases, SoX can determine whether
-the selected processing requires dither and will add it if appropriate.
+stored at a particular bit-depth and is achieved by adding a small
+amount of white noise to the signal.  In most cases, SoX can determine
+whether the selected processing requires dither and will add it during
+output formatting if appropriate.
+.SP
+Specifically, by default, SoX automatically adds TPDF dither
+when the output bit-depth is less than 24 and any
+of the following are true:
+.IP \(bu 4
+bit-depth reduction has been specified explicitly using a command-line
+option
+.IP \(bu 4
+the output file format supports only bit-depths lower than that of the
+input file format
+.IP \(bu 4
+an effect has increased effective bit-depth within the internal
+processing chain
+.PP
+For example, adjusting volume with
+.B vol 0.25
+requires two additional bits in which to losslessly store its results
+(since 0\*d25 decimal equals 0\*d01 binary).  So if the input file
+bit-depth is 16, then SoX's internal representation will utilise 18
+bits after processing this volume change.  In order to store the
+output at the same depth as the input, dithering is used to remove the
+additional bits.
+.SP
 Use the
 .B \-V
-option to see what processing SoX has automatically added.
-To override automatic dithering, the
+option to see what processing SoX has automatically added; the
 .B \-D
-option may be given; to invoke dithering manually, use the
+option may be given to override automatic dithering.  To invoke
+dithering manually (e.g. to select a noise-shaping curve), see the
 .B dither
 effect.
 .SS Clipping
@@ -380,7 +433,9 @@ adjusting the level prior to the point at which clipping occurs.
 .SP
 In SoX, clipping could occur, as you might expect, when using the
 .B vol
-effect to increase the audio volume, but could also occur with many
+or
+.B gain
+effects to increase the audio volume, but could also occur with many
 other effects, when converting one format to another, and even when
 simply playing the audio.
 .SP
@@ -408,6 +463,14 @@ guarantees that the treble boost will not clip.
 .SP
 If clipping occurs at any point during processing, then
 SoX will display a warning message to that effect.
+.SP
+See also
+.B \-G
+and the
+.B gain
+and
+.B norm
+effects.
 .SS Input File Combining
 SoX's input combiner can be configured (see OPTIONS below) to
 combine multiple files using any of the
@@ -669,7 +732,7 @@ environment variable can be used to provide alternative default values for
 SoX's global options.
 For example:
 .EX
-   set SOX_OPTS="--buffer 20000 --play-rate-arg -v"
+   SOX_OPTS="--buffer 20000 --play-rate-arg -hs"
 .EE
 Note that setting SOX_OPTS can potentially create unwanted changes in
 the behaviour of scripts or other programs that invoke SoX.  So SOX_OPTS
@@ -682,13 +745,32 @@ since a shell alias will not affect operation in scripts etc.
 One way to ensure that a script can not be affected by SOX_OPTS, is to
 clear SOX_OPTS at the start of the script (but this of course loses
 the benefit of SOX_OPTS carrying some system-wide default options).  An
-alternative approach would be to explicitly invoke SoX with default
+alternative approach is to explicitly invoke SoX with default
 option values, e.g.
 .EX
-   SOX_OPTS="... --no-clobber ..."
+   SOX_OPTS="-V --no-clobber"
    ...
-   sox --clobber $input $output ...
+   sox -V2 --clobber $input $output ...
 .EE
+Note that the way of setting environment variables varies from system
+to system\*mhere are some examples:
+.SP
+Unix bash:
+.EX
+  export SOX_OPTS="-V --no-clobber"
+.EE
+Unix csh:
+.EX
+  setenv SOX_OPTS "-V --no-clobber"
+.EE
+MS-DOS/MS-Windows:
+.EX
+  set SOX_OPTS=-V --no-clobber
+.EE
+MS-Windows GUI: via Control Panel : System : Advanced : Environment
+Variables
+.SP
+Mac OS X GUI: Refer to Apple's Technical Q&A QA1067 document.
 .TP
 \fB\-\-buffer\fR \fBBYTES\fR, \fB\-\-input\-buffer\fR \fBBYTES\fR
 Set the size in bytes of the buffers used for processing audio (default 8192).
@@ -709,26 +791,17 @@ Don't prompt before overwriting an existing file with the same name as that
 given for the output file.  This is the default behaviour.
 .TP
 \fB\-D\fR, \fB\-\-no\-dither\fR
-Disable automatic dither on bit-depth reduction.
-By default, SoX automatically invokes the dither effect (with TPDF)
-in the following circumstances:
-bit-depth reduction has been specified explicitly using a
-command-line option, the output file format supports only bit-depths
-lower than that of the input file format, or, as is the case with
-many effects, effects processing has increased bit-depth within the
-effects processing chain (e.g.
-.B vol 0.25
-requires two additional bits in which to losslessly store its
-results; in order to store the output at the same depth as the input,
-dithering is used to remove the additional bits).
-.SP
-See also
-.B \-V
-and the
-.B dither
-effect.
+Disable automatic dither\*msee `Dither' above.  An example of why this
+might occasionally be useful is if a file has been converted from 16 to
+24 bit with the intention of doing some processing on it, but in fact
+no processing is needed after all and the original 16 bit file has
+been lost, then, strictly speaking, no dither is needed if converting the
+file back to 16 bit.  See also the
+.B stats
+effect for how to determine the actual bit depth of the audio within a
+file.
 .TP
-\fB\-\--effects\-file=\fIFILENAME\fR
+\fB\-\-effects\-file \fIFILENAME\fR
 Use FILENAME to obtain all effects and their arguments.
 The file is parsed as if the values were specified on the
 command line.  A new line can be used in place of the special ":" marker
@@ -742,6 +815,10 @@ effect to guard against clipping. E.g.
 .EX
    sox -G infile -b 16 outfile rate 44100 dither -s
 .EE
+is shorthand for
+.EX
+   sox infile -b 16 outfile gain -h rate 44100 gain -rh dither -s
+.EE
 See also
 .BR \-V,
 .BR \-\-norm,
@@ -752,11 +829,11 @@ effect.
 \fB\-h\fR, \fB\-\-help\fR
 Show version number and usage information.
 .TP
-\fB\-\-help\-effect=\fINAME\fR
+\fB\-\-help\-effect \fINAME\fR
 Show usage information on the specified effect.  The name
 \fBall\fR can be used to show usage on all effects.
 .TP
-\fB\-\-help\-format=\fINAME\fR
+\fB\-\-help\-format \fINAME\fR
 Show information about the specified file format.  The name
 \fBall\fR can be used to show information on all formats.
 .TP
@@ -798,7 +875,7 @@ when what you really meant was
    play file1 file2 effect1 effect2 ...
 .EE
 then, without this option, file2 will be overwritten.  Hence, using
-this option is strongly recommended; SOX_OPTS (above), a `shell'
+this option is recommended; SOX_OPTS (above), a `shell'
 alias, script, or batch file may be an appropriate way of permanently
 enabling it.
 .TP
@@ -808,6 +885,10 @@ Automatically invoke the
 effect to guard against clipping, and to normalise the audio. E.g.
 .EX
    sox --norm infile -b 16 outfile rate 44100 dither -s
+.EE
+is shorthand for
+.EX
+   sox infile -b 16 outfile gain -h rate 44100 gain -nh dither -s
 .EE
 See also
 .BR \-V,
@@ -820,7 +901,7 @@ effect.
 Selects a quality option to be used when the `rate' effect is automatically
 invoked whilst playing audio.  This option is typically set via the
 .B SOX_OPTS
-environment variable.
+environment variable (see above).
 .TP
 \fB\-\-plot gnuplot\fR\^|\^\fBoctave\fR\^|\^\fBoff\fR
 If not set to
@@ -899,16 +980,17 @@ This option is enabled by default when using
 SoX to play or record audio.
 .TP
 \fB\-\-single-threaded\fR
-On some hyper-threading/multi-core architectures,
-SoX has support for parallel effects channel processing.
-This option can be given to disable parallel processing.
+By default, SoX processes audio channels for most multi-channel
+effects in parallel on hyper-threading/multi-core architectures.  In
+case this should ever cause a problem, parallel processing can be
+disabled by giving this option.
 .TP
 \fB\-\-temp\fI DIRECTORY\fR
 Specify that any temporary files should be created in the given
 .IR DIRECTORY .
 This can be useful if there are permission or free-space problems with the
-default location; in which case, using `\fB\-\-temp .\fR' is often a good
-solution.
+default location; in which case, using `\fB\-\-temp .\fR' (to use the
+current directory) is often a good solution.
 .TP
 \fB\-\-version\fR
 Show SoX's version number and exit.
@@ -941,10 +1023,10 @@ Messages to help with debugging
 SoX are also shown.
 .RE
 .IP
-By default, the verbosity level is set to 2; each occurrence of the \fB\-V\fR
-option increases the verbosity level by 1.  Alternatively, the verbosity
-level can be set to an absolute number by specifying it immediately after
-the
+By default, the verbosity level is set to 2 (shows errors and
+warnings); each occurrence of the \fB\-V\fR option increases the
+verbosity level by 1.  Alternatively, the verbosity level can be set
+to an absolute number by specifying it immediately after the
 .BR \-V ;
 e.g.
 .B \-V0
@@ -1017,7 +1099,7 @@ For an output file, this option provides a shorthand for specifying
 that the
 .B channels
 effect should be invoked in order to change (if necessary) the number
-of channels in the audio signal to the given number of channels.  For
+of channels in the audio signal to the number given.  For
 example, the following two commands are equivalent:
 .EX
 .ne 2
@@ -1165,12 +1247,12 @@ for a list of supported file types.
 These options specify whether the byte-order of the audio data is,
 respectively, `little endian', `big endian', or the opposite to that of
 the system on which SoX is being used.  Endianness applies only to data
-encoded as signed or unsigned integers of 16 or more bits.  It is often
-necessary to specify one of these options for headerless files, and
-sometimes necessary for (otherwise) self-describing files.  A given
-endian-setting option may be ignored for an input file whose header
-contains a specific endianness identifier, or for an output file that
-is actually an audio device.
+encoded as floating-pont, or as signed or unsigned integers of 16 or
+more bits.  It is often necessary to specify one of these options for
+headerless files, and sometimes necessary for (otherwise)
+self-describing files.  A given endian-setting option may be ignored
+for an input file whose header contains a specific endianness
+identifier, or for an output file that is actually an audio device.
 .SP
 .B N.B.
 Unlike other format characteristics, the endianness (byte, nibble, &
@@ -1236,10 +1318,10 @@ use this option in
 .BR soxformat (7)
 for more information.
 .SH EFFECTS
-In addition to converting and playing audio files, SoX can be used to
-invoke a number of audio `effects'.  Multiple effects may be applied
-by specifying them one after another at the end of the SoX command line;
-forming an effects chain.
+In addition to converting, playing and recording audio files, SoX can
+be used to invoke a number of audio `effects'.  Multiple effects may
+be applied by specifying them one after another at the end of the SoX
+command line, forming an `effects chain'.
 Note that applying multiple effects in real-time (i.e. when playing audio)
 is likely to need a high performance computer; stopping other applications
 may alleviate performance issues should they occur.
@@ -1768,9 +1850,9 @@ and this plays a guitar chord:
 Apply dithering to the audio.
 Dithering deliberately adds a small amount of noise to the signal in
 order to mask audible quantization effects that can occur if the output
-sample size is less than 24 bits.  The default is to add triangular
-(TPDF) white noise.  Noise-shaping (only for certain sample rates) can
-be selected with
+sample size is less than 24 bits.  With no options, this effect will
+add triangular (TPDF) white noise.  Noise-shaping (only for certain
+sample rates) can be selected with
 .BR \-s .
 With the
 .B \-f
@@ -1813,6 +1895,8 @@ will be different between invocations.
 .SP
 This effect should not be followed by any other effect that
 affects the audio.
+.SP
+See also the `Dither' section above.
 .TP
 \fBearwax\fR
 Makes audio easier to listen to on headphones.
@@ -2374,6 +2458,11 @@ adds 1\*d5 seconds of silence padding at each end of the audio, whilst
 inserts 4000 samples of silence 3 minutes into the audio.
 If silence is wanted only at the end of the audio, specify either the end
 position or specify a zero-length pad at the start.
+.SP
+See also
+.B delay
+for an effect that can add silence at the beginning of
+the audio on a channel-by-channel basis.
 .TP
 \fBphaser \fIgain-in gain-out delay decay speed\fR [\fB\-s\fR\^|\^\fB\-t\fR]
 Add a phasing effect to the audio.
@@ -2890,7 +2979,10 @@ that does not contain the delay at the start which usually occurs between
    rec \fIparameters filename other-effects\fR silence 1 5 2%
 .EE
 .TP
-\fBsinc\fR [\fB\-a\fI att\fR\^|\^\fB\-b\fI beta\fR] [\fB\-p\fI phase\fR\^|\^\fB\-M\fR\^|\^\fB\-I\fR\^|\^\fB\-L\fR] [\fB\-t\fI tbw\fR\^|\^\fB\-n\fI taps\fR] [\fIfreqHP\fR][\fB\-\fIfreqLP\fR [\fB\-t\fR tbw\^|\^\fB\-n\fR taps]]
+\fBsinc\fR [\fB\-a\fI att\fR\^|\^\fB\-b\fI beta\fR] [\fB\-p\fI phase\fR\^|\^\fB\-M\fR\^|\^\fB\-I\fR\^|\^\fB\-L\fR]
+.br
+[\fB\-t\fI tbw\fR\^|\^\fB\-n\fI taps\fR] [\fIfreqHP\fR][\fB\-\fIfreqLP\fR [\fB\-t\fR tbw\^|\^\fB\-n\fR taps]]
+.SP
 Apply a sinc kaiser-windowed low-pass, high-pass, band-pass, or band-reject filter
 to the signal.
 The \fIfreqHP\fR and \fIfreqLP\fR parameters give the frequencies of the
@@ -2903,9 +2995,9 @@ The default stop-band attenuation of 120dB can be overridden with
 \fB\-a\fR; alternatively, the kaiser-window `beta' parameter can be
 given directly with \fB\-b\fR.
 .SP
-The default transition band-width of 5% of the total band can be overridden with
-\fB\-t\fR; alternatively, the number of filter taps can be
-given directly with \fB\-n\fR.
+The default transition band-width of 5% of the total band can be
+overridden with \fB\-t\fR (and \fItbw\fR in Hertz); alternatively, the
+number of filter taps can be given directly with \fB\-n\fR.
 .SP
 If both \fIfreqHP\fR and \fIfreqLP\fR are given, then a \fB\-t\fR or
 \fB\-n\fR option given to the left of the frequencies applies to both
@@ -3081,8 +3173,7 @@ Name of the spectrogram output PNG file, default `spectrogram.png'.
 .RE
 .TP
 \ 
-For example, let's see what the spectrogram of a swept triangular wave looks
-like:
+For example, to see the spectrogram of a swept triangular wave:
 .EX
    sox -n -n synth 6 tri 10k:14k spectrogram -z 100 -w k
 .EE
@@ -3313,7 +3404,10 @@ effect.
 \fBstats\fR [\fB\-b \fIbits\fR\^|\^\fB\-x \fIbits\fR\^|\^\fB\-s \fIscale\fR] [\fB\-w \fIwindow-time\fR]
 Display time domain statistical information about the audio channels;
 audio is passed unmodified through the SoX processing chain.
-For example, for a stereo file:
+Statistics are calculated and displayed for each audio channel and,
+where applicable, an overall figure is also given.
+.SP
+For example, for a typical well-mastered stereo music file:
 .TS
 center;
 l.
@@ -3338,14 +3432,11 @@ Window s       0.050
 .TE
 .DT
 .SP
-Statistics are calculated and displayed for each audio channel and, where applicable, an
-overall figure is also given.
-.SP
 .IR DC\ offset ,
 .IR Min\ level ,
 and
 .I Max\ level
-are shown, by default, normalised to \(+-1.
+are shown, by default, in the range \(+-1.
 If the
 .B \-b
 (bits) options is given, then these three measurements will be scaled to a signed integer
@@ -3427,20 +3518,12 @@ See also the
 .B stat
 effect.
 .TP
-\fBswap\fR [\fI1 2\fR | \fI1 2 3 4\fR]
-Swap channels in multi-channel audio files.  Optionally, you may
-specify the channel order you would like the output in.  This defaults
-to output channel 2 and then 1 for stereo and 2, 1, 4, 3 for quad-channels.
-An interesting
-feature is that you may duplicate a given channel by overwriting another.
-This is done by repeating an output channel on the command-line.  For example,
-.B swap 2 2
-will overwrite channel 1 with channel 2; creating a stereo
-file with both channels containing the same audio.
-.SP
-See also the
+\fBswap\fR
+Swap stereo channels.
+See also
 .B remix
-effect.
+for an effect that allows arbitrary channel selection and ordering
+(and mixing).
 .TP
 \fBstretch \fIfactor\fR [\fIwindow fade shift fading\fR]
 Change the audio duration (but not its pitch).
@@ -3472,7 +3555,10 @@ See also the
 .B tempo
 effect.
 .TP
-\fBsynth\fR [\fB\-j \fIKEY\fR] [\fB\-n\fR] [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR] [[\fB%\fR]\fIfreq\fR[\fBk\fR][\fB:\fR\^|\^\fB+\fR\^|\^\fB/\fR\^|\^\fB\-\fR[\fB%\fR]\fIfreq2\fR[\fBk\fR]]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
+\fBsynth\fR [\fB\-j \fIKEY\fR] [\fB\-n\fR] [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR]
+.br
+[[\fB%\fR]\fIfreq\fR[\fBk\fR][\fB:\fR\^|\^\fB+\fR\^|\^\fB/\fR\^|\^\fB\-\fR[\fB%\fR]\fIfreq2\fR[\fBk\fR]]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
+.SP
 This effect can be used to generate fixed or swept frequency audio tones
 with various wave shapes, or to generate wide-band noise of various
 `colours'.
@@ -3511,8 +3597,7 @@ The following example shows how two synth effects can be cascaded
 to create a more complex waveform:
 .EX
 .ne 2
-   sox -n output.wav synth 0.5 sine 200-500 \\
-	synth 0.5 sine fmod 700-100
+   play -n synth 0.5 sine 200-500 synth 0.5 sine fmod 700-100
 .EE
 Frequencies can also be given as a number of semitones
 relative to `middle A' (440\ Hz) by prefixing a `%' character;  for
@@ -3524,7 +3609,7 @@ string:
 or with a (Bourne shell) loop, the whole guitar:
 .EX
 .ne 2
-   for s in -29 -24 -19 -14 -10 -5; do \\
+   for s in -29 -24 -19 -14 -10 -5; do
 	play -n synth 4 pluck %$s repeat 2; done
 .EE
 .B N.B.
