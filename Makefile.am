@@ -72,7 +72,7 @@ FIXHTML = sed 's,<HEAD>,&<link rel="stylesheet" href="http://sox.sourceforge.net
 	  sed 's,<A HREF="/cgi-bin/man/man2html">man2html</A>,<A HREF="http://primates.ximian.com/~flucifredi/man/">man2html</A>,'
 
 .1.html .3.html .7.html:
-	man2html -r $(srcdir)/$< | $(FIXHTML) > $@
+	sed "s/\\\\://g" < $(srcdir)/$< | man2html -r | $(FIXHTML) > $@
 
 DOCHTML = sox.html soxi.html soxformat.html libsox.html
 html: $(DOCHTML)

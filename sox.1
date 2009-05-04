@@ -249,19 +249,19 @@ and
 commands are provided so that basic playing and
 recording is as simple as
 .EX
-  play existing-file.wav
+   play existing-file.wav
 .EE
 and
 .EX
-  rec new-file.wav
+   rec new-file.wav
 .EE
 These two commands are functionally equivalent to
 .EX
-  sox existing-file.wav -d
+   sox existing-file.wav -d
 .EE
 and
 .EX
-  sox -d new-file.wav
+   sox -d new-file.wav
 .EE
 Of course, further options and effects (as described below) can be
 added to either form of the command.
@@ -600,7 +600,7 @@ it has read all available audio data from the input files.
 .SP
 If desired, it can be terminated earlier by sending an
 interrupt signal to the process (usually by pressing the
-keyboard interrupt key which is usually Ctrl-C).  This is a natural requirement
+keyboard interrupt key which is normally Ctrl-C).  This is a natural requirement
 in some circumstances, e.g. when using SoX to make a recording.  Note
 that when using SoX to play multiple files, Ctrl-C behaves slightly
 differently: pressing it once causes SoX to skip to the next file;
@@ -757,15 +757,15 @@ to system\*mhere are some examples:
 .SP
 Unix bash:
 .EX
-  export SOX_OPTS="-V --no-clobber"
+   export SOX_OPTS="-V --no-clobber"
 .EE
 Unix csh:
 .EX
-  setenv SOX_OPTS "-V --no-clobber"
+   setenv SOX_OPTS "-V --no-clobber"
 .EE
 MS-DOS/MS-Windows:
 .EX
-  set SOX_OPTS=-V --no-clobber
+   set SOX_OPTS=-V --no-clobber
 .EE
 MS-Windows GUI: via Control Panel : System : Advanced : Environment
 Variables
@@ -947,29 +947,22 @@ input file(s) percentage complete, elapsed time, and remaining time (if
 known; shown in brackets), and the number of samples written to the
 output file.  Also shown is a peak-level meter, and an indication if
 clipping has occurred.  The peak-level meter shows up to two channels
-and is calibrated for digital audio as follows:
+and is calibrated for digital audio as follows (right channel shown):
+.ne 8
 .TS
-center box;
-cI lI lI
-cI lI lI
-r l l.
-dB FSD	Display
->=	(right channel)
-\-25	\-
+center;
+cI lI cI lI
+c l c l.
+dB FSD	Display	dB FSD	Display
+\-25	\-	\-11	====
 \-23	T{
 =
-T}
-\-21	=\-
-\-19	==
-\-17	==\-
-\-15	===
+T}	\-9	====\-
+\-21	=\-	\-7	=====
+\-19	==	\-5	=====\-
+\-17	==\-	\-3	======
+\-15	===	\-1	=====!
 \-13	===\-
-\-11	====
-\-9	====\-
-\-7	=====
-\-5	=====\-
-\-3	======
-\-1	=====!	`In the red'
 .TE
 .DT
 .SP
@@ -1070,15 +1063,23 @@ A/\(*m-law, ADPCM.
 .SP
 For an input file, the most common use for this option is to inform
 SoX of the number of bits per sample in a `raw' (`headerless') audio
-file.
+file.  For example
+.EX
+   sox -r 16k -e signed -b 8 input.raw output.wav
+.EE
+converts a particular `raw' file to a self-describing `WAV' file.
 .SP
 For an output file, this option can be used (perhaps along with
 .BR \-e )
 to set the output encoding size.  By default (i.e. if this option is
-not given),
-the output encoding size will
-(providing it is supported by the output file type)
-be set to the input encoding size.
+not given), the output encoding size will (providing it is supported
+by the output file type) be set to the input encoding size.  For
+example
+.EX
+   sox input.cdda -b 24 output.wav
+.EE
+converts raw CD digital audio (16-bit, signed-integer) to a
+24-bit (signed-integer) `WAV' file.
 .TP
 \fB\-1\fR\^/\fB\-2\fR\^/\fB\-3\fR\^/\fB\-4\fR\^/\fB\-8\fR
 The number of bytes in each encoded sample.  Deprecated aliases for
@@ -1093,7 +1094,19 @@ For an input file, the most common use for this option is to inform
 SoX of the number of channels in a `raw' (`headerless') audio file.
 Occasionally, it may be useful to use this option with a `headered'
 file, in order to override the (presumably incorrect) value in the
-header.
+header\*mnote that this is only supported with certain file types.
+Examples:
+.EX
+   sox -r 48k -e float -b 32 -c 2 input.raw output.wav
+.EE
+converts a particular `raw' file to a self-describing `WAV' file.
+.EX
+   play -c 1 music.wav
+.EE
+interprets the file data as belonging to a single channel regardless
+of what is indicated in the file header.  Note that if the file does
+in fact have two channels, this will result in the file playing at
+half speed.
 .SP
 For an output file, this option provides a shorthand for specifying
 that the
@@ -1113,18 +1126,7 @@ be ordered arbitrarily.
 The audio encoding type.  Sometimes needed with file-types that
 support more than one encoding type; for example, with raw, WAV, or
 AU (but not, for example, with MP3 or FLAC).
-.SP
-For an input file, the most common use for this option is to inform
-SoX of the encoding of a `raw' (`headerless') audio
-file.
-.SP
-For an output file, this option can be used (perhaps along with
-.BR \-b )
-to set the output encoding type.  By default (i.e. if this option is
-not given), the output encoding type will (providing it is supported
-by the output file type) be set to the input encoding type.
-.SP
-Encoding types:
+The available encoding types are as follows:
 .RS
 .IP \fBsigned-integer\fR
 PCM data stored as signed (`two's complement') integers.  Commonly used
@@ -1173,8 +1175,30 @@ It is usually CPU intensive to work with GSM audio.
 \ 
 Encoding names can be abbreviated where this would not be ambiguous;
 e.g. `unsigned-integer' can be given as `un', but not `u' (ambiguous
-with `u-law').  For reasons of forward compatibility, using
-abbreviations in scripts is not recommended.
+with `u-law').
+.SP
+For an input file, the most common use for this option is to inform
+SoX of the encoding of a `raw' (`headerless') audio
+file (see the examples in
+.B \-b
+and
+.B \-c
+above).
+.SP
+For an output file, this option can be used (perhaps along with
+.BR \-b )
+to set the output encoding type  For example
+.EX
+   sox input.cdda -e float output1.wav
+
+   sox input.cdda -b 64 -e float output2.wav
+.EE
+convert raw CD digital audio (16-bit, signed-integer) to
+floating-point `WAV' files (single & double precision respectively).
+.SP
+By default (i.e. if this option is not given), the output encoding
+type will (providing it is supported by the output file type) be set
+to the input encoding type.
 .TP
 \fB\-s\fR\^/\fB\-u\fR\^/\fB\-f\fR\^/\fB\-A\fR\^/\fB\-U\fR\^/\fB\-o\fR\^/\fB\-i\fR\^/\fB\-a\fR\^/\fB\-g\fR
 Deprecated aliases for specifying the encoding types
@@ -1196,10 +1220,24 @@ can be used to play just the single file `five*.wav'.
 Gives the sample rate in Hz (or kHz if appended with `k') of the file.
 .SP
 For an input file, the most common use for this option is to inform
-SoX of the sample rate of a `raw' (`headerless') audio file.
+SoX of the sample rate of a `raw' (`headerless') audio file (see the
+examples in
+.B \-b
+and
+.B \-c
+above).
 Occasionally, it may be useful to use this option with a `headered'
 file, in order to override the (presumably incorrect) value in the
-header.
+header\*mnote that this is only supported with certain file types.
+For example, if audio was recorded with a sample-rate of say 48k from
+a source that played back a little, say 1\*d5%, too slowly, then
+.EX
+   sox -r 48720 input.wav output.wav
+.EE
+effectively corrects the speed by changing only the file header (but see
+also the
+.B speed
+effect for the more usual solution to this problem).
 .SP
 For an output file, this option provides a shorthand for specifying
 that the
@@ -1219,7 +1257,7 @@ options to be given, and allows the effects to be ordered arbitrarily.
 \fB\-t\fR, \fB\-\-type\fR \fIFILE-TYPE\fR
 Gives the type of the audio file.  For both input and output files,
 this option is commonly used to inform SoX of the type a `headerless'
-audio file\*me.g. raw, mp3\*mwhere the actual/desired type cannot be
+audio file (e.g. raw, mp3) where the actual/desired type cannot be
 determined from a given filename extension.  For example:
 .EX
    another-command | sox -t mp3 - output.wav
@@ -1403,8 +1441,9 @@ Used to specify the band-width of a filter.  A number of different
 methods to specify the width are available (though not all for every effect);
 one of the characters shown may be appended to select the desired method
 as follows:
+.ne 5
 .TS
-center box;
+center;
 cI cI lI
 cB c l.
 \ 	Method	Notes
@@ -2060,9 +2099,10 @@ Apply a flanging effect to the audio.
 See [3] for a detailed description of flanging.
 .SP
 All parameters are optional (right to left).
+.ne 15
 .TS
-center box;
-cB cB cB lB
+center;
+cI cI cI lI
 cI c c l.
 \ 	Range	Default	Description
 delay	0 \- 30	0	Base delay in milliseconds.
@@ -2346,9 +2386,10 @@ channel count; just specify 0 for unused channels.
 .SP
 Finally, certain reduced combination of numbers can be specified
 for certain input/output channel combinations.
+.ne 7
 .TS
-center box ;
-cB cB cB lB
+center;
+cI cI cI lI
 c c c l .
 In Ch	Out Ch	Num	Mappings
 2	1	2	l \*(RA l, r \*(RA l
@@ -2514,8 +2555,9 @@ Change the audio sampling rate (i.e. resample the audio) to any given
 .I RATE
 (even non-integer if this is supported by the output file format)
 using a quality level defined as follows:
+.ne 10
 .TS
-center box;
+center;
 cI cI2w9 cI2w6 cIw6 lIw17
 cB c c c l.
 \ 	Quality	T{
@@ -2598,8 +2640,9 @@ Occasionally, however, it may be desirable to fine-tune the resampler's
 filter response; this can be achieved using
 .IR override\ options ,
 as detailed in the following table:
+.ne 6
 .TS
-center box;
+center;
 lB lw52.
 \-M/\-I/\-L	Phase response = minimum/intermediate/linear
 \-s	Steep filter (band-width = 99%)
@@ -2978,11 +3021,10 @@ that does not contain the delay at the start which usually occurs between
 .EX
    rec \fIparameters filename other-effects\fR silence 1 5 2%
 .EE
+.na
 .TP
-\fBsinc\fR [\fB\-a\fI att\fR\^|\^\fB\-b\fI beta\fR] [\fB\-p\fI phase\fR\^|\^\fB\-M\fR\^|\^\fB\-I\fR\^|\^\fB\-L\fR]
-.br
-[\fB\-t\fI tbw\fR\^|\^\fB\-n\fI taps\fR] [\fIfreqHP\fR][\fB\-\fIfreqLP\fR [\fB\-t\fR tbw\^|\^\fB\-n\fR taps]]
-.SP
+\fBsinc\fR [\fB\-a\fI att\fR\^|\^\fB\-b\fI beta\fR] [\fB\-p\fI phase\fR\^|\^\fB\-M\fR\^|\^\fB\-I\fR\^|\^\fB\-L\fR] \:[\fB\-t\fI tbw\fR\^|\^\fB\-n\fI taps\fR] [\fIfreqHP\fR][\fB\-\fIfreqLP\fR [\fB\-t\fR tbw\^|\^\fB\-n\fR taps]]
+.ad
 Apply a sinc kaiser-windowed low-pass, high-pass, band-pass, or band-reject filter
 to the signal.
 The \fIfreqHP\fR and \fIfreqLP\fR parameters give the frequencies of the
@@ -3241,7 +3283,7 @@ The following commands cut out the first verse:
 .EE
 (5 ms excess, after the first verse starts)
 .EX
-   sox long.wav part2.wav trim 1:03.422
+   sox too-long.wav part2.wav trim 1:03.422
 .EE
 (5 ms excess plus 5 ms leeway, before the second verse starts)
 .EX
@@ -3554,11 +3596,10 @@ and \fIshift\fR.
 See also the
 .B tempo
 effect.
+.na
 .TP
-\fBsynth\fR [\fB\-j \fIKEY\fR] [\fB\-n\fR] [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR]
-.br
-[[\fB%\fR]\fIfreq\fR[\fBk\fR][\fB:\fR\^|\^\fB+\fR\^|\^\fB/\fR\^|\^\fB\-\fR[\fB%\fR]\fIfreq2\fR[\fBk\fR]]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
-.SP
+\fBsynth\fR [\fB\-j \fIKEY\fR] [\fB\-n\fR] [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR] \:[[\fB%\fR]\fIfreq\fR[\fBk\fR][\fB:\fR\^|\^\fB+\fR\^|\^\fB/\fR\^|\^\fB\-\fR[\fB%\fR]\fIfreq2\fR[\fBk\fR]]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
+.ad
 This effect can be used to generate fixed or swept frequency audio tones
 with various wave shapes, or to generate wide-band noise of various
 `colours'.

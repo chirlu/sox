@@ -90,7 +90,9 @@ See
 .B .ima
 and
 .B .vox
-for raw ADPCM formats.
+for raw ADPCM formats, and
+.B .cdda
+for raw CD digital audio.
 .PP
 \&\fB.f4\fR, \fB.f8\fR,
 \&\fB.s1\fR, \fB.s2\fR, \fB.s3\fR, \fB.s4\fR,
@@ -232,11 +234,10 @@ on the Mac.
 Apple's Core Audio File format.
 .TP
 \&\fB.cdda\fR, \fB.cdr\fR
-`Red Book' Compact Disc Digital Audio.
-CDDA has two audio channels formatted as 16-bit
-signed integers at a sample rate of 44\*d1\ kHz.  The number of (stereo)
-samples in each CDDA track is always a multiple of 588 which is why it
-needs its own handler.
+`Red Book' Compact Disc Digital Audio (raw audio).  CDDA has two audio
+channels formatted as 16-bit signed integers (big endian)at a sample
+rate of 44\*d1\ kHz.  The number of (stereo) samples in each CDDA
+track is always a multiple of 588.
 .TP
 \fBcoreaudio\fR (optional)
 Mac OSX CoreAudio device driver: supports both playing and recording
