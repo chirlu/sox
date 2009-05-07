@@ -1,5 +1,6 @@
 Makefile Makefile.in
 autom4te.cache
+mingw32-config.cache
 configure config.log config.status confdefs.h configure.lineno 
 config.status.lineno config.guess config.sub depcomp compile 
 install-sh missing aclocal.m4
@@ -8,3 +9,4 @@ sox*.tar.gz
 *.txt *.pdf *.html
 sox.pc
 README
+Docs.Features
