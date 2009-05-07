@@ -24,11 +24,14 @@
 #endif
 #endif
 
+#if 0
 #ifdef _LIBC
 # include <getopt.h>
 #else
 # include "getopt.h"
 #endif
+#endif
+#include "getopt.h"
 
 #if !defined __STDC__ || !__STDC__
 /* This is a separate conditional since some stdc systems
@@ -73,6 +76,10 @@
 #ifndef NULL
 #define NULL 0
 #endif
+
+/* Some platforms undef our macro for getopt_long so redo to be safe. */
+#undef getopt_long
+#define getopt_long lsx_getopt_long
 
 int
 getopt_long (
@@ -125,6 +132,7 @@ libc_hidden_def (getopt_long_only)
 #ifdef TEST
 
 #include <stdio.h>
+
 
 int
 main (argc, argv)
