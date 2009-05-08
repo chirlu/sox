@@ -129,7 +129,7 @@ static int sox_trim_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
     } /* !trimmed */
 
     if (trim->trimmed || start_trim) {
-        if (trim->length && ((trim->trimmed+done) >= trim->length)) {
+        if (trim->length_str && ((trim->trimmed+done) >= trim->length)) {
             /* Since we know the end is in this block, we set done
              * to the desired length less the amount already read.
              */
