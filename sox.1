@@ -241,7 +241,7 @@ to them that is supported by the output file type.
 For all files, SoX will exit with an error
 if the file type cannot be determined; command-line format options may
 need to be added or changed to resolve the problem.
-.SS Play & Rec
+.SS Playing & Recording Audio
 The
 .B play
 and
@@ -264,7 +264,7 @@ and
    sox -d new-file.wav
 .EE
 Of course, further options and effects (as described below) can be
-added to either form of the command.
+added to the commands in either form.
 .TS
 center;
 c8 c8 c.
@@ -276,10 +276,7 @@ Some systems provide more than one type of (SoX-compatible) audio
 driver, e.g. ALSA & OSS, or SUNAU & AO.
 Systems can also have more than one audio device (a.k.a. `sound card').
 If more than one audio driver has been
-built-in to SoX, and the default selected by SoX when using
-.B rec
-or
-.B play
+built-in to SoX, and the default selected by SoX when recording or playing
 is not the one that is wanted, then the
 .B AUDIODRIVER
 environment variable can be used to override the default.  For example
@@ -288,12 +285,7 @@ environment variable can be used to override the default.  For example
    set AUDIODRIVER=oss
    play ...
 .EE
-For
-.BR rec ,
-.BR play ,
-and
-.BR sox ,
-the
+The
 .B AUDIODEV
 environment variable can be used to override the default audio device;
 e.g.
@@ -345,6 +337,7 @@ meter which can be invoked (before making the actual recording) as follows:
 The recording level should be adjusted (using the system-provided mixer
 program, not SoX) so that the meter is \fIat most occasionally\fR full
 scale, and never `in the red' (an exclamation mark is shown).
+See also \fB\-S\fR below.
 .SS Accuracy
 Many file formats that compress audio discard some of the audio signal
 information whilst doing so; converting to such a format then converting
@@ -388,12 +381,13 @@ formats and then convert to the lossy format only at the final stage.
 Applying multiple effects with a single SoX invocation will,
 in general, produce more accurate results than those produced using
 multiple SoX invocations; hence this is also recommended.
-.SS Dither
+.SS Dithering
 Dithering is a technique used to maximise the dynamic range of audio
-stored at a particular bit-depth and is achieved by adding a small
-amount of white noise to the signal.  In most cases, SoX can determine
-whether the selected processing requires dither and will add it during
-output formatting if appropriate.
+stored at a particular bit-depth: any distortion introduced by
+quantisation is decorrelated by adding a small amount of white noise
+to the signal.  In most cases, SoX can determine whether the selected
+processing requires dither and will add it during output formatting if
+appropriate.
 .SP
 Specifically, by default, SoX automatically adds TPDF dither
 when the output bit-depth is less than 24 and any
@@ -426,10 +420,11 @@ dithering manually (e.g. to select a noise-shaping curve), see the
 .B dither
 effect.
 .SS Clipping
-Clipping is distortion that occurs when an audio signal
-level (or `volume') exceeds the range of the chosen representation.
-It is nearly always undesirable and so should usually be corrected by
-adjusting the level prior to the point at which clipping occurs.
+Clipping is distortion that occurs when an audio signal level (or
+`volume') exceeds the range of the chosen representation.  In most
+cases, clipping is undesirable and so should be corrected by adjusting
+the level prior to the point (in the processing chain) at which it
+occurs.
 .SP
 In SoX, clipping could occur, as you might expect, when using the
 .B vol
@@ -448,10 +443,16 @@ For these reasons, it is usual to make sure that an audio
 file's signal level has some `headroom', i.e. it does not exceed a particular
 level below the maximum possible level for the given representation.
 Some standards bodies recommend as much as 9dB headroom, but in most cases,
-3dB (\(~~ 70% linear) will probably suffice.
+3dB (\(~~ 70% linear) will probably suffice.  Note that this wisdom
+seems to have been lost in modern music production; in fact, many CDs,
+MP3s, etc.  are now mastered at levels \fIabove\fR 0dBFS i.e. the
+audio is clipped as delivered.
+.SP
 SoX's
 .B stat
-effect can assist in determining the signal level in an audio file; the
+and
+.B stats
+effects can assist in determining the signal level in an audio file; the
 .B gain
 or
 .B vol
@@ -1816,7 +1817,8 @@ is to use the
 filter effect at a frequency of say 10Hz, as illustrated in the following
 example:
 .EX
-   sox -n output.wav synth 5 sin %0 50 highpass 10
+   sox -n dc.wav synth 5 sin %0 50
+   sox dc.wav fixed.wav highpass 10
 .EE
 .SP
 See also the
@@ -3653,6 +3655,10 @@ or with a (Bourne shell) loop, the whole guitar:
    for s in -29 -24 -19 -14 -10 -5; do
 	play -n synth 4 pluck %$s repeat 2; done
 .EE
+See the
+.B delay
+effect for further examples.
+.SP
 .B N.B.
 This effect generates audio at maximum volume (0dBFS), which means that there
 is a high chance of clipping when using the audio subsequently, so
