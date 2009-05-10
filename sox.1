@@ -1509,7 +1509,7 @@ frequency and settling around it.
 .SP
 This effect supports the \fB\-\-plot\fR global option.
 .SP
-See also \fBfilter\fR for a bandpass filter with steeper shoulders.
+See also \fBsinc\fR for a bandpass filter with steeper shoulders.
 .TP
 \fBbandpass\fR\^|\^\fBbandreject\fR [\fB\-c\fR] \fIfrequency\fR[\fBk\fR]\fI width\fR[\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]
 Apply a two-pole Butterworth band-pass or band-reject filter with
@@ -1525,7 +1525,7 @@ and are described in detail in [1].
 .SP
 These effects support the \fB\-\-plot\fR global option.
 .SP
-See also \fBfilter\fR for a bandpass filter with steeper shoulders.
+See also \fBsinc\fR for a bandpass filter with steeper shoulders.
 .TP
 \fBbandreject \fIfrequency\fR[\fBk\fR]\fI width\fR[\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]
 Apply a band-reject filter.
@@ -2279,7 +2279,7 @@ double-pole filters are described in detail in [1].
 .SP
 These effects support the \fB\-\-plot\fR global option.
 .SP
-See also \fBfilter\fR for filters with a steeper roll-off.
+See also \fBsinc\fR for filters with a steeper roll-off.
 .TP
 \fBladspa\fR \fBmodule\fR [\fBplugin\fR] [\fBargument\fR...]
 Apply a LADSPA [5] (Linux Audio Developer's Simple Plugin API) plugin.
@@ -2334,13 +2334,13 @@ For example, the following (one long) command shows how multi-band
 companding is typically used in FM radio:
 .EX
 .ne 8
-   play track1.wav gain -3 filter 8000- 32 100 mcompand \\
+   play track1.wav gain -3 sinc 8000- 29 100 mcompand \\
 	\(dq0.005,0.1 -47,-40,-34,-34,-17,-33\(dq 100 \\
 	\(dq0.003,0.05 -47,-40,-34,-34,-17,-33\(dq 400 \\
 	\(dq0.000625,0.0125 -47,-40,-34,-34,-15,-33\(dq 1600 \\
 	\(dq0.0001,0.025 -47,-40,-34,-34,-31,-31,-0,-30\(dq 6400 \\
 	\(dq0,0.025 -38,-31,-28,-28,-0,-25\(dq \\
-	gain 15 highpass 22 highpass 22 filter -17500 256 \\
+	gain 15 highpass 22 highpass 22 sinc -n 255 -b 16 -17500 \\
 	gain 9 lowpass -1 17801
 .EE
 The audio file is played with a simulated FM radio sound (or broadcast

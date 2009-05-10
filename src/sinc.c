@@ -42,8 +42,8 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
     while (c && (c = getopt(argc, argv, "+ra:b:p:MILt:n:")) != -1) switch (c) {
       char * parse_ptr;
       case 'r': p->round = sox_true; break;
-      GETOPT_NUMERIC('a', att,  40 , 170)
-      GETOPT_NUMERIC('b', beta,  0 , 18)
+      GETOPT_NUMERIC('a', att,  40 , 180)
+      GETOPT_NUMERIC('b', beta,  0 , 256)
       GETOPT_NUMERIC('p', phase, 0, 100)
       case 'M': p->phase =  0; break;
       case 'I': p->phase = 25; break;

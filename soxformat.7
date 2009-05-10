@@ -264,7 +264,7 @@ This is an alternative handler for CVSD that is unfiltered but can
 be used with any bit-rate.  E.g.
 .EX
 	sox infile outfile.cvu rate 28k
-	play -r 28k outfile.cvu filter -3.4k
+	play -r 28k outfile.cvu sinc -3.4k
 .EE
 .TP
 .B .dat
@@ -597,7 +597,7 @@ and/or DC offset problems when it comes to decoding the audio.  Whilst
 little can be done about the clipping, a DC offset can be removed by
 passing the decoded audio through a high-pass filter, e.g.:
 .EX
-	sox input.vox output.au highpass 10
+	sox input.vox output.wav highpass 10
 .EE
 .TP
 \&\fB.w64\fR (optional)
