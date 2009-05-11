@@ -40,9 +40,42 @@ typedef struct {
         unsigned char           *InputBuffer;
         ptrdiff_t             cursamp;
         size_t              FrameCount;
+
+	void (*mad_stream_buffer)(struct mad_stream *, unsigned char const *,
+				  unsigned long);
+	void (*mad_stream_skip)(struct mad_stream *, unsigned long);
+	int (*mad_stream_sync)(struct mad_stream *);
+	void (*mad_stream_init)(struct mad_stream *);
+	void (*mad_frame_init)(struct mad_frame *);
+	void (*mad_synth_init)(struct mad_synth *);
+	int (*mad_frame_decode)(struct mad_frame *, struct mad_stream *);
+	void (*mad_timer_add)(mad_timer_t *, mad_timer_t);
+	void (*mad_synth_frame)(struct mad_synth *, struct mad_frame const *);
+	char const *(*mad_stream_errorstr)(struct mad_stream const *);
+	void (*mad_frame_finish)(struct mad_frame *);
+	void (*mad_stream_finish)(struct mad_stream *);
 #endif /*HAVE_MAD_H*/
 #ifdef HAVE_LAME_LAME_H
         lame_global_flags       *gfp;
+
+	lame_global_flags * (*lame_init)(void);
+	int (*lame_set_num_channels)(lame_global_flags *, int);
+	int (*lame_get_num_channels)(const lame_global_flags *);
+	int (*lame_set_in_samplerate)(lame_global_flags *, int);
+	int (*lame_set_bWriteVbrTag)(lame_global_flags *, int);
+	int (*lame_init_params)(lame_global_flags *);
+	int (*lame_set_errorf)(lame_global_flags *, 
+			       void (*func)(const char *, va_list));
+	int (*lame_set_debugf)(lame_global_flags *,
+			       void (*func)(const char *, va_list));
+	int (*lame_set_msgf)(lame_global_flags *,
+			     void (*func)(const char *, va_list));
+	int (*lame_encode_buffer)(lame_global_flags *, const short int[],
+				  const short int[], const int, 
+				  unsigned char *, const int);
+	int (*lame_encode_flush)(lame_global_flags *, unsigned char *,
+				 int);
+	int (*lame_close)(lame_global_flags *);
 #endif /*HAVE_LAME_LAME_H*/
 } priv_t;
 
@@ -143,7 +176,7 @@ static int sox_mp3_inputtag(sox_format_t * ft)
     remaining = p->Stream.bufend - p->Stream.next_frame;
     if ((tagsize = tagtype(p->Stream.this_frame, remaining)))
     {
-        mad_stream_skip(&p->Stream, tagsize);
+        p->mad_stream_skip(&p->Stream, tagsize);
         rc = SOX_SUCCESS;
     }
 
@@ -151,7 +184,7 @@ static int sox_mp3_inputtag(sox_format_t * ft)
      * so help libmad out and go back into frame seek mode.
      * This is true whether an ID3 tag was found or not.
      */
-    mad_stream_sync(&p->Stream);
+    p->mad_stream_sync(&p->Stream);
 
     return rc;
 }
@@ -161,6 +194,19 @@ static int startread(sox_format_t * ft)
     priv_t *p = (priv_t *) ft->priv;
     size_t ReadSize;
     sox_bool ignore_length = ft->signal.length == SOX_IGNORE_LENGTH;
+
+    p->mad_stream_buffer = mad_stream_buffer;
+    p->mad_stream_skip = mad_stream_skip;
+    p->mad_stream_sync = mad_stream_sync;
+    p->mad_stream_init = mad_stream_init;
+    p->mad_frame_init = mad_frame_init;
+    p->mad_synth_init = mad_synth_init;
+    p->mad_frame_decode = mad_frame_decode;
+    p->mad_timer_add = mad_timer_add;
+    p->mad_synth_frame = mad_synth_frame;
+    p->mad_stream_errorstr = mad_stream_errorstr;
+    p->mad_frame_finish = mad_frame_finish;
+    p->mad_stream_finish = mad_stream_finish;
 
     p->InputBuffer = NULL;
 
@@ -177,9 +223,9 @@ static int startread(sox_format_t * ft)
           ft->signal.length = mp3_duration_ms(ft->fp, p->InputBuffer);
     }
 
-    mad_stream_init(&p->Stream);
-    mad_frame_init(&p->Frame);
-    mad_synth_init(&p->Synth);
+    p->mad_stream_init(&p->Stream);
+    p->mad_frame_init(&p->Frame);
+    p->mad_synth_init(&p->Synth);
     mad_timer_reset(&p->Timer);
 
     ft->encoding.encoding = SOX_ENCODING_MP3;
@@ -192,14 +238,14 @@ static int startread(sox_format_t * ft)
     if (ReadSize != INPUT_BUFFER_SIZE && ferror(ft->fp))
       return SOX_EOF;
 
-    mad_stream_buffer(&p->Stream, p->InputBuffer, ReadSize);
+    p->mad_stream_buffer(&p->Stream, p->InputBuffer, ReadSize);
 
     /* Find a valid frame before starting up.  This makes sure
      * that we have a valid MP3 and also skips past ID3v2 tags
      * at the beginning of the audio file.
      */
     p->Stream.error = 0;
-    while (mad_frame_decode(&p->Frame,&p->Stream))
+    while (p->mad_frame_decode(&p->Frame,&p->Stream))
     {
         /* check whether input buffer needs a refill */
         if (p->Stream.error == MAD_ERROR_BUFLEN)
@@ -242,8 +288,8 @@ static int startread(sox_format_t * ft)
 
     p->FrameCount=1;
 
-    mad_timer_add(&p->Timer,p->Frame.header.duration);
-    mad_synth_frame(&p->Synth,&p->Frame);
+    p->mad_timer_add(&p->Timer,p->Frame.header.duration);
+    p->mad_synth_frame(&p->Synth,&p->Frame);
     ft->signal.rate=p->Synth.pcm.samplerate;
     if (ignore_length)
       ft->signal.length = SOX_UNSPEC;
@@ -301,7 +347,7 @@ static size_t sox_mp3read(sox_format_t * ft, sox_sample_t *buf, size_t len)
             }
         }
 
-        if (mad_frame_decode(&p->Frame,&p->Stream))
+        if (p->mad_frame_decode(&p->Frame,&p->Stream))
         {
             if(MAD_RECOVERABLE(p->Stream.error))
             {
@@ -315,14 +361,14 @@ static size_t sox_mp3read(sox_format_t * ft, sox_sample_t *buf, size_t len)
                 else
                 {
                     lsx_report("unrecoverable frame level error (%s).",
-                              mad_stream_errorstr(&p->Stream));
+                              p->mad_stream_errorstr(&p->Stream));
                     break;
                 }
             }
         }
         p->FrameCount++;
-        mad_timer_add(&p->Timer,p->Frame.header.duration);
-        mad_synth_frame(&p->Synth,&p->Frame);
+        p->mad_timer_add(&p->Timer,p->Frame.header.duration);
+        p->mad_synth_frame(&p->Synth,&p->Frame);
         p->cursamp=0;
     } while(1);
 
@@ -334,8 +380,8 @@ static int stopread(sox_format_t * ft)
   priv_t *p=(priv_t*) ft->priv;
 
   mad_synth_finish(&p->Synth);
-  mad_frame_finish(&p->Frame);
-  mad_stream_finish(&p->Stream);
+  p->mad_frame_finish(&p->Frame);
+  p->mad_stream_finish(&p->Stream);
 
   free(p->InputBuffer);
 
@@ -361,30 +407,43 @@ static int startwrite(sox_format_t * ft)
 {
   priv_t *p = (priv_t *) ft->priv;
 
+  p->lame_init = lame_init;
+  p->lame_set_num_channels = lame_set_num_channels;
+  p->lame_get_num_channels = lame_get_num_channels;
+  p->lame_set_in_samplerate = lame_set_in_samplerate;
+  p->lame_set_bWriteVbrTag = lame_set_bWriteVbrTag;
+  p->lame_init_params = lame_init_params;
+  p->lame_set_errorf = lame_set_errorf;
+  p->lame_set_debugf = lame_set_debugf;
+  p->lame_set_msgf = lame_set_msgf;
+  p->lame_encode_buffer = lame_encode_buffer;
+  p->lame_encode_flush = lame_encode_flush;
+  p->lame_close = lame_close;
+
   if (ft->encoding.encoding != SOX_ENCODING_MP3) {
     if(ft->encoding.encoding != SOX_ENCODING_UNKNOWN)
       lsx_report("Encoding forced to MP3");
     ft->encoding.encoding = SOX_ENCODING_MP3;
   }
 
-  p->gfp = lame_init();
+  p->gfp = p->lame_init();
   if (p->gfp == NULL){
     lsx_fail_errno(ft,SOX_EOF,"Initialization of LAME library failed");
     return(SOX_EOF);
   }
 
   if (ft->signal.channels != SOX_ENCODING_UNKNOWN) {
-    if ( (lame_set_num_channels(p->gfp,(int)ft->signal.channels)) < 0) {
+    if ( (p->lame_set_num_channels(p->gfp,(int)ft->signal.channels)) < 0) {
         lsx_fail_errno(ft,SOX_EOF,"Unsupported number of channels");
         return(SOX_EOF);
     }
   }
   else
-    ft->signal.channels = lame_get_num_channels(p->gfp); /* LAME default */
+    ft->signal.channels = p->lame_get_num_channels(p->gfp); /* LAME default */
 
-  lame_set_in_samplerate(p->gfp,(int)ft->signal.rate);
+  p->lame_set_in_samplerate(p->gfp,(int)ft->signal.rate);
 
-  lame_set_bWriteVbrTag(p->gfp, 0); /* disable writing VBR tag */
+  p->lame_set_bWriteVbrTag(p->gfp, 0); /* disable writing VBR tag */
 
   /* The bitrate, mode, quality and other settings are the default ones,
      since SoX's command line options do not allow to set them */
@@ -394,13 +453,13 @@ static int startwrite(sox_format_t * ft)
      as a compressed bit-rate. */
   if (ft->encoding.compression != HUGE_VAL)
       lsx_warn("-C option not supported for mp3; using default compression rate");
-  if (lame_init_params(p->gfp) < 0){
+  if (p->lame_init_params(p->gfp) < 0){
         lsx_fail_errno(ft,SOX_EOF,"LAME initialization failed");
         return(SOX_EOF);
   }
-  lame_set_errorf(p->gfp,null_error_func);
-  lame_set_debugf(p->gfp,null_error_func);
-  lame_set_msgf  (p->gfp,null_error_func);
+  p->lame_set_errorf(p->gfp,null_error_func);
+  p->lame_set_debugf(p->gfp,null_error_func);
+  p->lame_set_msgf  (p->gfp,null_error_func);
 
   return(SOX_SUCCESS);
 }
@@ -458,9 +517,10 @@ static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t sa
     mp3buffer_size = 1.25 * nsamples + 7200;
     mp3buffer = lsx_malloc(mp3buffer_size);
 
-    if ((written = lame_encode_buffer(p->gfp,buffer_l, buffer_r,
-                                      nsamples, mp3buffer,
-                                      (int)mp3buffer_size)) > mp3buffer_size){
+    if ((written = 
+	 p->lame_encode_buffer(p->gfp,buffer_l, buffer_r,
+			       nsamples, mp3buffer,
+			       (int)mp3buffer_size)) > mp3buffer_size){
         lsx_fail_errno(ft,SOX_EOF,"Encoding failed");
         goto end;
     }
@@ -486,14 +546,14 @@ static int stopwrite(sox_format_t * ft)
 {
   priv_t *p = (priv_t *) ft->priv;
   unsigned char mp3buffer[7200];
-  int written = lame_encode_flush(p->gfp, mp3buffer, (int)sizeof(mp3buffer));
+  int written = p->lame_encode_flush(p->gfp, mp3buffer, (int)sizeof(mp3buffer));
 
   if (written < 0)
     lsx_fail_errno(ft, SOX_EOF, "Encoding failed");
   else if (lsx_writebuf(ft, mp3buffer, (size_t)written) < (size_t)written)
     lsx_fail_errno(ft, SOX_EOF, "File write failed");
 
-  lame_close(p->gfp);
+  p->lame_close(p->gfp);
   return SOX_SUCCESS;
 }
 
