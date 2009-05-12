@@ -79,12 +79,12 @@ static void read_comments(sox_format_t * ft)
 
 #endif
 
-static unsigned long xing_frames(struct mad_bitptr ptr, unsigned bitlen)
+static unsigned long xing_frames(priv_t * p, struct mad_bitptr ptr, unsigned bitlen)
 {
   #define XING_MAGIC ( ('X' << 24) | ('i' << 16) | ('n' << 8) | 'g' )
-  if (bitlen >= 96 && mad_bit_read(&ptr, 32) == XING_MAGIC &&
-      (mad_bit_read(&ptr, 32) & 1 )) /* XING_FRAMES */
-    return mad_bit_read(&ptr, 32);
+  if (bitlen >= 96 && p->mad_bit_read(&ptr, 32) == XING_MAGIC &&
+      (p->mad_bit_read(&ptr, 32) & 1 )) /* XING_FRAMES */
+    return p->mad_bit_read(&ptr, 32);
   return 0;
 }
 
@@ -94,19 +94,21 @@ static void mad_timer_mult(mad_timer_t * t, double d)
   t->fraction = (d - t->seconds) * MAD_TIMER_RESOLUTION + .5;
 }
 
-static size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
+static size_t mp3_duration_ms(sox_format_t * ft, unsigned char *buffer)
 {
+  priv_t              * p = (priv_t *) ft->priv;
+  FILE                * fp = ft->fp;
   struct mad_stream   mad_stream;
   struct mad_header   mad_header;
   struct mad_frame    mad_frame;
   mad_timer_t         time = mad_timer_zero;
-  size_t          initial_bitrate = 0; /* Initialised to prevent warning */
-  size_t          tagsize = 0, consumed = 0, frames = 0;
+  size_t              initial_bitrate = 0; /* Initialised to prevent warning */
+  size_t              tagsize = 0, consumed = 0, frames = 0;
   sox_bool            vbr = sox_false, depadded = sox_false;
 
-  mad_stream_init(&mad_stream);
-  mad_header_init(&mad_header);
-  mad_frame_init(&mad_frame);
+  p->mad_stream_init(&mad_stream);
+  p->mad_header_init(&mad_header);
+  p->mad_frame_init(&mad_frame);
 
   do {  /* Read data from the MP3 file */
     int read, padding = 0;
@@ -120,11 +122,11 @@ static size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
     }
     for (; !depadded && padding < read && !buffer[padding]; ++padding);
     depadded = sox_true;
-    mad_stream_buffer(&mad_stream, buffer + padding, leftover + read - padding);
+    p->mad_stream_buffer(&mad_stream, buffer + padding, leftover + read - padding);
 
     while (sox_true) {  /* Decode frame headers */
       mad_stream.error = MAD_ERROR_NONE;
-      if (mad_header_decode(&mad_header, &mad_stream) == -1) {
+      if (p->mad_header_decode(&mad_header, &mad_stream) == -1) {
         if (mad_stream.error == MAD_ERROR_BUFLEN)
           break;  /* Normal behaviour; get some more data from the file */
         if (!MAD_RECOVERABLE(mad_stream.error)) {
@@ -139,7 +141,7 @@ static size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
               fseeko(fp, (off_t)(tagsize - available), SEEK_CUR);
               depadded = sox_false;
             }
-            mad_stream_skip(&mad_stream, min(tagsize, available));
+            p->mad_stream_skip(&mad_stream, min(tagsize, available));
           }
           else lsx_warn("MAD lost sync");
         }
@@ -147,7 +149,7 @@ static size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
         continue; /* Not an audio frame */
       }
 
-      mad_timer_add(&time, mad_header.duration);
+      p->mad_timer_add(&time, mad_header.duration);
       consumed += mad_stream.next_frame - mad_stream.this_frame;
 
       if (!frames) {
@@ -155,13 +157,13 @@ static size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
 
         /* Get the precise frame count from the XING header if present */
         mad_frame.header = mad_header;
-        if (mad_frame_decode(&mad_frame, &mad_stream) == -1)
+        if (p->mad_frame_decode(&mad_frame, &mad_stream) == -1)
           if (!MAD_RECOVERABLE(mad_stream.error)) {
             lsx_warn("unrecoverable MAD error");
             break;
           }
-        if ((frames = xing_frames(mad_stream.anc_ptr, mad_stream.anc_bitlen))) {
-          mad_timer_multiply(&time, (signed long)frames);
+        if ((frames = xing_frames(p, mad_stream.anc_ptr, mad_stream.anc_bitlen))) {
+          p->mad_timer_multiply(&time, (signed long)frames);
           lsx_debug("got exact duration from XING frame count (%lu)", (unsigned long)frames);
           break;
         }
@@ -179,9 +181,9 @@ static size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
     }
   } while (mad_stream.error == MAD_ERROR_BUFLEN);
 
-  mad_frame_finish(&mad_frame);
+  p->mad_frame_finish(&mad_frame);
   mad_header_finish(&mad_header);
-  mad_stream_finish(&mad_stream);
+  p->mad_stream_finish(&mad_stream);
   rewind(fp);
-  return mad_timer_count(time, MAD_UNITS_MILLISECONDS);
+  return p->mad_timer_count(time, MAD_UNITS_MILLISECONDS);
 }

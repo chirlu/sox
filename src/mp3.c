@@ -28,54 +28,78 @@
   #define ID3_TAG_FLAG_FOOTERPRESENT 0x10
 #endif
 
+#if defined HAVE_LIBLTDL
+  #include <ltdl.h>
+#if defined DL_MAD
+mad_timer_t const mad_timer_zero;
+#endif
+#endif
+
+#if 0
+#define DL_MAD
+#define DL_LAME
+#endif
+
 #define INPUT_BUFFER_SIZE       (sox_globals.bufsiz)
 
 /* Private data */
 typedef struct {
 #ifdef HAVE_MAD_H
-        struct mad_stream       Stream;
-        struct mad_frame        Frame;
-        struct mad_synth        Synth;
-        mad_timer_t             Timer;
-        unsigned char           *InputBuffer;
-        ptrdiff_t             cursamp;
-        size_t              FrameCount;
+  struct mad_stream       Stream;
+  struct mad_frame        Frame;
+  struct mad_synth        Synth;
+  mad_timer_t             Timer;
+  unsigned char           *InputBuffer;
+  ptrdiff_t               cursamp;
+  size_t                  FrameCount;
 
-	void (*mad_stream_buffer)(struct mad_stream *, unsigned char const *,
-				  unsigned long);
-	void (*mad_stream_skip)(struct mad_stream *, unsigned long);
-	int (*mad_stream_sync)(struct mad_stream *);
-	void (*mad_stream_init)(struct mad_stream *);
-	void (*mad_frame_init)(struct mad_frame *);
-	void (*mad_synth_init)(struct mad_synth *);
-	int (*mad_frame_decode)(struct mad_frame *, struct mad_stream *);
-	void (*mad_timer_add)(mad_timer_t *, mad_timer_t);
-	void (*mad_synth_frame)(struct mad_synth *, struct mad_frame const *);
-	char const *(*mad_stream_errorstr)(struct mad_stream const *);
-	void (*mad_frame_finish)(struct mad_frame *);
-	void (*mad_stream_finish)(struct mad_stream *);
+  void (*mad_stream_buffer)(struct mad_stream *, unsigned char const *,
+                            unsigned long);
+  void (*mad_stream_skip)(struct mad_stream *, unsigned long);
+  int (*mad_stream_sync)(struct mad_stream *);
+  void (*mad_stream_init)(struct mad_stream *);
+  void (*mad_frame_init)(struct mad_frame *);
+  void (*mad_synth_init)(struct mad_synth *);
+  int (*mad_frame_decode)(struct mad_frame *, struct mad_stream *);
+  void (*mad_timer_add)(mad_timer_t *, mad_timer_t);
+  void (*mad_synth_frame)(struct mad_synth *, struct mad_frame const *);
+  char const *(*mad_stream_errorstr)(struct mad_stream const *);
+  void (*mad_frame_finish)(struct mad_frame *);
+  void (*mad_stream_finish)(struct mad_stream *);
+  unsigned long (*mad_bit_read)(struct mad_bitptr *, unsigned int);
+  int (*mad_header_decode)(struct mad_header *, struct mad_stream *);
+  void (*mad_header_init)(struct mad_header *);
+  signed long (*mad_timer_count)(mad_timer_t, enum mad_units);
+  void (*mad_timer_multiply)(mad_timer_t *, signed long);
+  #if defined HAVE_LIBLTDL && defined DL_MAD
+  lt_dlhandle mad_lth;
+  #endif
 #endif /*HAVE_MAD_H*/
-#ifdef HAVE_LAME_LAME_H
-        lame_global_flags       *gfp;
 
-	lame_global_flags * (*lame_init)(void);
-	int (*lame_set_num_channels)(lame_global_flags *, int);
-	int (*lame_get_num_channels)(const lame_global_flags *);
-	int (*lame_set_in_samplerate)(lame_global_flags *, int);
-	int (*lame_set_bWriteVbrTag)(lame_global_flags *, int);
-	int (*lame_init_params)(lame_global_flags *);
-	int (*lame_set_errorf)(lame_global_flags *, 
-			       void (*func)(const char *, va_list));
-	int (*lame_set_debugf)(lame_global_flags *,
-			       void (*func)(const char *, va_list));
-	int (*lame_set_msgf)(lame_global_flags *,
-			     void (*func)(const char *, va_list));
-	int (*lame_encode_buffer)(lame_global_flags *, const short int[],
-				  const short int[], const int, 
-				  unsigned char *, const int);
-	int (*lame_encode_flush)(lame_global_flags *, unsigned char *,
-				 int);
-	int (*lame_close)(lame_global_flags *);
+#ifdef HAVE_LAME_LAME_H
+  lame_global_flags       *gfp;
+
+  lame_global_flags * (*lame_init)(void);
+  int (*lame_set_num_channels)(lame_global_flags *, int);
+  int (*lame_get_num_channels)(const lame_global_flags *);
+  int (*lame_set_in_samplerate)(lame_global_flags *, int);
+  int (*lame_set_bWriteVbrTag)(lame_global_flags *, int);
+  int (*lame_init_params)(lame_global_flags *);
+  int (*lame_set_errorf)(lame_global_flags *, 
+                         void (*func)(const char *, va_list));
+  int (*lame_set_debugf)(lame_global_flags *,
+                         void (*func)(const char *, va_list));
+  int (*lame_set_msgf)(lame_global_flags *,
+                       void (*func)(const char *, va_list));
+  int (*lame_encode_buffer)(lame_global_flags *, const short int[],
+                            const short int[], const int, 
+                            unsigned char *, const int);
+  int (*lame_encode_flush)(lame_global_flags *, unsigned char *,
+                           int);
+  int (*lame_close)(lame_global_flags *);
+  #if defined HAVE_LIBLTDL && defined DL_LAME
+  lt_dlhandle lame_lth;
+  #endif
 #endif /*HAVE_LAME_LAME_H*/
 } priv_t;
 
@@ -144,7 +168,7 @@ static int sox_mp3_input(sox_format_t * ft)
         return SOX_EOF;
     }
 
-    mad_stream_buffer(&p->Stream, p->InputBuffer, bytes_read+remaining);
+    p->mad_stream_buffer(&p->Stream, p->InputBuffer, bytes_read+remaining);
     p->Stream.error = 0;
 
     return SOX_SUCCESS;
@@ -191,22 +215,49 @@ static int sox_mp3_inputtag(sox_format_t * ft)
 
 static int startread(sox_format_t * ft)
 {
-    priv_t *p = (priv_t *) ft->priv;
-    size_t ReadSize;
-    sox_bool ignore_length = ft->signal.length == SOX_IGNORE_LENGTH;
+  priv_t *p = (priv_t *) ft->priv;
+  size_t ReadSize;
+  sox_bool ignore_length = ft->signal.length == SOX_IGNORE_LENGTH;
 
-    p->mad_stream_buffer = mad_stream_buffer;
-    p->mad_stream_skip = mad_stream_skip;
-    p->mad_stream_sync = mad_stream_sync;
-    p->mad_stream_init = mad_stream_init;
-    p->mad_frame_init = mad_frame_init;
-    p->mad_synth_init = mad_synth_init;
-    p->mad_frame_decode = mad_frame_decode;
-    p->mad_timer_add = mad_timer_add;
-    p->mad_synth_frame = mad_synth_frame;
-    p->mad_stream_errorstr = mad_stream_errorstr;
-    p->mad_frame_finish = mad_frame_finish;
-    p->mad_stream_finish = mad_stream_finish;
+#if defined HAVE_LIBLTDL && defined DL_MAD
+  #define DL_LIB_NAME "MAD decoder library (libmad"
+  #define LOAD_FN_PTR(x) \
+    if (!(ltptr.ptr = lt_dlsym(p->mad_lth, #x))) { \
+      lsx_fail("incompatible " DL_LIB_NAME " is missing "#x")"); \
+      return SOX_EOF; \
+    } \
+    p->x = ltptr.fn;
+  union {void (* fn)(); lt_ptr ptr;} ltptr;
+  p->mad_lth = lt_dlopenext("libmad");
+  if (!p->mad_lth) {
+    lsx_fail("could not find " DL_LIB_NAME ")");
+    return SOX_EOF;
+  }
+#else
+  #define DL_LIB_NAME
+  #define LOAD_FN_PTR(x) p->x = x;
+#endif 
+
+  LOAD_FN_PTR(mad_bit_read)
+  LOAD_FN_PTR(mad_frame_decode)
+  LOAD_FN_PTR(mad_frame_finish)
+  LOAD_FN_PTR(mad_frame_init)
+  LOAD_FN_PTR(mad_header_decode)
+  LOAD_FN_PTR(mad_header_init)
+  LOAD_FN_PTR(mad_stream_buffer)
+  LOAD_FN_PTR(mad_stream_errorstr)
+  LOAD_FN_PTR(mad_stream_finish)
+  LOAD_FN_PTR(mad_stream_init)
+  LOAD_FN_PTR(mad_stream_skip)
+  LOAD_FN_PTR(mad_stream_sync)
+  LOAD_FN_PTR(mad_synth_frame)
+  LOAD_FN_PTR(mad_synth_init)
+  LOAD_FN_PTR(mad_timer_add)
+  LOAD_FN_PTR(mad_timer_count)
+  LOAD_FN_PTR(mad_timer_multiply)
+
+#undef LOAD_FN_PTR
+#undef DL_LIB_NAME
 
     p->InputBuffer = NULL;
 
@@ -220,7 +271,7 @@ static int startread(sox_format_t * ft)
       if (!ft->signal.length)
 #endif
         if (!ignore_length)
-          ft->signal.length = mp3_duration_ms(ft->fp, p->InputBuffer);
+          ft->signal.length = mp3_duration_ms(ft, p->InputBuffer);
     }
 
     p->mad_stream_init(&p->Stream);
@@ -384,7 +435,9 @@ static int stopread(sox_format_t * ft)
   p->mad_stream_finish(&p->Stream);
 
   free(p->InputBuffer);
-
+#if defined HAVE_LIBLTDL && defined DL_MAD
+  lt_dlclose(p->mad_lth);
+#endif
   return SOX_SUCCESS;
 }
 #else /*HAVE_MAD_H*/
@@ -407,18 +460,40 @@ static int startwrite(sox_format_t * ft)
 {
   priv_t *p = (priv_t *) ft->priv;
 
-  p->lame_init = lame_init;
-  p->lame_set_num_channels = lame_set_num_channels;
-  p->lame_get_num_channels = lame_get_num_channels;
-  p->lame_set_in_samplerate = lame_set_in_samplerate;
-  p->lame_set_bWriteVbrTag = lame_set_bWriteVbrTag;
-  p->lame_init_params = lame_init_params;
-  p->lame_set_errorf = lame_set_errorf;
-  p->lame_set_debugf = lame_set_debugf;
-  p->lame_set_msgf = lame_set_msgf;
-  p->lame_encode_buffer = lame_encode_buffer;
-  p->lame_encode_flush = lame_encode_flush;
-  p->lame_close = lame_close;
+#if defined HAVE_LIBLTDL && defined DL_LAME
+  #define DL_LIB_NAME "LAME encoder library (libmp3lame"
+  #define LOAD_FN_PTR(x) \
+    if (!(ltptr.ptr = lt_dlsym(p->lame_lth, #x))) { \
+      lsx_fail("incompatible " DL_LIB_NAME " is missing "#x")"); \
+      return SOX_EOF; \
+    } \
+    p->x = ltptr.fn;
+  union {void (* fn)(); lt_ptr ptr;} ltptr;
+  p->lame_lth = lt_dlopenext("libmp3lame");
+  if (!p->lame_lth) {
+    lsx_fail("could not find " DL_LIB_NAME ")");
+    return SOX_EOF;
+  }
+#else
+  #define DL_LIB_NAME
+  #define LOAD_FN_PTR(x) p->x = x;
+#endif 
+
+  LOAD_FN_PTR(lame_init)
+  LOAD_FN_PTR(lame_set_num_channels)
+  LOAD_FN_PTR(lame_get_num_channels)
+  LOAD_FN_PTR(lame_set_in_samplerate)
+  LOAD_FN_PTR(lame_set_bWriteVbrTag)
+  LOAD_FN_PTR(lame_init_params)
+  LOAD_FN_PTR(lame_set_errorf)
+  LOAD_FN_PTR(lame_set_debugf)
+  LOAD_FN_PTR(lame_set_msgf)
+  LOAD_FN_PTR(lame_encode_buffer)
+  LOAD_FN_PTR(lame_encode_flush)
+  LOAD_FN_PTR(lame_close)
+
+#undef LOAD_FN_PTR
+#undef DL_LIB_NAME
 
   if (ft->encoding.encoding != SOX_ENCODING_MP3) {
     if(ft->encoding.encoding != SOX_ENCODING_UNKNOWN)
@@ -554,6 +629,9 @@ static int stopwrite(sox_format_t * ft)
     lsx_fail_errno(ft, SOX_EOF, "File write failed");
 
   p->lame_close(p->gfp);
+#if defined HAVE_LIBLTDL && defined DL_MAD
+  lt_dlclose(p->lame_lth);
+#endif
   return SOX_SUCCESS;
 }
 
