@@ -1,3 +1,8 @@
+#if 0
+#define DL_MAD
+#define DL_LAME
+#endif
+
 /* MP3 support for SoX
  *
  * Uses libmad for MP3 decoding
@@ -33,11 +38,6 @@
 #if defined DL_MAD
 mad_timer_t const mad_timer_zero;
 #endif
-#endif
-
-#if 0
-#define DL_MAD
-#define DL_LAME
 #endif
 
 #define INPUT_BUFFER_SIZE       (sox_globals.bufsiz)
@@ -228,7 +228,8 @@ static int startread(sox_format_t * ft)
     } \
     p->x = ltptr.fn;
   union {void (* fn)(); lt_ptr ptr;} ltptr;
-  p->mad_lth = lt_dlopenext("libmad");
+  if (!lt_dlinit())
+    p->mad_lth = lt_dlopenext("libmad");
   if (!p->mad_lth) {
     lsx_fail("could not find " DL_LIB_NAME ")");
     return SOX_EOF;
@@ -436,7 +437,8 @@ static int stopread(sox_format_t * ft)
 
   free(p->InputBuffer);
 #if defined HAVE_LIBLTDL && defined DL_MAD
-  lt_dlclose(p->mad_lth);
+  if (!lt_dlclose(p->mad_lth))
+    lt_dlexit();
 #endif
   return SOX_SUCCESS;
 }
@@ -468,8 +470,9 @@ static int startwrite(sox_format_t * ft)
       return SOX_EOF; \
     } \
     p->x = ltptr.fn;
-  union {void (* fn)(); lt_ptr ptr;} ltptr;
-  p->lame_lth = lt_dlopenext("libmp3lame");
+  union {int (* fn)(); lt_ptr ptr;} ltptr;
+  if (!lt_dlinit())
+    p->lame_lth = lt_dlopenext("libmp3lame");
   if (!p->lame_lth) {
     lsx_fail("could not find " DL_LIB_NAME ")");
     return SOX_EOF;
@@ -629,8 +632,9 @@ static int stopwrite(sox_format_t * ft)
     lsx_fail_errno(ft, SOX_EOF, "File write failed");
 
   p->lame_close(p->gfp);
-#if defined HAVE_LIBLTDL && defined DL_MAD
-  lt_dlclose(p->lame_lth);
+#if defined HAVE_LIBLTDL && defined DL_LAME
+  if (!lt_dlclose(p->lame_lth))
+    lt_dlexit();
 #endif
   return SOX_SUCCESS;
 }
