@@ -381,16 +381,6 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
 
 
-static int flow_null(sox_effect_t * effp, const sox_sample_t * ibuf,
-    sox_sample_t * obuf, size_t * isamp, size_t * osamp)
-{
-  (void)effp, (void)ibuf, (void)obuf;
-  *isamp = *osamp = 0;
-  return SOX_EOF;
-}
-
-
-
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
@@ -398,14 +388,9 @@ static int start(sox_effect_t * effp)
 
   p->samples_done = 0;
 
-  if (p->length_str) {
+  if (p->length_str)
     if (lsx_parsesamples(effp->in_signal.rate, p->length_str, &p->samples_to_do, 't') == NULL)
       return lsx_usage(effp);
-    if (!p->samples_to_do) {
-      effp->handler.flow = flow_null;
-      return SOX_SUCCESS;
-    }
-  }
 
   p->number_of_channels = effp->in_signal.channels;
   p->channels = lsx_calloc(p->number_of_channels, sizeof(*p->channels));
