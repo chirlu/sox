@@ -230,7 +230,7 @@ static void set_default_parameters(channel_t *  chan, size_t c)
       if (chan->p1 < 0) /* p1 is position of maximum */
         chan->p1 = 0.5;
       if (chan->p2 < 0) /* p2 is amplitude */
-        chan->p2 = 1;
+        chan->p2 = .5;
       break;
 
     case synth_pluck:
@@ -563,7 +563,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
              * |                            |
              * 0             p1             1
              */
-            synth_out = dB_to_linear(chan->p2 * -100);  /* 0 ..  1 */
+            synth_out = dB_to_linear(chan->p2 * -200);  /* 0 ..  1 */
             if (phase < chan->p1)
               synth_out = synth_out * exp(phase * log(1 / synth_out) / chan->p1);
             else

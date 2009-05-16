@@ -3600,7 +3600,7 @@ See also the
 effect.
 .na
 .TP
-\fBsynth\fR [\fB\-j \fIKEY\fR] [\fB\-n\fR] [\fIlen\fR] {[\fItype\fR] [\fIcombine\fR] \:[[\fB%\fR]\fIfreq\fR[\fBk\fR][\fB:\fR\^|\^\fB+\fR\^|\^\fB/\fR\^|\^\fB\-\fR[\fB%\fR]\fIfreq2\fR[\fBk\fR]]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
+\fBsynth\fR [\fB\-j \fIKEY\fR] [\fB\-n\fR] [\fIlen\fR] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR] {[\fItype\fR] [\fIcombine\fR] \:[[\fB%\fR]\fIfreq\fR[\fBk\fR][\fB:\fR\^|\^\fB+\fR\^|\^\fB/\fR\^|\^\fB\-\fR[\fB%\fR]\fIfreq2\fR[\fBk\fR]]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
 .ad
 This effect can be used to generate fixed or swept frequency audio tones
 with various wave shapes, or to generate wide-band noise of various
@@ -3657,7 +3657,10 @@ or with a (Bourne shell) loop, the whole guitar:
 .EE
 See the
 .B delay
-effect for further examples.
+effect (above) and the reference to `SoX scripting examples' (below)
+for more
+.B synth
+examples.
 .SP
 .B N.B.
 This effect generates audio at maximum volume (0dBFS), which means that there
@@ -3688,10 +3691,10 @@ for specifying sample counts is the number of samples with the letter
 `s' appended to it.
 .SP
 \fItype\fR is one of sine, square, triangle, sawtooth, trapezium, exp,
-[white]noise, tpdfnoise pinknoise, brownnoise, pluck; default=sine
+[white]noise, tpdfnoise pinknoise, brownnoise, pluck; default=sine.
 .SP
 \fIcombine\fR is one of create, mix, amod (amplitude modulation), fmod
-(frequency modulation); default=create
+(frequency modulation); default=create.
 .SP
 \fIfreq\fR/\fIfreq2\fR are the frequencies at the beginning/end of
 synthesis in Hz or, if preceded with `%', semitones relative to A
@@ -3736,8 +3739,8 @@ used for noise.
 default=10 (trapezium), or sustain (pluck); default=40.
 .SP
 \fIp2\fR (trapezium): the percentage through each cycle at which `falling'
-begins; default=50. exp: the amplitude in percent; default=100, or tone
-(pluck) default=0.
+begins; default=50. exp: the amplitude in multiples of 2dB; default=50, or
+tone (pluck) default=0.
 .SP
 \fIp3\fR (trapezium): the percentage through each cycle at which `falling'
 ends; default=60.
