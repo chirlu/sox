@@ -2150,7 +2150,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 
       case 4:
         sox_append_comment(&f->oob.comments, "");
-        if (optarg)
+        if (*optarg)
           sox_append_comment(&f->oob.comments, optarg);
         break;
 
