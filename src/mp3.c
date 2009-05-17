@@ -1,8 +1,3 @@
-#if 0
-#define DL_MAD
-#define DL_LAME
-#endif
-
 /* MP3 support for SoX
  *
  * Uses libmad for MP3 decoding

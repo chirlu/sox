@@ -272,9 +272,19 @@ AC_ARG_WITH(mad,
 using_mad=no
 if test "$with_mad" != "no"; then
     using_mad=yes
-    AC_CHECK_HEADERS(mad.h, [AC_CHECK_LIB(mad, mad_stream_buffer, MP3_LIBS="$MP3_LIBS -lmad",using_mad=no)], using_mad=no)
-    if test "$with_mad" = "yes" -a "$using_mad" = "no"; then
+    AC_CHECK_HEADERS(mad.h,, using_mad=no)
+    AC_MSG_CHECKING([whether to dlopen mad])
+    AC_ARG_ENABLE(dl_mad,
+      AC_HELP_STRING([--enable-dl-mad], [Dlopen mad instead of linking in.]),
+      enable_dl_mad=$enableval, enable_dl_mad=no)
+    AC_MSG_RESULT($enable_dl_mad)
+    if test "x$enable_dl_mad" = "xyes"; then
+      AC_DEFINE(DL_MAD, 1, [Define if to dlopen() mad.])
+    else
+      AC_CHECK_LIB(mad, mad_stream_buffer, MP3_LIBS="$MP3_LIBS -lmad",using_mad=no)
+      if test "$with_mad" = "yes" -a "$using_mad" = "no"; then
         AC_MSG_FAILURE([cannot find libmad])
+      fi
     fi
 fi
 
@@ -310,13 +320,20 @@ if test "$with_lame" != "no"; then
     using_lame=yes
     AC_CHECK_HEADERS(lame/lame.h,,
         [AC_CHECK_HEADERS(lame.h,, using_lame=no)])
-    AC_CHECK_LIB(mp3lame, lame_init, MP3_LIBS="$MP3_LIBS -lmp3lame",using_lame=no)
-    if test "$with_lame" = "yes" -a "$using_lame" = "no"; then
+    AC_MSG_CHECKING([whether to dlopen lame])
+    AC_ARG_ENABLE(dl_lame,
+      AC_HELP_STRING([--enable-dl-lame], [Dlopen lame instead of linking in.]),
+      enable_dl_lame=$enableval, enable_dl_lame=no)
+    AC_MSG_RESULT($enable_dl_lame)
+    if test "x$enable_dl_lame" = "xyes"; then
+      AC_DEFINE(DL_LAME, 1, [Define if to dlopen() lame.])
+    else
+      AC_CHECK_LIB(mp3lame, lame_init, MP3_LIBS="$MP3_LIBS -lmp3lame",using_lame=no)
+      if test "$with_lame" = "yes" -a "$using_lame" = "no"; then
         AC_MSG_FAILURE([cannot find LAME])
+      fi
     fi
 fi
-
-
 
 # Check for libgsm
 found_libgsm=yes
@@ -529,7 +546,13 @@ echo "lpc10......................$using_lpc10 $lpc10_option"
 echo "mp3........................$using_mp3"
 echo " id3tag....................$using_id3tag"
 echo " lame......................$using_lame"
+if test "x$using_lame" = "xyes"; then
+echo " dlopen lame...............$enable_dl_lame"
+fi
 echo " mad.......................$using_mad"
+if test "x$using_mad" = "xyes"; then
+echo " dlopen mad................$enable_dl_mad"
+fi
 echo "oggvorbis..................$using_oggvorbis"
 echo "sndfile....................$using_sndfile"
 echo "wavpack....................$using_wavpack"
