@@ -77,9 +77,6 @@
 #define NULL 0
 #endif
 
-/* Some platforms undef our macro for getopt_long so redo to be safe. */
-#undef getopt_long
-#define getopt_long lsx_getopt_long
 
 int
 getopt_long (
