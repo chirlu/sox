@@ -7,9 +7,6 @@
 # requires to already have several external libraries already installed
 # under /usr/local.
 #
-# Since directory name in package is based on current directory name,
-# it should be ran from that *.tar.gz distribution.
-#
 # And last, it will optional package a wget compiled with VC++ instead
 # of cygwin version (which has no DLL's to distribute) if found
 # in wget-1.11.4 directory.  If not found, it will distribute the
@@ -53,16 +50,18 @@
 if [ $# -ne 0 -o ! -r Makefile ]; then
   ./configure \
     --disable-shared \
-    --without-mp3 \
+    --with-libltdl \
+    --enable-dl-lame --enable-dl-mad \
     CC=gcc-4 CPP=cpp\
     CPPFLAGS=-I/usr/local/include \
     LDFLAGS="-static -L/usr/local/lib" \
     $*
 fi
 
-make -s all pdf
+make -s all pdf txt || exit 1
 
-dir="$(basename $(pwd))"
+#dir="$(basename $(pwd))"
+dir=sox-`grep Version: sox.pc | cut -d ' ' -f 2`
 rm -rf $dir $dir.zip
 mkdir -p $dir
 

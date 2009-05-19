@@ -25,6 +25,7 @@ FLAC              http://flac.sourceforge.net           BSD
 LADSPA            http://www.ladspa.org                 LGPL + plugins' licence
 Lame MP3 encoder  http://lame.sourceforge.net           LGPL
 MAD MP3 decoder   http://www.underbit.com/products/mad  GPL
+MP3 ID3 tags      http://www.underbit.com/products/mad  GPL
 Magic             http://www.darwinsys.com/file         GPL
 Ogg Vorbis        http://www.vorbis.com                 BSD
 PNG               http://www.libpng.org/pub/png         zlib (BSD-like)
@@ -123,14 +124,27 @@ You can run "cygcheck.exe src/sox.exe" after compiling to see which
 dynamic DLL's will be required to be distributed with the cygwin
 executable.
 
+Alternatively, you can make use of the "cygbuild" script distributed
+with SoX source that is used to automate all steps of building
+a win32 package.
+
 Newer versions of SoX include support for loading libraries for
-file formats at runtime.  If you experience problems with this
-then you may wish to revert back to the older compile-time support.
-To stick with old behavior use:
+file formats at runtime.  The main usage of this feature is to
+allow shipping SoX without dependencies on external libraries
+that are not globally used or have redistribution restrictions.
+If you experience problems with this then you may wish to disable
+this feature:
 
 ./configure --without-libltdl
 
+Also, the default behavior even when libltdl is used is to link
+all file format handlers into libsox as there is a performance
+hit when dynamically loading external libraries.  To force a format
+handler to be built as a dynamically loaded module, pass "dyn" to
+its --with-* option.  For example, to build pulseaudio handler as
+an external dynamic library:
 
+./configure --with-pulseaudio=dyn
 
 Testing
 -------

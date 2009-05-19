@@ -27,18 +27,26 @@ AC_SUBST(SHLIB_VERSION)
 
 AC_ARG_WITH(libltdl,
     AC_HELP_STRING([--without-libltdl],
-        [Don't try to use libltdl for external dynamic library support]))
+        [Don't try to use libltdl for external dynamic library support]),
+    with_libltdl=$withval, with_libltdl=default)
 
-using_libltdl=no
-if test "$with_libltdl" != "no"; then
-    dnl Disable libltdl support when building only static libraries
+if test "$with_libltdl" = "default"; then
+    dnl Default to no libltdl support when building only static libraries
     if test "$enable_shared" != "no"; then
         using_libltdl=yes
+    else
+        using_libltdl=no
     fi
+    with_libltdl="yes"
+else
+    using_libltdl=$with_libltdl
+fi
+
+if test "$with_libltdl" != "no"; then
     dnl Force off using libltdl on targets that are know to have
     dnl problems.
     case $target in
-      *cygwin* | *mingw* | *os2*)
+      *mingw32* | *os2*)
         using_libltdl=no
         ;;
     esac
@@ -278,7 +286,7 @@ if test "$with_mad" != "no"; then
       AC_HELP_STRING([--enable-dl-mad], [Dlopen mad instead of linking in.]),
       enable_dl_mad=$enableval, enable_dl_mad=no)
     AC_MSG_RESULT($enable_dl_mad)
-    if test "x$enable_dl_mad" = "xyes"; then
+    if test "x$using_libltdl" = "xyes" -a "x$enable_dl_mad" = "xyes"; then
       AC_DEFINE(DL_MAD, 1, [Define if to dlopen() mad.])
     else
       AC_CHECK_LIB(mad, mad_stream_buffer, MP3_LIBS="$MP3_LIBS -lmad",using_mad=no)
@@ -325,7 +333,7 @@ if test "$with_lame" != "no"; then
       AC_HELP_STRING([--enable-dl-lame], [Dlopen lame instead of linking in.]),
       enable_dl_lame=$enableval, enable_dl_lame=no)
     AC_MSG_RESULT($enable_dl_lame)
-    if test "x$enable_dl_lame" = "xyes"; then
+    if test "x$using_libltdl" = "xyes" -a "x$enable_dl_lame" = "xyes"; then
       AC_DEFINE(DL_LAME, 1, [Define if to dlopen() lame.])
     else
       AC_CHECK_LIB(mp3lame, lame_init, MP3_LIBS="$MP3_LIBS -lmp3lame",using_lame=no)
