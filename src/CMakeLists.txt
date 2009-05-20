@@ -36,8 +36,8 @@ set(effects_srcs
   compandt        fade            noiseprof       reverse         tempo
   contrast        fft4g           noisered        silence         tremolo
   crop            filter          output          sinc            trim
-  dcshift         fir             overdrive       skeleff         vol
-  delay           firfit          pad             speed
+  dcshift         fir             overdrive       skeleff         vad
+  delay           firfit          pad             speed           vol
   dft_filter      flanger         pan             splice
 )
 set(formats_srcs

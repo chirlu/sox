@@ -89,3 +89,4 @@
   EFFECT(tremolo)
   EFFECT(trim)
   EFFECT(vol)
+  EFFECT(vad)

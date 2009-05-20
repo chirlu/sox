@@ -67,7 +67,7 @@ libsox_la_SOURCES += \
 	rate_filters.h rate_half_fir.h rate_poly_fir0.h rate_poly_fir.h \
 	remix.c repeat.c reverb.c reverse.c silence.c sinc.c skeleff.c speed.c \
 	splice.c stat.c stats.c stretch.c swap.c synth.c tempo.c tremolo.c \
-	trim.c vol.c
+	trim.c vad.c vol.c
 if HAVE_PNG
     libsox_la_SOURCES += spectrogram.c
 endif

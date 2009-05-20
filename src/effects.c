@@ -38,10 +38,12 @@ static int default_function(sox_effect_t * effp UNUSED)
 }
 
 /* Pass through samples verbatim */
-static int default_flow(sox_effect_t * effp UNUSED, const sox_sample_t *ibuf UNUSED, sox_sample_t *obuf UNUSED, size_t *isamp, size_t *osamp)
+int lsx_flow_copy(sox_effect_t * effp, const sox_sample_t * ibuf,
+    sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   *isamp = *osamp = min(*isamp, *osamp);
   memcpy(obuf, ibuf, *isamp * sizeof(*obuf));
+  (void)effp;
   return SOX_SUCCESS;
 }
 
@@ -67,7 +69,7 @@ sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh)
   effp->handler = *eh;
   if (!effp->handler.getopts) effp->handler.getopts = default_getopts;
   if (!effp->handler.start  ) effp->handler.start   = default_function;
-  if (!effp->handler.flow   ) effp->handler.flow    = default_flow;
+  if (!effp->handler.flow   ) effp->handler.flow    = lsx_flow_copy;
   if (!effp->handler.drain  ) effp->handler.drain   = default_drain;
   if (!effp->handler.stop   ) effp->handler.stop    = default_function;
   if (!effp->handler.kill   ) effp->handler.kill    = default_function;

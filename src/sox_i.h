@@ -257,6 +257,8 @@ char * lsx_cat_comments(sox_comments_t comments);
 
 /*--------------------------------- Effects ----------------------------------*/
 
+int lsx_flow_copy(sox_effect_t * effp, const sox_sample_t * ibuf,
+    sox_sample_t * obuf, size_t * isamp, size_t * osamp);
 int lsx_usage(sox_effect_t * effp);
 char * lsx_usage_lines(char * * usage, char const * const * lines, size_t n);
 #define EFFECT(f) extern sox_effect_handler_t const * lsx_##f##_effect_fn(void);
