@@ -1,11 +1,3 @@
-#if defined __GNUC__
-  #pragma GCC system_header
-#elif defined __SUNPRO_CC
-  #pragma disable_warn
-#elif defined _MSC_VER
-  #pragma warning(push, 1)
-#endif
-
 /* Declarations for getopt.
    Copyright (C) 1989-1994, 1996-1999, 2001 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
@@ -25,7 +17,20 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#if defined(HAVE_GETOPT_H) && defined(HAVE_GETOPT_LONG)
+
+#include <getopt.h>
+
+#else
+
 #ifndef _GETOPT_H
+#if defined __GNUC__
+  #pragma GCC system_header
+#elif defined __SUNPRO_CC
+  #pragma disable_warn
+#elif defined _MSC_VER
+  #pragma warning(push, 1)
+#endif
 
 #ifndef __need_getopt
 # define _GETOPT_H 1
@@ -45,13 +50,6 @@
 #ifdef  __cplusplus
 extern "C" {
 #endif
-
-/* Create aliases to prevent collisions with c libraries versions of
- * these.
- */
-#define optind lsx_optind
-#define optarg lsx_optarg
-#define getopt lsx_getopt
 
 /* For communication from `getopt' to the caller.
    When `getopt' finds an option that takes an argument,
@@ -199,4 +197,6 @@ extern int _getopt_internal ();
   #pragma enable_warn
 #elif defined _MSC_VER
   #pragma warning(pop)
+#endif
+
 #endif

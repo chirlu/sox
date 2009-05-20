@@ -20,7 +20,7 @@
 #endif
 
 #include "sox_i.h"
-#include "getopt.h"
+#include "sgetopt.h"
 #include <assert.h>
 
 #undef RANQD1

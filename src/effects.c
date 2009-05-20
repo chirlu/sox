@@ -17,7 +17,7 @@
 
 #define LSX_EFF_ALIAS
 #include "sox_i.h"
-#include "getopt.h"
+#include "sgetopt.h"
 #include <assert.h>
 #include <string.h>
 #ifdef HAVE_STRINGS_H

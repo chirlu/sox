@@ -1,3 +1,5 @@
+#include "soxconfig.h"
+#if !defined(HAVE_GETOPT_H) || !defined(HAVE_GETOPT_LONG)
 /* getopt_long and getopt_long_only entry points for GNU getopt.
    Copyright (C) 1987,88,89,90,91,92,93,94,96,97,98
      Free Software Foundation, Inc.
@@ -24,14 +26,11 @@
 #endif
 #endif
 
-#if 0
 #ifdef _LIBC
 # include <getopt.h>
 #else
 # include "getopt.h"
 #endif
-#endif
-#include "getopt.h"
 
 #if !defined __STDC__ || !__STDC__
 /* This is a separate conditional since some stdc systems
@@ -57,11 +56,6 @@
 #if _GNU_GETOPT_INTERFACE_VERSION == GETOPT_INTERFACE_VERSION
 #define ELIDE_CODE
 #endif
-#endif
-
-/* Always compile for SoX */
-#if defined ELIDE_CODE
-#undef ELIDE_CODE
 #endif
 
 #ifndef ELIDE_CODE
@@ -220,3 +214,4 @@ main (argc, argv)
 }
 
 #endif /* TEST */
+#endif

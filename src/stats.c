@@ -16,7 +16,7 @@
  */
 
 #include "sox_i.h"
-#include "getopt.h"
+#include "sgetopt.h"
 #include <ctype.h>
 #include <string.h>
 

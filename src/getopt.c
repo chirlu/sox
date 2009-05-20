@@ -1,4 +1,5 @@
 #include "soxconfig.h"
+#if !defined(HAVE_GETOPT_H) || !defined(HAVE_GETOPT_LONG)
 /* Getopt for GNU.
    NOTE: getopt is now part of the C library, so if you don't know what
    "Keep this file name-space clean" means, talk to drepper@gnu.org
@@ -60,11 +61,6 @@
 # endif
 #endif
 
-/* For SoX, always compile this */
-#if defined ELIDE_CODE
-#undef ELIDE_CODE
-#endif
-
 #ifndef ELIDE_CODE
 
 
@@ -117,7 +113,11 @@
    GNU application programs can use a third alternative mode in which
    they can distinguish the relative order of options and other arguments.  */
 
-#include "getopt.h"
+ #ifdef _LIBC
+ # include <getopt.h>
+ #else
+ # include "getopt.h"
+ #endif
 
 /* For communication from `getopt' to the caller.
    When `getopt' finds an option that takes an argument,
@@ -1290,3 +1290,4 @@ main (argc, argv)
 }
 
 #endif /* TEST */
+#endif

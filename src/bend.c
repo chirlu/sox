@@ -33,7 +33,7 @@
 #endif
 
 #include "sox_i.h"
-#include "getopt.h"
+#include "sgetopt.h"
 #include <assert.h>
 
 #define MAX_FRAME_LENGTH 8192

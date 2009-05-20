@@ -17,7 +17,7 @@
 
 #include "sox_i.h"
 #include "dft_filter.h"
-#include "getopt.h"
+#include "sgetopt.h"
 #include <string.h>
 
 typedef struct {

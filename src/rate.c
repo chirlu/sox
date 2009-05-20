@@ -25,7 +25,7 @@
 
 #include "sox_i.h"
 #include "fft4g.h"
-#include "getopt.h"
+#include "sgetopt.h"
 #include "dft_filter.h"
 #include <assert.h>
 #include <string.h>

@@ -153,10 +153,14 @@ AC_C_INLINE
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(fcntl.h unistd.h byteswap.h sys/time.h sys/timeb.h sys/types.h sys/utsname.h termios.h)
+AC_CHECK_HEADERS(fcntl.h unistd.h byteswap.h sys/time.h sys/timeb.h sys/types.h sys/utsname.h termios.h getopt.h)
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS(strcasecmp strdup popen vsnprintf gettimeofday glob mkstemp)
+
+if test "x$ac_cv_header_getopt_h" = "xyes"; then
+  AC_CHECK_FUNCS(getopt_long)
+fi
 
 dnl Check if math library is needed.
 AC_CHECK_FUNC(pow)

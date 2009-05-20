@@ -16,7 +16,7 @@
  */
 
 #include "sox_i.h"
-#include "getopt.h"
+#include "sgetopt.h"
 #include <string.h>
 
 typedef struct {double mean_sqr, *log_mean_sqrs; unsigned trigger_done;} chan_t;

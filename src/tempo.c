@@ -19,7 +19,7 @@
 
 #include "sox_i.h"
 #include "fifo.h"
-#include "getopt.h"
+#include "sgetopt.h"
 #include <math.h>
 
 typedef struct {
