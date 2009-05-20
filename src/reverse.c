@@ -45,7 +45,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 static int drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  size_t i, j;
+  int i, j;
 
   if (p->pos == 0) {
     fflush(p->tmp_file);
