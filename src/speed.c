@@ -59,19 +59,10 @@ static int start(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
-                sox_sample_t * obuf, size_t * isamp, size_t * osamp)
-{
-  size_t len = *isamp = *osamp = min(*isamp, *osamp);
-  memcpy(obuf, ibuf, len * sizeof(*osamp));
-  (void)effp;
-  return SOX_SUCCESS;
-}
-
 sox_effect_handler_t const * lsx_speed_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "speed", "factor[c]",SOX_EFF_NULL|SOX_EFF_MCHAN|SOX_EFF_RATE|SOX_EFF_LENGTH,
-    getopts, start, flow, 0, 0, 0, sizeof(priv_t)};
+    getopts, start, lsx_flow_copy, 0, 0, 0, sizeof(priv_t)};
   return &handler;
 }
