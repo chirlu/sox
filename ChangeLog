@@ -85,6 +85,7 @@ Effects:
   o New `biquad' filter effect using external coefficients.  (robs)
   o New `overdrive' effect.  (robs)
   o New `pluck' and `tpdf' types for `synth'.  (robs)
+  o New `-X duration' option for `spectrogram'.  (robs)
   o [2778142] just intonation for `synth'.  (robs)
   o Can now set common parameters for multiple `synth' channels.  (robs)
   o Richer gain/normalise options.  (robs)

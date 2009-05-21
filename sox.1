@@ -1798,18 +1798,30 @@ and
 effects.
 .TP
 \fBdcshift \fIshift\fR [\fIlimitergain\fR]
-DC Shift the audio, with basic linear amplitude formula.
-This is most useful if your audio tends to not be centred around
-a value of 0.  Shifting it back will allow you to get the most volume
-adjustments without clipping.
+Apply a DC shift to the audio.  This can be useful to remove a DC
+offset (caused perhaps by a hardware problem in the recording chain)
+from the audio.  The effect of a DC offset is reduced headroom and
+hence volume.
+The
+.B stat
+or
+.B stats
+effect can be used to determine if a signal has a DC offset.
 .SP
-The first option is the \fIdcshift\fR value.  It is a floating point number that
-indicates the amount to shift.
+The given \fIdcshift\fR value is a floating point number in the range
+of \(+-2 that indicates the amount to shift the audio (which is in the
+range of \(+-1).
 .SP
 An optional
 .I limitergain
 can be specified as well.  It should have a value much less than 1
 (e.g. 0\*d05 or 0\*d02) and is used only on peaks to prevent clipping.
+.TS
+center;
+c8 c8 c.
+*	*	*
+.TE
+.DT
 .SP
 An alternative approach to removing a DC offset (albeit with a short delay)
 is to use the
@@ -1820,10 +1832,6 @@ example:
    sox -n dc.wav synth 5 sin %0 50
    sox dc.wav fixed.wav highpass 10
 .EE
-.SP
-See also the
-.B stats
-effect.
 .TP
 \fBdeemph\fR
 Apply ISO 908 de-emphasis (a treble attenuation shelving filter) to
@@ -3109,8 +3117,8 @@ can be from 1 (low time resolution) to 5000 (high time resolution)
 and need not be an integer.  SoX
 may make a slight adjustment to the given number for processing
 quantisation reasons; if so, SoX will report the actual number used
-(viewable when
-.B \-\-verbose
+(viewable when the SoX global option
+.B \-V
 is in effect).
 .SP
 The maximum width of the spectrogram is 999 pixels; if the audio length
@@ -3125,6 +3133,25 @@ effect; e.g.
    sox audio.ogg -n trim 1:00 spectrogram
 .EE
 starts the spectrogram at 1 minute through the audio.
+.SP
+See also
+.B \-X
+for an alternative way of setting the X-axis resolution.
+.IP \fB\-X\ \fIduration\fR
+Sets the X-axis resolution such that audio with the given
+.I duration
+([[HH:]MM:]SS) fits the maximum X-axis width.  For example,
+.EX
+   sox my.mp3 -n remix - spectrogram -X 03:24
+.EE
+or, with Bourne shell, PowerShell, etc.,
+.EX
+   sox my.mp3 -n remix - spectrogram -X $(soxi -D my.mp3)
+.EE
+.SP
+See also
+.B \-x
+for an alternative way of setting the X-axis resolution.
 .IP \fB\-y\ \fInum\fR
 Y-axis resolution (1 \- 4), default 2.
 This controls the height of the spectrogram;

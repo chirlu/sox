@@ -79,6 +79,8 @@ typedef struct {
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *)effp->priv;
+  size_t duration_1e5;
+  char const * next;
   int c;
 
   assert(array_length(p->bit_rev_table) >= (size_t)dft_br_len(MAX_DFT_SIZE));
@@ -87,7 +89,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   p->spectrum_points = 249, p->perm = 1;
   p->out_name = "spectrogram.png", p->comment = "Created by SoX";
 
-  while ((c = getopt(argc, argv, "+x:y:z:Z:q:p:w:st:c:amlho:")) != -1) switch (c) {
+  while ((c = getopt(argc, argv, "+x:X:y:z:Z:q:p:w:st:c:amlho:")) != -1) switch (c) {
     GETOPT_NUMERIC('x', pixels_per_sec,  1 , 5000)
     GETOPT_NUMERIC('y', y_size        ,  1 , 1 + MAX_DFT_SIZE_SHIFT)
     GETOPT_NUMERIC('z', dB_range      , 20 , 180)
@@ -96,6 +98,12 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     GETOPT_NUMERIC('p', perm          ,  1 , 6)
     case 'w': p->win_type = lsx_enum_option(c, window_options);   break;
     case 's': p->slack_overlap = sox_true; break;
+    case 'X': 
+      next = lsx_parsesamples(1e5, optarg, &duration_1e5, 't');
+      if (next == NULL || *next != '\0')
+        return lsx_usage(effp);
+      p->pixels_per_sec = MAX_COLS * 1e5 / duration_1e5;
+      break;
     case 't': p->title    = optarg;   break;
     case 'c': p->comment  = optarg;   break;
     case 'a': p->no_axes  = sox_true; break;
@@ -497,7 +505,8 @@ sox_effect_handler_t const * lsx_spectrogram_effect_fn(void)
     "spectrogram", 0, SOX_EFF_MODIFY, getopts, start, flow, drain, stop, 0, sizeof(priv_t)};
   static char const * lines[] = {
     "[options]",
-    "\t-x num\tX-axis pixels/second, default 100",
+    "\t-x num\tX-axis pixels/second, default 100.  -x & -X are alternatives",
+    "\t-X time\tAudio duration to fit to X-axis e.g. $(soxi -D file)",
     "\t-y num\tY-axis resolution (1 - 4), default 2",
     "\t-z num\tZ-axis range in dB, default 120",
     "\t-Z num\tZ-axis maximum in dBFS, default 0",
