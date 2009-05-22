@@ -210,7 +210,7 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
   priv_t * p = (priv_t *)effp->priv;
   int c;
 
-  while ((c = getopt(argc, argv, "+aSsf:""rt")) != -1) switch (c) {
+  while ((c = lsx_getopt(argc, argv, "+aSsf:""rt")) != -1) switch (c) {
     case 'a': p->auto_detect = sox_true; break;
     case 'S': p->alt_tpdf = sox_true; break;
     case 'r': case 't': break; /* No longer in use */
@@ -222,7 +222,7 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
       break;
     default: lsx_fail("invalid option `-%c'", optopt); return lsx_usage(effp);
   }
-  argc -= optind, argv += optind;
+  argc -= lsx_optind, argv += lsx_optind;
   do {NUMERIC_PARAMETER(dummy, 0.5, 1)} while (0); /* No longer in use */
   return argc? lsx_usage(effp) : SOX_SUCCESS;
 }

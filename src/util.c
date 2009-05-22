@@ -85,7 +85,7 @@ lsx_enum_item const * lsx_find_enum_value(unsigned value, lsx_enum_item const * 
 
 int lsx_enum_option(int c, lsx_enum_item const * items)
 {
-  lsx_enum_item const * p = lsx_find_enum_text(optarg, items);
+  lsx_enum_item const * p = lsx_find_enum_text(lsx_optarg, items);
   if (p == NULL) {
     size_t len = 1;
     char * set = lsx_malloc(len);
@@ -94,7 +94,7 @@ int lsx_enum_option(int c, lsx_enum_item const * items)
       set = lsx_realloc(set, len += 2 + strlen(p->text));
       strcat(set, ", "); strcat(set, p->text);
     }
-    lsx_fail("-%c: `%s' is not one of: %s.", c, optarg, set + 2);
+    lsx_fail("-%c: `%s' is not one of: %s.", c, lsx_optarg, set + 2);
     free(set);
     return INT_MAX;
   }

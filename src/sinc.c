@@ -39,7 +39,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   p->beta = -1;
   while (i < 2) {
     int c = 1;
-    while (c && (c = getopt(argc, argv, "+ra:b:p:MILt:n:")) != -1) switch (c) {
+    while (c && (c = lsx_getopt(argc, argv, "+ra:b:p:MILt:n:")) != -1) switch (c) {
       char * parse_ptr;
       case 'r': p->round = sox_true; break;
       GETOPT_NUMERIC('a', att,  40 , 180)
@@ -49,7 +49,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
       case 'I': p->phase = 25; break;
       case 'L': p->phase = 50; break;
       GETOPT_NUMERIC('n', num_taps[1], 11, 32767)
-      case 't': p->tbw1 = lsx_parse_frequency(optarg, &parse_ptr);
+      case 't': p->tbw1 = lsx_parse_frequency(lsx_optarg, &parse_ptr);
         if (p->tbw1 < 1 || *parse_ptr) return lsx_usage(effp);
         break;
       default: c = 0;
@@ -58,14 +58,14 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
       return lsx_usage(effp);
     if (!i || !p->Fc1)
       p->tbw0 = p->tbw1, p->num_taps[0] = p->num_taps[1];
-    if (!i++ && optind < argc) {
-      if (*(parse_ptr = argv[optind++]) != '-')
+    if (!i++ && lsx_optind < argc) {
+      if (*(parse_ptr = argv[lsx_optind++]) != '-')
         p->Fc0 = lsx_parse_frequency(parse_ptr, &parse_ptr);
       if (*parse_ptr == '-')
         p->Fc1 = lsx_parse_frequency(parse_ptr + 1, &parse_ptr);
     }
   }
-  return optind != argc || p->Fc0 < 0 || p->Fc1 < 0 || *parse_ptr ?
+  return lsx_optind != argc || p->Fc0 < 0 || p->Fc1 < 0 || *parse_ptr ?
       lsx_usage(effp) : SOX_SUCCESS;
 }
 

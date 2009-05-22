@@ -17,12 +17,6 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#if defined(HAVE_GETOPT_H) && defined(HAVE_GETOPT_LONG)
-
-#include <getopt.h>
-
-#else
-
 #ifndef _GETOPT_H
 #if defined __GNUC__
   #pragma GCC system_header
@@ -57,7 +51,7 @@ extern "C" {
    Also, when `ordering' is RETURN_IN_ORDER,
    each non-option ARGV-element is returned here.  */
 
-extern char *optarg;
+extern char *lsx_optarg;
 
 /* Index in ARGV of the next element to be scanned.
    This is used for communication to and from the caller
@@ -71,7 +65,7 @@ extern char *optarg;
    Otherwise, `optind' communicates from one call to the next
    how much of ARGV has been scanned so far.  */
 
-extern int optind;
+extern int lsx_optind;
 
 /* Callers store zero here to inhibit the error message `getopt' prints
    for unrecognized options.  */
@@ -155,13 +149,13 @@ struct option
 /* Many other libraries have conflicting prototypes for getopt, with
    differences in the consts, in stdlib.h.  To avoid compilation
    errors, only prototype getopt for the GNU C library.  */
-extern int getopt (int ___argc, char *const *___argv, const char *__shortopts);
+extern int lsx_getopt (int ___argc, char *const *___argv, const char *__shortopts);
 # else /* not __GNU_LIBRARY__ */
-extern int getopt ();
+extern int lsx_getopt ();
 # endif /* __GNU_LIBRARY__ */
 
 # ifndef __need_getopt
-extern int getopt_long (int ___argc, char *const *___argv,
+extern int lsx_getopt_long (int ___argc, char *const *___argv,
                         const char *__shortopts,
                         const struct option *__longopts, int *__longind);
 extern int getopt_long_only (int ___argc, char *const *___argv,
@@ -175,9 +169,9 @@ extern int _getopt_internal (int ___argc, char *const *___argv,
                              int __long_only);
 # endif
 #else /* not __STDC__ */
-extern int getopt ();
+extern int lsx_getopt ();
 # ifndef __need_getopt
-extern int getopt_long ();
+extern int lsx_getopt_long ();
 extern int getopt_long_only ();
 
 extern int _getopt_internal ();
@@ -199,4 +193,3 @@ extern int _getopt_internal ();
   #pragma warning(pop)
 #endif
 
-#endif

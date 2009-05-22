@@ -101,12 +101,12 @@ static int create(sox_effect_t * effp, int argc, char **argv)
 
   p->frame_rate = 25;
   p->ovsamp = 16;
-  while ((c = getopt(argc, argv, opts)) != -1) switch (c) {
+  while ((c = lsx_getopt(argc, argv, opts)) != -1) switch (c) {
     GETOPT_NUMERIC('f', frame_rate, 10 , 80)
     GETOPT_NUMERIC('o', ovsamp,  4 , 32)
     default: lsx_fail("unknown option `-%c'", optopt); return lsx_usage(effp);
   }
-  argc -= optind, argv += optind;
+  argc -= lsx_optind, argv += lsx_optind;
 
   p->bends = lsx_calloc(p->nbends = argc, sizeof(*p->bends));
   return parse(effp, argv, 0.);     /* No rate yet; parse with dummy */

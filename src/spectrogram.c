@@ -26,14 +26,10 @@
 
 #include "sox_i.h"
 #include "fft4g.h"
+#include "sgetopt.h"
 #include <assert.h>
 #include <math.h>
 #include <png.h>
-
-/* we are playing games with getopt aliases so this needs to be included
- * after system header files to prevent aliasing OS's version of getopt.
- */
-#include "getopt.h"
 
 #define malloc              lsx_malloc
 #define calloc              lsx_calloc
@@ -89,7 +85,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   p->spectrum_points = 249, p->perm = 1, p->max_cols = MAX_COLS;
   p->out_name = "spectrogram.png", p->comment = "Created by SoX";
 
-  while ((c = getopt(argc, argv, "+M:x:X:y:z:Z:q:p:w:st:c:amlho:")) != -1) switch (c) {
+  while ((c = lsx_getopt(argc, argv, "+M:x:X:y:z:Z:q:p:w:st:c:amlho:")) != -1) switch (c) {
     GETOPT_NUMERIC('M', max_cols      , 100, 2000)
     GETOPT_NUMERIC('x', pixels_per_sec,  1 , 5000)
     GETOPT_NUMERIC('y', y_size        ,  1 , 1 + MAX_DFT_SIZE_SHIFT)
@@ -100,25 +96,25 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     case 'w': p->win_type = lsx_enum_option(c, window_options);   break;
     case 's': p->slack_overlap = sox_true; break;
     case 'X': 
-      next = lsx_parsesamples(1e5, optarg, &duration_1e5, 't');
+      next = lsx_parsesamples(1e5, lsx_optarg, &duration_1e5, 't');
       if (next == NULL || *next != '\0' || duration_1e5 > p->max_cols * 1e5
           || duration_1e5 < 1e5 / 5000 * p->max_cols)
         return lsx_usage(effp);
       p->pixels_per_sec = p->max_cols * 1e5 / duration_1e5;
       break;
-    case 't': p->title    = optarg;   break;
-    case 'c': p->comment  = optarg;   break;
+    case 't': p->title    = lsx_optarg;   break;
+    case 'c': p->comment  = lsx_optarg;   break;
     case 'a': p->no_axes  = sox_true; break;
     case 'm': p->monochrome = sox_true; break;
     case 'l': p->light_background = sox_true; break;
     case 'h': p->high_colour = sox_true; break;
-    case 'o': p->out_name = optarg;   break;
+    case 'o': p->out_name = lsx_optarg;   break;
     default: lsx_fail("invalid option `-%c'", optopt); return lsx_usage(effp);
   }
   p->gain = -p->gain;
   --p->y_size, --p->perm;
   p->spectrum_points += 2;
-  return optind !=argc || p->win_type == INT_MAX? lsx_usage(effp) : SOX_SUCCESS;
+  return lsx_optind !=argc || p->win_type == INT_MAX? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static double make_window(priv_t * p, int end)

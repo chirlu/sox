@@ -736,7 +736,7 @@ static sox_bool is_pseudo_effect(char *s)
 
 static void parse_effects(int argc, char **argv)
 {
-  while (optind < argc) {
+  while (lsx_optind < argc) {
     unsigned eff_offset;
     int j;
     int newline_mode = 0;
@@ -748,7 +748,7 @@ static void parse_effects(int argc, char **argv)
     }
 
     /* psuedo-effect ":" is used to create a new effects chain */
-    if (strcmp(argv[optind], ":") == 0)
+    if (strcmp(argv[lsx_optind], ":") == 0)
     {
       /* Only create a new chain if current one has effects.
        * Error checking will be done when loop is restarted.
@@ -758,11 +758,11 @@ static void parse_effects(int argc, char **argv)
         eff_chain_count++;
         add_eff_chain();
       }
-      optind++;
+      lsx_optind++;
       continue;
     }
 
-    if (strcmp(argv[optind], "newfile") == 0)
+    if (strcmp(argv[lsx_optind], "newfile") == 0)
     {
       /* Start a new effect chain for newfile if user doesn't
        * manually do it.  Restart loop without advancing
@@ -776,7 +776,7 @@ static void parse_effects(int argc, char **argv)
       }
       newline_mode = 1;
     }
-    else if (strcmp(argv[optind], "restart") == 0)
+    else if (strcmp(argv[lsx_optind], "restart") == 0)
     {
       /* Start a new effect chain for restart if user doesn't
        * manually do it.  Restart loop without advancing
@@ -792,13 +792,13 @@ static void parse_effects(int argc, char **argv)
     }
 
     /* Name should always be correct! */
-    user_effargs[eff_chain_count][eff_offset].name = strdup(argv[optind++]);
-    for (j = 0; j < argc - optind && !sox_find_effect(argv[optind + j]) &&
-         !is_pseudo_effect(argv[optind + j]); ++j)
-      user_effargs[eff_chain_count][eff_offset].argv[j] = strdup(argv[optind + j]);
+    user_effargs[eff_chain_count][eff_offset].name = strdup(argv[lsx_optind++]);
+    for (j = 0; j < argc - lsx_optind && !sox_find_effect(argv[lsx_optind + j]) &&
+         !is_pseudo_effect(argv[lsx_optind + j]); ++j)
+      user_effargs[eff_chain_count][eff_offset].argv[j] = strdup(argv[lsx_optind + j]);
     user_effargs[eff_chain_count][eff_offset].argc = j;
 
-    optind += j; /* Skip past the effect arguments */
+    lsx_optind += j; /* Skip past the effect arguments */
     nuser_effects[eff_chain_count]++;
     if (newline_mode)
     {
@@ -880,7 +880,7 @@ static void read_user_effects(char *filename)
          * Reset opt index so it thinks its back at beginning of
          * main()'s argv[].
          */
-        optind = 0;
+        lsx_optind = 0;
         parse_effects(argc, argv);
 
         /* Advance to next effect but only if current chain has been
@@ -2091,7 +2091,7 @@ static lsx_enum_item const encodings[] = {
 
 static int enum_option(int option_index, lsx_enum_item const * items)
 {
-  lsx_enum_item const * p = lsx_find_enum_text(optarg, items);
+  lsx_enum_item const * p = lsx_find_enum_text(lsx_optarg, items);
   if (p == NULL) {
     size_t len = 1;
     char * set = lsx_malloc(len);
@@ -2101,7 +2101,7 @@ static int enum_option(int option_index, lsx_enum_item const * items)
       strcat(set, ", "); strcat(set, p->text);
     }
     lsx_fail("--%s: `%s' is not one of: %s.",
-        long_options[option_index].name, optarg, set + 2);
+        long_options[option_index].name, lsx_optarg, set + 2);
     free(set);
     exit(1);
   }
@@ -2115,21 +2115,21 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
     int i; /* sscanf silently accepts negative numbers for %u :( */
     char dummy;     /* To check for extraneous chars in optarg. */
 
-    switch (c=getopt_long(argc, argv, getoptstr, long_options, &option_index)) {
+    switch (c=lsx_getopt_long(argc, argv, getoptstr, long_options, &option_index)) {
     case -1:        /* @ one of: file-name, effect name, end of arg-list. */
       return '\0'; /* i.e. not device. */
 
     case 0:         /* Long options with no short equivalent. */
       switch (option_index) {
       case 0:
-        if (optarg)
-          sox_append_comment(&f->oob.comments, optarg);
+        if (lsx_optarg)
+          sox_append_comment(&f->oob.comments, lsx_optarg);
         break;
 
       case 1:
 #define SOX_BUFMIN 16
-        if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= SOX_BUFMIN) {
-          lsx_fail("Buffer size `%s' must be > %d", optarg, SOX_BUFMIN);
+        if (sscanf(lsx_optarg, "%i %c", &i, &dummy) != 1 || i <= SOX_BUFMIN) {
+          lsx_fail("Buffer size `%s' must be > %d", lsx_optarg, SOX_BUFMIN);
           exit(1);
         }
         sox_globals.bufsiz = i;
@@ -2141,13 +2141,13 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 
       case 3:
         sox_append_comment(&f->oob.comments, "");
-        read_comment_file(&f->oob.comments, optarg);
+        read_comment_file(&f->oob.comments, lsx_optarg);
         break;
 
       case 4:
         sox_append_comment(&f->oob.comments, "");
-        if (*optarg)
-          sox_append_comment(&f->oob.comments, optarg);
+        if (*lsx_optarg)
+          sox_append_comment(&f->oob.comments, lsx_optarg);
         break;
 
       case 5:
@@ -2161,16 +2161,16 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
         break;
 
       case 6:
-        if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= SOX_BUFMIN) {
-          lsx_fail("Buffer size `%s' must be > %d", optarg, SOX_BUFMIN);
+        if (sscanf(lsx_optarg, "%i %c", &i, &dummy) != 1 || i <= SOX_BUFMIN) {
+          lsx_fail("Buffer size `%s' must be > %d", lsx_optarg, SOX_BUFMIN);
           exit(1);
         }
         sox_globals.input_bufsiz = i;
         break;
 
       case 7: no_clobber = sox_true; break;
-      case 8: usage_effect(optarg); break;
-      case 9: usage_format(optarg); break;
+      case 8: usage_effect(lsx_optarg); break;
+      case 9: usage_format(lsx_optarg); break;
       case 10: f->no_glob = sox_true; break;
       case 11:
         sox_effects_globals.plot = enum_option(option_index, plot_methods);
@@ -2178,8 +2178,8 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       case 12: replay_gain_mode = enum_option(option_index, rg_modes); break;
       case 13: display_SoX_version(stdout); exit(0); break;
       case 14: break;
-      case 15: effects_filename = strdup(optarg); break;
-      case 16: sox_globals.tmp_path = strdup(optarg); break;
+      case 15: effects_filename = strdup(lsx_optarg); break;
+      case 16: sox_globals.tmp_path = strdup(lsx_optarg); break;
       case 17: single_threaded = sox_true; break;
       case 18: f->signal.length = SOX_IGNORE_LENGTH; break;
       case 19: do_guarded_norm = is_guarded = sox_true; break;
@@ -2188,7 +2188,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 #else
       case 20: lsx_warn("this build of SoX does not include `magic'"); break;
 #endif
-      case 21: play_rate_arg = strdup(optarg); break;
+      case 21: play_rate_arg = strdup(lsx_optarg); break;
       case 22: no_clobber = sox_false; break;
       case 23: no_clobber = sox_true; break;
       }
@@ -2216,16 +2216,16 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       break;
 
     case 't':
-      f->filetype = optarg;
+      f->filetype = lsx_optarg;
       if (f->filetype[0] == '.')
         f->filetype++;
       break;
 
     case 'r': {
       char k = 0;
-      size_t n = sscanf(optarg, "%lf %c %c", &f->signal.rate, &k, &dummy);
+      size_t n = sscanf(lsx_optarg, "%lf %c %c", &f->signal.rate, &k, &dummy);
       if (n < 1 || f->signal.rate <= 0 || (n > 1 && k != 'k') || n > 2) {
-        lsx_fail("Rate value `%s' is not a positive number", optarg);
+        lsx_fail("Rate value `%s' is not a positive number", lsx_optarg);
         exit(1);
       }
       f->signal.rate *= k == 'k'? 1000. : 1.;
@@ -2233,8 +2233,8 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
     }
 
     case 'v':
-      if (sscanf(optarg, "%lf %c", &f->volume, &dummy) != 1) {
-        lsx_fail("Volume value `%s' is not a number", optarg);
+      if (sscanf(lsx_optarg, "%lf %c", &f->volume, &dummy) != 1) {
+        lsx_fail("Volume value `%s' is not a number", lsx_optarg);
         exit(1);
       }
       uservolume = sox_true;
@@ -2244,23 +2244,23 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       break;
 
     case 'c':
-      if (sscanf(optarg, "%d %c", &i, &dummy) != 1 || i <= 0) {
-        lsx_fail("Channels value `%s' is not a positive integer", optarg);
+      if (sscanf(lsx_optarg, "%d %c", &i, &dummy) != 1 || i <= 0) {
+        lsx_fail("Channels value `%s' is not a positive integer", lsx_optarg);
         exit(1);
       }
       f->signal.channels = i;
       break;
 
     case 'C':
-      if (sscanf(optarg, "%lf %c", &f->encoding.compression, &dummy) != 1) {
-        lsx_fail("Compression value `%s' is not a number", optarg);
+      if (sscanf(lsx_optarg, "%lf %c", &f->encoding.compression, &dummy) != 1) {
+        lsx_fail("Compression value `%s' is not a number", lsx_optarg);
         exit(1);
       }
       break;
 
     case 'b':
-      if (sscanf(optarg, "%d %c", &i, &dummy) != 1 || i <= 0) {
-        lsx_fail("Bits value `%s' is not a positive integer", optarg);
+      if (sscanf(lsx_optarg, "%d %c", &i, &dummy) != 1 || i <= 0) {
+        lsx_fail("Bits value `%s' is not a positive integer", lsx_optarg);
         exit(1);
       }
       f->encoding.bits_per_sample = i;
@@ -2326,12 +2326,12 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
     case 'D': no_dither = sox_true; break;
 
     case 'V':
-      if (optarg == NULL)
+      if (lsx_optarg == NULL)
         ++sox_globals.verbosity;
       else {
-        if (sscanf(optarg, "%d %c", &i, &dummy) != 1 || i < 0) {
+        if (sscanf(lsx_optarg, "%d %c", &i, &dummy) != 1 || i < 0) {
           sox_globals.verbosity = 2;
-          lsx_fail("Verbosity value `%s' is not a non-negative integer", optarg);
+          lsx_fail("Verbosity value `%s' is not a non-negative integer", lsx_optarg);
           exit(1);
         }
         sox_globals.verbosity = (unsigned)i;
@@ -2448,12 +2448,12 @@ static void parse_options_and_filenames(int argc, char **argv)
       lsx_fail("invalid option for "SOX_OPTS);
       exit(1);
     }
-    optind = 1, opterr = 0;
+    lsx_optind = 1, opterr = 0;
     free(str);
     free(argv2);
   }
 
-  for (; optind < argc && !sox_find_effect(argv[optind]); init_file(&opts)) {
+  for (; lsx_optind < argc && !sox_find_effect(argv[lsx_optind]); init_file(&opts)) {
     char c = parse_gopts_and_fopts(&opts, argc, argv);
     if (c == 'n') { /* is null file? */
       if (opts.filetype != NULL && strcmp(opts.filetype, "null") != 0)
@@ -2469,11 +2469,11 @@ static void parse_options_and_filenames(int argc, char **argv)
       opts.filetype = "sox";
       add_file(&opts, "-");
     }
-    else if (optind >= argc || sox_find_effect(argv[optind]))
+    else if (lsx_optind >= argc || sox_find_effect(argv[lsx_optind]))
       break;
-    else if (!sox_is_playlist(argv[optind]))
-      add_glob_file(&opts, argv[optind++]);
-    else if (sox_parse_playlist((sox_playlist_callback_t)add_file, &opts, argv[optind++]) != SOX_SUCCESS)
+    else if (!sox_is_playlist(argv[lsx_optind]))
+      add_glob_file(&opts, argv[lsx_optind++]);
+    else if (sox_parse_playlist((sox_playlist_callback_t)add_file, &opts, argv[lsx_optind++]) != SOX_SUCCESS)
       exit(1);
   }
   if (env_opts && *env_opts) {
@@ -2535,16 +2535,16 @@ static int soxi(int argc, char * const * argv)
   int opt, num_errors = 0;
   sox_bool do_total = sox_false;
 
-  while ((opt = getopt(argc, argv, opts)) > 0) /* act only on last option */
+  while ((opt = lsx_getopt(argc, argv, opts)) > 0) /* act only on last option */
     if (opt == 'V') {
       int i; /* sscanf silently accepts negative numbers for %u :( */
       char dummy;     /* To check for extraneous chars in optarg. */
-      if (optarg == NULL)
+      if (lsx_optarg == NULL)
         ++sox_globals.verbosity;
       else {
-        if (sscanf(optarg, "%d %c", &i, &dummy) != 1 || i < 0) {
+        if (sscanf(lsx_optarg, "%d %c", &i, &dummy) != 1 || i < 0) {
           sox_globals.verbosity = 2;
-          lsx_fail("Verbosity value `%s' is not a non-negative integer", optarg);
+          lsx_fail("Verbosity value `%s' is not a non-negative integer", lsx_optarg);
           exit(1);
         }
         sox_globals.verbosity = (unsigned)i;
@@ -2563,10 +2563,10 @@ static int soxi(int argc, char * const * argv)
     do_total = sox_false;
   }
   soxi_total = -!do_total;
-  for (; optind < argc; ++optind) {
-    if (sox_is_playlist(argv[optind]))
-      num_errors += (sox_parse_playlist((sox_playlist_callback_t)soxi1, &type, argv[optind]) != SOX_SUCCESS);
-    else num_errors += soxi1(&type, argv[optind]);
+  for (; lsx_optind < argc; ++lsx_optind) {
+    if (sox_is_playlist(argv[lsx_optind]))
+      num_errors += (sox_parse_playlist((sox_playlist_callback_t)soxi1, &type, argv[lsx_optind]) != SOX_SUCCESS);
+    else num_errors += soxi1(&type, argv[lsx_optind]);
   }
   if (type == Full) {
     if (soxi_file_count > 1 && soxi_total > 0)

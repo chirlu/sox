@@ -1,5 +1,4 @@
 #include "soxconfig.h"
-#if !defined(HAVE_GETOPT_H) || !defined(HAVE_GETOPT_LONG)
 /* getopt_long and getopt_long_only entry points for GNU getopt.
    Copyright (C) 1987,88,89,90,91,92,93,94,96,97,98
      Free Software Foundation, Inc.
@@ -26,11 +25,14 @@
 #endif
 #endif
 
+#if 0
 #ifdef _LIBC
 # include <getopt.h>
 #else
 # include "getopt.h"
 #endif
+#endif
+#include "sgetopt.h"
 
 #if !defined __STDC__ || !__STDC__
 /* This is a separate conditional since some stdc systems
@@ -58,6 +60,9 @@
 #endif
 #endif
 
+/* Always compile for SoX. */
+#undef ELIDE_CODE
+
 #ifndef ELIDE_CODE
 
 
@@ -73,14 +78,14 @@
 
 
 int
-getopt_long (
+lsx_getopt_long (
      int argc,
      char *const *argv,
      const char *options,
      const struct option *long_options,
      int *opt_index);
 int
-getopt_long (
+lsx_getopt_long (
      int argc,
      char *const *argv,
      const char *options,
@@ -114,7 +119,7 @@ getopt_long_only (
 }
 
 # ifdef _LIBC
-libc_hidden_def (getopt_long)
+libc_hidden_def (lsx_getopt_long)
 libc_hidden_def (getopt_long_only)
 # endif
 
@@ -148,7 +153,7 @@ main (argc, argv)
         {0, 0, 0, 0}
       };
 
-      c = getopt_long (argc, argv, "abc:d:0123456789",
+      c = lsx_getopt_long (argc, argv, "abc:d:0123456789",
                        long_options, &option_index);
       if (c == -1)
         break;
@@ -214,4 +219,3 @@ main (argc, argv)
 }
 
 #endif /* TEST */
-#endif

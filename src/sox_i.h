@@ -292,8 +292,8 @@ char * lsx_usage_lines(char * * usage, char const * const * lines, size_t n);
 
 #define GETOPT_NUMERIC(ch, name, min, max) case ch:{ \
   char * end_ptr; \
-  double d = strtod(optarg, &end_ptr); \
-  if (end_ptr == optarg || d < min || d > max || *end_ptr != '\0') {\
+  double d = strtod(lsx_optarg, &end_ptr); \
+  if (end_ptr == lsx_optarg || d < min || d > max || *end_ptr != '\0') {\
     lsx_fail("parameter `%s' must be between %g and %g", #name, (double)min, (double)max); \
     return lsx_usage(effp); \
   } \

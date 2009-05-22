@@ -41,7 +41,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   p->power_boot_len = 2;    p->trigger_time = .01;
   p->power_dt       = .1;   p->buffer_time  = .05;
 
-  while ((c = getopt(argc, argv, "+c:b:d:r:u:p:")) != -1) switch (c) {
+  while ((c = lsx_getopt(argc, argv, "+c:b:d:r:u:p:")) != -1) switch (c) {
     GETOPT_NUMERIC('c', power_tc        ,.001 , 10)
     GETOPT_NUMERIC('b', power_boot_len  ,   0 , 10)
     GETOPT_NUMERIC('d', power_dt        ,.001 , 10)
@@ -51,7 +51,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
     default: lsx_fail("invalid option `-%c'", optopt); return lsx_usage(effp);
   }
   p->trigger_rise *= .1 * log(10.); /* Convert to natural log */
-  return optind !=argc? lsx_usage(effp) : SOX_SUCCESS;
+  return lsx_optind !=argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static int start(sox_effect_t * effp)

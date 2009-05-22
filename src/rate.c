@@ -445,7 +445,7 @@ static int create(sox_effect_t * effp, int argc, char **argv)
   p->phase = 50;
   p->shared_ptr = &p->shared;
 
-  while ((c = getopt(argc, argv, opts)) != -1) switch (c) {
+  while ((c = lsx_getopt(argc, argv, opts)) != -1) switch (c) {
     GETOPT_NUMERIC('i', coef_interp, 1 , 3)
     GETOPT_NUMERIC('p', phase,  0 , 100)
     GETOPT_NUMERIC('b', bandwidth,  100 - LSX_MAX_TBW3, 99.7)
@@ -457,7 +457,7 @@ static int create(sox_effect_t * effp, int argc, char **argv)
     default: if ((found_at = strchr(qopts, c))) p->quality = found_at - qopts;
       else {lsx_fail("unknown option `-%c'", optopt); return lsx_usage(effp);}
   }
-  argc -= optind, argv += optind;
+  argc -= lsx_optind, argv += lsx_optind;
 
   if ((unsigned)p->quality < 2 && (p->bandwidth || p->phase != 50 || p->allow_aliasing)) {
     lsx_fail("override options not allowed with this quality level");

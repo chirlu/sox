@@ -37,7 +37,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
   p->time_constant = .05;
   p->scale = 1;
-  while ((c = getopt(argc, argv, "+x:b:t:s:")) != -1) switch (c) {
+  while ((c = lsx_getopt(argc, argv, "+x:b:t:s:")) != -1) switch (c) {
     GETOPT_NUMERIC('x', hex_bits      ,  2 , 32)
     GETOPT_NUMERIC('b', scale_bits    ,  2 , 32)
     GETOPT_NUMERIC('w', time_constant ,  .01 , 10)
@@ -46,7 +46,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   }
   if (p->hex_bits)
     p->scale_bits = p->hex_bits;
-  return optind != argc? lsx_usage(effp) : SOX_SUCCESS;
+  return lsx_optind != argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static int start(sox_effect_t * effp)
