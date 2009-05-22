@@ -42,7 +42,7 @@
 #define DFT_BASE_SIZE       512
 #define MAX_DFT_SIZE_SHIFT  3
 #define MAX_DFT_SIZE        (DFT_BASE_SIZE << MAX_DFT_SIZE_SHIFT)
-#define MAX_COLS            999 /* Also max seconds */
+#define MAX_COLS            1000 /* Also max seconds */
 
 typedef enum {Window_Hann, Window_Hamming, Window_Bartlett, Window_Rectangular, Window_Kaiser} win_type_t;
 static lsx_enum_item const window_options[] = {
@@ -56,7 +56,7 @@ static lsx_enum_item const window_options[] = {
 typedef struct {
   /* Parameters */
   double     pixels_per_sec;
-  int        y_size, dB_range, gain, spectrum_points, perm;
+  int        y_size, dB_range, gain, spectrum_points, perm, max_cols;
   sox_bool   monochrome, light_background, high_colour, slack_overlap, no_axes;
   win_type_t win_type;
   char const * out_name, * title, * comment;
@@ -86,10 +86,11 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   assert(array_length(p->bit_rev_table) >= (size_t)dft_br_len(MAX_DFT_SIZE));
 
   p->pixels_per_sec = 100, p->y_size = 2, p->dB_range = 120;/* non-0 defaults */
-  p->spectrum_points = 249, p->perm = 1;
+  p->spectrum_points = 249, p->perm = 1, p->max_cols = MAX_COLS;
   p->out_name = "spectrogram.png", p->comment = "Created by SoX";
 
-  while ((c = getopt(argc, argv, "+x:X:y:z:Z:q:p:w:st:c:amlho:")) != -1) switch (c) {
+  while ((c = getopt(argc, argv, "+M:x:X:y:z:Z:q:p:w:st:c:amlho:")) != -1) switch (c) {
+    GETOPT_NUMERIC('M', max_cols      , 100, 2000)
     GETOPT_NUMERIC('x', pixels_per_sec,  1 , 5000)
     GETOPT_NUMERIC('y', y_size        ,  1 , 1 + MAX_DFT_SIZE_SHIFT)
     GETOPT_NUMERIC('z', dB_range      , 20 , 180)
@@ -100,9 +101,10 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     case 's': p->slack_overlap = sox_true; break;
     case 'X': 
       next = lsx_parsesamples(1e5, optarg, &duration_1e5, 't');
-      if (next == NULL || *next != '\0')
+      if (next == NULL || *next != '\0' || duration_1e5 > p->max_cols * 1e5
+          || duration_1e5 < 1e5 / 5000 * p->max_cols)
         return lsx_usage(effp);
-      p->pixels_per_sec = MAX_COLS * 1e5 / duration_1e5;
+      p->pixels_per_sec = p->max_cols * 1e5 / duration_1e5;
       break;
     case 't': p->title    = optarg;   break;
     case 'c': p->comment  = optarg;   break;
@@ -172,7 +174,7 @@ static int do_column(sox_effect_t * effp)
   priv_t * p = (priv_t *)effp->priv;
   int i;
 
-  if (p->cols == MAX_COLS) {
+  if (p->cols == p->max_cols) {
     lsx_warn("PNG truncated at %g seconds", secs(p->cols));
     p->truncated = sox_true;
     return SOX_EOF;
@@ -505,6 +507,7 @@ sox_effect_handler_t const * lsx_spectrogram_effect_fn(void)
     "spectrogram", 0, SOX_EFF_MODIFY, getopts, start, flow, drain, stop, 0, sizeof(priv_t)};
   static char const * lines[] = {
     "[options]",
+    "\t-M num\tMaximum width of spectrogram in pixels, default 1000",
     "\t-x num\tX-axis pixels/second, default 100.  -x & -X are alternatives",
     "\t-X time\tAudio duration to fit to X-axis e.g. $(soxi -D file)",
     "\t-y num\tY-axis resolution (1 - 4), default 2",
