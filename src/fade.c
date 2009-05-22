@@ -114,6 +114,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int argc, char **argv)
 static int sox_fade_start(sox_effect_t * effp)
 {
     priv_t * fade = (priv_t *) effp->priv;
+    sox_bool truncate = sox_false;
 
     /* converting time values to samples */
     fade->in_start = 0;
@@ -130,7 +131,7 @@ static int sox_fade_start(sox_effect_t * effp)
                             &fade->out_stop, 't') == NULL)
           return lsx_usage(effp);
 
-        if (!fade->out_stop) {
+        if (!(truncate = !!fade->out_stop)) {
           fade->out_stop = effp->in_signal.length / effp->in_signal.channels;
           if (!fade->out_stop) {
             lsx_fail("cannot fade out: audio length is neither known nor given");
@@ -173,7 +174,8 @@ static int sox_fade_start(sox_effect_t * effp)
 
     lsx_debug("fade: in_start = %lu in_stop = %lu out_start = %lu out_stop = %lu", (unsigned long)fade->in_start, (unsigned long)fade->in_stop, (unsigned long)fade->out_start, (unsigned long)fade->out_stop);
 
-    if (fade->in_start == fade->in_stop && fade->out_start == fade->out_stop)
+    if (fade->in_start == fade->in_stop && !truncate &&
+        fade->out_start == fade->out_stop)
       return SOX_EFF_NULL;
 
     return SOX_SUCCESS;
