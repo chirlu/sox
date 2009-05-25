@@ -271,44 +271,21 @@ static int sox_silence_start(sox_effect_t * effp)
     return(SOX_SUCCESS);
 }
 
-static int aboveThreshold(sox_effect_t * effp, sox_sample_t value, double threshold, int unit)
+static sox_bool aboveThreshold(sox_effect_t const * effp,
+    sox_sample_t value /* >= 0 */, double threshold, int unit)
 {
-    double ratio;
-    int rc;
-    sox_sample_t dummy_clipped_count = 0;
+  /* When scaling low bit data, noise values got scaled way up */
+  /* Only consider the original bits when looking for silence */
+  sox_sample_t masked_value = value & (-1 << (32 - effp->in_signal.precision));
 
-    /* When scaling low bit data, noise values got scaled way up */
-    /* Only consider the original bits when looking for silence */
-    switch(effp->in_signal.precision)
-    {
-        SOX_SAMPLE_LOCALS;
-        case 8:
-            value = SOX_SAMPLE_TO_SIGNED_8BIT(value, dummy_clipped_count);
-            ratio = (double)abs(value) / (double)SOX_INT8_MAX;
-            break;
-        case 16:
-            value = SOX_SAMPLE_TO_SIGNED_16BIT(value, dummy_clipped_count);
-            ratio = (double)abs(value) / (double)SOX_INT16_MAX;
-            break;
-        case 24:
-            value = SOX_SAMPLE_TO_SIGNED_24BIT(value, dummy_clipped_count);
-            ratio = (double)abs(value) / (double)SOX_INT24_MAX;
-            break;
-        case 32:
-            value = SOX_SAMPLE_TO_SIGNED_32BIT(value,);
-            ratio = (double)abs(value) / (double)SOX_INT32_MAX;
-            break;
-        default:
-            ratio = 0;
-    }
+  double scaled_value = (double)masked_value / SOX_SAMPLE_MAX;
 
-    if (unit == '%')
-        ratio *= 100.0;
-    else if (unit == 'd')
-        ratio = log10(ratio) * 20.0;
-    rc = (ratio >= threshold);
+  if (unit == '%')
+    scaled_value *= 100;
+  else if (unit == 'd')
+    scaled_value = linear_to_dB(scaled_value);
 
-    return rc;
+  return scaled_value >= threshold;
 }
 
 static sox_sample_t compute_rms(sox_effect_t * effp, sox_sample_t sample)
