@@ -733,7 +733,7 @@ environment variable can be used to provide alternative default values for
 SoX's global options.
 For example:
 .EX
-   SOX_OPTS="--buffer 20000 --play-rate-arg -hs"
+   SOX_OPTS="--buffer 20000 --play-rate-arg -hs --temp /mnt/temp"
 .EE
 Note that setting SOX_OPTS can potentially create unwanted changes in
 the behaviour of scripts or other programs that invoke SoX.  So SOX_OPTS
@@ -2949,9 +2949,8 @@ The sampling rate must be one of: 44\*d1, 48, 88\*d2, 96 kHz.
 .SP
 This effect supports the \fB\-\-plot\fR global option.
 .TP
-\fBsilence \fR[\fB\-l\fR] \fIabove-periods\fR [\fIduration
-threshold\fR[\fBd\fR\^|\^\fB%\fR] [\fIbelow-periods duration
-threshold\fR[\fBd\fR\^|\^\fB%\fR]]
+\fBsilence \fR[\fB\-l\fR] \fIabove-periods\fR [\fIduration threshold\fR[\fBd\fR\^|\^\fB%\fR]
+[\fIbelow-periods duration threshold\fR[\fBd\fR\^|\^\fB%\fR]]
 .SP
 Removes silence from the beginning, middle, or end of the audio.
 Silence is anything below a specified threshold.
@@ -3087,31 +3086,81 @@ and
 .B tempo
 effects.
 .TP
-\fBspectrogram \fR[options]
-Create a spectrogram of the audio.  This effect is optional; type \fBsox
-\-\-help\fR and check the list of supported effects to see if it has
-been included.
+\fBspectrogram \fR[\fIoptions\fR]
+Create a spectrogram of the audio; the audio is passed unmodified
+through the SoX processing chain.  This effect is optional\*mtype
+\fBsox \-\-help\fR and check the list of supported effects to see if
+it has been included.
 .SP
 The spectrogram is rendered in a Portable Network Graphic (PNG) file,
-and shows time in the X-axis, frequency in the Y-axis, and audio signal
-magnitude in the Z-axis.  Z-axis values are represented by the colour
-(or intensity) of the pixels in the X-Y plane.
+and shows time in the X-axis, frequency in the Y-axis, and audio
+signal magnitude in the Z-axis.  Z-axis values are represented by the
+colour (or optionally the intensity) of the pixels in the X-Y plane.
+If the audio signal contains multiple channels then these are shown
+from top to bottom starting from channel 1 (which is the left channel
+for stereo audio).
 .SP
-This effect supports only one channel.
-For multi-channel input files, use the
-.B remix
-effect as either
-.B remix \-
-to obtain a spectrogram on the mix-down,
-or
-.B remix
-.I n
-to select a particular channel; be aware though, that both of
-these methods affect the audio in the effects chain.
+For example, if `my.wav' is a stereo file, then with
+.EX
+   sox my.wav -n spectrogram
+.EE
+a spectrogram of the entire file will be created in the file
+`spectrogram.png'.  More often though, analysis of a smaller portion
+of the audio is required; e.g. with
+.EX
+   sox my.wav -n remix 2 trim 20 30 spectrogram
+.EE
+the spectrogram shows information only from the second (right)
+channel, and of thirty seconds of audio starting from twenty seconds
+in.  To analyse a small portion of the frequency domain, the
+.B rate
+effect may be used, e.g.
+.EX
+   sox my.wav -n rate 6k spectrogram
+.EE
+allows detailed analysis of frequencies up to 3kHz (half the sampling
+rate) i.e. where the human auditory system is most sensitive.
+With
+.EX
+   sox my.wav -n trim 0 10 spectrogram -x 600 -y 200 -z 100
+.EE
+the given options control the size of the spectrogram's X, Y & Z axes
+(in this case, the spectrogram area of the produced image will be 600
+by 200 pixels in size and the Z-axis range will be 100 dB).  Note that
+the produced image includes axes legends etc. and so will be a little
+larger than the specified spectrogram size.  In this example:
+.EX
+   sox -n -n synth 6 tri 10k:14k spectrogram -z 100 -w kaiser
+.EE
+an analysis `window' with high dynamic range is selected to best
+display the spectrogram of a swept triangular wave.  For a smilar
+example, append the following to the `chime' command in the
+description of the
+.B delay
+effect (above):
+.EX
+   rate 2k spectrogram -X 200 -Z -10 -w kaiser
+.EE
+Options are also avaliable to control the appearance (colour-set,
+brightness, contrast, etc.) and filename of the spectrogram; e.g. with
+.EX
+   sox my.wav -n spectrogram -m -l -o print.png
+.EE
+a spectrogram is created suitable for printing on a `black and white'
+printer.
+.SP
+.I Options:
 .RS
 .IP \fB\-x\ \fInum\fR
-X-axis pixels/second, default 100.  This controls the width of the
-spectrogram;
+Change the (maximum) width (X-axis) of the spectrogram from its default
+value of 800 pixels to a given number between 100 and 5000.
+See also \fB\-X\fR and \fB\-d\fR.
+.IP \fB\-X\ \fInum\fR
+X-axis pixels/second; the default is auto-calculated to fit the given
+or known audio duration to the X-axis size, or 100 otherwise.  If
+given in conjunction with \fB\-d\fR, this option affects the width of
+the spectrogram; otherwise, it affects the duration of the
+spectrogram.
 .I num
 can be from 1 (low time resolution) to 5000 (high time resolution)
 and need not be an integer.  SoX
@@ -3120,61 +3169,26 @@ quantisation reasons; if so, SoX will report the actual number used
 (viewable when the SoX global option
 .B \-V
 is in effect).
-.SP
-The maximum width of the spectrogram is 999 pixels; if the audio length
-and the given
-.B \-x
-number are such that this would be exceeded, then the spectrogram (and
-the effects chain) will be truncated.  To move the spectrogram to a
-point later in the audio stream, first invoke the
-.B trim
-effect; e.g.
-.EX
-   sox audio.ogg -n trim 1:00 spectrogram
-.EE
-starts the spectrogram at 1 minute through the audio.
-.SP
-See also
-.B \-X
-for an alternative way of setting the X-axis resolution.
-.IP \fB\-X\ \fIduration\fR
-Sets the X-axis resolution such that audio with the given
-.I duration
-([[HH:]MM:]SS) fits the maximum X-axis width.  For example,
-.EX
-   sox my.mp3 -n remix - spectrogram -X 03:24
-.EE
-or, with Bourne shell, PowerShell, etc.,
-.EX
-   sox my.mp3 -n remix - spectrogram -X $(soxi -D my.mp3)
-.EE
-.SP
-See also
-.B \-x
-for an alternative way of setting the X-axis resolution.
+See also \fB\-x\fR and \fB\-d\fR.
 .IP \fB\-y\ \fInum\fR
-Y-axis resolution (1 \- 4), default 2.
-This controls the height of the spectrogram;
-.I num
-can be from 1 (low frequency resolution) to 4 (high frequency
-resolution).  For values greater than 2, the resulting image may be too
-tall to display on the screen; if so, a graphic manipulation package
-(such as
-.BR ImageMagick (1))
-can be used to re-size the image.
-.SP
-To increase the frequency resolution without increasing the height of
-the spectrogram, the
-.B rate
-effect may be invoked to reduce the sampling rate of the signal before
-invoking
-.BR spectrogram ;
-e.g.
-.EX
-   sox audio.ogg -n rate 4k spectrogram
-.EE
-allows detailed analysis of frequencies up to 2kHz (half the sampling
-rate).
+Sets the Y-axis size in pixels (per channel); this is the number of
+frequency `bins' used in the Fourier analysis that produces the
+spectrogram.  N.B. it can be slow to produce the spectrogram if this
+number is not one more than a power of two (e.g. 129).  By default the
+Y-axis size is chosen automatically (depending on the number of
+channels).  See
+.B \-Y
+for alternative way of setting spectrogram height.
+.IP \fB\-Y\ \fInum\fR
+Sets the target total height of the spectrogram(s).  The default value
+is 550 pixels.  Using this option (and by default), SoX will choose a
+height for individual spectrogram channels that is one more than a
+power of two, so the actual total height may fall short of the given
+number.  However, there is also a minimum height per channel so if
+there are many channels, the number may be exceeded.
+See
+.B \-y
+for alternative way of setting spectrogram height.
 .IP \fB\-z\ \fInum\fR
 Z-axis (colour) range in dB, default 120.  This sets the dynamic-range
 of the spectrogram to be \-\fInum\fR\ dBFS to 0\ dBFS.
@@ -3205,10 +3219,10 @@ all-round frequency-resolution and dynamic-range properties.  For better
 frequency resolution (but lower dynamic-range), select a Hamming window;
 for higher dynamic-range (but poorer frequency-resolution), select a
 Kaiser window.  Bartlett and Rectangular windows are also available.
-Selecting a window other than Hann will usually require
-a corresponding
-.B \-z
-setting.
+.IP \fB\-W\ \fInum\fR
+Window adjustment parameter.  This can be used to make small
+adjustments to the Kaiser window shape.  A positive number (up to
+ten) increases its dynamic range, a negative number decreases it.
 .IP \fB\-s\fR
 Allow slack overlapping of DFT windows.
 This can, in some cases, increase image sharpness and give greater adherence
@@ -3227,33 +3241,64 @@ the result will be a hybrid monochrome/colour palette.
 Permute the colours in a colour or hybrid palette.
 The
 .I num
-parameter (from 1 to 6) selects the permutation.
+parameter, from 1 (the default) to 6, selects the permutation.
 .IP \fB\-l\fR
 Creates a `printer friendly' spectrogram with a light background (the
 default has a dark background).
 .IP \fB\-a\fR
 Suppress the display of the axis lines.  This is sometimes useful in
 helping to discern artefacts at the spectrogram edges.
+.IP \fB\-A\fR
+Selects an alternative, fixed colour-set.  This is provided only for
+compatibility with spectrograms produced by another package.  It should
+not normally be used as it has some problems, not least, a lack of
+differentiation at the bottom end which results in masking of low-level
+artefacts.
 .IP \fB\-t\ \fItext\fR
 Set the image title\*mtext to display above the spectrogram.
 .IP \fB\-c\ \fItext\fR
-Set the image comment\*mtext to display below and to the left of the
-spectrogram.
+Set (or clear) the image comment\*mtext to display below and to the
+left of the spectrogram.
 .IP \fB\-o\ \fItext\fR
 Name of the spectrogram output PNG file, default `spectrogram.png'.
 .RE
 .TP
 \ 
-For example, to see the spectrogram of a swept triangular wave:
+.I Advanced Options:
+.br
+In order to process a smaller section of audio without affecting other
+effects or the output signal (unlike when the
+.B trim
+effect is used), the following options may be used.
+.RS
+.IP \fB\-d\ \fIduration\fR
+This option sets the X-axis resolution such that audio with the given
+.I duration
+([[HH:]MM:]SS) fits the selected (or default) X-axis width.  For
+example,
 .EX
-   sox -n -n synth 6 tri 10k:14k spectrogram -z 100 -w k
+   sox input.mp3 output.wav -n spectrogram -d 1:00 stats
 .EE
-Append the following to the `chime' example in the
-.B delay
-effect to see its spectrogram:
+creates a spectrogram showing the first minute of the audio, whilst
+.EE
+the
+.B stats
+effect is applied to the entire audio signal.
+.SP
+See also
+.B \-X
+for an alternative way of setting the X-axis resolution.
+.IP \fB\-S\ \fItime\fR
+Start the spectrogram at the given point in the audio stream.  For
+example
 .EX
-   rate 2k spectrogram -x 200 -Z -15 -w k
+   sox input.aiff output.wav spectrogram -S 1:00
 .EE
+creates a spectrogram showing all but the first minute of the audio
+(the output file however, receives the entire audio stream).
+.RE
+.TP
+\ 
 For the ability to perform off-line processing of spectral data, see the
 .B stat
 effect.
@@ -3991,7 +4036,6 @@ Please report any bugs found in this version of SoX to the mailing list
 .BR libsox (3)
 .br
 .BR audacity (1),
-.BR ImageMagick (1),
 .BR gnuplot (1),
 .BR octave (1),
 .BR wget (1)

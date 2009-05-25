@@ -83,6 +83,7 @@ static int sox_trim_start(sox_effect_t * effp)
     trim->index = 0;
     trim->trimmed = 0;
 
+    effp->out_signal.length = trim->length;
     return (SOX_SUCCESS);
 }
 

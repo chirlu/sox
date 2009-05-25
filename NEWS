@@ -13,6 +13,7 @@ Release highlights include:
   o Automatically `dither' as needed.
   o Improvements to AIFF, WAV, FLAC, MP3 handlers
   o ALSA driver now supports 24-bit.
+  o `spectrogram' effect enhancements including multi-channel support.
   o `synth' effect enhancements including new `pluck' type.
   o More gain/normalise options.
   o Now uses CPU multi-core to speed up some effects.
@@ -22,7 +23,7 @@ Release highlights include:
   o Can now auto-detect file-type even when inputing from a pipe.
 
 For the complete list of changes, see the ChangeLog at
-  http://sox.cvs.sourceforge.net/sox/sox/ChangeLog?revision=1.225&view=markup
+  http://sox.cvs.sourceforge.net/sox/sox/ChangeLog?revision=1.228&view=markup
 
 Thanks to all who contributed to this release.
 
