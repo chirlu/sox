@@ -46,7 +46,7 @@
 
 # Configuration:
 
-sox=sox			# Where is sox?  E.g. ../src/sox, /usr/local/bin/sox
+sox=../src/sox		# Where is sox?  E.g. sox, /usr/local/bin/sox
 type=wav		# File type, e.g. flac, cdda
 rate=44100		# Default sample rate
 #chans2="-c 2"		# Uncomment for all files to have 2 channels
@@ -62,8 +62,8 @@ plot=yes		# Uncomment to enable PNG plots
 
 plot()
 {
-  [ -n "$plot" ] && [ -n "$name" ] && $sox $D "$name" -n remix - \
-    spectrogram -wk -x$((1000 / $length)) -o "`basename "$name" $type`png"
+  [ -n "$plot" ] && [ -n "$name" ] && $sox $D "$name" -n \
+    spectrogram -w kaiser -o "`basename "$name" $type`png"
 }
 
 
