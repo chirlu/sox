@@ -43,6 +43,8 @@
 # cd ../libsndfile-1.0.19
 #./configure --disable-shared --enable-static;make;make install
 
+[ ! -x configure ] && autoreconf -i
+
 # Some versions of autoconf (2.63?) seem to get easily confused about
 # CPP variable. If you see warning messages about header files
 # rejected by preprocessor then its most likely from that.
@@ -60,7 +62,6 @@ fi
 
 make -s all pdf txt || exit 1
 
-#dir="$(basename $(pwd))"
 dir=sox-`grep Version: sox.pc | cut -d ' ' -f 2`
 rm -rf $dir $dir.zip
 mkdir -p $dir
@@ -70,13 +71,12 @@ for f in ChangeLog LICENSE.GPL README README.win32; do
   unix2dos $dir/$f.txt
 done
 
-binaries=$(for f in `cygcheck src/sox|dos2unix`
-    do cygpath -u $f; done|sort|uniq|grep -v ^/cygdrive/)
+binaries=src/sox
 
-if test ! -r "../wget-1.11.4/wget.exe"; then
-  binaries+=$(for f in `cygcheck /usr/bin/wget|dos2unix`
-      do cygpath -u $f; done|sort|uniq|grep -v ^/cygdrive/)
-fi
+[ ! -r "../wget-1.11.4/wget.exe" -a -r /usr/bin/wget ] && binaries+=" /usr/bin/wget"
+ 
+binaries=$(for f in `cygcheck $binaries|dos2unix`
+    do cygpath -u $f; done|sort|uniq|grep -v ^/cygdrive/)
 
 cp -p \
   $binaries \
@@ -89,11 +89,13 @@ cp -p \
 
 unix2dos $dir/batch-example.bat
 
-if test ! -r "../wget-1.11.4/wget.exe"; then
-  cp -p /etc/wgetrc $dir/wget.ini
-  chmod +r $dir/wget.ini
-else
+if test -r "../wget-1.11.4/wget.exe"; then
   cp ../wget-1.11.4/wget.ini $dir
+else
+  if test -r /usr/bin/wget -a -r /etc/wgetrc; then
+    cp -p /etc/wgetrc $dir/wget.ini
+    chmod +r $dir/wget.ini
+  fi
 fi
 
 zip -r $dir.zip $dir
