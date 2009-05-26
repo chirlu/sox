@@ -3,7 +3,7 @@
 tmp=/tmp/`basename $0`-$$
 
 check_file () {
-  ./soxi -a $1 > $tmp.comments
+  ./sox --i -a $1 > $tmp.comments
   cmp $tmp.comments $2 || exit 1
 }
 
