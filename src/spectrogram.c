@@ -235,7 +235,7 @@ static int start(sox_effect_t * effp)
   p->block_steps = floor((double)p->block_steps / p->step_size +.5);
   p->block_norm = 1. / p->block_steps;
   actual = effp->in_signal.rate / p->step_size / p->block_steps;
-  if (actual != pixels_per_sec)
+  if (!effp->flow && actual != pixels_per_sec)
     lsx_report("actual pixels/s = %g", actual);
   lsx_debug("step_size=%i block_steps=%i", p->step_size, p->block_steps);
   p->max = -p->dB_range;
