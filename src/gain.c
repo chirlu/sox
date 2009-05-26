@@ -48,15 +48,15 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
       default: lsx_fail("invalid option `-%c'", *q); return lsx_usage(effp);
     }
   if ((p->do_equalise + p->do_balance + p->do_balance_no_clip + p->do_restore)/ sox_true > 1) {
-    lsx_fail("Only one of -e, -B, -b, -r may be given");
+    lsx_fail("only one of -e, -B, -b, -r may be given");
     return SOX_EOF;
   }
   if (p->do_normalise && p->do_restore) {
-    lsx_fail("Only one of -n, -r may be given");
+    lsx_fail("only one of -n, -r may be given");
     return SOX_EOF;
   }
   if (p->do_limiter && p->make_headroom) {
-    lsx_fail("Only one of -l, -h may be given");
+    lsx_fail("only one of -l, -h may be given");
     return SOX_EOF;
   }
   do {NUMERIC_PARAMETER(fixed_gain, -HUGE_VAL, HUGE_VAL)} while (0);
