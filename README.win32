@@ -75,3 +75,91 @@ further information on how it was compiled and packaged.
 
 Enjoy,
 The SoX Development Team
+
+Appendix - MP3 Support
+----------------------
+
+SoX contains support for reading and writing MP3 files but does not ship
+with the DLL's that perform decoding and encoding of MP3 data because
+of patent restrictions.  For further details, refer to:
+
+http://en.wikipedia.org/wiki/MP3#Licensing_and_patent_issues
+
+MP3 support can be enabled by placing Lame encoding DLL and/or
+MAD decoding DLL into the same directory as SOX.EXE.  These
+can be compiled yourself, may turn up on searches of the internet
+or may be included with other MP3 applications already installed
+on your system. Try searching for cygmp3lame-0.dll, libmp3lame.dll, 
+cygmad-0.dll, and libmad.dll.
+
+Instructions are included here for using Cygwin to create the DLL's. 
+It is assumed you already have cygwin installed on your system
+with its optional gcc compiler installed.  The commands are ran from
+bash shell cygwin installs.
+
+Obtain the latest Lame and MAD source code from approprate locations.
+
+Lame MP3 encoder  http://lame.sourceforge.net
+MAD MP3 decoder   http://www.underbit.com/products/mad 
+
+cd lame-398-2
+./configure
+make
+cp libmp3lame/.libs/cygmp3lame-0.dll /path/to/sox/libmp3lame.dll
+
+MAD library up to 0.15.1b has a bug in configure that will not allow
+building DLL under cygwin.  So an additional command is needed to
+work around this.
+
+cd libmad-0.15.1b
+./configure
+make
+gcc -shared -Wl,-export-all -Wl,--out-implib=libmad.dll.a -o cygmad-0.dll version.o fixed.o bit.o timer.o stream.o frame.o synth.o decoder.o layer12.o layer3.o huffman.o
+cp cygmad-0.dll /path/to/sox/libmad.dll
+
+gcc -shared  .libs/version.o .libs/fixed.o .libs/bit.o .libs/timer.o .libs/stream.o .libs/frame.o .libs/synth.o .libs/decoder.o .libs/layer12.o .libs/layer3.o .libs/huffman.o    -march=i486   -o .libs/cygmad-0.dll -Wl,--enable-auto-image-base -Xlinker --out-implib -Xlinker .libs/libmad.dll.a
+
+Alternatively, the MAD configure script can be patched to allow building and
+installing libmad under standard cygwin directories.
+
+--- ../libmad-0.15.1b.orig/configure.ac	2004-01-23 03:41:32.000000000 -0600
++++ configure.ac	2009-05-25 22:44:50.846400000 -0500
+@@ -51,17 +51,17 @@
+ 	    esac
+     esac
+ 
+-dnl    case "$host" in
+-dnl	*-*-cygwin* | *-*-mingw*)
+-dnl	    LDFLAGS="$LDFLAGS -no-undefined -mdll"
+-dnl	    ;;
+-dnl    esac
++    case "$host" in
++	*-*-cygwin* | *-*-mingw*)
++	    LDFLAGS="$LDFLAGS -no-undefined"
++	    ;;
++    esac
+ fi
+ 
+ dnl Support for libtool.
+ 
+ dnl AC_DISABLE_SHARED
+-dnl AC_LIBTOOL_WIN32_DLL
++AC_LIBTOOL_WIN32_DLL
+ AC_PROG_LIBTOOL
+ 
+ AC_SUBST(LIBTOOL_DEPS)
+--- end diff
+
+cd libmad-0.15.1b
+patch -p0 < configure.ac.diff
+touch NEWS AUTHORS ChangeLog
+autoreconf -i -f
+./configure
+make
+cp .libs/cymad-0.dll /path/to/sox/libmad.dll
+
+It may also be possible to create DLL's using MS VC++ since both
+libraries include VC++ project files.  Lame creates a library
+call lame_enc.dll which does not correctly export VBR symbols
+and MAD does not export any symbols.  Therefore, cygwin is simpliest
+and is suggested method.
