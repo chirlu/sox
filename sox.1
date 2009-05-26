@@ -3066,26 +3066,6 @@ for details.
 .SP
 This effect supports the \fB\-\-plot\fR global option.
 .TP
-\fBspeed \fIfactor\fR[\fBc\fR]
-Adjust the audio speed (pitch and tempo together).  \fIfactor\fR
-is either the ratio of the new speed to the old speed: greater
-than 1 speeds up, less than 1 slows down, or, if appended with the
-letter
-`c', the number of cents (i.e. 100ths of a semitone) by
-which the pitch (and tempo) should be adjusted: greater than 0
-increases, less than 0 decreases.
-.SP
-By default, the speed change is performed by resampling with the \fBrate\fR
-effect using its default quality/speed.  For higher quality or higher speed
-resampling, in addition to the \fBspeed\fR effect, specify
-the \fBrate\fR effect with the desired quality option.
-.SP
-See also the
-.B pitch
-and
-.B tempo
-effects.
-.TP
 \fBspectrogram \fR[\fIoptions\fR]
 Create a spectrogram of the audio; the audio is passed unmodified
 through the SoX processing chain.  This effect is optional\*mtype
@@ -3302,6 +3282,26 @@ creates a spectrogram showing all but the first minute of the audio
 For the ability to perform off-line processing of spectral data, see the
 .B stat
 effect.
+.TP
+\fBspeed \fIfactor\fR[\fBc\fR]
+Adjust the audio speed (pitch and tempo together).  \fIfactor\fR
+is either the ratio of the new speed to the old speed: greater
+than 1 speeds up, less than 1 slows down, or, if appended with the
+letter
+`c', the number of cents (i.e. 100ths of a semitone) by
+which the pitch (and tempo) should be adjusted: greater than 0
+increases, less than 0 decreases.
+.SP
+By default, the speed change is performed by resampling with the \fBrate\fR
+effect using its default quality/speed.  For higher quality or higher speed
+resampling, in addition to the \fBspeed\fR effect, specify
+the \fBrate\fR effect with the desired quality option.
+.SP
+See also the
+.B pitch
+and
+.B tempo
+effects.
 .TP
 \fBsplice \fR [\fB\-h\fR\^|\^\fB\-t\fR\^|\^\fB\-q\fR] { \fIposition\fR[\fB,\fIexcess\fR[\fB,\fIleeway\fR]] }
 Splice together audio sections.  This effect provides two things over
@@ -3672,7 +3672,7 @@ See also the
 effect.
 .na
 .TP
-\fBsynth\fR [\fB\-j \fIKEY\fR] [\fB\-n\fR] [\fIlen\fR] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR] {[\fItype\fR] [\fIcombine\fR] \:[[\fB%\fR]\fIfreq\fR[\fBk\fR][\fB:\fR\^|\^\fB+\fR\^|\^\fB/\fR\^|\^\fB\-\fR[\fB%\fR]\fIfreq2\fR[\fBk\fR]]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
+\fBsynth\fR [\fB\-j \fIKEY\fR] [\fB\-n\fR] [\fIlen\fR [\fIoff\fR [\fIph\fR [\fIp1\fR [\fIp2\fR [\fIp3\fR]]]]]] {[\fItype\fR] [\fIcombine\fR] \:[[\fB%\fR]\fIfreq\fR[\fBk\fR][\fB:\fR\^|\^\fB+\fR\^|\^\fB/\fR\^|\^\fB\-\fR[\fB%\fR]\fIfreq2\fR[\fBk\fR]]] [\fIoff\fR [\fIph\fR [\fIp1\fR [\fIp2\fR [\fIp3\fR]]]]]}
 .ad
 This effect can be used to generate fixed or swept frequency audio tones
 with various wave shapes, or to generate wide-band noise of various
