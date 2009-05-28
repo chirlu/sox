@@ -1,0 +1,92 @@
+#!/bin/sh
+#
+# This script will automates the steps used to producing a static osx
+# package of SoX.
+#
+# It requires to already have several external libraries already installed
+# under /usr/local.  The external libraries must be static only or else
+# it will expect dylib versions to already exist on external boxes.
+#
+# Various notes:
+#
+# The following command lines were used to generate the static external
+# libraries SoX ships with.
+#
+# cd libpng-1.2.32
+#./configure --disable-shared --enable-static;make;sudo make install
+#
+# cd ../wavpack-4.50.1
+#./configure --disable-shared --enable-static;make;sudo make install
+#
+# FIXME: Won't build static
+# cd ../flac-1.2.1
+#./configure --disable-shared --enable-static;make;sudo make install
+#
+# cd ../libogg-1.1.3
+#./configure --disable-shared --enable-static;make;sudo make install
+#
+# cd ../libvorbis-1.2.0
+#./configure --disable-shared --enable-static;make;sudo make install
+#
+# cd ../libsndfile-1.0.19
+#./configure --disable-shared --enable-static;make;sudo make install
+#
+#
+# To get MP3 header files used to enable MP3 support (no libraries used):
+#
+# cd ../lame-398-2
+#./configure --enable-shared --disable-static;make;sudo make install
+#
+# cd ../libmad
+#./configure --enable-shared --disable-static;make;sudo make install
+
+[ ! -x configure ] && autoreconf -i
+
+# Some versions of autoconf (2.63?) seem to get easily confused about
+# CPP variable. If you see warning messages about header files
+# rejected by preprocessor then its most likely from that.
+# Force the value of CPP=cpp works around that bug.
+if [ $# -ne 0 -o ! -r Makefile ]; then
+  ./configure \
+    --disable-shared \
+    --with-libltdl \
+    --enable-dl-lame --enable-dl-mad \
+    CPP=cpp\
+    CPPFLAGS=-I/usr/local/include \
+    LDFLAGS="-L/usr/local/lib" \
+    $*
+fi
+
+make -s all txt || exit 1
+
+dir=sox-`grep Version: sox.pc | cut -d ' ' -f 2`
+rm -rf $dir $dir-macosx.zip
+mkdir -p $dir
+
+for f in ChangeLog LICENSE.GPL README README.osx; do
+  cp -p $f $dir/$f.txt
+done
+
+binaries=src/sox
+
+#[ ! -r "../wget-1.11.4/wget.exe" -a -r /usr/bin/wget ] && binaries+=" /usr/bin/wget"
+ 
+cp -p \
+  $binaries \
+  sox.txt \
+  soxformat.txt \
+  soxi.txt \
+  libsox.txt \
+  $dir
+
+#if test -r "../wget-1.11.4/wget.exe"; then
+#  cp ../wget-1.11.4/wget.ini $dir
+#else
+#  if test -r /usr/bin/wget -a -r /etc/wgetrc; then
+#    cp -p /etc/wgetrc $dir/wget.ini
+#    chmod +r $dir/wget.ini
+#  fi
+#fi
+
+zip -r $dir-macosx.zip $dir
+rm -rf $dir

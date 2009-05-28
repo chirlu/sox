@@ -117,8 +117,6 @@ make
 gcc -shared -Wl,-export-all -Wl,--out-implib=libmad.dll.a -o cygmad-0.dll version.o fixed.o bit.o timer.o stream.o frame.o synth.o decoder.o layer12.o layer3.o huffman.o
 cp cygmad-0.dll /path/to/sox/libmad.dll
 
-gcc -shared  .libs/version.o .libs/fixed.o .libs/bit.o .libs/timer.o .libs/stream.o .libs/frame.o .libs/synth.o .libs/decoder.o .libs/layer12.o .libs/layer3.o .libs/huffman.o    -march=i486   -o .libs/cygmad-0.dll -Wl,--enable-auto-image-base -Xlinker --out-implib -Xlinker .libs/libmad.dll.a
-
 Alternatively, the MAD configure script can be patched to allow building and
 installing libmad under standard cygwin directories.
 

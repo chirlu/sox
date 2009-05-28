@@ -126,7 +126,8 @@ executable.
 
 Alternatively, you can make use of the "cygbuild" script distributed
 with SoX source that is used to automate all steps of building
-a win32 package.
+a win32 package.  "osxbuild" script is used to automate all steps
+of building a MacOS X package.
 
 Newer versions of SoX include support for loading libraries for
 file formats at runtime.  The main usage of this feature is to

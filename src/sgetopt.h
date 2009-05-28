@@ -17,7 +17,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef _GETOPT_H
+#ifndef _SGETOPT_H
 #if defined __GNUC__
   #pragma GCC system_header
 #elif defined __SUNPRO_CC
