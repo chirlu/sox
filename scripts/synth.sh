@@ -188,4 +188,4 @@ equalizer 1500 10 8 pad 0 .21 remix 1 1 reverb 10 repeat 56" \
 \"|$b B1 $c\" \
 \
 \"|$b E1 $sb\" \
--p lowpass -1 1k remix 1p-12 1p-12" -d
+-p lowpass -1 1k remix 1p-18 1p-18" -d
