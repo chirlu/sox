@@ -26,7 +26,6 @@
 # ---------------------------------------------------------------------------
 
 SOX=../src/sox
-PLAY=../src/play
 
 rm -f 2tones.ul    # Make sure we append to a file that's initially empty
 
@@ -45,4 +44,4 @@ done
 $SOX -c 1 -r 8000 alert.ul alert.au    # Add a file header
 rm 2tones.ul alert.ul                  # Tidy up intermediate files
 
-$PLAY alert.au
+$SOX alert.au -d

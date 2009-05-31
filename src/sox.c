@@ -2091,7 +2091,7 @@ static lsx_enum_item const encodings[] = {
 
 static int enum_option(int option_index, lsx_enum_item const * items)
 {
-  lsx_enum_item const * p = lsx_find_enum_text(lsx_optarg, items);
+  lsx_enum_item const * p = lsx_find_enum_text(lsx_optarg, items, 0);
   if (p == NULL) {
     size_t len = 1;
     char * set = lsx_malloc(len);

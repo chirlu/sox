@@ -565,7 +565,8 @@ void lsx_debug(const char *, ...) PRINTF;
 typedef struct {char const *text; unsigned value;} lsx_enum_item;
 #define LSX_ENUM_ITEM(prefix, item) {#item, prefix##item},
 
-lsx_enum_item const * lsx_find_enum_text(char const * text, lsx_enum_item const * lsx_enum_items);
+lsx_enum_item const * lsx_find_enum_text(char const * text, lsx_enum_item const * lsx_enum_items, unsigned flags);
+#define LSX_FET_CASE 1
 lsx_enum_item const * lsx_find_enum_value(unsigned value, lsx_enum_item const * lsx_enum_items);
 int lsx_enum_option(int c, lsx_enum_item const * items);
 sox_bool lsx_strends(char const * str, char const * end);

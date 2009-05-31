@@ -60,7 +60,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   }
 
   if (have_type) {
-    lsx_enum_item const * p = lsx_find_enum_text(type_ptr, vol_types);
+    lsx_enum_item const * p = lsx_find_enum_text(type_ptr, vol_types, 0);
     if (!p)
       return lsx_usage(effp);
     switch (p->value) {

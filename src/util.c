@@ -58,14 +58,17 @@ char const * lsx_find_file_extension(char const * pathname)
   return result;
 }
 
-lsx_enum_item const * lsx_find_enum_text(char const * text, lsx_enum_item const * enum_items)
+lsx_enum_item const * lsx_find_enum_text(char const * text, lsx_enum_item const * enum_items, unsigned flags)
 {
   lsx_enum_item const * result = NULL; /* Assume not found */
+  sox_bool sensitive = !!(flags & LSX_FET_CASE);
 
   while (enum_items->text) {
-    if (strcasecmp(text, enum_items->text) == 0)
+    if ((!sensitive && !strcasecmp(text, enum_items->text)) ||
+        ( sensitive && !    strcmp(text, enum_items->text)))
       return enum_items;    /* Found exact match */
-    if (strncasecmp(text, enum_items->text, strlen(text)) == 0) {
+    if ((!sensitive && !strncasecmp(text, enum_items->text, strlen(text))) ||
+        ( sensitive && !    strncmp(text, enum_items->text, strlen(text)))) {
       if (result != NULL && result->value != enum_items->value)
         return NULL;        /* Found ambiguity */
       result = enum_items;  /* Found sub-string match */
@@ -85,7 +88,7 @@ lsx_enum_item const * lsx_find_enum_value(unsigned value, lsx_enum_item const * 
 
 int lsx_enum_option(int c, lsx_enum_item const * items)
 {
-  lsx_enum_item const * p = lsx_find_enum_text(lsx_optarg, items);
+  lsx_enum_item const * p = lsx_find_enum_text(lsx_optarg, items, sox_false);
   if (p == NULL) {
     size_t len = 1;
     char * set = lsx_malloc(len);

@@ -21,6 +21,7 @@
 #define LSX_EFF_ALIAS
 #include "sox_i.h"
 #include <string.h>
+#include <ctype.h>
 
 int lsx_usage(sox_effect_t * effp)
 {
@@ -290,9 +291,24 @@ static double calc_note_freq(double note, int key)
   return 440 * pow(2., note / 12);
 }
 
+int lsx_parse_note(char const * text, char * * end_ptr)
+{
+  int result = INT_MAX;
+
+  if (*text >= 'A' && *text <= 'G') {
+    result = (int)(5/3. * (*text++ - 'A') + 9.5) % 12 - 9;
+    if (*text == 'b') {--result; ++text;}
+    else if (*text == '#') {++result; ++text;}
+    if (isdigit(*text))
+      result += 12 * (*text++ - '4'); 
+  }
+  *end_ptr = (char *)text;
+  return result;
+}
+
 /* Read string 'text' and convert to frequency.
  * 'text' can be a positive number which is the frequency in Hz.
- * If 'text' starts with a hash '%' and a following number the corresponding
+ * If 'text' starts with a '%' and a following number the corresponding
  * note is calculated.
  * Return -1 on error.
  */
@@ -305,6 +321,10 @@ double lsx_parse_frequency_k(char const * text, char * * end_ptr, int key)
     if (*end_ptr == text + 1)
       return -1;
     return calc_note_freq(result, key);
+  }
+  if (*text >= 'A' && *text <= 'G') {
+    int result = lsx_parse_note(text, end_ptr);
+    return result == INT_MAX? - 1 : calc_note_freq((double)result, key);
   }
   result = strtod(text, end_ptr);
   if (end_ptr) {

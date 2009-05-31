@@ -273,7 +273,7 @@ if [ $soxver -ge 1403 ]; then
   echo; echo "Plucked scale:"
 
   options=
-  overdrive=
+  overdrive="gain -3"
   for f in pluck pluck_dist; do
     next_file $f 42
     note=-29
@@ -289,14 +289,13 @@ if [ $soxver -ge 1403 ]; then
       $input -t s32 - synth .4 pluck %$note $options >> tmp.s32
       note=$(($note - 1))
     done
-    $input -t s32 - synth pluck %$note $options fade h 0 2 .1 >> tmp.s32
+    $input -t s32 - synth pluck %$note $options fade t 0 4 3.6 >> tmp.s32
 
-    $sox -r $rate -c 1 tmp.s32 $output compand .1,.2 6:-70,-60,-20 -7 -15 .1 \
-        $overdrive pad 0 2 remix 1 1 reverb 30
+    $sox -r $rate -c 1 tmp.s32 $output $overdrive remix 1 1 reverb 30
 
     rm -f tmp.s32
-    options="0 0 60 60"
-    overdrive="overdrive 30 gain -9"
+    options="0 0 60 75 0"
+    overdrive="overdrive gain -10"
   done
 fi
 

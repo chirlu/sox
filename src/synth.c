@@ -6,6 +6,25 @@
  * This source code is freely redistributable and may be used for any purpose.
  * This copyright notice must be maintained.  The authors are not responsible
  * for the consequences of using this software.
+ *
+ * Except for synth types: pluck, tpdf, & brownnoise, and sweep types: linear
+ *   square & exp, which are:
+ *
+ * Copyright (c) 2006-2009 robs@users.sourceforge.net
+ *
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or (at
+ * your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "sox_i.h"
@@ -152,12 +171,12 @@ typedef struct {
   double p1, p2, p3; /* Use depends on synth type */
 
   /* internal stuff */
-  double cycle_start_time_s;
-  double last_out;
+  double lp_last_out, hp_last_out, hp_last_in, ap_last_out, ap_last_in;
+  double cycle_start_time_s, c0, c1, c2, c3, c4;
   PinkNoise pink_noise;
 
   double * buffer;
-  size_t buffer_len, pos, dx, dy, acc;
+  size_t buffer_len, pos;
 } channel_t;
 
 
@@ -208,12 +227,12 @@ static void set_default_parameters(channel_t *  chan, size_t c)
         chan->p1 = 0.1;
         chan->p2 = 0.5;
         chan->p3 = 0.6;
-      } else if (chan->p2 < 0) { /* try a symetric waveform */
+      } else if (chan->p2 < 0) { /* try a symmetric waveform */
         if (chan->p1 <= 0.5) {
           chan->p2 = (1 - 2 * chan->p1) / 2;
           chan->p3 = chan->p2 + chan->p1;
         } else {
-          /* symetric is not possible, fall back to asymetrical triangle */
+          /* symetric is not possible, fall back to asymmetrical triangle */
           chan->p2 = chan->p1;
           chan->p3 = 1;
         }
@@ -237,7 +256,7 @@ static void set_default_parameters(channel_t *  chan, size_t c)
       if (chan->p1 < 0)
         chan->p1 = .4;
       if (chan->p2 < 0)
-        chan->p2 = 0;
+        chan->p2 = .2, chan->p3 = .9;
 
     default: break;
   }
@@ -267,12 +286,15 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   priv_t * p = (priv_t *) effp->priv;
   channel_t master, * chan = &master;
   int key = INT_MAX, argn = 0;
-  char dummy;
+  char dummy, * end_ptr;
   --argc, ++argv;
 
   if (argc && !strcmp(*argv, "-n")) p->no_headroom = sox_true, ++argv, --argc;
 
-  if (argc > 1 && !strcmp(*argv, "-j") && sscanf(argv[1], "%i %c", &key, &dummy) == 1) {
+  if (argc > 1 && !strcmp(*argv, "-j") && (
+        sscanf(argv[1], "%i %c", &key, &dummy) == 1 || (
+          (key = lsx_parse_note(argv[1], &end_ptr)) != INT_MAX &&
+          !*end_ptr))) {
     argc -= 2;
     argv += 2;
   }
@@ -299,8 +321,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   }
 
   while (argn < argc) { /* type [combine] [f1[-f2] [off [ph [p1 [p2 [p3]]]]]] */
-    char * end_ptr;
-    lsx_enum_item const *enum_p = lsx_find_enum_text(argv[argn], synth_type);
+    lsx_enum_item const * enum_p = lsx_find_enum_text(argv[argn], synth_type, LSX_FET_CASE);
 
     if (enum_p == NULL) {
       lsx_fail("no type given");
@@ -314,7 +335,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
       break;
 
     /* maybe there is a combine-type in next arg */
-    enum_p = lsx_find_enum_text(argv[argn], combine_type);
+    enum_p = lsx_find_enum_text(argv[argn], combine_type, LSX_FET_CASE);
     if (enum_p != NULL) {
       chan->combine = enum_p->value;
       if (++argn == argc)
@@ -322,16 +343,21 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     }
 
     /* read frequencies if given */
-    if (isdigit((int) argv[argn][0]) ||
-        argv[argn][0] == '.' || argv[argn][0] == '%') {
+    if (!lsx_find_enum_text(argv[argn], synth_type, LSX_FET_CASE) &&
+        argv[argn][0] != '-') {
       static const char sweeps[] = ":+/-";
 
       chan->freq2 = chan->freq = lsx_parse_frequency_k(argv[argn], &end_ptr, key);
-      if (chan->freq < 0) {
+      if (chan->freq < (chan->type == synth_pluck? 27.5 : 0) ||
+          (chan->type == synth_pluck && chan->freq > 4220)) {
         lsx_fail("invalid freq");
         return SOX_EOF;
       }
       if (*end_ptr && strchr(sweeps, *end_ptr)) {         /* freq2 given? */
+        if (chan->type >= synth_noise) {
+          lsx_fail("can't sweep this type");
+          return SOX_EOF;
+        }
         chan->sweep = strchr(sweeps, *end_ptr) - sweeps;
         chan->freq2 = lsx_parse_frequency_k(end_ptr + 1, &end_ptr, key);
         if (chan->freq2 < 0) {
@@ -384,7 +410,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  size_t i, j;
+  size_t i, j, k;
 
   p->samples_done = 0;
 
@@ -399,24 +425,64 @@ static int start(sox_effect_t * effp)
     *chan = p->getopts_channels[i % p->getopts_nchannels];
     set_default_parameters(chan, i);
     if (chan->type == synth_pluck) {
-      int32_t r = 0;
-      double colour = pow(2., 4 * (chan->p2 - 1));
-      double dc = 0, a = 6.9 / (chan->p2 < .25? chan->p2  / .25 * 11 + 7 :
-                     chan->p2 <= .55? 18 :  (1-chan->p2) / .45 * 3 + 15);
-      chan->buffer_len = effp->in_signal.rate / chan->freq + .5;
-      chan->dx = chan->freq * 1000 + .5;
-      chan->dy = effp->in_signal.rate / chan->buffer_len * 1000 + .5;
-      chan->pos = chan->acc = 0;
-      chan->buffer = malloc(chan->buffer_len * sizeof(*chan->buffer));
-      chan->buffer[0] = 0;
-      for (j = 1; j < chan->buffer_len; dc += chan->buffer[j++])
-        do chan->buffer[j] =
-            chan->buffer[j - 1] + (chan->p3 == 0? DRANQD1:dranqd1(r)) * colour;
-        while (fabs(chan->buffer[j]) > 1);
-      for (dc /= chan->buffer_len, j = 0; j < chan->buffer_len; ++j)
-        chan->buffer[j] = range_limit(chan->buffer[j] - dc, -1, 1) * a;
-      chan->p3 = .5 * exp(log(.6) / chan->freq / chan->p1);
-      lsx_debug("a=%g colour=%g", a, 1/colour);
+      double min, max, frac, p2;
+      double const decay_rate = -2; /* dB / s */
+      double const decay_f = min(912, 266 + 106 * log(chan->freq));
+      double d = sqr(dB_to_linear(decay_rate / chan->freq));
+      d = (d * cos(2 * M_PI * decay_f / effp->in_signal.rate) - 1) / (d - 1);
+      chan->c0 = d - sqrt(d * d - 1);
+      chan->c1 = 1 - chan->c0;
+
+      chan->c1 *= exp(-2e4/ (.05+chan->p1)/ chan->freq/ effp->in_signal.rate);
+
+      chan->c2 = exp(-2 * M_PI * 10 / effp->in_signal.rate);
+      chan->c3 = (1 + chan->c2) * .5;
+
+      if (effp->in_signal.rate < 44100 || effp->in_signal.rate > 48000) {
+        lsx_fail("sample rate for pluck must be 44100-48000; use `rate' to resample");
+        return SOX_EOF;
+      }
+      d = chan->c0 / (chan->c0 + chan->c1);
+
+      chan->buffer_len = effp->in_signal.rate / chan->freq - d;
+      frac = effp->in_signal.rate / chan->freq - d - chan->buffer_len;
+      chan->c4 = (1 - frac) / (1 + frac);
+      chan->pos = 0;
+
+      chan->buffer = lsx_calloc(chan->buffer_len, sizeof(*chan->buffer));
+      for (k = 0, p2 = chan->p2; k < 2 && p2 >= 0; ++k, p2 = chan->p3) {
+        double d1 = 0, d, colour = pow(2., 4 * (p2 - 1));
+        int32_t r = p2 * 100 + .5;
+        for (j = 0; j < chan->buffer_len; ++j) {
+          do d = d1 + (chan->phase? DRANQD1:dranqd1(r)) * colour;
+          while (fabs(d) > 1);
+          chan->buffer[j] += d * (1 - .3 * k);
+          d1 = d * (colour != 1);
+#ifdef TEST_PLUCK
+          chan->buffer[j] = sin(2 * M_PI * j / chan->buffer_len);
+#endif
+        }
+      }
+      for (j = 0, min = max = 0; j < chan->buffer_len; ++j) {
+        double d, t = (double)j / chan->buffer_len;
+        chan->lp_last_out = d =
+          chan->buffer[j] * chan->c1 + chan->lp_last_out * chan->c0;
+
+          chan->ap_last_out =
+            d * chan->c4 + chan->ap_last_in - chan->ap_last_out * chan->c4;
+          chan->ap_last_in = d;
+
+        chan->buffer[j] = chan->buffer[j] * (1 - t) + chan->ap_last_out * t;
+        min = min(min, chan->buffer[j]);
+        max = max(max, chan->buffer[j]);
+      }
+      for (j = 0, d = 0; j < chan->buffer_len; ++j) {
+        chan->buffer[j] = (2 * chan->buffer[j] - max - min) / (max - min);
+        d += sqr(chan->buffer[j]);
+      }
+      lsx_debug("rms=%f c0=%f c1=%f c2=%f c3=%f df=%f d3f=%f",
+          10 * log(d / chan->buffer_len), chan->c0, chan->c1, chan->c2,
+          chan->c3, decay_f, log(chan->c0)/ -2 / M_PI * effp->in_signal.rate);
     }
     switch (chan->sweep) {
       case Linear: chan->mult = p->samples_to_do?
@@ -587,22 +653,27 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
           break;
 
         case synth_brownnoise:
-          do synth_out = chan->last_out + DRANQD1 * (1. / 16);
+          do synth_out = chan->lp_last_out + DRANQD1 * (1. / 16);
           while (fabs(synth_out) > 1);
-          chan->last_out = synth_out;
+          chan->lp_last_out = synth_out;
           break;
 
         case synth_pluck: {
-          size_t pos1 = chan->pos + 1 == chan->buffer_len? 0 : chan->pos + 1;
-          double t = (double)chan->acc / chan->dy;
-          synth_out = chan->buffer[chan->pos] * (1-t) + chan->buffer[pos1] * t;
-          for (chan->acc+=chan->dx; chan->acc>=chan->dy; chan->acc-=chan->dy) {
-            t = chan->buffer[chan->pos];
-            chan->buffer[chan->pos] =
-              chan->p3 * (chan->buffer[chan->pos] + chan->last_out);
-            chan->last_out = t;
-            chan->pos = chan->pos + 1 == chan->buffer_len? 0 : chan->pos + 1;
-          }
+          double d = chan->buffer[chan->pos];
+
+          chan->hp_last_out = 
+             (d - chan->hp_last_in) * chan->c3 + chan->hp_last_out * chan->c2;
+          chan->hp_last_in = d;
+        
+          synth_out = range_limit(chan->hp_last_out, -1, 1);
+
+          chan->lp_last_out = d = d * chan->c1 + chan->lp_last_out * chan->c0;
+
+          chan->ap_last_out = chan->buffer[chan->pos] =
+            (d - chan->ap_last_out) * chan->c4 + chan->ap_last_in;
+          chan->ap_last_in = d;
+
+          chan->pos = chan->pos + 1 == chan->buffer_len? 0 : chan->pos + 1;
           break;
         }
 
