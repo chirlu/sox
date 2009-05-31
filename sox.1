@@ -3714,18 +3714,18 @@ to create a more complex waveform:
 .ne 2
    play -n synth 0.5 sine 200-500 synth 0.5 sine fmod 700-100
 .EE
-Frequencies can also be given as a number of semitones
-relative to `middle A' (440\ Hz) by prefixing a `%' character;  for
-example, the following could be used to help tune a guitar's low `E'
-string:
+Frequencies can also be given in `scientific' note notation, or, by
+prefixing a `%' character, as a number of semitones relative to
+`middle A' (440\ Hz).  For example, the following could be used to
+help tune a guitar's low `E' string:
 .EX
    play -n synth 4 pluck %-29
 .EE
 or with a (Bourne shell) loop, the whole guitar:
 .EX
 .ne 2
-   for s in -29 -24 -19 -14 -10 -5; do
-	play -n synth 4 pluck %$s repeat 2; done
+   for n in E2 A2 D3 G3 B3 E4; do
+	play -n synth 4 pluck $n repeat 2; done
 .EE
 See the
 .B delay
@@ -3770,14 +3770,16 @@ for specifying sample counts is the number of samples with the letter
 .SP
 \fIfreq\fR/\fIfreq2\fR are the frequencies at the beginning/end of
 synthesis in Hz or, if preceded with `%', semitones relative to A
-(440\ Hz); for both, default=%0.  By default, the tuning used for the
-semitone notation is equal temperament; the
+(440\ Hz); alternatively, `scientific' note notation (e.g. E2) may
+be used.  The default frequency is 440Hz.  By default, the tuning used
+with the note notations is `equal temperament'; the
 .B \-j
 .I KEY
-option selects just intonation, where
+option selects `just intonation', where
 .I KEY
-is an integer number of semitones relative to A.
-So for example, \-9 or 3 selects the key of C.
+is an integer number of semitones relative to A (so for example, \-9
+or 3 selects the key of C), or a note in scientific notation.
+.SP
 If
 .I freq2
 is given, then
@@ -3811,11 +3813,11 @@ used for noise.
 default=10 (trapezium), or sustain (pluck); default=40.
 .SP
 \fIp2\fR (trapezium): the percentage through each cycle at which `falling'
-begins; default=50. exp: the amplitude in multiples of 2dB; default=50, or
-tone (pluck) default=0.
+begins; default=50. exp: the amplitude in multiples of 2dB; default=50,
+or tone-1 (pluck); default=20.
 .SP
 \fIp3\fR (trapezium): the percentage through each cycle at which `falling'
-ends; default=60.
+ends; default=60, or tone-2 (pluck); default=90.
 .TP
 \fBtempo \fR[\fB\-q\fR] \fIfactor\fR [\fIsegment\fR [\fIsearch\fR [\fIoverlap\fR]]]
 Change the audio tempo (but not its pitch).
