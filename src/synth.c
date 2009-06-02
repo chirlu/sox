@@ -426,6 +426,8 @@ static int start(sox_effect_t * effp)
     set_default_parameters(chan, i);
     if (chan->type == synth_pluck) {
       double min, max, frac, p2;
+
+      /* Low pass: */
       double const decay_rate = -2; /* dB / s */
       double const decay_f = min(912, 266 + 106 * log(chan->freq));
       double d = sqr(dB_to_linear(decay_rate / chan->freq));
@@ -433,22 +435,27 @@ static int start(sox_effect_t * effp)
       chan->c0 = d - sqrt(d * d - 1);
       chan->c1 = 1 - chan->c0;
 
+      /* Single-pole low pass is very rate-dependent: */
+      if (effp->in_signal.rate < 44100 || effp->in_signal.rate > 48000) {
+        lsx_fail(
+          "sample rate for pluck must be 44100-48000; use `rate' to resample");
+        return SOX_EOF;
+      }
+      /* Decay: */
       chan->c1 *= exp(-2e4/ (.05+chan->p1)/ chan->freq/ effp->in_signal.rate);
 
+      /* High pass (DC-block): */
       chan->c2 = exp(-2 * M_PI * 10 / effp->in_signal.rate);
       chan->c3 = (1 + chan->c2) * .5;
 
-      if (effp->in_signal.rate < 44100 || effp->in_signal.rate > 48000) {
-        lsx_fail("sample rate for pluck must be 44100-48000; use `rate' to resample");
-        return SOX_EOF;
-      }
+      /* All pass (for fractional delay): */
       d = chan->c0 / (chan->c0 + chan->c1);
-
       chan->buffer_len = effp->in_signal.rate / chan->freq - d;
       frac = effp->in_signal.rate / chan->freq - d - chan->buffer_len;
       chan->c4 = (1 - frac) / (1 + frac);
       chan->pos = 0;
 
+      /* Exitation: */
       chan->buffer = lsx_calloc(chan->buffer_len, sizeof(*chan->buffer));
       for (k = 0, p2 = chan->p2; k < 2 && p2 >= 0; ++k, p2 = chan->p3) {
         double d1 = 0, d, colour = pow(2., 4 * (p2 - 1));
@@ -463,26 +470,31 @@ static int start(sox_effect_t * effp)
 #endif
         }
       }
+
+      /* In-delay filter graduation: */
       for (j = 0, min = max = 0; j < chan->buffer_len; ++j) {
         double d, t = (double)j / chan->buffer_len;
         chan->lp_last_out = d =
           chan->buffer[j] * chan->c1 + chan->lp_last_out * chan->c0;
 
-          chan->ap_last_out =
-            d * chan->c4 + chan->ap_last_in - chan->ap_last_out * chan->c4;
-          chan->ap_last_in = d;
+        chan->ap_last_out =
+          d * chan->c4 + chan->ap_last_in - chan->ap_last_out * chan->c4;
+        chan->ap_last_in = d;
 
         chan->buffer[j] = chan->buffer[j] * (1 - t) + chan->ap_last_out * t;
         min = min(min, chan->buffer[j]);
         max = max(max, chan->buffer[j]);
       }
+
+      /* Normalise: */
       for (j = 0, d = 0; j < chan->buffer_len; ++j) {
         chan->buffer[j] = (2 * chan->buffer[j] - max - min) / (max - min);
         d += sqr(chan->buffer[j]);
       }
-      lsx_debug("rms=%f c0=%f c1=%f c2=%f c3=%f df=%f d3f=%f",
-          10 * log(d / chan->buffer_len), chan->c0, chan->c1, chan->c2,
-          chan->c3, decay_f, log(chan->c0)/ -2 / M_PI * effp->in_signal.rate);
+      lsx_debug("rms=%f c0=%f c1=%f df=%f d3f=%f c2=%f c3=%f c4=%f frac=%f",
+          10 * log(d / chan->buffer_len), chan->c0, chan->c1, decay_f,
+          log(chan->c0)/ -2 / M_PI * effp->in_signal.rate,
+          chan->c2, chan->c3, chan->c4, frac);
     }
     switch (chan->sweep) {
       case Linear: chan->mult = p->samples_to_do?
@@ -726,7 +738,7 @@ static int kill(sox_effect_t * effp)
 const sox_effect_handler_t *lsx_synth_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "synth", "[-j KEY] [-n] [len [off [ph [p1 [p2 [p3]]]]]]] {type [combine] [[%]freq[k][:|+|/|-[%]freq2[k]] [off [ph [p1 [p2 [p3]]]]]]}",
+    "synth", "[-j KEY] [-n] [length [offset [phase [p1 [p2 [p3]]]]]]] {type [combine] [[%]freq[k][:|+|/|-[%]freq2[k]] [offset [phase [p1 [p2 [p3]]]]]]}",
     SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_GAIN,
     getopts, start, flow, 0, stop, kill, sizeof(priv_t)
   };
