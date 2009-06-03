@@ -19,15 +19,18 @@
 #include "sgetopt.h"
 #include <string.h>
 
-typedef struct {double mean_sqr, *log_mean_sqrs; unsigned trigger_done;} chan_t;
+typedef struct {
+  double mean_sqr, * log_mean_sqrs, min, held_min;
+  unsigned power_boot_done, trigger_done, count;
+} chan_t;
 
 typedef struct {                /* Configuation parameters: */
-  unsigned      power_boot_len;
+  double        power_boot_mult;
   double        power_tc, buffer_time, power_dt, trigger_rise, trigger_time;
                                 /* Working variables: */
   double        tc_mult;   /* Multiplier for decay time constant */
   sox_sample_t  * buffer;
-  unsigned      buffer_len, buffer_ptr, flush_done, power_boot_done;
+  unsigned      buffer_len, buffer_ptr, flush_done, power_boot_len;
   unsigned      trigger_len, log_mean_sqrs_len, log_mean_sqrs_ptr;
   chan_t        * channels;
 } priv_t;
@@ -37,13 +40,13 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   priv_t * p = (priv_t *)effp->priv;
   int c;
 
-  p->power_tc       = .025; p->trigger_rise = 20;
-  p->power_boot_len = 2;    p->trigger_time = .01;
+  p->power_tc       = .01;  p->trigger_rise = 20;
+  p->power_boot_mult= 3;    p->trigger_time = .05;
   p->power_dt       = .1;   p->buffer_time  = .05;
 
   while ((c = lsx_getopt(argc, argv, "+c:b:d:r:u:p:")) != -1) switch (c) {
     GETOPT_NUMERIC('c', power_tc        ,.001 , 10)
-    GETOPT_NUMERIC('b', power_boot_len  ,   0 , 10)
+    GETOPT_NUMERIC('b', power_boot_mult ,   0 , 10)
     GETOPT_NUMERIC('d', power_dt        ,.001 , 10)
     GETOPT_NUMERIC('r', trigger_rise    ,   1 , 100)
     GETOPT_NUMERIC('u', trigger_time    ,   0 , 10)
@@ -60,17 +63,17 @@ static int start(sox_effect_t * effp)
   size_t i;
 
   p->tc_mult = exp(-1 / (p->power_tc * effp->in_signal.rate));
+  p->power_boot_len = (p->power_tc * p->power_boot_mult + p->power_dt) * effp->in_signal.rate + .5;
   p->trigger_len = 1 + p->trigger_time * effp->in_signal.rate + .5;
 
   p->log_mean_sqrs_len = p->power_dt * effp->in_signal.rate + .5;
   p->channels = lsx_calloc(effp->in_signal.channels, sizeof(*p->channels));
   for (i = 0; i < effp->in_signal.channels; ++i)
     lsx_Calloc(p->channels[i].log_mean_sqrs, p->log_mean_sqrs_len);
-
   p->buffer_len = p->trigger_len + p->buffer_time * effp->in_signal.rate + .5;
   p->buffer_len *= effp->in_signal.channels;
   p->buffer = lsx_calloc(p->buffer_len, sizeof(*p->buffer));
-  p->power_boot_done = p->flush_done = p->log_mean_sqrs_ptr = p->buffer_ptr = 0;
+  p->flush_done = p->log_mean_sqrs_ptr = p->buffer_ptr = 0;
   return SOX_SUCCESS;
 }
 
@@ -106,21 +109,40 @@ static int flow_trigger(sox_effect_t * effp, sox_sample_t const * ibuf,
   while (idone < *ilen && !triggered) {
     for (i = 0; i < effp->in_signal.channels; ++i, ++idone) {
       chan_t * c = &p->channels[i];
-      double d = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf,);
+      double tmp, d = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf,);
       p->buffer[p->buffer_ptr++] = *ibuf++;
+      /* Might need to add high-pass (e.g. for mains-hum or DC) and/or
+       * low-pass (e.g. for noise-shaped dither) filters at this point. */
       c->mean_sqr = p->tc_mult * c->mean_sqr + (1 - p->tc_mult) * sqr(d);
-      d = log(c->mean_sqr);
-      if (p->power_boot_done >= p->power_boot_len) {
-        if (d - c->log_mean_sqrs[p->log_mean_sqrs_ptr] < p->trigger_rise)
-          c->trigger_done = 0;
-        else triggered |= ++c->trigger_done == p->trigger_len;
+#if 0
+      if (++c->count == 48) {
+        fprintf(stderr, "%g\n", 10 * log10(c->mean_sqr));
+        c->count = 0;
       }
-      c->log_mean_sqrs[p->log_mean_sqrs_ptr] = d;
+#endif
+      if (c->mean_sqr >= sqr(1. / SOX_SAMPLE_MIN)) {
+        d = log(c->mean_sqr);
+        if (c->power_boot_done == p->power_boot_len) {
+          if (d - c->held_min < p->trigger_rise)
+            c->trigger_done = 0;
+          else triggered |= ++c->trigger_done == p->trigger_len;
+        }
+        else ++c->power_boot_done;
+        tmp = c->log_mean_sqrs[p->log_mean_sqrs_ptr];
+        c->log_mean_sqrs[p->log_mean_sqrs_ptr] = d;
+        if (tmp <= c->min)
+          for (c->min = i = 0; i < p->log_mean_sqrs_len; ++i)
+            c->min = min(c->min, c->log_mean_sqrs[i]);
+        else c->min = min(c->min, d);
+        if (!c->trigger_done)
+          c->held_min = c->min;
+      }
+      else c->min = c->power_boot_done = c->trigger_done = 0;
     }
     if (p->buffer_ptr == p->buffer_len)
       p->buffer_ptr = 0;
     if (++p->log_mean_sqrs_ptr == p->log_mean_sqrs_len)
-      ++p->power_boot_done, p->log_mean_sqrs_ptr = 0;
+      p->log_mean_sqrs_ptr = 0;
   }
   if (triggered) {
     size_t ilen1 = *ilen - idone;
@@ -153,11 +175,11 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * lsx_vad_effect_fn(void)
 {
   static sox_effect_handler_t handler = {"vad", "[options]"
-    "\n\t-c power-time-constant (0.025 s)"
-    "\n\t-d trigger-rise-time   (0.1 s)"
-    "\n\t-r trigger-rise        (20 dB)"
-    "\n\t-u trigger-up-time     (0.01 s)"
-    "\n\t-p pre-trigger-buffer  (0.05 s)"
+    "\n\t-c power-time-constant      (0.01 s)"
+    "\n\t-d max. trigger-rise-time   (0.1 s)"
+    "\n\t-r trigger-rise             (20 dB)"
+    "\n\t-u trigger-up-time          (0.05 s)"
+    "\n\t-p pre-trigger-buffer       (0.05 s)"
     , SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_MODIFY,
     create, start, flow_trigger, drain, stop, NULL, sizeof(priv_t)
   };
