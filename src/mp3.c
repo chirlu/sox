@@ -648,7 +648,7 @@ LSX_FORMAT_HANDLER(mp3)
 {
   static char const * const names[] = {"mp3", "mp2", "audio/mpeg", NULL};
   static unsigned const write_encodings[] = {
-    SOX_ENCODING_GSM, 0, 0};
+    SOX_ENCODING_MP3, 0, 0};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "MPEG Layer 3 lossy audio compression", names, 0,
     startread, sox_mp3read, stopread,

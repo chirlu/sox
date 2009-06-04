@@ -70,6 +70,7 @@ File formats:
   o Fix [2404566] segfault when converting from MS ADPCM wav file.  (robs)
   o Fix slight FLAC seek inaccuracy e.g. when using `trim' effect.  (robs)
   o Fix mp3 decode sometimes being up to a block short.  (robs)
+  o Fix not outputing GSM-in-wav when input is GSM-in-wav.  (robs)
 
 Audio device drivers:
 

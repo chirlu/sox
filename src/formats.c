@@ -143,7 +143,7 @@ sox_encodings_info_t const sox_encodings_info[] = {
 };
 
 assert_static(array_length(sox_encodings_info) == SOX_ENCODINGS,
-    SIZE_MISMATCH_BETWEEN_sox_encodings_t_AND_sox_encodings_info);
+    SIZE_MISMATCH_BETWEEN_sox_encoding_t_AND_sox_encodings_info);
 
 unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample)
 {
@@ -572,9 +572,12 @@ sox_bool sox_format_supports_encoding(
     return sox_false;
   while ((e = enc_arg(sox_encoding_t))) {
     if (e == encoding->encoding) {
-      while ((s = enc_arg(unsigned)))
+      sox_bool has_bits;
+      for (has_bits = sox_false; (s = enc_arg(unsigned)); has_bits = sox_true)
         if (s == encoding->bits_per_sample)
           return sox_true;
+      if (!has_bits && !encoding->bits_per_sample)
+        return sox_true;
       break;
     }
     while (enc_arg(unsigned));
