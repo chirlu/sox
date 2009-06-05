@@ -92,6 +92,7 @@ The audio effects/tools included in this release are as follows:
 ** silence: Remove portions of silence from the audio
 ** splice: Perform the equivalent of a cross-faded tape splice
 ** trim: Trim the ends of the audio
+** vad+: Prototype `silence' variant (W.I.P.)
 
 * Mixing effects
 ** channels: Auto mix or duplicate to change number of channels

@@ -180,7 +180,7 @@ sox_effect_handler_t const * lsx_vad_effect_fn(void)
     "\n\t-r trigger-rise             (20 dB)"
     "\n\t-u trigger-up-time          (0.05 s)"
     "\n\t-p pre-trigger-buffer       (0.05 s)"
-    , SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_MODIFY,
+    , SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_MODIFY | SOX_EFF_ALPHA,
     create, start, flow_trigger, drain, stop, NULL, sizeof(priv_t)
   };
   return &handler;
