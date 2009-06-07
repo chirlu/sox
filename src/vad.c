@@ -122,7 +122,7 @@ static int start(sox_effect_t * effp)
   p->trigger_slope_tc_mult2 = exp(-1 / (p->slope_tc2 * p->measure_freq));
   p->search_slope_tc_mult1 = exp(-1 / (p->slope_tc1 / p->search_step_time));
   p->search_slope_tc_mult2 = exp(-1 / (p->slope_tc2 / p->search_step_time));
-  lsx_warn("dft_len=%u measure_len=%u", p->dft_len, p->measure_len);
+  lsx_debug("dft_len=%u measure_len=%u", p->dft_len, p->measure_len);
   return SOX_SUCCESS;
 }
 
@@ -204,7 +204,7 @@ static int flow_trigger(sox_effect_t * effp, sox_sample_t const * ibuf,
             * (1  - p->trigger_slope_tc_mult2) : slope;
         }
         c->last_meas = meas0;
-#if 1
+#if 0
         if (c->meas)
           fprintf(stderr, "%g\n", c->meas);
 #endif
