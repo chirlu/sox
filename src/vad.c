@@ -45,7 +45,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   priv_t * p = (priv_t *)effp->priv;
   int c;
 
-  p->hp_freq          = 300;
+  p->hp_freq          = 120;
   p->lp_freq          = 12500;
   p->measure_duration = .2;
   p->measure_freq     = 10;
@@ -153,7 +153,7 @@ static double measure(sox_effect_t * effp, size_t x)
   priv_t * p = (priv_t *)effp->priv;
   double * buf = p->dft_buf;
   double mult, result = 0;
-  size_t i;
+  size_t i, n;
 
   for (i = 0; i < p->measure_len; ++i) {
     buf[i] = p->buffer[x] * p->window1[i];
@@ -168,9 +168,10 @@ static double measure(sox_effect_t * effp, size_t x)
   memset(buf + i, 0, ((p->dft_len >> 1) - i) * sizeof(*buf));
   lsx_safe_rdft((int)p->dft_len >> 1, 1, buf);
 
-  i = max(1, (size_t)(.01 * p->dft_len + .5));
-  mult = (p->dft_len / 4 + 1.) / (p->dft_len / 4 - i);
-  for (; i < p->dft_len >> 2; ++i)
+  i = max(1, (size_t)(.006 * p->dft_len + .5));
+  n = (size_t)(.014 * p->dft_len + .5);
+  mult = (p->dft_len / 4 + 1.) / (n - i);
+  for (; i < n; ++i)
     result += sqr(buf[2*i]) + sqr(buf[2*i+1]);
   result = log(mult * result);
   result = max(result + 50, 0);
@@ -227,7 +228,7 @@ static int flow_trigger(sox_effect_t * effp, sox_sample_t const * ibuf,
               started = sox_true;
             }
           } while (flush < p->search_len && (
-                (meas > meas0 - 12 && (c->slope1 > 4 || c->slope2 > 2)) ||
+                (meas > p->trigger_level - 12 && (c->slope1 > 4 || c->slope2 > 2)) ||
                 meas > p->trigger_level));
           to_flush = range_limit(flush, to_flush, p->search_len);
         }
