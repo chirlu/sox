@@ -20,73 +20,76 @@
 #include <string.h>
 
 typedef struct {
-  double    * dft_buf, * noise_buf, * spectrum, * meas_buf, mean_meas;
+  double    * dftBuf, * noiseSpectrum, * spectrum, * measures, meanMeas;
 } chan_t;
 
 typedef struct {                /* Configuration parameters: */
-  double    noise_tc_up, noise_tc_down, noise_reduction_amount;
-  double    measure_freq, measure_duration, measure_tc, pre_trigger_time;
-  double    hp_filter_freq, lp_filter_freq, hp_lifter_freq, lp_lifter_freq;
-  double    trigger_tc, trigger_level1, search_time, gap_time;
+  double    bootTime, noiseTcUp, noiseTcDown, noiseReductionAmount;
+  double    measureFreq, measureDuration, measureTc, preTriggerTime;
+  double    hpFilterFreq, lpFilterFreq, hpLifterFreq, lpLifterFreq;
+  double    triggerTc, triggerLevel, searchTime, gapTime;
                                 /* Working variables: */
-  sox_sample_t  * buffer;
-  unsigned  dft_len, buffer_len, buffer_ptr, flush_done, gap_count;
-  unsigned  measure_period_len, measure_len, search_count, search_ptr;
-  unsigned  spectrum_start, spectrum_end, cepstrum_start, cepstrum_end;
-  int       measure_timer, booting;
-  double    measure_tc_mult, trigger_meas_tc_mult;
-  double    noise_tc_up_mult, noise_tc_down_mult;
-  double    * spectrum_window, * cepstrum_window;
+  sox_sample_t  * samples;
+  unsigned  dftLen_ws, samplesLen_ns, samplesIndex_ns, flushedLen_ns, gapLen;
+  unsigned  measurePeriod_ns, measuresLen, measuresIndex;
+  unsigned  measureTimer_ns, measureLen_ws, measureLen_ns;
+  unsigned  spectrumStart, spectrumEnd, cepstrumStart, cepstrumEnd; /* bins */
+  int       bootCountMax, bootCount;
+  double    measureTcMult, triggerMeasTcMult;
+  double    noiseTcUpMult, noiseTcDownMult;
+  double    * spectrumWindow, * cepstrumWindow;
   chan_t    * channels;
 } priv_t;
 
 #define GETOPT_FREQ(c, name, min) \
-    case c: p->name = lsx_parse_frequency(lsx_optarg, &parse_ptr); \
-      if (p->name < min || *parse_ptr) return lsx_usage(effp); \
+    case c: p->name = lsx_parse_frequency(lsx_optarg, &parseIndex); \
+      if (p->name < min || *parseIndex) return lsx_usage(effp); \
       break;
 
 static int create(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
-  #define opt_str "+N:n:r:f:m:M:h:l:H:L:T:t:s:g:p:"
+  #define opt_str "+b:N:n:r:f:m:M:h:l:H:L:T:t:s:g:p:"
   int c;
 
-  p->noise_tc_up      = .1;
-  p->noise_tc_down    = .01;
-  p->noise_reduction_amount = 1.35;
+  p->bootTime        = .35;
+  p->noiseTcUp       = .1;
+  p->noiseTcDown     = .01;
+  p->noiseReductionAmount = 1.35;
 
-  p->measure_freq     = 20;
-  p->measure_duration = 2 / p->measure_freq;
-  p->measure_tc       = .4;
+  p->measureFreq     = 20;
+  p->measureDuration = 2 / p->measureFreq; /* 50% overlap */
+  p->measureTc       = .4;
 
-  p->hp_filter_freq   = 50;
-  p->lp_filter_freq   = 6000;
-  p->hp_lifter_freq   = 150;
-  p->lp_lifter_freq   = 2000;
+  p->hpFilterFreq    = 50;
+  p->lpFilterFreq    = 6000;
+  p->hpLifterFreq    = 150;
+  p->lpLifterFreq    = 2000;
 
-  p->trigger_tc       = .25;
-  p->trigger_level1   = 7;
+  p->triggerTc       = .25;
+  p->triggerLevel    = 7;
 
-  p->search_time      = 1;
-  p->gap_time         = .25;
+  p->searchTime      = 1;
+  p->gapTime         = .25;
 
   while ((c = lsx_getopt(argc, argv, opt_str)) != -1) switch (c) {
-    char * parse_ptr;
-    GETOPT_NUMERIC('N', noise_tc_up     ,  .1 , 10)
-    GETOPT_NUMERIC('n', noise_tc_down   ,.001 , .1)
-    GETOPT_NUMERIC('r', noise_reduction_amount   ,0 , 2)
-    GETOPT_NUMERIC('f', measure_freq    ,   5 , 50)
-    GETOPT_NUMERIC('m', measure_duration, .01 , 1)
-    GETOPT_NUMERIC('M', measure_tc      ,  .1 , 1)
-    GETOPT_FREQ(   'h', hp_filter_freq  ,  10)
-    GETOPT_FREQ(   'l', lp_filter_freq  ,  1000)
-    GETOPT_FREQ(   'H', hp_lifter_freq  ,  10)
-    GETOPT_FREQ(   'L', lp_lifter_freq  ,  1000)
-    GETOPT_NUMERIC('T', trigger_tc      , .01 , 1)
-    GETOPT_NUMERIC('t', trigger_level1  ,   0 , 10)
-    GETOPT_NUMERIC('s', search_time     ,  .1 , 4)
-    GETOPT_NUMERIC('g', gap_time        ,  .1 , 1)
-    GETOPT_NUMERIC('p', pre_trigger_time,   0 , 4)
+    char * parseIndex;
+    GETOPT_NUMERIC('b', bootTime      ,  .1 , 10)
+    GETOPT_NUMERIC('N', noiseTcUp     ,  .1 , 10)
+    GETOPT_NUMERIC('n', noiseTcDown   ,.001 , .1)
+    GETOPT_NUMERIC('r', noiseReductionAmount,0 , 2)
+    GETOPT_NUMERIC('f', measureFreq   ,   5 , 50)
+    GETOPT_NUMERIC('m', measureDuration, .01 , 1)
+    GETOPT_NUMERIC('M', measureTc     ,  .1 , 1)
+    GETOPT_FREQ(   'h', hpFilterFreq  ,  10)
+    GETOPT_FREQ(   'l', lpFilterFreq  ,  1000)
+    GETOPT_FREQ(   'H', hpLifterFreq  ,  10)
+    GETOPT_FREQ(   'L', lpLifterFreq  ,  1000)
+    GETOPT_NUMERIC('T', triggerTc     , .01 , 1)
+    GETOPT_NUMERIC('t', triggerLevel  ,   0 , 20)
+    GETOPT_NUMERIC('s', searchTime    ,  .1 , 4)
+    GETOPT_NUMERIC('g', gapTime       ,  .1 , 1)
+    GETOPT_NUMERIC('p', preTriggerTime,   0 , 4)
     default: lsx_fail("invalid option `-%c'", optopt); return lsx_usage(effp);
   }
   return lsx_optind !=argc? lsx_usage(effp) : SOX_SUCCESS;
@@ -95,79 +98,80 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  unsigned i, pre_trigger_len, search_len;
+  unsigned i, fixedPreTriggerLen_ns, searchPreTriggerLen_ns;
 
-  pre_trigger_len = p->pre_trigger_time * effp->in_signal.rate + .5;
-  pre_trigger_len *= effp->in_signal.channels;
+  fixedPreTriggerLen_ns = p->preTriggerTime * effp->in_signal.rate + .5;
+  fixedPreTriggerLen_ns *= effp->in_signal.channels;
 
-  p->measure_len = effp->in_signal.rate * p->measure_duration + .5;
-  p->measure_len *= effp->in_signal.channels;
+  p->measureLen_ws = effp->in_signal.rate * p->measureDuration + .5;
+  p->measureLen_ns = p->measureLen_ws * effp->in_signal.channels;
+  for (p->dftLen_ws = 16; p->dftLen_ws < p->measureLen_ws; p->dftLen_ws <<= 1);
+  lsx_debug("dftLen_ws=%u measureLen_ws=%u", p->dftLen_ws, p->measureLen_ws);
 
-  p->measure_period_len = effp->in_signal.rate / p->measure_freq + .5;
-  p->measure_period_len *= effp->in_signal.channels;
-  p->search_count = ceil(p->search_time * p->measure_freq);
-  search_len = p->search_count * p->measure_period_len;
-  p->gap_count = p->gap_time * p->measure_freq + .5;
+  p->measurePeriod_ns = effp->in_signal.rate / p->measureFreq + .5;
+  p->measurePeriod_ns *= effp->in_signal.channels;
+  p->measuresLen = ceil(p->searchTime * p->measureFreq);
+  searchPreTriggerLen_ns = p->measuresLen * p->measurePeriod_ns;
+  p->gapLen = p->gapTime * p->measureFreq + .5;
 
-  p->buffer_len = pre_trigger_len + p->measure_len + search_len;
-  lsx_Calloc(p->buffer, p->buffer_len);
-
-  for (p->dft_len = 16; p->dft_len < p->measure_len; p->dft_len <<= 1);
-  lsx_debug("dft_len=%u measure_len=%u", p->dft_len, p->measure_len);
+  p->samplesLen_ns =
+    fixedPreTriggerLen_ns + searchPreTriggerLen_ns + p->measureLen_ns;
+  lsx_Calloc(p->samples, p->samplesLen_ns);
 
   lsx_Calloc(p->channels, effp->in_signal.channels);
   for (i = 0; i < effp->in_signal.channels; ++i) {
     chan_t * c = &p->channels[i];
-    lsx_Calloc(c->dft_buf, p->dft_len);
-    lsx_Calloc(c->spectrum, p->dft_len);
-    lsx_Calloc(c->noise_buf, p->dft_len);
-    lsx_Calloc(c->meas_buf, p->search_count);
+    lsx_Calloc(c->dftBuf, p->dftLen_ws);
+    lsx_Calloc(c->spectrum, p->dftLen_ws);
+    lsx_Calloc(c->noiseSpectrum, p->dftLen_ws);
+    lsx_Calloc(c->measures, p->measuresLen);
   }
 
-  lsx_Calloc(p->spectrum_window, p->measure_len);
-  for (i = 0; i < p->measure_len; ++i)
-    p->spectrum_window[i] = -2. / SOX_SAMPLE_MIN / sqrt((double)p->measure_len);
-  lsx_apply_hann(p->spectrum_window, (int)p->measure_len);
+  lsx_Calloc(p->spectrumWindow, p->measureLen_ws);
+  for (i = 0; i < p->measureLen_ws; ++i)
+    p->spectrumWindow[i] = -2./ SOX_SAMPLE_MIN / sqrt((double)p->measureLen_ws);
+  lsx_apply_hann(p->spectrumWindow, (int)p->measureLen_ws);
 
-  p->spectrum_start = p->hp_filter_freq / effp->in_signal.rate * p->dft_len + .5;
-  p->spectrum_start = max(p->spectrum_start, 1);
-  p->spectrum_end = p->lp_filter_freq / effp->in_signal.rate * p->dft_len + .5;
-  p->spectrum_end = min(p->spectrum_end, p->dft_len / 2);
+  p->spectrumStart = p->hpFilterFreq / effp->in_signal.rate * p->dftLen_ws + .5;
+  p->spectrumStart = max(p->spectrumStart, 1);
+  p->spectrumEnd = p->lpFilterFreq / effp->in_signal.rate * p->dftLen_ws + .5;
+  p->spectrumEnd = min(p->spectrumEnd, p->dftLen_ws / 2);
 
-  lsx_Calloc(p->cepstrum_window, p->spectrum_end - p->spectrum_start);
-  for (i = 0; i < p->spectrum_end - p->spectrum_start; ++i)
-    p->cepstrum_window[i] = 2 / sqrt((double)p->spectrum_end - p->spectrum_start);
-  lsx_apply_hann(p->cepstrum_window, (int)(p->spectrum_end - p->spectrum_start));
+  lsx_Calloc(p->cepstrumWindow, p->spectrumEnd - p->spectrumStart);
+  for (i = 0; i < p->spectrumEnd - p->spectrumStart; ++i)
+    p->cepstrumWindow[i] = 2 / sqrt((double)p->spectrumEnd - p->spectrumStart);
+  lsx_apply_hann(p->cepstrumWindow,(int)(p->spectrumEnd - p->spectrumStart));
   
-  p->cepstrum_start = ceil(effp->in_signal.rate * .5 / p->lp_lifter_freq);
-  p->cepstrum_end = floor(effp->in_signal.rate * .5 / p->hp_lifter_freq);
-  p->cepstrum_end = min(p->cepstrum_end, p->dft_len / 4);
-  if (p->cepstrum_end <= p->cepstrum_start)
+  p->cepstrumStart = ceil(effp->in_signal.rate * .5 / p->lpLifterFreq);
+  p->cepstrumEnd  = floor(effp->in_signal.rate * .5 / p->hpLifterFreq);
+  p->cepstrumEnd = min(p->cepstrumEnd, p->dftLen_ws / 4);
+  if (p->cepstrumEnd <= p->cepstrumStart)
     return SOX_EOF;
 
-  p->noise_tc_up_mult     = exp(-1 / (p->noise_tc_up   * p->measure_freq));
-  p->noise_tc_down_mult   = exp(-1 / (p->noise_tc_down * p->measure_freq));
-  p->measure_tc_mult      = exp(-1 / (p->measure_tc    * p->measure_freq));
-  p->trigger_meas_tc_mult = exp(-1 / (p->trigger_tc    * p->measure_freq));
+  p->noiseTcUpMult     = exp(-1 / (p->noiseTcUp   * p->measureFreq));
+  p->noiseTcDownMult   = exp(-1 / (p->noiseTcDown * p->measureFreq));
+  p->measureTcMult     = exp(-1 / (p->measureTc   * p->measureFreq));
+  p->triggerMeasTcMult = exp(-1 / (p->triggerTc   * p->measureFreq));
 
-  p->measure_timer = -p->measure_len;
-  p->flush_done = p->buffer_ptr = 0;
+  p->bootCountMax = p->bootTime * p->measureFreq - .5;
+  p->measureTimer_ns = p->measureLen_ns;
+  p->flushedLen_ns = p->samplesIndex_ns = 0;
   return SOX_SUCCESS;
 }
 
-static int flow_flush(sox_effect_t * effp, sox_sample_t const * ibuf,
+static int flowFlush(sox_effect_t * effp, sox_sample_t const * ibuf,
     sox_sample_t * obuf, size_t * ilen, size_t * olen)
 {
   priv_t * p = (priv_t *)effp->priv;
-  size_t odone = min(p->buffer_len - p->flush_done, *olen);
-  size_t odone1 = min(odone, p->buffer_len - p->buffer_ptr);
+  size_t odone = min(p->samplesLen_ns - p->flushedLen_ns, *olen);
+  size_t odone1 = min(odone, p->samplesLen_ns - p->samplesIndex_ns);
 
-  memcpy(obuf, p->buffer + p->buffer_ptr, odone1 * sizeof(*obuf));
-  if ((p->buffer_ptr += odone1) == p->buffer_len) {
-    memcpy(obuf + odone1, p->buffer, (odone - odone1) * sizeof(*obuf));
-    p->buffer_ptr = odone - odone1;
+  memcpy(obuf, p->samples + p->samplesIndex_ns, odone1 * sizeof(*obuf));
+  if ((p->samplesIndex_ns += odone1) == p->samplesLen_ns) {
+    memcpy(obuf + odone1, p->samples, (odone - odone1) * sizeof(*obuf));
+    p->samplesIndex_ns = odone - odone1;
   }
-  if ((p->flush_done += odone) == p->buffer_len) {
+  if ((p->flushedLen_ns += odone) == p->samplesLen_ns) {
     size_t olen1 = *olen - odone;
     (effp->handler.flow = lsx_flow_copy)(effp, ibuf, obuf +odone, ilen, &olen1);
     odone += olen1;
@@ -178,84 +182,86 @@ static int flow_flush(sox_effect_t * effp, sox_sample_t const * ibuf,
 }
 
 static double measure(
-    priv_t * p, chan_t * c, size_t index, unsigned step, int booting)
+    priv_t * p, chan_t * c, size_t index_ns, unsigned step_ns, int bootCount)
 {
   double mult, result = 0;
   size_t i;
 
-  for (i = 0; i < p->measure_len; ++i, index = (index + step) % p->buffer_len)
-    c->dft_buf[i] = p->buffer[index] * p->spectrum_window[i];
-  memset(c->dft_buf + i, 0, (p->dft_len - i) * sizeof(*c->dft_buf));
-  lsx_safe_rdft((int)p->dft_len, 1, c->dft_buf);
+  for (i = 0; i < p->measureLen_ws; ++i, index_ns = (index_ns + step_ns) % p->samplesLen_ns)
+    c->dftBuf[i] = p->samples[index_ns] * p->spectrumWindow[i];
+  memset(c->dftBuf + i, 0, (p->dftLen_ws - i) * sizeof(*c->dftBuf));
+  lsx_safe_rdft((int)p->dftLen_ws, 1, c->dftBuf);
 
-  memset(c->dft_buf, 0, p->spectrum_start * sizeof(*c->dft_buf));
-  for (i = p->spectrum_start; i < p->spectrum_end; ++i) {
-    double d = sqrt(sqr(c->dft_buf[2 * i]) + sqr(c->dft_buf[2 * i + 1]));
-    mult = booting >= 0? booting / (1. + booting) : p->measure_tc_mult;
+  memset(c->dftBuf, 0, p->spectrumStart * sizeof(*c->dftBuf));
+  for (i = p->spectrumStart; i < p->spectrumEnd; ++i) {
+    double d = sqrt(sqr(c->dftBuf[2 * i]) + sqr(c->dftBuf[2 * i + 1]));
+    mult = bootCount >= 0? bootCount / (1. + bootCount) : p->measureTcMult;
     c->spectrum[i] = c->spectrum[i] * mult + d * (1 - mult);
     d = sqr(c->spectrum[i]);
-    mult = booting >= 0? 0 :
-        d > c->noise_buf[i]? p->noise_tc_up_mult : p->noise_tc_down_mult;
-    c->noise_buf[i] = c->noise_buf[i] * mult + d * (1 - mult);
-    d = sqrt(max(0, d - p->noise_reduction_amount * c->noise_buf[i]));
-    c->dft_buf[i] = d * p->cepstrum_window[i - p->spectrum_start];
+    mult = bootCount >= 0? 0 :
+        d > c->noiseSpectrum[i]? p->noiseTcUpMult : p->noiseTcDownMult;
+    c->noiseSpectrum[i] = c->noiseSpectrum[i] * mult + d * (1 - mult);
+    d = sqrt(max(0, d - p->noiseReductionAmount * c->noiseSpectrum[i]));
+    c->dftBuf[i] = d * p->cepstrumWindow[i - p->spectrumStart];
   }
-  memset(c->dft_buf + i, 0, ((p->dft_len >> 1) - i) * sizeof(*c->dft_buf));
-  lsx_safe_rdft((int)p->dft_len >> 1, 1, c->dft_buf);
+  memset(c->dftBuf + i, 0, ((p->dftLen_ws >> 1) - i) * sizeof(*c->dftBuf));
+  lsx_safe_rdft((int)p->dftLen_ws >> 1, 1, c->dftBuf);
 
-  for (i = p->cepstrum_start; i < p->cepstrum_end; ++i)
-    result += sqr(c->dft_buf[2 * i]) + sqr(c->dft_buf[2 * i + 1]);
-  result = log(result / (p->cepstrum_end - p->cepstrum_start));
+  for (i = p->cepstrumStart; i < p->cepstrumEnd; ++i)
+    result += sqr(c->dftBuf[2 * i]) + sqr(c->dftBuf[2 * i + 1]);
+  result = log(result / (p->cepstrumEnd - p->cepstrumStart));
   return max(0, 21 + result);
 }
 
-static int flow_trigger(sox_effect_t * effp, sox_sample_t const * ibuf,
+static int flowTrigger(sox_effect_t * effp, sox_sample_t const * ibuf,
     sox_sample_t * obuf, size_t * ilen, size_t * olen)
 {
   priv_t * p = (priv_t *)effp->priv;
-  sox_bool triggered = sox_false;
-  size_t i, idone = 0, to_flush = 0;
+  sox_bool hasTriggered = sox_false;
+  size_t i, idone = 0, numMeasuresToFlush = 0;
 
-  while (idone < *ilen && !triggered) {
-    p->measure_timer += effp->in_signal.channels;
+  while (idone < *ilen && !hasTriggered) {
+    p->measureTimer_ns -= effp->in_signal.channels;
     for (i = 0; i < effp->in_signal.channels; ++i, ++idone) {
       chan_t * c = &p->channels[i];
-      p->buffer[p->buffer_ptr++] = *ibuf++;
-      if (!p->measure_timer) {
-        size_t x = (p->buffer_ptr + p->buffer_len - p->measure_len) % p->buffer_len;
-        double meas = measure(p, c, x, effp->in_signal.channels, p->booting);
-        c->meas_buf[p->search_ptr] = meas;
-        c->mean_meas = c->mean_meas * p->trigger_meas_tc_mult +
-            meas *(1 - p->trigger_meas_tc_mult);
+      p->samples[p->samplesIndex_ns++] = *ibuf++;
+      if (!p->measureTimer_ns) {
+        size_t x = (p->samplesIndex_ns + p->samplesLen_ns - p->measureLen_ns) % p->samplesLen_ns;
+        double meas = measure(p, c, x, effp->in_signal.channels, p->bootCount);
+        c->measures[p->measuresIndex] = meas;
+        c->meanMeas = c->meanMeas * p->triggerMeasTcMult +
+            meas *(1 - p->triggerMeasTcMult);
 
-        if (triggered |= c->mean_meas > p->trigger_level1) {
-          unsigned n = p->search_count, ptr = p->search_ptr;
-          unsigned j, trigger_j = n, zero_j = n;
-          for (j = 0; j < n; ++j, ptr = (ptr + n - 1) % n)
-            if (c->meas_buf[ptr] > p->trigger_level1 && j <= trigger_j + p->gap_count)
-              zero_j = trigger_j = j;
-            else if (!c->meas_buf[ptr] && trigger_j >= zero_j)
-              zero_j = j;
-          j = min(j, zero_j);
-          to_flush = range_limit(j, to_flush, n);
+        if (hasTriggered |= c->meanMeas >= p->triggerLevel) {
+          unsigned n = p->measuresLen, k = p->measuresIndex;
+          unsigned j, jTrigger = n, jZero = n;
+          for (j = 0; j < n; ++j, k = (k + n - 1) % n)
+            if (c->measures[k] >= p->triggerLevel && j <= jTrigger + p->gapLen)
+              jZero = jTrigger = j;
+            else if (!c->measures[k] && jTrigger >= jZero)
+              jZero = j;
+          j = min(j, jZero);
+          numMeasuresToFlush = range_limit(j, numMeasuresToFlush, n);
         }
-        lsx_debug_more("%12g %12g %u", meas, c->mean_meas, (unsigned)to_flush);
+        lsx_debug_more("%12g %12g %u",
+            meas, c->meanMeas, (unsigned)numMeasuresToFlush);
       }
     }
-    if (p->buffer_ptr == p->buffer_len)
-      p->buffer_ptr = 0;
-    if (!p->measure_timer) {
-      p->measure_timer = -p->measure_period_len;
-      p->search_ptr = (p->search_ptr + 1) % p->search_count;
-      if (p->booting >= 0)
-        p->booting = p->booting == 6? -1 : p->booting + 1;
+    if (p->samplesIndex_ns == p->samplesLen_ns)
+      p->samplesIndex_ns = 0;
+    if (!p->measureTimer_ns) {
+      p->measureTimer_ns = p->measurePeriod_ns;
+      ++p->measuresIndex;
+      p->measuresIndex %= p->measuresLen;
+      if (p->bootCount >= 0)
+        p->bootCount = p->bootCount == p->bootCountMax? -1 : p->bootCount + 1;
     }
   }
-  if (triggered) {
+  if (hasTriggered) {
     size_t ilen1 = *ilen - idone;
-    p->flush_done = (p->search_count - to_flush) * p->measure_period_len;
-    p->buffer_ptr = (p->buffer_ptr + p->flush_done) % p->buffer_len;
-    (effp->handler.flow = flow_flush)(effp, ibuf, obuf, &ilen1, olen);
+    p->flushedLen_ns = (p->measuresLen - numMeasuresToFlush) * p->measurePeriod_ns;
+    p->samplesIndex_ns = (p->samplesIndex_ns + p->flushedLen_ns) % p->samplesLen_ns;
+    (effp->handler.flow = flowFlush)(effp, ibuf, obuf, &ilen1, olen);
     idone += ilen1;
   }
   else *olen = 0;
@@ -276,15 +282,15 @@ static int stop(sox_effect_t * effp)
 
   for (i = 0; i < effp->in_signal.channels; ++i) {
     chan_t * c = &p->channels[i];
-    free(c->meas_buf);
-    free(c->noise_buf);
+    free(c->measures);
+    free(c->noiseSpectrum);
     free(c->spectrum);
-    free(c->dft_buf);
+    free(c->dftBuf);
   }
   free(p->channels);
-  free(p->cepstrum_window);
-  free(p->spectrum_window);
-  free(p->buffer);
+  free(p->cepstrumWindow);
+  free(p->spectrumWindow);
+  free(p->samples);
   return SOX_SUCCESS;
 }
 
@@ -292,25 +298,26 @@ sox_effect_handler_t const * lsx_vad_effect_fn(void)
 {
   static sox_effect_handler_t handler = {"vad", NULL,
     SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_MODIFY,
-    create, start, flow_trigger, drain, stop, NULL, sizeof(priv_t)
+    create, start, flowTrigger, drain, stop, NULL, sizeof(priv_t)
   };
   static char const * lines[] = {
     "[options]",
-    "\t-N noise-tc-up              (0.1 s)",
-    "\t-n noise-tc-down            (0.01 s)",
-    "\t-r noise-reduction-amount   (1.35)",
-    "\t-f measure-frequency        (20 Hz)",
-    "\t-m measure-duration         (0.1 s)",
-    "\t-M measure-tc               (0.4 s)",
-    "\t-h high-pass-filter         (50 Hz)",
-    "\t-l low-pass-filter          (6000 Hz)",
-    "\t-H high-pass-lifter         (150 Hz)",
-    "\t-L low-pass-lifter          (2000 Hz)",
-    "\t-T trigger-time-constant    (0.25 s)",
-    "\t-t trigger-level            (7)",
-    "\t-s search-time              (1 s)",
-    "\t-g allowed-gap              (0.25 s)",
-    "\t-p pre-trigger-buffer       (0 s)",
+    "\t-b noise-est-boot-time          (0.35 s)",
+    "\t-N noise-est-time-constant-up   (0.1 s)",
+    "\t-n noise-est-time-constant-down (0.01 s)",
+    "\t-r noise-reduction-amount       (1.35)",
+    "\t-f measurement-frequency        (20 Hz)",
+    "\t-m measurement-duration         (0.1 s)",
+    "\t-M measurement-time-constant    (0.4 s)",
+    "\t-h high-pass-filter             (50 Hz)",
+    "\t-l low-pass-filter              (6000 Hz)",
+    "\t-H high-pass-lifter             (150 Hz)",
+    "\t-L low-pass-lifter              (2000 Hz)",
+    "\t-T trigger-time-constant        (0.25 s)",
+    "\t-t trigger-level                (7)",
+    "\t-s search-time                  (1 s)",
+    "\t-g allowed-gap                  (0.25 s)",
+    "\t-p pre-trigger-time             (0 s)",
   };
   static char * usage;
   handler.usage = lsx_usage_lines(&usage, lines, array_length(lines));
