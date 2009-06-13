@@ -178,7 +178,7 @@ static int flow_flush(sox_effect_t * effp, sox_sample_t const * ibuf,
 }
 
 static double measure(
-    priv_t * p, chan_t * c, size_t index, size_t step, int booting)
+    priv_t * p, chan_t * c, size_t index, unsigned step, int booting)
 {
   double mult, result = 0;
   size_t i;
@@ -239,7 +239,7 @@ static int flow_trigger(sox_effect_t * effp, sox_sample_t const * ibuf,
           j = min(j, zero_j);
           to_flush = range_limit(j, to_flush, n);
         }
-        lsx_debug_more("%12g %12g %u", meas, c->mean_meas, to_flush);
+        lsx_debug_more("%12g %12g %u", meas, c->mean_meas, (unsigned)to_flush);
       }
     }
     if (p->buffer_ptr == p->buffer_len)
