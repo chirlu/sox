@@ -68,7 +68,7 @@ static int start(sox_effect_t * effp)
   p->a2 /= p->a0;
   p->a1 /= p->a0;
 
-  p->o2 = p->o1 = p->i2 = p-> i1 = 0;
+  p->o2 = p->o1 = p->i2 = p->i1 = 0;
   return SOX_SUCCESS;
 }
 
