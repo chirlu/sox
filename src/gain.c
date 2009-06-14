@@ -260,7 +260,7 @@ static int norm_getopts(sox_effect_t * effp, int argc, char * * argv)
   else if (argc && !strcmp(*argv, "-b"))
     argv2[argc2++] = "-B", --argc, ++argv;
   if (argc2 > 1)
-    lsx_warn("this use is deprecated; use `gain %s' instead", argv2[1]);
+    lsx_warn("this usage is deprecated; use `gain %s' instead", argv2[1]);
   else argv2[argc2++] = "-n";
   if (argc)
     argv2[argc2++] = *argv, --argc, ++argv;
