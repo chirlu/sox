@@ -117,6 +117,10 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   if (argc && !strcmp(*argv, "-m")) p->mode = manual   , ++argv, --argc;
   if (argc && !strcmp(*argv, "-a")) p->mode = automatic, ++argv, --argc;
   if (argc && !strcmp(*argv, "-p")) p->mix_power = sox_true, ++argv, --argc;
+  if (!argc) {
+    lsx_fail("must specify at least one output channel");
+    return SOX_EOF;
+  }
   p->out_specs = lsx_calloc(p->num_out_channels = argc, sizeof(*p->out_specs));
   return parse(effp, argv, 1); /* No channels yet; parse with dummy */
 }
