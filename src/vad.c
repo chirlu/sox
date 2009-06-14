@@ -35,8 +35,8 @@ typedef struct {                /* Configuration parameters: */
   unsigned  measureTimer_ns, measureLen_ws, measureLen_ns;
   unsigned  spectrumStart, spectrumEnd, cepstrumStart, cepstrumEnd; /* bins */
   int       bootCountMax, bootCount;
-  double    measureTcMult, triggerMeasTcMult;
   double    noiseTcUpMult, noiseTcDownMult;
+  double    measureTcMult, triggerMeasTcMult;
   double    * spectrumWindow, * cepstrumWindow;
   chan_t    * channels;
 } priv_t;
@@ -155,7 +155,7 @@ static int start(sox_effect_t * effp)
 
   p->bootCountMax = p->bootTime * p->measureFreq - .5;
   p->measureTimer_ns = p->measureLen_ns;
-  p->flushedLen_ns = p->samplesIndex_ns = 0;
+  p->bootCount = p->measuresIndex = p->flushedLen_ns = p->samplesIndex_ns = 0;
   return SOX_SUCCESS;
 }
 
@@ -302,6 +302,12 @@ sox_effect_handler_t const * lsx_vad_effect_fn(void)
   };
   static char const * lines[] = {
     "[options]",
+    "\t-t trigger-level                (7)",
+    "\t-T trigger-time-constant        (0.25 s)",
+    "\t-s search-time                  (1 s)",
+    "\t-g allowed-gap                  (0.25 s)",
+    "\t-p pre-trigger-time             (0 s)",
+    "Advanced options:",
     "\t-b noise-est-boot-time          (0.35 s)",
     "\t-N noise-est-time-constant-up   (0.1 s)",
     "\t-n noise-est-time-constant-down (0.01 s)",
@@ -313,11 +319,6 @@ sox_effect_handler_t const * lsx_vad_effect_fn(void)
     "\t-l low-pass-filter              (6000 Hz)",
     "\t-H high-pass-lifter             (150 Hz)",
     "\t-L low-pass-lifter              (2000 Hz)",
-    "\t-T trigger-time-constant        (0.25 s)",
-    "\t-t trigger-level                (7)",
-    "\t-s search-time                  (1 s)",
-    "\t-g allowed-gap                  (0.25 s)",
-    "\t-p pre-trigger-time             (0 s)",
   };
   static char * usage;
   handler.usage = lsx_usage_lines(&usage, lines, array_length(lines));

@@ -6,12 +6,12 @@ Source code, Win32 binaries, and Mac OSX binaries can be downloaded from
 Release highlights include:
  
   o New filter effects: `sinc', `fir', `biquad'.
-  o Other new effects: `stats', `overdrive'.
+  o Other new effects: `stats', `overdrive', `vad'.
   o New audio device handler for OpenBSD.
   o Fixed problems with temporary file on Windows.
   o Can now enable automated clipping protection for most effects.
   o Automatically `dither' as needed.
-  o Improvements to AIFF, WAV, FLAC, MP3 handlers
+  o Improvements to AIFF, WAV, FLAC, MP3 handlers.
   o ALSA driver now supports 24-bit.
   o `spectrogram' effect enhancements including multi-channel support.
   o `synth' effect enhancements including new `pluck' type.

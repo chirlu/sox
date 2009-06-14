@@ -16,6 +16,11 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+# Demonstrates the use of some of the features new in SoX 14.3.0, viz
+# nested SoX commands, the synth `pluck' type, and the overdrive
+# effect (also used are several other effects).
+# Music (c) 2008 robs@users.sourceforge.net.  All rights reserved.
+
 sox=../src/sox
 
 G0="pl %-26 pl %-19 pl %-14 pl %-10 pl %-7 pl %-2"

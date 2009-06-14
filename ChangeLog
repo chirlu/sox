@@ -85,7 +85,7 @@ Effects:
   o New `fir' filter effect using external coefficients/file.  (robs)
   o New `biquad' filter effect using external coefficients.  (robs)
   o New `overdrive' effect.  (robs)
-  o New `vad' Voice Activity Detector effect (undocumented as yet).  (robs)
+  o New `vad' Voice Activity Detector effect.  (robs)
   o `synth' enhancements: can now set common parameters for multiple
     channels, new `pluck' and `tpdf' types, `scientific' note
     notation, [2778142] just intonation.  (robs)

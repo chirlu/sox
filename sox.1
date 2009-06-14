@@ -3891,6 +3891,100 @@ sample counts is the number of samples with the letter `s' appended to
 it.  A value of 8000s will wait until 8000 samples are read before
 starting to process audio.
 .TP
+\fBvad \fR[\fIoptions\fR]
+Voice Activity Detector.  Attempts to trim silence and quiet
+background sounds from the ends of (fairly high resolution
+i.e. 16-bit, 44-48kHz) recordings of speech.  The algorithm currently
+uses a simple cepstral power measurement to detect voice, so may be
+fooled by other things, especially music.  The effect can trim only
+from the front of the audio, so in order to trim from the back, the
+.B reverse
+effect must also be used.  E.g.
+.EX
+   play speech.wav norm vad
+.EE
+to trim from the front,
+.EX
+   play speech.wav norm reverse vad reverse
+.EE
+to trim from the back, and
+.EX
+   play speech.wav norm vad reverse vad reverse
+.EE
+to trim from both ends.  The use of the
+.B norm
+effect is recommended, but remember that neither
+.B reverse
+nor
+.B norm
+is suitable for use with streamed audio.
+.SP
+.I Options:
+.br
+Default values are shown in parenthesis.
+.RS
+.IP \fB\-t\ \fInum\fR\ (7)
+The measurement level used to trigger activity detection.  This might
+need to be changed depending on the noise level, signal level and
+other charactistics of the input audio.
+.IP \fB\-T\ \fInum\fR\ (0.25)
+The time constant (in seconds) used to help ignore short bursts of
+sound.
+.IP \fB\-s\ \fInum\fR\ (1)
+The amount of audio (in seconds) to search for quieter/shorter bursts
+of audio to include prior to the detected trigger point.
+.IP \fB\-g\ \fInum\fR\ (0.25)
+Allowed gap (in seconds) between quieter/shorter bursts of audio to
+include prior to the detected trigger point.
+.IP \fB\-p\ \fInum\fR\ (0)
+The amount of audio (in seconds) to preseve before the trigger point
+and any found quieter/shorter bursts.
+.RE
+.TP
+\ 
+.I Advanced Options:
+.br
+These allow fine tuning of the alogithm's internal parameters.
+.RS
+.IP \fB\-b\ \fInum\fR
+The algorithm (internally) uses adaptive noise estimation/reduction in
+order to detect the start of the wanted audio.  This option sets the
+time for the initial noise estimate.
+.IP \fB\-N\ \fInum\fR
+Time constant used by the adaptive noise estimator for when the noise
+level is increasing.
+.IP \fB\-n\ \fInum\fR
+Time constant used by the adaptive noise estimator for when the noise
+level is decreasing.
+.IP \fB\-r\ \fInum\fR
+Amount of noise reduction to use in the detection algorithm (e.g. 0,
+0.5, ...).
+.IP \fB\-f\ \fInum\fR
+Frequency of the algorithm's processing/measurements.
+.IP \fB\-m\ \fInum\fR
+Measurement duration; by default, twice the measurement period; i.e.
+with overlap.
+.IP \fB\-M\ \fInum\fR
+Time constant used to smooth spectral measurements.
+.IP \fB\-h\ \fInum\fR
+`Brick-wall' frequency of high-pass filter applied at the input to the
+detector algorithm.
+.IP \fB\-l\ \fInum\fR
+`Brick-wall' frequency of low-pass filter applied at the input to the
+detector algorithm.
+.IP \fB\-H\ \fInum\fR
+`Brick-wall' quefrency of high-pass lifter used in the detector
+algorithm.
+.IP \fB\-L\ \fInum\fR
+`Brick-wall' quefrency of low-pass lifter used in the detector
+algorithm.
+.RE
+.TP
+\ 
+See also the
+.B silence
+effect.
+.TP
 \fBvol \fIgain\fR [\fItype\fR [\fIlimitergain\fR]]
 Apply an amplification or an attenuation to the audio signal.
 Unlike the
