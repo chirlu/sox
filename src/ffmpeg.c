@@ -126,16 +126,12 @@ static int audio_decode_frame(priv_t * ffmpeg, uint8_t *audio_buf, int buf_size)
   for (;;) {
     /* NOTE: the audio packet can contain several frames */
     while (ffmpeg->audio_pkt_size > 0) {
-      AVPacket avpkt;
-      av_init_packet(&avpkt);
-      avpkt.data = ffmpeg->audio_pkt_data;
-      avpkt.size = ffmpeg->audio_pkt_size;
       data_size = buf_size;
-
-      len1 = avcodec_decode_audio3(ffmpeg->audio_st->codec,
-                                   (int16_t *)audio_buf, &data_size, &avpkt);
+      len1 = avcodec_decode_audio2(ffmpeg->audio_st->codec,
+                                   (int16_t *)audio_buf, &data_size,
+                                   ffmpeg->audio_pkt_data, ffmpeg->audio_pkt_size);
       if (len1 < 0) /* if error, we skip the rest of the packet */
-        return 0;
+	return 0;
 
       ffmpeg->audio_pkt_data += len1;
       ffmpeg->audio_pkt_size -= len1;
@@ -225,7 +221,7 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
     /* If input buffer empty, read more data */
     if (ffmpeg->audio_buf_index * 2 >= ffmpeg->audio_buf_size) {
       if ((ret = av_read_frame(ffmpeg->ctxt, pkt)) < 0 &&
-          (ret == AVERROR_EOF || url_ferror(ffmpeg->ctxt->pb)))
+	  (ret == AVERROR_EOF || url_ferror(ffmpeg->ctxt->pb)))
         break;
       ffmpeg->audio_buf_size = audio_decode_frame(ffmpeg, ffmpeg->audio_buf, AVCODEC_MAX_AUDIO_FRAME_SIZE);
       ffmpeg->audio_buf_index = 0;
@@ -348,7 +344,7 @@ static int startwrite(sox_format_t * ft)
   }
 
   /* allocate the output media context */
-  ffmpeg->ctxt = avformat_alloc_context();
+  ffmpeg->ctxt = av_alloc_format_context();
   if (!ffmpeg->ctxt) {
     fprintf(stderr, "ffmpeg out of memory error");
     return SOX_EOF;
