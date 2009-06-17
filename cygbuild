@@ -98,6 +98,7 @@ cp -p \
 unix2dos $dir/batch-example.bat
 
 if test -r "../wget-1.11.4/wget.exe"; then
+  cp ../wget-1.11.4/wget.exe $dir
   cp ../wget-1.11.4/wget.ini $dir
 else
   if test -r /usr/bin/wget -a -r /etc/wgetrc; then
