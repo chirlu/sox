@@ -5,6 +5,49 @@ This file contains a list of all changes starting after the release of
 sox-11gamma, followed by a list of prior authors and features.
 
 
+sox-14.x.x	2009-xx-xx
+----------
+
+Previously deprecated features that have been removed in this release:
+
+Newly deprecated features (to be removed in future):
+
+Previously deprecated features (to be removed in future):
+
+  Deprec-  Feature    [O(ption)]                           Removal
+  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
+  -------  ----------------------  ----------------------  -------
+  14.2.0   E key alias             pitch                   14.3.0
+  14.2.0   E pan                   ~= mixer/remix          14.3.0
+  14.1.0   F wve (native)          wve (libsndfile)        2009-07-29
+  14.1.0   Behaviour whereby       soxi                    2009-07-29
+           sox -V file(s) -n
+           doesn't read to EOF.
+  14.3.0   F flac: libFLAC 1.1.2,3 libFLAC > 1.1.3         2009-12-14
+  14.3.0   PLAY_RATE_ARG           SOX_OPTS                2009-12-14
+  14.3.0   E norm -b, norm -i      gain -B, gain -en       2010-06-14
+  14.3.0   E filter                ~=sinc                  2010-06-14
+  14.1.0   E resample alias        rate                    2010-06-14
+  14.1.0   E polyphase alias       rate                    2010-06-14
+  14.1.0   E rabbit alias          rate                    2010-06-14
+
+LibSoX interface changes:
+
+File formats:
+
+Audio device drivers:
+
+Effects:
+
+Other new features:
+
+  o Added libSoX example #4: concatenating audio files.  (robs)
+
+Other bug fixes:
+
+Internal improvements:
+
+
 sox-14.3.0	2009-06-14
 ----------
 
@@ -20,31 +63,6 @@ Previously deprecated features that have been removed in this release:
   14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1
 
   * But interface retained as an alias for `rate'.
-
-Newly deprecated features (to be removed in future):
-
-  Deprec-  Feature    [O(ption)]                           Removal
-  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
-  -------  ----------------------  ----------------------  -------
-  14.3.0   E norm -b, norm -i      gain -B, gain -en       14.3.0 + 1 year
-  14.3.0   E filter                ~=sinc                  14.3.0 + 1 year
-  14.3.0   F flac: libFLAC 1.1.2,3 libFLAC > 1.1.3         14.3.0 + 6 months
-  14.3.0   PLAY_RATE_ARG           SOX_OPTS                14.3.0 + 6 months
-
-Previously deprecated features (to be removed in future):
-
-  Deprec-  Feature    [O(ption)]                           Removal
-  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
-  -------  ----------------------  ----------------------  -------
-  14.2.0   E key alias             pitch                   2009-05-29
-  14.2.0   E pan                   ~= mixer/remix          2009-05-29
-  14.1.0   E resample alias        rate                    14.3.0 + 1 year
-  14.1.0   E polyphase alias       rate                    14.3.0 + 1 year
-  14.1.0   E rabbit alias          rate                    14.3.0 + 1 year
-  14.1.0   F wve (native)          wve (libsndfile)        2009-07-29
-  14.1.0   Behaviour whereby       soxi                    2009-07-29
-           sox -V file(s) -n
-           doesn't read to EOF.
 
 LibSoX interface changes:
 
