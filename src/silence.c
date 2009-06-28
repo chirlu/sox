@@ -285,7 +285,7 @@ static sox_bool aboveThreshold(sox_effect_t const * effp,
   else if (unit == 'd')
     scaled_value = linear_to_dB(scaled_value);
 
-  return scaled_value >= threshold;
+  return scaled_value > threshold;
 }
 
 static sox_sample_t compute_rms(sox_effect_t * effp, sox_sample_t sample)

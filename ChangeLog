@@ -39,6 +39,8 @@ Audio device drivers:
 
 Effects:
 
+  o Fix [2254919] Silence doesn't trim digitial silence correctly.  (robs)
+
 Other new features:
 
   o Added libSoX example #4: concatenating audio files.  (robs)
