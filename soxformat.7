@@ -615,7 +615,13 @@ You had better know what you are doing! Output format
 options will cause a format conversion, and the \fB.wav\fR
 will written appropriately.
 .SP
-SoX can read and write PCM, \(*m-law, A-law, MS ADPCM, and IMA (or DVI) ADPCM.
+SoX can read and write linear PCM, \(*m-law, A-law, MS ADPCM, and IMA (or DVI) ADPCM.
+WAV files can also contain audio encoded in many other ways (not currently
+supported with SoX) e.g. MP3; in some cases such a file can still be
+read by SoX by overriding the file type, e.g.
+.EX
+   play -t mp3 mp3-encoded.wav
+.EE
 Big endian versions of RIFF files, called RIFX, are also supported.
 To write a RIFX file, use the
 .B \-B

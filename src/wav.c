@@ -406,7 +406,7 @@ static int findChunk(sox_format_t * ft, const char *Label, uint32_t *len)
 
 static int wavfail(sox_format_t * ft, const char *format)
 {
-    lsx_fail_errno(ft, SOX_EHDR, "Unhandled WAV file encoding (%s).\nTry overriding the encoding: e.g. for an MP3 WAV, `-t mp3'", format);
+    lsx_fail_errno(ft, SOX_EHDR, "WAV file encoding `%s' is not supported", format);
     return SOX_EOF;
 }
 
