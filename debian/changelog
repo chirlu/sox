@@ -10,12 +10,19 @@ sox (14.3.0+cvs-1) UNRELEASED; urgency=low
     - Reenabled libmagic as it's not used by default anymore.
     - Explicitly disabled amrwb and amrnb.
     - Removed now useless --disable-rpath flag.
+    - Made patch target available at all times.
   * [debian/libsox-fmt-pulse.dirs,debian/libsox-fmt-pulse.install]:
     - Added PulseAudio library.
   * [debian/libsox-fmt-base.install]:
     - Removed formats libraries that are now included in libsox.
+  * [debian/mime]:
+    - Fixed by moving the argument before the filename, thanks to
+      Robert Grimm <rob@robgri.de> (closes: #530899).
+  * [debian/README.source]:
+    - Added documentation on the debian source package. This follows section
+      4.14 of the Debian Policy Manual (closes: #522548).
 
- -- Pascal Giard <evilynux@gmail.com>  Fri, 24 Apr 2009 10:17:03 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Mon, 29 Jun 2009 22:45:49 -0400
 
 sox (14.2.0-2) unstable; urgency=low
 

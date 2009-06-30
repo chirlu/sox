@@ -1,0 +1,38 @@
+Package Structure
+-----------------
+Say the SoX version is 14.3.0. the orig tarball is built by:
+1) Creating a sox-14.3.0 folder;
+2) Copying the upstream source tarball into it;
+3) Calling "tar -czvf sox_14.3.0.orig.tar.gz sox-14.3.0".
+
+Modifying and Patching the Source
+---------------------------------
+Patches can be applied by creating a debian/patches folder, adding patches to
+it and building the package again.
+
+Creating a Patch
+----------------
+Create your patch from the SoX root folder (e.g. /tmp/sox-14.3.0/build-tree).
+Copy it into the debian/patches folder. Patches are applied in the alphabetical
+order so you may want to use numered prefixes.
+
+Patch Example
+-------------
+Say you did an "apt-get source sox" in the /tmp/ folder and tried to build the
+package already, but want to create a patch. (The upstream tarball has been
+extracted in the build-tree/ folder).
+
+cd /tmp/sox-14.3.0/
+mkdir debian/patches
+cd build-tree/
+
+do your modifications to sox-14.3.0/src/sox.c and save your new file as 
+sox-14.3.0/src/sox.c.new
+
+diff -Naur sox-14.3.0/src/sox.c.old sox-14.3.0/src/sox.c > \
+  ../debian/patches/01-some_fix_to_sox.diff
+debuild
+
+Hope this helps!
+
+ -- Pascal Giard <pascal@debian.org>  Mon, 29 Jun 2009 22:45:49 -0400

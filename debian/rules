@@ -6,7 +6,7 @@ DEB_TAR_SRCDIR := sox-14.3.0
 include /usr/share/cdbs/1/rules/tarball.mk
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
-#include /usr/share/cdbs/1/rules/simple-patchsys.mk
+include /usr/share/cdbs/1/rules/simple-patchsys.mk
 
 CFLAGS += -D_REENTRANT
 CPPFLAGS += -I/usr/include/ffmpeg
