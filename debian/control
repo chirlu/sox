@@ -27,12 +27,12 @@ Description: Swiss army knife of sound processing
  (provided by libsox-fmt-alsa, libsox-fmt-ao and libsox-fmt-oss). It also
  supports LADSPA plugins.
 
-Package: libsox1
+Package: libsox1a
 Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Recommends: libsox-fmt-base, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss
-Conflicts: libsox0, libsox0a
+Conflicts: libsox0, libsox0a, libsox1
 Suggests: libsox-fmt-all
 Description: SoX library of audio effects and processing
  SoX is the swiss army knife of sound processing.
@@ -131,7 +131,7 @@ Description: All SoX format libraries
 Package: libsox-dev
 Architecture: any
 Section: libdevel
-Depends: libsox1 (=${binary:Version}), ${misc:Depends}, libsox-fmt-all (=${binary:Version}), ${shlibs:Depends}
+Depends: libsox1a (=${binary:Version}), ${misc:Depends}, libsox-fmt-all (=${binary:Version}), ${shlibs:Depends}
 Description: Development files for the SoX library
  SoX is the swiss army knife of sound processing.
  .

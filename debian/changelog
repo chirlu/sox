@@ -1,9 +1,16 @@
 sox (14.3.0+cvs-1) UNRELEASED; urgency=low
 
-  * CVS version.
+  * CVS Version.
+
+ -- Pascal Giard <evilynux@gmail.com>  Sat, 04 Jul 2009 13:40:25 -0400
+
+sox (14.3.0-1) unstable; urgency=low
+
+  * New upstream release.
   * [debian/control]:
     - Added build depend on libpulse-dev.
     - Added PulseAudio package.
+    - Bumped libsox1 to libsox1a, new version is binary incompatible.
   * [debian/rules]:
     - Added distro name.
     - Added dynamic library configure flag.
@@ -21,8 +28,10 @@ sox (14.3.0+cvs-1) UNRELEASED; urgency=low
   * [debian/README.source]:
     - Added documentation on the debian source package. This follows section
       4.14 of the Debian Policy Manual (closes: #522548).
-
- -- Pascal Giard <evilynux@gmail.com>  Mon, 29 Jun 2009 22:45:49 -0400
+  * [debian/watch]:
+    - Bump version to 3 as recommanded by uscan manpage.
+  
+ -- Pascal Giard <pascal@debian.org>  Sat, 04 Jul 2009 12:55:41 -0400
 
 sox (14.2.0-2) unstable; urgency=low
 
