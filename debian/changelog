@@ -1,8 +1,10 @@
 sox (14.3.0+cvs-1) UNRELEASED; urgency=low
 
   * CVS Version.
+  * [debian/control]:
+    - Improved PulseAudio integration.
 
- -- Pascal Giard <evilynux@gmail.com>  Sat, 04 Jul 2009 13:40:25 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Fri, 10 Jul 2009 23:15:58 -0400
 
 sox (14.3.0-1) unstable; urgency=low
 

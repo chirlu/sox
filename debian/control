@@ -10,7 +10,7 @@ Standards-Version: 3.8.1
 Package: sox
 Section: sound
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libsox-fmt-base, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss
+Depends: ${shlibs:Depends}, ${misc:Depends}, libsox-fmt-base, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse
 Suggests: libsox-fmt-all
 Description: Swiss army knife of sound processing
  SoX is a command line utility that can convert various formats of computer 
@@ -23,15 +23,15 @@ Description: Swiss army knife of sound processing
  Any format support requires at least libsox-fmt-base. Some formats have their
  own package e.g. mp3 read support is provided by libsox-fmt-mp3.
  .
- SoX supports most common sound architectures i.e. Alsa, Libao and OSS
- (provided by libsox-fmt-alsa, libsox-fmt-ao and libsox-fmt-oss). It also
- supports LADSPA plugins.
+ SoX supports most common sound architectures i.e. Alsa, Libao, OSS and Pulse
+ (respectively provided by libsox-fmt-alsa, libsox-fmt-ao, libsox-fmt-oss and
+ libsox-fmt-pulse). It also supports LADSPA plugins.
 
 Package: libsox1a
 Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Recommends: libsox-fmt-base, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss
+Recommends: libsox-fmt-base, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse
 Conflicts: libsox0, libsox0a, libsox1
 Suggests: libsox-fmt-all
 Description: SoX library of audio effects and processing
@@ -42,7 +42,8 @@ Description: SoX library of audio effects and processing
  various effects to sound files.
  .
  Any format support requires at least libsox-fmt-base.
- Sound card I/O requires libsox-fmt-alsa, libsox-fmt-ao or libsox-fmt-oss.
+ Sound card I/O requires libsox-fmt-alsa, libsox-fmt-ao, libsox-fmt-oss or
+ libsox-fmt-pulse.
 
 Package: libsox-fmt-base
 Architecture: any
@@ -108,7 +109,10 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: SoX OSS format I/O library
  SoX is the swiss army knife of sound processing.
  .
- This package contains the SoX OSS format I/O library.
+ This package contains the SoX Open Sound System (OSS)
+ format I/O library.
+ .
+ Open Sound System: http://www.opensound.com/oss.html
 
 Package: libsox-fmt-pulse
 Architecture: any
@@ -118,6 +122,8 @@ Description: SoX PulseAudio format I/O library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX PulseAudio format I/O library.
+ .
+ PulseAudio: http://www.pulseaudio.org/
 
 Package: libsox-fmt-all
 Architecture: any
