@@ -62,7 +62,7 @@ libsox \- SoX, an audio file-format and effect library
 .P
 .B void sox_delete_effects_chain(sox_effects_chain_t *\fIecp\fB);
 .P
-.B int sox_add_effect(sox_effects_chaint_t *\fIchain\fB, sox_effect_t*\fIeffp\fB, sox_signalinfo_t *\fIin\fB, sox_signalinfo-t const *\fIout\fB);
+.B int sox_add_effect(sox_effects_chaint_t *\fIchain\fB, sox_effect_t*\fIeffp\fB, sox_signalinfo_t *\fIin\fB, sox_signalinfo_t const *\fIout\fB);
 .P
 .B cc \fIfile.c\fB -o \fIfile \fB-lsox
 .fi
@@ -201,13 +201,13 @@ For example, if an effect to
 mix down left and right channels into one monophonic channel
 were to use the line
 .EX
-	*obuf++ = (*ibuf++ + *ibuf++)/2;
+   *obuf++ = (*ibuf++ + *ibuf++)/2;
 .EE
 distortion might occur since
 the intermediate addition can overflow 32 bits.
 The line
 .EX
-	*obuf++ = *ibuf++/2 + *ibuf++/2;
+   *obuf++ = *ibuf++/2 + *ibuf++/2;
 .EE
 would get round the overflow problem (at the expense of the least significant
 bit).
@@ -357,9 +357,9 @@ built on your system. For a static build, just link against the
 libraries as normal. For a dynamic build, you should use libtool to
 link with the correct linker flags. See the libtool manual for
 details; basically, you use it as:
-.SP
-	libtool --mode=link gcc -o prog /path/to/libsox.la
-.SP
+.EX
+   libtool --mode=link gcc -o prog /path/to/libsox.la
+.EE
 .SH BUGS
 This manual page is both incomplete and out of date.
 .SH SEE ALSO

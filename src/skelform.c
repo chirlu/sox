@@ -93,12 +93,12 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
         break;
       default:
         lsx_fail("Undetected sample encoding in read!");
-        exit(2);
+        return 0;
       }
       break;
     default:
       lsx_fail("Undetected bad sample size in read!");
-      exit(2);
+      return 0;
     }
   }
 
@@ -166,12 +166,12 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
       break;
     default:
       lsx_fail("Undetected bad sample encoding in write!");
-      exit(2);
+      return 0;
     }
     break;
   default:
     lsx_fail("Undetected bad sample size in write!");
-    exit(2);
+    return 0;
   }
   return done;
 }
