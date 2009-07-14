@@ -5,10 +5,9 @@ Priority: optional
 Maintainer: Pascal Giard <pascal@debian.org>
 Uploaders: Guenter Geiger (Debian/GNU) <geiger@debian.org>
 Build-Depends: debhelper (>= 7), cdbs, libltdl3-dev, libvorbis-dev, libmad0-dev, libgsm1-dev, libsndfile1-dev (>= 1.0.12), libsamplerate0-dev, libavcodec-dev (>= 0.cvs20070301), libavformat-dev, libavutil-dev, libwavpack-dev, libao-dev, libid3tag0-dev, ladspa-sdk, libpng12-dev, libmagic-dev, libpulse-dev, libasound2-dev [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386]
-Standards-Version: 3.8.1
+Standards-Version: 3.8.2
 
 Package: sox
-Section: sound
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libsox-fmt-base, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse
 Suggests: libsox-fmt-all
@@ -29,7 +28,6 @@ Description: Swiss army knife of sound processing
 
 Package: libsox1a
 Architecture: any
-Section: sound
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Recommends: libsox-fmt-base, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse
 Conflicts: libsox0, libsox0a, libsox1
@@ -47,7 +45,6 @@ Description: SoX library of audio effects and processing
 
 Package: libsox-fmt-base
 Architecture: any
-Section: sound
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Replaces: libsox-fmt-flac, libsox-fmt-gsm, libsox-fmt-libsndfile, libsox-fmt-ogg
 Description: Minimal set of SoX format libraries
@@ -59,7 +56,6 @@ Description: Minimal set of SoX format libraries
 
 Package: libsox-fmt-alsa
 Architecture: alpha amd64 arm armel hppa i386 ia64 m68k mips mipsel powerpc s390 sparc armeb lpia m32r ppc64 s390x sh3 sh3eb sh4 sh4eb
-Section: sound
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: SoX alsa format I/O library
  SoX is the swiss army knife of sound processing.
@@ -70,7 +66,6 @@ Description: SoX alsa format I/O library
 
 Package: libsox-fmt-ao
 Architecture: any
-Section: sound
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: SoX Libao format I/O library
  SoX is the swiss army knife of sound processing.
@@ -81,7 +76,6 @@ Description: SoX Libao format I/O library
 
 Package: libsox-fmt-ffmpeg
 Architecture: any
-Section: sound
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: SoX ffmpeg format library
  SoX is the swiss army knife of sound processing.
@@ -92,7 +86,6 @@ Description: SoX ffmpeg format library
 
 Package: libsox-fmt-mp3
 Architecture: any
-Section: sound
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: SoX MP3 format library
  SoX is the swiss army knife of sound processing.
@@ -104,7 +97,6 @@ Description: SoX MP3 format library
 
 Package: libsox-fmt-oss
 Architecture: any
-Section: sound
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: SoX OSS format I/O library
  SoX is the swiss army knife of sound processing.
@@ -116,7 +108,6 @@ Description: SoX OSS format I/O library
 
 Package: libsox-fmt-pulse
 Architecture: any
-Section: sound
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: SoX PulseAudio format I/O library
  SoX is the swiss army knife of sound processing.
@@ -127,7 +118,6 @@ Description: SoX PulseAudio format I/O library
 
 Package: libsox-fmt-all
 Architecture: any
-Section: sound
 Depends: ${misc:Depends}, libsox-fmt-base, libsox-fmt-ffmpeg, libsox-fmt-mp3, libsox-fmt-alsa, libsox-fmt-ao, libsox-fmt-oss, libsox-fmt-pulse
 Description: All SoX format libraries
  SoX is the swiss army knife of sound processing.

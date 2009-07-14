@@ -3,8 +3,12 @@ sox (14.3.0+cvs-1) UNRELEASED; urgency=low
   * CVS Version.
   * [debian/control]:
     - Improved PulseAudio integration.
+    - Bumped standard version to 3.8.2, no changes required.
+    - Removed duplicate section control field, inherited from source.
+  * [debian/changelog]:
+    - Fixed to spelling errors reported by Lintian.
 
- -- Pascal Giard <evilynux@gmail.com>  Fri, 10 Jul 2009 23:15:58 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Tue, 14 Jul 2009 09:57:08 -0400
 
 sox (14.3.0-1) unstable; urgency=low
 
@@ -16,7 +20,7 @@ sox (14.3.0-1) unstable; urgency=low
   * [debian/rules]:
     - Added distro name.
     - Added dynamic library configure flag.
-    - Reenabled libmagic as it's not used by default anymore.
+    - Re-enabled libmagic as it's not used by default anymore.
     - Explicitly disabled amrwb and amrnb.
     - Removed now useless --disable-rpath flag.
     - Made patch target available at all times.
@@ -31,7 +35,7 @@ sox (14.3.0-1) unstable; urgency=low
     - Added documentation on the debian source package. This follows section
       4.14 of the Debian Policy Manual (closes: #522548).
   * [debian/watch]:
-    - Bump version to 3 as recommanded by uscan manpage.
+    - Bump version to 3 as recommended by uscan manpage.
   
  -- Pascal Giard <pascal@debian.org>  Sat, 04 Jul 2009 12:55:41 -0400
 
