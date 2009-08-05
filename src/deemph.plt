@@ -8,7 +8,7 @@
 # License: LGPL (Lesser Gnu Public License)
 #
 # This implements the inverse filter of the optional pre-emphasis stage
-# as defined by ISO 908 (describing the audio cd format).
+# as defined by IEC 60908 (describing the audio cd format).
 #
 # Background: In the early days of audio cds, there were recording
 # problems with noise (for example in classical recordings). The high
