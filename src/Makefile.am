@@ -164,6 +164,20 @@ clean-local:
 distclean-local:
 	$(RM) soxstdint.h
 
+ALL_SOURCES = \
+	$(sox_SOURCES) \
+	$(example0_SOURCES) \
+	$(example1_SOURCES) \
+	$(example2_SOURCES) \
+	$(example3_SOURCES) \
+	$(example4_SOURCES) \
+	$(sox_sample_test_SOURCES) \
+	$(libsox_la_SOURCES)
+
+loc:
+	sloccount $(ALL_SOURCES)
+
+
 # Ideally we would use the "check" target so that "make distcheck"
 # would run the test suite, but an uninstalled libltdl build cannot
 # currently load its formats and effects, so the checks would fail.
