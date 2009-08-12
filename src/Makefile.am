@@ -165,6 +165,8 @@ distclean-local:
 	$(RM) soxstdint.h
 
 ALL_SOURCES = \
+	$(include_HEADERS) \
+	$(nodist_include_HEADERS) \
 	$(sox_SOURCES) \
 	$(example0_SOURCES) \
 	$(example1_SOURCES) \
