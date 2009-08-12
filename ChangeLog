@@ -39,7 +39,7 @@ Audio device drivers:
 
 Effects:
 
-  o Fix [2254919] Silence doesn't trim digitial silence correctly.  (robs)
+  o Fix [2254919] Silence doesn't trim digital silence correctly.  (robs)
 
 Other new features:
 
