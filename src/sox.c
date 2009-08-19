@@ -1628,7 +1628,7 @@ static int process(void)
   optimize_trim();
 
 #ifdef HAVE_TERMIOS_H /* so we can be fully interactive. */
-  if (!interactive && is_player && stdin_is_a_tty) {
+  if (show_progress && !interactive && is_player && stdin_is_a_tty) {
     struct termios modified_termios;
 
     tcgetattr(fileno(stdin), &original_termios);
@@ -1761,7 +1761,7 @@ static void display_supported_effects(void)
 static void usage(char const * message)
 {
   size_t i;
-  static char const * lines[] = {
+  static char const * const lines[] = {
 "SPECIAL FILENAMES (infile, outfile):",
 "-                        Pipe/redirect input/output (stdin/stdout); may need -t",
 "-d, --default-device     Use the default audio device (where available)",
@@ -1989,55 +1989,55 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
   free(text);
 }
 
-static char *getoptstr = "+ab:c:de:fghimnopqr:st:uv:xABC:DGLMNRSTUV::X12348";
+static char const * const getoptstr =
+  "+ab:c:de:fghimnopqr:st:uv:xABC:DGLMNRSTUV::X12348";
 
-static struct option long_options[] =
-  {
-    {"add-comment"     , required_argument, NULL, 0},
-    {"buffer"          , required_argument, NULL, 0},
-    {"combine"         , required_argument, NULL, 0},
-    {"comment-file"    , required_argument, NULL, 0},
-    {"comment"         , required_argument, NULL, 0},
-    {"endian"          , required_argument, NULL, 0},
-    {"input-buffer"    , required_argument, NULL, 0},
-    {"interactive"     ,       no_argument, NULL, 0},
-    {"help-effect"     , required_argument, NULL, 0},
-    {"help-format"     , required_argument, NULL, 0},
-    {"no-glob"         ,       no_argument, NULL, 0},
-    {"plot"            , required_argument, NULL, 0},
-    {"replay-gain"     , required_argument, NULL, 0},
-    {"version"         ,       no_argument, NULL, 0},
-    {"output"          , required_argument, NULL, 0},
-    {"effects-file"    , required_argument, NULL, 0},
-    {"temp"            , required_argument, NULL, 0},
-    {"single-threaded" ,       no_argument, NULL, 0},
-    {"ignore-length"   ,       no_argument, NULL, 0},
-    {"norm"            ,       no_argument, NULL, 0},
-    {"magic"           ,       no_argument, NULL, 0},
-    {"play-rate-arg"   , required_argument, NULL, 0},
-    {"clobber"         ,       no_argument, NULL, 0},
-    {"no-clobber"      ,       no_argument, NULL, 0},
+static struct option const long_options[] = {
+  {"add-comment"     , required_argument, NULL, 0},
+  {"buffer"          , required_argument, NULL, 0},
+  {"combine"         , required_argument, NULL, 0},
+  {"comment-file"    , required_argument, NULL, 0},
+  {"comment"         , required_argument, NULL, 0},
+  {"endian"          , required_argument, NULL, 0},
+  {"input-buffer"    , required_argument, NULL, 0},
+  {"interactive"     ,       no_argument, NULL, 0},
+  {"help-effect"     , required_argument, NULL, 0},
+  {"help-format"     , required_argument, NULL, 0},
+  {"no-glob"         ,       no_argument, NULL, 0},
+  {"plot"            , required_argument, NULL, 0},
+  {"replay-gain"     , required_argument, NULL, 0},
+  {"version"         ,       no_argument, NULL, 0},
+  {"output"          , required_argument, NULL, 0},
+  {"effects-file"    , required_argument, NULL, 0},
+  {"temp"            , required_argument, NULL, 0},
+  {"single-threaded" ,       no_argument, NULL, 0},
+  {"ignore-length"   ,       no_argument, NULL, 0},
+  {"norm"            ,       no_argument, NULL, 0},
+  {"magic"           ,       no_argument, NULL, 0},
+  {"play-rate-arg"   , required_argument, NULL, 0},
+  {"clobber"         ,       no_argument, NULL, 0},
+  {"no-clobber"      ,       no_argument, NULL, 0},
 
-    {"bits"            , required_argument, NULL, 'b'},
-    {"channels"        , required_argument, NULL, 'c'},
-    {"compression"     , required_argument, NULL, 'C'},
-    {"default-device"  ,       no_argument, NULL, 'd'},
-    {"no-dither"       ,       no_argument, NULL, 'D'},
-    {"encoding"        , required_argument, NULL, 'e'},
-    {"help"            ,       no_argument, NULL, 'h'},
-    {"null"            ,       no_argument, NULL, 'n'},
-    {"no-show-progress",       no_argument, NULL, 'q'},
-    {"pipe"            ,       no_argument, NULL, 'p'},
-    {"rate"            , required_argument, NULL, 'r'},
-    {"reverse-bits"    ,       no_argument, NULL, 'X'},
-    {"reverse-nibbles" ,       no_argument, NULL, 'N'},
-    {"show-progress"   ,       no_argument, NULL, 'S'},
-    {"type"            , required_argument, NULL, 't'},
-    {"volume"          , required_argument, NULL, 'v'},
-    {"guard"           ,       no_argument, NULL, 'G'},
+  {"bits"            , required_argument, NULL, 'b'},
+  {"channels"        , required_argument, NULL, 'c'},
+  {"compression"     , required_argument, NULL, 'C'},
+  {"default-device"  ,       no_argument, NULL, 'd'},
+  {"no-dither"       ,       no_argument, NULL, 'D'},
+  {"encoding"        , required_argument, NULL, 'e'},
+  {"help"            ,       no_argument, NULL, 'h'},
+  {"null"            ,       no_argument, NULL, 'n'},
+  {"no-show-progress",       no_argument, NULL, 'q'},
+  {"pipe"            ,       no_argument, NULL, 'p'},
+  {"rate"            , required_argument, NULL, 'r'},
+  {"reverse-bits"    ,       no_argument, NULL, 'X'},
+  {"reverse-nibbles" ,       no_argument, NULL, 'N'},
+  {"show-progress"   ,       no_argument, NULL, 'S'},
+  {"type"            , required_argument, NULL, 't'},
+  {"volume"          , required_argument, NULL, 'v'},
+  {"guard"           ,       no_argument, NULL, 'G'},
 
-    {NULL, 0, NULL, 0}
-  };
+  {NULL, 0, NULL, 0}
+};
 
 static int opt_index(int val)
 {

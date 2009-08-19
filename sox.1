@@ -131,8 +131,9 @@ plays a synthesised `A minor seventh' chord with a pipe-organ sound,
 .EE
 records half an hour of stereo audio, and
 .EX
-   rec -M take1.aiff take1-dub.aiff
+   play -q take1.aiff & rec -M take1.aiff take1-dub.aiff
 .EE
+(with POSIX shell and where supported by hardware)
 records a new track in a multi-track recording.  Finally,
 .EX
 .ne 3
