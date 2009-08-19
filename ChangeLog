@@ -5,7 +5,7 @@ This file contains a list of all changes starting after the release of
 sox-11gamma, followed by a list of prior authors and features.
 
 
-sox-14.x.x	2009-xx-xx
+sox-14.0.1	2009-xx-xx
 ----------
 
 Previously deprecated features that have been removed in this release:
@@ -46,6 +46,9 @@ Other new features:
   o Added libSoX example #4: concatenating audio files.  (robs)
 
 Other bug fixes:
+
+  o Fix build so that grouped files (e.g. play -r 6k "*.vox" plays all
+    at 6k) works.  (robs)
 
 Internal improvements:
 
