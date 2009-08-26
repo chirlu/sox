@@ -35,6 +35,8 @@ LibSoX interface changes:
 
 File formats:
 
+  o CVSD encode/decode speed-ups.  (Kimberly Rockwell, P. Chaintreuil)
+
 Audio device drivers:
 
   o Add native windows audio output driver. (Pavel Karneliuk)

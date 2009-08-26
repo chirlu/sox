@@ -27,6 +27,18 @@
  * June 1, 1998 - Chris Bagwell (cbagwell@sprynet.com)
  *   Fixed compile warnings reported by Kjetil Torgrim Homme
  *   <kjetilho@ifi.uio.no>
+ *
+ * June 20, 2006 - Kimberly Rockwell (pyxis13317 (at) yahoo.com)
+ *   Speed optimization: Unrolled float_conv() loop in seperate
+ *     functions for encoding and decoding.  15% speed up decoding.
+ *
+ * Aug. 24, 2009 - P. Chaintreuil (sox-cvsd-peep (at) parallaxshift.com)
+ *   Speed optimization: Replaced calls to memmove() with a 
+ *     mirrored circular buffer.  This doubles the size of the
+ *     dec.output_filter (48 -> 96 floats) and enc.input_filter
+ *     (16 -> 32 floats), but keeps the memory from having to
+ *     be copied so many times.  56% speed increase decoding;
+ *     less than 5% encoding speed increase.
  */
 
 #include "sox_i.h"
@@ -47,12 +59,102 @@ static int debug_count = 0;
 
 /* ---------------------------------------------------------------------- */
 
+/* This float_conv() function is not used as more specialized/optimized
+ * versions exist below.  However, those new versions are tied to
+ * very percise filters defined in cvsdfilt.h.  If those are modified
+ * or different filters are found to be required, this function may
+ * be needed.  Thus I leave it here for possible future use, but commented
+ * out to avoid compiler warnings about it not being used.
 static float float_conv(float const *fp1, float const *fp2,int n)
 {
         float res = 0;
         for(; n > 0; n--)
                 res += (*fp1++) * (*fp2++);
         return res;
+}
+*/
+
+static float float_conv_enc(float const *fp1, float const *fp2)
+{
+    /* This is a specialzed version of float_conv() for encoding
+     * which simply assumes a CVSD_ENC_FILTERLEN (16) length of
+     * the two arrays and unrolls that loop.
+     *
+     * fp1 should be the enc.input_filter array and must be 
+     * CVSD_ENC_FILTERLEN (16) long.
+     *
+     * fp2 should be one of the enc_filter_xx_y() tables listed
+     * in cvsdfilt.h.  At minimum, fp2 must be CVSD_ENC_FILTERLEN
+     * (16) entries long.
+     */
+    float res = 0;
+
+    /* unrolling loop */ 
+    res += fp1[0] * fp2[0];
+    res += fp1[1] * fp2[1];
+    res += fp1[2] * fp2[2];
+    res += fp1[3] * fp2[3];
+    res += fp1[4] * fp2[4];
+    res += fp1[5] * fp2[5];
+    res += fp1[6] * fp2[6];
+    res += fp1[7] * fp2[7];
+    res += fp1[8] * fp2[8];
+    res += fp1[9] * fp2[9];
+    res += fp1[10] * fp2[10];
+    res += fp1[11] * fp2[11];
+    res += fp1[12] * fp2[12];
+    res += fp1[13] * fp2[13];
+    res += fp1[14] * fp2[14];
+    res += fp1[15] * fp2[15];
+
+    return res;
+}
+
+static float float_conv_dec(float const *fp1, float const *fp2)
+{
+    /* This is a specialzed version of float_conv() for decoding
+     * which assumes a specific length and structure to the data
+     * in fp2.
+     *
+     * fp1 should be the dec.output_filter array and must be 
+     * CVSD_DEC_FILTERLEN (48) long.
+     *
+     * fp2 should be one of the dec_filter_xx() tables listed
+     * in cvsdfilt.h.  fp2 is assumed to be CVSD_DEC_FILTERLEN
+     * (48) entries long, is assumed to have 0.0 in the last
+     * entry, and is a symmetrical mirror around fp2[23] (ie,
+     * fp2[22] == fp2[24], fp2[0] == fp2[47], etc).
+     */
+    float res = 0;
+
+    /* unrolling loop, also taking advantage of the symmetry
+    * of the sampling rate array*/
+    res += (fp1[0] + fp1[46]) * fp2[0];
+    res += (fp1[1] + fp1[45]) * fp2[1];
+    res += (fp1[2] + fp1[44]) * fp2[2];
+    res += (fp1[3] + fp1[43]) * fp2[3];
+    res += (fp1[4] + fp1[42]) * fp2[4];
+    res += (fp1[5] + fp1[41]) * fp2[5];
+    res += (fp1[6] + fp1[40]) * fp2[6];
+    res += (fp1[7] + fp1[39]) * fp2[7];
+    res += (fp1[8] + fp1[38]) * fp2[8];
+    res += (fp1[9] + fp1[37]) * fp2[9];
+    res += (fp1[10] + fp1[36]) * fp2[10];
+    res += (fp1[11] + fp1[35]) * fp2[11];
+    res += (fp1[12] + fp1[34]) * fp2[12];
+    res += (fp1[13] + fp1[33]) * fp2[13];
+    res += (fp1[14] + fp1[32]) * fp2[14];
+    res += (fp1[15] + fp1[31]) * fp2[15];
+    res += (fp1[16] + fp1[30]) * fp2[16];
+    res += (fp1[17] + fp1[29]) * fp2[17];
+    res += (fp1[18] + fp1[28]) * fp2[18];
+    res += (fp1[19] + fp1[27]) * fp2[19];
+    res += (fp1[20] + fp1[26]) * fp2[20];
+    res += (fp1[21] + fp1[25]) * fp2[21];
+    res += (fp1[22] + fp1[24]) * fp2[22];
+    res += (fp1[23]) * fp2[23];
+
+    return res;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -124,8 +226,10 @@ int lsx_cvsdstartread(sox_format_t * ft)
         /*
          * zero the filter
          */
-        for(fp1 = p->c.dec.output_filter, i = CVSD_DEC_FILTERLEN; i > 0; i--)
+        for(fp1 = p->c.dec.output_filter, i = CVSD_DEC_FILTERLEN*2; i > 0; i--)
                 *fp1++ = 0;
+        /* initialize mirror circular buffer offset to anything sane. */
+        p->c.dec.offset = CVSD_DEC_FILTERLEN - 1;
 
         return (SOX_SUCCESS);
 }
@@ -145,9 +249,11 @@ int lsx_cvsdstartwrite(sox_format_t * ft)
         /*
          * zero the filter
          */
-        for(fp1 = p->c.enc.input_filter, i = CVSD_ENC_FILTERLEN; i > 0; i--)
+        for(fp1 = p->c.enc.input_filter, i = CVSD_ENC_FILTERLEN*2; i > 0; i--)
                 *fp1++ = 0;
         p->c.enc.recon_int = 0;
+        /* initialize mirror circular buffer offset to anything sane. */
+        p->c.enc.offset = CVSD_ENC_FILTERLEN - 1;
 
         return(SOX_SUCCESS);
 }
@@ -205,21 +311,32 @@ size_t lsx_cvsdread(sox_format_t * ft, sox_sample_t *buf, size_t nsamp)
                 p->com.mla_int *= p->com.mla_tc0;
                 if ((p->com.overload == 0) || (p->com.overload == 7))
                         p->com.mla_int += p->com.mla_tc1;
-                memmove(p->c.dec.output_filter+1, p->c.dec.output_filter,
-                        sizeof(p->c.dec.output_filter)-sizeof(float));
+
+                /* shift output filter window in mirror cirular buffer. */
+                if (p->c.dec.offset != 0)
+                        --p->c.dec.offset;
+                else p->c.dec.offset = CVSD_DEC_FILTERLEN - 1;
+                /* write into both halves of the mirror circular buffer */
                 if (p->com.overload & 1)
-                        p->c.dec.output_filter[0] = p->com.mla_int;
+                {
+                        p->c.dec.output_filter[p->c.dec.offset] = p->com.mla_int;
+                        p->c.dec.output_filter[p->c.dec.offset + CVSD_DEC_FILTERLEN] = p->com.mla_int;
+                }
                 else
-                        p->c.dec.output_filter[0] = -p->com.mla_int;
+                {
+                        p->c.dec.output_filter[p->c.dec.offset] = -p->com.mla_int;
+                        p->c.dec.output_filter[p->c.dec.offset + CVSD_DEC_FILTERLEN] = -p->com.mla_int;
+                }
+
                 /*
                  * check if the next output is due
                  */
                 p->com.phase += p->com.phase_inc;
                 if (p->com.phase >= 4) {
-                        oval = float_conv(p->c.dec.output_filter,
-                                          (p->cvsd_rate < 24000) ?
-                                          dec_filter_16 : dec_filter_32,
-                                          CVSD_DEC_FILTERLEN);
+                        oval = float_conv_dec(
+                                p->c.dec.output_filter + p->c.dec.offset,
+                                (p->cvsd_rate < 24000) ?
+                                dec_filter_16 : dec_filter_32);
                         lsx_debug_more("input %d %f\n", debug_count, p->com.mla_int);
                         lsx_debug_more("recon %d %f\n", debug_count, oval);
                         debug_count++;
@@ -251,19 +368,27 @@ size_t lsx_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp)
                 if (p->com.phase >= 4) {
                         if (done >= nsamp)
                                 return done;
-                        memmove(p->c.enc.input_filter+1, p->c.enc.input_filter,
-                                sizeof(p->c.enc.input_filter)-sizeof(float));
-                        p->c.enc.input_filter[0] = (*buf++) /
-                                ((float)SOX_SAMPLE_MAX);
+
+                        /* shift input filter window in mirror cirular buffer. */
+                        if (p->c.enc.offset != 0)
+                                --p->c.enc.offset;
+                        else p->c.enc.offset = CVSD_ENC_FILTERLEN - 1;
+
+                        /* write into both halves of the mirror circular buffer */
+                        p->c.enc.input_filter[p->c.enc.offset] = 
+                                 p->c.enc.input_filter[p->c.enc.offset 
+                                     + CVSD_ENC_FILTERLEN] = 
+                                                (*buf++) /
+                                                    ((float)SOX_SAMPLE_MAX);
                         done++;
                 }
                 p->com.phase &= 3;
                 /* insert input filter here! */
-                inval = float_conv(p->c.enc.input_filter,
+                inval = float_conv_enc(
+                                   p->c.enc.input_filter + p->c.enc.offset,
                                    (p->cvsd_rate < 24000) ?
                                    (enc_filter_16[(p->com.phase >= 2)]) :
-                                   (enc_filter_32[p->com.phase]),
-                                   CVSD_ENC_FILTERLEN);
+                                   (enc_filter_32[p->com.phase]));
                 /*
                  * encode one bit
                  */

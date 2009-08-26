@@ -36,11 +36,15 @@ typedef struct {
   } com;
   union {
     struct {
-      float output_filter[CVSD_DEC_FILTERLEN];
+      /* mirror circular buffer */
+      float output_filter[CVSD_DEC_FILTERLEN*2];
+      unsigned offset; /* into output_filter; always in first half */
     } dec;
     struct {
       float recon_int;
-      float input_filter[CVSD_ENC_FILTERLEN];
+      /* mirror circular buffer */
+      float input_filter[CVSD_ENC_FILTERLEN*2];
+      unsigned offset; /* into input_filter; always in first half */
     } enc;
   } c;
   struct {
