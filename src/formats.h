@@ -99,6 +99,9 @@
 #if defined HAVE_PULSEAUDIO && (defined STATIC_PULSEAUDIO || !defined HAVE_LIBLTDL)
   FORMAT(pulseaudio)
 #endif
+#if defined HAVE_WAVEAUDIO && (defined STATIC_WAVEAUDIO || !defined HAVE_LIBLTDL)
+  FORMAT(waveaudio)
+#endif
 #if defined HAVE_SNDIO && (defined STATIC_SNDIO || !defined HAVE_LIBLTDL)
   FORMAT(sndio)
 #endif

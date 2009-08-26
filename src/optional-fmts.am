@@ -144,6 +144,18 @@ else
 endif
 endif
 
+if HAVE_WAVEAUDIO
+if STATIC_WAVEAUDIO
+  libsox_la_SOURCES += waveaudio.c
+  libsox_la_LIBADD += @WAVEAUDIO_LIBS@
+  sox_LDADD += @WAVEAUDIO_LIBS@
+else
+  libsox_fmt_waveaudio_la_SOURCES = waveaudio.c
+  libsox_fmt_waveaudio_la_LIBADD = libsox.la @WAVEAUDIO_LIBS@
+  pkglib_LTLIBRARIES += libsox_fmt_waveaudio.la
+endif
+endif
+
 if HAVE_SNDIO
 if STATIC_SNDIO
   libsox_la_SOURCES += sndio.c

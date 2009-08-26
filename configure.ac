@@ -428,6 +428,8 @@ AC_OPTIONAL_FORMAT(ao, AO, [AC_CHECK_HEADER(ao/ao.h, [AC_CHECK_LIB(ao, ao_play, 
 AC_OPTIONAL_FORMAT(pulseaudio, PULSEAUDIO, [AC_CHECK_HEADER(pulse/simple.h, [AC_CHECK_LIB(pulse, pa_simple_new, PULSEAUDIO_LIBS="$PULSEAUDIO_LIBS -lpulse -lpulse-simple",using_pulseaudio=no,"-lpulse-simple")], using_pulseaudio=no)])
 
 
+AC_OPTIONAL_FORMAT(waveaudio, WAVEAUDIO, [AC_CHECK_HEADER(mmsystem.h, [WAVEAUDIO_LIBS="$WAVEAUDIO_LIBS -lwinmm"], using_waveaudio=no)])
+
 
 AC_OPTIONAL_FORMAT(sndfile, SNDFILE, [SOX_PATH_SNDFILE(, using_sndfile=no)])
 AC_SUBST(SNDFILE_CFLAGS)
@@ -543,6 +545,7 @@ echo "sndio (OpenBSD)............$using_sndio"
 echo "oss........................$using_oss"
 echo "pulseaudio.................$using_pulseaudio"
 echo "sunaudio...................$using_sunaudio"
+echo "waveaudio..................$using_waveaudio"
 echo
 echo "OPTIONAL FILE FORMATS"
 echo "amrnb......................$using_amrnb"

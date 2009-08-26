@@ -5,7 +5,7 @@ This file contains a list of all changes starting after the release of
 sox-11gamma, followed by a list of prior authors and features.
 
 
-sox-14.0.1	2009-xx-xx
+sox-14.3.1	2009-xx-xx
 ----------
 
 Previously deprecated features that have been removed in this release:
@@ -36,6 +36,8 @@ LibSoX interface changes:
 File formats:
 
 Audio device drivers:
+
+  o Add native windows audio output driver. (Pavel Karneliuk)
 
 Effects:
 
