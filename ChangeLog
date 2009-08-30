@@ -35,6 +35,7 @@ LibSoX interface changes:
 
 File formats:
 
+  o New Grandstream ring-tone (gsrt) format.  (robs)
   o CVSD encode/decode speed-ups.  (Kimberly Rockwell, P. Chaintreuil)
 
 Audio device drivers:

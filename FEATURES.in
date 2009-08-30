@@ -13,6 +13,7 @@ The current release handles the following audio file formats:
 * AVR files
 * CDDA (Compact Disc Digital Audio format)
 * CVS and VMS files (continuous variable slope)
+* Grandstream ring-tone files
 * GSM files
 * HTK files
 * LPC-10 files

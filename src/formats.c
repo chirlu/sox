@@ -48,6 +48,7 @@ static char const * auto_detect_format(sox_format_t * ft, char const * ext)
   CHECK(voc   , 0, 0, ""     , 0, 20, "Creative Voice File\x1a")
   CHECK(smp   , 0, 0, ""     , 0, 17, "SOUND SAMPLE DATA")
   CHECK(wve   , 0, 0, ""     , 0, 15, "ALawSoundFile**")
+  CHECK(gsrt  , 0, 0, ""     , 16, 9, "ring.bin")
   CHECK(amr-wb, 0, 0, ""     , 0,  9, "#!AMR-WB\n")
   CHECK(prc   , 0, 0, ""     , 0,  8, "\x37\x00\x00\x10\x6d\x00\x00\x10")
   CHECK(sph   , 0, 0, ""     , 0,  7, "NIST_1A")
@@ -811,7 +812,7 @@ sox_format_t * sox_open_write(
         lsx_fail("permission to overwrite `%s' denied", path);
         goto error;
       }
-      if ((ft->fp = fopen(path, "wb")) == NULL) {
+      if ((ft->fp = fopen(path, "w+b")) == NULL) {
         lsx_fail("can't open output file `%s': %s", path, strerror(errno));
         goto error;
       }

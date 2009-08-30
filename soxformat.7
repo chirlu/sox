@@ -325,6 +325,16 @@ An alias for the
 .B .u8
 format.
 .TP
+.B .gsrt
+Grandstream ring-tone files.
+Whilst this file format can contain A-Law, \(*m-law, GSM, G.722,
+G.723, G.726, G.728, or iLBC encoded audio, SoX supports reading and
+writing only A-Law and \(*m-law.  E.g.
+.EX
+   sox music.wav -t gsrt ring.bin
+   play ring.bin
+.EE
+.TP
 \&\fB.gsm\fR (optional; also with \fB\-t sndfile\fR)
 GSM 06.10 Lossy Speech Compression.
 A lossy format for compressing speech which is used in the

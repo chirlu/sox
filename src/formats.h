@@ -29,6 +29,7 @@
   FORMAT(dvms)
   FORMAT(f4)
   FORMAT(f8)
+  FORMAT(gsrt)
   FORMAT(hcom)
   FORMAT(htk)
   FORMAT(ima)

@@ -41,22 +41,22 @@ set(effects_srcs
   dft_filter      flanger         pan             splice
 )
 set(formats_srcs
-  8svx            dat             ima-fmt         s3-fmt          u3-fmt
-  adpcm           dvms-fmt        ima_rw          s4-fmt          u4-fmt
-  adpcms          f4-fmt          la-fmt          sf              ul-fmt
-  aifc-fmt        f8-fmt          lpc10.c         skelform        voc
-  aiff            g711            lu-fmt          smp             vox
-  aiff-fmt        g721            maud            sounder         vox-fmt
-  al-fmt          g723_24         nulfile         soundtool       wav
-  au              g723_40         prc             sox-fmt         wve
-  avr             g72x            raw             sphere          xa
-  cdr             gsm.c           raw-fmt         tx16w
-  cvsd            hcom            s1-fmt          u1-fmt
-  cvsd-fmt        htk             s2-fmt          u2-fmt
+  8svx            dat             htk             s2-fmt          u2-fmt
+  adpcm           dvms-fmt        ima-fmt         s3-fmt          u3-fmt
+  adpcms          f4-fmt          ima_rw          s4-fmt          u4-fmt
+  aifc-fmt        f8-fmt          la-fmt          sf              ul-fmt
+  aiff            g711            lpc10.c         skelform        voc
+  aiff-fmt        g721            lu-fmt          smp             vox
+  al-fmt          g723_24         maud            sounder         vox-fmt
+  au              g723_40         nulfile         soundtool       wav
+  avr             g72x            prc             sox-fmt         wve
+  cdr             gsm.c           raw             sphere          xa
+  cvsd            gsrt            raw-fmt         tx16w
+  cvsd-fmt        hcom            s1-fmt          u1-fmt
 )
 
 # Uncomment for bit-rot detection on linux
-#set(formats_srcs ${formats_srcs} coreaudio sndio sunaudio)
+#set(formats_srcs ${formats_srcs} coreaudio sndio sunaudio waveaudio)
 
 add_library(lib${PROJECT_NAME}
   effects                 formats_i               libsox_i
