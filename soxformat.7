@@ -470,6 +470,19 @@ because Psion Record seems to insist on frames of 800 samples or
 fewer, so that the ADPCM CODEC has to be reset at every 800 frames,
 which causes the sound to glitch every tenth of a second.
 .TP
+\fBpulseaudio\fR (optional)
+PulseAudio driver; supports both playing and recording of audio.
+PulseAudio is a cross platform networked sound server.  
+If a file name is specified with this driver, it is ignored.  Examples:
+.EX
+	sox infile -t pulseaudio
+	sox infile -t pulseaudio default
+.EE
+See also
+.BR play (1)
+and
+.BR rec (1).
+.TP
 \&\fB.pvf\fR (optional)
 Portable Voice Format.
 .TP
@@ -636,6 +649,21 @@ Big endian versions of RIFF files, called RIFX, are also supported.
 To write a RIFX file, use the
 .B \-B
 option with the output file options.
+.TP
+\fBwaveaudio\fR (optional)
+Wave Audio device driver; supports only playing of audio.
+This is a native Windows audio driver.  The OSS driver is also
+often used when compiled with Cygwin under Windows since it
+has read and write support.
+If a file name is specified with this driver, it is ignored.  Examples:
+.EX
+	sox infile -t waveaudio
+	sox infile -t waveaudio default
+.EE
+See also
+.BR play (1)
+and
+.BR rec (1).
 .TP
 .B .wavpcm
 A non-standard, but widely used, variant of

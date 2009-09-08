@@ -2353,7 +2353,8 @@ static char const * device_name(char const * const type)
   else if (!strcmp(type, "oss" ) || !strcmp(type, "ossdsp"))
     name = "/dev/dsp";
   else if (!strcmp(type, "alsa") || !strcmp(type, "ao") || !strcmp(type,"sndio")
-        || !strcmp(type, "coreaudio") || !strcmp(type, "pulseaudio"))
+        || !strcmp(type, "coreaudio") || !strcmp(type, "pulseaudio")
+	|| !strcmp(type, "waveaudio"))
     name = "default";
   
   return name? from_env? from_env : name : NULL;
@@ -2369,6 +2370,7 @@ static char const * set_default_device(file_t * f)
   if (!f->filetype && sox_find_format("pulseaudio" , sox_false)) f->filetype = "pulseaudio";
   if (!f->filetype && sox_find_format("sunau",sox_false)) f->filetype = "sunau";
   if (!f->filetype && sox_find_format("sndio", sox_false)) f->filetype = "sndio";
+  if (!f->filetype && sox_find_format("waveaudio" , sox_false)) f->filetype = "waveaudio";
   if (!f->filetype && sox_find_format("ao"  , sox_false) && file_count) /*!rec*/
     f->filetype = "ao";
 
