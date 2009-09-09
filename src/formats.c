@@ -393,7 +393,9 @@ static FILE * xfopen(char const * identifier, char const * mode, lsx_io_type * i
  * Works by resetting the FILE buffer pointer */
 static void UNUSED rewind_pipe(FILE * fp)
 {
-#if defined _NEWLIB_VERSION || defined __APPLE__
+/* _FSTDIO is for Torek stdio (i.e. most BSD-derived libc's)
+ * In theory, we no longer need to check _NEWLIB_VERSION or __APPLE__ */
+#if defined _FSTDIO || defined _NEWLIB_VERSION || defined __APPLE__
   fp->_p -= AUTO_DETECT_SIZE;
   fp->_r += AUTO_DETECT_SIZE;
 #elif defined __GLIBC__

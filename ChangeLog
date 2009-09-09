@@ -50,6 +50,8 @@ Other bug fixes:
 
   o Fix build so that grouped files (e.g. play -r 6k "*.vox" plays all
     at 6k) works.  (robs)
+  o Fix build to support auto file type detection with pipes on FreeBSD
+    and elsewhere.  (Dan Nelson)
   o Fix simultaneous play & rec not working.  (robs)
   o Fix multi-threading bug on Windows OS; also, change default to
     single-threaded.
