@@ -934,6 +934,14 @@ then exit without actually processing any audio.  E.g.
 Run in quiet mode when SoX wouldn't otherwise do so;
 this is the opposite of the \fB\-S\fR option.
 .TP
+\fB\-R\fR
+Run in `repeatable' mode.  When this option is given, where
+applicable, SoX will embed a fixed time-stamp in the output file (e.g.
+\fBAIFF\fR) and will `seed' pseudo random number generators (e.g.
+\fBdither\fR) with a fixed number, thus ensuring that successive SoX
+invocations with the same inputs and the same parameters yield the
+same output.
+.TP
 \fB\-\-replay\-gain track\fR\^|\^\fBalbum\fR\^|\^\fBoff\fR
 Select whether or not to apply replay-gain adjustment to input files.
 The default is

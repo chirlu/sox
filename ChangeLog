@@ -29,6 +29,8 @@ Previously deprecated features (to be removed in future):
 
 LibSoX interface changes:
 
+  None.
+
 File formats:
 
   o New Grandstream ring-tone (gsrt) format.  (robs)
@@ -42,7 +44,7 @@ Audio device drivers:
 
 Effects:
 
-  o Fix [2254919] Silence doesn't trim digital silence correctly.  (robs)
+  o Fix [2254919] silence doesn't trim digital silence correctly.  (robs)
 
 Other new features:
 
@@ -58,8 +60,11 @@ Other bug fixes:
   o Fix multi-threading bug on Windows OS; also, change default to
     single-threaded.
   o Fix mistaken file size with pipe input on Windows.  (Doug Cook)
+  o Fix missing documentation for -R (repeatable).  (robs)
 
 Internal improvements:
+
+  None.
 
 
 sox-14.3.0	2009-06-14
