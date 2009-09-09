@@ -17,12 +17,8 @@ Previously deprecated features (to be removed in future):
   Deprec-  Feature    [O(ption)]                           Removal
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
   -------  ----------------------  ----------------------  -------
-  14.2.0   E key alias             pitch                   14.3.0
-  14.2.0   E pan                   ~= mixer/remix          14.3.0
-  14.1.0   F wve (native)          wve (libsndfile)        2009-07-29
-  14.1.0   Behaviour whereby       soxi                    2009-07-29
-           sox -V file(s) -n
-           doesn't read to EOF.
+  14.2.0   E key alias             pitch                   14.3.1
+  14.2.0   E pan                   ~= mixer/remix          14.3.1
   14.3.0   F flac: libFLAC 1.1.2,3 libFLAC > 1.1.3         2009-12-14
   14.3.0   PLAY_RATE_ARG           SOX_OPTS                2009-12-14
   14.3.0   E norm -b, norm -i      gain -B, gain -en       2010-06-14
@@ -55,6 +51,9 @@ Other bug fixes:
   o Fix build so that grouped files (e.g. play -r 6k "*.vox" plays all
     at 6k) works.  (robs)
   o Fix simultaneous play & rec not working.  (robs)
+  o Fix multi-threading bug on Windows OS; also, change default to
+    single-threaded.
+  o Fix mistaken file size with pipe input on Windows.  (Doug Cook)
 
 Internal improvements:
 
