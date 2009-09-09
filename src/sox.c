@@ -190,7 +190,7 @@ static sox_sample_t omax[2], omin[2];
 
 /* Multi-processing */
 
-static sox_bool single_threaded = sox_false;
+static sox_bool single_threaded = sox_true;
 
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
@@ -1790,6 +1790,8 @@ static void usage(char const * message)
 "-m, --combine mix        Mix multiple input files (instead of concatenating)",
 "-M, --combine merge      Merge multiple input files (instead of concatenating)",
 "--magic                  Use `magic' file-type detection",
+"--multi-threaded         Enable parallel effects channels processing (where",
+"                         available)",
 "--norm                   Guard (see --guard) & normalise",
 "--play-rate-arg ARG      Default `rate' argument for auto-resample with `play'",
 "--plot gnuplot|octave    Generate script to plot response of filter effect",
@@ -2017,6 +2019,7 @@ static struct option const long_options[] = {
   {"play-rate-arg"   , required_argument, NULL, 0},
   {"clobber"         ,       no_argument, NULL, 0},
   {"no-clobber"      ,       no_argument, NULL, 0},
+  {"multi-threaded"  ,       no_argument, NULL, 0},
 
   {"bits"            , required_argument, NULL, 'b'},
   {"channels"        , required_argument, NULL, 'c'},
@@ -2191,6 +2194,7 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       case 21: play_rate_arg = strdup(lsx_optarg); break;
       case 22: no_clobber = sox_false; break;
       case 23: no_clobber = sox_true; break;
+      case 24: single_threaded = sox_false; break;
       }
       break;
 

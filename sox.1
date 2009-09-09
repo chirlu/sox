@@ -862,6 +862,15 @@ combining methods.
 If SoX has been built with the optional `libmagic' library, then this
 option can be given to enable its use in helping to detect audio file types.
 .TP
+\fB\-\-multi-threaded\fR | \fB\-\-single-threaded\fR
+By default, SoX is `single threaded'.
+If the \fB\-\-multi-threaded\fR option is given however then SoX
+will process audio channels for most multi-channel
+effects in parallel on hyper-threading/multi-core architectures; this
+may reduce processing time, though sometimes it may be necessary to use
+this option in conjuction with a larger buffer size than is the default
+(e.g. 131072; see \fB\-\-buffer\fR above).
+.TP
 \fB\-\-no\-clobber\fR
 Prompt before overwriting an existing file with the same name as that
 given for the output file.
@@ -973,12 +982,6 @@ of the meter if this is below 6dB.
 .SP
 This option is enabled by default when using
 SoX to play or record audio.
-.TP
-\fB\-\-single-threaded\fR
-By default, SoX processes audio channels for most multi-channel
-effects in parallel on hyper-threading/multi-core architectures.  In
-case this should ever cause a problem, parallel processing can be
-disabled by giving this option.
 .TP
 \fB\-\-temp\fI DIRECTORY\fR
 Specify that any temporary files should be created in the given
