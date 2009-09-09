@@ -34,8 +34,12 @@ static int select_format(sox_encoding_t * e, unsigned * bits, snd_pcm_format_mas
 {
   unsigned does[3], i, j, k = (*bits >> 3) - 1;
   
-  if (k > 2 || (*e != SOX_ENCODING_SIGN2 && *e != SOX_ENCODING_UNSIGNED))
-    return -1;
+  if (k > 2 || (*e != SOX_ENCODING_SIGN2 && *e != SOX_ENCODING_UNSIGNED)) {
+    lsx_warn("invalid encoding; trying 24-bit signed");
+    *bits = 24;
+    *e = SOX_ENCODING_SIGN2;
+    k = 2;
+  }
   for (i = 0; i < 3; ++i) for (does[i] = 0, j = 0; j < 2; ++j)
     does[i] |= snd_pcm_format_mask_test(mask, encs[j][i]);
   if (!does[k])
