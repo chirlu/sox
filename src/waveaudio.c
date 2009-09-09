@@ -91,12 +91,14 @@ int stop_write(sox_format_t* ft)
 
     while(WAVERR_STILLPLAYING == waveOutClose(priv->waveout))
     {
-/*        // terminate
+#if 0
+        /* terminate */
         if( priv->is_cancelled() )
         {
             waveOutReset(priv->waveout);
         }
-        else priv->update_pos();*/
+        else priv->update_pos();
+#endif
         Sleep(50);
     }
 
@@ -123,7 +125,7 @@ static size_t write(sox_format_t * ft, const sox_sample_t* buf, size_t len)
 
     while(header == NULL)
     {
-        // find first free header
+        /* find first free header */
         for(i=0; i<num_buffers; i++)
         {
             if(priv->ptr_wavheader[i].dwFlags == 0 || priv->ptr_wavheader[i].dwFlags & WHDR_DONE )
@@ -133,7 +135,7 @@ static size_t write(sox_format_t * ft, const sox_sample_t* buf, size_t len)
             }
         }
 
-        if(header == NULL) // not found free data blocks
+        if(header == NULL) /* not found free data blocks */
         {
             while(WAIT_TIMEOUT == WaitForSingleObject(priv->need_more_data_blocks, 50))
             {
