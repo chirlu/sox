@@ -61,6 +61,7 @@ Other bug fixes:
     single-threaded.
   o Fix mistaken file size with pipe input on Windows.  (Doug Cook)
   o Fix missing documentation for -R (repeatable).  (robs)
+  o Fix memory leak of format private data.  (Slawomir Testowy)
 
 Internal improvements:
 
