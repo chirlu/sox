@@ -2534,6 +2534,33 @@ static int soxi1(soxi_t const * type, char * filename)
   return !!sox_close(ft);
 }
 
+static void soxi_usage(int return_code)
+{
+  display_SoX_version(stdout);
+  printf(
+    "\n"
+    "Usage: soxi [-V[level]] [-T] [-t|-r|-c|-s|-d|-D|-b|-B|-e|-a] infile1 ...\n"
+    "\n"
+    "-V[n]\tIncrement or set verbosity level (default is 2)\n"
+    "-T\tWith -s, -d or -D, display the total across all given files\n"
+    "\n"
+    "-t\tShow detected file-type\n"
+    "-r\tShow sample-rate\n"
+    "-c\tShow number of channels\n"
+    ); printf(
+    "-s\tShow number of samples (0 if unavailable)\n"
+    "-d\tShow duration in hours, minutes and seconds (0 if unavailable)\n"
+    "-D\tShow duration in seconds (0 if unavailable)\n"
+    "-b\tShow number of bits per sample\n"
+    "-B\tShow the bitrate averaged over the whole file (0 if unavailable)\n"
+    "-e\tShow the name of the audio encoding\n"
+    "-a\tShow file comments (annotations) if available\n"
+    "\n"
+    "With no options, as much information as is available is shown\n"
+    );
+  exit(return_code);
+}
+
 static int soxi(int argc, char * const * argv)
 {
   static char const opts[] = "trcsdDbBea?TV::";
@@ -2541,6 +2568,8 @@ static int soxi(int argc, char * const * argv)
   int opt, num_errors = 0;
   sox_bool do_total = sox_false;
 
+  if (argc < 2)
+    soxi_usage(0);
   while ((opt = lsx_getopt(argc, argv, opts)) > 0) /* act only on last option */
     if (opt == 'V') {
       int i; /* sscanf silently accepts negative numbers for %u :( */
@@ -2558,10 +2587,9 @@ static int soxi(int argc, char * const * argv)
     }
     else if (opt == 'T')
       do_total = sox_true;
-    else if ((type = 1 + (strchr(opts, opt) - opts)) > Annotation) {
-      printf("Usage: soxi [-V[level]] [-T] [-t|-r|-c|-s|-d|-D|-b|-B|-e|-a] infile1 ...\n");
-      return -1;
-    }
+    else if ((type = 1 + (strchr(opts, opt) - opts)) > Annotation)
+      soxi_usage(1);
+
   if (type == Full)
     do_total = sox_true;
   else if (do_total && (type < Samples || type > Duration_secs)) {

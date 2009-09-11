@@ -49,6 +49,7 @@ Effects:
 Other new features:
 
   o Added libSoX example #4: concatenating audio files.  (robs)
+  o Show soxi version & usage information when no args given.  (robs)
 
 Other bug fixes:
 
