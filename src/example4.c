@@ -45,7 +45,7 @@ int main(int argc, char * argv[])
 
     /* The (maximum) number of samples that we shall read/write at a time;
      * chosen as a rough match to typical operating system I/O buffer size: */
-    #define MAX_SAMPLES 2048
+    #define MAX_SAMPLES (size_t)2048
     sox_sample_t samples[MAX_SAMPLES]; /* Temporary store whilst copying. */
     size_t number_read;
 

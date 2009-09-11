@@ -22,8 +22,8 @@
 
 #define VERSION       0x1000000
 #define MAX_FILE_SIZE 0x10000
-#define HEADER_SIZE   512
-#define PADDING_SIZE  478
+#define HEADER_SIZE   (size_t)512
+#define PADDING_SIZE  (size_t)478
 
 static char const id[16] = "ring.bin";
 
@@ -97,7 +97,7 @@ static int start_read(sox_format_t * ft)
       lsx_warn("invalid checksum in input file %s", ft->filename);
   }
 
-  lsx_skipbytes(ft, 2 + 4 + 6);   /* Checksum, version, and time stamp. */
+  lsx_skipbytes(ft, (size_t)(2 + 4 + 6)); /* Checksum, version, time stamp. */
 
   lsx_readchars(ft, read_id, sizeof(read_id));
   if (memcmp(read_id, id, strlen(id))) {
@@ -172,7 +172,7 @@ static int stop_write(sox_format_t * ft)
           lsx_readsw(ft, &int16);
           checksum += int16;
         }
-        if (!lsx_seeki(ft, 0, SEEK_SET)) {
+        if (!lsx_seeki(ft, (size_t)0, SEEK_SET)) {
           lsx_writedw(ft, file_size);
           lsx_writesw(ft, -checksum);
           return SOX_SUCCESS;

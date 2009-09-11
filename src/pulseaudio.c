@@ -38,7 +38,7 @@ static int setup(sox_format_t *ft, int is_input)
     app_str = "playback";
   }
 
-  if (strncmp(ft->filename, "default", 7) == 0)
+  if (strncmp(ft->filename, "default", (size_t)7) == 0)
     dev = NULL;
   else
     dev = ft->filename;
