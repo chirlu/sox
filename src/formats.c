@@ -566,7 +566,7 @@ sox_format_t * sox_open_read(
     sox_encodinginfo_t const * encoding,
     char               const * filetype)
 {
-  return open_read(path, NULL, 0, signal, encoding, filetype);
+  return open_read(path, NULL, (size_t)0, signal, encoding, filetype);
 }
 
 sox_format_t * sox_open_mem_read(
@@ -929,7 +929,7 @@ sox_format_t * sox_open_write(
     sox_oob_t          const * oob,
     sox_bool           (*overwrite_permitted)(const char *filename))
 {
-  return open_write(path, NULL, 0, NULL, NULL, signal, encoding, filetype, oob, overwrite_permitted);
+  return open_write(path, NULL, (size_t)0, NULL, NULL, signal, encoding, filetype, oob, overwrite_permitted);
 }
 
 sox_format_t * sox_open_mem_write(
@@ -951,7 +951,7 @@ sox_format_t * sox_open_memstream_write(
     char               const * filetype,
     sox_oob_t          const * oob)
 {
-  return open_write("", NULL, 0, buffer_ptr, buffer_size_ptr, signal, encoding, filetype, oob, NULL);
+  return open_write("", NULL, (size_t)0, buffer_ptr, buffer_size_ptr, signal, encoding, filetype, oob, NULL);
 }
 
 size_t sox_read(sox_format_t * ft, sox_sample_t * buf, size_t len)
