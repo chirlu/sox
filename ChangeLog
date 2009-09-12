@@ -38,7 +38,7 @@ File formats:
 
 Audio device drivers:
 
-  o Add native windows audio output driver. (Pavel Karneliuk)
+  o Add native windows audio driver. (Pavel Karneliuk, Doug Cook)
   o Try default ALSA record encoding parameters if those given
     are invalid (would previously fail).  (robs)
 
