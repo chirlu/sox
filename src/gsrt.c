@@ -20,7 +20,7 @@
 #include "sox_i.h"
 #include <time.h>
 
-#define VERSION       0x1000000
+#define VERSION_      0x1000000
 #define MAX_FILE_SIZE 0x10000
 #define HEADER_SIZE   (size_t)512
 #define PADDING_SIZE  (size_t)478
@@ -91,7 +91,7 @@ static int start_read(sox_format_t * ft)
       lsx_readsw(ft, &int16);
       checksum += int16;
     }
-    if (lsx_seeki(ft, sizeof(file_size), SEEK_SET) != 0)
+    if (lsx_seeki(ft, (off_t)sizeof(file_size), SEEK_SET) != 0)
       return SOX_EOF;
     if (checksum & 0xffff)
       lsx_warn("invalid checksum in input file %s", ft->filename);
@@ -123,7 +123,7 @@ static int start_write(sox_format_t * ft)
   time_t now = sox_globals.repeatable? 0 : time(NULL);
   struct tm const * t = sox_globals.repeatable? gmtime(&now) : localtime(&now);
 
-  int checksum = (VERSION >> 16) + VERSION;
+  int checksum = (VERSION_ >> 16) + VERSION_;
   checksum += t->tm_year + 1900;
   checksum += ((t->tm_mon + 1) << 8) + t->tm_mday;
   checksum += (t->tm_hour << 8) + t->tm_min;
@@ -133,7 +133,7 @@ static int start_write(sox_format_t * ft)
 
   return lsx_writedw(ft, 0)
       || lsx_writesw(ft, -checksum)
-      || lsx_writedw(ft, VERSION)
+      || lsx_writedw(ft, VERSION_)
       || lsx_writesw(ft, t->tm_year + 1900)
       || lsx_writesb(ft, t->tm_mon + 1)
       || lsx_writesb(ft, t->tm_mday)
@@ -164,15 +164,15 @@ static int stop_write(sox_format_t * ft)
     unsigned i, file_size = ft->tell_off >> 1;
     int16_t int16;
     int checksum;
-    if (!lsx_seeki(ft, sizeof(uint32_t), SEEK_SET)) {
+    if (!lsx_seeki(ft, (off_t)sizeof(uint32_t), SEEK_SET)) {
       lsx_readsw(ft, &int16);
       checksum = (file_size >> 16) + file_size - int16;
-      if (!lsx_seeki(ft, HEADER_SIZE, SEEK_SET)) {
+      if (!lsx_seeki(ft, (off_t)HEADER_SIZE, SEEK_SET)) {
         for (i = (num_samples + 1) >> 1; i; --i) {
           lsx_readsw(ft, &int16);
           checksum += int16;
         }
-        if (!lsx_seeki(ft, (size_t)0, SEEK_SET)) {
+        if (!lsx_seeki(ft, (off_t)0, SEEK_SET)) {
           lsx_writedw(ft, file_size);
           lsx_writesw(ft, -checksum);
           return SOX_SUCCESS;
