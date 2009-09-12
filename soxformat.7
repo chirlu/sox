@@ -29,7 +29,7 @@
 .SP
 .fi
 ..
-.TH SoX 7 "June 14, 2009" "soxformat" "Sound eXchange"
+.TH SoX 7 "September 12, 2009" "soxformat" "Sound eXchange"
 .SH NAME
 SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH DESCRIPTION
@@ -151,9 +151,11 @@ these often support OSS (see below) as well.  Examples:
 	sox -2 -t alsa hw:1 outfile
 .EE
 See also
-.BR play (1)
+.BR play (1),
+.BR rec (1),
 and
-.BR rec (1).
+.BR sox (1)
+.BR \-d .
 .TP
 .B .amb
 Ambisonic B-Format: a specialisation of
@@ -202,7 +204,10 @@ Examples:
 	sox infile -t ao pulse
 .EE
 See also
-.BR play (1).
+.BR play (1)
+and
+.BR sox (1)
+.BR \-d .
 .TP
 \&\fB.au\fR, \fB.snd\fR (also with \fB\-t sndfile\fR)
 Sun Microsystems AU files.
@@ -247,9 +252,11 @@ audio.  Examples:
 	sox infile -t coreaudio default
 .EE
 See also
-.BR play (1)
+.BR play (1),
+.BR rec (1),
 and
-.BR rec (1).
+.BR sox (1)
+.BR \-d .
 .TP
 \&\fB.cvsd\fR, \fB.cvs\fR
 Continuously Variable Slope Delta modulation.
@@ -440,9 +447,11 @@ sometimes together with alternative sound systems (such as ALSA).  Examples:
 	sox -2 -t oss /dev/dsp outfile
 .EE
 See also
-.BR play (1)
+.BR play (1),
+.BR rec (1),
 and
-.BR rec (1).
+.BR sox (1)
+.BR \-d .
 .TP
 \&\fB.paf\fR, \fB.fap\fR (optional)
 Ensoniq PARIS file format (big and little-endian respectively).
@@ -482,9 +491,11 @@ If a file name is specified with this driver, it is ignored.  Examples:
 	sox infile -t pulseaudio default
 .EE
 See also
-.BR play (1)
+.BR play (1),
+.BR rec (1),
 and
-.BR rec (1).
+.BR sox (1)
+.BR \-d .
 .TP
 \&\fB.pvf\fR (optional)
 Portable Voice Format.
@@ -535,9 +546,11 @@ OpenBSD audio device driver; supports both playing and recording audio.
 	sox infile -t sndio
 .EE
 See also
-.BR play (1)
+.BR play (1),
+.BR rec (1),
 and
-.BR rec (1).
+.BR sox (1)
+.BR \-d .
 .TP
 .B .sndr
 Sounder files.
@@ -582,9 +595,11 @@ or
 for older sun equipment.
 .SP
 See also
-.BR play (1)
+.BR play (1),
+.BR rec (1),
 and
-.BR rec (1).
+.BR sox (1)
+.BR \-d .
 .TP
 .B .txw
 Yamaha TX-16W sampler.
@@ -654,16 +669,34 @@ To write a RIFX file, use the
 option with the output file options.
 .TP
 \fBwaveaudio\fR (optional)
-MS-Windows native audio device driver.
-If a file name is specified with this driver, it is ignored.  Examples:
+MS-Windows native audio device driver.  Examples:
 .EX
 	sox infile -t waveaudio
 	sox infile -t waveaudio default
+	sox infile -t waveaudio 1
+	sox infile -t waveaudio "High Definition Audio Device ("
 .EE
+If the device name is omitted, \fB-1\fR, or \fBdefault\fR, then you
+get the `Microsoft Wave Mapper' device.  Wave Mapper means `use the
+system default audio devices'.  You can control what `default' means
+via the OS Control Panel.
+.SP
+If the device name given is some other number, you get that audio
+device by index; so recording with device name \fB0\fR would get the
+first input device (perhaps the microphone), \fB1\fR would get the
+second (perhaps line in), etc.  Playback using \fB0\fR will get the
+first output device (usually the only audio device).
+.SP
+If the device name given is something other than a number, SoX tries
+to match it (maximum 31 characters) against the names of the available
+devices.
+.SP
 See also
-.BR play (1)
+.BR play (1),
+.BR rec (1),
 and
-.BR rec (1).
+.BR sox (1)
+.BR \-d .
 .TP
 .B .wavpcm
 A non-standard, but widely used, variant of
