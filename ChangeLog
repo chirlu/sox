@@ -29,7 +29,8 @@ Previously deprecated features (to be removed in future):
 
 LibSoX interface changes:
 
-  None.
+  o Added new variants of sox_open to allow read/write from/to memory
+    buffers (in POSIX 200x environment); see example5.c  (robs)
 
 File formats:
 

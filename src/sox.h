@@ -412,6 +412,12 @@ sox_format_t * sox_open_read(
     sox_signalinfo_t   const * signal,
     sox_encodinginfo_t const * encoding,
     char               const * filetype);
+sox_format_t * sox_open_mem_read(
+    void                     * buffer,
+    size_t                     buffer_size,
+    sox_signalinfo_t   const * signal,
+    sox_encodinginfo_t const * encoding,
+    char               const * filetype);
 sox_bool sox_format_supports_encoding(
     char               const * path,
     char               const * filetype,
@@ -427,6 +433,20 @@ sox_format_t * sox_open_write(
     char               const * filetype,
     sox_oob_t          const * oob,
     sox_bool           (*overwrite_permitted)(const char *filename));
+sox_format_t * sox_open_mem_write(
+    void                     * buffer,
+    size_t                     buffer_size,
+    sox_signalinfo_t   const * signal,
+    sox_encodinginfo_t const * encoding,
+    char               const * filetype,
+    sox_oob_t          const * oob);
+sox_format_t * sox_open_memstream_write(
+    char                     * * buffer_ptr,
+    size_t                   * buffer_size_ptr,
+    sox_signalinfo_t   const * signal,
+    sox_encodinginfo_t const * encoding,
+    char               const * filetype,
+    sox_oob_t          const * oob);
 size_t sox_read(sox_format_t * ft, sox_sample_t *buf, size_t len);
 size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, size_t len);
 int sox_close(sox_format_t * ft);

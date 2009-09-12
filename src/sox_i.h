@@ -14,6 +14,9 @@
 #define SOX_I_H
 
 #include "soxomp.h"  /* Make this 1st in list (for soxconfig) */
+#if defined HAVE_FMEMOPEN
+#define _GNU_SOURCE
+#endif
 #include "sox.h"
 #include "util.h"
 

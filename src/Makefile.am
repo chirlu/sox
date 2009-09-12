@@ -30,7 +30,7 @@ endif
 #########################
 
 bin_PROGRAMS = sox
-EXTRA_PROGRAMS = example0 example1 example2 example3 example4 sox_sample_test
+EXTRA_PROGRAMS = example0 example1 example2 example3 example4 example5 sox_sample_test
 lib_LTLIBRARIES = libsox.la
 include_HEADERS = sox.h
 nodist_include_HEADERS = soxstdint.h
@@ -41,6 +41,7 @@ example1_SOURCES = example1.c
 example2_SOURCES = example2.c
 example3_SOURCES = example3.c
 example4_SOURCES = example4.c
+example5_SOURCES = example5.c
 sox_sample_test_SOURCES = sox_sample_test.c sox_sample_test.h
 
 
@@ -123,12 +124,13 @@ example1_LDADD = ${sox_LDADD}
 example2_LDADD = ${sox_LDADD}
 example3_LDADD = ${sox_LDADD}
 example4_LDADD = ${sox_LDADD}
+example5_LDADD = ${sox_LDADD}
 
 EXTRA_DIST = monkey.au monkey.wav optional-fmts.in \
 	     CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake \
 	     tests.sh testall.sh tests.bat testall.bat test-comments
 
-all: sox$(EXEEXT) play rec soxi sox_sample_test$(EXEEXT) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT)
+all: sox$(EXEEXT) play rec soxi sox_sample_test$(EXEEXT) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT) example5$(EXEEXT)
 
 play rec: sox$(EXEEXT)
 	if test "$(PLAYRECLINKS)" = "yes"; then	\
@@ -159,7 +161,7 @@ uninstall-hook:
 clean-local:
 	$(RM) play rec soxi
 	$(RM) sox_sample_test$(EXEEXT)
-	$(RM) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT)
+	$(RM) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT) example5$(EXEEXT)
 
 distclean-local:
 	$(RM) soxstdint.h
@@ -173,6 +175,7 @@ ALL_SOURCES = \
 	$(example2_SOURCES) \
 	$(example3_SOURCES) \
 	$(example4_SOURCES) \
+	$(example5_SOURCES) \
 	$(sox_sample_test_SOURCES) \
 	$(libsox_la_SOURCES)
 

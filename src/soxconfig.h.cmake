@@ -10,6 +10,7 @@
 #cmakedefine HAVE_COREAUDIO           1
 #cmakedefine HAVE_FFMPEG              1
 #cmakedefine HAVE_FLAC                1
+#cmakedefine HAVE_FMEMOPEN            1
 #cmakedefine HAVE_FSEEKO              1
 #cmakedefine HAVE_GETTIMEOFDAY        1
 #cmakedefine HAVE_GLOB_H              1

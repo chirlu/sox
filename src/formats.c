@@ -412,8 +412,10 @@ static void UNUSED rewind_pipe(FILE * fp)
 #endif
 }
 
-sox_format_t * sox_open_read(
+static sox_format_t * open_read(
     char               const * path,
+    void                     * buffer,
+    size_t                     buffer_size,
     sox_signalinfo_t   const * signal,
     sox_encodinginfo_t const * encoding,
     char               const * filetype)
@@ -444,7 +446,11 @@ sox_format_t * sox_open_read(
       ft->fp = stdin;
     }
     else {
-      ft->fp = xfopen(path, "rb", &ft->io_type);
+      ft->fp =
+#ifdef HAVE_FMEMOPEN
+        buffer? fmemopen(buffer, buffer_size, "rb") :
+#endif
+        xfopen(path, "rb", &ft->io_type);
       type = io_types[ft->io_type];
       if (ft->fp == NULL) {
         lsx_fail("can't open input %s `%s': %s", type, path, strerror(errno));
@@ -552,6 +558,25 @@ error:
   free(ft->filetype);
   free(ft);
   return NULL;
+}
+
+sox_format_t * sox_open_read(
+    char               const * path,
+    sox_signalinfo_t   const * signal,
+    sox_encodinginfo_t const * encoding,
+    char               const * filetype)
+{
+  return open_read(path, NULL, 0, signal, encoding, filetype);
+}
+
+sox_format_t * sox_open_mem_read(
+    void                     * buffer,
+    size_t                     buffer_size,
+    sox_signalinfo_t   const * signal,
+    sox_encodinginfo_t const * encoding,
+    char               const * filetype)
+{
+  return open_read("", buffer, buffer_size, signal,encoding,filetype);
 }
 
 sox_bool sox_format_supports_encoding(
@@ -776,8 +801,12 @@ sox_format_handler_t const * sox_write_handler(
   return handler;
 }
 
-sox_format_t * sox_open_write(
+static sox_format_t * open_write(
     char               const * path,
+    void                     * buffer,
+    size_t                     buffer_size,
+    char                     * * buffer_ptr,
+    size_t                   * buffer_size_ptr,
     sox_signalinfo_t   const * signal,
     sox_encodinginfo_t const * encoding,
     char               const * filetype,
@@ -814,7 +843,13 @@ sox_format_t * sox_open_write(
         lsx_fail("permission to overwrite `%s' denied", path);
         goto error;
       }
-      if ((ft->fp = fopen(path, "w+b")) == NULL) {
+      ft->fp =
+#ifdef HAVE_FMEMOPEN
+        buffer? fmemopen(buffer, buffer_size, "w+b") :
+        buffer_ptr? open_memstream(buffer_ptr, buffer_size_ptr) :
+#endif
+        fopen(path, "w+b");
+      if (ft->fp == NULL) {
         lsx_fail("can't open output file `%s': %s", path, strerror(errno));
         goto error;
       }
@@ -884,6 +919,39 @@ error:
   free(ft->filetype);
   free(ft);
   return NULL;
+}
+
+sox_format_t * sox_open_write(
+    char               const * path,
+    sox_signalinfo_t   const * signal,
+    sox_encodinginfo_t const * encoding,
+    char               const * filetype,
+    sox_oob_t          const * oob,
+    sox_bool           (*overwrite_permitted)(const char *filename))
+{
+  return open_write(path, NULL, 0, NULL, NULL, signal, encoding, filetype, oob, overwrite_permitted);
+}
+
+sox_format_t * sox_open_mem_write(
+    void                     * buffer,
+    size_t                     buffer_size,
+    sox_signalinfo_t   const * signal,
+    sox_encodinginfo_t const * encoding,
+    char               const * filetype,
+    sox_oob_t          const * oob)
+{
+  return open_write("", buffer, buffer_size, NULL, NULL, signal, encoding, filetype, oob, NULL);
+}
+
+sox_format_t * sox_open_memstream_write(
+    char                     * * buffer_ptr,
+    size_t                   * buffer_size_ptr,
+    sox_signalinfo_t   const * signal,
+    sox_encodinginfo_t const * encoding,
+    char               const * filetype,
+    sox_oob_t          const * oob)
+{
+  return open_write("", NULL, 0, buffer_ptr, buffer_size_ptr, signal, encoding, filetype, oob, NULL);
 }
 
 size_t sox_read(sox_format_t * ft, sox_sample_t * buf, size_t len)
