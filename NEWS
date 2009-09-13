@@ -1,29 +1,17 @@
-We are happy to announce the release of SoX 14.3.0.
+We are happy to announce the release of SoX 14.3.1.
  
 Source code, Win32 binaries, and Mac OSX binaries can be downloaded from 
   https://sourceforge.net/project/showfiles.php?group_id=10706
  
-Release highlights include:
+Primarily a maintenance release, highlights include:
  
-  o New filter effects: `sinc', `fir', `biquad'.
-  o Other new effects: `stats', `overdrive', `vad'.
-  o New audio device handler for OpenBSD.
-  o Fixed problems with temporary file on Windows.
-  o Can now enable automated clipping protection for most effects.
-  o Automatically `dither' as needed.
-  o Improvements to AIFF, WAV, FLAC, MP3 handlers.
-  o ALSA driver now supports 24-bit.
-  o `spectrogram' effect enhancements including multi-channel support.
-  o `synth' effect enhancements including new `pluck' type.
-  o More gain/normalise options.
-  o Now uses CPU multi-core to speed up some effects.
-  o SOX_OPTS environment variable for setting default options.
-  o Interactive playback volume control (on some systems).
-  o More `soxi' options, including multi-file total duration.
-  o Can now auto-detect file-type even when inputing from a pipe.
+  o Several fixes incl. multi-core MS-Windows threading problem.
+  o New MS-Windows native audio driver.
+  o New Grandstream ringtone file format.
+  o New support in libSoX for memory based file IO.
 
 For the complete list of changes, see the ChangeLog at
-  http://sox.cvs.sourceforge.net/sox/sox/ChangeLog?revision=SOX_14_3_0&view=markup
+  http://sox.cvs.sourceforge.net/sox/sox/ChangeLog?revision=SOX_14_3_1&view=markup
 
 Thanks to all who contributed to this release.
 

@@ -30,7 +30,7 @@ Previously deprecated features (to be removed in future):
 LibSoX interface changes:
 
   o Added new variants of sox_open to allow read/write from/to memory
-    buffers (in POSIX 2008 environment); see example5.c  (robs)
+    buffers (in POSIX 2008 environment); see example5.c.  (robs)
 
 File formats:
 
@@ -39,9 +39,8 @@ File formats:
 
 Audio device drivers:
 
-  o Add native windows audio driver. (Pavel Karneliuk, Doug Cook)
-  o Try default ALSA record encoding parameters if those given
-    are invalid (would previously fail).  (robs)
+  o Add native windows audio driver.  (Pavel Karneliuk, Doug Cook)
+  o Add 32-bit support to ALSA driver.  (Pavel Hofman)
 
 Effects:
 
@@ -59,16 +58,16 @@ Other bug fixes:
   o Fix build to support auto file type detection with pipes on FreeBSD
     and elsewhere.  (Dan Nelson)
   o Fix simultaneous play & rec not working.  (robs)
-  o Fix multi-threading bug on Windows OS; also, change default to
-    single-threaded.
+  o Fix multi-threading problems on multi-core Windows OS; also, change
+    default to single-threaded.
   o Fix mistaken file size with pipe input on Windows.  (Doug Cook)
-  o Fix missing documentation for -R (repeatable).  (robs)
+  o Fix missing documentation for -R (repeatable), and pulseaudio driver.
   o Fix memory leak of format private data.  (Slawomir Testowy)
 
 Internal improvements:
 
-  o Move bit-rot detection support files to sub-directory (had
-    been causing some build problems).  (robs)
+  o Move bit-rot detection support files to sub-directory (could
+    previously cause build problems).  (robs)
 
 
 sox-14.3.0	2009-06-14
