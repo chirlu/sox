@@ -545,7 +545,7 @@ echo "sndio (OpenBSD)............$using_sndio"
 echo "oss........................$using_oss"
 echo "pulseaudio.................$using_pulseaudio"
 echo "sunaudio...................$using_sunaudio"
-echo "waveaudio..................$using_waveaudio"
+echo "waveaudio (MS-Windows).....$using_waveaudio"
 echo
 echo "OPTIONAL FILE FORMATS"
 echo "amrnb......................$using_amrnb"
