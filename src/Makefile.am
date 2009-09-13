@@ -167,7 +167,8 @@ clean-local:
 distclean-local:
 	$(RM) soxstdint.h
 
-ALL_SOURCES = \
+loc:
+	sloccount \
 	$(include_HEADERS) \
 	$(nodist_include_HEADERS) \
 	$(sox_SOURCES) \
@@ -179,9 +180,6 @@ ALL_SOURCES = \
 	$(example5_SOURCES) \
 	$(sox_sample_test_SOURCES) \
 	$(libsox_la_SOURCES)
-
-loc:
-	sloccount $(ALL_SOURCES)
 
 
 # Ideally we would use the "check" target so that "make distcheck"
