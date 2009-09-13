@@ -25,32 +25,48 @@ typedef struct {
   int                format;
 } priv_t;
 
-static const int bytes_size[] = {1, 2, 4}, encs[][3] = {
-  {SND_PCM_FORMAT_S8, SND_PCM_FORMAT_S16, SND_PCM_FORMAT_S24},
-  {SND_PCM_FORMAT_U8, SND_PCM_FORMAT_U16, SND_PCM_FORMAT_U24}};
 #define NBYTES bytes_size[(ft->encoding.bits_per_sample >> 3) - 1]
+#define NSIZES array_length(bytes_size)
 
-static int select_format(sox_encoding_t * e, unsigned * bits, snd_pcm_format_mask_t const * mask, int * format)
+static const int bytes_size[] = {1, 2, 4, 4}, formats[][NSIZES] = {
+    {SND_PCM_FORMAT_S8, SND_PCM_FORMAT_S16, SND_PCM_FORMAT_S24,
+         SND_PCM_FORMAT_S32},
+    {SND_PCM_FORMAT_U8, SND_PCM_FORMAT_U16, SND_PCM_FORMAT_U24,
+          SND_PCM_FORMAT_U32}};
+
+static int select_format(
+    sox_encoding_t              * encoding_,
+    unsigned                    * nbits_,
+    snd_pcm_format_mask_t const * mask,
+    int                         * format)
 {
-  unsigned does[3], i, j, k = (*bits >> 3) - 1;
-  
-  if (k > 2 || (*e != SOX_ENCODING_SIGN2 && *e != SOX_ENCODING_UNSIGNED)) {
-    lsx_warn("invalid encoding; trying 24-bit signed");
-    *bits = 24;
-    *e = SOX_ENCODING_SIGN2;
-    k = 2;
-  }
-  for (i = 0; i < 3; ++i) for (does[i] = 0, j = 0; j < 2; ++j)
-    does[i] |= snd_pcm_format_mask_test(mask, encs[j][i]);
-  if (!does[k])
-    k = 1;
-  while (!does[k]) if ((k = (k + 1 ) % 3) == 1)
-    return -1;
-  *bits = (k + 1) << 3;
+  unsigned can_do[NSIZES], i, j, index = (*nbits_ >> 3) - 1, nbits;
+  sox_encoding_t encoding = *encoding_;
 
-  if (*e == SOX_ENCODING_SIGN2 && !snd_pcm_format_mask_test(mask, encs[0][k]))
-    *e = SOX_ENCODING_UNSIGNED;
-  *format = encs[*e == SOX_ENCODING_UNSIGNED][k];
+  for (i = 0; i < NSIZES; ++i) for (can_do[i] = 0, j = 0; j < 2; ++j)
+    can_do[i] |= snd_pcm_format_mask_test(mask, formats[j][i]);
+
+  if (index >= NSIZES ||
+      (encoding != SOX_ENCODING_SIGN2 && encoding != SOX_ENCODING_UNSIGNED)){
+    encoding = SOX_ENCODING_SIGN2;
+    index = 2;
+  }
+  while (!can_do[index]) if (++index == NSIZES)           /* Search up */
+    for (--index; !can_do[index];) if (--index >= NSIZES) /* then down */
+      return -1;
+  nbits = (index + 1) << 3;
+
+  if (encoding == SOX_ENCODING_SIGN2 &&
+      !snd_pcm_format_mask_test(mask, formats[0][index]))
+    encoding = SOX_ENCODING_UNSIGNED;
+
+  if (*nbits_ != nbits || *encoding_ != encoding) {
+    lsx_warn("can't encode %u-bit %s", *nbits_,
+        sox_encodings_info[*encoding_].desc);
+    *nbits_ = nbits;
+    *encoding_ = encoding;
+  }
+  *format = formats[encoding == SOX_ENCODING_UNSIGNED][index];
   return 0;
 }
 
@@ -179,7 +195,17 @@ static size_t read_(sox_format_t * ft, sox_sample_t * buf, size_t len)
         while (i--) *buf++ = SOX_UNSIGNED_24BIT_TO_SAMPLE(*buf1++,);
         break;
       }
-      default: lsx_fail_errno(ft, SOX_EFMT, "invalid format");
+      case SND_PCM_FORMAT_S32: {
+        int32_t * buf1 = (int32_t *)p->buf;
+        while (i--) *buf++ = SOX_SIGNED_32BIT_TO_SAMPLE(*buf1++,);
+        break;
+      }
+      case SND_PCM_FORMAT_U32: {
+        uint32_t * buf1 = (uint32_t *)p->buf;
+        while (i--) *buf++ = SOX_UNSIGNED_32BIT_TO_SAMPLE(*buf1++,);
+        break;
+      }
+     default: lsx_fail_errno(ft, SOX_EFMT, "invalid format");
         return 0;
     }
   }
@@ -232,6 +258,16 @@ static size_t write_(sox_format_t * ft, sox_sample_t const * buf, size_t len)
         while (i--) *buf1++ = SOX_SAMPLE_TO_UNSIGNED_24BIT(*buf++, ft->clips);
         break;
       }
+      case SND_PCM_FORMAT_S32: {
+        int32_t * buf1 = (int32_t *)p->buf;
+        while (i--) *buf1++ = SOX_SAMPLE_TO_SIGNED_32BIT(*buf++, ft->clips);
+        break;
+      }
+      case SND_PCM_FORMAT_U32: {
+        uint32_t * buf1 = (uint32_t *)p->buf;
+        while (i--) *buf1++ = SOX_SAMPLE_TO_UNSIGNED_32BIT(*buf++, ft->clips);
+        break;
+      }
     }
     for (i = 0; i < n; i += actual * ft->signal.channels) do {
       actual = snd_pcm_writei(
@@ -270,7 +306,9 @@ LSX_FORMAT_HANDLER(alsa)
 {
   static char const * const names[] = {"alsa", NULL};
   static unsigned const write_encodings[] = {
-    SOX_ENCODING_SIGN2, 24, 16, 8, 0, SOX_ENCODING_UNSIGNED, 24, 16, 8, 0, 0};
+    SOX_ENCODING_SIGN2   , 32, 24, 16, 8, 0,
+    SOX_ENCODING_UNSIGNED, 32, 24, 16, 8, 0,
+    0};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "Advanced Linux Sound Architecture device driver",
     names, SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
