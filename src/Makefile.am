@@ -100,8 +100,8 @@ endif
 #########################
 
 # Uncomment for bit-rot detection on linux
-libsox_la_SOURCES += coreaudio.c sndio.c sunaudio.c
-libsox_la_CFLAGS += -Ibit-rot
+#libsox_la_SOURCES += coreaudio.c sndio.c sunaudio.c
+#libsox_la_CFLAGS += -Ibit-rot
 
 libsox_la_SOURCES += raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
   s4-fmt.c u1-fmt.c u2-fmt.c u3-fmt.c u4-fmt.c al-fmt.c la-fmt.c ul-fmt.c \
