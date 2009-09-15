@@ -18,6 +18,10 @@
 #include <stdlib.h>
 #include "soxstdint.h"
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 /* Avoid warnings about unused parameters. */
 #ifdef __GNUC__
 #define UNUSED __attribute__ ((unused))
@@ -595,4 +599,9 @@ char const * lsx_sigfigs3(double number);
 char const * lsx_sigfigs3p(double percentage);
 
 /* WARNING END */
+
+#if defined(__cplusplus)
+}
+#endif
+
 #endif
