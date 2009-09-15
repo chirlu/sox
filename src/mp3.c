@@ -79,6 +79,7 @@ typedef struct {
   int (*lame_get_num_channels)(const lame_global_flags *);
   int (*lame_set_in_samplerate)(lame_global_flags *, int);
   int (*lame_set_bWriteVbrTag)(lame_global_flags *, int);
+  int (*lame_get_bWriteVbrTag)(lame_global_flags const *);
   int (*lame_init_params)(lame_global_flags *);
   int (*lame_set_errorf)(lame_global_flags *, 
                          void (*func)(const char *, va_list));
@@ -92,6 +93,15 @@ typedef struct {
   int (*lame_encode_flush)(lame_global_flags *, unsigned char *,
                            int);
   int (*lame_close)(lame_global_flags *);
+  void (*lame_mp3_tags_fid)(lame_global_flags *, FILE *);
+  int (*lame_get_brate)(const lame_global_flags *);
+  int (*lame_set_brate)(lame_global_flags *, int);
+  int (*lame_set_quality)(lame_global_flags *, int);
+  int (*lame_set_VBR)(lame_global_flags *, vbr_mode);
+  int (*lame_set_VBR_min_bitrate_kbps)(lame_global_flags *, int);
+  int (*lame_set_VBR_quality)(lame_global_flags *, float);
+  vbr_mode (*lame_get_VBR)(const lame_global_flags *);
+
   #if defined HAVE_LIBLTDL && defined DL_LAME
   lt_dlhandle lame_lth;
   #endif
@@ -448,10 +458,33 @@ static int startread(sox_format_t * ft)
 #endif /*HAVE_MAD_H*/
 
 #ifdef HAVE_LAME_LAME_H
-static void null_error_func(const char* string UNUSED, va_list va UNUSED)
+
+/* Adapters for lame message callbacks: */
+
+static void errorf(const char* fmt, va_list va)
 {
+  sox_globals.subsystem=__FILE__;
+  if (sox_globals.output_message_handler)
+    (*sox_globals.output_message_handler)(1,sox_globals.subsystem,fmt,va);
   return;
 }
+
+static void debugf(const char* fmt, va_list va)
+{
+  sox_globals.subsystem=__FILE__;
+  if (sox_globals.output_message_handler)
+    (*sox_globals.output_message_handler)(4,sox_globals.subsystem,fmt,va);
+  return;
+}
+
+static void msgf(const char* fmt, va_list va)
+{
+  sox_globals.subsystem=__FILE__;
+  if (sox_globals.output_message_handler)
+    (*sox_globals.output_message_handler)(3,sox_globals.subsystem,fmt,va);
+  return;
+}
+
 
 static int startwrite(sox_format_t * ft)
 {
@@ -482,6 +515,7 @@ static int startwrite(sox_format_t * ft)
   LOAD_FN_PTR(lame_get_num_channels)
   LOAD_FN_PTR(lame_set_in_samplerate)
   LOAD_FN_PTR(lame_set_bWriteVbrTag)
+  LOAD_FN_PTR(lame_get_bWriteVbrTag)
   LOAD_FN_PTR(lame_init_params)
   LOAD_FN_PTR(lame_set_errorf)
   LOAD_FN_PTR(lame_set_debugf)
@@ -489,6 +523,16 @@ static int startwrite(sox_format_t * ft)
   LOAD_FN_PTR(lame_encode_buffer)
   LOAD_FN_PTR(lame_encode_flush)
   LOAD_FN_PTR(lame_close)
+  LOAD_FN_PTR(lame_mp3_tags_fid)
+  LOAD_FN_PTR(lame_get_brate)
+  LOAD_FN_PTR(lame_set_brate)
+  LOAD_FN_PTR(lame_set_quality)
+  LOAD_FN_PTR(lame_set_VBR)
+  LOAD_FN_PTR(lame_set_VBR_min_bitrate_kbps)
+#if HAVE_LAME_SET_VBR_QUALITY
+  LOAD_FN_PTR(lame_set_VBR_quality)
+#endif
+  LOAD_FN_PTR(lame_get_VBR)
 
 #undef LOAD_FN_PTR
 #undef DL_LIB_NAME
@@ -500,10 +544,16 @@ static int startwrite(sox_format_t * ft)
   }
 
   p->gfp = p->lame_init();
+
   if (p->gfp == NULL){
     lsx_fail_errno(ft,SOX_EOF,"Initialization of LAME library failed");
     return(SOX_EOF);
   }
+
+  /* First set message callbacks so we don't miss any messages: */
+  p->lame_set_errorf(p->gfp,errorf);
+  p->lame_set_debugf(p->gfp,debugf);
+  p->lame_set_msgf  (p->gfp,msgf);
 
   if (ft->signal.channels != SOX_ENCODING_UNKNOWN) {
     if ( (p->lame_set_num_channels(p->gfp,(int)ft->signal.channels)) < 0) {
@@ -518,21 +568,111 @@ static int startwrite(sox_format_t * ft)
 
   p->lame_set_bWriteVbrTag(p->gfp, 0); /* disable writing VBR tag */
 
-  /* The bitrate, mode, quality and other settings are the default ones,
-     since SoX's command line options do not allow to set them */
+  /* The primary parameter to the LAME encoder is the bit rate. If the
+   * value of encoding.compression is a positive integer, it's taken as
+   * the bitrate in kbps (that is if you specify 128, it use 128 kbps).
+   *
+   * The second most important parameter is probably "quality" (really
+   * performance), which allows balancing encoding speed vs. quality.
+   * In LAME, 0 specifies highest quality but is very slow, while
+   * 9 selects poor quality, but is fast. (5 is the default and 2 is
+   * recommend as a good trade-off for high quality encodes.)
+   *
+   * Becaues encoding.compression is a float, the fractional part is used
+   * to select quality. 128.2 selects 128 kbps encoding with a quality
+   * of 2. There is one problem with this approach. We need 128 to specify
+   * 128 kbps encoding with default quality, so 0 means use default. Instead
+   * of 0 you have to use .01 (or .99) to specify the highest quality
+   * (128.01 or 128.99).
+   *
+   * LAME uses bitrate to specify a constant bitrate, but higher quality
+   * can be acheived using Variable Bit Rate (VBR). VBR quality (really
+   * size) is selected using a number from 0 to 9. Use a value of 0 for high
+   * quality, larger files, and 9 for smaller files of lower quality. 4 is
+   * the default.
+   *
+   * In order to squeeze the selection of VBR into the encoding.compression
+   * float we use negative numbers to select VRR. -4.2 would select default
+   * VBR encoding (size) with high quality (speed). One special case is 0,
+   * which is a valid VBR encoding parameter but not a valid bitrate.
+   * Compression value of 0 is always treated as a high quality vbr, as a
+   * result both -0.2 and 0.2 are treated as highest quality VBR (size) and
+   * high quality (speed).
+   *
+   * Note: It would have been nice to simply use low values, 0-9, to trigger
+   * VBR mode, but 8 kbps is a valid bit rate, so negative values were
+   * used instead.
+  */
 
-  /* FIXME: Someone who knows about lame could implement adjustable compression
-     here.  E.g. by using the -C value as an index into a table of params or
-     as a compressed bit-rate. */
-  if (ft->encoding.compression != HUGE_VAL)
-      lsx_warn("-C option not supported for mp3; using default compression rate");
+  lsx_debug("-C option is %f", ft->encoding.compression);
+
+  if (ft->encoding.compression == HUGE_VAL) {
+    /* Do nothing, use defaults: */
+    lsx_report("using MP3 encoding defaults");
+  } else {
+    double abs_compression = fabs(ft->encoding.compression);
+    double floor_compression = floor(abs_compression);
+    double fraction_compression = abs_compression - floor_compression;
+
+    if (floor(ft->encoding.compression) <= 0) {
+      if (p->lame_get_VBR(p->gfp) == vbr_off)
+        p->lame_set_VBR(p->gfp, vbr_default);
+
+      if (ft->seekable) {
+        p->lame_set_bWriteVbrTag(p->gfp, 1); /* enable writing VBR tag */
+      } else {
+        lsx_warn("unable to write VBR Tag because we can't seek");
+      }
+
+#if HAVE_LAME_SET_VBR_QUALITY
+#include "mp3-1.h"
+      {
+        lsx_fail_errno(ft, SOX_EOF,
+          "lame_set_VBR_quality(%f) failed (should be between 0 and 9)",
+          floor_compression);
+        return(SOX_EOF);
+      }
+      lsx_report("lame_set_VBR_quality(%f)", floor_compression);
+#else
+      /* TODO lsx_warn */
+#endif
+    } else {
+      if (p->lame_set_brate(p->gfp, (int)floor_compression) < 0) {
+        lsx_fail_errno(ft, SOX_EOF,
+          "lame_set_brate(%d) failed", (int)floor_compression);
+        return(SOX_EOF);
+      }
+      p->lame_set_VBR_min_bitrate_kbps(p->gfp, p->lame_get_brate(p->gfp));
+      lsx_report("lame_set_brate(%d)", (int)floor_compression);
+    }
+
+    /* Set Quality */
+
+    if (0.0 == fraction_compression) {
+      /* use default quality value */
+      lsx_report("using MP3 default quality");
+    }
+    else if (fraction_compression <= 0.01 || 0.99 <= fraction_compression) {
+      if (p->lame_set_quality(p->gfp, 0) < 0) {
+        lsx_fail_errno(ft, SOX_EOF, "lame_set_quality(0) failed");
+        return(SOX_EOF);
+      }
+      lsx_report("lame_set_quality(0)");
+    } else {
+      int quality = (int)(0.5 + fraction_compression * 10);
+      if (p->lame_set_quality(p->gfp, quality) < 0) {
+        lsx_fail_errno(ft, SOX_EOF,
+          "lame_set_quality(%d) failed", quality);
+        return(SOX_EOF);
+      }
+      lsx_report("lame_set_quality(%d)", quality);
+    }
+  }
+
   if (p->lame_init_params(p->gfp) < 0){
         lsx_fail_errno(ft,SOX_EOF,"LAME initialization failed");
         return(SOX_EOF);
   }
-  p->lame_set_errorf(p->gfp,null_error_func);
-  p->lame_set_debugf(p->gfp,null_error_func);
-  p->lame_set_msgf  (p->gfp,null_error_func);
 
   return(SOX_SUCCESS);
 }
@@ -624,7 +764,12 @@ static int stopwrite(sox_format_t * ft)
   if (written < 0)
     lsx_fail_errno(ft, SOX_EOF, "Encoding failed");
   else if (lsx_writebuf(ft, mp3buffer, (size_t)written) < (size_t)written)
+  {
     lsx_fail_errno(ft, SOX_EOF, "File write failed");
+  }
+  else if (p->lame_get_bWriteVbrTag(p->gfp) && ft->seekable) {
+    p->lame_mp3_tags_fid(p->gfp, ft->fp);
+  }
 
   p->lame_close(p->gfp);
 #if defined HAVE_LIBLTDL && defined DL_LAME

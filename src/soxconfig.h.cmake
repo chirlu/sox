@@ -19,6 +19,7 @@
 #cmakedefine HAVE_INTTYPES_H          1
 #cmakedefine HAVE_IO_H                1
 #cmakedefine HAVE_LAME_LAME_H         1
+#cmakedefine HAVE_LAME_SET_VBR_QUALITY 1
 #define HAVE_LPC10                    1
 #cmakedefine HAVE_LTDL_H              1
 #cmakedefine HAVE_MACHINE_SOUNDCARD_H 1

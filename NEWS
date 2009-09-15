@@ -9,6 +9,7 @@ Primarily a maintenance release, highlights include:
   o New MS-Windows native audio driver.
   o New Grandstream ringtone file format.
   o New support in libSoX for memory based file IO.
+  o Now able to set MP3 compression parameters.
 
 For the complete list of changes, see the ChangeLog at
   http://sox.cvs.sourceforge.net/sox/sox/ChangeLog?revision=SOX_14_3_1&view=markup

@@ -337,6 +337,10 @@ if test "$with_lame" != "no"; then
       AC_DEFINE(DL_LAME, 1, [Define if to dlopen() lame.])
     else
       AC_CHECK_LIB(mp3lame, lame_init, MP3_LIBS="$MP3_LIBS -lmp3lame",using_lame=no)
+      AC_CHECK_LIB(mp3lame, lame_set_VBR_quality)
+      if test "$ac_cv_lib_mp3lame_lame_set_VBR_quality" = yes; then
+        AC_DEFINE(HAVE_LAME_SET_VBR_QUALITY, 1, [Define to 1 if you have lame_set_VBR_quality.])
+      fi
       if test "$with_lame" = "yes" -a "$using_lame" = "no"; then
         AC_MSG_FAILURE([cannot find LAME])
       fi
