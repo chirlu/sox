@@ -19,7 +19,61 @@
 
 #include <sys/stat.h>
 
-#if HAVE_ID3TAG && HAVE_UNISTD_H
+#ifdef USING_ID3TAG
+
+static char const * id3tagmap[][2] =
+{
+  {"TIT2", "Title"},
+  {"TPE1", "Artist"},
+  {"TALB", "Album"},
+  {"TRCK", "Tracknumber"},
+  {"TDRC", "Year"},
+  {"TCON", "Genre"},
+  {"COMM", "Comment"},
+  {"TPOS", "Discnumber"},
+  {NULL, NULL}
+};
+
+static void write_comments(sox_format_t * ft)
+{
+#if HAVE_ID3TAG_SET_FIELDVALUE
+  priv_t *p = (priv_t *) ft->priv;
+  size_t i;
+  char* id3tag_buf = NULL;
+  size_t id3tag_size = 0;
+  const char* comment;
+  size_t required_size;
+
+  for (i = 0; id3tagmap[i][0]; i++)
+  {
+    comment = sox_find_comment(ft->oob.comments, id3tagmap[i][1]);
+    if (comment)
+    {
+      required_size = strlen(comment) + 6;
+      if (id3tag_size < required_size)
+      {
+        char* id3tag_realloc = lsx_realloc(id3tag_buf, required_size);
+        if (id3tag_realloc)
+        {
+          id3tag_buf = id3tag_realloc;
+          id3tag_size = required_size;
+        }
+      }
+
+      if (id3tag_size >= required_size)
+      {
+        sprintf(id3tag_buf, "%s=%s", id3tagmap[i][0], comment);
+        id3tag_buf[id3tag_size - 1] = 0;
+        p->id3tag_set_fieldvalue(p->gfp, id3tag_buf);
+      }
+    }
+  }
+
+  free(id3tag_buf);
+#else
+  (void)ft;
+#endif
+}
 
 static id3_utf8_t * utf8_id3tag_findframe(
     struct id3_tag * tag, const char * const frameid, unsigned index)
@@ -39,17 +93,6 @@ static id3_utf8_t * utf8_id3tag_findframe(
 
 static void read_comments(sox_format_t * ft)
 {
-  static char const * list[][2] = {
-    {ID3_FRAME_TITLE,   "Title"},
-    {ID3_FRAME_ARTIST,  "Artist"},
-    {ID3_FRAME_ALBUM,   "Album"},
-    {ID3_FRAME_TRACK,   "Tracknumber"},
-    {ID3_FRAME_YEAR,    "Year"},
-    {ID3_FRAME_GENRE,   "Genre"},
-    {ID3_FRAME_COMMENT, "Comment"},
-    {"TPOS",            "Discnumber"},
-    {NULL, NULL}
-  };
   struct id3_file   * id3struct;
   struct id3_tag    * tag;
   id3_utf8_t        * utf8;
@@ -57,10 +100,10 @@ static void read_comments(sox_format_t * ft)
 
   if ((id3struct = id3_file_fdopen(fd, ID3_FILE_MODE_READONLY))) {
     if ((tag = id3_file_tag(id3struct)) && tag->frames)
-      for (i = 0; list[i][0]; ++i)
-        if ((utf8 = utf8_id3tag_findframe(tag, list[i][0], 0))) {
-          char * comment = lsx_malloc(strlen(list[i][1]) + 1 + strlen((char *)utf8) + 1);
-          sprintf(comment, "%s=%s", list[i][1], utf8);
+      for (i = 0; id3tagmap[i][0]; ++i)
+        if ((utf8 = utf8_id3tag_findframe(tag, id3tagmap[i][0], 0))) {
+          char * comment = lsx_malloc(strlen(id3tagmap[i][1]) + 1 + strlen((char *)utf8) + 1);
+          sprintf(comment, "%s=%s", id3tagmap[i][1], utf8);
           sox_append_comment(&ft->oob.comments, comment);
           free(comment);
           free(utf8);

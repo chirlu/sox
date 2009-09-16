@@ -21,9 +21,17 @@
 #include <lame/lame.h>
 #endif
 
-#if HAVE_ID3TAG && HAVE_UNISTD_H
+#if defined(HAVE_ID3TAG) && (defined(HAVE_IO_H) || defined(HAVE_UNISTD_H))
+#define USING_ID3TAG 1
+#endif
+
+#ifdef USING_ID3TAG
   #include <id3tag.h>
+#if defined(HAVE_UNISTD_H)
   #include <unistd.h>
+#elif defined(HAVE_IO_H)
+  #include <io.h>
+#endif
 #else
   #define ID3_TAG_FLAG_FOOTERPRESENT 0x10
 #endif
@@ -80,15 +88,16 @@ typedef struct {
   int (*lame_set_in_samplerate)(lame_global_flags *, int);
   int (*lame_set_bWriteVbrTag)(lame_global_flags *, int);
   int (*lame_get_bWriteVbrTag)(lame_global_flags const *);
+  int (*id3tag_set_fieldvalue)(lame_global_flags *, const char *);
   int (*lame_init_params)(lame_global_flags *);
-  int (*lame_set_errorf)(lame_global_flags *, 
+  int (*lame_set_errorf)(lame_global_flags *,
                          void (*func)(const char *, va_list));
   int (*lame_set_debugf)(lame_global_flags *,
                          void (*func)(const char *, va_list));
   int (*lame_set_msgf)(lame_global_flags *,
                        void (*func)(const char *, va_list));
   int (*lame_encode_buffer)(lame_global_flags *, const short int[],
-                            const short int[], const int, 
+                            const short int[], const int,
                             unsigned char *, const int);
   int (*lame_encode_flush)(lame_global_flags *, unsigned char *,
                            int);
@@ -242,7 +251,7 @@ static int startread(sox_format_t * ft)
 #else
   #define DL_LIB_NAME
   #define LOAD_FN_PTR(x) p->x = x;
-#endif 
+#endif
 
   LOAD_FN_PTR(mad_bit_read)
   LOAD_FN_PTR(mad_frame_decode)
@@ -271,7 +280,7 @@ static int startread(sox_format_t * ft)
 
     ft->signal.length = SOX_UNSPEC;
     if (ft->seekable) {
-#if HAVE_ID3TAG && HAVE_UNISTD_H
+#ifdef USING_ID3TAG
       read_comments(ft);
       rewind(ft->fp);
       if (!ft->signal.length)
@@ -485,7 +494,6 @@ static void msgf(const char* fmt, va_list va)
   return;
 }
 
-
 static int startwrite(sox_format_t * ft)
 {
   priv_t *p = (priv_t *) ft->priv;
@@ -508,7 +516,7 @@ static int startwrite(sox_format_t * ft)
 #else
   #define DL_LIB_NAME
   #define LOAD_FN_PTR(x) p->x = x;
-#endif 
+#endif
 
   LOAD_FN_PTR(lame_init)
   LOAD_FN_PTR(lame_set_num_channels)
@@ -516,6 +524,9 @@ static int startwrite(sox_format_t * ft)
   LOAD_FN_PTR(lame_set_in_samplerate)
   LOAD_FN_PTR(lame_set_bWriteVbrTag)
   LOAD_FN_PTR(lame_get_bWriteVbrTag)
+#if defined USING_ID3TAG && HAVE_ID3TAG_SET_FIELDVALUE
+  LOAD_FN_PTR(id3tag_set_fieldvalue)
+#endif
   LOAD_FN_PTR(lame_init_params)
   LOAD_FN_PTR(lame_set_errorf)
   LOAD_FN_PTR(lame_set_debugf)
@@ -567,6 +578,10 @@ static int startwrite(sox_format_t * ft)
   p->lame_set_in_samplerate(p->gfp,(int)ft->signal.rate);
 
   p->lame_set_bWriteVbrTag(p->gfp, 0); /* disable writing VBR tag */
+
+#ifdef USING_ID3TAG
+  write_comments(ft);
+#endif
 
   /* The primary parameter to the LAME encoder is the bit rate. If the
    * value of encoding.compression is a positive integer, it's taken as
@@ -730,7 +745,7 @@ static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t sa
     mp3buffer_size = 1.25 * nsamples + 7200;
     mp3buffer = lsx_malloc(mp3buffer_size);
 
-    if ((written = 
+    if ((written =
 	 p->lame_encode_buffer(p->gfp,buffer_l, buffer_r,
 			       nsamples, mp3buffer,
 			       (int)mp3buffer_size)) > mp3buffer_size){

@@ -37,6 +37,7 @@ File formats:
   o New Grandstream ring-tone (gsrt) format.  (robs)
   o CVSD encode/decode speed-ups.  (Kimberly Rockwell, P. Chaintreuil)
   o Add ability to select MP3 compression parameters.  (Jim Harkins)
+  o Now writes out ID3-tags in MP3 files.  (Doug Cook)
 
 Audio device drivers:
 

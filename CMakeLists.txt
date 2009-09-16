@@ -121,6 +121,7 @@ endif (HAVE_LAME_LAME_H OR HAVE_MAD_H)
 
 set(CMAKE_REQUIRED_LIBRARIES mp3lame m)
 check_function_exists("lame_set_VBR_quality" HAVE_LAME_SET_VBR_QUALITY)
+check_function_exists("id3tag_set_fieldvalue" HAVE_ID3TAG_SET_FIELDVALUE)
 
 if (HAVE_SUN_AUDIOIO_H OR HAVE_SYS_AUDIOIO_H)
   set(HAVE_SUN_AUDIO 1)

@@ -341,6 +341,10 @@ if test "$with_lame" != "no"; then
       if test "$ac_cv_lib_mp3lame_lame_set_VBR_quality" = yes; then
         AC_DEFINE(HAVE_LAME_SET_VBR_QUALITY, 1, [Define to 1 if you have lame_set_VBR_quality.])
       fi
+      AC_CHECK_LIB(mp3lame, id3tag_set_fieldvalue)
+      if test "$ac_cv_lib_mp3lame_id3tag_set_fieldvalue" = yes; then
+        AC_DEFINE(HAVE_ID3TAG_SET_FIELDVALUE, 1, [Define to 1 if you have id3tag_set_fieldvalue.])
+      fi
       if test "$with_lame" = "yes" -a "$using_lame" = "no"; then
         AC_MSG_FAILURE([cannot find LAME])
       fi
