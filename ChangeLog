@@ -46,6 +46,7 @@ Audio device drivers:
 Effects:
 
   o Fix [2254919] silence doesn't trim digital silence correctly.  (robs)
+  o Fix [2859842] stats effect crashes on 64-bit arch.  (Ulrich Klauer)
 
 Other new features:
 

@@ -69,7 +69,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 {
   priv_t * p = (priv_t *)effp->priv;
   size_t len = *ilen = *olen = min(*ilen, *olen);
-  memcpy(obuf, ibuf, len * sizeof(*olen));
+  memcpy(obuf, ibuf, len * sizeof(*obuf));
 
   for (; len--; ++ibuf, ++p->num_samples) {
     double d = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf,);
