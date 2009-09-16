@@ -1,6 +1,4 @@
-/* libSoX determine MP3 duration
- * Copyright (c) 2007 robs@users.sourceforge.net
- * Based on original ideas by Regis Boudin, Thibaut Varene & Pascal Giard
+/* libSoX MP3 support routines  Copyright (c) 2007-9 SoX contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
