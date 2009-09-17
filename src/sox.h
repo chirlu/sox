@@ -163,7 +163,6 @@ typedef int32_t sox_sample_t;
 
 
 
-#include <stddef.h>
 #define SOX_SIZE_MAX (size_t)(-sizeof(char))
 
 typedef void (*sox_output_message_handler_t)(unsigned level, const char *filename, const char *fmt, va_list ap);
