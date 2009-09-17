@@ -414,9 +414,9 @@ The second most important parameter is probably "quality" (really
 performance), which allows balancing encoding speed vs. quality.
 In LAME, 0 specifies highest quality but is very slow, while
 9 selects poor quality, but is fast. (5 is the default and 2 is
-recommend as a good trade-off for high quality encodes.)
+recommended as a good trade-off for high quality encodes.)
 .SP
-Becaues the \fB\-C\fR value is a float, the fractional part is used
+Because the \fB\-C\fR value is a float, the fractional part is used
 to select quality. 128.2 selects 128 kbps encoding with a quality
 of 2. There is one problem with this approach. We need 128 to specify
 128 kbps encoding with default quality, so 0 means use default. Instead
@@ -424,7 +424,7 @@ of 0 you have to use .01 (or .99) to specify the highest quality
 (128.01 or 128.99).
 .SP
 LAME uses bitrate to specify a constant bitrate, but higher quality
-can be acheived using Variable Bit Rate (VBR). VBR quality (really
+can be achieved using Variable Bit Rate (VBR). VBR quality (really
 size) is selected using a number from 0 to 9. Use a value of 0 for high
 quality, larger files, and 9 for smaller files of lower quality. 4 is
 the default.
