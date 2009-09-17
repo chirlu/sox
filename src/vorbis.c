@@ -300,7 +300,13 @@ static int startwrite(sox_format_t * ft)
     }
     quality = ft->encoding.compression;
   }
-#include "vorbis1.h"
+#define IGNORE_WARNING \
+  if (vorbis_encode_init_vbr(&ve->vi, ft->signal.channels, ft->signal.rate + .5, quality / 10))
+#include "ignore-warning.h"
+  {
+    lsx_fail_errno(ft, SOX_EFMT, "libVorbis cannot encode this sample-rate or # of channels");
+    return SOX_EOF;
+  }
 
   vorbis_analysis_init(&ve->vd, &ve->vi);
   vorbis_block_init(&ve->vd, &ve->vb);

@@ -1,4 +1,4 @@
-/* libSoX MP3 support routines  Copyright (c) 2007-9 SoX contributors
+/* libSoX MP3 utilities  Copyright (c) 2007-9 SoX contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -17,8 +17,6 @@
 
 #include <sys/stat.h>
 
-#ifdef USING_ID3TAG
-
 static char const * id3tagmap[][2] =
 {
   {"TIT2", "Title"},
@@ -32,9 +30,10 @@ static char const * id3tagmap[][2] =
   {NULL, NULL}
 };
 
+#if defined(HAVE_LAME_LAME_H) && defined(HAVE_ID3TAG_SET_FIELDVALUE)
+
 static void write_comments(sox_format_t * ft)
 {
-#if HAVE_ID3TAG_SET_FIELDVALUE
   priv_t *p = (priv_t *) ft->priv;
   size_t i;
   char* id3tag_buf = NULL;
@@ -68,10 +67,11 @@ static void write_comments(sox_format_t * ft)
   }
 
   free(id3tag_buf);
-#else
-  (void)ft;
-#endif
 }
+
+#endif /* HAVE_LAME_LAME_H && HAVE_ID3TAG_SET_FIELDVALUE */
+
+#ifdef USING_ID3TAG
 
 static id3_utf8_t * utf8_id3tag_findframe(
     struct id3_tag * tag, const char * const frameid, unsigned index)
@@ -118,7 +118,9 @@ static void read_comments(sox_format_t * ft)
   else close(fd);
 }
 
-#endif
+#endif /* USING_ID3TAG */
+
+#ifdef HAVE_MAD_H
 
 static unsigned long xing_frames(priv_t * p, struct mad_bitptr ptr, unsigned bitlen)
 {
@@ -228,3 +230,5 @@ static size_t mp3_duration_ms(sox_format_t * ft, unsigned char *buffer)
   rewind(fp);
   return p->mad_timer_count(time, MAD_UNITS_MILLISECONDS);
 }
+
+#endif /* HAVE_MAD_H */

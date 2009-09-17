@@ -110,11 +110,11 @@ endif
 
 if HAVE_MP3
 if STATIC_MP3
-  libsox_la_SOURCES += mp3.c mp3-duration.h
+  libsox_la_SOURCES += mp3.c mp3-util.h
   libsox_la_LIBADD += @MP3_LIBS@
   sox_LDADD += @MP3_LIBS@
 else
-  libsox_fmt_mp3_la_SOURCES = mp3.c mp3-duration.h
+  libsox_fmt_mp3_la_SOURCES = mp3.c mp3-util.h
   libsox_fmt_mp3_la_LIBADD = libsox.la @MP3_LIBS@
   pkglib_LTLIBRARIES += libsox_fmt_mp3.la
 endif
@@ -182,11 +182,11 @@ endif
 
 if HAVE_OGG_VORBIS
 if STATIC_OGG_VORBIS
-  libsox_la_SOURCES += vorbis.c vorbis1.h
+  libsox_la_SOURCES += vorbis.c
   libsox_la_LIBADD += @OGG_VORBIS_LIBS@
   sox_LDADD += @OGG_VORBIS_LIBS@
 else
-  libsox_fmt_vorbis_la_SOURCES = vorbis.c vorbis1.h
+  libsox_fmt_vorbis_la_SOURCES = vorbis.c
   libsox_fmt_vorbis_la_LIBADD = libsox.la @OGG_VORBIS_LIBS@
   pkglib_LTLIBRARIES += libsox_fmt_vorbis.la
 endif

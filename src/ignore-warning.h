@@ -21,7 +21,9 @@
   #pragma warning(push, 1)
 #endif
 
-      if (p->lame_set_VBR_quality(p->gfp, floor_compression) < 0)
+  IGNORE_WARNING
+#undef IGNORE_WARNING
+
 
 #if defined __SUNPRO_CC
   #pragma enable_warn

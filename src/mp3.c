@@ -11,6 +11,8 @@
 
 #include "sox_i.h"
 
+#if defined(HAVE_LAME_LAME_H) || defined (HAVE_MAD_H)
+
 #include <string.h>
 
 #ifdef HAVE_MAD_H
@@ -38,7 +40,7 @@
 
 #if defined HAVE_LIBLTDL
   #include <ltdl.h>
-#if defined DL_MAD
+#if defined HAVE_MAD_H && defined DL_MAD
 mad_timer_t const mad_timer_zero;
 #endif
 #endif
@@ -88,7 +90,9 @@ typedef struct {
   int (*lame_set_in_samplerate)(lame_global_flags *, int);
   int (*lame_set_bWriteVbrTag)(lame_global_flags *, int);
   int (*lame_get_bWriteVbrTag)(lame_global_flags const *);
+  #ifdef HAVE_ID3TAG_SET_FIELDVALUE
   int (*id3tag_set_fieldvalue)(lame_global_flags *, const char *);
+  #endif
   int (*lame_init_params)(lame_global_flags *);
   int (*lame_set_errorf)(lame_global_flags *,
                          void (*func)(const char *, va_list));
@@ -108,7 +112,9 @@ typedef struct {
   int (*lame_set_quality)(lame_global_flags *, int);
   int (*lame_set_VBR)(lame_global_flags *, vbr_mode);
   int (*lame_set_VBR_min_bitrate_kbps)(lame_global_flags *, int);
+  #ifdef HAVE_LAME_SET_VBR_QUALITY
   int (*lame_set_VBR_quality)(lame_global_flags *, float);
+  #endif
   vbr_mode (*lame_get_VBR)(const lame_global_flags *);
 
   #if defined HAVE_LIBLTDL && defined DL_LAME
@@ -116,8 +122,6 @@ typedef struct {
   #endif
 #endif /*HAVE_LAME_LAME_H*/
 } priv_t;
-
-#ifdef HAVE_MAD_H
 
 /* This function merges the functions tagtype() and id3_tag_query()
    from MAD's libid3tag, so we don't have to link to it
@@ -148,7 +152,9 @@ static int tagtype(const unsigned char *data, size_t length)
     return 0;
 }
 
-#include "mp3-duration.h"
+#include "mp3-util.h"
+
+#ifdef HAVE_MAD_H
 
 /*
  * (Re)fill the stream buffer that is to be decoded.  If any data
@@ -524,7 +530,7 @@ static int startwrite(sox_format_t * ft)
   LOAD_FN_PTR(lame_set_in_samplerate)
   LOAD_FN_PTR(lame_set_bWriteVbrTag)
   LOAD_FN_PTR(lame_get_bWriteVbrTag)
-#if defined USING_ID3TAG && HAVE_ID3TAG_SET_FIELDVALUE
+#ifdef HAVE_ID3TAG_SET_FIELDVALUE
   LOAD_FN_PTR(id3tag_set_fieldvalue)
 #endif
   LOAD_FN_PTR(lame_init_params)
@@ -579,7 +585,7 @@ static int startwrite(sox_format_t * ft)
 
   p->lame_set_bWriteVbrTag(p->gfp, 0); /* disable writing VBR tag */
 
-#ifdef USING_ID3TAG
+#ifdef HAVE_ID3TAG_SET_FIELDVALUE
   write_comments(ft);
 #endif
 
@@ -591,9 +597,9 @@ static int startwrite(sox_format_t * ft)
    * performance), which allows balancing encoding speed vs. quality.
    * In LAME, 0 specifies highest quality but is very slow, while
    * 9 selects poor quality, but is fast. (5 is the default and 2 is
-   * recommend as a good trade-off for high quality encodes.)
+   * recommended as a good trade-off for high quality encodes.)
    *
-   * Becaues encoding.compression is a float, the fractional part is used
+   * Because encoding.compression is a float, the fractional part is used
    * to select quality. 128.2 selects 128 kbps encoding with a quality
    * of 2. There is one problem with this approach. We need 128 to specify
    * 128 kbps encoding with default quality, so 0 means use default. Instead
@@ -601,7 +607,7 @@ static int startwrite(sox_format_t * ft)
    * (128.01 or 128.99).
    *
    * LAME uses bitrate to specify a constant bitrate, but higher quality
-   * can be acheived using Variable Bit Rate (VBR). VBR quality (really
+   * can be achieved using Variable Bit Rate (VBR). VBR quality (really
    * size) is selected using a number from 0 to 9. Use a value of 0 for high
    * quality, larger files, and 9 for smaller files of lower quality. 4 is
    * the default.
@@ -640,7 +646,9 @@ static int startwrite(sox_format_t * ft)
       }
 
 #if HAVE_LAME_SET_VBR_QUALITY
-#include "mp3-1.h"
+#define IGNORE_WARNING \
+      if (p->lame_set_VBR_quality(p->gfp, floor_compression) < 0)
+#include "ignore-warning-1.h"
       {
         lsx_fail_errno(ft, SOX_EOF,
           "lame_set_VBR_quality(%f) failed (should be between 0 and 9)",
@@ -817,3 +825,4 @@ LSX_FORMAT_HANDLER(mp3)
   };
   return &handler;
 }
+#endif /* defined(HAVE_LAME_LAME_H) || defined (HAVE_MAD_H) */
