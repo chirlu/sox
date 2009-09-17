@@ -92,6 +92,11 @@
   #define TIME_FRAC 1e3
 #endif
 
+#ifdef _MSC_VER
+/* _kbhit and _getch */
+#include <conio.h>
+#endif
+
 /*#define MORE_INTERACTIVE 1*/
 
 /* argv[0] options */
@@ -1224,7 +1229,11 @@ static int update_status(sox_bool all_done, void * client_data)
 {
   (void)client_data;
   if (interactive) while (kbhit()) {
+#ifdef _MSC_VER
+    int ch = _getch();
+#else
     int ch = getchar();
+#endif
 
 #ifdef MORE_INTERACTIVE
     if (files[current_input]->ft->handler.seek &&
@@ -1465,7 +1474,10 @@ static void sigint(int s)
   static struct timeval then;
   if (input_count > 1 && show_progress && s == SIGINT &&
       is_serial(combine_method) && since(&then, 1.0, sox_true))
+  {
+    signal(SIGINT, sigint);
     user_skip = sox_true;
+  }
   else user_abort = sox_true;
 }
 
@@ -1627,16 +1639,19 @@ static int process(void)
 
   optimize_trim();
 
-#ifdef HAVE_TERMIOS_H /* so we can be fully interactive. */
+#if defined(HAVE_TERMIOS_H) || defined(_MSC_VER)
+  /* so we can be fully interactive. */
   if (show_progress && !interactive && is_player && stdin_is_a_tty) {
+#ifdef HAVE_TERMIOS_H
     struct termios modified_termios;
 
     tcgetattr(fileno(stdin), &original_termios);
-    interactive = sox_true;
     modified_termios = original_termios;
     modified_termios.c_lflag &= ~(ICANON | ECHO);
     modified_termios.c_cc[VMIN] = modified_termios.c_cc[VTIME] = 0;
     tcsetattr(fileno(stdin), TCSANOW, &modified_termios);
+#endif
+    interactive = sox_true;
   }
 #endif
 

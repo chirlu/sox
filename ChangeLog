@@ -71,6 +71,7 @@ Internal improvements:
 
   o Move bit-rot detection support files to sub-directory (could
     previously cause build problems).  (robs)
+  o [2859244] Fixes to improve compatibility with MSVC.  (Doug Cook)
 
 
 sox-14.3.0	2009-06-14
