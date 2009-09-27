@@ -133,11 +133,6 @@ void lsx_fir_to_phase(double * * h, int * len,
 #define LSX_MAX_TBW3A floor(LSX_MAX_TBW0A * LSX_TO_3dB)
 void lsx_plot_fir(double * h, int num_points, sox_rate_t rate, sox_plot_t type, char const * title, double y1, double y2);
 
-#ifndef HAVE_STRCASECMP
-int strcasecmp(const char *s1, const char *s2);
-int strncasecmp(char const * s1, char const * s2, size_t n);
-#endif
-
 #ifdef HAVE_BYTESWAP_H
 #include <byteswap.h>
 #define lsx_swapw(x) bswap_16(x)
@@ -309,5 +304,98 @@ int lsx_effect_set_imin(sox_effect_t * effp, size_t imin);
 
 int lsx_effects_init(void);
 int lsx_effects_quit(void);
+
+/*--------------------------------- Dynamic Library ----------------------------------*/
+
+#if defined(HAVE_LIBLTDL)
+    #include <ltdl.h>
+    typedef lt_dlhandle lsx_dlhandle;
+#else
+    struct lsx_dlhandle_tag;
+    typedef struct lsx_dlhandle_tag *lsx_dlhandle;
+#endif
+
+typedef void (*lsx_dlptr)(void);
+
+typedef struct lsx_dlfunction_info
+{
+    const char* name;
+    lsx_dlptr static_func;
+    lsx_dlptr stub_func;
+} lsx_dlfunction_info;
+
+int lsx_open_dllibrary(
+    const char* library_description,
+    const char * const library_names[],
+    const lsx_dlfunction_info func_infos[],
+    lsx_dlptr selected_funcs[],
+    lsx_dlhandle* pdl);
+
+void lsx_close_dllibrary(
+    lsx_dlhandle dl);
+
+#define LSX_DLENTRIES_APPLY__(entries, f, x) entries(f, x)
+
+#define LSX_DLENTRY_TO_PTR__(unused, func_return, func_name, func_args, static_func, stub_func, func_ptr) \
+    func_return (*func_ptr) func_args;
+
+/* LSX_DLENTRIES_TO_PTRS: Given an ENTRIES macro and the name of the dlhandle
+   variable, declares the corresponding function pointer variables and the
+   dlhandle variable. */
+#define LSX_DLENTRIES_TO_PTRS(entries, dlhandle) \
+    LSX_DLENTRIES_APPLY__(entries, LSX_DLENTRY_TO_PTR__, 0) \
+    lsx_dlhandle dlhandle
+
+#define LSX_DLLIBRARY_OPEN1__(unused, func_return, func_name, func_args, static_func, stub_func, func_ptr) \
+    { #func_name, (lsx_dlptr)(static_func), (lsx_dlptr)(stub_func) },
+
+#define LSX_DLLIBRARY_OPEN2__(ptr_container, func_return, func_name, func_args, static_func, stub_func, func_ptr) \
+    (ptr_container)->func_ptr = (func_return (*)func_args)lsx_dlfunction_open_library_funcs[lsx_dlfunction_open_library_index++];
+
+/* LSX_DLFUNCTION_OPEN_LIBRARY: Input an ENTRIES macro, the library's description,
+   a null-terminated list of library names (i.e. { "libmp3-0", "libmp3", NULL }),
+   the name of the dlhandle variable, the name of the structure that contains
+   the function pointer and dlhandle variables, and the name of the variable in
+   which the result of the lsx_open_dllibrary call should be stored. This will
+   call lsx_open_dllibrary and copy the resulting function pointers into the
+   structure members. */
+#define LSX_DLLIBRARY_OPEN(ptr_container, dlhandle, entries, library_description, library_names, return_var) \
+    do { \
+      lsx_dlfunction_info lsx_dlfunction_open_library_infos[] = { \
+        LSX_DLENTRIES_APPLY__(entries, LSX_DLLIBRARY_OPEN1__, 0) \
+        {NULL,NULL,NULL} }; \
+      int lsx_dlfunction_open_library_index = 0; \
+      lsx_dlptr lsx_dlfunction_open_library_funcs[sizeof(lsx_dlfunction_open_library_infos)/sizeof(lsx_dlfunction_open_library_infos[0])]; \
+      (return_var) = lsx_open_dllibrary((library_description), (library_names), lsx_dlfunction_open_library_infos, lsx_dlfunction_open_library_funcs, &(ptr_container)->dlhandle); \
+      LSX_DLENTRIES_APPLY__(entries, LSX_DLLIBRARY_OPEN2__, ptr_container) \
+    } while(0)
+
+#define LSX_DLLIBRARY_CLOSE(ptr_container, dlhandle) \
+    lsx_close_dllibrary((ptr_container)->dlhandle)
+
+  /* LSX_DLENTRY_STATIC: For use in creating an ENTRIES macro. func is
+     expected to be available at link time. If not present, link will fail. */
+#define LSX_DLENTRY_STATIC(f,x, ret, func, args)  f(x, ret, func, args, func, NULL, func)
+
+  /* LSX_DLENTRY_DYNAMIC: For use in creating an ENTRIES macro. func need
+     not be available at link time (and if present, the link time version will
+     not be used). func will be loaded via dlsym. If this function is not
+     found in the shared library, the shared library will not be used. */
+#define LSX_DLENTRY_DYNAMIC(f,x, ret, func, args) f(x, ret, func, args, NULL, NULL, func)
+
+  /* LSX_DLENTRY_STUB: For use in creating an ENTRIES macro. func need not
+     be available at link time (and if present, the link time version will not
+     be used). If using DL_LAME, the func may be loaded via dlopen/dlsym, but
+     if not found, the shared library will still be used if all of the
+     non-stub functions are found. If the function is not found via dlsym (or
+     if we are not loading any shared libraries), the stub will be used. This
+     assumes that the name of the stub function is the name of the function +
+     "_stub". */
+#define LSX_DLENTRY_STUB(f,x, ret, func, args)    f(x, ret, func, args, NULL, func##_stub, func)
+
+  /* LSX_DLFUNC_IS_STUB: returns true if the named function is a do-nothing
+     stub. Assumes that the name of the stub function is the name of the
+     function + "_stub". */
+#define LSX_DLFUNC_IS_STUB(ptr_container, func) ((ptr_container)->func == func##_stub)
 
 #endif

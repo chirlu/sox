@@ -21,21 +21,31 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#ifndef HAVE_STRCASECMP
-int strcasecmp(const char * s1, const char * s2)
+int lsx_strcasecmp(const char * s1, const char * s2)
 {
+#if defined(HAVE_STRCASECMP)
+  return strcasecmp(s1, s2);
+#elif defined(_MSC_VER)
+  return _stricmp(s1, s2);
+#else
   while (*s1 && (toupper(*s1) == toupper(*s2)))
     s1++, s2++;
   return toupper(*s1) - toupper(*s2);
+#endif
 }
 
-int strncasecmp(char const * s1, char const * s2, size_t n)
+int lsx_strncasecmp(char const * s1, char const * s2, size_t n)
 {
+#if defined(HAVE_STRCASECMP)
+  return strncasecmp(s1, s2, n);
+#elif defined(_MSC_VER)
+  return _strnicmp(s1, s2, n);
+#else
   while (--n && *s1 && (toupper(*s1) == toupper(*s2)))
     s1++, s2++;
   return toupper(*s1) - toupper(*s2);
-}
 #endif
+}
 
 sox_bool lsx_strends(char const * str, char const * end)
 {
@@ -136,3 +146,138 @@ char const * lsx_sigfigs3p(double percentage)
   return string[n];
 }
 
+int lsx_open_dllibrary(
+  const char* library_description,
+  const char* const library_names[] UNUSED,
+  const lsx_dlfunction_info func_infos[],
+  lsx_dlptr selected_funcs[],
+  lsx_dlhandle* pdl)
+{
+  int failed = 0;
+  lsx_dlhandle dl = NULL;
+
+  /* Track enough information to give a good error message about one failure.
+   * Let failed symbol load override failed library open, and let failed
+   * library open override missing static symbols.
+   */
+  const char* failed_libname = NULL;
+  const char* failed_funcname = NULL;
+
+#ifdef HAVE_LIBLTDL
+  if (library_names && library_names[0])
+  {
+    const char* const* libname;
+    if (lt_dlinit())
+    {
+      lsx_fail(
+        "Unable to load %s - failed to initialize ltdl.",
+        library_description);
+      return 1;
+    }
+
+    for (libname = library_names; *libname; libname++)
+    {
+      dl = lt_dlopenext(*libname);
+      if (dl)
+      {
+        size_t i;
+        for (i = 0; func_infos[i].name; i++)
+        {
+          union {lsx_dlptr fn; lt_ptr ptr;} func;
+          func.ptr = lt_dlsym(dl, func_infos[i].name);
+          selected_funcs[i] = func.fn ? func.fn : func_infos[i].stub_func;
+          if (!selected_funcs[i])
+          {
+            lt_dlclose(dl);
+            dl = NULL;
+            failed_libname = *libname;
+            failed_funcname = func_infos[i].name;
+            break;
+          }
+        }
+
+        if (dl)
+          break;
+      }
+      else if (!failed_libname)
+      {
+        failed_libname = *libname;
+      }
+    }
+
+    if (!dl)
+      lt_dlexit();
+  }
+#endif /* HAVE_LIBLTDL */
+
+  if (!dl)
+  {
+    size_t i;
+    for (i = 0; func_infos[i].name; i++)
+    {
+      selected_funcs[i] =
+          func_infos[i].static_func
+          ? func_infos[i].static_func
+          : func_infos[i].stub_func;
+      if (!selected_funcs[i])
+      {
+        if (!failed_libname)
+        {
+          failed_libname = "static";
+          failed_funcname = func_infos[i].name;
+        }
+
+        failed = 1;
+        break;
+      }
+    }
+  }
+
+  if (failed)
+  {
+    size_t i;
+    for (i = 0; func_infos[i].name; i++)
+      selected_funcs[i] = NULL;
+#ifdef HAVE_LIBLTDL
+#define LTDL_MISSING ""
+#else
+#define LTDL_MISSING " (Dynamic library support not configured.)"
+#endif /* HAVE_LIBLTDL */
+    if (failed_funcname)
+    {
+      lsx_fail(
+        "Unable to load %s (%s) function \"%s\"." LTDL_MISSING,
+        library_description,
+        failed_libname,
+        failed_funcname);
+    }
+    else if (failed_libname)
+    {
+      lsx_fail(
+        "Unable to load %s (%s)." LTDL_MISSING,
+        library_description,
+        failed_libname);
+    }
+    else
+    {
+      lsx_fail(
+        "Unable to load %s - no dynamic library names selected." LTDL_MISSING,
+        library_description);
+    }
+  }
+
+  *pdl = dl;
+  return failed;
+}
+
+void lsx_close_dllibrary(
+  lsx_dlhandle dl UNUSED)
+{
+#ifdef HAVE_LIBLTDL
+  if (dl)
+  {
+    lt_dlclose(dl);
+    lt_dlexit();
+  }
+#endif /* HAVE_LIBLTDL */
+}

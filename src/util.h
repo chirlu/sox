@@ -121,3 +121,8 @@
 
 #define dB_to_linear(x) exp((x) * M_LN10 * 0.05)
 #define linear_to_dB(x) (log10(x) * 20)
+
+#ifndef HAVE_STRCASECMP
+#define strcasecmp(s1, s2) lsx_strcasecmp((s1), (s2))
+#define strncasecmp(s1, s2, n) lsx_strncasecmp((s1), (s2), (n))
+#endif

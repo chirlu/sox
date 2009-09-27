@@ -30,7 +30,7 @@ static char const * id3tagmap[][2] =
   {NULL, NULL}
 };
 
-#if defined(HAVE_LAME_LAME_H) && defined(HAVE_ID3TAG_SET_FIELDVALUE)
+#if defined(HAVE_LAME)
 
 static void write_comments(sox_format_t * ft)
 {
@@ -40,6 +40,9 @@ static void write_comments(sox_format_t * ft)
   size_t id3tag_size = 0;
   const char* comment;
   size_t required_size;
+
+  p->id3tag_init(p->gfp);
+  p->id3tag_set_pad(p->gfp, ID3PADDING);
 
   for (i = 0; id3tagmap[i][0]; i++)
   {
@@ -69,7 +72,7 @@ static void write_comments(sox_format_t * ft)
   free(id3tag_buf);
 }
 
-#endif /* HAVE_LAME_LAME_H && HAVE_ID3TAG_SET_FIELDVALUE */
+#endif /* HAVE_LAME */
 
 #ifdef USING_ID3TAG
 
@@ -133,11 +136,11 @@ static unsigned long xing_frames(priv_t * p, struct mad_bitptr ptr, unsigned bit
 
 static void mad_timer_mult(mad_timer_t * t, double d)
 {
-  t->seconds = d *= (t->seconds + t->fraction * (1. / MAD_TIMER_RESOLUTION));
-  t->fraction = (d - t->seconds) * MAD_TIMER_RESOLUTION + .5;
+  t->seconds = (signed long)(d *= (t->seconds + t->fraction * (1. / MAD_TIMER_RESOLUTION)));
+  t->fraction = (unsigned long)((d - t->seconds) * MAD_TIMER_RESOLUTION + .5);
 }
 
-static size_t mp3_duration_ms(sox_format_t * ft, unsigned char *buffer)
+static size_t mp3_duration_ms(sox_format_t * ft)
 {
   priv_t              * p = (priv_t *) ft->priv;
   FILE                * fp = ft->fp;
@@ -157,15 +160,15 @@ static size_t mp3_duration_ms(sox_format_t * ft, unsigned char *buffer)
     int read, padding = 0;
     size_t leftover = mad_stream.bufend - mad_stream.next_frame;
 
-    memcpy(buffer, mad_stream.this_frame, leftover);
-    read = fread(buffer + leftover, (size_t) 1, INPUT_BUFFER_SIZE - leftover, fp);
+    memcpy(p->mp3_buffer, mad_stream.this_frame, leftover);
+    read = fread(p->mp3_buffer + leftover, (size_t) 1, p->mp3_buffer_size - leftover, fp);
     if (read <= 0) {
       lsx_debug("got exact duration by scan to EOF (frames=%lu leftover=%lu)", (unsigned long)frames, (unsigned long)leftover);
       break;
     }
-    for (; !depadded && padding < read && !buffer[padding]; ++padding);
+    for (; !depadded && padding < read && !p->mp3_buffer[padding]; ++padding);
     depadded = sox_true;
-    p->mad_stream_buffer(&mad_stream, buffer + padding, leftover + read - padding);
+    p->mad_stream_buffer(&mad_stream, p->mp3_buffer + padding, leftover + read - padding);
 
     while (sox_true) {  /* Decode frame headers */
       mad_stream.error = MAD_ERROR_NONE;

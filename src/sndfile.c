@@ -30,9 +30,48 @@
 
 #define LOG_MAX 2048 /* As per the SFC_GET_LOG_INFO example */
 
-#ifndef HACKED_LSF
-#define sf_stop(x)
+#if !defined(HAVE_LIBLTDL) || !defined(HAVE_SNDFILE_1_0_12)
+#undef DL_SNDFILE
 #endif
+
+static const char* const sndfile_library_names[] =
+{
+#ifdef DL_SNDFILE
+  "libsndfile-1",
+  "cygsndfile-1",
+#endif
+  NULL
+};
+
+#ifdef DL_SNDFILE
+  #define SNDFILE_FUNC      LSX_DLENTRY_DYNAMIC
+  #define SNDFILE_FUNC_STOP LSX_DLENTRY_STUB
+#else
+  #define SNDFILE_FUNC      LSX_DLENTRY_STATIC
+#ifdef HACKED_LSF
+  #define SNDFILE_FUNC_STOP LSX_DLENTRY_STATIC
+#else
+  #define SNDFILE_FUNC_STOP LSX_DLENTRY_STUB
+#endif
+#endif /* DL_SNDFILE */
+
+#ifdef HAVE_SNDFILE_1_0_12
+#define SNDFILE_FUNC_OPEN(f,x) \
+  SNDFILE_FUNC(f,x, SNDFILE*, sf_open_virtual, (SF_VIRTUAL_IO *sfvirtual, int mode, SF_INFO *sfinfo, void *user_data))
+#else
+  SNDFILE_FUNC(f,x, SNDFILE*, sf_open_fd, (int fd, int mode, SF_INFO *sfinfo, int close_desc))
+#endif
+
+#define SNDFILE_FUNC_ENTRIES(f,x) \
+  SNDFILE_FUNC_OPEN(f,x) \
+  SNDFILE_FUNC_STOP(f,x, int, sf_stop, (SNDFILE *sndfile)) \
+  SNDFILE_FUNC(f,x, int, sf_close, (SNDFILE *sndfile)) \
+  SNDFILE_FUNC(f,x, int, sf_format_check, (const SF_INFO *info)) \
+  SNDFILE_FUNC(f,x, int, sf_command, (SNDFILE *sndfile, int command, void *data, int datasize)) \
+  SNDFILE_FUNC(f,x, sf_count_t, sf_read_int, (SNDFILE *sndfile, int *ptr, sf_count_t items)) \
+  SNDFILE_FUNC(f,x, sf_count_t, sf_write_int, (SNDFILE *sndfile, const int *ptr, sf_count_t items)) \
+  SNDFILE_FUNC(f,x, sf_count_t, sf_seek, (SNDFILE *sndfile, sf_count_t frames, int whence)) \
+  SNDFILE_FUNC(f,x, const char*, sf_strerror, (SNDFILE *sndfile))
 
 /* Private data for sndfile files */
 typedef struct {
@@ -40,6 +79,7 @@ typedef struct {
   SF_INFO *sf_info;
   char * log_buffer;
   char const * log_buffer_ptr;
+  LSX_DLENTRIES_TO_PTRS(SNDFILE_FUNC_ENTRIES, sndfile_dl);
 } priv_t;
 
 /*
@@ -48,7 +88,7 @@ typedef struct {
 static void drain_log_buffer(sox_format_t * ft)
 {
   priv_t * sf = (priv_t *)ft->priv;
-  sf_command(sf->sf_file, SFC_GET_LOG_INFO, sf->log_buffer, LOG_MAX);
+  sf->sf_command(sf->sf_file, SFC_GET_LOG_INFO, sf->log_buffer, LOG_MAX);
   while (*sf->log_buffer_ptr) {
     static char const warning_prefix[] = "*** Warning : ";
     char const * end = strchr(sf->log_buffer_ptr, '\n');
@@ -181,6 +221,49 @@ static struct {
   { "xi",       SF_FORMAT_XI }
 };
 
+static int sf_stop_stub(SNDFILE *sndfile)
+{
+    return 1;
+}
+
+#ifdef HAVE_SNDFILE_1_0_12
+
+static sf_count_t vio_get_filelen(void *user_data)
+{
+  return lsx_filelength((sox_format_t *)user_data);
+}
+
+static sf_count_t vio_seek(sf_count_t offset, int whence, void *user_data)
+{
+    return lsx_seeki((sox_format_t *)user_data, (off_t)offset, whence);
+}
+
+static sf_count_t vio_read(void *ptr, sf_count_t count, void *user_data)
+{
+    return lsx_readbuf((sox_format_t *)user_data, ptr, (size_t)count);
+}
+
+static sf_count_t vio_write(const void *ptr, sf_count_t count, void *user_data)
+{
+    return lsx_writebuf((sox_format_t *)user_data, ptr, (size_t)count);
+}
+
+static sf_count_t vio_tell(void *user_data)
+{
+    return lsx_tell((sox_format_t *)user_data);
+}
+
+static SF_VIRTUAL_IO vio =
+{
+    vio_get_filelen,
+    vio_seek,
+    vio_read,
+    vio_write,
+    vio_tell
+};
+
+#endif /* HAVE_SNDFILE_1_0_12 */
+
 /* Convert file name or type to libsndfile format */
 static int name_to_format(const char *name)
 {
@@ -205,10 +288,22 @@ static int name_to_format(const char *name)
   return 0;
 }
 
-static void start(sox_format_t * ft)
+static int start(sox_format_t * ft)
 {
   priv_t * sf = (priv_t *)ft->priv;
   int subtype = ft_enc(ft->encoding.bits_per_sample? ft->encoding.bits_per_sample : ft->signal.precision, ft->encoding.encoding);
+  int open_library_result;
+
+  LSX_DLLIBRARY_OPEN(
+      sf,
+      sndfile_dl,
+      SNDFILE_FUNC_ENTRIES,
+      "libsndfile library",
+      sndfile_library_names,
+      open_library_result);
+  if (open_library_result)
+    return SOX_EOF;
+
   sf->log_buffer_ptr = sf->log_buffer = lsx_malloc((size_t)LOG_MAX);
   sf->sf_info = lsx_calloc(1, sizeof(SF_INFO));
 
@@ -219,16 +314,18 @@ static void start(sox_format_t * ft)
     else
       sf->sf_info->format = name_to_format(ft->filetype) | subtype;
   }
-  sf->sf_info->samplerate = ft->signal.rate;
+  sf->sf_info->samplerate = (int)ft->signal.rate;
   sf->sf_info->channels = ft->signal.channels;
   if (ft->signal.channels)
     sf->sf_info->frames = ft->signal.length / ft->signal.channels;
+
+  return SOX_SUCCESS;
 }
 
 static int check_read_params(sox_format_t * ft, unsigned channels,
     sox_rate_t rate, sox_encoding_t encoding, unsigned bits_per_sample, off_t length)
 {
-  ft->signal.length = length;
+  ft->signal.length = (size_t)length;
 
   if (channels && ft->signal.channels && ft->signal.channels != channels)
     lsx_warn("`%s': overriding number of channels", ft->filename);
@@ -262,15 +359,20 @@ static int startread(sox_format_t * ft)
   sox_encoding_t encoding;
   sox_rate_t rate;
 
-  start(ft);
+  if (start(ft) == SOX_EOF)
+      return SOX_EOF;
 
-  sf->sf_file = sf_open_fd(fileno(ft->fp), SFM_READ, sf->sf_info, 1);
+#ifdef HAVE_SNDFILE_1_0_12
+  sf->sf_file = sf->sf_open_virtual(&vio, SFM_READ, sf->sf_info, ft);
+#else
+  sf->sf_file = sf->sf_open_fd(fileno(ft->fp), SFM_READ, sf->sf_info, 1);
   ft->fp = NULL; /* Transfer ownership of fp to LSF */
+#endif
   drain_log_buffer(ft);
 
   if (sf->sf_file == NULL) {
     memset(ft->sox_errstr, 0, sizeof(ft->sox_errstr));
-    strncpy(ft->sox_errstr, sf_strerror(sf->sf_file), sizeof(ft->sox_errstr)-1);
+    strncpy(ft->sox_errstr, sf->sf_strerror(sf->sf_file), sizeof(ft->sox_errstr)-1);
     free(sf->sf_file);
     return SOX_EOF;
   }
@@ -289,8 +391,8 @@ static int startread(sox_format_t * ft)
 
 #ifdef HAVE_SFC_SET_SCALE_FLOAT_INT_READ
   if ((sf->sf_info->format & SF_FORMAT_SUBMASK) == SF_FORMAT_FLOAT) {
-    sf_command(sf->sf_file, SFC_SET_SCALE_FLOAT_INT_READ, NULL, SF_TRUE);
-    sf_command(sf->sf_file, SFC_SET_CLIPPING, NULL, SF_TRUE);
+    sf->sf_command(sf->sf_file, SFC_SET_SCALE_FLOAT_INT_READ, NULL, SF_TRUE);
+    sf->sf_command(sf->sf_file, SFC_SET_CLIPPING, NULL, SF_TRUE);
   }
 #endif
 
@@ -310,7 +412,7 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
 {
   priv_t * sf = (priv_t *)ft->priv;
   /* FIXME: We assume int == sox_sample_t here */
-  return (size_t)sf_read_int(sf->sf_file, (int *)buf, (sf_count_t)len);
+  return (size_t)sf->sf_read_int(sf->sf_file, (int *)buf, (sf_count_t)len);
 }
 
 /*
@@ -319,25 +421,29 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
 static int stopread(sox_format_t * ft)
 {
   priv_t * sf = (priv_t *)ft->priv;
-  sf_stop(sf->sf_file);
+  sf->sf_stop(sf->sf_file);
   drain_log_buffer(ft);
-  sf_close(sf->sf_file);
+  sf->sf_close(sf->sf_file);
+  LSX_DLLIBRARY_CLOSE(sf, sndfile_dl);
   return SOX_SUCCESS;
 }
 
 static int startwrite(sox_format_t * ft)
 {
   priv_t * sf = (priv_t *)ft->priv;
-  start(ft);
+
+  if (start(ft) == SOX_EOF)
+      return SOX_EOF;
+
   /* If output format is invalid, try to find a sensible default */
-  if (!sf_format_check(sf->sf_info)) {
+  if (!sf->sf_format_check(sf->sf_info)) {
     SF_FORMAT_INFO format_info;
     int i, count;
 
-    sf_command(sf->sf_file, SFC_GET_SIMPLE_FORMAT_COUNT, &count, (int) sizeof(int));
+    sf->sf_command(sf->sf_file, SFC_GET_SIMPLE_FORMAT_COUNT, &count, (int) sizeof(int));
     for (i = 0; i < count; i++) {
       format_info.format = i;
-      sf_command(sf->sf_file, SFC_GET_SIMPLE_FORMAT, &format_info, (int) sizeof(format_info));
+      sf->sf_command(sf->sf_file, SFC_GET_SIMPLE_FORMAT, &format_info, (int) sizeof(format_info));
       if ((format_info.format & SF_FORMAT_TYPEMASK) == (sf->sf_info->format & SF_FORMAT_TYPEMASK)) {
         sf->sf_info->format = format_info.format;
         /* FIXME: Print out exactly what we chose, needs sndfile ->
@@ -346,7 +452,7 @@ static int startwrite(sox_format_t * ft)
       }
     }
 
-    if (!sf_format_check(sf->sf_info)) {
+    if (!sf->sf_format_check(sf->sf_info)) {
       lsx_fail("cannot find a usable output encoding");
       return SOX_EOF;
     }
@@ -354,20 +460,24 @@ static int startwrite(sox_format_t * ft)
       lsx_warn("cannot use desired output encoding, choosing default");
   }
 
-  sf->sf_file = sf_open_fd(fileno(ft->fp), SFM_WRITE, sf->sf_info, 1);
+#ifdef HAVE_SNDFILE_1_0_12
+  sf->sf_file = sf->sf_open_virtual(&vio, SFM_WRITE, sf->sf_info, ft);
+#else
+  sf->sf_file = sf->sf_open_fd(fileno(ft->fp), SFM_WRITE, sf->sf_info, 1);
   ft->fp = NULL; /* Transfer ownership of fp to LSF */
+#endif
   drain_log_buffer(ft);
 
   if (sf->sf_file == NULL) {
     memset(ft->sox_errstr, 0, sizeof(ft->sox_errstr));
-    strncpy(ft->sox_errstr, sf_strerror(sf->sf_file), sizeof(ft->sox_errstr)-1);
+    strncpy(ft->sox_errstr, sf->sf_strerror(sf->sf_file), sizeof(ft->sox_errstr)-1);
     free(sf->sf_file);
     return SOX_EOF;
   }
 
 #ifdef HAVE_SFC_SET_SCALE_INT_FLOAT_WRITE
   if ((sf->sf_info->format & SF_FORMAT_SUBMASK) == SF_FORMAT_FLOAT)
-    sf_command(sf->sf_file, SFC_SET_SCALE_INT_FLOAT_WRITE, NULL, SF_TRUE);
+    sf->sf_command(sf->sf_file, SFC_SET_SCALE_INT_FLOAT_WRITE, NULL, SF_TRUE);
 #endif
            
   return SOX_SUCCESS;
@@ -381,7 +491,7 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
 {
   priv_t * sf = (priv_t *)ft->priv;
   /* FIXME: We assume int == sox_sample_t here */
-  return (size_t)sf_write_int(sf->sf_file, (int *)buf, (sf_count_t)len);
+  return (size_t)sf->sf_write_int(sf->sf_file, (int *)buf, (sf_count_t)len);
 }
 
 /*
@@ -390,16 +500,17 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
 static int stopwrite(sox_format_t * ft)
 {
   priv_t * sf = (priv_t *)ft->priv;
-  sf_stop(sf->sf_file);
+  sf->sf_stop(sf->sf_file);
   drain_log_buffer(ft);
-  sf_close(sf->sf_file);
+  sf->sf_close(sf->sf_file);
+  LSX_DLLIBRARY_CLOSE(sf, sndfile_dl);
   return SOX_SUCCESS;
 }
 
 static int seek(sox_format_t * ft, uint64_t offset)
 {
   priv_t * sf = (priv_t *)ft->priv;
-  sf_seek(sf->sf_file, (sf_count_t)(offset / ft->signal.channels), SEEK_CUR);
+  sf->sf_seek(sf->sf_file, (sf_count_t)(offset / ft->signal.channels), SEEK_CUR);
   return SOX_SUCCESS;
 }
 

@@ -10,17 +10,24 @@
  */
 
 #include "sox_i.h"
-
-#if defined(HAVE_LAME_LAME_H) || defined (HAVE_MAD_H)
-
 #include <string.h>
+
+#if defined(HAVE_LAME_LAME_H) || defined(HAVE_LAME_H)
+#define HAVE_LAME 1
+#else
+#undef HAVE_LAME
+#endif
+
+#if defined(HAVE_MAD_H) || defined(HAVE_LAME)
 
 #ifdef HAVE_MAD_H
 #include <mad.h>
 #endif
 
-#ifdef HAVE_LAME_LAME_H
+#if defined(HAVE_LAME_LAME_H)
 #include <lame/lame.h>
+#elif defined(HAVE_LAME_H)
+#include <lame.h>
 #endif
 
 #if defined(HAVE_ID3TAG) && (defined(HAVE_IO_H) || defined(HAVE_UNISTD_H))
@@ -38,89 +45,139 @@
   #define ID3_TAG_FLAG_FOOTERPRESENT 0x10
 #endif
 
-#if defined HAVE_LIBLTDL
-  #include <ltdl.h>
-#if defined HAVE_MAD_H && defined DL_MAD
-mad_timer_t const mad_timer_zero;
-#endif
+#ifndef HAVE_LIBLTDL
+  #undef DL_LAME
+  #undef DL_MAD
 #endif
 
-#define INPUT_BUFFER_SIZE       (sox_globals.bufsiz)
+/* Under Windows, importing data from DLLs is a dicey proposition. This is true
+ * when using dlopen, but also true if linking directly against the DLL if the
+ * header does not mark the data as __declspec(dllexport), which mad.h does not.
+ * Sidestep the issue by defining our own mad_timer_zero. This is needed because
+ * mad_timer_zero is used in some of the mad.h macros.
+ */
+#define mad_timer_zero mad_timer_zero_stub
+static mad_timer_t const mad_timer_zero_stub = {0, 0};
+
+#define MAXFRAMESIZE 2880
+#define ID3PADDING 128
+
+static const char* const mad_library_names[] =
+{
+#ifdef DL_MAD
+    "libmad",
+    "cygmad-0",
+#endif
+    NULL
+};
+
+#ifdef DL_MAD
+  #define MAD_FUNC LSX_DLENTRY_DYNAMIC
+#else
+  #define MAD_FUNC LSX_DLENTRY_STATIC
+#endif
+
+#define MAD_FUNC_ENTRIES(f,x) \
+  MAD_FUNC(f,x, void, mad_stream_buffer, (struct mad_stream *, unsigned char const *, unsigned long)) \
+  MAD_FUNC(f,x, void, mad_stream_skip, (struct mad_stream *, unsigned long)) \
+  MAD_FUNC(f,x, int, mad_stream_sync, (struct mad_stream *)) \
+  MAD_FUNC(f,x, void, mad_stream_init, (struct mad_stream *)) \
+  MAD_FUNC(f,x, void, mad_frame_init, (struct mad_frame *)) \
+  MAD_FUNC(f,x, void, mad_synth_init, (struct mad_synth *)) \
+  MAD_FUNC(f,x, int, mad_frame_decode, (struct mad_frame *, struct mad_stream *)) \
+  MAD_FUNC(f,x, void, mad_timer_add, (mad_timer_t *, mad_timer_t)) \
+  MAD_FUNC(f,x, void, mad_synth_frame, (struct mad_synth *, struct mad_frame const *)) \
+  MAD_FUNC(f,x, char const *, mad_stream_errorstr, (struct mad_stream const *)) \
+  MAD_FUNC(f,x, void, mad_frame_finish, (struct mad_frame *)) \
+  MAD_FUNC(f,x, void, mad_stream_finish, (struct mad_stream *)) \
+  MAD_FUNC(f,x, unsigned long, mad_bit_read, (struct mad_bitptr *, unsigned int)) \
+  MAD_FUNC(f,x, int, mad_header_decode, (struct mad_header *, struct mad_stream *)) \
+  MAD_FUNC(f,x, void, mad_header_init, (struct mad_header *)) \
+  MAD_FUNC(f,x, signed long, mad_timer_count, (mad_timer_t, enum mad_units)) \
+  MAD_FUNC(f,x, void, mad_timer_multiply, (mad_timer_t *, signed long))
+
+static const char* const lame_library_names[] =
+{
+#ifdef DL_LAME
+  "libmp3lame",
+  "lame-enc",
+#endif
+  NULL
+};
+
+#ifdef DL_LAME
+  #define LAME_FUNC           LSX_DLENTRY_DYNAMIC
+  #define LAME_FUNC_MSG       LSX_DLENTRY_STUB
+  #define LAME_FUNC_LAMETAG   LSX_DLENTRY_STUB
+  #define LAME_FUNC_ID3       LSX_DLENTRY_STUB
+#else
+  #define LAME_FUNC           LSX_DLENTRY_STATIC
+  #ifdef HAVE_LAME_SET_MSGF
+    #define LAME_FUNC_MSG     LSX_DLENTRY_STATIC
+  #else
+    #define LAME_FUNC_MSG     LSX_DLENTRY_STUB
+  #endif
+  #ifdef HAVE_LAME_GET_LAMETAG_FRAME
+    #define LAME_FUNC_LAMETAG LSX_DLENTRY_STATIC
+  #else
+    #define LAME_FUNC_LAMETAG LSX_DLENTRY_STUB
+  #endif
+  #ifdef HAVE_LAME_ID3TAG
+    #define LAME_FUNC_ID3     LSX_DLENTRY_STATIC
+  #else
+    #define LAME_FUNC_ID3     LSX_DLENTRY_STUB
+  #endif
+#endif
+
+#define LAME_FUNC_ENTRIES(f,x) \
+  LAME_FUNC(f,x, lame_global_flags*, lame_init, (void)) \
+  LAME_FUNC_MSG(f,x, int, lame_set_errorf, (lame_global_flags *, void (*)(const char *, va_list))) \
+  LAME_FUNC_MSG(f,x, int, lame_set_debugf, (lame_global_flags *, void (*)(const char *, va_list))) \
+  LAME_FUNC_MSG(f,x, int, lame_set_msgf, (lame_global_flags *, void (*)(const char *, va_list))) \
+  LAME_FUNC(f,x, int, lame_set_num_samples, (lame_global_flags *, unsigned long)) \
+  LAME_FUNC(f,x, int, lame_get_num_channels, (const lame_global_flags *)) \
+  LAME_FUNC(f,x, int, lame_set_num_channels, (lame_global_flags *, int)) \
+  LAME_FUNC(f,x, int, lame_set_in_samplerate, (lame_global_flags *, int)) \
+  LAME_FUNC(f,x, int, lame_set_out_samplerate, (lame_global_flags *, int)) \
+  LAME_FUNC(f,x, int, lame_set_bWriteVbrTag, (lame_global_flags *, int)) \
+  LAME_FUNC(f,x, int, lame_set_brate, (lame_global_flags *, int)) \
+  LAME_FUNC(f,x, int, lame_set_quality, (lame_global_flags *, int)) \
+  LAME_FUNC(f,x, vbr_mode, lame_get_VBR, (const lame_global_flags *)) \
+  LAME_FUNC(f,x, int, lame_set_VBR, (lame_global_flags *, vbr_mode)) \
+  LAME_FUNC(f,x, int, lame_set_VBR_q, (lame_global_flags *, int)) \
+  LAME_FUNC(f,x, int, lame_init_params, (lame_global_flags *)) \
+  LAME_FUNC(f,x, int, lame_encode_buffer, (lame_global_flags *, const short int[], const short int[], const int, unsigned char *, const int)) \
+  LAME_FUNC(f,x, int, lame_encode_flush, (lame_global_flags *, unsigned char *, int)) \
+  LAME_FUNC(f,x, int, lame_close, (lame_global_flags *)) \
+  LAME_FUNC_LAMETAG(f,x, size_t, lame_get_lametag_frame, (const lame_global_flags *, unsigned char*, size_t)) \
+  LAME_FUNC_ID3(f,x, size_t, lame_get_id3v2_tag, (lame_global_flags *, unsigned char*, size_t)) \
+  LAME_FUNC_ID3(f,x, void, id3tag_init, (lame_global_flags *)) \
+  LAME_FUNC_ID3(f,x, void, id3tag_set_pad, (lame_global_flags *, size_t)) \
+  LAME_FUNC_ID3(f,x, int, id3tag_set_fieldvalue, (lame_global_flags *, const char *))
 
 /* Private data */
-typedef struct {
+typedef struct mp3_priv_t {
+  unsigned char *mp3_buffer;
+  size_t mp3_buffer_size;
+
 #ifdef HAVE_MAD_H
   struct mad_stream       Stream;
   struct mad_frame        Frame;
   struct mad_synth        Synth;
   mad_timer_t             Timer;
-  unsigned char           *InputBuffer;
   ptrdiff_t               cursamp;
   size_t                  FrameCount;
-
-  void (*mad_stream_buffer)(struct mad_stream *, unsigned char const *,
-                            unsigned long);
-  void (*mad_stream_skip)(struct mad_stream *, unsigned long);
-  int (*mad_stream_sync)(struct mad_stream *);
-  void (*mad_stream_init)(struct mad_stream *);
-  void (*mad_frame_init)(struct mad_frame *);
-  void (*mad_synth_init)(struct mad_synth *);
-  int (*mad_frame_decode)(struct mad_frame *, struct mad_stream *);
-  void (*mad_timer_add)(mad_timer_t *, mad_timer_t);
-  void (*mad_synth_frame)(struct mad_synth *, struct mad_frame const *);
-  char const *(*mad_stream_errorstr)(struct mad_stream const *);
-  void (*mad_frame_finish)(struct mad_frame *);
-  void (*mad_stream_finish)(struct mad_stream *);
-  unsigned long (*mad_bit_read)(struct mad_bitptr *, unsigned int);
-  int (*mad_header_decode)(struct mad_header *, struct mad_stream *);
-  void (*mad_header_init)(struct mad_header *);
-  signed long (*mad_timer_count)(mad_timer_t, enum mad_units);
-  void (*mad_timer_multiply)(mad_timer_t *, signed long);
-  #if defined HAVE_LIBLTDL && defined DL_MAD
-  lt_dlhandle mad_lth;
-  #endif
+  LSX_DLENTRIES_TO_PTRS(MAD_FUNC_ENTRIES, mad_dl);
 #endif /*HAVE_MAD_H*/
 
-#ifdef HAVE_LAME_LAME_H
-  lame_global_flags       *gfp;
-
-  lame_global_flags * (*lame_init)(void);
-  int (*lame_set_num_channels)(lame_global_flags *, int);
-  int (*lame_get_num_channels)(const lame_global_flags *);
-  int (*lame_set_in_samplerate)(lame_global_flags *, int);
-  int (*lame_set_bWriteVbrTag)(lame_global_flags *, int);
-  int (*lame_get_bWriteVbrTag)(lame_global_flags const *);
-  #ifdef HAVE_ID3TAG_SET_FIELDVALUE
-  int (*id3tag_set_fieldvalue)(lame_global_flags *, const char *);
-  #endif
-  int (*lame_init_params)(lame_global_flags *);
-  int (*lame_set_errorf)(lame_global_flags *,
-                         void (*func)(const char *, va_list));
-  int (*lame_set_debugf)(lame_global_flags *,
-                         void (*func)(const char *, va_list));
-  int (*lame_set_msgf)(lame_global_flags *,
-                       void (*func)(const char *, va_list));
-  int (*lame_encode_buffer)(lame_global_flags *, const short int[],
-                            const short int[], const int,
-                            unsigned char *, const int);
-  int (*lame_encode_flush)(lame_global_flags *, unsigned char *,
-                           int);
-  int (*lame_close)(lame_global_flags *);
-  void (*lame_mp3_tags_fid)(lame_global_flags *, FILE *);
-  int (*lame_get_brate)(const lame_global_flags *);
-  int (*lame_set_brate)(lame_global_flags *, int);
-  int (*lame_set_quality)(lame_global_flags *, int);
-  int (*lame_set_VBR)(lame_global_flags *, vbr_mode);
-  int (*lame_set_VBR_min_bitrate_kbps)(lame_global_flags *, int);
-  #ifdef HAVE_LAME_SET_VBR_QUALITY
-  int (*lame_set_VBR_quality)(lame_global_flags *, float);
-  #endif
-  vbr_mode (*lame_get_VBR)(const lame_global_flags *);
-
-  #if defined HAVE_LIBLTDL && defined DL_LAME
-  lt_dlhandle lame_lth;
-  #endif
-#endif /*HAVE_LAME_LAME_H*/
+#ifdef HAVE_LAME
+  lame_global_flags *gfp;
+  short *pcm_buffer;
+  size_t pcm_buffer_size;
+  unsigned long num_samples;
+  int vbr_tag;
+  LSX_DLENTRIES_TO_PTRS(LAME_FUNC_ENTRIES, lame_dl);
+#endif /*HAVE_LAME*/
 } priv_t;
 
 /* This function merges the functions tagtype() and id3_tag_query()
@@ -179,16 +236,16 @@ static int sox_mp3_input(sox_format_t * ft)
      * TODO: Is 2016 bytes the size of the largest frame?
      * (448000*(1152/32000))/8
      */
-    memmove(p->InputBuffer, p->Stream.next_frame, remaining);
+    memmove(p->mp3_buffer, p->Stream.next_frame, remaining);
 
-    bytes_read = lsx_readbuf(ft, p->InputBuffer+remaining,
-                            INPUT_BUFFER_SIZE-remaining);
+    bytes_read = lsx_readbuf(ft, p->mp3_buffer+remaining,
+                            p->mp3_buffer_size-remaining);
     if (bytes_read == 0)
     {
         return SOX_EOF;
     }
 
-    p->mad_stream_buffer(&p->Stream, p->InputBuffer, bytes_read+remaining);
+    p->mad_stream_buffer(&p->Stream, p->mp3_buffer, bytes_read+remaining);
     p->Stream.error = 0;
 
     return SOX_SUCCESS;
@@ -238,141 +295,110 @@ static int startread(sox_format_t * ft)
   priv_t *p = (priv_t *) ft->priv;
   size_t ReadSize;
   sox_bool ignore_length = ft->signal.length == SOX_IGNORE_LENGTH;
+  int open_library_result;
 
-#if defined HAVE_LIBLTDL && defined DL_MAD
-  #define DL_LIB_NAME "MAD decoder library (libmad"
-  #define LOAD_FN_PTR(x) \
-    if (!(ltptr.ptr = lt_dlsym(p->mad_lth, #x))) { \
-      lsx_fail("incompatible " DL_LIB_NAME " is missing "#x")"); \
-      return SOX_EOF; \
-    } \
-    p->x = ltptr.fn;
-  union {void (* fn)(); lt_ptr ptr;} ltptr;
-  if (!lt_dlinit())
-    p->mad_lth = lt_dlopenext("libmad");
-  if (!p->mad_lth) {
-    lsx_fail("could not find " DL_LIB_NAME ")");
+  LSX_DLLIBRARY_OPEN(
+      p,
+      mad_dl,
+      MAD_FUNC_ENTRIES,
+      "MAD decoder library",
+      mad_library_names,
+      open_library_result);
+  if (open_library_result)
     return SOX_EOF;
-  }
-#else
-  #define DL_LIB_NAME
-  #define LOAD_FN_PTR(x) p->x = x;
-#endif
 
-  LOAD_FN_PTR(mad_bit_read)
-  LOAD_FN_PTR(mad_frame_decode)
-  LOAD_FN_PTR(mad_frame_finish)
-  LOAD_FN_PTR(mad_frame_init)
-  LOAD_FN_PTR(mad_header_decode)
-  LOAD_FN_PTR(mad_header_init)
-  LOAD_FN_PTR(mad_stream_buffer)
-  LOAD_FN_PTR(mad_stream_errorstr)
-  LOAD_FN_PTR(mad_stream_finish)
-  LOAD_FN_PTR(mad_stream_init)
-  LOAD_FN_PTR(mad_stream_skip)
-  LOAD_FN_PTR(mad_stream_sync)
-  LOAD_FN_PTR(mad_synth_frame)
-  LOAD_FN_PTR(mad_synth_init)
-  LOAD_FN_PTR(mad_timer_add)
-  LOAD_FN_PTR(mad_timer_count)
-  LOAD_FN_PTR(mad_timer_multiply)
+  p->mp3_buffer_size = sox_globals.bufsiz;
+  p->mp3_buffer = lsx_malloc(p->mp3_buffer_size);
 
-#undef LOAD_FN_PTR
-#undef DL_LIB_NAME
-
-    p->InputBuffer = NULL;
-
-    p->InputBuffer=lsx_malloc(INPUT_BUFFER_SIZE);
-
-    ft->signal.length = SOX_UNSPEC;
-    if (ft->seekable) {
+  ft->signal.length = SOX_UNSPEC;
+  if (ft->seekable) {
 #ifdef USING_ID3TAG
-      read_comments(ft);
-      rewind(ft->fp);
-      if (!ft->signal.length)
+    read_comments(ft);
+    rewind(ft->fp);
+    if (!ft->signal.length)
 #endif
-        if (!ignore_length)
-          ft->signal.length = mp3_duration_ms(ft, p->InputBuffer);
-    }
+      if (!ignore_length)
+        ft->signal.length = mp3_duration_ms(ft);
+  }
 
-    p->mad_stream_init(&p->Stream);
-    p->mad_frame_init(&p->Frame);
-    p->mad_synth_init(&p->Synth);
-    mad_timer_reset(&p->Timer);
+  p->mad_stream_init(&p->Stream);
+  p->mad_frame_init(&p->Frame);
+  p->mad_synth_init(&p->Synth);
+  mad_timer_reset(&p->Timer);
 
-    ft->encoding.encoding = SOX_ENCODING_MP3;
+  ft->encoding.encoding = SOX_ENCODING_MP3;
 
-    /* Decode at least one valid frame to find out the input
-     * format.  The decoded frame will be saved off so that it
-     * can be processed later.
-     */
-    ReadSize = lsx_readbuf(ft, p->InputBuffer, INPUT_BUFFER_SIZE);
-    if (ReadSize != INPUT_BUFFER_SIZE && ferror(ft->fp))
+  /* Decode at least one valid frame to find out the input
+   * format.  The decoded frame will be saved off so that it
+   * can be processed later.
+   */
+  ReadSize = lsx_readbuf(ft, p->mp3_buffer, p->mp3_buffer_size);
+  if (ReadSize != p->mp3_buffer_size && ferror(ft->fp))
+    return SOX_EOF;
+
+  p->mad_stream_buffer(&p->Stream, p->mp3_buffer, ReadSize);
+
+  /* Find a valid frame before starting up.  This makes sure
+   * that we have a valid MP3 and also skips past ID3v2 tags
+   * at the beginning of the audio file.
+   */
+  p->Stream.error = 0;
+  while (p->mad_frame_decode(&p->Frame,&p->Stream))
+  {
+      /* check whether input buffer needs a refill */
+      if (p->Stream.error == MAD_ERROR_BUFLEN)
+      {
+          if (sox_mp3_input(ft) == SOX_EOF)
+              return SOX_EOF;
+
+          continue;
+      }
+
+      /* Consume any ID3 tags */
+      sox_mp3_inputtag(ft);
+
+      /* FIXME: We should probably detect when we've read
+       * a bunch of non-ID3 data and still haven't found a
+       * frame.  In that case we can abort early without
+       * scanning the whole file.
+       */
+      p->Stream.error = 0;
+  }
+
+  if (p->Stream.error)
+  {
+      lsx_fail_errno(ft,SOX_EOF,"No valid MP3 frame found");
       return SOX_EOF;
+  }
 
-    p->mad_stream_buffer(&p->Stream, p->InputBuffer, ReadSize);
+  switch(p->Frame.header.mode)
+  {
+      case MAD_MODE_SINGLE_CHANNEL:
+      case MAD_MODE_DUAL_CHANNEL:
+      case MAD_MODE_JOINT_STEREO:
+      case MAD_MODE_STEREO:
+          ft->signal.channels = MAD_NCHANNELS(&p->Frame.header);
+          break;
+      default:
+          lsx_fail_errno(ft, SOX_EFMT, "Cannot determine number of channels");
+          return SOX_EOF;
+  }
 
-    /* Find a valid frame before starting up.  This makes sure
-     * that we have a valid MP3 and also skips past ID3v2 tags
-     * at the beginning of the audio file.
-     */
-    p->Stream.error = 0;
-    while (p->mad_frame_decode(&p->Frame,&p->Stream))
-    {
-        /* check whether input buffer needs a refill */
-        if (p->Stream.error == MAD_ERROR_BUFLEN)
-        {
-            if (sox_mp3_input(ft) == SOX_EOF)
-                return SOX_EOF;
+  p->FrameCount=1;
 
-            continue;
-        }
+  p->mad_timer_add(&p->Timer,p->Frame.header.duration);
+  p->mad_synth_frame(&p->Synth,&p->Frame);
+  ft->signal.rate=p->Synth.pcm.samplerate;
+  if (ignore_length)
+    ft->signal.length = SOX_UNSPEC;
+  else {
+    ft->signal.length = (size_t)(ft->signal.length * .001 * ft->signal.rate + .5);
+    ft->signal.length *= ft->signal.channels;  /* Keep separate from line above! */
+  }
 
-        /* Consume any ID3 tags */
-        sox_mp3_inputtag(ft);
+  p->cursamp = 0;
 
-        /* FIXME: We should probably detect when we've read
-         * a bunch of non-ID3 data and still haven't found a
-         * frame.  In that case we can abort early without
-         * scanning the whole file.
-         */
-        p->Stream.error = 0;
-    }
-
-    if (p->Stream.error)
-    {
-        lsx_fail_errno(ft,SOX_EOF,"No valid MP3 frame found");
-        return SOX_EOF;
-    }
-
-    switch(p->Frame.header.mode)
-    {
-        case MAD_MODE_SINGLE_CHANNEL:
-        case MAD_MODE_DUAL_CHANNEL:
-        case MAD_MODE_JOINT_STEREO:
-        case MAD_MODE_STEREO:
-            ft->signal.channels = MAD_NCHANNELS(&p->Frame.header);
-            break;
-        default:
-            lsx_fail_errno(ft, SOX_EFMT, "Cannot determine number of channels");
-            return SOX_EOF;
-    }
-
-    p->FrameCount=1;
-
-    p->mad_timer_add(&p->Timer,p->Frame.header.duration);
-    p->mad_synth_frame(&p->Synth,&p->Frame);
-    ft->signal.rate=p->Synth.pcm.samplerate;
-    if (ignore_length)
-      ft->signal.length = SOX_UNSPEC;
-    else {
-      ft->signal.length = ft->signal.length * .001 * ft->signal.rate + .5;
-      ft->signal.length *= ft->signal.channels;  /* Keep separate from line above! */
-    }
-
-    p->cursamp = 0;
-
-    return SOX_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /*
@@ -455,11 +481,8 @@ static int stopread(sox_format_t * ft)
   p->mad_frame_finish(&p->Frame);
   p->mad_stream_finish(&p->Stream);
 
-  free(p->InputBuffer);
-#if defined HAVE_LIBLTDL && defined DL_MAD
-  if (!lt_dlclose(p->mad_lth))
-    lt_dlexit();
-#endif
+  free(p->mp3_buffer);
+  LSX_DLLIBRARY_CLOSE(p, mad_dl);
   return SOX_SUCCESS;
 }
 #else /*HAVE_MAD_H*/
@@ -472,7 +495,7 @@ static int startread(sox_format_t * ft)
 #define stopread NULL
 #endif /*HAVE_MAD_H*/
 
-#ifdef HAVE_LAME_LAME_H
+#ifdef HAVE_LAME
 
 /* Adapters for lame message callbacks: */
 
@@ -500,65 +523,182 @@ static void msgf(const char* fmt, va_list va)
   return;
 }
 
+/* These functions are considered optional. If they aren't present in the
+   library, the stub versions defined here will be used instead. */
+
+static int lame_set_errorf_stub(lame_global_flags * gfp UNUSED, void (*func)(const char *, va_list) UNUSED)
+  { return 0; }
+static int lame_set_debugf_stub(lame_global_flags * gfp UNUSED, void (*func)(const char *, va_list) UNUSED)
+  { return 0; }
+static int lame_set_msgf_stub(lame_global_flags * gfp UNUSED, void (*func)(const char *, va_list) UNUSED)
+  { return 0; }
+static size_t lame_get_lametag_frame_stub(const lame_global_flags * gfp UNUSED, unsigned char * buffer UNUSED, size_t size UNUSED)
+  { return 0; }
+static size_t lame_get_id3v2_tag_stub(lame_global_flags * gfp UNUSED, unsigned char * buffer UNUSED, size_t size UNUSED)
+  { return 0; }
+static void id3tag_init_stub(lame_global_flags * gfp UNUSED)
+  { return; }
+static void id3tag_set_pad_stub(lame_global_flags * gfp UNUSED, size_t padding UNUSED)
+  { return; }
+static int id3tag_set_fieldvalue_stub(lame_global_flags * gfp UNUSED, const char *fieldvalue UNUSED)
+  { return 0; }
+
+static int get_id3v2_tag_size(sox_format_t * ft)
+{
+  priv_t *p = (priv_t *)ft->priv;
+  FILE *fp = ft->fp;
+  size_t bytes_read;
+  int id3v2_size;
+  unsigned char id3v2_header[10];
+
+  if (fseeko(fp, 0, SEEK_SET) != 0) {
+    lsx_warn("cannot update id3 tag - failed to seek to beginning");
+    return SOX_EOF;
+  }
+
+  /* read 10 bytes in case there's an ID3 version 2 header here */
+  bytes_read = fread(id3v2_header, 1, sizeof(id3v2_header), fp);
+  if (bytes_read != sizeof(id3v2_header)) {
+    lsx_warn("cannot update id3 tag - failed to read id3 header");
+    return SOX_EOF;      /* not readable, maybe opened Write-Only */
+  }
+
+  /* does the stream begin with the ID3 version 2 file identifier? */
+  if (!strncmp((char *) id3v2_header, "ID3", 3)) {
+    /* the tag size (minus the 10-byte header) is encoded into four
+     * bytes where the most significant bit is clear in each byte */
+    id3v2_size = (((id3v2_header[6] & 0x7f) << 21)
+                    | ((id3v2_header[7] & 0x7f) << 14)
+                    | ((id3v2_header[8] & 0x7f) << 7)
+                    | (id3v2_header[9] & 0x7f))
+        + sizeof(id3v2_header);
+  } else {
+    /* no ID3 version 2 tag in this stream */
+    id3v2_size = 0;
+  }
+  return id3v2_size;
+}
+
+static void rewrite_id3v2_tag(sox_format_t * ft, int id3v2_size, unsigned long num_samples)
+{
+  priv_t *p = (priv_t *)ft->priv;
+  FILE *fp = ft->fp;
+  int new_size;
+  unsigned char *buffer = lsx_malloc(id3v2_size);  
+
+  if (!buffer)
+  {
+    lsx_warn("cannot update id3 tag - failed to allocate buffer");
+    return;
+  }
+
+  p->lame_set_num_samples(p->gfp, num_samples);
+  lsx_debug("updated MP3 TLEN to %lu samples", num_samples);
+
+  p->id3tag_set_pad(p->gfp, ID3PADDING);
+  new_size = p->lame_get_id3v2_tag(p->gfp, buffer, id3v2_size);
+
+  if (new_size != id3v2_size && new_size-ID3PADDING <= id3v2_size) {
+    p->id3tag_set_pad(p->gfp, ID3PADDING + id3v2_size - new_size);
+    new_size = p->lame_get_id3v2_tag(p->gfp, buffer, id3v2_size);
+  }
+
+  if (new_size != id3v2_size) {
+    lsx_warn("cannot update id3 tag - new tag too big");
+  } else {
+    fseeko(fp, 0, SEEK_SET);
+    /* Overwrite the Id3v2 tag (this time TLEN should be accurate) */
+    if (fwrite(buffer, id3v2_size, 1, fp) != 1) {
+      lsx_debug("Rewrote Id3v2 tag (%d bytes)", id3v2_size);
+    }
+  }
+
+  free(buffer);
+}
+
+static void rewrite_tags(sox_format_t * ft, unsigned long num_samples)
+{
+  priv_t *p = (priv_t *)ft->priv;
+  FILE *fp = ft->fp;
+
+  off_t file_size;
+  int id3v2_size;
+
+  if (fseeko(fp, 0, SEEK_END)) {
+    lsx_warn("cannot update tags - seek to end failed");
+    return;
+  }
+
+  /* Get file size */
+  file_size = ftello(fp);
+
+  if (file_size == 0) {
+    lsx_warn("cannot update tags - file size is 0");
+    return;
+  }
+
+  id3v2_size = get_id3v2_tag_size(ft);
+  if (id3v2_size < 0) {
+    return;
+  } else if (id3v2_size > 0 && num_samples != p->num_samples) {
+    rewrite_id3v2_tag(ft, id3v2_size, num_samples);
+  }
+
+  if (p->vbr_tag) {
+    unsigned int lametag_size;
+    uint8_t buffer[MAXFRAMESIZE];
+
+    if (fseeko(fp, id3v2_size, SEEK_SET)) {
+      lsx_warn("cannot write VBR tag - seek to tag block failed");
+      return;
+    }
+
+    lametag_size = p->lame_get_lametag_frame(p->gfp, buffer, sizeof(buffer));
+    if (lametag_size > sizeof(buffer)) {
+      lsx_warn("cannot write VBR tag - VBR tag too large for buffer");
+      return;
+    }
+
+    if (lametag_size < 1) {
+      return;
+    }
+
+    if (fwrite(buffer, lametag_size, 1, fp) != 1) {
+      lsx_warn("cannot write VBR tag - VBR tag write failed");
+    } else {
+      lsx_debug("rewrote VBR tag (%u bytes)", lametag_size);
+    }
+  }
+}
+
+#define LAME_BUFFER_SIZE(num_samples) (((num_samples) + 3) / 4 * 5 + 7200)
+
 static int startwrite(sox_format_t * ft)
 {
   priv_t *p = (priv_t *) ft->priv;
+  int openlibrary_result;
 
-#if defined HAVE_LIBLTDL && defined DL_LAME
-  #define DL_LIB_NAME "LAME encoder library (libmp3lame"
-  #define LOAD_FN_PTR(x) \
-    if (!(ltptr.ptr = lt_dlsym(p->lame_lth, #x))) { \
-      lsx_fail("incompatible " DL_LIB_NAME " is missing "#x")"); \
-      return SOX_EOF; \
-    } \
-    p->x = ltptr.fn;
-  union {int (* fn)(); lt_ptr ptr;} ltptr;
-  if (!lt_dlinit())
-    p->lame_lth = lt_dlopenext("libmp3lame");
-  if (!p->lame_lth) {
-    lsx_fail("could not find " DL_LIB_NAME ")");
+  LSX_DLLIBRARY_OPEN(
+      p,
+      lame_dl,
+      LAME_FUNC_ENTRIES,
+      "LAME encoder library",
+      lame_library_names,
+      openlibrary_result);
+  if (openlibrary_result)
     return SOX_EOF;
-  }
-#else
-  #define DL_LIB_NAME
-  #define LOAD_FN_PTR(x) p->x = x;
-#endif
-
-  LOAD_FN_PTR(lame_init)
-  LOAD_FN_PTR(lame_set_num_channels)
-  LOAD_FN_PTR(lame_get_num_channels)
-  LOAD_FN_PTR(lame_set_in_samplerate)
-  LOAD_FN_PTR(lame_set_bWriteVbrTag)
-  LOAD_FN_PTR(lame_get_bWriteVbrTag)
-#ifdef HAVE_ID3TAG_SET_FIELDVALUE
-  LOAD_FN_PTR(id3tag_set_fieldvalue)
-#endif
-  LOAD_FN_PTR(lame_init_params)
-  LOAD_FN_PTR(lame_set_errorf)
-  LOAD_FN_PTR(lame_set_debugf)
-  LOAD_FN_PTR(lame_set_msgf)
-  LOAD_FN_PTR(lame_encode_buffer)
-  LOAD_FN_PTR(lame_encode_flush)
-  LOAD_FN_PTR(lame_close)
-  LOAD_FN_PTR(lame_mp3_tags_fid)
-  LOAD_FN_PTR(lame_get_brate)
-  LOAD_FN_PTR(lame_set_brate)
-  LOAD_FN_PTR(lame_set_quality)
-  LOAD_FN_PTR(lame_set_VBR)
-  LOAD_FN_PTR(lame_set_VBR_min_bitrate_kbps)
-#if HAVE_LAME_SET_VBR_QUALITY
-  LOAD_FN_PTR(lame_set_VBR_quality)
-#endif
-  LOAD_FN_PTR(lame_get_VBR)
-
-#undef LOAD_FN_PTR
-#undef DL_LIB_NAME
 
   if (ft->encoding.encoding != SOX_ENCODING_MP3) {
     if(ft->encoding.encoding != SOX_ENCODING_UNKNOWN)
       lsx_report("Encoding forced to MP3");
     ft->encoding.encoding = SOX_ENCODING_MP3;
   }
+
+  p->mp3_buffer_size = LAME_BUFFER_SIZE(sox_globals.bufsiz);
+  p->mp3_buffer = lsx_malloc(p->mp3_buffer_size);
+
+  p->pcm_buffer_size = sox_globals.bufsiz * sizeof(short signed int);
+  p->pcm_buffer = lsx_malloc(p->pcm_buffer_size);
 
   p->gfp = p->lame_init();
 
@@ -572,6 +712,9 @@ static int startwrite(sox_format_t * ft)
   p->lame_set_debugf(p->gfp,debugf);
   p->lame_set_msgf  (p->gfp,msgf);
 
+  p->num_samples = ft->signal.length == SOX_IGNORE_LENGTH ? 0 : ft->signal.length / max(ft->signal.channels, 1);
+  p->lame_set_num_samples(p->gfp, p->num_samples);
+
   if (ft->signal.channels != SOX_ENCODING_UNKNOWN) {
     if ( (p->lame_set_num_channels(p->gfp,(int)ft->signal.channels)) < 0) {
         lsx_fail_errno(ft,SOX_EOF,"Unsupported number of channels");
@@ -582,12 +725,10 @@ static int startwrite(sox_format_t * ft)
     ft->signal.channels = p->lame_get_num_channels(p->gfp); /* LAME default */
 
   p->lame_set_in_samplerate(p->gfp,(int)ft->signal.rate);
+  p->lame_set_out_samplerate(p->gfp,(int)ft->signal.rate);
 
-  p->lame_set_bWriteVbrTag(p->gfp, 0); /* disable writing VBR tag */
-
-#ifdef HAVE_ID3TAG_SET_FIELDVALUE
-  write_comments(ft);
-#endif
+  if (!LSX_DLFUNC_IS_STUB(p, id3tag_init))
+    write_comments(ft);
 
   /* The primary parameter to the LAME encoder is the bit rate. If the
    * value of encoding.compression is a positive integer, it's taken as
@@ -602,9 +743,8 @@ static int startwrite(sox_format_t * ft)
    * Because encoding.compression is a float, the fractional part is used
    * to select quality. 128.2 selects 128 kbps encoding with a quality
    * of 2. There is one problem with this approach. We need 128 to specify
-   * 128 kbps encoding with default quality, so 0 means use default. Instead
-   * of 0 you have to use .01 (or .99) to specify the highest quality
-   * (128.01 or 128.99).
+   * 128 kbps encoding with default quality, so .0 means use default. Instead
+   * of .0 you have to use .01 to specify the highest quality (128.01).
    *
    * LAME uses bitrate to specify a constant bitrate, but higher quality
    * can be achieved using Variable Bit Rate (VBR). VBR quality (really
@@ -634,63 +774,60 @@ static int startwrite(sox_format_t * ft)
     double abs_compression = fabs(ft->encoding.compression);
     double floor_compression = floor(abs_compression);
     double fraction_compression = abs_compression - floor_compression;
+    int bitrate_q = (int)floor_compression;
+    int encoder_q =
+        fraction_compression == 0.0
+        ? -1
+        : (int)(fraction_compression * 10.0 + 0.5);
 
-    if (floor(ft->encoding.compression) <= 0) {
+    if (ft->encoding.compression < 0.5) {
       if (p->lame_get_VBR(p->gfp) == vbr_off)
         p->lame_set_VBR(p->gfp, vbr_default);
 
       if (ft->seekable) {
-        p->lame_set_bWriteVbrTag(p->gfp, 1); /* enable writing VBR tag */
+        if (!LSX_DLFUNC_IS_STUB(p, lame_get_id3v2_tag) &&
+            !LSX_DLFUNC_IS_STUB(p, lame_get_lametag_frame)) {
+          p->vbr_tag = 1;
+        } else {
+          lsx_warn("unable to write VBR tag because lametag support is not present");
+        }
       } else {
-        lsx_warn("unable to write VBR Tag because we can't seek");
+        lsx_warn("unable to write VBR tag because we can't seek");
       }
 
-#if HAVE_LAME_SET_VBR_QUALITY
-#define IGNORE_WARNING \
-      if (p->lame_set_VBR_quality(p->gfp, floor_compression) < 0)
-#include "ignore-warning-1.h"
+      if (p->lame_set_VBR_q(p->gfp, bitrate_q) < 0)
       {
         lsx_fail_errno(ft, SOX_EOF,
-          "lame_set_VBR_quality(%f) failed (should be between 0 and 9)",
-          floor_compression);
+          "lame_set_VBR_q(%d) failed (should be between 0 and 9)",
+          bitrate_q);
         return(SOX_EOF);
       }
-      lsx_report("lame_set_VBR_quality(%f)", floor_compression);
-#else
-      /* TODO lsx_warn */
-#endif
+      lsx_report("lame_set_VBR_q(%d)", bitrate_q);
     } else {
-      if (p->lame_set_brate(p->gfp, (int)floor_compression) < 0) {
+      if (p->lame_set_brate(p->gfp, bitrate_q) < 0) {
         lsx_fail_errno(ft, SOX_EOF,
-          "lame_set_brate(%d) failed", (int)floor_compression);
+          "lame_set_brate(%d) failed", bitrate_q);
         return(SOX_EOF);
       }
-      p->lame_set_VBR_min_bitrate_kbps(p->gfp, p->lame_get_brate(p->gfp));
-      lsx_report("lame_set_brate(%d)", (int)floor_compression);
+      lsx_report("lame_set_brate(%d)", bitrate_q);
     }
 
     /* Set Quality */
 
-    if (0.0 == fraction_compression) {
+    if (encoder_q < 0) {
       /* use default quality value */
       lsx_report("using MP3 default quality");
-    }
-    else if (fraction_compression <= 0.01 || 0.99 <= fraction_compression) {
-      if (p->lame_set_quality(p->gfp, 0) < 0) {
-        lsx_fail_errno(ft, SOX_EOF, "lame_set_quality(0) failed");
-        return(SOX_EOF);
-      }
-      lsx_report("lame_set_quality(0)");
     } else {
-      int quality = (int)(0.5 + fraction_compression * 10);
-      if (p->lame_set_quality(p->gfp, quality) < 0) {
+      if (p->lame_set_quality(p->gfp, encoder_q) < 0) {
         lsx_fail_errno(ft, SOX_EOF,
-          "lame_set_quality(%d) failed", quality);
+          "lame_set_quality(%d) failed", encoder_q);
         return(SOX_EOF);
       }
-      lsx_report("lame_set_quality(%d)", quality);
+      lsx_report("lame_set_quality(%d)", encoder_q);
     }
   }
+
+  p->lame_set_bWriteVbrTag(p->gfp, p->vbr_tag);
 
   if (p->lame_init_params(p->gfp) < 0){
         lsx_fail_errno(ft,SOX_EOF,"LAME initialization failed");
@@ -703,14 +840,23 @@ static int startwrite(sox_format_t * ft)
 static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t samp)
 {
     priv_t *p = (priv_t *)ft->priv;
-    unsigned char *mp3buffer;
-    size_t mp3buffer_size;
+    size_t new_buffer_size;
     short signed int *buffer_l, *buffer_r = NULL;
     int nsamples = samp/ft->signal.channels;
     int i,j;
-    ptrdiff_t done = 0;
     size_t written;
     SOX_SAMPLE_LOCALS;
+
+    new_buffer_size = samp * sizeof(short signed int);
+    if (p->pcm_buffer_size < new_buffer_size) {
+      short *new_buffer = lsx_realloc(p->pcm_buffer, new_buffer_size);
+      if (!new_buffer) {
+        lsx_fail_errno(ft, SOX_ENOMEM, "Out of memory");
+        return 0;
+      }
+      p->pcm_buffer_size = new_buffer_size;
+      p->pcm_buffer = new_buffer;
+    }
 
     /* NOTE: This logic assumes that "short int" is 16-bits
      * on all platforms.  It happens to be for all that I know
@@ -728,14 +874,14 @@ static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t sa
      * lsx_malloc()'ing a smaller buffer and call a consistent
      * interface.
      */
-    buffer_l = lsx_malloc(nsamples * sizeof(short signed int));
+    buffer_l = p->pcm_buffer;
 
     if (ft->signal.channels == 2)
     {
         /* lame doesn't support iterleaved samples so we must break
          * them out into seperate buffers.
          */
-        buffer_r = lsx_malloc(nsamples* sizeof(short signed int));
+        buffer_r = p->pcm_buffer + nsamples;
         j=0;
         for (i=0; i<nsamples; i++)
         {
@@ -750,59 +896,55 @@ static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t sa
             buffer_l[i]=SOX_SAMPLE_TO_SIGNED_16BIT(buf[j++], ft->clips);
     }
 
-    mp3buffer_size = 1.25 * nsamples + 7200;
-    mp3buffer = lsx_malloc(mp3buffer_size);
+    new_buffer_size = LAME_BUFFER_SIZE(samp);
+    if (p->mp3_buffer_size < new_buffer_size) {
+      unsigned char *new_buffer = lsx_realloc(p->mp3_buffer, new_buffer_size);
+      if (!new_buffer) {
+        lsx_fail_errno(ft, SOX_ENOMEM, "Out of memory");
+        return 0;
+      }
+      p->mp3_buffer_size = new_buffer_size;
+      p->mp3_buffer = new_buffer;
+    }
 
     if ((written =
-	 p->lame_encode_buffer(p->gfp,buffer_l, buffer_r,
-			       nsamples, mp3buffer,
-			       (int)mp3buffer_size)) > mp3buffer_size){
+      p->lame_encode_buffer(p->gfp,buffer_l, buffer_r,
+                   nsamples, p->mp3_buffer,
+                   (int)p->mp3_buffer_size)) > p->mp3_buffer_size){
         lsx_fail_errno(ft,SOX_EOF,"Encoding failed");
-        goto end;
+        return 0;
     }
 
-    if (lsx_writebuf(ft, mp3buffer, written) < written)
+    if (lsx_writebuf(ft, p->mp3_buffer, written) < written)
     {
         lsx_fail_errno(ft,SOX_EOF,"File write failed");
-        goto end;
+        return 0;
     }
 
-    done = nsamples*ft->signal.channels;
-
-end:
-    free(mp3buffer);
-    if (ft->signal.channels == 2)
-        free(buffer_r);
-    free(buffer_l);
-
-    return done;
+    return samp;
 }
 
 static int stopwrite(sox_format_t * ft)
 {
   priv_t *p = (priv_t *) ft->priv;
-  unsigned char mp3buffer[7200];
-  int written = p->lame_encode_flush(p->gfp, mp3buffer, (int)sizeof(mp3buffer));
+  unsigned long num_samples = ft->olength == SOX_IGNORE_LENGTH ? 0 : ft->olength / max(ft->signal.channels, 1);
+  int written = p->lame_encode_flush(p->gfp, p->mp3_buffer, (int)p->mp3_buffer_size);
 
   if (written < 0)
     lsx_fail_errno(ft, SOX_EOF, "Encoding failed");
-  else if (lsx_writebuf(ft, mp3buffer, (size_t)written) < (size_t)written)
-  {
+  else if (lsx_writebuf(ft, p->mp3_buffer, (size_t)written) < (size_t)written)
     lsx_fail_errno(ft, SOX_EOF, "File write failed");
-  }
-  else if (p->lame_get_bWriteVbrTag(p->gfp) && ft->seekable) {
-    p->lame_mp3_tags_fid(p->gfp, ft->fp);
-  }
+  else if (ft->seekable && (num_samples != p->num_samples || p->vbr_tag))
+    rewrite_tags(ft, num_samples);
 
+  free(p->mp3_buffer);
+  free(p->pcm_buffer);
   p->lame_close(p->gfp);
-#if defined HAVE_LIBLTDL && defined DL_LAME
-  if (!lt_dlclose(p->lame_lth))
-    lt_dlexit();
-#endif
+  LSX_DLLIBRARY_CLOSE(p, lame_dl);
   return SOX_SUCCESS;
 }
 
-#else /* HAVE_LAME_LAME_H */
+#else /* HAVE_LAME */
 static int startwrite(sox_format_t * ft UNUSED)
 {
   lsx_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
@@ -810,7 +952,7 @@ static int startwrite(sox_format_t * ft UNUSED)
 }
 #define sox_mp3write NULL
 #define stopwrite NULL
-#endif /* HAVE_LAME_LAME_H */
+#endif /* HAVE_LAME */
 
 LSX_FORMAT_HANDLER(mp3)
 {
@@ -825,4 +967,4 @@ LSX_FORMAT_HANDLER(mp3)
   };
   return &handler;
 }
-#endif /* defined(HAVE_LAME_LAME_H) || defined (HAVE_MAD_H) */
+#endif /* defined(HAVE_MAD_H) || defined(HAVE_LAME) */
