@@ -145,10 +145,10 @@ Advanced Linux Sound Architecture device driver; supports both playing and
 recording audio.  ALSA is only used in Linux-based operating systems, though
 these often support OSS (see below) as well.  Examples:
 .EX
-	sox infile -t alsa
-	sox infile -t alsa default
-	sox infile -t alsa plughw:0,0
-	sox -2 -t alsa hw:1 outfile
+	sox infile \-t alsa
+	sox infile \-t alsa default
+	sox infile \-t alsa plughw:0,0
+	sox \-2 \-t alsa hw:1 outfile
 .EE
 See also
 .BR play (1),
@@ -199,9 +199,9 @@ doesn't give the desired behavior then you can specify the short name
 for a given plugin (such as \fBpulse\fR for pulse audio plugin).
 Examples:
 .EX
-	sox infile -t ao
-	sox infile -t ao default
-	sox infile -t ao pulse
+	sox infile \-t ao
+	sox infile \-t ao default
+	sox infile \-t ao pulse
 .EE
 See also
 .BR play (1)
@@ -248,8 +248,8 @@ track is always a multiple of 588.
 Mac OSX CoreAudio device driver: supports both playing and recording
 audio.  Examples:
 .EX
-	sox infile -t coreaudio
-	sox infile -t coreaudio default
+	sox infile \-t coreaudio
+	sox infile \-t coreaudio default
 .EE
 See also
 .BR play (1),
@@ -271,7 +271,7 @@ This is an alternative handler for CVSD that is unfiltered but can
 be used with any bit-rate.  E.g.
 .EX
 	sox infile outfile.cvu rate 28k
-	play -r 28k outfile.cvu sinc -3.4k
+	play \-r 28k outfile.cvu sinc \-3.4k
 .EE
 .TP
 .B .dat
@@ -338,7 +338,7 @@ Whilst this file format can contain A-Law, \(*m-law, GSM, G.722,
 G.723, G.726, G.728, or iLBC encoded audio, SoX supports reading and
 writing only A-Law and \(*m-law.  E.g.
 .EX
-   sox music.wav -t gsrt ring.bin
+   sox music.wav \-t gsrt ring.bin
    play ring.bin
 .EE
 .TP
@@ -475,9 +475,9 @@ Open Sound System /dev/dsp device driver; supports both playing and
 recording audio.  OSS support is available in Unix-like operating systems,
 sometimes together with alternative sound systems (such as ALSA).  Examples:
 .EX
-	sox infile -t oss
-	sox infile -t oss /dev/dsp
-	sox -2 -t oss /dev/dsp outfile
+	sox infile \-t oss
+	sox infile \-t oss /dev/dsp
+	sox \-2 \-t oss /dev/dsp outfile
 .EE
 See also
 .BR play (1),
@@ -501,7 +501,7 @@ Note: SoX support for SHOUTcast PLS relies on
 and is only partially supported: it's necessary to
 specify the audio type manually, e.g.
 .EX
-	play -t mp3 \(dqhttp://a.server/pls?rn=265&file=filename.pls\(dq
+	play \-t mp3 \(dqhttp://a.server/pls?rn=265&file=filename.pls\(dq
 .EE
 and SoX does not know about alternative servers\*mhit Ctrl-C twice in
 quick succession to quit.
@@ -520,8 +520,8 @@ PulseAudio driver; supports both playing and recording of audio.
 PulseAudio is a cross platform networked sound server.  
 If a file name is specified with this driver, it is ignored.  Examples:
 .EX
-	sox infile -t pulseaudio
-	sox infile -t pulseaudio default
+	sox infile \-t pulseaudio
+	sox infile \-t pulseaudio default
 .EE
 See also
 .BR play (1),
@@ -576,7 +576,7 @@ them, it is deduced from the file.
 \fBsndio\fR (optional)
 OpenBSD audio device driver; supports both playing and recording audio.
 .EX
-	sox infile -t sndio
+	sox infile \-t sndio
 .EE
 See also
 .BR play (1),
@@ -619,11 +619,11 @@ format with `pipes'.
 Sun /dev/audio device driver; supports both playing and
 recording audio.  For example:
 .EX
-	sox infile -t sunau /dev/audio
+	sox infile \-t sunau /dev/audio
 .EE
 or
 .EX
-	sox infile -t sunau -U -c 1 /dev/audio
+	sox infile \-t sunau \-U \-c 1 /dev/audio
 .EE
 for older sun equipment.
 .SP
@@ -704,10 +704,10 @@ option with the output file options.
 \fBwaveaudio\fR (optional)
 MS-Windows native audio device driver.  Examples:
 .EX
-	sox infile -t waveaudio
-	sox infile -t waveaudio default
-	sox infile -t waveaudio 1
-	sox infile -t waveaudio "High Definition Audio Device ("
+	sox infile \-t waveaudio
+	sox infile \-t waveaudio default
+	sox infile \-t waveaudio 1
+	sox infile \-t waveaudio "High Definition Audio Device ("
 .EE
 If the device name is omitted, \fB-1\fR, or \fBdefault\fR, then you
 get the `Microsoft Wave Mapper' device.  Wave Mapper means `use the
@@ -746,7 +746,7 @@ detect and read WAV files with the non-standard header.)
 The most common use of this file-type is likely to be along the following
 lines:
 .EX
-	sox infile.any -t wavpcm -s outfile.wav
+	sox infile.any \-t wavpcm \-s outfile.wav
 .EE
 .TP
 \&\fB.wv\fR (optional)
