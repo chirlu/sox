@@ -12,6 +12,8 @@ sox (14.3.0.99+cvs-1) UNRELEASED; urgency=low
     - Fixed to spelling errors reported by Lintian.
   * [debian/README.source]:
     - Fixed typo.
+  * [debian/docs]:
+    - Added README.source (really fixes #522548).
 
  -- Pascal Giard <evilynux@gmail.com>  Sat, 10 Oct 2009 09:43:51 -0400
 

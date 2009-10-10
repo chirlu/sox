@@ -1,2 +1,3 @@
 build-tree/*/README
+debian/README.source
 build-tree/*/TODO
