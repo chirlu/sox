@@ -14,7 +14,7 @@ Creating a Patch
 ----------------
 Create your patch from the SoX root folder (e.g. /tmp/sox-14.3.0/build-tree).
 Copy it into the debian/patches folder. Patches are applied in the alphabetical
-order so you may want to use numered prefixes.
+order so you may want to use numbered prefixes.
 
 Patch Example
 -------------

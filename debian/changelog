@@ -1,14 +1,27 @@
-sox (14.3.0+cvs-1) UNRELEASED; urgency=low
+sox (14.3.0.99+cvs-1) UNRELEASED; urgency=low
 
   * CVS Version.
+    - Single-threaded is now default (closes: #546944).
   * [debian/control]:
     - Improved PulseAudio integration.
-    - Bumped standard version to 3.8.2, no changes required.
+    - Bumped standard version to 3.8.3, no changes required.
     - Removed duplicate section control field, inherited from source.
+    - Removed Guenter Geiger from uploaders (closes: #546952).
+    - Removed depend on alsa for fmt-all on non-Linux systems (closes: #539224).
   * [debian/changelog]:
     - Fixed to spelling errors reported by Lintian.
+  * [debian/README.source]:
+    - Fixed typo.
 
- -- Pascal Giard <evilynux@gmail.com>  Tue, 14 Jul 2009 09:57:08 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Sat, 10 Oct 2009 09:43:51 -0400
+
+sox (14.3.0-1.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Add missing Replaces from libsox-fmt-base to libsox-fmt-sndfile. Fix
+    file overwrite errors when upgrading from Lenny. (Closes: #540497)
+
+ -- Stefano Zacchiroli <zack@debian.org>  Sun, 04 Oct 2009 14:44:45 +0200
 
 sox (14.3.0-1) unstable; urgency=low
 

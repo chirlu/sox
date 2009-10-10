@@ -3,13 +3,12 @@ Homepage: http://sox.sourceforge.net
 Section: sound
 Priority: optional
 Maintainer: Pascal Giard <pascal@debian.org>
-Uploaders: Guenter Geiger (Debian/GNU) <geiger@debian.org>
 Build-Depends: debhelper (>= 7), cdbs, libltdl3-dev, libvorbis-dev, libmad0-dev, libgsm1-dev, libsndfile1-dev (>= 1.0.12), libsamplerate0-dev, libavcodec-dev (>= 0.cvs20070301), libavformat-dev, libavutil-dev, libwavpack-dev, libao-dev, libid3tag0-dev, ladspa-sdk, libpng12-dev, libmagic-dev, libpulse-dev, libasound2-dev [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386]
-Standards-Version: 3.8.2
+Standards-Version: 3.8.3
 
 Package: sox
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libsox-fmt-base, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse
+Depends: ${shlibs:Depends}, ${misc:Depends}, libsox-fmt-base, libsox-fmt-alsa [!hurd-i386 !kfreebsd-i386 !kfreebsd-amd64] | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse
 Suggests: libsox-fmt-all
 Description: Swiss army knife of sound processing
  SoX is a command line utility that can convert various formats of computer 
@@ -46,7 +45,7 @@ Description: SoX library of audio effects and processing
 Package: libsox-fmt-base
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Replaces: libsox-fmt-flac, libsox-fmt-gsm, libsox-fmt-libsndfile, libsox-fmt-ogg
+Replaces: libsox-fmt-flac, libsox-fmt-gsm, libsox-fmt-libsndfile, libsox-fmt-ogg, libsox-fmt-sndfile
 Description: Minimal set of SoX format libraries
  SoX is the swiss army knife of sound processing.
  .

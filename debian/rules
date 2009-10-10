@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- mode: makefile; coding: utf-8 -*-
 
-DEB_TAR_SRCDIR := sox-14.3.0
+DEB_TAR_SRCDIR := sox-14.3.1
 
 include /usr/share/cdbs/1/rules/tarball.mk
 include /usr/share/cdbs/1/rules/debhelper.mk
