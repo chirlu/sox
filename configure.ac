@@ -405,12 +405,25 @@ AC_OPTIONAL_FORMAT(flac, FLAC, [AC_CHECK_HEADER(FLAC/all.h, [AC_CHECK_LIB(FLAC, 
 
 
 
-AC_OPTIONAL_FORMAT(amrwb, AMRWB, [AC_CHECK_HEADER(amrwb/dec.h, [AC_CHECK_LIB(amrwb, D_IF_init, AMRWB_LIBS="$AMR_WB_LIBS -lamrwb",using_amrwb=no)], using_amrwb=no)])
+AC_OPTIONAL_FORMAT(amrwb, AMRWB, 
+		   [AC_CHECK_HEADERS(opencore-amrwb/dec_if.h,
+		    [AC_CHECK_LIB(opencore-amrwb, D_IF_init, 
+		     AMRNB_LIBS="$AMRWB_LIBS -lopencore-amrwb", using_amrwb=no)],
+		    [AC_CHECK_HEADERS(amrwb/dec.h, 
+		     [AC_CHECK_LIB(amrwb, D_IF_init, 
+		      AMRWB_LIBS="$AMRWB_LIBS -lamrwb",using_amrwb=no)], 
+		      using_amrwb=no)])])
 
 
 
-AC_OPTIONAL_FORMAT(amrnb, AMRNB, [AC_CHECK_HEADER(amrnb/sp_dec.h, [AC_CHECK_LIB(amrnb, Decoder_Interface_init, AMRNB_LIBS="$AMR_WB_LIBS -lamrnb",using_amrnb=no)], using_amrnb=no)])
-
+AC_OPTIONAL_FORMAT(amrnb, AMRNB, 
+		   [AC_CHECK_HEADERS(opencore-amrnb/interf_dec.h, 
+		    [AC_CHECK_LIB(opencore-amrnb, Decoder_Interface_init, 
+		     AMRNB_LIBS="$AMRNB_LIBS -lopencore-amrnb", using_amrnb=no)],
+		    [AC_CHECK_HEADER(amrnb/sp_dec.h, 
+		     [AC_CHECK_LIB(amrnb, Decoder_Interface_init, 
+		      AMRNB_LIBS="$AMRNB_LIBS -lamrnb", using_amrnb=no)], 
+		       using_amrnb=no)])])
 
 
 AC_OPTIONAL_FORMAT(wavpack, WAVPACK, [AC_CHECK_HEADER(wavpack/wavpack.h, [AC_CHECK_LIB(wavpack, WavpackGetSampleRate, WAVPACK_LIBS="$WAVPACK_LIBS -lwavpack",using_wavpack=no)], using_wavpack=no)])

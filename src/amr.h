@@ -29,7 +29,7 @@ static size_t decode_1_frame(sox_format_t * ft)
 {
   priv_t * p = (priv_t *)ft->priv;
   size_t n_1;
-  UWord8 coded[AMR_CODED_MAX];
+  uint8_t coded[AMR_CODED_MAX];
 
   if (lsx_readbuf(ft, &coded[0], (size_t)1) != 1)
     return AMR_FRAME;
@@ -38,17 +38,6 @@ static size_t decode_1_frame(sox_format_t * ft)
     return AMR_FRAME;
   D_IF_decode(p->state, coded, p->pcm, 0);
   return 0;
-}
-
-static sox_bool encode_1_frame(sox_format_t * ft)
-{
-  priv_t * p = (priv_t *)ft->priv;
-  UWord8 coded[AMR_CODED_MAX];
-#include "amr1.h"
-  sox_bool result = lsx_writebuf(ft, coded, (size_t) (size_t) (unsigned)n) == (unsigned)n;
-  if (!result)
-    lsx_fail_errno(ft, errno, "write error");
-  return result;
 }
 
 static int startread(sox_format_t * ft)
@@ -95,6 +84,10 @@ static int stopread(sox_format_t * ft)
 
 static int startwrite(sox_format_t * ft)
 {
+#ifdef DISABLE_AMR_WB_ENCODE
+  lsx_fail_errno(ft, SOX_EOF, "SoX was compiled without AMR-WB encoding support.");
+  return SOX_EOF;
+#else
   priv_t * p = (priv_t *)ft->priv;
   if (ft->encoding.compression != HUGE_VAL) {
     p->mode = ft->encoding.compression;
@@ -109,8 +102,25 @@ static int startwrite(sox_format_t * ft)
   lsx_writes(ft, magic);
   p->pcm_index = 0;
   return SOX_SUCCESS;
+#endif
 }
 
+#ifndef DISABLE_AMR_WB_ENCODE
+static sox_bool encode_1_frame(sox_format_t * ft)
+{
+  priv_t * p = (priv_t *)ft->priv;
+  uint8_t coded[AMR_CODED_MAX];
+#include "amr1.h"
+  sox_bool result = lsx_writebuf(ft, coded, (size_t) (size_t) (unsigned)n) == (unsigned)n;
+  if (!result)
+    lsx_fail_errno(ft, errno, "write error");
+  return result;
+}
+#endif
+
+#ifdef DISABLE_AMR_WB_ENCODE
+#define write_samples NULL
+#else
 static size_t write_samples(sox_format_t * ft, const sox_sample_t * buf, size_t len)
 {
   priv_t * p = (priv_t *)ft->priv;
@@ -127,7 +137,11 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t * buf, size_t 
   }
   return done;
 }
+#endif
 
+#ifdef DISABLE_AMR_WB_ENCODE
+#define stopwrite NULL
+#else
 static int stopwrite(sox_format_t * ft)
 {
   priv_t * p = (priv_t *)ft->priv;
@@ -143,6 +157,7 @@ static int stopwrite(sox_format_t * ft)
   E_IF_exit(p->state);
   return result;
 }
+#endif
 
 sox_format_handler_t const * AMR_FORMAT_FN(void);
 sox_format_handler_t const * AMR_FORMAT_FN(void)

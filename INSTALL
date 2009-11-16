@@ -18,7 +18,7 @@ be installed before compiling SoX.  The current list of supported
 libraries, where to get them (if not from your OS distribution), and
 their licence types, is as follows:
 
-AMR-NB/WB         http://www.penguin.cz/~utx/amr        See library web page
+AMR-NB/WB         http://opencore-amr.sourceforge.net/  Apache
 AO                http://xiph.org/ao                    GPL
 ffmpeg            http://ffmpeg.mplayerhq.hu            LGPL
 FLAC              http://flac.sourceforge.net           BSD

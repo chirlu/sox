@@ -22,9 +22,13 @@
 
 #include "sox_i.h"
 
+#ifdef HAVE_OPENCORE_AMRNB_INTERF_DEC_H
+#include "opencore-amrnb/interf_dec.h"
+#else
 #include "amrnb/typedef.h"
 #include "amrnb/interf_dec.h"
 #include "amrnb/sp_dec.h"
+#endif
 #define Mode  _Mode
 #define MR102 _MR102
 #define MR122 _MR122
@@ -35,7 +39,11 @@
 #define MR74  _MR74
 #define MR795 _MR795
 #define MRDTX _MRDTX
+#ifdef HAVE_OPENCORE_AMRNB_INTERF_DEC_H
+#include "opencore-amrnb/interf_enc.h"
+#else
 #include "amrnb/interf_enc.h"
+#endif
 
 static char const magic[] = "#!AMR\n";
 #define AMR_CODED_MAX       32                  /* max coded size */

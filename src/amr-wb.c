@@ -22,17 +22,26 @@
 
 #include "sox_i.h"
 
+#ifdef HAVE_OPENCORE_AMRWB_DEC_IF_H
+#include "opencore-amrwb/dec_if.h"
+#include "opencore-amrwb/if_rom.h"
+#define DISABLE_AMR_WB_ENCODE
+#else
 #include "amrwb/typedef.h"
 #include "amrwb/enc_if.h"
 #include "amrwb/dec_if.h"
 #include "amrwb/if_rom.h"
+#endif
 
 static char const magic[] = "#!AMR-WB\n";
-#define AMR_CODED_MAX       NB_SERIAL_MAX
+#define AMR_CODED_MAX       61 /* max serial size */
 #define AMR_ENCODING        SOX_ENCODING_AMR_WB
 #define AMR_FORMAT_FN       lsx_amr_wb_format_fn
-#define AMR_FRAME           L_FRAME16k
+#define AMR_FRAME           320 /* Frame size at 16kHz */
 #define AMR_MODE_MAX        8
 #define AMR_NAMES           "amr-wb", "awb"
 #define AMR_RATE            16000
+#ifdef HAVE_OPENCORE_AMRWB_DEC_IF_H
+static const unsigned block_size[16] = {18, 24, 33, 37, 41, 47, 51, 59, 61, 6, 6, 0, 0, 0, 1, 1};
+#endif
 #include "amr.h"
