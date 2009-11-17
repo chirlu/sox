@@ -40,6 +40,8 @@ File formats:
   o CVSD encode/decode speed-ups.  (Kimberly Rockwell, P. Chaintreuil)
   o Add ability to select MP3 compression parameters.  (Jim Harkins)
   o Now writes out ID3-tags in MP3 files.  (Doug Cook)
+  o Fix failed writing 24-bit PAF files (and possibly other libsndfile
+    based formats).  (cbagwell)
 
 Audio device drivers:
 
