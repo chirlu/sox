@@ -455,7 +455,15 @@ AC_OPTIONAL_FORMAT(waveaudio, WAVEAUDIO, [AC_CHECK_HEADER(mmsystem.h, [WAVEAUDIO
 AC_OPTIONAL_FORMAT(sndfile, SNDFILE, [SOX_PATH_SNDFILE(, using_sndfile=no)])
 AC_SUBST(SNDFILE_CFLAGS)
 
-
+AC_ARG_ENABLE(dl_sndfile,
+	      AC_HELP_STRING([--enable-dl-sndfile], 
+			     [Dlopen sndfile instead of linking in.]),
+			     enable_dl_sndfile=$enableval, enable_dl_sndfile=no)
+if test "x$using_sndfile" = "xyes"; then
+  if test "x$using_libltdl" = "xyes" -a "x$enable_dl_sndfile" = "xyes"; then
+    AC_DEFINE(DL_SNDFILE, 1, [Define if to dlopen() sndfile.])
+  fi
+fi
 
 AC_OPTIONAL_FORMAT(ffmpeg, FFMPEG, [SOX_PATH_FFMPEG(, using_ffmpeg=no)])
 
@@ -587,6 +595,9 @@ echo " dlopen mad................$enable_dl_mad"
 fi
 echo "oggvorbis..................$using_oggvorbis"
 echo "sndfile....................$using_sndfile"
+if test "x$using_sndfile" = "xyes"; then
+echo " dlopen sndfile............$enable_dl_sndfile"
+fi
 echo "wavpack....................$using_wavpack"
 echo
 echo "OTHER OPTIONS"

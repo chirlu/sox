@@ -147,6 +147,16 @@ an external dynamic library:
 
 ./configure --with-pulseaudio=dyn
 
+A subset of external libraries can be configured to be dlopen()'ed
+at run time instead of being linked in.  This will allow one to
+distribute a binary with optional features that only require
+a user to install the missing libraries into their system.  This
+can be enabled using:
+
+--enable-dl-lame
+--enable-dl-mad
+--enable-dl-sndfile
+
 Testing
 -------
 

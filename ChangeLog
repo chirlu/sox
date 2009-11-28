@@ -16,6 +16,7 @@ Newly deprecated features (to be removed in future):
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
   -------  ----------------------  ----------------------  -------
   14.3.1   F mp3: lame 3.97        lame > 3.97             2010-xx-xx
+  14.3.1   F sndfile: sndfile 1.0.11 sndfile > 1.0.11      14.3.1
 
 Previously deprecated features (to be removed in future):
 
@@ -45,10 +46,12 @@ File formats:
   o CVSD encode/decode speed-ups.  (Kimberly Rockwell, P. Chaintreuil)
   o Add ability to select MP3 compression parameters.  (Jim Harkins)
   o Now writes out ID3-tags in MP3 files.  (Doug Cook)
-  o Also can write VBR Tag ("XING Header") in MP3 files. 
-    (Jim Hark/Doug Cook)
+  o Also can write VBR Tag ("XING Header") in MP3 files. (Jim Hark /
+    Doug Cook)
   o Fix failed writing 24-bit PAF files (and possibly other libsndfile
     based formats).  (cbagwell)
+  o Allow libsndfile to be dlopen()'ed at runtime if --enable-dl-sndfile
+    is used. (Doug Cook)
 
 Audio device drivers:
 
@@ -83,6 +86,8 @@ Internal improvements:
   o Move bit-rot detection support files to sub-directory (could
     previously cause build problems).  (robs)
   o [2859244] Fixes to improve compatibility with MSVC.  (Doug Cook)
+  o Added utilities to help any format handler dlopen() external
+    libraries at run time instead of link time. (Doug Cook)
 
 
 sox-14.3.0	2009-06-14

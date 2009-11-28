@@ -37,6 +37,7 @@
 static const char* const sndfile_library_names[] =
 {
 #ifdef DL_SNDFILE
+  "libsndfile",
   "libsndfile-1",
   "cygsndfile-1",
 #endif
