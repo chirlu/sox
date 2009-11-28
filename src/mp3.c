@@ -66,8 +66,9 @@ static mad_timer_t const mad_timer_zero_stub = {0, 0};
 #define MP3_LAME_PRECISION 24
 
 /* MAD returns values with MAD_F_FRACBITS (28) bits of precision, though it's
-   not certain that all of them are meaningful. Let's just make it match LAME. */
-#define MP3_MAD_PRECISION  MP3_LAME_PRECISION
+   not certain that all of them are meaningful. Default to 16 bits to
+   align with most users expectation of output file should be 16 bits. */
+#define MP3_MAD_PRECISION  16
 
 static const char* const mad_library_names[] =
 {

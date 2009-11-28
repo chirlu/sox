@@ -402,6 +402,12 @@ must currently compile and build SoX with the MP3 libraries (LAME & MAD)
 from source code, or, in some cases, obtain pre-built dynamically loadable
 libraries.
 .SP
+When reading MP3 files, up to 28 bits of precision is stored although
+only 16 bits is reported to user.  This is to allow default behavior
+of writing 16 bit output files.  A user can specify a higher precision
+for the output file to prevent lossing this extra information.  MP3
+output files will use up to 24 bits of precision while encoding.
+.SP
 MP3 compression parameters can be selected using SoX's \fB\-C\fR option
 as follows
 (note that the current syntax is subject to change):

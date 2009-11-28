@@ -37,8 +37,6 @@ LibSoX interface changes:
 
   o Added new variants of sox_open to allow read/write from/to memory
     buffers (in POSIX 2008 environment); see example5.c.  (robs)
-  o amrnb and amrwb formats can optionally use opencore-amr libraries.
-    (cbagwell)
 
 File formats:
 
@@ -54,6 +52,8 @@ File formats:
     based formats).  (cbagwell)
   o Allow libsndfile to be dlopen()'ed at runtime if --enable-dl-sndfile
     is used. (Doug Cook)
+  o amrnb and amrwb formats can optionally use opencore-amr libraries.
+    (cbagwell)
 
 Audio device drivers:
 
