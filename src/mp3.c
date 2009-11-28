@@ -122,7 +122,7 @@ static const char* const lame_library_names[] =
   #else
     #define LAME_FUNC_LAMETAG LSX_DLENTRY_STUB
   #endif
-  #ifdef HAVE_LAME_ID3TAG
+  #ifdef HAVE_ID3TAG_SET_FIELDVALUE
     #define LAME_FUNC_ID3     LSX_DLENTRY_STATIC
   #else
     #define LAME_FUNC_ID3     LSX_DLENTRY_STUB
@@ -727,6 +727,7 @@ static int startwrite(sox_format_t * ft)
   p->lame_set_in_samplerate(p->gfp,(int)ft->signal.rate);
   p->lame_set_out_samplerate(p->gfp,(int)ft->signal.rate);
 
+  
   if (!LSX_DLFUNC_IS_STUB(p, id3tag_init))
     write_comments(ft);
 

@@ -228,7 +228,7 @@ o Microsoft Visual Stuio 2008 (also earlier Versions)
 o SoX source distribution version 14.0.1
   available on [http://sox.sourceforge.net]
 
-o LAME source distribution version 3.97
+o LAME source distribution version 3.97.  3.98 required for ID3TAG support.
   available on [http://lame.sourceforge.net]
 
 o MAD source distribution version 0.15.1b
