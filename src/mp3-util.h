@@ -35,41 +35,41 @@ static char const * id3tagmap[][2] =
 static void write_comments(sox_format_t * ft)
 {
   priv_t *p = (priv_t *) ft->priv;
-  size_t i;
-  char* id3tag_buf = NULL;
-  size_t id3tag_size = 0;
   const char* comment;
-  size_t required_size;
 
   p->id3tag_init(p->gfp);
   p->id3tag_set_pad(p->gfp, ID3PADDING);
 
-  for (i = 0; id3tagmap[i][0]; i++)
+  /* Note: id3tag_set_fieldvalue is not present in LAME 3.97, so we're using
+     the 3.97-compatible methods for all of the tags that 3.97 supported. */
+  if (comment = sox_find_comment(ft->oob.comments, "Title"))
+    p->id3tag_set_title(p->gfp, comment);
+  if (comment = sox_find_comment(ft->oob.comments, "Artist"))
+    p->id3tag_set_artist(p->gfp, comment);
+  if (comment = sox_find_comment(ft->oob.comments, "Album"))
+    p->id3tag_set_album(p->gfp, comment);
+  if (comment = sox_find_comment(ft->oob.comments, "Tracknumber"))
+    p->id3tag_set_track(p->gfp, comment);
+  if (comment = sox_find_comment(ft->oob.comments, "Year"))
+    p->id3tag_set_year(p->gfp, comment);
+  if (comment = sox_find_comment(ft->oob.comments, "Comment"))
+    p->id3tag_set_comment(p->gfp, comment);
+  if (comment = sox_find_comment(ft->oob.comments, "Genre"))
   {
-    comment = sox_find_comment(ft->oob.comments, id3tagmap[i][1]);
-    if (comment)
-    {
-      required_size = strlen(comment) + 6;
-      if (id3tag_size < required_size)
-      {
-        char* id3tag_realloc = lsx_realloc(id3tag_buf, required_size);
-        if (id3tag_realloc)
-        {
-          id3tag_buf = id3tag_realloc;
-          id3tag_size = required_size;
-        }
-      }
-
-      if (id3tag_size >= required_size)
-      {
-        sprintf(id3tag_buf, "%s=%s", id3tagmap[i][0], comment);
-        id3tag_buf[id3tag_size - 1] = 0;
-        p->id3tag_set_fieldvalue(p->gfp, id3tag_buf);
-      }
-    }
+    if (p->id3tag_set_genre(p->gfp, comment))
+      lsx_warn("\"%s\" is not a recognized ID3v1 genre.", comment);
   }
 
-  free(id3tag_buf);
+  if (comment = sox_find_comment(ft->oob.comments, "Discnumber"))
+  {
+    char* id3tag_buf = lsx_malloc(strlen(comment) + 6);
+    if (id3tag_buf)
+    {
+      sprintf(id3tag_buf, "TPOS=%s", comment);
+      p->id3tag_set_fieldvalue(p->gfp, id3tag_buf);
+      free(id3tag_buf);
+    }
+  }
 }
 
 #endif /* HAVE_LAME */

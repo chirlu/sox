@@ -337,13 +337,17 @@ if test "$with_lame" != "no"; then
       AC_DEFINE(DL_LAME, 1, [Define if to dlopen() lame.])
     else
       AC_CHECK_LIB(mp3lame, lame_init, MP3_LIBS="$MP3_LIBS -lmp3lame",using_lame=no)
-      AC_CHECK_LIB(mp3lame, lame_set_VBR_quality)
-      if test "$ac_cv_lib_mp3lame_lame_set_VBR_quality" = yes; then
-        AC_DEFINE(HAVE_LAME_SET_VBR_QUALITY, 1, [Define to 1 if you have lame_set_VBR_quality.])
+      AC_CHECK_LIB(mp3lame, lame_get_lametag_frame)
+      if test "$ac_cv_lib_mp3lame_lame_get_lametag_frame" = yes; then
+	AC_DEFINE(HAVE_LAME_398, 1, [Define to 1 if you have lame 3.98 or greater.])
+      fi
+      AC_CHECK_LIB(mp3lame, id3tag_init)
+      if test "$ac_cv_lib_mp3lame_id3tag_init" = yes; then
+        AC_DEFINE(HAVE_LAME_ID3TAG, 1, [Define to 1 if lame supports optional ID3 tags.])
       fi
       AC_CHECK_LIB(mp3lame, id3tag_set_fieldvalue)
       if test "$ac_cv_lib_mp3lame_id3tag_set_fieldvalue" = yes; then
-        AC_DEFINE(HAVE_ID3TAG_SET_FIELDVALUE, 1, [Define to 1 if you have id3tag_set_fieldvalue.])
+        AC_DEFINE(HAVE_LAME_398_ID3TAG, 1, [Define to 1 if lame 3.98 or newer ID3 tag support.])
       fi
       if test "$with_lame" = "yes" -a "$using_lame" = "no"; then
         AC_MSG_FAILURE([cannot find LAME])

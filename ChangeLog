@@ -45,9 +45,11 @@ File formats:
   o New Grandstream ring-tone (gsrt) format.  (robs)
   o CVSD encode/decode speed-ups.  (Kimberly Rockwell, P. Chaintreuil)
   o Add ability to select MP3 compression parameters.  (Jim Harkins)
-  o Now writes out ID3-tags in MP3 files.  (Doug Cook)
+  o Now writes out ID3-tags in MP3 files with lame supports it.  (Doug Cook)
   o Also can write VBR Tag ("XING Header") in MP3 files. (Jim Hark /
     Doug Cook)
+  o Increase percision of MP3 encoders to use 24-bits instead of 
+    16-bits. (Doug Cook)
   o Fix failed writing 24-bit PAF files (and possibly other libsndfile
     based formats).  (cbagwell)
   o Allow libsndfile to be dlopen()'ed at runtime if --enable-dl-sndfile

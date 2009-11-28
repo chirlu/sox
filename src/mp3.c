@@ -62,6 +62,13 @@ static mad_timer_t const mad_timer_zero_stub = {0, 0};
 #define MAXFRAMESIZE 2880
 #define ID3PADDING 128
 
+/* LAME takes float values as input. */
+#define MP3_LAME_PRECISION 24
+
+/* MAD returns values with MAD_F_FRACBITS (28) bits of precision, though it's
+   not certain that all of them are meaningful. Let's just make it match LAME. */
+#define MP3_MAD_PRECISION  MP3_LAME_PRECISION
+
 static const char* const mad_library_names[] =
 {
 #ifdef DL_MAD
@@ -106,34 +113,54 @@ static const char* const lame_library_names[] =
 };
 
 #ifdef DL_LAME
+
+  /* Expected to be present in all builds of LAME. */
   #define LAME_FUNC           LSX_DLENTRY_DYNAMIC
-  #define LAME_FUNC_MSG       LSX_DLENTRY_STUB
-  #define LAME_FUNC_LAMETAG   LSX_DLENTRY_STUB
+
+  /* id3tag support is an optional component of LAME. Use if available. */
   #define LAME_FUNC_ID3       LSX_DLENTRY_STUB
-#else
+
+  /* Added in LAME 3.98: lame_get_lametag_frame. Use if available. */
+  #define LAME_FUNC_398       LSX_DLENTRY_STUB
+
+  /* Added in LAME 3.98.1 (optional): id3tag_set_pad, lame_get_id3v2_tag,
+     id3tag_set_fieldvalue. Use if available. */
+  #define LAME_FUNC_398_ID3   LSX_DLENTRY_STUB
+
+#else /* DL_LAME */
+
+  /* Expected to be present in all builds of LAME. */
   #define LAME_FUNC           LSX_DLENTRY_STATIC
-  #ifdef HAVE_LAME_SET_MSGF
-    #define LAME_FUNC_MSG     LSX_DLENTRY_STATIC
-  #else
-    #define LAME_FUNC_MSG     LSX_DLENTRY_STUB
-  #endif
-  #ifdef HAVE_LAME_GET_LAMETAG_FRAME
-    #define LAME_FUNC_LAMETAG LSX_DLENTRY_STATIC
-  #else
-    #define LAME_FUNC_LAMETAG LSX_DLENTRY_STUB
-  #endif
-  #ifdef HAVE_ID3TAG_SET_FIELDVALUE
+
+  /* id3tag support is an optional component of LAME. Use if available. */
+  #ifdef HAVE_LAME_ID3TAG
     #define LAME_FUNC_ID3     LSX_DLENTRY_STATIC
   #else
     #define LAME_FUNC_ID3     LSX_DLENTRY_STUB
   #endif
-#endif
+
+  /* Added in LAME 3.98: lame_get_lametag_frame. Use if available. */
+  #ifdef HAVE_LAME_398
+    #define LAME_FUNC_398     LSX_DLENTRY_STATIC
+  #else
+    #define LAME_FUNC_398     LSX_DLENTRY_STUB
+  #endif
+
+  /* Added in LAME 3.98.1 (optional): id3tag_set_pad, lame_get_id3v2_tag,
+     id3tag_set_fieldvalue. Use if available. */
+  #ifdef HAVE_LAME_398_ID3TAG
+    #define LAME_FUNC_398_ID3 LSX_DLENTRY_STATIC
+  #else
+    #define LAME_FUNC_398_ID3 LSX_DLENTRY_STUB
+  #endif
+
+#endif /* DL_LAME */
 
 #define LAME_FUNC_ENTRIES(f,x) \
   LAME_FUNC(f,x, lame_global_flags*, lame_init, (void)) \
-  LAME_FUNC_MSG(f,x, int, lame_set_errorf, (lame_global_flags *, void (*)(const char *, va_list))) \
-  LAME_FUNC_MSG(f,x, int, lame_set_debugf, (lame_global_flags *, void (*)(const char *, va_list))) \
-  LAME_FUNC_MSG(f,x, int, lame_set_msgf, (lame_global_flags *, void (*)(const char *, va_list))) \
+  LAME_FUNC(f,x, int, lame_set_errorf, (lame_global_flags *, void (*)(const char *, va_list))) \
+  LAME_FUNC(f,x, int, lame_set_debugf, (lame_global_flags *, void (*)(const char *, va_list))) \
+  LAME_FUNC(f,x, int, lame_set_msgf, (lame_global_flags *, void (*)(const char *, va_list))) \
   LAME_FUNC(f,x, int, lame_set_num_samples, (lame_global_flags *, unsigned long)) \
   LAME_FUNC(f,x, int, lame_get_num_channels, (const lame_global_flags *)) \
   LAME_FUNC(f,x, int, lame_set_num_channels, (lame_global_flags *, int)) \
@@ -146,14 +173,21 @@ static const char* const lame_library_names[] =
   LAME_FUNC(f,x, int, lame_set_VBR, (lame_global_flags *, vbr_mode)) \
   LAME_FUNC(f,x, int, lame_set_VBR_q, (lame_global_flags *, int)) \
   LAME_FUNC(f,x, int, lame_init_params, (lame_global_flags *)) \
-  LAME_FUNC(f,x, int, lame_encode_buffer, (lame_global_flags *, const short int[], const short int[], const int, unsigned char *, const int)) \
+  LAME_FUNC(f,x, int, lame_encode_buffer_float, (lame_global_flags *, const float[], const float[], const int, unsigned char *, const int)) \
   LAME_FUNC(f,x, int, lame_encode_flush, (lame_global_flags *, unsigned char *, int)) \
   LAME_FUNC(f,x, int, lame_close, (lame_global_flags *)) \
-  LAME_FUNC_LAMETAG(f,x, size_t, lame_get_lametag_frame, (const lame_global_flags *, unsigned char*, size_t)) \
-  LAME_FUNC_ID3(f,x, size_t, lame_get_id3v2_tag, (lame_global_flags *, unsigned char*, size_t)) \
   LAME_FUNC_ID3(f,x, void, id3tag_init, (lame_global_flags *)) \
-  LAME_FUNC_ID3(f,x, void, id3tag_set_pad, (lame_global_flags *, size_t)) \
-  LAME_FUNC_ID3(f,x, int, id3tag_set_fieldvalue, (lame_global_flags *, const char *))
+  LAME_FUNC_ID3(f,x, void, id3tag_set_title, (lame_global_flags *, const char* title)) \
+  LAME_FUNC_ID3(f,x, void, id3tag_set_artist, (lame_global_flags *, const char* artist)) \
+  LAME_FUNC_ID3(f,x, void, id3tag_set_album, (lame_global_flags *, const char* album)) \
+  LAME_FUNC_ID3(f,x, void, id3tag_set_year, (lame_global_flags *, const char* year)) \
+  LAME_FUNC_ID3(f,x, void, id3tag_set_comment, (lame_global_flags *, const char* comment)) \
+  LAME_FUNC_ID3(f,x, int, id3tag_set_track, (lame_global_flags *, const char* track)) \
+  LAME_FUNC_ID3(f,x, int, id3tag_set_genre, (lame_global_flags *, const char* genre)) \
+  LAME_FUNC_398(f,x, size_t, lame_get_lametag_frame, (const lame_global_flags *, unsigned char*, size_t)) \
+  LAME_FUNC_398_ID3(f,x, size_t, id3tag_set_pad, (lame_global_flags *, size_t)) \
+  LAME_FUNC_398_ID3(f,x, size_t, lame_get_id3v2_tag, (lame_global_flags *, unsigned char*, size_t)) \
+  LAME_FUNC_398_ID3(f,x, int, id3tag_set_fieldvalue, (lame_global_flags *, const char *))
 
 /* Private data */
 typedef struct mp3_priv_t {
@@ -172,7 +206,7 @@ typedef struct mp3_priv_t {
 
 #ifdef HAVE_LAME
   lame_global_flags *gfp;
-  short *pcm_buffer;
+  float *pcm_buffer;
   size_t pcm_buffer_size;
   unsigned long num_samples;
   int vbr_tag;
@@ -388,6 +422,7 @@ static int startread(sox_format_t * ft)
 
   p->mad_timer_add(&p->Timer,p->Frame.header.duration);
   p->mad_synth_frame(&p->Synth,&p->Frame);
+  ft->signal.precision = MP3_MAD_PRECISION;
   ft->signal.rate=p->Synth.pcm.samplerate;
   if (ignore_length)
     ft->signal.length = SOX_UNSPEC;
@@ -526,20 +561,30 @@ static void msgf(const char* fmt, va_list va)
 /* These functions are considered optional. If they aren't present in the
    library, the stub versions defined here will be used instead. */
 
-static int lame_set_errorf_stub(lame_global_flags * gfp UNUSED, void (*func)(const char *, va_list) UNUSED)
-  { return 0; }
-static int lame_set_debugf_stub(lame_global_flags * gfp UNUSED, void (*func)(const char *, va_list) UNUSED)
-  { return 0; }
-static int lame_set_msgf_stub(lame_global_flags * gfp UNUSED, void (*func)(const char *, va_list) UNUSED)
+static void id3tag_init_stub(lame_global_flags * gfp UNUSED)
+  { return; }
+static void id3tag_pad_v2_stub(lame_global_flags * gfp UNUSED)
+  { return; }
+static void id3tag_set_title_stub(lame_global_flags * gfp UNUSED, const char* title UNUSED)
+  { return; }
+static void id3tag_set_artist_stub(lame_global_flags * gfp UNUSED, const char* artist UNUSED)
+  { return; }
+static void id3tag_set_album_stub(lame_global_flags * gfp UNUSED, const char* album UNUSED)
+  { return; }
+static void id3tag_set_year_stub(lame_global_flags * gfp UNUSED, const char* year UNUSED)
+  { return; }
+static void id3tag_set_comment_stub(lame_global_flags * gfp UNUSED, const char* comment UNUSED)
+  { return; }
+static void id3tag_set_track_stub(lame_global_flags * gfp UNUSED, const char* track UNUSED)
+  { return; }
+static int id3tag_set_genre_stub(lame_global_flags * gfp UNUSED, const char* genre UNUSED)
   { return 0; }
 static size_t lame_get_lametag_frame_stub(const lame_global_flags * gfp UNUSED, unsigned char * buffer UNUSED, size_t size UNUSED)
   { return 0; }
+static size_t id3tag_set_pad_stub(lame_global_flags * gfp UNUSED, size_t n UNUSED)
+  { return 0; }
 static size_t lame_get_id3v2_tag_stub(lame_global_flags * gfp UNUSED, unsigned char * buffer UNUSED, size_t size UNUSED)
   { return 0; }
-static void id3tag_init_stub(lame_global_flags * gfp UNUSED)
-  { return; }
-static void id3tag_set_pad_stub(lame_global_flags * gfp UNUSED, size_t padding UNUSED)
-  { return; }
 static int id3tag_set_fieldvalue_stub(lame_global_flags * gfp UNUSED, const char *fieldvalue UNUSED)
   { return 0; }
 
@@ -584,18 +629,27 @@ static void rewrite_id3v2_tag(sox_format_t * ft, int id3v2_size, unsigned long n
   priv_t *p = (priv_t *)ft->priv;
   FILE *fp = ft->fp;
   int new_size;
-  unsigned char *buffer = lsx_malloc(id3v2_size);  
+  unsigned char * buffer;
 
+  if (LSX_DLFUNC_IS_STUB(p, lame_get_id3v2_tag))
+  {
+    if (p->num_samples)
+      lsx_warn("cannot update track length info - tag update not supported with this version of LAME. Track length will be incorrect.");
+    else
+      lsx_report("cannot update track length info - tag update not supported with this version of LAME. Track length will be unspecified.");
+    return;
+  }
+
+  buffer = lsx_malloc(id3v2_size);
   if (!buffer)
   {
-    lsx_warn("cannot update id3 tag - failed to allocate buffer");
+    lsx_warn("cannot update track length info - failed to allocate buffer");
     return;
   }
 
   p->lame_set_num_samples(p->gfp, num_samples);
   lsx_debug("updated MP3 TLEN to %lu samples", num_samples);
 
-  p->id3tag_set_pad(p->gfp, ID3PADDING);
   new_size = p->lame_get_id3v2_tag(p->gfp, buffer, id3v2_size);
 
   if (new_size != id3v2_size && new_size-ID3PADDING <= id3v2_size) {
@@ -604,7 +658,15 @@ static void rewrite_id3v2_tag(sox_format_t * ft, int id3v2_size, unsigned long n
   }
 
   if (new_size != id3v2_size) {
-    lsx_warn("cannot update id3 tag - new tag too big");
+    if (LSX_DLFUNC_IS_STUB(p, id3tag_set_pad))
+    {
+      if (p->num_samples)
+        lsx_warn("cannot update track length info - tag size adjustment not supported with this version of LAME. Track length will be invalid.");
+      else
+        lsx_report("cannot update track length info - tag size adjustment not supported with this version of LAME. Track length will be unspecified.");
+    }
+    else
+      lsx_warn("cannot update track length info - failed to adjust tag size");
   } else {
     fseeko(fp, 0, SEEK_SET);
     /* Overwrite the Id3v2 tag (this time TLEN should be accurate) */
@@ -694,10 +756,10 @@ static int startwrite(sox_format_t * ft)
     ft->encoding.encoding = SOX_ENCODING_MP3;
   }
 
-  p->mp3_buffer_size = LAME_BUFFER_SIZE(sox_globals.bufsiz);
+  p->mp3_buffer_size = LAME_BUFFER_SIZE(sox_globals.bufsiz / max(ft->signal.channels, 1));
   p->mp3_buffer = lsx_malloc(p->mp3_buffer_size);
 
-  p->pcm_buffer_size = sox_globals.bufsiz * sizeof(short signed int);
+  p->pcm_buffer_size = sox_globals.bufsiz * sizeof(float);
   p->pcm_buffer = lsx_malloc(p->pcm_buffer_size);
 
   p->gfp = p->lame_init();
@@ -714,6 +776,8 @@ static int startwrite(sox_format_t * ft)
 
   p->num_samples = ft->signal.length == SOX_IGNORE_LENGTH ? 0 : ft->signal.length / max(ft->signal.channels, 1);
   p->lame_set_num_samples(p->gfp, p->num_samples);
+
+  ft->signal.precision = MP3_LAME_PRECISION;
 
   if (ft->signal.channels != SOX_ENCODING_UNKNOWN) {
     if ( (p->lame_set_num_channels(p->gfp,(int)ft->signal.channels)) < 0) {
@@ -786,11 +850,10 @@ static int startwrite(sox_format_t * ft)
         p->lame_set_VBR(p->gfp, vbr_default);
 
       if (ft->seekable) {
-        if (!LSX_DLFUNC_IS_STUB(p, lame_get_id3v2_tag) &&
-            !LSX_DLFUNC_IS_STUB(p, lame_get_lametag_frame)) {
+        if (!LSX_DLFUNC_IS_STUB(p, lame_get_lametag_frame)) {
           p->vbr_tag = 1;
         } else {
-          lsx_warn("unable to write VBR tag because lametag support is not present");
+          lsx_report("unable to write VBR tag because lametag update is not supported with this version of LAME");
         }
       } else {
         lsx_warn("unable to write VBR tag because we can't seek");
@@ -838,19 +901,22 @@ static int startwrite(sox_format_t * ft)
   return(SOX_SUCCESS);
 }
 
+#define MP3_SAMPLE_TO_FLOAT(d,clips) ((float)(32768*SOX_SAMPLE_TO_FLOAT_32BIT(d,clips)))
+
 static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t samp)
 {
     priv_t *p = (priv_t *)ft->priv;
     size_t new_buffer_size;
-    short signed int *buffer_l, *buffer_r = NULL;
+    float *buffer_l, *buffer_r;
     int nsamples = samp/ft->signal.channels;
     int i,j;
     size_t written;
+    int clips = 0;
     SOX_SAMPLE_LOCALS;
 
-    new_buffer_size = samp * sizeof(short signed int);
+    new_buffer_size = samp * sizeof(float);
     if (p->pcm_buffer_size < new_buffer_size) {
-      short *new_buffer = lsx_realloc(p->pcm_buffer, new_buffer_size);
+      float *new_buffer = lsx_realloc(p->pcm_buffer, new_buffer_size);
       if (!new_buffer) {
         lsx_fail_errno(ft, SOX_ENOMEM, "Out of memory");
         return 0;
@@ -859,45 +925,30 @@ static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t sa
       p->pcm_buffer = new_buffer;
     }
 
-    /* NOTE: This logic assumes that "short int" is 16-bits
-     * on all platforms.  It happens to be for all that I know
-     * about.
-     *
-     * Lame ultimately wants data scaled to 16-bit samples
-     * and assumes for the majority of cases that your passing
-     * in something scaled based on passed in datatype
-     * (16, 32, 64, and float).
-     *
-     * If we used long buffers then this means it expects
-     * different scalling between 32-bit and 64-bit CPU's.
-     *
-     * We might as well scale it ourselfs to 16-bit to allow
-     * lsx_malloc()'ing a smaller buffer and call a consistent
-     * interface.
-     */
     buffer_l = p->pcm_buffer;
 
     if (ft->signal.channels == 2)
     {
-        /* lame doesn't support iterleaved samples so we must break
+        /* lame doesn't support interleaved samples for floats so we must break
          * them out into seperate buffers.
          */
         buffer_r = p->pcm_buffer + nsamples;
         j=0;
-        for (i=0; i<nsamples; i++)
+        for (i = 0; i < nsamples; i++)
         {
-            buffer_l[i]=SOX_SAMPLE_TO_SIGNED_16BIT(buf[j++], ft->clips);
-            buffer_r[i]=SOX_SAMPLE_TO_SIGNED_16BIT(buf[j++], ft->clips);
+            buffer_l[i] = MP3_SAMPLE_TO_FLOAT(buf[j++], clips);
+            buffer_r[i] = MP3_SAMPLE_TO_FLOAT(buf[j++], clips);
         }
     }
     else
     {
         j=0;
-        for (i=0; i<nsamples; i++)
-            buffer_l[i]=SOX_SAMPLE_TO_SIGNED_16BIT(buf[j++], ft->clips);
+        for (i = 0; i < nsamples; i++) {
+            buffer_l[i] = MP3_SAMPLE_TO_FLOAT(buf[j++], clips);
+        }
     }
 
-    new_buffer_size = LAME_BUFFER_SIZE(samp);
+    new_buffer_size = LAME_BUFFER_SIZE(nsamples);
     if (p->mp3_buffer_size < new_buffer_size) {
       unsigned char *new_buffer = lsx_realloc(p->mp3_buffer, new_buffer_size);
       if (!new_buffer) {
@@ -909,7 +960,7 @@ static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t sa
     }
 
     if ((written =
-      p->lame_encode_buffer(p->gfp,buffer_l, buffer_r,
+      p->lame_encode_buffer_float(p->gfp, buffer_l, buffer_r,
                    nsamples, p->mp3_buffer,
                    (int)p->mp3_buffer_size)) > p->mp3_buffer_size){
         lsx_fail_errno(ft,SOX_EOF,"Encoding failed");

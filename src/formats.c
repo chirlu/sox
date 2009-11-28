@@ -171,8 +171,9 @@ unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample)
     case SOX_ENCODING_CVSD:       return bits_per_sample == 1? 16: 0;
     case SOX_ENCODING_DPCM:       return bits_per_sample; /* ? */
 
+    case SOX_ENCODING_MP3:        return 0; /* Accept the precision returned by the format. */
+
     case SOX_ENCODING_GSM:
-    case SOX_ENCODING_MP3:
     case SOX_ENCODING_VORBIS:
     case SOX_ENCODING_AMR_WB:
     case SOX_ENCODING_AMR_NB:
@@ -1145,7 +1146,6 @@ enum {
 static sox_bool plugins_initted = sox_false;
 
 #ifdef HAVE_LIBLTDL /* Plugin format handlers */
-  #include <ltdl.h>
   #define MAX_DYNAMIC_FORMATS 42
   #define MAX_FORMATS (NSTATIC_FORMATS + MAX_DYNAMIC_FORMATS)
   #define MAX_FORMATS_1 (MAX_FORMATS + 1)
