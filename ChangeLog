@@ -12,6 +12,11 @@ Previously deprecated features that have been removed in this release:
 
 Newly deprecated features (to be removed in future):
 
+  Deprec-  Feature    [O(ption)]                           Removal
+  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
+  -------  ----------------------  ----------------------  -------
+  14.3.1   F mp3: lame 3.97        lame > 3.97             2010-xx-xx
+
 Previously deprecated features (to be removed in future):
 
   Deprec-  Feature    [O(ption)]                           Removal
@@ -40,6 +45,8 @@ File formats:
   o CVSD encode/decode speed-ups.  (Kimberly Rockwell, P. Chaintreuil)
   o Add ability to select MP3 compression parameters.  (Jim Harkins)
   o Now writes out ID3-tags in MP3 files.  (Doug Cook)
+  o Also can write VBR Tag ("XING Header") in MP3 files. 
+    (Jim Hark/Doug Cook)
   o Fix failed writing 24-bit PAF files (and possibly other libsndfile
     based formats).  (cbagwell)
 
