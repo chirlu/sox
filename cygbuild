@@ -40,8 +40,8 @@
 # cd ../libvorbis-1.2.0
 #./configure --disable-shared --enable-static;make;make install
 #
-# cd ../libsndfile-1.0.19
-#./configure --disable-shared --enable-static;make;make install
+# cd ../libsndfile-1.0.20
+#./configure --disable-shared --enable-static --disable-external-libs;make;make install
 #
 # To get MP3 header files used to enable MP3 support (no libraries used):
 #
@@ -57,6 +57,8 @@
 # CPP variable. If you see warning messages about header files
 # rejected by preprocessor then its most likely from that.
 # Force the value of CPP=cpp works around that bug.
+# static versions of libsndfile do not advertise when they have
+# FLAC or ogg vorbis support.  Need to force the link ourselves.
 if [ $# -ne 0 -o ! -r Makefile ]; then
   ./configure \
     --disable-shared \

@@ -20,8 +20,8 @@ m4_ifdef([PKG_CHECK_MODULES],
   AC_PATH_PROG([PKGCONFIG], [pkg-config], [none])
   if test "$PKGCONFIG" != "none" && `$PKGCONFIG --exists sndfile`
   then
-    SNDFILE_CFLAGS=`$PKGCONFIG --cflags sndfile`
-    SNDFILE_LIBS=`$PKGCONFIG --libs sndfile`
+    SNDFILE_CFLAGS=`$PKGCONFIG --cflags sndfile`" $ac_save_SNDFILE_CFLAGS $SNDFILE_CFLAGS"
+    SNDFILE_LIBS=`$PKGCONFIG --libs sndfile`" $ac_save_SNDFILE_LIBS $SNDFILE_LIBS"
     have_sndfile="maybe"
   else
     have_sndfile="no"
@@ -35,7 +35,7 @@ then
   # As a last resort, just hope that header and ilbrary can
   # be found in default paths and that it doesn't need
   # to link against any other libraries.
-  SNDFILE_LIBS="-lsndfile"
+  SNDFILE_LIBS="-lsndfile $SNDFILE_LIBS"
   have_sndfile="maybe"
 fi
 

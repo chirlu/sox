@@ -287,7 +287,7 @@ if test "$with_mad" != "no"; then
       enable_dl_mad=$enableval, enable_dl_mad=no)
     AC_MSG_RESULT($enable_dl_mad)
     if test "x$using_libltdl" = "xyes" -a "x$enable_dl_mad" = "xyes"; then
-      AC_DEFINE(DL_MAD, 1, [Define if to dlopen() mad.])
+      AC_DEFINE(DL_MAD, 1, [Define to dlopen() mad.])
     else
       AC_CHECK_LIB(mad, mad_stream_buffer, MP3_LIBS="$MP3_LIBS -lmad",using_mad=no)
       if test "$with_mad" = "yes" -a "$using_mad" = "no"; then
@@ -334,7 +334,7 @@ if test "$with_lame" != "no"; then
       enable_dl_lame=$enableval, enable_dl_lame=no)
     AC_MSG_RESULT($enable_dl_lame)
     if test "x$using_libltdl" = "xyes" -a "x$enable_dl_lame" = "xyes"; then
-      AC_DEFINE(DL_LAME, 1, [Define if to dlopen() lame.])
+      AC_DEFINE(DL_LAME, 1, [Define to dlopen() lame.])
     else
       AC_CHECK_LIB(mp3lame, lame_init, MP3_LIBS="$MP3_LIBS -lmp3lame",using_lame=no)
       AC_CHECK_LIB(mp3lame, lame_get_lametag_frame)
@@ -455,19 +455,23 @@ AC_OPTIONAL_FORMAT(pulseaudio, PULSEAUDIO, [AC_CHECK_HEADER(pulse/simple.h, [AC_
 
 AC_OPTIONAL_FORMAT(waveaudio, WAVEAUDIO, [AC_CHECK_HEADER(mmsystem.h, [WAVEAUDIO_LIBS="$WAVEAUDIO_LIBS -lwinmm"], using_waveaudio=no, [[#include <windows.h>]])])
 
-
-AC_OPTIONAL_FORMAT(sndfile, SNDFILE, [SOX_PATH_SNDFILE(, using_sndfile=no)])
-AC_SUBST(SNDFILE_CFLAGS)
-
+dnl When enable_dl_sndfile, do not let SOX_PATH_SNDFILE add libraries
+dnl to be linked in (since they will be dlopen()'ed instead).
+ac_sox_save_SNDFILE_LIBS="$SNDFILE_LIBS"
+SOX_PATH_SNDFILE(using_sndfile=no)
 AC_ARG_ENABLE(dl_sndfile,
 	      AC_HELP_STRING([--enable-dl-sndfile], 
 			     [Dlopen sndfile instead of linking in.]),
 			     enable_dl_sndfile=$enableval, enable_dl_sndfile=no)
 if test "x$using_sndfile" = "xyes"; then
   if test "x$using_libltdl" = "xyes" -a "x$enable_dl_sndfile" = "xyes"; then
-    AC_DEFINE(DL_SNDFILE, 1, [Define if to dlopen() sndfile.])
+    AC_DEFINE(DL_SNDFILE, 1, [Define to dlopen() sndfile.]) 
+    dnl When enable_dl_sndfile, do not let SOX_PATH_SNDFILE add libraries
+    dnl to be linked in (since they will be dlopen()'ed instead).
+    SNDFILE_LIBS="$ac_sox_save_SNDFILE_LIBS"
   fi
 fi
+AC_OPTIONAL_FORMAT(sndfile, SNDFILE)
 
 AC_OPTIONAL_FORMAT(ffmpeg, FFMPEG, [SOX_PATH_FFMPEG(, using_ffmpeg=no)])
 
