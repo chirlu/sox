@@ -52,6 +52,8 @@ File formats:
     based formats).  (cbagwell)
   o Allow libsndfile to be dlopen()'ed at runtime if --enable-dl-sndfile
     is used. (Doug Cook)
+  o Allow amr-nb/amr-wb to be dlopen()'ed at runtime if 
+    --enable-dl-amrwb or --enable-dl-amrnb is used. (Doug Cook)
   o amrnb and amrwb formats can optionally use opencore-amr libraries.
     (cbagwell)
 

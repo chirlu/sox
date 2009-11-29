@@ -23,6 +23,7 @@ typedef struct {
   unsigned mode;
   short pcm[AMR_FRAME];
   size_t pcm_index;
+  LSX_DLENTRIES_TO_PTRS(AMR_FUNC_ENTRIES, amr_dl);
 } priv_t;
 
 static size_t decode_1_frame(sox_format_t * ft)
@@ -36,7 +37,7 @@ static size_t decode_1_frame(sox_format_t * ft)
   n_1 = block_size[(coded[0] >> 3) & 0x0F] - 1;
   if (lsx_readbuf(ft, &coded[1], n_1) != n_1)
     return AMR_FRAME;
-  D_IF_decode(p->state, coded, p->pcm, 0);
+  p->D_IF_decode(p->state, coded, p->pcm, 0);
   return 0;
 }
 
@@ -44,9 +45,7 @@ static int startread(sox_format_t * ft)
 {
   priv_t * p = (priv_t *)ft->priv;
   char buffer[sizeof(magic) - 1];
-
-  p->pcm_index = AMR_FRAME;
-  p->state = D_IF_init();
+  int open_library_result;
 
   if (lsx_readchars(ft, buffer, sizeof(buffer)))
     return SOX_EOF;
@@ -54,6 +53,20 @@ static int startread(sox_format_t * ft)
     lsx_fail_errno(ft, SOX_EHDR, "invalid magic number");
     return SOX_EOF;
   }
+
+  LSX_DLLIBRARY_OPEN(
+      p,
+      amr_dl,
+      AMR_FUNC_ENTRIES,
+      AMR_DESC,
+      amr_library_names,
+      open_library_result);
+  if (open_library_result)
+    return SOX_EOF;
+
+  p->pcm_index = AMR_FRAME;
+  p->state = p->D_IF_init();
+
   ft->signal.rate = AMR_RATE;
   ft->encoding.encoding = AMR_ENCODING;
   ft->signal.channels = 1;
@@ -78,7 +91,8 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t * buf, size_t len)
 static int stopread(sox_format_t * ft)
 {
   priv_t * p = (priv_t *)ft->priv;
-  D_IF_exit(p->state);
+  p->D_IF_exit(p->state);
+  LSX_DLLIBRARY_CLOSE(p, amr_dl);
   return SOX_SUCCESS;
 }
 
@@ -89,8 +103,10 @@ static int startwrite(sox_format_t * ft)
   return SOX_EOF;
 #else
   priv_t * p = (priv_t *)ft->priv;
+  int open_library_result;
+
   if (ft->encoding.compression != HUGE_VAL) {
-    p->mode = ft->encoding.compression;
+    p->mode = (unsigned)ft->encoding.compression;
     if (p->mode != ft->encoding.compression || p->mode > AMR_MODE_MAX) {
       lsx_fail_errno(ft, SOX_EINVAL, "compression level must be a whole number from 0 to %i", AMR_MODE_MAX);
       return SOX_EOF;
@@ -98,7 +114,20 @@ static int startwrite(sox_format_t * ft)
   }
   else p->mode = 0;
 
-#include "amr2.h"
+  LSX_DLLIBRARY_OPEN(
+      p,
+      amr_dl,
+      AMR_FUNC_ENTRIES,
+      AMR_DESC,
+      amr_library_names,
+      open_library_result);
+  if (open_library_result)
+    return SOX_EOF;
+
+#define IGNORE_WARNING \
+  p->state = p->E_IF_init();
+#include "ignore-warning.h"
+
   lsx_writes(ft, magic);
   p->pcm_index = 0;
   return SOX_SUCCESS;
@@ -110,7 +139,9 @@ static sox_bool encode_1_frame(sox_format_t * ft)
 {
   priv_t * p = (priv_t *)ft->priv;
   uint8_t coded[AMR_CODED_MAX];
-#include "amr1.h"
+#define IGNORE_WARNING \
+  int n = p->E_IF_encode(p->state, p->mode, p->pcm, coded, 1);
+#include "ignore-warning.h"
   sox_bool result = lsx_writebuf(ft, coded, (size_t) (size_t) (unsigned)n) == (unsigned)n;
   if (!result)
     lsx_fail_errno(ft, errno, "write error");
@@ -154,7 +185,7 @@ static int stopwrite(sox_format_t * ft)
     if (!encode_1_frame(ft))
       result = SOX_EOF;
   }
-  E_IF_exit(p->state);
+  p->E_IF_exit(p->state);
   return result;
 }
 #endif

@@ -408,18 +408,33 @@ esac
 AC_OPTIONAL_FORMAT(flac, FLAC, [AC_CHECK_HEADER(FLAC/all.h, [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new, FLAC_LIBS="-lFLAC $FLAC_LIBS $OGG_VORBIS_LIBS",using_flac=no, $FLAC_LIBS $OGG_VORBIS_LIBS)], using_flac=no)])
 
 
-
+dnl When enable_dl_amrbw, do not let add libraries to be linked in
+dnl since they will be dlopen()'ed instead.
+ac_sox_save_AMRWB_LIBS="$AMRWB_LIBS"
 AC_OPTIONAL_FORMAT(amrwb, AMRWB, 
 		   [AC_CHECK_HEADERS(opencore-amrwb/dec_if.h,
 		    [AC_CHECK_LIB(opencore-amrwb, D_IF_init, 
-		     AMRNB_LIBS="$AMRWB_LIBS -lopencore-amrwb", using_amrwb=no)],
+		     AMRWB_LIBS="$AMRWB_LIBS -lopencore-amrwb", using_amrwb=no)],
 		    [AC_CHECK_HEADERS(amrwb/dec.h, 
 		     [AC_CHECK_LIB(amrwb, D_IF_init, 
 		      AMRWB_LIBS="$AMRWB_LIBS -lamrwb",using_amrwb=no)], 
 		      using_amrwb=no)])])
+AC_ARG_ENABLE(dl_amrwb,
+	      AC_HELP_STRING([--enable-dl-amrwb], 
+			     [Dlopen amrbw instead of linking in.]),
+			     enable_dl_amrwb=$enableval, enable_dl_amrwb=no)
+if test "x$using_amrwb" = "xyes"; then
+  if test "x$using_libltdl" = "xyes" -a "x$enable_dl_amrwb" = "xyes"; then
+    AC_DEFINE(DL_AMRWB, 1, [Define to dlopen() amrwb.]) 
+    dnl When enable_dl_amrwb, do not let SOX_PATH_AMRWB add libraries
+    dnl to be linked in (since they will be dlopen()'ed instead).
+    AMRWB_LIBS="$ac_sox_save_AMRWB_LIBS"
+  fi
+fi
 
-
-
+dnl When enable_dl_amrnb, do not let add libraries to be linked in
+dnl since they will be dlopen()'ed instead.
+ac_sox_save_AMRNB_LIBS="$AMRNB_LIBS"
 AC_OPTIONAL_FORMAT(amrnb, AMRNB, 
 		   [AC_CHECK_HEADERS(opencore-amrnb/interf_dec.h, 
 		    [AC_CHECK_LIB(opencore-amrnb, Decoder_Interface_init, 
@@ -428,6 +443,18 @@ AC_OPTIONAL_FORMAT(amrnb, AMRNB,
 		     [AC_CHECK_LIB(amrnb, Decoder_Interface_init, 
 		      AMRNB_LIBS="$AMRNB_LIBS -lamrnb", using_amrnb=no)], 
 		       using_amrnb=no)])])
+AC_ARG_ENABLE(dl_amrnb,
+	      AC_HELP_STRING([--enable-dl-amrnb], 
+			     [Dlopen amrnb instead of linking in.]),
+			     enable_dl_amrnb=$enableval, enable_dl_amrnb=no)
+if test "x$using_amrnb" = "xyes"; then
+  if test "x$using_libltdl" = "xyes" -a "x$enable_dl_amrnb" = "xyes"; then
+    AC_DEFINE(DL_AMRNB, 1, [Define to dlopen() amrnb.]) 
+    dnl When enable_dl_amrnb, do not let SOX_PATH_AMRNB add libraries
+    dnl to be linked in (since they will be dlopen()'ed instead).
+    AMRNB_LIBS="$ac_sox_save_AMRNB_LIBS"
+  fi
+fi
 
 
 AC_OPTIONAL_FORMAT(wavpack, WAVPACK, [AC_CHECK_HEADER(wavpack/wavpack.h, [AC_CHECK_LIB(wavpack, WavpackGetSampleRate, WAVPACK_LIBS="$WAVPACK_LIBS -lwavpack",using_wavpack=no)], using_wavpack=no)])
@@ -586,7 +613,13 @@ echo "waveaudio (MS-Windows).....$using_waveaudio"
 echo
 echo "OPTIONAL FILE FORMATS"
 echo "amrnb......................$using_amrnb"
+if test "x$using_amrnb" = "xyes"; then
+echo " dlopen amrnb..............$enable_dl_amrnb"
+fi
 echo "amrwb......................$using_amrwb"
+if test "x$using_amrwb" = "xyes"; then
+echo " dlopen amrwb..............$enable_dl_amrwb"
+fi
 echo "ffmpeg.....................$using_ffmpeg"
 echo "flac.......................$using_flac"
 echo "gsm........................$using_gsm $gsm_option"

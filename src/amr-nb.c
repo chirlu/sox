@@ -22,28 +22,65 @@
 
 #include "sox_i.h"
 
+#ifdef HAVE_AMRNB
+
 #ifdef HAVE_OPENCORE_AMRNB_INTERF_DEC_H
-#include "opencore-amrnb/interf_dec.h"
-#else
-#include "amrnb/typedef.h"
-#include "amrnb/interf_dec.h"
-#include "amrnb/sp_dec.h"
-#endif
-#define Mode  _Mode
-#define MR102 _MR102
-#define MR122 _MR122
-#define MR475 _MR475
-#define MR515 _MR515
-#define MR59  _MR59
-#define MR67  _MR67
-#define MR74  _MR74
-#define MR795 _MR795
-#define MRDTX _MRDTX
-#ifdef HAVE_OPENCORE_AMRNB_INTERF_DEC_H
-#include "opencore-amrnb/interf_enc.h"
-#else
-#include "amrnb/interf_enc.h"
-#endif
+
+  enum Mode { amrnb_mode_dummy };
+
+  int Encoder_Interface_Encode(void* state, enum Mode mode, const short* speech, unsigned char* out, int forceSpeech);
+  void* Encoder_Interface_init(int dtx);
+  void Encoder_Interface_exit(void* state);
+  void Decoder_Interface_Decode(void* state, const unsigned char* in, short* out, int bfi);
+  void* Decoder_Interface_init(void);
+  void Decoder_Interface_exit(void* state);
+
+#define AMR_FUNC_ENTRIES(f,x) \
+  AMR_FUNC(f,x, int, Encoder_Interface_Encode, (void* state, enum Mode mode, const short* speech, unsigned char* out, int forceSpeech)) \
+  AMR_FUNC(f,x, void*, Encoder_Interface_init, (int dtx)) \
+  AMR_FUNC(f,x, void, Encoder_Interface_exit, (void* state)) \
+  AMR_FUNC(f,x, void, Decoder_Interface_Decode, (void* state, const unsigned char* in, short* out, int bfi)) \
+  AMR_FUNC(f,x, void*, Decoder_Interface_init, (void)) \
+  AMR_FUNC(f,x, void, Decoder_Interface_exit, (void* state))
+
+#define D_IF_decode         Decoder_Interface_Decode
+#define D_IF_exit           Decoder_Interface_exit
+#define D_IF_init           Decoder_Interface_init
+#define E_IF_encode         Encoder_Interface_Encode
+#define E_IF_exit           Encoder_Interface_exit
+#define E_IF_init()         Encoder_Interface_init(1)
+
+#else /* HAVE_OPENCORE_AMRNB_INTERF_DEC_H */
+
+enum amrnb_mode { amrnb_mode_dummy };
+
+int GP3VADxEncoder_Interface_Encode(void *st, enum amrnb_mode mode, short *speech, unsigned char *serial, int forceSpeech, char vad2_code);
+void *VADxEncoder_Interface_init(int dtx, char vad2_code);
+void Encoder_Interface_exit(void *state);
+void GP3Decoder_Interface_Decode(void *st, unsigned char *bits, short *synth, int bfi);
+void *Decoder_Interface_init(void);
+void Decoder_Interface_exit(void *state);
+
+#define AMR_FUNC_ENTRIES(f,x) \
+  AMR_FUNC(f,x, int, GP3VADxEncoder_Interface_Encode, (void *st, enum amrnb_mode mode, short *speech, unsigned char *serial, int forceSpeech, char vad2_code)) \
+  AMR_FUNC(f,x, void*, VADxEncoder_Interface_init, (int dtx, char vad2_code)) \
+  AMR_FUNC(f,x, void, Encoder_Interface_exit, (void *state)) \
+  AMR_FUNC(f,x, void, GP3Decoder_Interface_Decode, (void *st, unsigned char *bits, short *synth, int bfi)) \
+  AMR_FUNC(f,x, void*, Decoder_Interface_init, (void)) \
+  AMR_FUNC(f,x, void, Decoder_Interface_exit, (void *state))
+
+#define E_IF_encode(st,m,sp,ser,fs) \
+                            GP3VADxEncoder_Interface_Encode(st,m,sp,ser,fs,0)
+#define E_IF_init()         VADxEncoder_Interface_init(1,0)
+#define E_IF_exit           Encoder_Interface_exit
+#define D_IF_decode         GP3Decoder_Interface_Decode
+#define D_IF_init           Decoder_Interface_init
+#define D_IF_exit           Decoder_Interface_exit
+
+#endif /* HAVE_OPENCORE_AMRNB_INTERF_DEC_H */
+
+static const unsigned amrnb_block_size[] = {13,14,16,18,20,21,27,32,6,0,0,0,0,0,0,1};
+#define block_size amrnb_block_size
 
 static char const magic[] = "#!AMR\n";
 #define AMR_CODED_MAX       32                  /* max coded size */
@@ -53,11 +90,32 @@ static char const magic[] = "#!AMR\n";
 #define AMR_MODE_MAX        7
 #define AMR_NAMES           "amr-nb", "anb"
 #define AMR_RATE            8000
-#define D_IF_decode         Decoder_Interface_Decode
-#define D_IF_exit           Decoder_Interface_exit
-#define D_IF_init           Decoder_Interface_init
-#define E_IF_encode         Encoder_Interface_Encode
-#define E_IF_exit           Encoder_Interface_exit
-#define E_IF_init()         Encoder_Interface_init(1)
-static const unsigned block_size[] = {13,14,16,18,20,21,27,32,6,1,1,1,1,1,1,1};
+#define AMR_DESC            "amr-nb library"
+
+#if !defined(HAVE_LIBLTDL)
+#undef DL_AMRNB
+#endif
+
+static const char* const amr_library_names[] =
+{
+#ifdef DL_AMRNB
+#ifdef HAVE_OPENCORE_AMRNB_INTERF_DEC_H
+  "libopencore-amrnb",
+#else
+  "libamrnb-3",
+  "libamrnb",
+  "amrnb",
+#endif
+#endif
+  NULL
+};
+
+#ifdef DL_AMRNB
+  #define AMR_FUNC  LSX_DLENTRY_DYNAMIC
+#else
+  #define AMR_FUNC  LSX_DLENTRY_STATIC
+#endif /* DL_AMRNB */
+
 #include "amr.h"
+
+#endif /* HAVE_AMRNB */

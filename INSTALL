@@ -156,6 +156,8 @@ can be enabled using:
 --enable-dl-lame
 --enable-dl-mad
 --enable-dl-sndfile
+--enable-dl-amrnb
+--enable-dl-amrwb
 
 Testing
 -------
