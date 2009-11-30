@@ -3,8 +3,11 @@
 if HAVE_ALSA
 if STATIC_ALSA
   libsox_la_SOURCES += alsa.c
-  libsox_la_LIBADD += @ALSA_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @ALSA_LIBS@
+else
+  libsox_la_LIBADD += @ALSA_LIBS@
+endif
 else
   libsox_fmt_alsa_la_SOURCES = alsa.c
   libsox_fmt_alsa_la_LIBADD = libsox.la @ALSA_LIBS@
@@ -15,8 +18,11 @@ endif
 if HAVE_AMRNB
 if STATIC_AMRNB
   libsox_la_SOURCES += amr-nb.c amr.h amr1.h amr2.h
-  libsox_la_LIBADD += @AMRNB_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @AMRNB_LIBS@
+else
+  libsox_la_LIBADD += @AMRNB_LIBS@
+endif
 else
   libsox_fmt_amr_nb_la_SOURCES = amr-nb.c amr.h amr1.h amr2.h
   libsox_fmt_amr_nb_la_LIBADD = libsox.la @AMRNB_LIBS@
@@ -27,8 +33,11 @@ endif
 if HAVE_AMRWB
 if STATIC_AMRWB
   libsox_la_SOURCES += amr-wb.c amr.h amr1.h amr2.h
-  libsox_la_LIBADD += @AMRWB_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @AMRWB_LIBS@
+else
+  libsox_la_LIBADD += @AMRWB_LIBS@
+endif
 else
   libsox_fmt_amr_wb_la_SOURCES = amr-wb.c amr.h amr1.h amr2.h
   libsox_fmt_amr_wb_la_LIBADD = libsox.la @AMRWB_LIBS@
@@ -39,8 +48,11 @@ endif
 if HAVE_AO
 if STATIC_AO
   libsox_la_SOURCES += ao.c
-  libsox_la_LIBADD += @AO_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @AO_LIBS@
+else
+  libsox_la_LIBADD += @AO_LIBS@
+endif
 else
   libsox_fmt_ao_la_SOURCES = ao.c
   libsox_fmt_ao_la_LIBADD = libsox.la @AO_LIBS@
@@ -51,8 +63,11 @@ endif
 if HAVE_COREAUDIO
 if STATIC_COREAUDIO
   libsox_la_SOURCES += coreaudio.c
-  libsox_la_LIBADD += @COREAUDIO_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @COREAUDIO_LIBS@
+else
+  libsox_la_LIBADD += @COREAUDIO_LIBS@
+endif
 else
   libsox_fmt_coreaudio_la_SOURCES = coreaudio.c
   libsox_fmt_coreaudio_la_LIBADD = libsox.la @COREAUDIO_LIBS@
@@ -63,8 +78,11 @@ endif
 if HAVE_FFMPEG
 if STATIC_FFMPEG
   libsox_la_SOURCES += ffmpeg.c ffmpeg.h
-  libsox_la_LIBADD += @FFMPEG_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @FFMPEG_LIBS@
+else
+  libsox_la_LIBADD += @FFMPEG_LIBS@
+endif
 else
   libsox_fmt_ffmpeg_la_SOURCES = ffmpeg.c ffmpeg.h
   libsox_fmt_ffmpeg_la_LIBADD = libsox.la @FFMPEG_LIBS@
@@ -75,8 +93,11 @@ endif
 if HAVE_FLAC
 if STATIC_FLAC
   libsox_la_SOURCES += flac.c
-  libsox_la_LIBADD += @FLAC_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @FLAC_LIBS@
+else
+  libsox_la_LIBADD += @FLAC_LIBS@
+endif
 else
   libsox_fmt_flac_la_SOURCES = flac.c
   libsox_fmt_flac_la_LIBADD = libsox.la @FLAC_LIBS@
@@ -87,8 +108,11 @@ endif
 if HAVE_GSM
 if STATIC_GSM
   libsox_la_SOURCES += gsm.c
-  libsox_la_LIBADD += @GSM_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @GSM_LIBS@
+else
+  libsox_la_LIBADD += @GSM_LIBS@
+endif
 else
   libsox_fmt_gsm_la_SOURCES = gsm.c
   libsox_fmt_gsm_la_LIBADD = libsox.la @GSM_LIBS@
@@ -99,8 +123,11 @@ endif
 if HAVE_LPC10
 if STATIC_LPC10
   libsox_la_SOURCES += lpc10.c
-  libsox_la_LIBADD += @LPC10_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @LPC10_LIBS@
+else
+  libsox_la_LIBADD += @LPC10_LIBS@
+endif
 else
   libsox_fmt_lpc10_la_SOURCES = lpc10.c
   libsox_fmt_lpc10_la_LIBADD = libsox.la @LPC10_LIBS@
@@ -111,8 +138,11 @@ endif
 if HAVE_MP3
 if STATIC_MP3
   libsox_la_SOURCES += mp3.c mp3-util.h
-  libsox_la_LIBADD += @MP3_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @MP3_LIBS@
+else
+  libsox_la_LIBADD += @MP3_LIBS@
+endif
 else
   libsox_fmt_mp3_la_SOURCES = mp3.c mp3-util.h
   libsox_fmt_mp3_la_LIBADD = libsox.la @MP3_LIBS@
@@ -123,8 +153,11 @@ endif
 if HAVE_OSS
 if STATIC_OSS
   libsox_la_SOURCES += oss.c
-  libsox_la_LIBADD += @OSS_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @OSS_LIBS@
+else
+  libsox_la_LIBADD += @OSS_LIBS@
+endif
 else
   libsox_fmt_oss_la_SOURCES = oss.c
   libsox_fmt_oss_la_LIBADD = libsox.la @OSS_LIBS@
@@ -135,8 +168,11 @@ endif
 if HAVE_PULSEAUDIO
 if STATIC_PULSEAUDIO
   libsox_la_SOURCES += pulseaudio.c
-  libsox_la_LIBADD += @PULSEAUDIO_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @PULSEAUDIO_LIBS@
+else
+  libsox_la_LIBADD += @PULSEAUDIO_LIBS@
+endif
 else
   libsox_fmt_pulseaudio_la_SOURCES = pulseaudio.c
   libsox_fmt_pulseaudio_la_LIBADD = libsox.la @PULSEAUDIO_LIBS@
@@ -147,8 +183,11 @@ endif
 if HAVE_WAVEAUDIO
 if STATIC_WAVEAUDIO
   libsox_la_SOURCES += waveaudio.c
-  libsox_la_LIBADD += @WAVEAUDIO_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @WAVEAUDIO_LIBS@
+else
+  libsox_la_LIBADD += @WAVEAUDIO_LIBS@
+endif
 else
   libsox_fmt_waveaudio_la_SOURCES = waveaudio.c
   libsox_fmt_waveaudio_la_LIBADD = libsox.la @WAVEAUDIO_LIBS@
@@ -160,7 +199,11 @@ if HAVE_SNDIO
 if STATIC_SNDIO
   libsox_la_SOURCES += sndio.c
   libsox_la_LIBADD += @SNDIO_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @SNDIO_LIBS@
+else
+  libsox_la_LIBADD += @SNDIO_LIBS@
+endif
 else
   libsox_fmt_sndio_la_SOURCES = sndio.c
   libsox_fmt_sndio_la_LIBADD = libsox.la @SNDIO_LIBS@
@@ -171,8 +214,11 @@ endif
 if HAVE_SUN_AUDIO
 if STATIC_SUN_AUDIO
   libsox_la_SOURCES += sunaudio.c
-  libsox_la_LIBADD += @SUN_AUDIO_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @SUN_AUDIO_LIBS@
+else
+  libsox_la_LIBADD += @SUN_AUDIO_LIBS@
+endif
 else
   libsox_fmt_sunau_la_SOURCES = sunaudio.c
   libsox_fmt_sunau_la_LIBADD = libsox.la @SUN_AUDIO_LIBS@
@@ -183,8 +229,11 @@ endif
 if HAVE_OGG_VORBIS
 if STATIC_OGG_VORBIS
   libsox_la_SOURCES += vorbis.c
-  libsox_la_LIBADD += @OGG_VORBIS_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @OGG_VORBIS_LIBS@
+else
+  libsox_la_LIBADD += @OGG_VORBIS_LIBS@
+endif
 else
   libsox_fmt_vorbis_la_SOURCES = vorbis.c
   libsox_fmt_vorbis_la_LIBADD = libsox.la @OGG_VORBIS_LIBS@
@@ -195,8 +244,11 @@ endif
 if HAVE_WAVPACK
 if STATIC_WAVPACK
   libsox_la_SOURCES += wavpack.c
-  libsox_la_LIBADD += @WAVPACK_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @WAVPACK_LIBS@
+else
+  libsox_la_LIBADD += @WAVPACK_LIBS@
+endif
 else
   libsox_fmt_wavpack_la_SOURCES = wavpack.c
   libsox_fmt_wavpack_la_LIBADD = libsox.la @WAVPACK_LIBS@
@@ -209,8 +261,11 @@ if HAVE_SNDFILE
 if STATIC_SNDFILE
   libsox_la_SOURCES += sndfile.c caf.c mat4.c mat5.c paf.c fap.c w64.c xi.c pvf.c sd2.c
   libsox_la_CFLAGS += @SNDFILE_CFLAGS@
-  libsox_la_LIBADD += @SNDFILE_LIBS@
+if STATIC_LIBSOX_ONLY
   sox_LDADD += @SNDFILE_LIBS@
+else
+  libsox_la_LIBADD += @SNDFILE_LIBS@
+endif
 else
 libsox_fmt_sndfile_la_SOURCES = sndfile.c
 libsox_fmt_sndfile_la_CFLAGS = @WARN_CFLAGS@ @SNDFILE_CFLAGS@

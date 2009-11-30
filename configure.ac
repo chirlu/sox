@@ -589,7 +589,7 @@ else
   pkgconfig_option="$with_pkgconfigdir"
 fi
 
-
+AM_CONDITIONAL(STATIC_LIBSOX_ONLY, test "$enable_shared" = "no" -a "$enable_static" = "yes")
 
 # Report configuration.
 echo
