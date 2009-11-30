@@ -485,7 +485,7 @@ AC_OPTIONAL_FORMAT(waveaudio, WAVEAUDIO, [AC_CHECK_HEADER(mmsystem.h, [WAVEAUDIO
 dnl When enable_dl_sndfile, do not let SOX_PATH_SNDFILE add libraries
 dnl to be linked in (since they will be dlopen()'ed instead).
 ac_sox_save_SNDFILE_LIBS="$SNDFILE_LIBS"
-SOX_PATH_SNDFILE(using_sndfile=no)
+SOX_PATH_SNDFILE(tmp_using_sndfile=yes, tmp_using_sndfile=no)
 AC_ARG_ENABLE(dl_sndfile,
 	      AC_HELP_STRING([--enable-dl-sndfile], 
 			     [Dlopen sndfile instead of linking in.]),
@@ -498,7 +498,7 @@ if test "x$using_sndfile" = "xyes"; then
     SNDFILE_LIBS="$ac_sox_save_SNDFILE_LIBS"
   fi
 fi
-AC_OPTIONAL_FORMAT(sndfile, SNDFILE)
+AC_OPTIONAL_FORMAT(sndfile, SNDFILE, [using_sndfile=$tmp_using_sndfile])
 
 AC_OPTIONAL_FORMAT(ffmpeg, FFMPEG, [SOX_PATH_FFMPEG(, using_ffmpeg=no)])
 
