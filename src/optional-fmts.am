@@ -17,14 +17,14 @@ endif
 
 if HAVE_AMRNB
 if STATIC_AMRNB
-  libsox_la_SOURCES += amr-nb.c amr.h amr1.h amr2.h
+  libsox_la_SOURCES += amr-nb.c amr.h
 if STATIC_LIBSOX_ONLY
   sox_LDADD += @AMRNB_LIBS@
 else
   libsox_la_LIBADD += @AMRNB_LIBS@
 endif
 else
-  libsox_fmt_amr_nb_la_SOURCES = amr-nb.c amr.h amr1.h amr2.h
+  libsox_fmt_amr_nb_la_SOURCES = amr-nb.c amr.h
   libsox_fmt_amr_nb_la_LIBADD = libsox.la @AMRNB_LIBS@
   pkglib_LTLIBRARIES += libsox_fmt_amr_nb.la
 endif
@@ -32,7 +32,7 @@ endif
 
 if HAVE_AMRWB
 if STATIC_AMRWB
-  libsox_la_SOURCES += amr-wb.c amr.h amr1.h amr2.h
+  libsox_la_SOURCES += amr-wb.c amr.h
 if STATIC_LIBSOX_ONLY
   sox_LDADD += @AMRWB_LIBS@
 else
