@@ -39,7 +39,7 @@ else
   libsox_la_LIBADD += @AMRWB_LIBS@
 endif
 else
-  libsox_fmt_amr_wb_la_SOURCES = amr-wb.c amr.h amr1.h amr2.h
+  libsox_fmt_amr_wb_la_SOURCES = amr-wb.c amr.h
   libsox_fmt_amr_wb_la_LIBADD = libsox.la @AMRWB_LIBS@
   pkglib_LTLIBRARIES += libsox_fmt_amr_wb.la
 endif
