@@ -42,6 +42,8 @@
 
 #include "sox_i.h"
 
+#ifdef HAVE_FFMPEG
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -500,3 +502,5 @@ LSX_FORMAT_HANDLER(ffmpeg)
 
   return &handler;
 }
+
+#endif /* HAVE_FFMPEG */

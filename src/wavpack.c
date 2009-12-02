@@ -16,7 +16,18 @@
  */
 
 #include "sox_i.h"
-#include "wavpack/wavpack.h"
+
+#ifdef HAVE_WAVPACK_H
+#define HAVE_WAVPACK 1
+#endif
+
+#ifdef HAVE_WAVPACK
+
+#ifdef HAVE_WAVPACK_H
+#include <wavpack.h>
+#else
+#include <wavpack/wavpack.h>
+#endif
 
 typedef struct {
   WavpackContext * codec;
@@ -177,3 +188,5 @@ LSX_FORMAT_HANDLER(wavpack)
   };
   return &handler;
 }
+
+#endif /* HAVE_WAVPACK */
