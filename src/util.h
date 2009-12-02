@@ -32,6 +32,7 @@
 #endif
 
 #ifdef _MSC_VER
+
 #define __STDC__ 1
 #define O_BINARY _O_BINARY
 #define O_CREAT _O_CREAT
@@ -41,19 +42,35 @@
 #define S_IFREG _S_IFREG
 #define S_IREAD _S_IREAD
 #define S_IWRITE _S_IWRITE
+#define close _close
+#define dup _dup
 #define fdopen _fdopen
+#define fileno _fileno
 #define fstat _fstat
 #define ftime _ftime
 #define inline __inline
 #define isatty _isatty
+#define kbhit _kbhit
 #define mktemp _mktemp
 #define off_t _off_t
 #define open _open
+#define pclose _pclose
 #define popen _popen
+#define setmode _setmode
+#define snprintf _snprintf
 #define stat _stat
 #define strdup _strdup
 #define timeb _timeb
 #define unlink _unlink
+
+#if defined(HAVE_FSEEKI64) && !defined(HAVE_FSEEKO)
+#undef off_t
+#define fseeko _fseeki64
+#define ftello _ftelli64
+#define off_t __int64
+#define HAVE_FSEEKO 1
+#endif
+
 #endif
 
 #if defined(DOS) || defined(WIN32) || defined(__NT__) || defined(__DJGPP__) || defined(__OS2__)

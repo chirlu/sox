@@ -177,10 +177,12 @@ int lsx_open_dllibrary(
 
     for (libname = library_names; *libname; libname++)
     {
+      lsx_debug("Attempting to open %s (%s).", library_description, *libname);
       dl = lt_dlopenext(*libname);
       if (dl)
       {
         size_t i;
+        lsx_debug("Opened %s (%s).", library_description, *libname);
         for (i = 0; func_infos[i].name; i++)
         {
           union {lsx_dlptr fn; lt_ptr ptr;} func;
@@ -192,6 +194,7 @@ int lsx_open_dllibrary(
             dl = NULL;
             failed_libname = *libname;
             failed_funcname = func_infos[i].name;
+            lsx_debug("Cannot use %s (%s) - missing function \"%s\".", library_description, failed_libname, failed_funcname);
             break;
           }
         }
