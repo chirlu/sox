@@ -38,7 +38,10 @@
 #include <sys/types.h>
 #include <time.h>
 
-#ifdef HAVE_GLOB_H
+#if defined(HAVE_WIN32_GLOB_H)
+  #include "win32-glob.h"
+  #define HAVE_GLOB_H 1
+#elif defined(HAVE_GLOB_H)
   #include <glob.h>
 #endif
 
