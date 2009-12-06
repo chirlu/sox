@@ -155,9 +155,3 @@ autoreconf -i -f
 ./configure
 make
 cp .libs/cymad-0.dll /path/to/sox/libmad.dll
-
-It may also be possible to create DLL's using MS VC++ since both
-libraries include VC++ project files.  Lame creates a library
-call lame_enc.dll which does not correctly export VBR symbols
-and MAD does not export any symbols.  Therefore, cygwin is simpliest
-and is suggested method.

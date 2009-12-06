@@ -207,6 +207,12 @@ on a new platform then you can use the scripts "tests.sh" and
 Compiling using Microsoft's Visual C
 ------------------------------------
 
+To compile a full-featured build of SoX with Visual C 9.0, you may be able to
+use the preconfigured solution found in the sox\msvc9 folder. See
+sox\msvc9\readme.txt for details. If the preconfigured solution doesn't work
+for you or if you are not using Visual C 9.0, follow the CMake instructions
+given below.
+
 o Install cmake (http://www.cmake.org/HTML/Download.html)
 o Install any optional libraries to use with SoX
 o Unpack the SoX sources (...tar.gz) to say c:\sox
@@ -220,8 +226,12 @@ This should generate project build files for use with Visual C.
 Appendix: How To Compile SoX with MP3 Support on Win32
 ------------------------------------------------------
 
+The solution file in the msvc9 will build SoX to dynamically load
+libmad.dll and libmp3lame.dll at runtime.
+
 The following text, untested by the SoX team, was originally written
-by `Enter AG' and released to the public domain.
+by `Enter AG' and released to the public domain. It includes instructions for
+building SoX with MP3 support linked directly into the SoX executable.
 
 = How To Compile Sox with MP3 Support =
 
@@ -230,18 +240,18 @@ by `Enter AG' and released to the public domain.
 The following requirements have been tested. Nevertheless, other
 versions may work as well.
 
-o Microsoft Windows (Win32, Win2k, Win2003).
+o Microsoft Windows (Win32, Win2000, XP, Win2003, Vista, etc.).
 
 o CMake (Cross Platform Make) version 2.4
   available on [http://www.cmake.org]
 
-o Microsoft Visual Stuio 2008 (also earlier Versions)
+o Microsoft Visual Stuio 2008 (earlier versions should also work).
 
 o SoX source distribution version 14.0.1
   available on [http://sox.sourceforge.net]
 
-o LAME source distribution version 3.97.  3.98 required for full ID3 tag 
-  support. available on [http://lame.sourceforge.net]
+o LAME source distribution version 3.97. LAME 3.98 is required for full ID3 tag 
+  support. Available on [http://lame.sourceforge.net]
 
 o MAD source distribution version 0.15.1b
   available on [http://www.underbit.com/products/mad/]
@@ -305,10 +315,10 @@ o Execute cmake like this:
 o If the Visual Studio settings are done as described above the following cmake
   output should appear:
   ...
-  include files HAVE_MAD_H1 – found
-  mad_stream_buffer in madmad_stream_buffer in mad – found
+  include files HAVE_MAD_H1 - found
+  mad_stream_buffer in madmad_stream_buffer in mad - found
   ...
-  include files HAVE_LAME_LAME_H1 – found
+  include files HAVE_LAME_LAME_H1 - found
   lame_init in mp3lamelame_init in mp3lame - found
   ...
 
