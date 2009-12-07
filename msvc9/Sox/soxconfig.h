@@ -70,7 +70,6 @@
 #define HAVE_SFC_SET_SCALE_FLOAT_INT_READ 1
 #define HAVE_SFC_SET_SCALE_INT_FLOAT_WRITE 1
 #define STATIC_SNDFILE 1
-typedef __int64 __int64_t; /* Required for sndfile.h. */
 
 #define HAVE_WAVEAUDIO 1
 #define STATIC_WAVEAUDIO 1
