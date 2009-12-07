@@ -75,6 +75,7 @@ typedef __int64 __int64_t; /* Required for sndfile.h. */
 #define HAVE_WAVEAUDIO 1
 #define STATIC_WAVEAUDIO 1
 
+#define HAVE_WAVPACK 1
 #define HAVE_WAVPACK_H 1
 #define STATIC_WAVPACK 1
 
