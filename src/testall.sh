@@ -2,6 +2,8 @@ bindir="."
 srcdir="."
 effect=""
 
+EXEEXT=
+
 # Allow user to override paths.  Useful for testing an installed
 # sox.
 while [ $# -ne 0 ]; do
@@ -36,8 +38,8 @@ t() {
 	opts="$*"
 
 	echo "Format: $format   Options: $opts"
-	${bindir}/sox ${srcdir}/monkey.wav $opts /tmp/monkey.$format $effect
-	${bindir}/sox $opts /tmp/monkey.$format /tmp/monkey1.wav  $effect
+	${bindir}/sox${EXEEXT} ${srcdir}/monkey.wav $opts /tmp/monkey.$format $effect
+	${bindir}/sox${EXEEXT} $opts /tmp/monkey.$format /tmp/monkey1.wav  $effect
 }
 t 8svx
 t aiff
