@@ -1,0 +1,112 @@
+#!/bin/sh
+#
+# This script will automates the steps used to producing a static win32
+# package of SoX.
+#
+# It is used on a Fedora box with mingw cross compiler and wine to 
+# test.  It can be used as a reference for command lines under MSYS.
+#
+# It will optionally package up VC++ version of wget if found in 
+# ../wget-1.11.4.
+#
+# Various notes:
+#
+# Script makes use of "-static" option to tell compiler to prefer static
+# external libraries. Some libtool versions (2.2.7a?) will cause
+# linker to ignore -static if a lib*.la is found and it defines
+# a dynamic version of the library.  Work arounds include to only
+# install static libraries, delete the lib*.la file, or edit the
+# lib*.la file and set dlnames and library_names variables to empty
+# string ("").
+#
+# The following command lines were used to generate the static external
+# libraries SoX ships with.
+#
+# FIXME: This will link to dynamic zlib1.dll.  Need to use
+# -static trick with it.
+# cd libpng-1.2.32
+#./configure --disable-shared --enable-static;make;make install
+#
+# FIXME: had to comment out cli from SUBDIR.
+# cd ../wavpack-4.60.1
+#./configure --disable-shared --enable-static;make;make install
+#
+# FIXME: Needed to edit include/share/alloc.h and remove
+# !defined __MINGW32__ check so that stdint.h is included.
+# cd ../flac-1.2.1
+#./configure --disable-shared --enable-static;make;make install
+#
+# cd ../libogg-1.1.4
+#./configure --disable-shared --enable-static;make;make install
+#
+# cd ../libvorbis-1.2.3
+#./configure --disable-shared --enable-static;make;make install
+#
+# FIXME: Had to hand edit and add -lwsock32 to tons of executable
+# links when compiled with FLAC and ogg vorbis support.
+# cd ../libsndfile-1.0.20
+#./configure --disable-shared --enable-static --disable-external-libs;make;make install
+#
+# To get MP3 header files used to enable MP3 support (no libraries used):
+#
+# cd ../lame-398-2
+#./configure --enable-shared --disable-static;make;sudo make install
+#
+# cd ../libid3tag-0.15.1b
+#./configure --enable-shared --disable-static;make;sudo make install
+#
+# cd ../libmad-0.15.1b
+#./configure --enable-shared --disable-static;make;sudo make install
+
+[ ! -x configure ] && autoreconf -i
+
+# Some versions of autoconf (2.63?) seem to get easily confused about
+# CPP variable. If you see warning messages about header files
+# rejected by preprocessor then its most likely from that.
+# Force the value of CPP=cpp works around that bug.
+# static versions of libsndfile do not advertise when they have
+# FLAC or ogg vorbis support.  Need to force the link ourselves.
+if [ $# -ne 0 -o ! -r Makefile ]; then
+  mingw32-configure \
+    --disable-shared \
+    --with-libltdl \
+    --enable-dl-lame --enable-dl-mad --enable-dl-amrnb --enable-dl-amrwb\
+    LDFLAGS="-static" \
+    SNDFILE_LIBS="-lsndfile -lFLAC -lwsock32 -lvorbisenc -lvorbisfile -lvorbis -logg"
+    $*
+fi
+
+make -s all pdf txt || exit 1
+
+dir=sox-`grep Version: sox.pc | cut -d ' ' -f 2`
+rm -rf $dir $dir-win32.zip
+mkdir -p $dir
+
+for f in ChangeLog LICENSE.GPL README README.win32; do
+  cp -p $f $dir/$f.txt
+  unix2dos $dir/$f.txt
+done
+
+binaries=src/sox.exe
+# FIXME: Must distribute until can build libpng with static
+# version linked in.
+binaries=$binaries /usr/i686-pc-mingw32/sys-root/mingw/bin/zlib1.dll
+
+cp -p \
+  $binaries \
+  sox.pdf \
+  soxformat.pdf \
+  soxi.pdf \
+  libsox.pdf \
+  scripts/batch-example.bat \
+  $dir
+
+unix2dos $dir/batch-example.bat
+
+if test -r "../wget-1.11.4/wget.exe"; then
+  cp ../wget-1.11.4/wget.exe $dir
+  cp ../wget-1.11.4/wget.ini $dir
+fi
+
+zip -r $dir-win32.zip $dir
+rm -rf $dir

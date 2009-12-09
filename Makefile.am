@@ -58,6 +58,9 @@ uninstall-pdf:
 	  $(RM) "$(DESTDIR)$(pdfdir)/$$f"; \
 	  done
 
+distclean-local:
+	$(RM) mingw32-config.cache
+
 # Rule for making HTML man pages
 #
 # Get rid on unneeded Content-Type, man directory and manpage index in extension.
