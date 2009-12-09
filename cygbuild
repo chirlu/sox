@@ -64,7 +64,7 @@ if [ $# -ne 0 -o ! -r Makefile ]; then
     --disable-shared \
     --with-libltdl \
     --enable-dl-lame --enable-dl-mad \
-    CC=gcc CPP=cpp\
+    CC=gcc-4 CPP=cpp\
     CPPFLAGS=-I/usr/local/include \
     LDFLAGS="-static -L/usr/local/lib" \
     $*
