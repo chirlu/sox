@@ -12,51 +12,69 @@
 # Various notes:
 #
 # Script makes use of "-static" option to tell compiler to prefer static
-# external libraries. Some libtool versions (2.2.7a?) will cause
-# linker to ignore -static if a lib*.la is found and it defines
-# a dynamic version of the library.  Work arounds include to only
-# install static libraries, delete the lib*.la file, or edit the
-# lib*.la file and set dlnames and library_names variables to empty
-# string ("").
+# external libraries so that we do not need to distribute DLL's. 
+#
+# Libtool will get confused with this flag for external libraries 
+# that have a libtool lib*.la file and support shared libraries as 
+# well as static libraries (but usually only if that library 
+# further depends on other external libraries with lib*.la files). 
+# Libtool may ignore -static option or it may link first external
+# library as static but other dependent libraries as shared (usually
+# because it follows $dependency_libs and that ignores -static option).
+#
+# Work arounds include to only install static libraries, delete the lib*.la 
+# file, or edit the lib*.la file and set dlnames and library_names variables 
+# to empty string ("").
 #
 # The following command lines were used to generate the static external
 # libraries SoX ships with.
 #
-# FIXME: This will link to dynamic zlib1.dll.  Need to use
-# -static trick with it.
-# cd libpng-1.2.32
-#./configure --disable-shared --enable-static;make;make install
+# libpng.la will have libtool issue because depends on libz
+# which has a libz.la file.  Must edit libpng.la to
+# prevent needing to distribute zlib1.dll.
+# cd libpng-1.2.41
+# mingw32-configure --disable-shared --enable-static;mingw32-make;sudu mingw32-make install
 #
-# FIXME: had to comment out cli from SUBDIR.
+# MINGW work around: had to comment out "cli" from SUBDIR.
 # cd ../wavpack-4.60.1
-#./configure --disable-shared --enable-static;make;make install
+# mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
-# FIXME: Needed to edit include/share/alloc.h and remove
+# MINGW fixes for FLAC: Needed to edit include/share/alloc.h and remove
 # !defined __MINGW32__ check so that stdint.h is included.
+# Edited Makefile and removed "examples" from SUBDIRS.
 # cd ../flac-1.2.1
-#./configure --disable-shared --enable-static;make;make install
+# mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
 # cd ../libogg-1.1.4
-#./configure --disable-shared --enable-static;make;make install
+# mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
 # cd ../libvorbis-1.2.3
-#./configure --disable-shared --enable-static;make;make install
+# mingw32-configure --disable-shared --enable-static;mingw-32-make;sudo mingw32-make install
 #
-# FIXME: Had to hand edit and add -lwsock32 to tons of executable
-# links when compiled with FLAC and ogg vorbis support.
+# Compile libsndfile after FLAC and ogg vorbis so that it will include
+# support for that.
+# MINGW work around: Can either add -lwsock32 to end of *_LDADD for any 
+# failed program links or modify top leve Makefile and remove
+# "programs", "examples", "regtests", and "tests" from SUBDIRS.
 # cd ../libsndfile-1.0.20
-#./configure --disable-shared --enable-static --disable-external-libs;make;make install
+# mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
 # To get MP3 header files used to enable MP3 support (no libraries used):
 #
 # cd ../lame-398-2
-#./configure --enable-shared --disable-static;make;sudo make install
+# mingw32-configure --enable-shared --disable-static;mingw32-make;sudo mingw32-make install
 #
 # cd ../libid3tag-0.15.1b
-#./configure --enable-shared --disable-static;make;sudo make install
+# mingw32-configure --enable-shared --disable-static;mingw32-make;sudo mingw32-make install
 #
+# MINGW work around: Edit Makefile and remove -fforce-mem from CFLAGS
 # cd ../libmad-0.15.1b
-#./configure --enable-shared --disable-static;make;sudo make install
+# mingw32-configure --enable-shared --disable-static;mingw32-make;sudo mingw32-make install
+#
+# To get AMR header files used to eanble AMR support (no libraries used):
+#
+# cd ../opencore-amr-0.1.2
+# mingw32-configure --enable-shared --disable-static;mingw32-make;sudo mingw32-make install
 
 [ ! -x configure ] && autoreconf -i
 
@@ -70,9 +88,9 @@ if [ $# -ne 0 -o ! -r Makefile ]; then
   mingw32-configure \
     --disable-shared \
     --with-libltdl \
-    --enable-dl-lame --enable-dl-mad --enable-dl-amrnb --enable-dl-amrwb\
+    --enable-dl-lame --enable-dl-mad --enable-dl-amrnb --enable-dl-amrwb \
     LDFLAGS="-static" \
-    SNDFILE_LIBS="-lsndfile -lFLAC -lwsock32 -lvorbisenc -lvorbisfile -lvorbis -logg"
+    SNDFILE_LIBS="-lsndfile -lFLAC -lwsock32 -lvorbisenc -lvorbisfile -lvorbis -logg" \
     $*
 fi
 
@@ -88,9 +106,9 @@ for f in ChangeLog LICENSE.GPL README README.win32; do
 done
 
 binaries=src/sox.exe
-# FIXME: Must distribute until can build libpng with static
-# version linked in.
-binaries=$binaries /usr/i686-pc-mingw32/sys-root/mingw/bin/zlib1.dll
+# If you do not edit libpng.la to comment out shared libraries
+# then you'll need to distribute zlib1.dll.
+#binaries=$binaries /usr/i686-pc-mingw32/sys-root/mingw/bin/zlib1.dll
 
 cp -p \
   $binaries \
