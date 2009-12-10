@@ -78,7 +78,7 @@ if [ $# -ne 0 -o ! -r Makefile ]; then
   ./configure \
     --disable-shared \
     --with-libltdl \
-    --enable-dl-lame --enable-dl-mad --enable-dl-amrwb \
+    --enable-dl-lame --enable-dl-mad --enable-dl-amrnb --enable-dl-amrwb \
     CC=gcc-4 CPP=cpp\
     CPPFLAGS=-I/usr/local/include \
     LDFLAGS="-static -L/usr/local/lib" \
