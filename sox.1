@@ -48,15 +48,15 @@ SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH DESCRIPTION
 .SS Introduction
 SoX reads and writes audio files in most popular formats and can
-optionally apply effects to them; it can combine multiple input
+optionally apply effects to them. It can combine multiple input
 sources, synthesise audio, and, on many systems, act as a general
 purpose audio player or a multi-track audio recorder. It also has
-limited ability to split the input in to multiple output files.
+limited ability to split the input into multiple output files.
 .SP
-All SoX functionality is available using just the \fBsox\fR command,
-however, to simplify playing and recording audio, if SoX is invoked as
-\fBplay\fR the output file is automatically set to be the default sound
-device and if invoked as \fBrec\fR the default sound device is used as an
+All SoX functionality is available using just the \fBsox\fR command.
+To simplify playing and recording audio, if SoX is invoked as
+\fBplay\fR, the output file is automatically set to be the default sound
+device, and if invoked as \fBrec\fR, the default sound device is used as an
 input source.
 Additionally, the
 .BR soxi (1)
@@ -153,36 +153,35 @@ effects can be found below in this manual, in
 and in
 .BR soxi (1).
 .SS File Format Types
-There are two types of audio file format that SoX can work with:
-`self-describing'\*mthese (e.g. WAV, FLAC) have a header that
+SoX can work with `self-describing' and `raw' audio files.
+`self-describing' formats (e.g. WAV, FLAC, MP3) have a header that
 completely describes the signal and encoding attributes of the audio
-data that follows, and `raw' (or `headerless') audio\*mthe audio
-characteristics of these must, when reading a raw file, be described
-using the SoX command line, and, when writing a raw file, be set using
-the command line (or inferred from those of the input file).
+data that follows. `raw' or `headerless' formats do not contain this
+information, so the audio characteristics of these must be described
+on the SoX command line or inferred from those of the input file.
 .SP
 The following four characteristics are used to describe the format of
 audio data such that it can be processed with SoX:
 .TP
 sample rate
-The sample rate in samples per second (`Hertz' or `Hz').  For example,
-digital telephony traditionally uses a sample rate of 8000\ Hz (8\ kHz),
-though these days, 16 and even 32\ kHz are becoming more common; audio
-Compact Discs use 44100\ Hz (44\*d1\ kHz); Digital Audio Tape and many
-computer systems use 48\ kHz; professional audio systems often use 96
+The sample rate in samples per second (`Hertz' or `Hz').
+Digital telephony traditionally uses a sample rate of 8000\ Hz (8\ kHz),
+though these days, 16 and even 32\ kHz are becoming more common. Audio
+Compact Discs use 44100\ Hz (44\*d1\ kHz). Digital Audio Tape and many
+computer systems use 48\ kHz. Professional audio systems often use 96
 kHz.
 .TP
 sample size
 The number of bits used to store each sample.  Today, 16-bit is
-commonly used; 8-bit was popular in the early days of computer
-audio; 24-bit is used in the professional audio arena; other sizes are
+commonly used. 8-bit was popular in the early days of computer
+audio. 24-bit is used in the professional audio arena. Other sizes are
 also used.
 .TP
 data encoding
 The way in which each audio sample is represented (or `encoded').  Some
-encodings have variants with different byte-orderings or bit-orderings;
-some `compress' the audio data, i.e. the stored audio data takes up less
-space (i.e. disk-space or transmission band-width) than the other format
+encodings have variants with different byte-orderings or bit-orderings.
+Some compress the audio data so that the stored audio data takes up less
+space (i.e. disk space or transmission bandwidth) than the other format
 parameters and the number of samples would imply.  Commonly-used
 encoding types include floating-point, \(*m-law, ADPCM, signed-integer
 PCM, MP3, and FLAC.
@@ -195,8 +194,8 @@ contains six or more channels.
 The term `bit-rate' is a measure of the amount of storage occupied by an
 encoded audio signal over a unit of time.  It can depend on all of the
 above and is typically denoted as a number of kilo-bits per second
-(kbps).  An A-law telephony signal has a bit-rate of 64 kbs; MP3-encoded
-stereo music typically has a bit-rate of 128\-196 kbps; FLAC-encoded
+(kbps).  An A-law telephony signal has a bit-rate of 64 kbs. MP3-encoded
+stereo music typically has a bit-rate of 128\-196 kbps. FLAC-encoded
 stereo music typically has a bit-rate of 550\-760 kbps.
 .SP
 Most self-describing formats also allow textual `comments' to be
@@ -237,10 +236,10 @@ Command-line format options.
 The filename extension.
 .IP 3. 4
 The input file format characteristics, or the closest
-to them that is supported by the output file type.
+that is supported by the output file type.
 .PP
 For all files, SoX will exit with an error
-if the file type cannot be determined; command-line format options may
+if the file type cannot be determined. Command-line format options may
 need to be added or changed to resolve the problem.
 .SS Playing & Recording Audio
 The
@@ -288,7 +287,7 @@ environment variable can be used to override the default.  For example
 .EE
 The
 .B AUDIODEV
-environment variable can be used to override the default audio device;
+environment variable can be used to override the default audio device,
 e.g.
 .EX
    set AUDIODEV=/dev/dsp2
@@ -307,9 +306,9 @@ to system\*mfor some specific examples, see `SOX_OPTS' below.
 When playing a file with a sample rate that is not supported by the
 audio output device, SoX will automatically invoke the \fBrate\fR effect
 to perform the necessary sample rate conversion.  For
-compatibility with old hardware, here, the
-default \fBrate\fR quality level is set to `low'; however, this
-can be changed if desired, by explicitly specifying the \fBrate\fR
+compatibility with old hardware, the
+default \fBrate\fR quality level is set to `low'. This
+can be changed by explicitly specifying the \fBrate\fR
 effect with a different quality level, e.g.
 .EX
    play ... rate \-m
@@ -326,8 +325,8 @@ c8 c8 c.
 .SP
 On some systems, SoX allows audio playback volume to be adjusted whilst
 using
-.BR play ;
-where supported, this is achieved by tapping the `v' & `V' keys during
+.BR play .
+Where supported, this is achieved by tapping the `v' & `V' keys during
 playback.
 .SP
 To help with setting a suitable recording level, SoX includes a peak-level
@@ -341,7 +340,7 @@ scale, and never `in the red' (an exclamation mark is shown).
 See also \fB\-S\fR below.
 .SS Accuracy
 Many file formats that compress audio discard some of the audio signal
-information whilst doing so; converting to such a format then converting
+information whilst doing so. Converting to such a format and then converting
 back again will not produce an exact copy of the original audio.  This
 is the case for many formats used in telephony (e.g.  A-law, GSM) where
 low signal bandwidth is more important than high audio fidelity, and for
@@ -349,8 +348,8 @@ many formats used in portable music players (e.g. MP3, Vorbis) where
 adequate fidelity can be retained even with the large compression ratios
 that are needed to make portable players practical.
 .SP
-Formats that discard audio signal information are called `lossy',
-and formats that do not, `lossless'.  The term `quality' is used as a
+Formats that discard audio signal information are called `lossy'.
+Formats that do not are called `lossless'.  The term `quality' is used as a
 measure of how closely the original audio signal can be reproduced when
 using a lossy format.
 .SP
@@ -363,7 +362,7 @@ PCM format to a 16-bit PCM format is lossless but converting from an
 .SP
 .B N.B.
 SoX converts all audio files to an internal uncompressed
-format before performing any audio processing; this means that
+format before performing any audio processing. This means that
 manipulating a file that is stored in a lossy format can cause further
 losses in audio fidelity.  E.g. with
 .EX
@@ -381,10 +380,10 @@ formats and then convert to the lossy format only at the final stage.
 .B N.B.
 Applying multiple effects with a single SoX invocation will,
 in general, produce more accurate results than those produced using
-multiple SoX invocations; hence this is also recommended.
+multiple SoX invocations.
 .SS Dithering
 Dithering is a technique used to maximise the dynamic range of audio
-stored at a particular bit-depth: any distortion introduced by
+stored at a particular bit-depth. Any distortion introduced by
 quantisation is decorrelated by adding a small amount of white noise
 to the signal.  In most cases, SoX can determine whether the selected
 processing requires dither and will add it during output formatting if
@@ -414,7 +413,7 @@ additional bits.
 .SP
 Use the
 .B \-V
-option to see what processing SoX has automatically added; the
+option to see what processing SoX has automatically added. The
 .B \-D
 option may be given to override automatic dithering.  To invoke
 dithering manually (e.g. to select a noise-shaping curve), see the
@@ -431,12 +430,12 @@ In SoX, clipping could occur, as you might expect, when using the
 .B vol
 or
 .B gain
-effects to increase the audio volume, but could also occur with many
+effects to increase the audio volume. Clipping could also occur with many
 other effects, when converting one format to another, and even when
 simply playing the audio.
 .SP
 Playing an audio file often involves resampling, and processing by
-analogue components that can introduce a small DC offset and/or
+analogue components can introduce a small DC offset and/or
 amplification, all of which can produce distortion if the audio signal
 level was initially too close to the clipping point.
 .SP
@@ -444,7 +443,7 @@ For these reasons, it is usual to make sure that an audio
 file's signal level has some `headroom', i.e. it does not exceed a particular
 level below the maximum possible level for the given representation.
 Some standards bodies recommend as much as 9dB headroom, but in most cases,
-3dB (\(~~ 70% linear) will probably suffice.  Note that this wisdom
+3dB (\(~~ 70% linear) is enough.  Note that this wisdom
 seems to have been lost in modern music production; in fact, many CDs,
 MP3s, etc.  are now mastered at levels \fIabove\fR 0dBFS i.e. the
 audio is clipped as delivered.
@@ -453,7 +452,7 @@ SoX's
 .B stat
 and
 .B stats
-effects can assist in determining the signal level in an audio file; the
+effects can assist in determining the signal level in an audio file. The
 .B gain
 or
 .B vol
@@ -463,7 +462,7 @@ effect can be used to prevent clipping, e.g.
 .EE
 guarantees that the treble boost will not clip.
 .SP
-If clipping occurs at any point during processing, then
+If clipping occurs at any point during processing,
 SoX will display a warning message to that effect.
 .SP
 See also
@@ -485,7 +484,7 @@ and
 .BR sox .
 .SP
 For all methods other than `sequence', multiple input files must have
-the same sampling rate; if necessary, separate SoX invocations can be
+the same sampling rate. If necessary, separate SoX invocations can be
 used to make sampling rate adjustments prior to combining.
 .SP
 If the `concatenate' combining method is selected (usually, this will be
@@ -496,43 +495,43 @@ given to form the output file.
 The `sequence' combining method is selected automatically for
 .BR play .
 It is similar to `concatenate' in that the audio from each input file is
-sent serially to the output file, however here the output file may be
+sent serially to the output file. However, here the output file may be
 closed and reopened at the corresponding transition between input
-files\*mthis may be just what is needed when sending different types of
+files. This may be just what is needed when sending different types of
 audio to an output device, but is not generally useful when the output is a
 normal file.
 .SP
-If either the `mix' or `mix-power' combining method is selected, then two or
+If either the `mix' or `mix-power' combining method is selected then two or
 more input files must be given and will be mixed together to form the
 output file.  The number of channels in each input file need not be the
-same, however, SoX will issue a warning if they are not and some
+same, but SoX will issue a warning if they are not and some
 channels in the output file will not contain audio from every input
-file.  A mixed audio file cannot be un-mixed (without reference to the
-original input files).
+file.  A mixed audio file cannot be un-mixed without reference to the
+original input files.
 .SP
-If the `merge' combining method is selected, then two or
+If the `merge' combining method is selected then two or
 more input files must be given and will be merged together to form the
 output file.  The number of channels in each input file need not be the
 same.  A merged audio file comprises all of the channels from all of the
-input files; un-merging is possible using multiple
+input files. Un-merging is possible using multiple
 invocations of SoX with the
 .B remix
 effect.
-For example, two mono files could be merged to form one stereo file; the
+For example, two mono files could be merged to form one stereo file. The
 first and second mono files would become the left and right channels of
 the stereo file.
 .SP
 When combining input files, SoX applies any specified effects
 (including, for example, the
 .B vol
-volume adjustment effect) after the audio has been combined; however, it
+volume adjustment effect) after the audio has been combined. However, it
 is often useful to be able to set the volume of (i.e. `balance') the
 inputs individually, before combining takes place.
 .SP
 For all combining methods, input
 file volume adjustments can be made manually using the
 .B \-v
-option (below) which can be given for one or more input files; if it is
+option (below) which can be given for one or more input files. If it is
 given for only some of the input files then the others receive no volume
 adjustment.  In some circumstances, automatic volume
 adjustments may be applied (see below).
@@ -545,17 +544,18 @@ input files:
 .SP
 Unlike the other methods, `mix' combining has the
 potential to cause clipping in the combiner if no balancing is
-performed.  So here, if manual volume adjustments are not given, to
-ensure that clipping does not occur, SoX will automatically adjust the
+performed.  In this case, if manual volume adjustments are not given,
+SoX will try to ensure that clipping does not occur by automatically
+adjusting the
 volume (amplitude) of each input signal by a factor of \(S1/\s-2n\s+2,
 where n is the number of input files.  If this results in audio that is
 too quiet or otherwise unbalanced then the input file volumes can be
-set manually as described above; using the
+set manually as described above. Using the
 .B norm
 effect on the mix is another alternative.
 .SP
-If mixed audio seems loud enough at some points through the mixed audio but
-too quiet in others, then dynamic-range compression should be applied to
+If mixed audio seems loud enough at some points but
+too quiet in others then dynamic range compression should be applied to
 correct this\*msee the
 .B compand
 effect.
@@ -564,9 +564,9 @@ With the `mix-power' combine method, the
 mixed volume is appropriately equal to that of one of the input signals.
 This is achieved by balancing using a factor of
 \(S1/\s-2\(srn\s+2 instead of \(S1/\s-2n\s+2.
-Note that this balancing factor does not guarantee that no clipping will occur,
-however, in many cases, the number of clips will be low and the resultant
-distortion imperceptible.
+Note that this balancing factor does not guarantee that clipping will not occur,
+but the number of clips will usually be low and the resultant
+distortion is generally imperceptible.
 .SS Output Files
 SoX's default behaviour is to take one or more input files and
 write them to a single output file.
@@ -593,7 +593,7 @@ reached before the effects chain stops itself then no new file
 will be created as it would be empty.
 
 The following is an example of splitting the first 60 seconds of an input
-file in to two 30 second files and ignoring the rest.
+file into two 30 second files and ignoring the rest.
 .EX
    sox song.wav ringtone%1n.wav trim 0 30 : newfile : trim 0 30
 .SS Stopping SoX
@@ -622,7 +622,7 @@ Note:
 Giving SoX an input or output filename that is the same as a SoX
 effect-name will not work since SoX will treat it as an effect
 specification.  The only work-around to this is to avoid such
-filenames; however, this is generally not difficult since most audio
+filenames. This is generally not difficult since most audio
 filenames have a filename `extension', whilst effect-names do not.
 .SS Special Filenames
 The following special filenames may be used in certain circumstances
@@ -660,9 +660,9 @@ command.
 .TP
 \fB\(dq\fIwildcard-filename\fB\(dq\fR
 Specifies that filename `globbing' (wild-card matching) should be performed
-by SoX instead of the shell.  This allows a single set of file options to be
+by SoX instead of by the shell.  This allows a single set of file options to be
 applied to a group of files.  For example, if the current directory contains
-three `vox' files: file1.vox, file2.vox, and file3.vox, then
+three `vox' files, file1.vox, file2.vox, and file3.vox, then
 .EX
    play \-\-rate 6k *.vox
 .EE
@@ -670,8 +670,8 @@ will be expanded by the `shell' (in most environments) to
 .EX
    play \-\-rate 6k file1.vox file2.vox file3.vox
 .EE
-which will treat only the first vox file as having a sample rate of 6k; but
-with
+which will treat only the first vox file as having a sample rate of 6k.
+With
 .EX
    play \-\-rate 6k "*.vox"
 .EE
@@ -737,16 +737,16 @@ For example:
    SOX_OPTS="\-\-buffer 20000 \-\-play-rate-arg \-hs \-\-temp /mnt/temp"
 .EE
 Note that setting SOX_OPTS can potentially create unwanted changes in
-the behaviour of scripts or other programs that invoke SoX.  So SOX_OPTS
+the behaviour of scripts or other programs that invoke SoX.  SOX_OPTS
 might best be used for things (such as in the given example) that reflect the
 environment in which SoX is being run.  Enabling options such as
 .B \-\-no\-clobber
 as default might be handled better using a shell alias
 since a shell alias will not affect operation in scripts etc.
 .SP
-One way to ensure that a script can not be affected by SOX_OPTS, is to
-clear SOX_OPTS at the start of the script (but this of course loses
-the benefit of SOX_OPTS carrying some system-wide default options).  An
+One way to ensure that a script cannot be affected by SOX_OPTS is to
+clear SOX_OPTS at the start of the script, but this of course loses
+the benefit of SOX_OPTS carrying some system-wide default options.  An
 alternative approach is to explicitly invoke SoX with default
 option values, e.g.
 .EX
@@ -754,8 +754,8 @@ option values, e.g.
    ...
    sox \-V2 \-\-clobber $input $output ...
 .EE
-Note that the way of setting environment variables varies from system
-to system\*mhere are some examples:
+Note that the way to set environment variables varies from system
+to system. Here are some examples:
 .SP
 Unix bash:
 .EX
@@ -859,16 +859,17 @@ See \fBInput File Combining\fR above for a description of the different
 combining methods.
 .TP
 .B \-\-magic
-If SoX has been built with the optional `libmagic' library, then this
+If SoX has been built with the optional `libmagic' library then this
 option can be given to enable its use in helping to detect audio file types.
 .TP
 \fB\-\-multi-threaded\fR | \fB\-\-single-threaded\fR
 By default, SoX is `single threaded'.
 If the \fB\-\-multi-threaded\fR option is given however then SoX
 will process audio channels for most multi-channel
-effects in parallel on hyper-threading/multi-core architectures; this
+effects in parallel on hyper-threading/multi-core architectures. This
 may reduce processing time, though sometimes it may be necessary to use
 this option in conjuction with a larger buffer size than is the default
+to gain any benefit from multi-threaded processing
 (e.g. 131072; see \fB\-\-buffer\fR above).
 .TP
 \fB\-\-no\-clobber\fR
@@ -886,14 +887,14 @@ when what you really meant was
    play file1 file2 effect1 effect2 ...
 .EE
 then, without this option, file2 will be overwritten.  Hence, using
-this option is recommended; SOX_OPTS (above), a `shell'
+this option is recommended. SOX_OPTS (above), a `shell'
 alias, script, or batch file may be an appropriate way of permanently
 enabling it.
 .TP
 \fB\-\-norm\fR
 Automatically invoke the
 .B gain
-effect to guard against clipping, and to normalise the audio. E.g.
+effect to guard against clipping and to normalise the audio. E.g.
 .EX
    sox \-\-norm infile \-b 16 outfile rate 44100 dither \-s
 .EE
@@ -931,8 +932,8 @@ then exit without actually processing any audio.  E.g.
 .EE
 .TP
 \fB\-q\fR, \fB\-\-no\-show\-progress\fR
-Run in quiet mode when SoX wouldn't otherwise do so;
-this is the opposite of the \fB\-S\fR option.
+Run in quiet mode when SoX wouldn't otherwise do so.
+This is the opposite of the \fB\-S\fR option.
 .TP
 \fB\-R\fR
 Run in `repeatable' mode.  When this option is given, where
@@ -995,13 +996,13 @@ SoX to play or record audio.
 Specify that any temporary files should be created in the given
 .IR DIRECTORY .
 This can be useful if there are permission or free-space problems with the
-default location; in which case, using `\fB\-\-temp .\fR' (to use the
+default location. In this case, using `\fB\-\-temp .\fR' (to use the
 current directory) is often a good solution.
 .TP
 \fB\-\-version\fR
 Show SoX's version number and exit.
 .IP \fB\-V\fB[\fIlevel\fB]\fP
-Set verbosity\*mthis is particularly useful for seeing how any automatic
+Set verbosity. This is particularly useful for seeing how any automatic
 effects have been invoked by SoX.
 .SP
 SoX displays messages on the console (stderr) according to the following
@@ -1030,10 +1031,10 @@ SoX are also shown.
 .RE
 .IP
 By default, the verbosity level is set to 2 (shows errors and
-warnings); each occurrence of the \fB\-V\fR option increases the
+warnings). Each occurrence of the \fB\-V\fR option increases the
 verbosity level by 1.  Alternatively, the verbosity level can be set
 to an absolute number by specifying it immediately after the
-.BR \-V ;
+.BR \-V ,
 e.g.
 .B \-V0
 sets it to 0.
@@ -1043,17 +1044,17 @@ These options apply only to input files and may precede only input
 filenames on the command line.
 .TP
 \fB\-\-ignore-length\fR
-Override an (incorrect) audio length given in an audio file's header; if
-this option is given, then SoX will keep reading audio until it reaches
+Override an (incorrect) audio length given in an audio file's header. If
+this option is given then SoX will keep reading audio until it reaches
 the end of the input file.
 .TP
 \fB\-v\fR, \fB\-\-volume\fR \fIFACTOR\fR
 Intended for use when combining multiple input files, this option
 adjusts the volume of the file that follows it on the command line by a
-factor of \fIFACTOR\fR, thus allowing it to `balanced' w.r.t. the other
-input files.  This is a linear (amplitude) adjustment, so a number
-less than 1 decreases the volume; greater than 1 increases it.  If a
-negative number is given, then in addition to the volume adjustment,
+factor of \fIFACTOR\fR. This allows it to be `balanced' w.r.t. the other
+input files.  This is a linear (amplitude) adjustment, so a number less
+than 1 decreases the volume and a number greater than 1 increases it.  If a
+negative number is given then in addition to the volume adjustment,
 the audio signal will be inverted.
 .SP
 See also the
@@ -1100,7 +1101,7 @@ The number of bytes in each encoded sample.  Deprecated aliases for
 respectively.
 .TP
 \fB\-c\fR \fICHANNELS\fR, \fB\-\-channels\fR \fICHANNELS\fR
-The number of audio channels in the audio file; this can be any number
+The number of audio channels in the audio file. This can be any number
 greater than zero.
 .SP
 For an input file, the most common use for this option is to inform
@@ -1137,7 +1138,7 @@ be ordered arbitrarily.
 .TP
 \fB\-e \fIENCODING\fR, \fB\-\-encoding\fR \fIENCODING\fR
 The audio encoding type.  Sometimes needed with file-types that
-support more than one encoding type; for example, with raw, WAV, or
+support more than one encoding type. For example, with raw, WAV, or
 AU (but not, for example, with MP3 or FLAC).
 The available encoding types are as follows:
 .RS
@@ -1182,7 +1183,7 @@ GSM is currently used for the vast majority of the world's digital
 wireless telephone calls.  It utilises several audio
 formats with different bit-rates and associated speech quality.
 SoX has support for GSM's original 13kbps `Full Rate' audio format.
-It is usually CPU intensive to work with GSM audio.
+It is usually CPU-intensive to work with GSM audio.
 .RE
 .TP
 \ 
@@ -1239,7 +1240,7 @@ examples in
 and
 .B \-c
 above).
-Occasionally, it may be useful to use this option with a `headered'
+Occasionally it may be useful to use this option with a `headered'
 file, in order to override the (presumably incorrect) value in the
 header\*mnote that this is only supported with certain file types.
 For example, if audio was recorded with a sample-rate of say 48k from
@@ -1352,7 +1353,7 @@ applicable).
 .SP
 SoX will provide a default comment if this option (or
 .BR \-\-comment\-file )
-is not given; to specify that no comment should be stored in the output file,
+is not given. To specify that no comment should be stored in the output file,
 use
 .B "\-\-comment \(dq\(dq" .
 .TP
@@ -1362,7 +1363,7 @@ file header (where applicable).
 .TP
 \fB\-C\fR, \fB\-\-compression\fR \fIFACTOR\fR
 The compression factor for variably compressing output file formats.  If
-this option is not given, then a default compression factor will apply.
+this option is not given then a default compression factor will apply.
 The compression factor is interpreted differently for different
 compressing file formats.  See the description of the file formats that
 use this option in
@@ -1374,7 +1375,7 @@ be used to invoke a number of audio `effects'.  Multiple effects may
 be applied by specifying them one after another at the end of the SoX
 command line, forming an `effects chain'.
 Note that applying multiple effects in real-time (i.e. when playing audio)
-is likely to need a high performance computer; stopping other applications
+is likely to require a high performance computer. Stopping other applications
 may alleviate performance issues should they occur.
 .SP
 Some of the SoX effects are primarily intended to be applied to a single
@@ -1386,23 +1387,23 @@ A single effects chain is made up of one or more effects.  Audio from
 the input runs through the chain until either the end of the input file
 is reached or an effect in the chain requests to terminate the chain.
 .SP
-SoX supports running multiple effects chain over the input audio.
+SoX supports running multiple effects chains over the input audio.
 In this case, when one chain indicates it is done processing audio,
 the audio data is then sent through the next effects chain.  This
 continues until either no more effects chains exist or the input has
-reach end of file.
+reached the end of the file.
 .SP
-A effects chain is terminated by placing a
+An effects chain is terminated by placing a
 .B :
-(colon) after an effect.  Any following effects are apart of a new effects chain.
+(colon) after an effect.  Any following effects are a part of a new effects chain.
 .SP
 It is important to place the effect that will stop the chain
 as the first effect in the chain.  This is because any samples
 that are buffered by effects to the left of the terminating effect
 will be discarded.  The amount of samples discarded is related to the
 .B \-\-buffer
-option and it should be keep small, relative to the sample rate, if
-the terminating effect can not be first.  Further information on
+option and it should be kept small, relative to the sample rate, if
+the terminating effect cannot be first.  Further information on
 stopping effects can be found in the
 .B Stopping SoX
 section.
@@ -1421,7 +1422,7 @@ before and after they are specified).
 .SP
 The following is an example of multiple effects chains.  It will split the
 input file into multiple files of 30 seconds in length.  Each output filename
-will have unique number in its name as documented in
+will have unique number in its name as documented in the
 .B Output Files
 section.
 .EX
@@ -1451,8 +1452,8 @@ Zero gives no gain; less than zero gives an attenuation.
 .TP
 \fIwidth\fR[\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]
 Used to specify the band-width of a filter.  A number of different
-methods to specify the width are available (though not all for every effect);
-one of the characters shown may be appended to select the desired method
+methods to specify the width are available (though not all for every effect).
+One of the characters shown may be appended to select the desired method
 as follows:
 .ne 5
 .TS
@@ -1468,8 +1469,8 @@ q	Q-factor	See [2]
 .DT
 .SP
 For each effect that uses this parameter, the default method (i.e. if no
-character is appended) is the one that it listed first in the effect's
-first line of description.
+character is appended) is the one that it listed first in the first line of
+the effect's description.
 .PP
 To see if SoX has support for an optional effect, enter
 .B sox \-h
@@ -3831,17 +3832,41 @@ or tone-1 (pluck); default=20.
 \fIp3\fR (trapezium): the percentage through each cycle at which `falling'
 ends; default=60, or tone-2 (pluck); default=90.
 .TP
-\fBtempo \fR[\fB\-q\fR] \fIfactor\fR [\fIsegment\fR [\fIsearch\fR [\fIoverlap\fR]]]
-Change the audio tempo (but not its pitch).
-The audio is chopped up into segments which are then shifted in the time
-domain and overlapped (cross-faded) at points where their waveforms are
-most similar (as determined by measurement of `least squares').
+\fBtempo \fR[\fB\-q\fR] [\fB\-m\fR\^|\^\fB\-s\fR\^|\^\fB\-l\fR] \fIfactor\fR [\fIsegment\fR [\fIsearch\fR [\fIoverlap\fR]]]
+Change the audio playback speed but not its pitch. This effect uses the
+WSOLA algorithm. The audio is chopped up into segments which are then
+shifted in the time domain and overlapped (cross-faded) at points where
+their waveforms are most similar as determined by measurement of `least
+squares'.
 .SP
 By default, linear searches are used to find the best overlapping
-points; if the optional
+points. If the optional
 .B \-q
-parameter is given, tree searches are used instead, giving a quicker,
-but possibly lower quality, result.
+parameter is given, tree searches are used instead. This makes the effect
+work more quickly, but the result may not sound as good. However, if you
+must improve the processing speed, this generally reduces the sound quality
+less than reducing the search or overlap values.
+.SP
+The
+.B \-m
+option is used to optimize default values of segment, search and
+overlap for music processing.
+.SP
+The
+.B \-s
+option is used to optimize default values of segment, search and
+overlap for speech processing.
+.SP
+The
+.B \-l
+option is used to optimize default values of segment, search and
+overlap for `linear' processing that tends to cause more
+noticeable distortion but may be useful when factor is close to 1.
+.SP
+If \-m, \-s, or \-l is specified, the default value of segment will be
+calculated based on factor, while default search and overlap values are
+based on segment. Any values you provide still override these default
+values.
 .SP
 .I factor
 gives the ratio of new tempo to the old tempo, so e.g. 1.1 speeds up the
@@ -3849,21 +3874,33 @@ tempo by 10%, and 0.9 slows it down by 10%.
 .SP
 The optional
 .I segment
-parameter selects the algorithm's segment size in milliseconds.  The
-default value is 82 and is typically suited to making small changes to
-the tempo of music; for larger changes (e.g. a factor of 2), 50\ ms may
-give a better result.  When changing the tempo of speech, a segment size
-of around 30\ ms often works well.
+parameter selects the algorithm's segment size in milliseconds.  If no other
+flags are specified, the default value is 82 and is typically suited to
+making small changes to the tempo of music. For larger changes (e.g. a factor
+of 2), 41\ ms may give a better result.  The \-m, \-s, and \-l flags will cause
+the segment default to be automatically adjusted based on factor.
+For example using \-s (for speech) with a tempo of 1.25 will calculate a
+default segment value of 32.
 .SP
 The optional
 .I search
-parameter gives the audio length in milliseconds (default 14) over which
-the algorithm will search for overlapping points.  Larger values use
-more processing time and do not necessarily produce better results.
+parameter gives the audio length in milliseconds over which
+the algorithm will search for overlapping points.  If no other
+flags are specified, the default value is 14.68.  Larger values use
+more processing time and may or may not produce better results.
+A practical maximum is half the value of segment. Search
+can be reduced to cut processing time at the risk of degrading output
+quality. The \-m, \-s, and \-l flags will cause
+the search default to be automatically adjusted based on segment.
 .SP
 The optional
 .I overlap
-parameter gives the segment overlap length in milliseconds (default 12).
+parameter gives the segment overlap length in milliseconds.
+Default value is 12, but \-m, \-s, or \-l flags automatically
+adjust overlap based on segment size. Increasing overlap increases
+processing time and may increase quality. A practical maximum for overlap
+is the value of search, with overlap typically being (at least) a little
+smaller then search.
 .SP
 See also
 .B speed
