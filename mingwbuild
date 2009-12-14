@@ -94,7 +94,10 @@ if [ $# -ne 0 -o ! -r Makefile ]; then
     $*
 fi
 
+# Reduce total size of sox.exe by over half.
 make -s all pdf txt || exit 1
+
+i686-pc-mingw32-strip src/sox.exe
 
 dir=sox-`grep Version: sox.pc | cut -d ' ' -f 2`
 rm -rf $dir $dir-win32.zip
