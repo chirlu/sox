@@ -198,9 +198,14 @@ AC_ARG_ENABLE(gomp,
     AC_HELP_STRING([--disable-gomp], [Don't use GOMP.]),,enable_gomp=yes)
 AC_MSG_RESULT($enable_gomp)
 if test "$enable_gomp" = "yes"; then
+    EXTRA_GOMP_LIBS=""  
+    case $target in
+      *mingw32*)
+      EXTRA_GOMP_LIBS="-lpthread"
+      ;;
+    esac
     AC_CHECK_HEADERS(omp.h,
-        AC_CHECK_LIB(gomp, omp_get_thread_num, GOMP_LIBS="$GOMP_LIBS -lgomp", enable_gomp=no),
-        enable_gomp=no)
+		     AC_CHECK_LIB(gomp, omp_get_thread_num, GOMP_LIBS="$GOMP_LIBS -lgomp $EXTRA_GOMP_LIBS", enable_gomp=no, $EXTRA_GOMP_LIBS), enable_gomp=no)
 fi
 if test "$enable_gomp" = yes; then
    AC_DEFINE(HAVE_OPENMP, 1, [Define to 1 if you have GOMP.])
