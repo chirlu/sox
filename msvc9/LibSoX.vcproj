@@ -580,14 +580,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\skeleff.c"
-				>
-			</File>
-			<File
-				RelativePath="..\src\skelform.c"
-				>
-			</File>
-			<File
 				RelativePath="..\src\smp.c"
 				>
 			</File>
@@ -1111,6 +1103,46 @@
 			</File>
 			<File
 				RelativePath="..\src\pulseaudio.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\src\skeleff.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\src\skelform.c"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"

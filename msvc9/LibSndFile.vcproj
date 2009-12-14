@@ -20,7 +20,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)\lib\"
 			IntermediateDirectory="$(SolutionDir)$(ConfigurationName)\$(ProjectName)"
-			ConfigurationType="4"
+			ConfigurationType="2"
 			CharacterSet="0"
 			>
 			<Tool
@@ -67,10 +67,18 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				OutputFile="$(SolutionDir)$(ConfigurationName)\$(ProjectName)-1.dll"
+				ModuleDefinitionFile="..\..\libsndfile\src\libsndfile-1.def"
+				GenerateDebugInformation="true"
+				SetChecksum="true"
+				ImportLibrary="$(OutDir)$(TargetName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -82,6 +90,9 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -89,7 +100,7 @@
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)\lib\"
 			IntermediateDirectory="$(SolutionDir)$(ConfigurationName)\$(ProjectName)"
-			ConfigurationType="4"
+			ConfigurationType="2"
 			CharacterSet="0"
 			WholeProgramOptimization="1"
 			>
@@ -136,10 +147,20 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				OutputFile="$(SolutionDir)$(ConfigurationName)\$(ProjectName)-1.dll"
+				ModuleDefinitionFile="..\..\libsndfile\src\libsndfile-1.def"
+				GenerateDebugInformation="true"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				SetChecksum="true"
+				ImportLibrary="$(OutDir)$(TargetName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -149,6 +170,9 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
