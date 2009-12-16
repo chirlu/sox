@@ -299,7 +299,7 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * lsx_tempo_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "tempo", "[-q] factor [segment-ms [search-ms [overlap-ms]]]",
+    "tempo", "[-q] [-m | -s | -l] factor [segment-ms [search-ms [overlap-ms]]]",
     SOX_EFF_MCHAN | SOX_EFF_LENGTH,
     getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
   };
