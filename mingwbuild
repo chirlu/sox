@@ -111,7 +111,10 @@ done
 binaries=src/sox.exe
 # If you do not edit libpng.la to comment out shared libraries
 # then you'll need to distribute zlib1.dll.
-#binaries=$binaries /usr/i686-pc-mingw32/sys-root/mingw/bin/zlib1.dll
+#binaries="$binaries /usr/i686-pc-mingw32/sys-root/mingw/bin/zlib1.dll"
+
+binaries="$binaries /usr/i686-pc-mingw32/sys-root/mingw/bin/libgomp-1.dll"
+binaries="$binaries /usr/i686-pc-mingw32/sys-root/mingw/bin/pthreadGC2.dll"
 
 cp -p \
   $binaries \
