@@ -180,6 +180,9 @@ if test "$ac_cv_sys_file_offset_bits" = "64"; then
   AC_DEFINE(_LARGEFILE_SOURCE, 1)
 fi
 
+dnl Check for mingw's _fseeki64
+AC_CHECK_FUNCS(fseeko64)
+
 dnl Allow libtool to be silenced
 AC_MSG_CHECKING([whether libtool should be silenced])
 AC_ARG_ENABLE(silent-libtool,

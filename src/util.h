@@ -73,6 +73,12 @@
 
 #endif
 
+#if defined(HAVE_FSEEKO64) && !defined(HAVE_FSEEKO)
+#define fseeko fseeko64
+#define ftello ftello64
+#define HAVE_FSEEKO 1
+#endif
+
 #if defined(DOS) || defined(WIN32) || defined(__NT__) || defined(__DJGPP__) || defined(__OS2__)
   #define LAST_SLASH(path) max(strrchr(path, '/'), strrchr(path, '\\'))
   #define IS_ABSOLUTE(path) ((path)[0] == '/' || (path)[0] == '\\' || (path)[1] == ':')
