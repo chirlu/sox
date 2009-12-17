@@ -329,6 +329,7 @@ typedef struct lsx_dlfunction_info
 } lsx_dlfunction_info;
 
 int lsx_open_dllibrary(
+    int show_error_on_failure,
     const char* library_description,
     const char * const library_names[],
     const lsx_dlfunction_info func_infos[],
@@ -343,6 +344,9 @@ void lsx_close_dllibrary(
 #define LSX_DLENTRY_TO_PTR__(unused, func_return, func_name, func_args, static_func, stub_func, func_ptr) \
     func_return (*func_ptr) func_args;
 
+#define LSX_DLENTRIES_TO_FUNCTIONS__(unused, func_return, func_name, func_args, static_func, stub_func, func_ptr) \
+    func_return func_name func_args;
+
 /* LSX_DLENTRIES_TO_PTRS: Given an ENTRIES macro and the name of the dlhandle
    variable, declares the corresponding function pointer variables and the
    dlhandle variable. */
@@ -350,27 +354,43 @@ void lsx_close_dllibrary(
     LSX_DLENTRIES_APPLY__(entries, LSX_DLENTRY_TO_PTR__, 0) \
     lsx_dlhandle dlhandle
 
+/* LSX_DLENTRIES_TO_FUNCTIONS: Given an ENTRIES macro, declares the corresponding
+   functions. */
+#define LSX_DLENTRIES_TO_FUNCTIONS(entries) \
+    LSX_DLENTRIES_APPLY__(entries, LSX_DLENTRIES_TO_FUNCTIONS__, 0)
+
 #define LSX_DLLIBRARY_OPEN1__(unused, func_return, func_name, func_args, static_func, stub_func, func_ptr) \
     { #func_name, (lsx_dlptr)(static_func), (lsx_dlptr)(stub_func) },
 
 #define LSX_DLLIBRARY_OPEN2__(ptr_container, func_return, func_name, func_args, static_func, stub_func, func_ptr) \
     (ptr_container)->func_ptr = (func_return (*)func_args)lsx_dlfunction_open_library_funcs[lsx_dlfunction_open_library_index++];
 
-/* LSX_DLFUNCTION_OPEN_LIBRARY: Input an ENTRIES macro, the library's description,
+/* LSX_DLLIBRARY_OPEN: Input an ENTRIES macro, the library's description,
    a null-terminated list of library names (i.e. { "libmp3-0", "libmp3", NULL }),
    the name of the dlhandle variable, the name of the structure that contains
    the function pointer and dlhandle variables, and the name of the variable in
    which the result of the lsx_open_dllibrary call should be stored. This will
    call lsx_open_dllibrary and copy the resulting function pointers into the
-   structure members. */
+   structure members. If the library cannot be opened, show a failure message. */
 #define LSX_DLLIBRARY_OPEN(ptr_container, dlhandle, entries, library_description, library_names, return_var) \
+    LSX_DLLIBRARY_TRYOPEN(1, ptr_container, dlhandle, entries, library_description, library_names, return_var)
+
+/* LSX_DLLIBRARY_TRYOPEN: Input an ENTRIES macro, the library's description,
+   a null-terminated list of library names (i.e. { "libmp3-0", "libmp3", NULL }),
+   the name of the dlhandle variable, the name of the structure that contains
+   the function pointer and dlhandle variables, and the name of the variable in
+   which the result of the lsx_open_dllibrary call should be stored. This will
+   call lsx_open_dllibrary and copy the resulting function pointers into the
+   structure members. If the library cannot be opened, show a report or a failure
+   message, depending on whether error_on_failure is non-zero. */
+#define LSX_DLLIBRARY_TRYOPEN(error_on_failure, ptr_container, dlhandle, entries, library_description, library_names, return_var) \
     do { \
       lsx_dlfunction_info lsx_dlfunction_open_library_infos[] = { \
         LSX_DLENTRIES_APPLY__(entries, LSX_DLLIBRARY_OPEN1__, 0) \
         {NULL,NULL,NULL} }; \
       int lsx_dlfunction_open_library_index = 0; \
       lsx_dlptr lsx_dlfunction_open_library_funcs[sizeof(lsx_dlfunction_open_library_infos)/sizeof(lsx_dlfunction_open_library_infos[0])]; \
-      (return_var) = lsx_open_dllibrary((library_description), (library_names), lsx_dlfunction_open_library_infos, lsx_dlfunction_open_library_funcs, &(ptr_container)->dlhandle); \
+      (return_var) = lsx_open_dllibrary((error_on_failure), (library_description), (library_names), lsx_dlfunction_open_library_infos, lsx_dlfunction_open_library_funcs, &(ptr_container)->dlhandle); \
       LSX_DLENTRIES_APPLY__(entries, LSX_DLLIBRARY_OPEN2__, ptr_container) \
     } while(0)
 

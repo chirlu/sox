@@ -24,65 +24,18 @@
 
 #ifdef HAVE_AMRNB
 
-#ifdef HAVE_OPENCORE_AMRNB_INTERF_DEC_H
-
-  enum Mode { amrnb_mode_dummy };
-
-  int Encoder_Interface_Encode(void* state, enum Mode mode, const short* speech, unsigned char* out, int forceSpeech);
-  void* Encoder_Interface_init(int dtx);
-  void Encoder_Interface_exit(void* state);
-  void Decoder_Interface_Decode(void* state, const unsigned char* in, short* out, int bfi);
-  void* Decoder_Interface_init(void);
-  void Decoder_Interface_exit(void* state);
-
-#define AMR_FUNC_ENTRIES(f,x) \
-  AMR_FUNC(f,x, int, Encoder_Interface_Encode, (void* state, enum Mode mode, const short* speech, unsigned char* out, int forceSpeech)) \
-  AMR_FUNC(f,x, void*, Encoder_Interface_init, (int dtx)) \
-  AMR_FUNC(f,x, void, Encoder_Interface_exit, (void* state)) \
-  AMR_FUNC(f,x, void, Decoder_Interface_Decode, (void* state, const unsigned char* in, short* out, int bfi)) \
-  AMR_FUNC(f,x, void*, Decoder_Interface_init, (void)) \
-  AMR_FUNC(f,x, void, Decoder_Interface_exit, (void* state))
-
-#define D_IF_decode         Decoder_Interface_Decode
-#define D_IF_exit           Decoder_Interface_exit
-#define D_IF_init           Decoder_Interface_init
-#define E_IF_encode         Encoder_Interface_Encode
-#define E_IF_exit           Encoder_Interface_exit
-#define E_IF_init()         Encoder_Interface_init(1)
-
-#else /* HAVE_OPENCORE_AMRNB_INTERF_DEC_H */
+/* Common definitions: */
 
 enum amrnb_mode { amrnb_mode_dummy };
 
-int GP3VADxEncoder_Interface_Encode(void *st, enum amrnb_mode mode, short *speech, unsigned char *serial, int forceSpeech, char vad2_code);
-void *VADxEncoder_Interface_init(int dtx, char vad2_code);
-void Encoder_Interface_exit(void *state);
-void GP3Decoder_Interface_Decode(void *st, unsigned char *bits, short *synth, int bfi);
-void *Decoder_Interface_init(void);
-void Decoder_Interface_exit(void *state);
+static const unsigned amrnb_block_size[] = {13, 14, 16, 18, 20, 21, 27, 32, 6, 0, 0, 0, 0, 0, 0, 1};
+static char const amrnb_magic[] = "#!AMR\n";
+#define amr_block_size amrnb_block_size
+#define amr_magic amrnb_magic
+#define amr_priv_t amrnb_priv_t
+#define amr_opencore_funcs amrnb_opencore_funcs
+#define amr_gp3_funcs amrnb_gp3_funcs
 
-#define AMR_FUNC_ENTRIES(f,x) \
-  AMR_FUNC(f,x, int, GP3VADxEncoder_Interface_Encode, (void *st, enum amrnb_mode mode, short *speech, unsigned char *serial, int forceSpeech, char vad2_code)) \
-  AMR_FUNC(f,x, void*, VADxEncoder_Interface_init, (int dtx, char vad2_code)) \
-  AMR_FUNC(f,x, void, Encoder_Interface_exit, (void *state)) \
-  AMR_FUNC(f,x, void, GP3Decoder_Interface_Decode, (void *st, unsigned char *bits, short *synth, int bfi)) \
-  AMR_FUNC(f,x, void*, Decoder_Interface_init, (void)) \
-  AMR_FUNC(f,x, void, Decoder_Interface_exit, (void *state))
-
-#define E_IF_encode(st,m,sp,ser,fs) \
-                            GP3VADxEncoder_Interface_Encode(st,m,sp,ser,fs,0)
-#define E_IF_init()         VADxEncoder_Interface_init(1,0)
-#define E_IF_exit           Encoder_Interface_exit
-#define D_IF_decode         GP3Decoder_Interface_Decode
-#define D_IF_init           Decoder_Interface_init
-#define D_IF_exit           Decoder_Interface_exit
-
-#endif /* HAVE_OPENCORE_AMRNB_INTERF_DEC_H */
-
-static const unsigned amrnb_block_size[] = {13,14,16,18,20,21,27,32,6,0,0,0,0,0,0,1};
-#define block_size amrnb_block_size
-
-static char const magic[] = "#!AMR\n";
 #define AMR_CODED_MAX       32                  /* max coded size */
 #define AMR_ENCODING        SOX_ENCODING_AMR_NB
 #define AMR_FORMAT_FN       lsx_amr_nb_format_fn
@@ -90,25 +43,11 @@ static char const magic[] = "#!AMR\n";
 #define AMR_MODE_MAX        7
 #define AMR_NAMES           "amr-nb", "anb"
 #define AMR_RATE            8000
-#define AMR_DESC            "amr-nb library"
+#define AMR_DESC            "3GPP Adaptive Multi Rate Narrow-Band (AMR-NB) lossy speech compressor"
 
 #if !defined(HAVE_LIBLTDL)
-#undef DL_AMRNB
+  #undef DL_AMRNB
 #endif
-
-static const char* const amr_library_names[] =
-{
-#ifdef DL_AMRNB
-#ifdef HAVE_OPENCORE_AMRNB_INTERF_DEC_H
-  "libopencore-amrnb",
-#else
-  "libamrnb-3",
-  "libamrnb",
-  "amrnb",
-#endif
-#endif
-  NULL
-};
 
 #ifdef DL_AMRNB
   #define AMR_FUNC  LSX_DLENTRY_DYNAMIC
@@ -116,6 +55,82 @@ static const char* const amr_library_names[] =
   #define AMR_FUNC  LSX_DLENTRY_STATIC
 #endif /* DL_AMRNB */
 
+/* OpenCore definitions: */
+
+#if defined(HAVE_OPENCORE_AMRNB_INTERF_DEC_H) || defined(DL_AMRNB)
+  #define AMR_OPENCORE 1
+  #define AMR_OPENCORE_ENABLE_ENCODE 1
+#endif
+
+#define AMR_OPENCORE_FUNC_ENTRIES(f,x) \
+  AMR_FUNC(f,x, void*, Encoder_Interface_init,   (int dtx)) \
+  AMR_FUNC(f,x, int,   Encoder_Interface_Encode, (void* state, enum amrnb_mode mode, const short* in, unsigned char* out, int forceSpeech)) \
+  AMR_FUNC(f,x, void,  Encoder_Interface_exit,   (void* state)) \
+  AMR_FUNC(f,x, void*, Decoder_Interface_init,   (void)) \
+  AMR_FUNC(f,x, void,  Decoder_Interface_Decode, (void* state, const unsigned char* in, short* out, int bfi)) \
+  AMR_FUNC(f,x, void,  Decoder_Interface_exit,   (void* state)) \
+
+#define AmrOpencoreEncoderInit() \
+  Encoder_Interface_init(1)
+#define AmrOpencoreEncoderEncode(state, mode, in, out, forceSpeech) \
+  Encoder_Interface_Encode(state, mode, in, out, forceSpeech)
+#define AmrOpencoreEncoderExit(state) \
+  Encoder_Interface_exit(state)
+#define AmrOpencoreDecoderInit() \
+  Decoder_Interface_init()
+#define AmrOpencoreDecoderDecode(state, in, out, bfi) \
+  Decoder_Interface_Decode(state, in, out, bfi)
+#define AmrOpencoreDecoderExit(state) \
+  Decoder_Interface_exit(state)
+
+#define AMR_OPENCORE_DESC "amr-nb OpenCore library"
+static const char* const amr_opencore_library_names[] =
+{
+#ifdef DL_AMRWB
+  "libopencore-amrnb",
+#endif
+  NULL
+};
+
+/* 3GPP (reference implementation) definitions: */
+
+#if !defined(HAVE_OPENCORE_AMRNB_INTERF_DEC_H) || defined(DL_AMRNB)
+  #define AMR_GP3 1
+#endif
+
+#define AMR_GP3_FUNC_ENTRIES(f,x) \
+  AMR_FUNC(f,x, void*, VADxEncoder_Interface_init,      (int dtx, char vad2_code)) \
+  AMR_FUNC(f,x, int,   GP3VADxEncoder_Interface_Encode, (void* state, enum amrnb_mode mode, short* in, unsigned char* out, int forceSpeech, char vad2_code)) \
+  AMR_FUNC(f,x, void,  Encoder_Interface_exit,          (void* state)) \
+  AMR_FUNC(f,x, void*, Decoder_Interface_init,          (void)) \
+  AMR_FUNC(f,x, void,  GP3Decoder_Interface_Decode,     (void* state, unsigned char* in, short* out, int bfi)) \
+  AMR_FUNC(f,x, void,  Decoder_Interface_exit,          (void* state)) \
+
+#define AmrGp3EncoderInit() \
+  VADxEncoder_Interface_init(1, 0)
+#define AmrGp3EncoderEncode(state, mode, in, out, forceSpeech) \
+  GP3VADxEncoder_Interface_Encode(state, mode, in, out, forceSpeech, 0)
+#define AmrGp3EncoderExit(state) \
+  Encoder_Interface_exit(state)
+#define AmrGp3DecoderInit() \
+  Decoder_Interface_init()
+#define AmrGp3DecoderDecode(state, in, out, bfi) \
+  GP3Decoder_Interface_Decode(state, in, out, bfi)
+#define AmrGp3DecoderExit(state) \
+  Decoder_Interface_exit(state)
+
+#define AMR_GP3_DESC "amr-nb 3GPP reference library"
+static const char* const amr_gp3_library_names[] =
+{
+#ifdef DL_AMRWB
+  "libamrnb-3",
+  "libamrnb",
+  "amrnb",
+#endif
+  NULL
+};
+
 #include "amr.h"
 
 #endif /* HAVE_AMRNB */
+    

@@ -24,45 +24,16 @@
 
 #ifdef HAVE_AMRWB
 
-#ifdef HAVE_OPENCORE_AMRWB_DEC_IF_H
+/* Common definitions: */
 
-#define DISABLE_AMR_WB_ENCODE
+static const uint8_t amrwb_block_size[] = {18, 24, 33, 37, 41, 47, 51, 59, 61, 6, 6, 0, 0, 0, 1, 1};
+static char const amrwb_magic[] = "#!AMR-WB\n";
+#define amr_block_size amrwb_block_size
+#define amr_magic amrwb_magic
+#define amr_priv_t amrwb_priv_t
+#define amr_opencore_funcs amrwb_opencore_funcs
+#define amr_gp3_funcs amrwb_gp3_funcs
 
-  void D_IF_decode(void* state, const unsigned char* bits, short* synth, int bfi);
-  void* D_IF_init(void);
-  void D_IF_exit(void* state);
-
-#define AMR_FUNC_ENTRIES(f,x) \
-  AMR_FUNC(f,x, void,  D_IF_decode,(void* state, const unsigned char* bits, short* synth, int bfi)) \
-  AMR_FUNC(f,x, void*, D_IF_init,  (void)) \
-  AMR_FUNC(f,x, void,  D_IF_exit,  (void* state))
-
-#else /* HAVE_OPENCORE_AMRWB_DEC_IF_H */
-
-  int GP3E_IF_encode(void *st, int16_t mode, int16_t *speech, uint8_t *serial, int16_t dtx);
-  void *E_IF_init(void);
-  void E_IF_exit(void *state);
-  void GP3D_IF_decode(void *st, uint8_t *bits, int16_t *synth, int32_t bfi);
-  void * D_IF_init(void);
-  void D_IF_exit(void *state);
-
-#define AMR_FUNC_ENTRIES(f,x) \
-  AMR_FUNC(f,x, int,   GP3E_IF_encode,(void *st, int16_t mode, int16_t *speech, uint8_t *serial, int16_t dtx)) \
-  AMR_FUNC(f,x, void*, E_IF_init,     (void)) \
-  AMR_FUNC(f,x, void,  E_IF_exit,     (void *state)) \
-  AMR_FUNC(f,x, void,  GP3D_IF_decode,(void *st, uint8_t *bits, int16_t *synth, int32_t bfi)) \
-  AMR_FUNC(f,x, void*, D_IF_init,     (void)) \
-  AMR_FUNC(f,x, void,  D_IF_exit,     (void *state))
-
-#define D_IF_decode GP3D_IF_decode
-#define E_IF_encode GP3E_IF_encode
-
-#endif /* HAVE_OPENCORE_AMRWB_DEC_IF_H */
-
-static const uint8_t amrwb_block_size[16]= {18, 24, 33, 37, 41, 47, 51, 59, 61, 6, 6, 0, 0, 0, 1, 1};
-#define block_size amrwb_block_size
-
-static char const magic[] = "#!AMR-WB\n";
 #define AMR_CODED_MAX       61 /* NB_SERIAL_MAX */
 #define AMR_ENCODING        SOX_ENCODING_AMR_WB
 #define AMR_FORMAT_FN       lsx_amr_wb_format_fn
@@ -70,31 +41,83 @@ static char const magic[] = "#!AMR-WB\n";
 #define AMR_MODE_MAX        8
 #define AMR_NAMES           "amr-wb", "awb"
 #define AMR_RATE            16000
-#define AMR_DESC            "amr-wb library"
+#define AMR_DESC            "3GPP Adaptive Multi Rate Wide-Band (AMR-WB) lossy speech compressor"
 
 #if !defined(HAVE_LIBLTDL)
-#undef DL_AMRWB
+  #undef DL_AMRWB
 #endif
-
-static const char* const amr_library_names[] =
-{
-#ifdef DL_AMRWB
-#ifdef HAVE_OPENCORE_AMRWB_DEC_IF_H
-  "libopencore-amrwb",
-#else
-  "libamrwb-3",
-  "libamrwb",
-  "amrwb",
-#endif
-#endif
-  NULL
-};
 
 #ifdef DL_AMRWB
   #define AMR_FUNC  LSX_DLENTRY_DYNAMIC
 #else
   #define AMR_FUNC  LSX_DLENTRY_STATIC
 #endif /* DL_AMRWB */
+
+/* OpenCore definitions: */
+
+#if defined(HAVE_OPENCORE_AMRWB_DEC_IF_H) || defined(DL_AMRWB)
+  #define AMR_OPENCORE 1
+  #define AMR_OPENCORE_ENABLE_ENCODE 0
+#endif
+
+#define AMR_OPENCORE_FUNC_ENTRIES(f,x) \
+  AMR_FUNC(f,x, void*, D_IF_init,   (void)) \
+  AMR_FUNC(f,x, void,  D_IF_decode, (void* state, const unsigned char* in, short* out, int bfi)) \
+  AMR_FUNC(f,x, void,  D_IF_exit,   (void* state)) \
+
+#define AmrOpencoreDecoderInit() \
+  D_IF_init()
+#define AmrOpencoreDecoderDecode(state, in, out, bfi) \
+  D_IF_decode(state, in, out, bfi)
+#define AmrOpencoreDecoderExit(state) \
+  D_IF_exit(state)
+
+#define AMR_OPENCORE_DESC "amr-wb OpenCore library"
+static const char* const amr_opencore_library_names[] =
+{
+#ifdef DL_AMRWB
+  "libopencore-amrwb",
+#endif
+  NULL
+};
+
+/* 3GPP (reference implementation) definitions: */
+
+#if !defined(HAVE_OPENCORE_AMRWB_DEC_IF_H) || defined(DL_AMRWB)
+  #define AMR_GP3 1
+#endif
+
+#define AMR_GP3_FUNC_ENTRIES(f,x) \
+  AMR_FUNC(f,x, void*, E_IF_init,     (void)) \
+  AMR_FUNC(f,x, int,   GP3E_IF_encode,(void* state, int16_t mode, int16_t* in, uint8_t* out, int16_t dtx)) \
+  AMR_FUNC(f,x, void,  E_IF_exit,     (void* state)) \
+  AMR_FUNC(f,x, void*, D_IF_init,     (void)) \
+  AMR_FUNC(f,x, void,  GP3D_IF_decode,(void* state, uint8_t* in, int16_t* out, int32_t bfi)) \
+  AMR_FUNC(f,x, void,  D_IF_exit,     (void* state)) \
+
+#define AmrGp3EncoderInit() \
+  E_IF_init()
+#define AmrGp3EncoderEncode(state, mode, in, out, forceSpeech) \
+  GP3E_IF_encode(state, mode, in, out, forceSpeech)
+#define AmrGp3EncoderExit(state) \
+  E_IF_exit(state)
+#define AmrGp3DecoderInit() \
+  D_IF_init()
+#define AmrGp3DecoderDecode(state, in, out, bfi) \
+  GP3D_IF_decode(state, in, out, bfi)
+#define AmrGp3DecoderExit(state) \
+  D_IF_exit(state)
+
+#define AMR_GP3_DESC "amr-wb 3GPP reference library"
+static const char* const amr_gp3_library_names[] =
+{
+#ifdef DL_AMRWB
+  "libamrwb-3",
+  "libamrwb",
+  "amrwb",
+#endif
+  NULL
+};
 
 #include "amr.h"
 

@@ -147,6 +147,7 @@ char const * lsx_sigfigs3p(double percentage)
 }
 
 int lsx_open_dllibrary(
+  int show_error_on_failure,
   const char* library_description,
   const char* const library_names[] UNUSED,
   const lsx_dlfunction_info func_infos[],
@@ -248,24 +249,42 @@ int lsx_open_dllibrary(
 #endif /* HAVE_LIBLTDL */
     if (failed_funcname)
     {
-      lsx_fail(
-        "Unable to load %s (%s) function \"%s\"." LTDL_MISSING,
-        library_description,
-        failed_libname,
-        failed_funcname);
+      if (show_error_on_failure)
+        lsx_fail(
+          "Unable to load %s (%s) function \"%s\"." LTDL_MISSING,
+          library_description,
+          failed_libname,
+          failed_funcname);
+      else
+        lsx_report(
+          "Unable to load %s (%s) function \"%s\"." LTDL_MISSING,
+          library_description,
+          failed_libname,
+          failed_funcname);
     }
     else if (failed_libname)
     {
-      lsx_fail(
-        "Unable to load %s (%s)." LTDL_MISSING,
-        library_description,
-        failed_libname);
+      if (show_error_on_failure)
+        lsx_fail(
+          "Unable to load %s (%s)." LTDL_MISSING,
+          library_description,
+          failed_libname);
+      else
+        lsx_report(
+          "Unable to load %s (%s)." LTDL_MISSING,
+          library_description,
+          failed_libname);
     }
     else
     {
-      lsx_fail(
-        "Unable to load %s - no dynamic library names selected." LTDL_MISSING,
-        library_description);
+      if (show_error_on_failure)
+        lsx_fail(
+          "Unable to load %s - no dynamic library names selected." LTDL_MISSING,
+          library_description);
+      else
+        lsx_report(
+          "Unable to load %s - no dynamic library names selected." LTDL_MISSING,
+          library_description);
     }
   }
 
