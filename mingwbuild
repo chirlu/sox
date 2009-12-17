@@ -29,6 +29,14 @@
 # The following command lines were used to generate the static external
 # libraries SoX ships with.
 #
+# mingw32-gcc refuses to find static version of libltdl when
+# using "-static" flag.  So I compile and install only static
+# version of libltdl to help compiler out (means I can use
+# a packaged version).
+# cd libtool-1.5.26
+# mingw32-configure --disable-shared --enable-static;mingw32-make;sudu mingw32-make install
+#
+#
 # libpng.la will have libtool issue because depends on libz
 # which has a libz.la file.  Must edit libpng.la to
 # prevent needing to distribute zlib1.dll.

@@ -42,16 +42,6 @@ else
     using_libltdl=$with_libltdl
 fi
 
-if test "$with_libltdl" != "no"; then
-    dnl Force off using libltdl on targets that are know to have
-    dnl problems.
-    case $target in
-      *mingw32* | *os2*)
-        using_libltdl=no
-        ;;
-    esac
-fi
-
 if test "$using_libltdl" != "no"; then
   AC_CHECK_HEADERS(ltdl.h,
                    AC_CHECK_LIB(ltdl, lt_dlinit, LIBLTDL="$LIBLTDL -lltdl",
@@ -297,6 +287,7 @@ if test "$with_mad" != "no"; then
     if test "x$using_libltdl" = "xyes" -a "x$enable_dl_mad" = "xyes"; then
       AC_DEFINE(DL_MAD, 1, [Define to dlopen() mad.])
     else
+      enable_dl_mad="no"
       AC_CHECK_LIB(mad, mad_stream_buffer, MP3_LIBS="$MP3_LIBS -lmad",using_mad=no)
       if test "$with_mad" = "yes" -a "$using_mad" = "no"; then
         AC_MSG_FAILURE([cannot find libmad])
@@ -344,6 +335,7 @@ if test "$with_lame" != "no"; then
     if test "x$using_libltdl" = "xyes" -a "x$enable_dl_lame" = "xyes"; then
       AC_DEFINE(DL_LAME, 1, [Define to dlopen() lame.])
     else
+      enable_dl_lame="no"
       AC_CHECK_LIB(mp3lame, lame_init, MP3_LIBS="$MP3_LIBS -lmp3lame",using_lame=no)
       AC_CHECK_LIB(mp3lame, lame_get_lametag_frame)
       if test "$ac_cv_lib_mp3lame_lame_get_lametag_frame" = yes; then
@@ -419,50 +411,55 @@ AC_OPTIONAL_FORMAT(flac, FLAC, [AC_CHECK_HEADER(FLAC/all.h, [AC_CHECK_LIB(FLAC, 
 dnl When enable_dl_amrbw, do not let add libraries to be linked in
 dnl since they will be dlopen()'ed instead.
 ac_sox_save_AMRWB_LIBS="$AMRWB_LIBS"
-AC_OPTIONAL_FORMAT(amrwb, AMRWB, 
-		   [AC_CHECK_HEADERS(opencore-amrwb/dec_if.h,
-		    [AC_CHECK_LIB(opencore-amrwb, D_IF_init, 
-		     AMRWB_LIBS="$AMRWB_LIBS -lopencore-amrwb", using_amrwb=no)],
-		    [AC_CHECK_HEADERS(amrwb/dec.h, 
-		     [AC_CHECK_LIB(amrwb, D_IF_init, 
-		      AMRWB_LIBS="$AMRWB_LIBS -lamrwb",using_amrwb=no)], 
-		      using_amrwb=no)])])
+using_amrwb=yes
+AC_CHECK_HEADERS(opencore-amrwb/dec_if.h,
+		 [AC_CHECK_LIB(opencore-amrwb, D_IF_init, 
+		  AMRWB_LIBS="$AMRWB_LIBS -lopencore-amrwb", using_amrwb=no)],
+		  [AC_CHECK_HEADERS(amrwb/dec.h, 
+		   [AC_CHECK_LIB(amrwb, D_IF_init, 
+		    AMRWB_LIBS="$AMRWB_LIBS -lamrwb",using_amrwb=no)], 
+		    using_amrwb=no)])
 AC_ARG_ENABLE(dl_amrwb,
 	      AC_HELP_STRING([--enable-dl-amrwb], 
 			     [Dlopen amrbw instead of linking in.]),
 			     enable_dl_amrwb=$enableval, enable_dl_amrwb=no)
-if test "x$using_amrwb" = "xyes"; then
-  if test "x$using_libltdl" = "xyes" -a "x$enable_dl_amrwb" = "xyes"; then
-    AC_DEFINE(DL_AMRWB, 1, [Define to dlopen() amrwb.]) 
-    dnl When enable_dl_amrwb, do not let SOX_PATH_AMRWB add libraries
-    dnl to be linked in (since they will be dlopen()'ed instead).
-    AMRWB_LIBS="$ac_sox_save_AMRWB_LIBS"
-  fi
+if test "x$using_libltdl" = "xyes" -a "x$enable_dl_amrwb" = "xyes"; then
+  AC_DEFINE(DL_AMRWB, 1, [Define to dlopen() amrwb.]) 
+  dnl When enable_dl_amrwb, do not let SOX_PATH_AMRWB add libraries
+  dnl to be linked in (since they will be dlopen()'ed instead).
+  AMRWB_LIBS="$ac_sox_save_AMRWB_LIBS"
+  dnl Force to using regardless if headers or libraries were found.
+  using_amrwb=yes
+else
+  enable_dl_amrwb="no"
 fi
+AC_OPTIONAL_FORMAT(amrwb, AMRWB, [using_amrwb="yes"])
 
 dnl When enable_dl_amrnb, do not let add libraries to be linked in
 dnl since they will be dlopen()'ed instead.
 ac_sox_save_AMRNB_LIBS="$AMRNB_LIBS"
-AC_OPTIONAL_FORMAT(amrnb, AMRNB, 
-		   [AC_CHECK_HEADERS(opencore-amrnb/interf_dec.h, 
-		    [AC_CHECK_LIB(opencore-amrnb, Decoder_Interface_init, 
-		     AMRNB_LIBS="$AMRNB_LIBS -lopencore-amrnb", using_amrnb=no)],
-		    [AC_CHECK_HEADER(amrnb/sp_dec.h, 
-		     [AC_CHECK_LIB(amrnb, Decoder_Interface_init, 
-		      AMRNB_LIBS="$AMRNB_LIBS -lamrnb", using_amrnb=no)], 
-		       using_amrnb=no)])])
+AC_CHECK_HEADERS(opencore-amrnb/interf_dec.h, 
+		 [AC_CHECK_LIB(opencore-amrnb, Decoder_Interface_init, 
+		  AMRNB_LIBS="$AMRNB_LIBS -lopencore-amrnb", using_amrnb=no)],
+		  [AC_CHECK_HEADER(amrnb/sp_dec.h, 
+		   [AC_CHECK_LIB(amrnb, Decoder_Interface_init, 
+		    AMRNB_LIBS="$AMRNB_LIBS -lamrnb", using_amrnb=no)], 
+		    using_amrnb=no)])
 AC_ARG_ENABLE(dl_amrnb,
 	      AC_HELP_STRING([--enable-dl-amrnb], 
 			     [Dlopen amrnb instead of linking in.]),
 			     enable_dl_amrnb=$enableval, enable_dl_amrnb=no)
-if test "x$using_amrnb" = "xyes"; then
-  if test "x$using_libltdl" = "xyes" -a "x$enable_dl_amrnb" = "xyes"; then
-    AC_DEFINE(DL_AMRNB, 1, [Define to dlopen() amrnb.]) 
-    dnl When enable_dl_amrnb, do not let SOX_PATH_AMRNB add libraries
-    dnl to be linked in (since they will be dlopen()'ed instead).
-    AMRNB_LIBS="$ac_sox_save_AMRNB_LIBS"
-  fi
+if test "x$using_libltdl" = "xyes" -a "x$enable_dl_amrnb" = "xyes"; then
+  AC_DEFINE(DL_AMRNB, 1, [Define to dlopen() amrnb.]) 
+  dnl When enable_dl_amrnb, do not let SOX_PATH_AMRNB add libraries
+  dnl to be linked in (since they will be dlopen()'ed instead).
+  AMRNB_LIBS="$ac_sox_save_AMRNB_LIBS"
+  dnl Force to using regardless if headers or libraries were found.
+  using_amrnb=yes
+else
+  enable_dl_amrnb="no"
 fi
+AC_OPTIONAL_FORMAT(amrnb, AMRNB, [using_amrnb="yes"])
 
 
 AC_OPTIONAL_FORMAT(wavpack, WAVPACK, [AC_CHECK_HEADER(wavpack/wavpack.h, [AC_CHECK_LIB(wavpack, WavpackGetSampleRate, WAVPACK_LIBS="$WAVPACK_LIBS -lwavpack",using_wavpack=no)], using_wavpack=no)])
@@ -504,6 +501,8 @@ if test "x$using_sndfile" = "xyes"; then
     dnl When enable_dl_sndfile, do not let SOX_PATH_SNDFILE add libraries
     dnl to be linked in (since they will be dlopen()'ed instead).
     SNDFILE_LIBS="$ac_sox_save_SNDFILE_LIBS"
+  else
+    enable_dl_sndfile="no"
   fi
 fi
 AC_OPTIONAL_FORMAT(sndfile, SNDFILE, [using_sndfile=$tmp_using_sndfile])
