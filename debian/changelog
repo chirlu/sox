@@ -1,4 +1,4 @@
-sox (14.3.0.99+cvs-1) UNRELEASED; urgency=low
+sox (14.3.1-0cvs1) UNRELEASED; urgency=low
 
   * CVS Version.
     - Single-threaded is now default (closes: #546944).
@@ -14,8 +14,10 @@ sox (14.3.0.99+cvs-1) UNRELEASED; urgency=low
     - Fixed typo.
   * [debian/docs]:
     - Added README.source (really fixes #522548).
+  * [debian/libsox-fmt-base.install]:
+    - Removed formats now in libsox.
 
- -- Pascal Giard <evilynux@gmail.com>  Sat, 10 Oct 2009 09:43:51 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Fri, 18 Dec 2009 21:07:50 -0500
 
 sox (14.3.0-1.1) unstable; urgency=low
 
