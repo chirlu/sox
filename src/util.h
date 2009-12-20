@@ -76,6 +76,8 @@
 #if defined(HAVE_FSEEKO64) && !defined(HAVE_FSEEKO)
 #define fseeko fseeko64
 #define ftello ftello64
+#undef off_t
+#define off_t off64_t
 #define HAVE_FSEEKO 1
 #endif
 
