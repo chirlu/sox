@@ -48,9 +48,6 @@ extern lsx_enum_item const lsx_wave_enum[];
 #ifndef HAVE_FSEEKO
 #define fseeko fseek
 #define ftello ftell
-#ifndef _MSC_VER
-#define off_t long
-#endif
 #endif
 
 #ifdef _FILE_OFFSET_BITS
