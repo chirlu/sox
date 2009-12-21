@@ -42,25 +42,25 @@ static void write_comments(sox_format_t * ft)
 
   /* Note: id3tag_set_fieldvalue is not present in LAME 3.97, so we're using
      the 3.97-compatible methods for all of the tags that 3.97 supported. */
-  if (comment = sox_find_comment(ft->oob.comments, "Title"))
+  if ((comment = sox_find_comment(ft->oob.comments, "Title")))
     p->id3tag_set_title(p->gfp, comment);
-  if (comment = sox_find_comment(ft->oob.comments, "Artist"))
+  if ((comment = sox_find_comment(ft->oob.comments, "Artist")))
     p->id3tag_set_artist(p->gfp, comment);
-  if (comment = sox_find_comment(ft->oob.comments, "Album"))
+  if ((comment = sox_find_comment(ft->oob.comments, "Album")))
     p->id3tag_set_album(p->gfp, comment);
-  if (comment = sox_find_comment(ft->oob.comments, "Tracknumber"))
+  if ((comment = sox_find_comment(ft->oob.comments, "Tracknumber")))
     p->id3tag_set_track(p->gfp, comment);
-  if (comment = sox_find_comment(ft->oob.comments, "Year"))
+  if ((comment = sox_find_comment(ft->oob.comments, "Year")))
     p->id3tag_set_year(p->gfp, comment);
-  if (comment = sox_find_comment(ft->oob.comments, "Comment"))
+  if ((comment = sox_find_comment(ft->oob.comments, "Comment")))
     p->id3tag_set_comment(p->gfp, comment);
-  if (comment = sox_find_comment(ft->oob.comments, "Genre"))
+  if ((comment = sox_find_comment(ft->oob.comments, "Genre")))
   {
     if (p->id3tag_set_genre(p->gfp, comment))
       lsx_warn("\"%s\" is not a recognized ID3v1 genre.", comment);
   }
 
-  if (comment = sox_find_comment(ft->oob.comments, "Discnumber"))
+  if ((comment = sox_find_comment(ft->oob.comments, "Discnumber")))
   {
     char* id3tag_buf = lsx_malloc(strlen(comment) + 6);
     if (id3tag_buf)

@@ -147,6 +147,9 @@
 #define dB_to_linear(x) exp((x) * M_LN10 * 0.05)
 #define linear_to_dB(x) (log10(x) * 20)
 
+extern int lsx_strcasecmp(const char *s1, const char *st);
+extern int lsx_strncasecmp(char const *s1, char const *s2, size_t n);
+
 #ifndef HAVE_STRCASECMP
 #define strcasecmp(s1, s2) lsx_strcasecmp((s1), (s2))
 #define strncasecmp(s1, s2, n) lsx_strncasecmp((s1), (s2), (n))

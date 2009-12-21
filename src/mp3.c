@@ -564,8 +564,6 @@ static void msgf(const char* fmt, va_list va)
 
 static void id3tag_init_stub(lame_global_flags * gfp UNUSED)
   { return; }
-static void id3tag_pad_v2_stub(lame_global_flags * gfp UNUSED)
-  { return; }
 static void id3tag_set_title_stub(lame_global_flags * gfp UNUSED, const char* title UNUSED)
   { return; }
 static void id3tag_set_artist_stub(lame_global_flags * gfp UNUSED, const char* artist UNUSED)
@@ -591,13 +589,12 @@ static int id3tag_set_fieldvalue_stub(lame_global_flags * gfp UNUSED, const char
 
 static int get_id3v2_tag_size(sox_format_t * ft)
 {
-  priv_t *p = (priv_t *)ft->priv;
   FILE *fp = ft->fp;
   size_t bytes_read;
   int id3v2_size;
   unsigned char id3v2_header[10];
 
-  if (fseeko(fp, 0, SEEK_SET) != 0) {
+  if (fseeko(fp, (off_t)0, SEEK_SET) != 0) {
     lsx_warn("cannot update id3 tag - failed to seek to beginning");
     return SOX_EOF;
   }
@@ -625,11 +622,11 @@ static int get_id3v2_tag_size(sox_format_t * ft)
   return id3v2_size;
 }
 
-static void rewrite_id3v2_tag(sox_format_t * ft, int id3v2_size, unsigned long num_samples)
+static void rewrite_id3v2_tag(sox_format_t * ft, size_t id3v2_size, size_t num_samples)
 {
   priv_t *p = (priv_t *)ft->priv;
   FILE *fp = ft->fp;
-  int new_size;
+  size_t new_size;
   unsigned char * buffer;
 
   if (LSX_DLFUNC_IS_STUB(p, lame_get_id3v2_tag))
@@ -649,7 +646,7 @@ static void rewrite_id3v2_tag(sox_format_t * ft, int id3v2_size, unsigned long n
   }
 
   p->lame_set_num_samples(p->gfp, num_samples);
-  lsx_debug("updated MP3 TLEN to %lu samples", num_samples);
+  lsx_debug("updated MP3 TLEN to %d samples", num_samples);
 
   new_size = p->lame_get_id3v2_tag(p->gfp, buffer, id3v2_size);
 
@@ -669,7 +666,7 @@ static void rewrite_id3v2_tag(sox_format_t * ft, int id3v2_size, unsigned long n
     else
       lsx_warn("cannot update track length info - failed to adjust tag size");
   } else {
-    fseeko(fp, 0, SEEK_SET);
+    fseeko(fp, (off_t)0, SEEK_SET);
     /* Overwrite the Id3v2 tag (this time TLEN should be accurate) */
     if (fwrite(buffer, id3v2_size, 1, fp) != 1) {
       lsx_debug("Rewrote Id3v2 tag (%d bytes)", id3v2_size);
@@ -685,9 +682,9 @@ static void rewrite_tags(sox_format_t * ft, unsigned long num_samples)
   FILE *fp = ft->fp;
 
   off_t file_size;
-  int id3v2_size;
+  size_t id3v2_size;
 
-  if (fseeko(fp, 0, SEEK_END)) {
+  if (fseeko(fp, (off_t)0, SEEK_END)) {
     lsx_warn("cannot update tags - seek to end failed");
     return;
   }
@@ -701,9 +698,7 @@ static void rewrite_tags(sox_format_t * ft, unsigned long num_samples)
   }
 
   id3v2_size = get_id3v2_tag_size(ft);
-  if (id3v2_size < 0) {
-    return;
-  } else if (id3v2_size > 0 && num_samples != p->num_samples) {
+  if (id3v2_size > 0 && num_samples != p->num_samples) {
     rewrite_id3v2_tag(ft, id3v2_size, num_samples);
   }
 
@@ -711,7 +706,7 @@ static void rewrite_tags(sox_format_t * ft, unsigned long num_samples)
     unsigned int lametag_size;
     uint8_t buffer[MAXFRAMESIZE];
 
-    if (fseeko(fp, id3v2_size, SEEK_SET)) {
+    if (fseeko(fp, (off_t)id3v2_size, SEEK_SET)) {
       lsx_warn("cannot write VBR tag - seek to tag block failed");
       return;
     }
@@ -908,7 +903,7 @@ static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t sa
 {
     priv_t *p = (priv_t *)ft->priv;
     size_t new_buffer_size;
-    float *buffer_l, *buffer_r;
+    float *buffer_l, *buffer_r = NULL;
     int nsamples = samp/ft->signal.channels;
     int i,j;
     size_t written;

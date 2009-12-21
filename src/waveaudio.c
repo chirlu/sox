@@ -73,9 +73,9 @@ static void fail(sox_format_t* ft, DWORD code, const char* context)
     sizeof(message) / sizeof(message[0]),
     NULL);
   if (formatMessageOk)
-    lsx_fail_errno(ft, SOX_EOF, "WaveAudio %s failed with code %d: %s", context, code, message);
+    lsx_fail_errno(ft, SOX_EOF, "WaveAudio %s failed with code %d: %s", context, (int)code, message);
   else
-    lsx_fail_errno(ft, SOX_EOF, "WaveAudio %s failed with unrecognized MMSYSERR code %d.", context, code);
+    lsx_fail_errno(ft, SOX_EOF, "WaveAudio %s failed with unrecognized MMSYSERR code %d.", context, (int)code);
 }
 
 static int stop(sox_format_t* ft)

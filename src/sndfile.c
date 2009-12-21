@@ -222,7 +222,7 @@ static struct {
   { "xi",       SF_FORMAT_XI }
 };
 
-static int sf_stop_stub(SNDFILE *sndfile)
+static int sf_stop_stub(SNDFILE *sndfile UNUSED)
 {
     return 1;
 }

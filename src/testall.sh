@@ -2,7 +2,11 @@ bindir="."
 srcdir="."
 effect=""
 
-EXEEXT=
+if [ -f ./sox.exe ] ; then
+  EXEEXT=".exe"
+else
+  EXEEXXT=""
+fi
 
 # Allow user to override paths.  Useful for testing an installed
 # sox.
