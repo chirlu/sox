@@ -2670,7 +2670,7 @@ static sox_bool cmp_comment_text(char const * c1, char const * c2)
   return c1 && c2 && !strcasecmp(c1, c2);
 }
 
-#ifdef __CYGWIN__
+#if defined(__CYGWIN__) || defined(__MINGW32__)
 static char * check_dir(char * name)
 {
   struct stat st;
@@ -2710,7 +2710,8 @@ int main(int argc, char **argv)
 
   parse_options_and_filenames(argc, argv);
 
-#ifdef __CYGWIN__  /* Workarounds for a couple of cygwin problems: */
+#if defined(__CYGWIN__) || defined(__MINGW32__) 
+  /* Workarounds for a couple of cygwin/mingw problems: */
   /* Allow command-line --temp "" to specify default behaviour: */
   if (sox_globals.tmp_path && !*sox_globals.tmp_path) {
     free(sox_globals.tmp_path);
