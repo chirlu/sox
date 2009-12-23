@@ -95,9 +95,14 @@
   #define TIME_FRAC 1e3
 #endif
 
-#ifdef _MSC_VER
+#if !defined(HAVE_CONIO_H) && !defined(HAVE_TERMIOS_H) && (defined(_MSC_VER) || defined(__MINGW32__))
+#define HAVE_CONIO_H 1
+#endif
+
+#ifdef HAVE_CONIO_H
 /* _kbhit and _getch */
 #include <conio.h>
+#undef HAVE_TERMIOS_H
 #endif
 
 /*#define MORE_INTERACTIVE 1*/
@@ -1175,7 +1180,7 @@ static int kbhit(void)
   select(fileno(stdin) + 1, &fdset, NULL, NULL, &time_val);
   return FD_ISSET(fileno(stdin), &fdset);
 }
-#elif !defined(_MSC_VER)
+#elif !defined(HAVE_CONIO_H)
 #define kbhit() 0
 #endif
 
@@ -1232,7 +1237,7 @@ static int update_status(sox_bool all_done, void * client_data)
 {
   (void)client_data;
   if (interactive) while (kbhit()) {
-#ifdef _MSC_VER
+#ifdef HAVE_CONIO_H
     int ch = _getch();
 #else
     int ch = getchar();
@@ -1642,7 +1647,7 @@ static int process(void)
 
   optimize_trim();
 
-#if defined(HAVE_TERMIOS_H) || defined(_MSC_VER)
+#if defined(HAVE_TERMIOS_H) || defined(HAVE_CONIO_H)
   /* so we can be fully interactive. */
   if (show_progress && !interactive && is_player && stdin_is_a_tty) {
 #ifdef HAVE_TERMIOS_H
