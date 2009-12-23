@@ -200,7 +200,9 @@ static int start(sox_format_t* ft)
     return SOX_EOF;
   }
 
-  ft->signal.precision = 16;
+  /* Allow simulation of 8-bit audio playback. */
+  ft->signal.precision = ft->signal.precision >= 16 ? 16 : 8;
+
   fmt.wFormatTag = WAVE_FORMAT_PCM;
   fmt.nChannels = ft->signal.channels;
   fmt.nSamplesPerSec = (DWORD)ft->signal.rate;
@@ -323,10 +325,23 @@ static size_t write(sox_format_t * ft, const sox_sample_t* buf, size_t len)
       size_t ready = min(len - copied, priv->buf_len - header->dwUser);
       size_t i;
 
-      for (i = 0; i < ready; ++i)
+      if (ft->signal.precision != 8)
       {
-        SOX_SAMPLE_LOCALS;
-        ((int16_t *)header->lpData)[header->dwUser++] = SOX_SAMPLE_TO_SIGNED_16BIT(buf[copied++], clips);
+        /* Normal case: Play with 16-bit resolution. */
+        for (i = 0; i < ready; ++i)
+        {
+          SOX_SAMPLE_LOCALS;
+          ((int16_t *)header->lpData)[header->dwUser++] = SOX_SAMPLE_TO_SIGNED_16BIT(buf[copied++], clips);
+        }
+      }
+      else
+      {
+        /* Special case: Simulate 8-bit audio playback. */
+        for (i = 0; i < ready; ++i)
+        {
+          SOX_SAMPLE_LOCALS;
+          ((int16_t *)header->lpData)[header->dwUser++] = SOX_SAMPLE_TO_SIGNED_8BIT(buf[copied++], clips) << 8;
+        }
       }
 
       header->dwBufferLength = header->dwUser * sizeof(int16_t);
@@ -352,7 +367,10 @@ static size_t write(sox_format_t * ft, const sox_sample_t* buf, size_t len)
 LSX_FORMAT_HANDLER(waveaudio)
 {
   static const char * const names[] = {"waveaudio", NULL};
-  static unsigned const write_encodings[] = { SOX_ENCODING_UNKNOWN, 16, 0, 0};
+  static unsigned const write_encodings[] = {
+    SOX_ENCODING_SIGN2, 16, 0,
+    SOX_ENCODING_SIGN2, 8, 0,
+    0};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
   "Windows Multimedia Audio", names, 
   SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
