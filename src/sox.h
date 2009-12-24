@@ -30,6 +30,11 @@ extern "C" {
 #define UNUSED
 #define PRINTF
 #endif
+#ifdef _MSC_VER
+#define LSX_UNUSED_VAR(x) ((void)(x))
+#else
+#define LSX_UNUSED_VAR(x) ((void)0)
+#endif
 
 /* The following is the API version of libSoX.  It is not meant
  * to follow the version number of SoX but it has historically.

@@ -415,8 +415,8 @@ static void UNUSED rewind_pipe(FILE * fp)
 
 static sox_format_t * open_read(
     char               const * path,
-    void                     * buffer,
-    size_t                     buffer_size,
+    void                     * buffer UNUSED,
+    size_t                     buffer_size UNUSED,
     sox_signalinfo_t   const * signal,
     sox_encodinginfo_t const * encoding,
     char               const * filetype)
@@ -804,9 +804,9 @@ sox_format_handler_t const * sox_write_handler(
 
 static sox_format_t * open_write(
     char               const * path,
-    void                     * buffer,
-    size_t                     buffer_size,
-    char                     * * buffer_ptr,
+    void                     * buffer UNUSED,
+    size_t                     buffer_size UNUSED,
+    char                     * * buffer_ptr UNUSED,
     size_t                   * buffer_size_ptr,
     sox_signalinfo_t   const * signal,
     sox_encodinginfo_t const * encoding,
