@@ -1747,7 +1747,7 @@ static void display_supported_formats(void)
         if (!strchr(*names, '/'))
           format_list[formats++] = *names;
   }
-  qsort(format_list, formats, sizeof(*format_list), strcmp_p);
+  qsort((void*)format_list, formats, sizeof(*format_list), strcmp_p);
   for (i = 0; i < formats; i++)
     printf(" %s", format_list[i]);
   putchar('\n');
@@ -1759,12 +1759,12 @@ static void display_supported_formats(void)
       for (names = handler->names; *names; ++names)
         format_list[formats++] = *names;
   }
-  qsort(format_list, formats, sizeof(*format_list), strcmp_p);
+  qsort((void*)format_list, formats, sizeof(*format_list), strcmp_p);
   for (i = 0; i < formats; i++)
     printf(" %s", format_list[i]);
   puts("\n");
 
-  free(format_list);
+  free((void*)format_list);
 }
 
 static void display_supported_effects(void)
@@ -1799,8 +1799,8 @@ static void usage(char const * message)
 "GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):",
 "--buffer BYTES           Set the size of all processing buffers (default 8192)",
 "--clobber                Don't prompt to overwrite output file (default)",
-"--combine concatenate    Concatenate multiple input files (default for sox, rec)",
-"--combine sequence       Sequence multiple input files (default for play)",
+"--combine concatenate    Concatenate all input files (default for sox, rec)",
+"--combine sequence       Sequence all input files (default for play)",
 "-D, --no-dither          Don't dither automatically",
 "--effects-file FILENAME  File containing effects and options",
 "-G, --guard              Use temporary files to guard against clipping",
@@ -1838,7 +1838,7 @@ static void usage(char const * message)
 "-v|--volume FACTOR       Input file volume adjustment factor (real number)",
 "--ignore-length          Ignore input file length given in header; read to EOF",
 "-t|--type FILETYPE       File type of audio",
-"-s/-u/-f/-U/-A/-i/-a/-g  Encoding type=signed-integer/unsigned-integer/floating-",
+"-s/-u/-f/-U/-A/-i/-a/-g  Encoding type=signed-integer/unsigned-integer/floating",
 "                         point/mu-law/a-law/ima-adpcm/ms-adpcm/gsm-full-rate",
 "-e|--encoding ENCODING   Set encoding (ENCODING in above list)",
 "-b|--bits BITS           Encoded sample size in bits",
@@ -1864,7 +1864,7 @@ static void usage(char const * message)
   if (message)
     lsx_fail("%s\n", message);  /* N.B. stderr */
 
-  printf("Usage summary: [gopts] [[fopts] infile]... [fopts]%s [effect [effopts]]...\n\n",
+  printf("Usage summary: [gopts] [[fopts] infile]... [fopts]%s [effect [effopt]]...\n\n",
          sox_mode == sox_play? "" : " outfile");
   for (i = 0; i < array_length(lines); ++i)
     puts(lines[i]);
@@ -2758,7 +2758,7 @@ int main(int argc, char **argv)
     combine_method = sox_concatenate;
 
   /* Make sure we got at least the required # of input filenames */
-  if (input_count < (is_serial(combine_method) ? 1 : 2))
+  if (input_count < (size_t)(is_serial(combine_method) ? 1 : 2))
     usage("Not enough input filenames specified");
 
   /* Check for misplaced input/output-specific options */

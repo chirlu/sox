@@ -60,7 +60,7 @@ typedef int32_t int24_t;     /* But beware of the extra byte. */
 typedef uint32_t uint24_t;   /* ditto */
 
 #define SOX_INT_MIN(bits) (1 <<((bits)-1))
-#define SOX_INT_MAX(bits) (-1U>>(33-(bits)))
+#define SOX_INT_MAX(bits) (((unsigned)-1)>>(33-(bits)))
 #define SOX_UINT_MAX(bits) (SOX_INT_MIN(bits)|SOX_INT_MAX(bits))
 
 #define SOX_INT8_MAX  SOX_INT_MAX(8)
@@ -107,7 +107,7 @@ typedef int32_t sox_sample_t;
 #define SOX_SAMPLE_TO_UNSIGNED(bits,d,clips) \
   (uint##bits##_t)(SOX_SAMPLE_TO_SIGNED(bits,d,clips)^SOX_INT_MIN(bits))
 #define SOX_SAMPLE_TO_SIGNED(bits,d,clips) \
-  (int##bits##_t)(sox_macro_temp_sample=(d),sox_macro_temp_sample>SOX_SAMPLE_MAX-(1<<(31-bits))?++(clips),SOX_INT_MAX(bits):((uint32_t)(sox_macro_temp_sample+(1<<(31-bits))))>>(32-bits))
+  (int##bits##_t)(LSX_UNUSED_VAR(sox_macro_temp_double),sox_macro_temp_sample=(d),sox_macro_temp_sample>SOX_SAMPLE_MAX-(1<<(31-bits))?++(clips),SOX_INT_MAX(bits):((uint32_t)(sox_macro_temp_sample+(1<<(31-bits))))>>(32-bits))
 #define SOX_SIGNED_TO_SAMPLE(bits,d)((sox_sample_t)(d)<<(32-bits))
 #define SOX_UNSIGNED_TO_SAMPLE(bits,d)(SOX_SIGNED_TO_SAMPLE(bits,d)^SOX_SAMPLE_NEG)
 
@@ -119,8 +119,8 @@ typedef int32_t sox_sample_t;
 #define SOX_SIGNED_24BIT_TO_SAMPLE(d,clips) SOX_SIGNED_TO_SAMPLE(24,d)
 #define SOX_UNSIGNED_32BIT_TO_SAMPLE(d,clips) ((sox_sample_t)(d)^SOX_SAMPLE_NEG)
 #define SOX_SIGNED_32BIT_TO_SAMPLE(d,clips) (sox_sample_t)(d)
-#define SOX_FLOAT_32BIT_TO_SAMPLE(d,clips) (sox_sample_t)(sox_macro_temp_double=(d)*(SOX_SAMPLE_MAX+1.),sox_macro_temp_double<SOX_SAMPLE_MIN?++(clips),SOX_SAMPLE_MIN:sox_macro_temp_double>=SOX_SAMPLE_MAX+1.?sox_macro_temp_double>SOX_SAMPLE_MAX+1.?++(clips),SOX_SAMPLE_MAX:SOX_SAMPLE_MAX:sox_macro_temp_double)
-#define SOX_FLOAT_64BIT_TO_SAMPLE(d,clips) (sox_sample_t)(sox_macro_temp_double=(d)*(SOX_SAMPLE_MAX+1.),sox_macro_temp_double<0?sox_macro_temp_double<=SOX_SAMPLE_MIN-.5?++(clips),SOX_SAMPLE_MIN:sox_macro_temp_double-.5:sox_macro_temp_double>=SOX_SAMPLE_MAX+.5?sox_macro_temp_double>SOX_SAMPLE_MAX+1.?++(clips),SOX_SAMPLE_MAX:SOX_SAMPLE_MAX:sox_macro_temp_double+.5)
+#define SOX_FLOAT_32BIT_TO_SAMPLE(d,clips) (sox_sample_t)(LSX_UNUSED_VAR(sox_macro_temp_sample),sox_macro_temp_double=(d)*(SOX_SAMPLE_MAX+1.),sox_macro_temp_double<SOX_SAMPLE_MIN?++(clips),SOX_SAMPLE_MIN:sox_macro_temp_double>=SOX_SAMPLE_MAX+1.?sox_macro_temp_double>SOX_SAMPLE_MAX+1.?++(clips),SOX_SAMPLE_MAX:SOX_SAMPLE_MAX:sox_macro_temp_double)
+#define SOX_FLOAT_64BIT_TO_SAMPLE(d,clips) (sox_sample_t)(LSX_UNUSED_VAR(sox_macro_temp_sample),sox_macro_temp_double=(d)*(SOX_SAMPLE_MAX+1.),sox_macro_temp_double<0?sox_macro_temp_double<=SOX_SAMPLE_MIN-.5?++(clips),SOX_SAMPLE_MIN:sox_macro_temp_double-.5:sox_macro_temp_double>=SOX_SAMPLE_MAX+.5?sox_macro_temp_double>SOX_SAMPLE_MAX+1.?++(clips),SOX_SAMPLE_MAX:SOX_SAMPLE_MAX:sox_macro_temp_double+.5)
 #define SOX_SAMPLE_TO_UNSIGNED_8BIT(d,clips) SOX_SAMPLE_TO_UNSIGNED(8,d,clips)
 #define SOX_SAMPLE_TO_SIGNED_8BIT(d,clips) SOX_SAMPLE_TO_SIGNED(8,d,clips)
 #define SOX_SAMPLE_TO_UNSIGNED_16BIT(d,clips) SOX_SAMPLE_TO_UNSIGNED(16,d,clips)
@@ -129,7 +129,7 @@ typedef int32_t sox_sample_t;
 #define SOX_SAMPLE_TO_SIGNED_24BIT(d,clips) SOX_SAMPLE_TO_SIGNED(24,d,clips)
 #define SOX_SAMPLE_TO_UNSIGNED_32BIT(d,clips) (uint32_t)((d)^SOX_SAMPLE_NEG)
 #define SOX_SAMPLE_TO_SIGNED_32BIT(d,clips) (int32_t)(d)
-#define SOX_SAMPLE_TO_FLOAT_32BIT(d,clips) (sox_macro_temp_sample=(d),sox_macro_temp_sample>SOX_SAMPLE_MAX-128?++(clips),1:(((sox_macro_temp_sample+128)&~255)*(1./(SOX_SAMPLE_MAX+1.))))
+#define SOX_SAMPLE_TO_FLOAT_32BIT(d,clips) (LSX_UNUSED_VAR(sox_macro_temp_double),sox_macro_temp_sample=(d),sox_macro_temp_sample>SOX_SAMPLE_MAX-128?++(clips),1:(((sox_macro_temp_sample+128)&~255)*(1./(SOX_SAMPLE_MAX+1.))))
 #define SOX_SAMPLE_TO_FLOAT_64BIT(d,clips) ((d)*(1./(SOX_SAMPLE_MAX+1.)))
 
 
@@ -163,7 +163,7 @@ typedef int32_t sox_sample_t;
 
 
 
-#define SOX_SIZE_MAX (size_t)(-sizeof(char))
+#define SOX_SIZE_MAX ((size_t)(-1))
 
 typedef void (*sox_output_message_handler_t)(unsigned level, const char *filename, const char *fmt, va_list ap);
 
@@ -596,6 +596,9 @@ sox_bool lsx_strends(char const * str, char const * end);
 char const * lsx_find_file_extension(char const * pathname);
 char const * lsx_sigfigs3(double number);
 char const * lsx_sigfigs3p(double percentage);
+void *lsx_realloc(void *ptr, size_t newsize);
+int lsx_strcasecmp(const char * s1, const char * s2);
+int lsx_strncasecmp(char const * s1, char const * s2, size_t n);
 
 /* WARNING END */
 

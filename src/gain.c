@@ -99,7 +99,6 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  SOX_SAMPLE_LOCALS;
   size_t len;
 
   if (p->do_scan) {

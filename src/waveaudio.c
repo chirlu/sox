@@ -284,7 +284,6 @@ static size_t read(sox_format_t * ft, sox_sample_t* buf, size_t len)
 
       for (i = 0; i < ready; ++i)
       {
-        SOX_SAMPLE_LOCALS;
         buf[copied++] = SOX_SIGNED_16BIT_TO_SAMPLE(((int16_t *)header->lpData)[header->dwUser++], dummy);
       }
 

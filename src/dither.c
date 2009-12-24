@@ -179,7 +179,7 @@ static int flow_no_shape(sox_effect_t * effp, const sox_sample_t * ibuf,
   size_t len = *isamp = *osamp = min(*isamp, *osamp);
 
   while (len--) {
-    if (!p->auto_detect || (p->history = ((p->history << 1) + !!(*ibuf & (-1u >> p->prec))))) {
+    if (!p->auto_detect || (p->history = ((p->history << 1) + !!(*ibuf & (((unsigned)-1) >> p->prec))))) {
       int32_t r = RANQD1 >> p->prec;
       double d = ((double)*ibuf++ + r + (p->alt_tpdf? -p->r : (RANQD1 >> p->prec))) / (1 << (32 - p->prec));
       int i = d < 0? d - .5 : d + .5;

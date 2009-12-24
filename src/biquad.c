@@ -48,7 +48,7 @@ int lsx_biquad_getopts(sox_effect_t * effp, int argc, char **argv,
       !strchr(allowed_width_types, width_type) || (width_type == 's' && p->width > 1))
     return lsx_usage(effp);
   p->width_type = strchr(all_width_types, width_type) - all_width_types;
-  if (p->width_type >= strlen(all_width_types))
+  if ((size_t)p->width_type >= strlen(all_width_types))
     p->width_type = 0;
   if (p->width_type == width_bw_kHz) {
     p->width *= 1000;

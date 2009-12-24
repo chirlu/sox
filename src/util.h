@@ -32,6 +32,12 @@
 #endif
 
 #ifdef _MSC_VER
+#define LSX_UNUSED_VAR(x) ((void)(x))
+#else
+#define LSX_UNUSED_VAR(x) ((void)0)
+#endif
+
+#ifdef _MSC_VER
 
 #define __STDC__ 1
 #define O_BINARY _O_BINARY
