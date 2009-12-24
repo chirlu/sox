@@ -665,7 +665,7 @@ static int kill(sox_effect_t * effp)
 static sox_effect_handler_t sox_silence_effect = {
   "silence",
   "[ -l ] above_periods [ duration thershold[d|%%] ] [ below_periods duration threshold[d|%%]]",
-  SOX_EFF_MCHAN | SOX_EFF_MODIFY,
+  SOX_EFF_MCHAN | SOX_EFF_MODIFY | SOX_EFF_LENGTH,
   sox_silence_getopts,
   sox_silence_start,
   sox_silence_flow,

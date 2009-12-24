@@ -1,4 +1,4 @@
-/* noiseprof - Noise Profiling Effect.
+/* noisered - Noise Reduction Effect.
  *
  * Written by Ian Turner (vectro@vectro.org)
  *

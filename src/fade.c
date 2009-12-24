@@ -364,7 +364,7 @@ static sox_effect_handler_t sox_fade_effect = {
   "[ type ] fade-in-length [ stop-time [ fade-out-length ] ]\n"
   "       Time is in hh:mm:ss.frac format.\n"
   "       Fade type one of q, h, t, l or p.",
-  SOX_EFF_MCHAN,
+  SOX_EFF_MCHAN | SOX_EFF_LENGTH,
   sox_fade_getopts,
   sox_fade_start,
   sox_fade_flow,
