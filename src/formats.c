@@ -807,7 +807,7 @@ static sox_format_t * open_write(
     void                     * buffer UNUSED,
     size_t                     buffer_size UNUSED,
     char                     * * buffer_ptr UNUSED,
-    size_t                   * buffer_size_ptr,
+    size_t                   * buffer_size_ptr UNUSED,
     sox_signalinfo_t   const * signal,
     sox_encodinginfo_t const * encoding,
     char               const * filetype,
