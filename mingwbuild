@@ -78,11 +78,6 @@
 # MINGW work around: Edit Makefile and remove -fforce-mem from CFLAGS
 # cd ../libmad-0.15.1b
 # mingw32-configure --enable-shared --disable-static;mingw32-make;sudo mingw32-make install
-#
-# To get AMR header files used to eanble AMR support (no libraries used):
-#
-# cd ../opencore-amr-0.1.2
-# mingw32-configure --enable-shared --disable-static;mingw32-make;sudo mingw32-make install
 
 [ ! -x configure ] && autoreconf -i
 
