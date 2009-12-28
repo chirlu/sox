@@ -565,7 +565,7 @@ fi
 AC_SUBST(SYMLINKS)
 AC_SUBST(PLAYRECLINKS)
 
-
+AM_CONDITIONAL(STATIC_LIBSOX_ONLY, test "$enable_shared" = "no" -a "$enable_static" = "yes")
 
 dnl Generate output files.
 AX_CREATE_STDINT_H(src/soxstdint.h)
@@ -593,8 +593,6 @@ if test "$using_pkgconfig" = "no"; then
 else
   pkgconfig_option="$with_pkgconfigdir"
 fi
-
-AM_CONDITIONAL(STATIC_LIBSOX_ONLY, test "$enable_shared" = "no" -a "$enable_static" = "yes")
 
 # Report configuration.
 echo
