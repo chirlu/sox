@@ -21,7 +21,8 @@
 # cd ../wavpack-4.60.1
 #./configure --disable-shared --enable-static;make;sudo make install
 #
-# FIXME: Won't build static
+# flac won't compile without following fix.  Edit src/libFLAC/ia32/nasmh and add following
+# to top of that file: %define FLAC__PUBLIC_NEEDS_UNDERSCORE
 # cd ../flac-1.2.1
 #./configure --disable-shared --enable-static;make;sudo make install
 #
