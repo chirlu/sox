@@ -3,7 +3,7 @@
 # This script will automates the steps used to producing a static win32
 # package of SoX.
 #
-# It requires cygwin with gcc-4 and zip packages installed.  Also, it 
+# It requires cygwin with gcc-3 and zip packages installed.  Also, it 
 # requires to already have several external libraries already installed
 # under /usr/local.
 #
@@ -74,7 +74,7 @@ if [ $# -ne 0 -o ! -r Makefile ]; then
     --disable-shared \
     --with-libltdl \
     --enable-dl-lame --enable-dl-mad --enable-dl-amrnb --enable-dl-amrwb \
-    CC=gcc-4 CPP=cpp\
+    CC=gcc-3 CPP=cpp\
     CPPFLAGS=-I/usr/local/include \
     LDFLAGS="-static -L/usr/local/lib" \
     SNDFILE_LIBS="-lsndfile -lFLAC -lvorbisenc -lvorbisfile -lvorbis -logg" \
