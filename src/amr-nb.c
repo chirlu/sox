@@ -126,6 +126,7 @@ static const char* const amr_gp3_library_names[] =
   "libamrnb-3",
   "libamrnb",
   "amrnb",
+  "cygamrnb-3",
 #endif
   NULL
 };

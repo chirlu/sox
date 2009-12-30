@@ -19,7 +19,7 @@ libraries, where to get them (if not from your OS distribution), and
 their licence types, is as follows:
 
 OpencoreAMR-NB/WB http://opencore-amr.sourceforge.net/  Apache
-AMR-NB/WB         http://www.penguin.cz/~utx/amr/       See library web page
+AMR-NB/WB         http://www.penguin.cz/~utx/amr        See library web page
 AO                http://xiph.org/ao                    GPL
 ffmpeg            http://ffmpeg.mplayerhq.hu            LGPL
 FLAC              http://flac.sourceforge.net           BSD

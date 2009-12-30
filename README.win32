@@ -89,8 +89,9 @@ MP3 support can be enabled by placing Lame encoding DLL and/or
 MAD decoding DLL into the same directory as SOX.EXE.  These
 can be compiled yourself, may turn up on searches of the internet
 or may be included with other MP3 applications already installed
-on your system. Try searching for cygmp3lame-0.dll, libmp3lame.dll, 
-cygmad-0.dll, and libmad.dll.
+on your system. For encoding/writing, try searching for lame-enc.dll, 
+cygmp3lame-0.dll, or libmp3lame.dll.  For decoding/reading, try
+searching for libmad.dll or cygmad-0.dll.
 
 Instructions are included here for using Cygwin to create the DLL's. 
 It is assumed you already have cygwin installed on your system
@@ -105,7 +106,10 @@ MAD MP3 decoder   http://www.underbit.com/products/mad
 cd lame-398-2
 ./configure
 make
-cp libmp3lame/.libs/cygmp3lame-0.dll /path/to/sox/libmp3lame.dll
+cp libmp3lame/.libs/cygmp3lame-0.dll /path/to/sox
+cp /bin/cygwin1.dll /path/to/sox
+[if compiling with cygwin 1.7 you also need to copy following:]
+cp /bin/cyggcc_s-1.dll /path/to/sox
 
 MAD library up to 0.15.1b has a bug in configure that will not allow
 building DLL under cygwin.  So an additional command is needed to
@@ -115,7 +119,10 @@ cd libmad-0.15.1b
 ./configure
 make
 gcc -shared -Wl,-export-all -Wl,--out-implib=libmad.dll.a -o cygmad-0.dll version.o fixed.o bit.o timer.o stream.o frame.o synth.o decoder.o layer12.o layer3.o huffman.o
-cp cygmad-0.dll /path/to/sox/libmad.dll
+cp cygmad-0.dll /path/to/sox/
+cp /bin/cygwin1.dll /path/to/sox
+[if compiling with cygwin 1.7 you also need to copy following:]
+cp /bin/cyggcc_s-1.dll /path/to/sox
 
 Alternatively, the MAD configure script can be patched to allow building and
 installing libmad under standard cygwin directories.
@@ -154,4 +161,42 @@ touch NEWS AUTHORS ChangeLog
 autoreconf -i -f
 ./configure
 make
-cp .libs/cymad-0.dll /path/to/sox/libmad.dll
+cp .libs/cymad-0.dll /path/to/sox
+
+Appendix - AMR-NB/AMR-WB Support
+--------------------------------
+
+SoX contains support for reading and writing AMR-NB and AMR-WB files but 
+does not ship with the DLL's that perform decoding and encoding of AMR
+data because of patent restrictions. 
+
+AMR-NB/AMR-WB support can be enabled by placing required DLL's
+into the same directory as SOX.EXE.  These can be compiled yourself, 
+may turn up on searches of the internet or may be included with other 
+MP3 applications already installed on your system. For AMR-NB support,
+try searching for libamrnb-3.dll, libamrnb.dll, amrnb.dll, or
+opencore-amrnb.dll.  For AMR-WB support, try searching for libamrwb-3.dll,
+libamrwb.dll, amrwb.dll, or libopencore-amrwb.dll.
+
+Instructions are included here for using Cygwin to create the DLL's. 
+It is assumed you already have cygwin installed on your system
+with its optional gcc compiler installed.  The commands are ran from
+bash shell cygwin installs.
+
+Obtain the latest amrnb and amrwb source code from 
+http://www.penguin.cz/~utx/amr .
+
+cd amrnb-7.0.0.2
+./configure
+make
+cp .libs/cygamrnb-3.dll /path/to/sox
+
+cd amrwb-7.0.0.3
+./configure
+make
+cp .libs/cygamrwb-3.dll /path/to/sox
+
+cp /bin/cygwin1.dll /path/to/sox
+[if compiling with cygwin 1.7 you also need to copy following:]
+cp /bin/cyggcc_s-1.dll /path/to/sox
+
