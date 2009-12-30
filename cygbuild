@@ -74,9 +74,9 @@ if [ $# -ne 0 -o ! -r Makefile ]; then
     --disable-shared \
     --with-libltdl \
     --enable-dl-lame --enable-dl-mad --enable-dl-amrnb --enable-dl-amrwb \
-    CC=gcc-3 CPP=cpp\
+    CC=gcc CPP=cpp\
     CPPFLAGS=-I/usr/local/include \
-    LDFLAGS="-static -L/usr/local/lib" \
+    LDFLAGS="-L/usr/local/lib" \
     SNDFILE_LIBS="-lsndfile -lFLAC -lvorbisenc -lvorbisfile -lvorbis -logg" \
     $*
 fi
@@ -84,7 +84,7 @@ fi
 make -s all pdf txt || exit 1
 
 dir=sox-`grep Version: sox.pc | cut -d ' ' -f 2`
-rm -rf $dir $dir-win32.zip
+rm -rf $dir $dir-cygwin32.zip
 mkdir -p $dir
 
 for f in ChangeLog LICENSE.GPL README README.win32; do
@@ -120,5 +120,5 @@ else
   fi
 fi
 
-zip -r $dir-win32.zip $dir
+zip -r $dir-cygwin32.zip $dir
 rm -rf $dir
