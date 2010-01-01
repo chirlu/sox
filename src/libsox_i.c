@@ -27,9 +27,12 @@
 
 #ifdef HAVE_UNISTD_H
   #include <unistd.h>
-  #define MKTEMP_X 0
-#else /* win32 */
+#endif
+
+#if defined(_MSC_VER) || defined(__MINGW32__)
   #define MKTEMP_X _O_BINARY|_O_TEMPORARY
+#else
+  #define MKTEMP_X 0
 #endif
 
 #ifndef HAVE_MKSTEMP

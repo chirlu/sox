@@ -17,6 +17,14 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h> /* For off_t not found in stdio.h */
+#endif
+
+#ifdef HAVE_SYS_STAT_H
+#include <sys/stat.h> /* Needs to be included before we redefine off_t. */
+#endif
+
 #include "xmalloc.h"
 
 /*---------------------------- Portability stuff -----------------------------*/
@@ -46,7 +54,13 @@
 #define dup _dup
 #define fdopen _fdopen
 #define fileno _fileno
+
+#ifdef _fstati64
+#define fstat _fstati64
+#else
 #define fstat _fstat
+#endif
+
 #define ftime _ftime
 #define inline __inline
 #define isatty _isatty
@@ -58,16 +72,34 @@
 #define popen _popen
 #define setmode _setmode
 #define snprintf _snprintf
+
+#ifdef _stati64
+#define stat _stati64
+#else
 #define stat _stat
+#endif
+
 #define strdup _strdup
 #define timeb _timeb
 #define unlink _unlink
 
-#if defined(HAVE_FSEEKI64) && !defined(HAVE_FSEEKO)
+#if defined(HAVE__FSEEKI64) && !defined(HAVE_FSEEKO)
 #undef off_t
 #define fseeko _fseeki64
 #define ftello _ftelli64
 #define off_t __int64
+#define HAVE_FSEEKO 1
+#endif
+
+#elif defined(__MINGW32__)
+
+#if !defined(HAVE_FSEEKO)
+#undef off_t
+#define fseeko fseeko64
+#define fstat _fstati64
+#define ftello ftello64
+#define off_t off64_t
+#define stat _stati64
 #define HAVE_FSEEKO 1
 #endif
 

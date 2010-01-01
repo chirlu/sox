@@ -80,7 +80,7 @@
 #define STATIC_WAVPACK 1
 
 #define HAVE_CONIO_H 1
-#define HAVE_FSEEKI64 1
+#define HAVE__FSEEKI64 1
 #define HAVE_FCNTL_H 1
 #define HAVE_IO_H 1
 #define HAVE_MEMORY_H 1
