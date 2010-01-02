@@ -51,9 +51,11 @@ insert(
 
 static int
 entry_comparer(
-    const file_entry** pe1,
-    const file_entry** pe2)
+    const void* pv1,
+    const void* pv2)
 {
+	const file_entry* const * pe1 = pv1;
+	const file_entry* const * pe2 = pv2;
     return _stricmp((*pe1)->name, (*pe2)->name);
 }
 
