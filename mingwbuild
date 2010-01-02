@@ -4,7 +4,7 @@
 # package of SoX.
 #
 # It is used on a Fedora box with mingw cross compiler and wine to 
-# test.  It can be used as a reference for command lines under MSYS.
+# test.  It can also be used under MSYS but will not generate PDF docs.
 #
 # It will optionally package up VC++ version of wget if found in 
 # ../wget-1.11.4.
@@ -81,6 +81,27 @@
 
 [ ! -x configure ] && autoreconf -i
 
+if [ `uname` = "MINGW32_NT-6.0" ]; then
+  CONFIGURE=configure
+  SYS_ROOT=""
+  # Currently, can not build TXT files because lack of "col" program. If
+  # fixed, then can get rid of README variable.
+  # Can't build PDF's because lack of ps2pdfwr.
+  DOC_TARGETS=""
+  DOCS=""
+  README=""
+  TMP_SNDFILE_LIBS=""
+  STRIP=strip
+else
+  SYS_ROOT="/usr/i686-pc-mingw32/sys-root"
+  CONFIGURE=mingw32-configure
+  DOC_TARGETS="txt pdf"
+  DOCS="sox.pdf soxformat.pdf soxi.pdf libsox.pdf"
+  README="README"
+  TMP_SNDFILE_LIBS="-lsndfile -lFLAC -lwsock32 -lvorbisenc -lvorbisfile -lvorbis -logg"
+  STRIP=i686-pc-mingw32-strip
+fi
+
 # Some versions of autoconf (2.63?) seem to get easily confused about
 # CPP variable. If you see warning messages about header files
 # rejected by preprocessor then its most likely from that.
@@ -88,25 +109,25 @@
 # static versions of libsndfile do not advertise when they have
 # FLAC or ogg vorbis support.  Need to force the link ourselves.
 if [ $# -ne 0 -o ! -r Makefile ]; then
-  mingw32-configure \
+  $CONFIGURE \
     --disable-shared \
     --with-libltdl \
     --enable-dl-lame --enable-dl-mad --enable-dl-amrnb --enable-dl-amrwb \
-    LDFLAGS="-static" \
-    SNDFILE_LIBS="-lsndfile -lFLAC -lwsock32 -lvorbisenc -lvorbisfile -lvorbis -logg" \
+    LDFLAGS="-static -L/usr/local/lib" CPPFLAGS=-I/usr/local/include \
+    SNDFILE_LIBS="${TMP_SNDFILE_LIBS}" \
     $*
 fi
 
 # Reduce total size of sox.exe by over half.
-make -s all pdf txt || exit 1
+make -s all $DOC_TARGETS || exit 1
 
-i686-pc-mingw32-strip src/sox.exe
+${STRIP} src/sox.exe
 
 dir=sox-`grep Version: sox.pc | cut -d ' ' -f 2`
 rm -rf $dir $dir-win32.zip
 mkdir -p $dir
 
-for f in ChangeLog LICENSE.GPL README README.win32; do
+for f in ChangeLog LICENSE.GPL ${REAMDE} README.win32; do
   cp -p $f $dir/$f.txt
   unix2dos $dir/$f.txt
 done
@@ -114,17 +135,14 @@ done
 binaries=src/sox.exe
 # If you do not edit libpng.la to comment out shared libraries
 # then you'll need to distribute zlib1.dll.
-#binaries="$binaries /usr/i686-pc-mingw32/sys-root/mingw/bin/zlib1.dll"
+#binaries="$binaries ${SYS_ROOT}/mingw/bin/zlib1.dll"
 
-binaries="$binaries /usr/i686-pc-mingw32/sys-root/mingw/bin/libgomp-1.dll"
-binaries="$binaries /usr/i686-pc-mingw32/sys-root/mingw/bin/pthreadGC2.dll"
+binaries="$binaries ${SYS_ROOT}/mingw/bin/libgomp-1.dll"
+binaries="$binaries ${SYS_ROOT}/mingw/bin/pthreadGC2.dll"
 
 cp -p \
   $binaries \
-  sox.pdf \
-  soxformat.pdf \
-  soxi.pdf \
-  libsox.pdf \
+  $DOCS \
   scripts/batch-example.bat \
   $dir
 
