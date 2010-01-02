@@ -21,6 +21,10 @@
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 
+#ifndef _countof
+#define _countof(A) (sizeof(A)/sizeof((A)[0]))
+#endif
+
 static DWORD
 s_dwLastError;
 
