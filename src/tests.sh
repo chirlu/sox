@@ -194,7 +194,7 @@ timeIO () {
       if [ "${from_skip}x" = "x" ] ; then
         getFormat $1;
         ($time ${bindir}/sox${EXEEXT} $verbose -D tmp.sox $formatFlags -t $1 - 2> tmp.read) | \
-        ($time ${bindir}/sox${EXTEXT} $verbose -t $1 -c $channels -r $rate - -t sox /dev/null 2> tmp.write)
+        ($time ${bindir}/sox${EXEEXT} $verbose -t $1 -c $channels -r $rate - -t sox /dev/null 2> tmp.write)
         echo "TIME `printf %4s $formatText` write=`stderr_time tmp.write`s read=`stderr_time tmp.read`s"
       fi
       shift

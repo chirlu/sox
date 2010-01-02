@@ -42,15 +42,26 @@ else
     using_libltdl=$with_libltdl
 fi
 
+using_win32_ltdl="no"
 if test "$using_libltdl" != "no"; then
-  AC_CHECK_HEADERS(ltdl.h,
-                   AC_CHECK_LIB(ltdl, lt_dlinit, LIBLTDL="$LIBLTDL -lltdl",
-                                using_libltdl=no), using_libltdl=no)
+  case $target in
+    *doesntworkmingw*)
+    AC_DEFINE([HAVE_WIN32_LTDL_H], 1, [Define to 1 to use internal win32 ltdl])
+    LIBLTDL=""
+    using_win32_ltdl="yes"
+    ;;
+    *)
+     AC_CHECK_HEADERS(ltdl.h,
+		     AC_CHECK_LIB(ltdl, lt_dlinit, LIBLTDL="$LIBLTDL -lltdl",
+				  using_libltdl=no), using_libltdl=no)
+    ;;
+  esac
 fi
 if test "$using_libltdl" = yes; then
-   AC_DEFINE([HAVE_LIBLTDL], 1, [Define to 1 if you have libltdl])
+  AC_DEFINE([HAVE_LIBLTDL], 1, [Define to 1 if you have libltdl])
 fi
-AM_CONDITIONAL(HAVE_LIBLTDL, test x$using_libltdl = xyes)
+AM_CONDITIONAL(HAVE_LIBLTDL, test x$using_libltdl = xyes -a x$using_win32_ltdl = xno)
+AM_CONDITIONAL(HAVE_WIN32_LTDL, test x$using_win32_ltdl = xyes)
 AC_SUBST(LIBLTDL)
 
 AC_LIBTOOL_DLOPEN
@@ -81,6 +92,17 @@ if test "$with_pkgconfigdir" != "no"; then
 fi
 AM_CONDITIONAL(HAVE_PKGCONFIG, test x$using_pkgconfig = xyes)
 AC_SUBST(PKGCONFIGDIR, $with_pkgconfigdir)
+
+using_win32_glob="no"
+case $target in
+  *mingw*)
+  using_win32_glob="yes"
+   ;;
+esac
+if test "$using_win32_glob" = yes; then
+   AC_DEFINE([HAVE_WIN32_GLOB_H], 1, [Define to 1 to use win32 glob])
+fi
+AM_CONDITIONAL(HAVE_WIN32_GLOB, test x$using_win32_glob = xyes)
 
 dnl Debugging
 AC_MSG_CHECKING([whether to make a debug build])
@@ -143,7 +165,7 @@ AC_C_INLINE
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(fcntl.h unistd.h byteswap.h sys/time.h sys/timeb.h sys/types.h sys/utsname.h termios.h glob.h)
+AC_CHECK_HEADERS(fcntl.h unistd.h byteswap.h sys/stat.h sys/time.h sys/timeb.h sys/types.h sys/utsname.h termios.h glob.h)
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS(strcasecmp strdup popen vsnprintf gettimeofday mkstemp fmemopen)
