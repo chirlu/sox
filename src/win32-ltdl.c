@@ -36,7 +36,7 @@ CopyPath(
     const char* szSource,
     char* szDest,
     unsigned cchDest,
-    char chStop)
+    int chStop)
 {
     unsigned i = 0;
     char ch;
@@ -128,7 +128,7 @@ lt_dlforeachfile(
     int cErrors = 0;
     unsigned iSearchPath = 0;
     unsigned iOnePath;
-    unsigned iExePath;
+    unsigned iExePath = 0;
     unsigned cchCopied;
     HANDLE hFind;
     WIN32_FIND_DATAA data;
@@ -290,9 +290,10 @@ lt_dlsym(
     lt_dlhandle hModule,
     const char *szSymbolName)
 {
-    lt_ptr pf = (lt_ptr)GetProcAddress((HMODULE)hModule, szSymbolName);
-    s_dwLastError = pf ? 0 : GetLastError();
-    return pf;
+    union {FARPROC fn; lt_ptr ptr;} func;
+    func.fn = GetProcAddress((HMODULE)hModule, szSymbolName);
+    s_dwLastError = func.fn ? 0 : GetLastError();
+    return func.ptr;
 }
 
 const char *
