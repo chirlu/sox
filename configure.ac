@@ -45,7 +45,7 @@ fi
 using_win32_ltdl="no"
 if test "$using_libltdl" != "no"; then
   case $target in
-    *doesntworkmingw*)
+    *mingw*)
     AC_DEFINE([HAVE_WIN32_LTDL_H], 1, [Define to 1 to use internal win32 ltdl])
     LIBLTDL=""
     using_win32_ltdl="yes"
