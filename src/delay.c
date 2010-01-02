@@ -25,7 +25,7 @@ typedef struct {
   sox_sample_t * buffer;
 } priv_t;
 
-static int kill(sox_effect_t * effp)
+static int lsx_kill(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
   unsigned i;
@@ -47,7 +47,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   for (i = 0; i < p->argc; ++i) {
     char const * next = lsx_parsesamples(1e5, p->argv[i] = lsx_strdup(argv[i]), &delay, 't');
     if (!next || *next) {
-      kill(effp);
+      lsx_kill(effp);
       return lsx_usage(effp);
     }
     if (delay > max_samples) {
@@ -120,7 +120,7 @@ sox_effect_handler_t const * lsx_delay_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "delay", "{length}", SOX_EFF_LENGTH | SOX_EFF_MODIFY,
-    create, start, flow, drain, stop, kill, sizeof(priv_t)
+    create, start, flow, drain, stop, lsx_kill, sizeof(priv_t)
   };
   return &handler;
 }

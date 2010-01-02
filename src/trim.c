@@ -148,7 +148,7 @@ static int sox_trim_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
     return result;
 }
 
-static int kill(sox_effect_t * effp)
+static int lsx_kill(sox_effect_t * effp)
 {
     priv_t * trim = (priv_t *) effp->priv;
 
@@ -175,7 +175,7 @@ const sox_effect_handler_t *lsx_trim_effect_fn(void)
   static sox_effect_handler_t handler = {
     "trim", "start [length]", SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_MODIFY,
     sox_trim_getopts, sox_trim_start, sox_trim_flow,
-    NULL, NULL, kill, sizeof(priv_t)
+    NULL, NULL, lsx_kill, sizeof(priv_t)
   };
   return &handler;
 }

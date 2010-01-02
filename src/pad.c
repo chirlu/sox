@@ -122,7 +122,7 @@ static int stop(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-static int kill(sox_effect_t * effp)
+static int lsx_kill(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
   unsigned i;
@@ -136,7 +136,7 @@ sox_effect_handler_t const * lsx_pad_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "pad", "{length[@position]}", SOX_EFF_MCHAN|SOX_EFF_LENGTH|SOX_EFF_MODIFY,
-    create, start, flow, drain, stop, kill, sizeof(priv_t)
+    create, start, flow, drain, stop, lsx_kill, sizeof(priv_t)
   };
   return &handler;
 }

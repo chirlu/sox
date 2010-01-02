@@ -281,7 +281,7 @@ static int stop(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-static int kill(sox_effect_t * effp)
+static int lsx_kill(sox_effect_t * effp)
 {
   priv_t *p = (priv_t *) effp->priv;
   unsigned i;
@@ -296,7 +296,7 @@ sox_effect_handler_t const *lsx_bend_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "bend", "[-f frame-rate(25)] [-o over-sample(16)] {delay,cents,duration}",
-    0, create, start, flow, 0, stop, kill, sizeof(priv_t)
+    0, create, start, flow, 0, stop, lsx_kill, sizeof(priv_t)
   };
   return &handler;
 }

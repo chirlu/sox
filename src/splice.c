@@ -265,7 +265,7 @@ static int stop(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-static int kill(sox_effect_t * effp)
+static int lsx_kill(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
   unsigned i;
@@ -286,7 +286,7 @@ sox_effect_handler_t const * lsx_splice_effect_fn(void)
     "\n  excess    At the end of part 1 & the start of part2 (default 0.005)"
     "\n  leeway    Before part2 (default 0.005; set to 0 for cross-fade)",
     SOX_EFF_MCHAN | SOX_EFF_LENGTH,
-    create, start, flow, drain, stop, kill, sizeof(priv_t)
+    create, start, flow, drain, stop, lsx_kill, sizeof(priv_t)
   };
   return &handler;
 }

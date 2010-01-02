@@ -118,7 +118,7 @@ static int stop(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-static int kill(sox_effect_t * effp)
+static int lsx_kill(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
   free(p->pos[0].str);
@@ -135,7 +135,7 @@ sox_effect_handler_t const * lsx_crop_effect_fn(void)
       "  +n\tposition relative to previous",
     SOX_EFF_MCHAN | /* SOX_EFF_LENGTH | */ SOX_EFF_MODIFY | SOX_EFF_ALPHA,
 
-    create, start, flow, NULL, stop, kill, sizeof(priv_t)
+    create, start, flow, NULL, stop, lsx_kill, sizeof(priv_t)
   };
   return &handler;
 }

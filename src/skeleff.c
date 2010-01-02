@@ -115,7 +115,7 @@ static int stop(sox_effect_t UNUSED * effp)
  * Do anything required when you kill an effect.
  *      (free allocated memory, etc.)
  */
-static int kill(sox_effect_t UNUSED * effp)
+static int lsx_kill(sox_effect_t UNUSED * effp)
 {
   return SOX_SUCCESS;
 }
@@ -135,7 +135,7 @@ const sox_effect_handler_t *lsx_skel_effect_fn(void)
    */
   static sox_effect_handler_t sox_skel_effect = {
     "skel", "[OPTION]", SOX_EFF_MCHAN,
-    getopts, start, flow, drain, stop, kill, sizeof(priv_t)
+    getopts, start, flow, drain, stop, lsx_kill, sizeof(priv_t)
   };
   return &sox_skel_effect;
 }

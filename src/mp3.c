@@ -109,6 +109,7 @@ static const char* const lame_library_names[] =
 #ifdef DL_LAME
   "libmp3lame",
   "lame-enc",
+  "cygmp3lame-0",
 #endif
   NULL
 };
