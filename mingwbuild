@@ -81,26 +81,26 @@
 
 [ ! -x configure ] && autoreconf -i
 
-if [ `uname` = "MINGW32_NT-6.0" ]; then
+case `uname` in
+  MINGW32*)
   CONFIGURE=configure
   SYS_ROOT=""
-  # Currently, can not build TXT files because lack of "col" program. If
-  # fixed, then can get rid of README variable.
-  # Can't build PDF's because lack of ps2pdfwr.
+  # Can't build PDF's because lack of ps2pdfwr.  Need to install
+  # ghostscript for windows and then copy wrapper script ps2pdfwr
+  # into MinGW.
   DOC_TARGETS=""
   DOCS=""
-  README=""
   TMP_SNDFILE_LIBS=""
   STRIP=strip
-else
+  ;;
+  *)
   SYS_ROOT="/usr/i686-pc-mingw32/sys-root"
   CONFIGURE=mingw32-configure
-  DOC_TARGETS="txt pdf"
+  DOC_TARGETS="pdf"
   DOCS="sox.pdf soxformat.pdf soxi.pdf libsox.pdf"
-  README="README"
   TMP_SNDFILE_LIBS="-lsndfile -lFLAC -lwsock32 -lvorbisenc -lvorbisfile -lvorbis -logg"
   STRIP=i686-pc-mingw32-strip
-fi
+esac
 
 # Some versions of autoconf (2.63?) seem to get easily confused about
 # CPP variable. If you see warning messages about header files
@@ -119,7 +119,7 @@ if [ $# -ne 0 -o ! -r Makefile ]; then
 fi
 
 # Reduce total size of sox.exe by over half.
-make -s all $DOC_TARGETS || exit 1
+make -s all txt $DOC_TARGETS || exit 1
 
 ${STRIP} src/sox.exe
 
@@ -127,7 +127,7 @@ dir=sox-`grep Version: sox.pc | cut -d ' ' -f 2`
 rm -rf $dir $dir-win32.zip
 mkdir -p $dir
 
-for f in ChangeLog LICENSE.GPL ${REAMDE} README.win32; do
+for f in ChangeLog LICENSE.GPL README README.win32; do
   cp -p $f $dir/$f.txt
   unix2dos $dir/$f.txt
 done

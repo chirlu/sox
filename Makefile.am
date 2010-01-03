@@ -28,7 +28,7 @@ README: README.sh FEATURES.in
 
 # Rule for making text man pages
 .1.txt .3.txt .7.txt:
-	tbl $(srcdir)/$< | nroff -man | col -b > $@
+	tbl $(srcdir)/$< | nroff -man | sed "s/.//g" > $@
 
 DOCTXT = sox.txt soxi.txt soxformat.txt libsox.txt README
 txt: $(DOCTXT)
