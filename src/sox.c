@@ -2394,10 +2394,10 @@ static char const * set_default_device(file_t * f)
   if (!f->filetype && sox_find_format("coreaudio", sox_false)) f->filetype = "coreaudio";
   if (!f->filetype && sox_find_format("alsa", sox_false)) f->filetype = "alsa";
   if (!f->filetype && sox_find_format("waveaudio" , sox_false)) f->filetype = "waveaudio";
+  if (!f->filetype && sox_find_format("sndio", sox_false)) f->filetype = "sndio";
   if (!f->filetype && sox_find_format("oss" , sox_false)) f->filetype = "oss";
   if (!f->filetype && sox_find_format("pulseaudio" , sox_false)) f->filetype = "pulseaudio";
   if (!f->filetype && sox_find_format("sunau",sox_false)) f->filetype = "sunau";
-  if (!f->filetype && sox_find_format("sndio", sox_false)) f->filetype = "sndio";
   if (!f->filetype && sox_find_format("ao"  , sox_false) && file_count) /*!rec*/
     f->filetype = "ao";
 
