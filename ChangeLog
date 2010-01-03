@@ -59,6 +59,8 @@ Audio device drivers:
 
   o Add native windows audio driver.  (Pavel Karneliuk, Doug Cook)
   o Add 32-bit support to ALSA driver.  (Pavel Hofman)
+  o Make OpenBSD sndio audio driver default over older sunau driver.
+   (cbagwell)
 
 Effects:
 
