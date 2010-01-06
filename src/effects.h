@@ -78,6 +78,9 @@
   EFFECT(spectrogram)
 #endif
   EFFECT(speed)
+#ifdef HAVE_SPEEXDSP
+  EFFECT(speexdsp)
+#endif
   EFFECT(splice)
   EFFECT(stat)
   EFFECT(stats)
