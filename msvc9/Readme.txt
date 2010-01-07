@@ -1,10 +1,10 @@
 This directory includes hand-crafted project files for building SoX under
 MSVC9. The project files may be replaced by expanding CMAKE support in the
-future, but for now, this is the best build of SoX currently available on
-Windows. The resulting sox.exe has support for all SoX features except magic,
-ffmpeg, and pulseaudio. LAME (libmp3lame.dll or lame_enc.dll), MAD (libmad.dll
-or cygmad-0.dll) and AMR support (libamrnb-3.dll, libamrwb-3.dll) are loaded
-at runtime if they are available.
+future, but for now, this is the easiest way to build SoX with MS Visual C++.
+The resulting sox.exe has support for all SoX features except magic, ffmpeg,
+and pulseaudio. LAME (libmp3lame.dll or lame_enc.dll), MAD (libmad.dll or
+cygmad-0.dll), libsndfile (libsndfile-1.dll) and AMR support (libamrnb-3.dll,
+libamrwb-3.dll) are loaded at runtime if they are available.
 
 How to build:
 
@@ -20,6 +20,7 @@ How to build:
    -- libpng-1.2.39-no-config.tar.gz extracted into directory libpng
    -- libsndfile-1.0.20.tar.gz extracted into directory libsndfile
    -- libvorbis-1.2.3.tar.gz extracted into directory libvorbis
+   -- speex-1.2rc1.tar.gz extracted into directory speex
    -- wavpack-4.50.1.tar.gz extracted into directory wavpack
    -- zlib-1.2.3.tar.gz extracted into directory zlib
 
@@ -34,9 +35,9 @@ How to build:
 
 6. The resulting executable files will be in sox\msvc9\Debug or
    sox\msvc9\Release. The resulting sox.exe will dynamically link to
-   libmp3lame.dll, libmad.dll, libamrnb-3.dll, and libamrwb-3.dll if they are
-   available, but will run without them (though the corresponding features will
-   be unavailable if they are not present).
+   libmp3lame.dll, libmad.dll, libsndfile-1.dll, libamrnb-3.dll, and
+   libamrwb-3.dll if they are available, but will run without them (though the
+   corresponding features will be unavailable if they are not present).
 
 Points to note:
 
@@ -47,6 +48,13 @@ Points to note:
   sndfile.h, so you should not create a sndfile.h under the libsndfile folder.
   To repeat: you should extract a clean copy of libsndfile-1.0.20.tar.gz, and
   should not add, process, or rename any files.
+
+- The solution includes an experimental effect called speexdsp that uses the
+  speex DSP library. This does not yet enable any support for the speex file
+  format or speex codec. The speexdsp effect is simply an experimental effect
+  to make use of the automatic gain control and noise filtering components that
+  are part of the speex codec package. Support for the speex codec may be added
+  later.
 
 - The included libsox project enables OpenMP support. You can disable this
   in the libsox project properties under Configuration Properties, C/C++,

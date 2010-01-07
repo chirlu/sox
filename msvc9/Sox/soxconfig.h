@@ -85,6 +85,7 @@
 #define HAVE_IO_H 1
 #define HAVE_MEMORY_H 1
 #define HAVE_POPEN 1
+#define HAVE_SPEEXDSP 1
 #define HAVE_STDLIB_H 1
 #define HAVE_STRDUP 1
 #define HAVE_STRING_H 1
