@@ -337,7 +337,7 @@ const sox_effect_handler_t* lsx_speexdsp_effect_fn(void)
         "                       (default is 20).\n"
         "-spf samples_per_frame Specify the number of samples per frame. Default is to\n"
         "                       use the -fps setting.",
-        SOX_EFF_PREC | SOX_EFF_GAIN,
+        SOX_EFF_PREC | SOX_EFF_GAIN | SOX_EFF_ALPHA,
         getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
     };
   return &sox_speexdsp_effect;
