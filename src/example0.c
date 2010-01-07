@@ -87,6 +87,6 @@ int main(int argc, char * argv[])
   sox_delete_effects_chain(chain);
   sox_close(out);
   sox_close(in);
-  sox_format_quit();
+  sox_quit();
   return 0;
 }

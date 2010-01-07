@@ -301,7 +301,7 @@ static int flow(sox_effect_t * effp,
       make_window(p, p->last_end = p->end);
     for (i = 0; i < p->dft_size; ++i) p->dft_buf[i] = p->buf[i] * p->window[i];
     if (is_p2(p->dft_size)) {
-      lsx_rdft(p->dft_size, 1, p->dft_buf, lsx_fft_br, lsx_fft_sc);
+      lsx_safe_rdft(p->dft_size, 1, p->dft_buf);
       p->magnitudes[0] += sqr(p->dft_buf[0]);
       for (i = 1; i < p->dft_size >> 1; ++i)
         p->magnitudes[i] += sqr(p->dft_buf[2*i]) + sqr(p->dft_buf[2*i+1]);

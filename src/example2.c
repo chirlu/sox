@@ -113,6 +113,6 @@ int main(int argc, char * argv[])
   /* All done; tidy up: */
   free(buf);
   sox_close(in);
-  sox_format_quit();
+  sox_quit();
   return 0;
 }

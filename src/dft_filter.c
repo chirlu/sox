@@ -63,7 +63,7 @@ static void filter(priv_t * p)
     fifo_trim_by(&p->output_fifo, overlap);
     memcpy(output, input, f->dft_length * sizeof(*output));
 
-    lsx_rdft(f->dft_length, 1, output, lsx_fft_br, lsx_fft_sc);
+    lsx_safe_rdft(f->dft_length, 1, output);
     output[0] *= f->coefs[0];
     output[1] *= f->coefs[1];
     for (i = 2; i < f->dft_length; i += 2) {
@@ -71,7 +71,7 @@ static void filter(priv_t * p)
       output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
       output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
     }
-    lsx_rdft(f->dft_length, -1, output, lsx_fft_br, lsx_fft_sc);
+    lsx_safe_rdft(f->dft_length, -1, output);
   }
 }
 

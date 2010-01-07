@@ -248,7 +248,7 @@ static void cleanup(void)
     tcsetattr(fileno(stdin), TCSANOW, &original_termios);
 #endif
 
-  sox_format_quit();
+  sox_quit();
 }
 
 static char const * str_time(double seconds)

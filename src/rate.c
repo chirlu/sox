@@ -136,7 +136,7 @@ static void half_sample(stage_t * p, fifo_t * output_fifo)
     fifo_trim_by(output_fifo, (f->dft_length + overlap) >> 1);
     memcpy(output, input, f->dft_length * sizeof(*output));
 
-    lsx_rdft(f->dft_length, 1, output, lsx_fft_br, lsx_fft_sc);
+    lsx_safe_rdft(f->dft_length, 1, output);
     output[0] *= f->coefs[0];
     output[1] *= f->coefs[1];
     for (i = 2; i < f->dft_length; i += 2) {
@@ -144,7 +144,7 @@ static void half_sample(stage_t * p, fifo_t * output_fifo)
       output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
       output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
     }
-    lsx_rdft(f->dft_length, -1, output, lsx_fft_br, lsx_fft_sc);
+    lsx_safe_rdft(f->dft_length, -1, output);
 
     for (j = 1, i = 2; i < f->dft_length - overlap; ++j, i += 2)
       output[j] = output[i];
@@ -169,7 +169,7 @@ static void double_sample(stage_t * p, fifo_t * output_fifo)
     for (j = i = 0; i < f->dft_length; ++j, i += 2)
       output[i] = input[j], output[i+1] = 0;
 
-    lsx_rdft(f->dft_length, 1, output, lsx_fft_br, lsx_fft_sc);
+    lsx_safe_rdft(f->dft_length, 1, output);
     output[0] *= f->coefs[0];
     output[1] *= f->coefs[1];
     for (i = 2; i < f->dft_length; i += 2) {
@@ -177,7 +177,7 @@ static void double_sample(stage_t * p, fifo_t * output_fifo)
       output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
       output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
     }
-    lsx_rdft(f->dft_length, -1, output, lsx_fft_br, lsx_fft_sc);
+    lsx_safe_rdft(f->dft_length, -1, output);
   }
 }
 

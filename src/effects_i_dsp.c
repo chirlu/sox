@@ -97,30 +97,42 @@ int lsx_set_dft_length(int num_taps) /* Set to 4 x nearest power of 2 */
 }
 
 #include "fft4g.h"
-int    * lsx_fft_br;
-double * lsx_fft_sc;
-static int fft_len;
+static int * lsx_fft_br;
+static double * lsx_fft_sc;
+static int fft_len = -1;
 #ifdef HAVE_OPENMP
 static omp_lock_t fft_cache_lock;
 #endif
 
 void init_fft_cache(void)
 {
+  assert(lsx_fft_br == NULL);
+  assert(lsx_fft_sc == NULL);
+  assert(fft_len == -1);
   omp_init_lock(&fft_cache_lock);
+  fft_len = 0;
 }
 
 void clear_fft_cache(void)
 {
+  assert(fft_len >= 0);
   omp_destroy_lock(&fft_cache_lock);
   free(lsx_fft_br);
   free(lsx_fft_sc);
   lsx_fft_sc = NULL;
   lsx_fft_br = NULL;
-  fft_len = 0;
+  fft_len = -1;
+}
+
+static sox_bool is_power_of_2(int x)
+{
+  return !(x < 2 || (x & (x - 1)));
 }
 
 static void update_fft_cache(int len)
 {
+  assert(is_power_of_2(len));
+  assert(fft_len >= 0);
   omp_set_lock(&fft_cache_lock);
   if (len > fft_len) {
     int old_n = fft_len;
@@ -132,14 +144,8 @@ static void update_fft_cache(int len)
   }
 }
 
-static sox_bool is_power_of_2(int x)
-{
-  return !(x < 2 || (x & (x - 1)));
-}
-
 void lsx_safe_rdft(int len, int type, double * d)
 {
-  assert(is_power_of_2(len));
   update_fft_cache(len);
   lsx_rdft(len, type, d, lsx_fft_br, lsx_fft_sc);
   omp_unset_lock(&fft_cache_lock);
@@ -147,7 +153,6 @@ void lsx_safe_rdft(int len, int type, double * d)
 
 void lsx_safe_cdft(int len, int type, double * d)
 {
-  assert(is_power_of_2(len));
   update_fft_cache(len);
   lsx_cdft(len, type, d, lsx_fft_br, lsx_fft_sc);
   omp_unset_lock(&fft_cache_lock);

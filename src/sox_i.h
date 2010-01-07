@@ -90,8 +90,6 @@ double lsx_spline3(double const * x, double const * y, double const * y_2d,
 
 double lsx_bessel_I_0(double x);
 int lsx_set_dft_length(int num_taps);
-extern int * lsx_fft_br;
-extern double * lsx_fft_sc;
 void init_fft_cache(void);
 void clear_fft_cache(void);
 void lsx_safe_rdft(int len, int type, double * d);
