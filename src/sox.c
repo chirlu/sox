@@ -1365,34 +1365,28 @@ static char *fndup_with_count(const char *filename, size_t count)
          */
         if (*fn == '%')
         {
-            int width = 0;
+            char width = 0;
             fn++;
-            if (*fn >= '1' || *fn <= '9')
+            if (*fn >= '1' && *fn <= '9')
             {
                 width = *fn++;
             }
             if (*fn == 'n')
             {
-                char num[10];
                 char format[5];
 
                 found_marker = sox_true;
 
-                strcpy(format, "%");
                 if (width)
                 {
-                    char tmps[2];
-                    tmps[0] = width;
-                    tmps[1] = 0;
-                    strcat(format, "0");
-                    strcat(format, tmps);
+					sprintf(format, "%%0%cd", width);
                 }
-                strcat(format, "d");
-                strcpy(format, "%02d");
-                sprintf(num, format, count);
-                *efn = 0;
-                strcat(efn, num);
-                efn += strlen(num);
+				else
+				{
+                    strcpy(format, "%02d");
+				}
+
+                efn += sprintf(efn, format, count);
                 fn++;
             }
             else

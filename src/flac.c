@@ -310,6 +310,7 @@ static int start_write(sox_format_t * const ft)
   p->decoded_samples = lsx_malloc(sox_globals.bufsiz * sizeof(FLAC__int32));
 
   p->bits_per_sample = ft->encoding.bits_per_sample;
+  ft->signal.precision = ft->encoding.bits_per_sample;
 
   lsx_report("encoding at %i bits per sample", p->bits_per_sample);
 
