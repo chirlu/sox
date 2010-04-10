@@ -41,10 +41,10 @@
 # cd ../lame-398-2
 #./configure --enable-shared --disable-static;make;sudo make install
 #
-# cd ../id3tag-0.15.1b
+# cd ../libid3tag-0.15.1b
 #./configure --enable-shared --disable-static;make;sudo make install
 #
-# cd ../libmad
+# cd ../libmad-0.15.1b
 #./configure --enable-shared --disable-static;make;sudo make install
 
 [ ! -x configure ] && autoreconf -i

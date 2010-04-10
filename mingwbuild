@@ -34,14 +34,14 @@
 # version of libltdl to help compiler out (means I can use
 # a packaged version).
 # cd libtool-1.5.26
-# mingw32-configure --disable-shared --enable-static;mingw32-make;sudu mingw32-make install
+# mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
 #
 # libpng.la will have libtool issue because depends on libz
 # which has a libz.la file.  Must edit libpng.la to
 # prevent needing to distribute zlib1.dll.
 # cd libpng-1.2.41
-# mingw32-configure --disable-shared --enable-static;mingw32-make;sudu mingw32-make install
+# mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
 # MINGW work around: had to comment out "cli" from SUBDIR.
 # cd ../wavpack-4.60.1
@@ -64,7 +64,7 @@
 # MINGW work around: Can either add -lwsock32 to end of *_LDADD for any 
 # failed program links or modify top leve Makefile and remove
 # "programs", "examples", "regtests", and "tests" from SUBDIRS.
-# cd ../libsndfile-1.0.20
+# cd ../libsndfile-1.0.21
 # mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
 # To get MP3 header files used to enable MP3 support (no libraries used):
@@ -133,18 +133,23 @@ for f in ChangeLog LICENSE.GPL README README.win32; do
 done
 
 binaries=src/sox.exe
+
 # If you do not edit libpng.la to comment out shared libraries
 # then you'll need to distribute zlib1.dll.
-#binaries="$binaries ${SYS_ROOT}/mingw/bin/zlib1.dll"
-
-binaries="$binaries ${SYS_ROOT}/mingw/bin/libgomp-1.dll"
-binaries="$binaries ${SYS_ROOT}/mingw/bin/pthreadGC2.dll"
+dlls=""
+dlls="$dlls ${SYS_ROOT}/mingw/bin/zlib1.dll"
+dlls="$dlls ${SYS_ROOT}/mingw/bin/libgomp-1.dll"
 
 cp -p \
   $binaries \
+  $dlls \
   $DOCS \
   scripts/batch-example.bat \
   $dir
+
+# Special case copy to work around some case sensitivity bugs with
+# nsiswrapper under linux.
+cp -p ${SYS_ROOT}/mingw/bin/pthreadGC2.dll ${dir}/pthreadgc2.dll
 
 unix2dos $dir/batch-example.bat
 
@@ -154,4 +159,13 @@ if test -r "../wget-1.11.4/wget.exe"; then
 fi
 
 zip -r $dir-win32.zip $dir
+
+# Optionally, create windows installer if nsiswrapper exists.
+if test -r "/usr/bin/nsiswrapper"; then
+  cd ${dir}
+  export PATH=$PATH:.
+  nsiswrapper --run --name $dir --outfile ../${dir}-win32.exe *.exe *.ini *.txt *.pdf *.bat
+  cd ..
+fi
+
 rm -rf $dir
