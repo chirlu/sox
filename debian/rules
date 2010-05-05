@@ -10,6 +10,6 @@ include /usr/share/cdbs/1/rules/simple-patchsys.mk
 
 CFLAGS += -D_REENTRANT
 CPPFLAGS += -I/usr/include/ffmpeg
-DEB_CONFIGURE_EXTRA_FLAGS := --without-lame --with-distro="Debian GNU/Linux" --with-dyn-default --without-amrwb --without-amrnb
+DEB_CONFIGURE_EXTRA_FLAGS := --without-lame --with-distro="Debian GNU/Linux" --with-dyn-default
 # Takes care of postinst-has-useless-call-to-ldconfig for libsox-fmt-*
 DEB_DH_MAKESHLIBS_ARGS := -Xfmt

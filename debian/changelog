@@ -1,13 +1,23 @@
-sox (14.3.1-0cvs1) UNRELEASED; urgency=low
+sox (14.3.1-1cvs1) UNRELEASED; urgency=low
 
   * CVS Version.
+
+ -- Pascal Giard <evilynux@gmail.com>  Wed, 05 May 2010 15:22:01 -0400
+
+sox (14.3.1-1) unstable; urgency=medium
+
+  * New upstream candidate.
     - Single-threaded is now default (closes: #546944).
+    - Support for OpenCore-derived implementation of AMR (closes: #193348).
   * [debian/control]:
     - Improved PulseAudio integration.
     - Bumped standard version to 3.8.3, no changes required.
     - Removed duplicate section control field, inherited from source.
     - Removed Guenter Geiger from uploaders (closes: #546952).
     - Removed depend on alsa for fmt-all on non-Linux systems (closes: #539224).
+    - Added build-dep on libopencore-amrnb-dev and libopencore-amrwb-dev.
+    - Bumped Standards-Version to 3.8.4, no changes needed.
+    - Bumped libsox1a to libsox1b, interface changes.
   * [debian/changelog]:
     - Fixed to spelling errors reported by Lintian.
   * [debian/README.source]:
@@ -16,8 +26,10 @@ sox (14.3.1-0cvs1) UNRELEASED; urgency=low
     - Added README.source (really fixes #522548).
   * [debian/libsox-fmt-base.install]:
     - Removed formats now in libsox.
-
- -- Pascal Giard <evilynux@gmail.com>  Fri, 18 Dec 2009 21:07:50 -0500
+  * [debian/rules]:
+    - Enable amr-nb and amr-wb as there is now an implementation in main.
+	
+ -- Pascal Giard <pascal@debian.org>  Wed, 05 May 2010 14:33:18 -0400
 
 sox (14.3.0-1.1) unstable; urgency=low
 
