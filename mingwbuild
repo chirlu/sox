@@ -97,7 +97,7 @@ case `uname` in
   SYS_ROOT="/usr/i686-pc-mingw32/sys-root"
   CONFIGURE=mingw32-configure
   DOC_TARGETS="pdf"
-  DOCS="sox.pdf soxformat.pdf soxi.pdf libsox.pdf"
+  DOCS="sox.pdf soxformat.pdf soxi.pdf"
   TMP_SNDFILE_LIBS="-lsndfile -lFLAC -lwsock32 -lvorbisenc -lvorbisfile -lvorbis -logg"
   STRIP=i686-pc-mingw32-strip
 esac

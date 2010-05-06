@@ -104,7 +104,6 @@ cp -p \
   sox.pdf \
   soxformat.pdf \
   soxi.pdf \
-  libsox.pdf \
   scripts/batch-example.bat \
   $dir
 

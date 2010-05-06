@@ -56,8 +56,10 @@
  * Sidestep the issue by defining our own mad_timer_zero. This is needed because
  * mad_timer_zero is used in some of the mad.h macros.
  */
+#ifdef HAVE_MAD_H
 #define mad_timer_zero mad_timer_zero_stub
 static mad_timer_t const mad_timer_zero_stub = {0, 0};
+#endif
 
 #define MAXFRAMESIZE 2880
 #define ID3PADDING 128
