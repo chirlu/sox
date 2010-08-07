@@ -12,6 +12,11 @@ File formats:
 o Fix regression where MP3 handler required libmad headers to be installed.
   (Samuli Suominen) 
 
+Audio device drivers:
+
+o Fix immediate segfault on OSX while attempting to record.  May also
+  prevent segfaults on playing that some people reported.  (Adam Fritzler)
+
 sox-14.3.1	2010-04-11
 ----------
 

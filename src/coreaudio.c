@@ -18,8 +18,8 @@ typedef struct {
   float *buffer;
 } priv_t;
 
-static OSStatus PlaybackIOProc(AudioDeviceID inDevice UNUSED, 
-                               const AudioTimeStamp *inNow UNUSED, 
+static OSStatus PlaybackIOProc(AudioDeviceID inDevice UNUSED,
+                               const AudioTimeStamp *inNow UNUSED,
                                const AudioBufferList *inInputData UNUSED,
                                const AudioTimeStamp *inInputTime UNUSED,
                                AudioBufferList *outOutputData,
@@ -32,7 +32,7 @@ static OSStatus PlaybackIOProc(AudioDeviceID inDevice UNUSED,
 
   pthread_mutex_lock(&ac->mutex);
 
-  memcpy(buf, ac->buffer, (ac->buf_offset) * sizeof(float));
+  memcpy(buf, ac->buffer, ac->buf_offset);
   ac->buf_offset = 0;
 
   pthread_mutex_unlock(&ac->mutex);
@@ -41,8 +41,8 @@ static OSStatus PlaybackIOProc(AudioDeviceID inDevice UNUSED,
   return kAudioHardwareNoError;
 }
 
-static OSStatus RecIOProc(AudioDeviceID inDevice UNUSED, 
-                          const AudioTimeStamp *inNow UNUSED, 
+static OSStatus RecIOProc(AudioDeviceID inDevice UNUSED,
+                          const AudioTimeStamp *inNow UNUSED,
                           const AudioBufferList *inInputData,
                           const AudioTimeStamp *inInputTime UNUSED,
                           AudioBufferList *outOutputData UNUSED,
@@ -52,11 +52,24 @@ static OSStatus RecIOProc(AudioDeviceID inDevice UNUSED,
   sox_format_t *ft = (sox_format_t *)inClientData;
   priv_t *ac = (priv_t *)ft->priv;
   float *buf = inInputData->mBuffers[0].mData;
+  size_t buflen = inInputData->mBuffers[0].mDataByteSize;
+  float *destbuf = (float *)((unsigned char *)ac->buffer + ac->buf_offset);
+  int i;
+
+  /* mDataByteSize may be non-zero even when mData is NULL, but that is not an error */
+  if (buf == NULL)
+    return kAudioHardwareNoError;
+
+  if (buflen > (ac->buf_size + ac->buf_offset))
+    buflen = ac->buf_size - ac->buf_offset;
 
   pthread_mutex_lock(&ac->mutex);
 
-  memcpy(ac->buffer, buf, ac->buf_size * sizeof(float));
-  ac->buf_offset = ac->buf_size-1;
+  for (i = 0; i < (int)(buflen / sizeof(float)); i += 2) {
+    destbuf[i] = buf[i];
+    destbuf[i + 1] = buf[i + 1];
+    ac->buf_offset += sizeof(float) * 2;
+  }
 
   pthread_mutex_unlock(&ac->mutex);
   pthread_cond_signal(&ac->cond);
@@ -104,20 +117,10 @@ static int setup(sox_format_t *ft, int is_input)
     return SOX_EOF;
   }
 
-  /* If user doesn't specify, default to some reasonable values.
-   * Since this is mainly for recording case, default to typical
-   * 16-bit values to prevent saving larger files then average user
-   * wants.  Power users can override to 32-bit if they wish.
-   */
-  if (ft->signal.channels == 0)
-    ft->signal.channels = 2;
-  if (ft->signal.rate == 0)
-    ft->signal.rate = 44100;
-  if (ft->encoding.bits_per_sample == 0)
-  {
-    ft->encoding.bits_per_sample = 16;
-    ft->encoding.encoding = SOX_ENCODING_SIGN2;
-  }
+  /* OS X effectively only supports these values. */
+  ft->signal.channels = 2;
+  ft->signal.rate = 44100;
+  ft->encoding.bits_per_sample = 32;
 
   /* TODO: My limited experience with hardware can only get floats working which a fixed sample
    * rate and stereo.  I know that is a limitiation of audio device I have so this may not be
@@ -166,25 +169,25 @@ static int setup(sox_format_t *ft, int is_input)
     ft->signal.rate = stream_desc.mSampleRate;
   }
 
-  ac->buf_size = sox_globals.bufsiz;
+  ac->buf_size = sox_globals.bufsiz * sizeof(float);
   ac->buf_offset = 0;
-  ac->buffer = lsx_malloc(ac->buf_size * sizeof(sox_sample_t));
+  ac->buffer = lsx_malloc(ac->buf_size);
 
-  buf_size = sox_globals.bufsiz * sizeof(float);
+  buf_size = ac->buf_size;
   property_size = sizeof(buf_size);
-  status = AudioDeviceSetProperty(ac->adid, NULL, 0, is_input, 
+  status = AudioDeviceSetProperty(ac->adid, NULL, 0, is_input,
                                   kAudioDevicePropertyBufferSize,
                                   property_size, &buf_size);
 
   rc = pthread_mutex_init(&ac->mutex, NULL);
-  if (rc) 
+  if (rc)
   {
     lsx_fail_errno(ft, SOX_EPERM, "failed initializing mutex");
     return SOX_EOF;
   }
 
   rc = pthread_cond_init(&ac->cond, NULL);
-  if (rc) 
+  if (rc)
   {
     lsx_fail_errno(ft, SOX_EPERM, "failed initializing condition");
     return SOX_EOF;
@@ -224,19 +227,13 @@ static size_t read_samples(sox_format_t *ft, sox_sample_t *buf, size_t nsamp)
   pthread_mutex_lock(&ac->mutex);
 
   /* Wait until input buffer has been filled by device driver */
-  while (ac->buf_offset == 0 || ac->buf_offset > ac->buf_size)
+  while (ac->buf_offset < ac->buf_size)
     pthread_cond_wait(&ac->cond, &ac->mutex);
 
-  if (len > ac->buf_size - ac->buf_offset)
-    len = ac->buf_size - ac->buf_offset;
-  samp_left = len;
-
-  p = &ac->buffer[ac->buf_offset];
-
-  while (samp_left--)
-    *buf++ = SOX_FLOAT_32BIT_TO_SAMPLE(*p++, ft->clips);
-
-  ac->buf_offset -= len;
+  len = ac->buf_offset / sizeof(float);
+  for (p = ac->buffer, samp_left = len; samp_left > 0; samp_left--, buf++, p++)
+    *buf = SOX_FLOAT_32BIT_TO_SAMPLE(*p, ft->clips);
+  ac->buf_offset = 0;
 
   pthread_mutex_unlock(&ac->mutex);
 
@@ -274,23 +271,28 @@ static size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, size_t ns
 
   pthread_mutex_lock(&ac->mutex);
 
+  /* globals.bufsize is in samples
+   * buf_offset is in bytes
+   * buf_size is in bytes
+   */
   do {
-
-    /* Wait until there is some room to copy some samples */
-    while (ac->buf_offset >= ac->buf_size - 1)
+    /* Wait until callback has cleared the buffer. We move in
+     * lock-step with the callback; we never deal with a partially
+     * written buffer. */
+    while (ac->buf_offset != 0)
       pthread_cond_wait(&ac->cond, &ac->mutex);
 
     len = nsamp - written;
-    if (len > ac->buf_size - ac->buf_offset)
-      len = ac->buf_size - ac->buf_offset;
+    if (len > (ac->buf_size - ac->buf_offset) / sizeof(float))
+      len = (ac->buf_size - ac->buf_offset) / sizeof(float);
     samp_left = len;
 
-    p = &ac->buffer[ac->buf_offset];
+    p = ((unsigned char *)ac->buffer) + ac->buf_offset;
 
     while (samp_left--)
       *p++ = SOX_SAMPLE_TO_FLOAT_32BIT(*buf++, ft->clips);
 
-    ac->buf_offset += len;
+    ac->buf_offset += len * sizeof(float);
     written += len;
   } while (written < nsamp);
 
