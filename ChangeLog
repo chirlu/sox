@@ -17,6 +17,10 @@ Audio device drivers:
 o Fix immediate segfault on OSX while attempting to record.  May also
   prevent segfaults on playing that some people reported.  (Adam Fritzler)
 
+Internal improvements:
+
+  o Distribute msvc9 project files that had been in CVS only. (cbagwell)
+
 sox-14.3.1	2010-04-11
 ----------
 
