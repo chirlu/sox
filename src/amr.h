@@ -90,6 +90,7 @@ static int openlibrary(priv_t* p, int encoding)
 {
   int open_library_result;
 
+  (void)encoding;
 #ifdef AMR_OPENCORE
   if (AMR_OPENCORE_ENABLE_ENCODE || !encoding)
   {
@@ -151,6 +152,24 @@ static void closelibrary(priv_t* p)
 #endif
 }
 
+static size_t amr_duration_frames(sox_format_t * ft)
+{
+  off_t      frame_size, data_start_offset = lsx_tell(ft);
+  size_t     frames;
+  uint8_t    coded;
+
+  for (frames = 0; lsx_readbuf(ft, &coded, (size_t)1) == 1; ++frames) {
+    frame_size = amr_block_size[coded >> 3 & 15];
+    if (lsx_seeki(ft, frame_size - 1, SEEK_CUR)) {
+      lsx_fail("seek");
+      break;
+    }
+  }
+  lsx_debug("frames=%lu", (unsigned long)frames);
+  lsx_seeki(ft, data_start_offset, SEEK_SET);
+  return frames;
+}
+
 static int startread(sox_format_t * ft)
 {
   priv_t * p = (priv_t *)ft->priv;
@@ -180,6 +199,8 @@ static int startread(sox_format_t * ft)
   ft->signal.rate = AMR_RATE;
   ft->encoding.encoding = AMR_ENCODING;
   ft->signal.channels = 1;
+  ft->signal.length = ft->signal.length != SOX_IGNORE_LENGTH && ft->seekable?
+    (size_t)(amr_duration_frames(ft) * .02 * ft->signal.rate +.5) : SOX_UNSPEC;
   return SOX_SUCCESS;
 }
 
