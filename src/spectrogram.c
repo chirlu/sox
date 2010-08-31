@@ -43,7 +43,7 @@ typedef struct {
   double     pixels_per_sec, duration, start_time,  window_adjust;
   int        x_size0, y_size, Y_size, dB_range, gain, spectrum_points, perm;
   sox_bool   monochrome, light_background, high_colour, slack_overlap, no_axes;
-  sox_bool   alt_palette, truncate;
+  sox_bool   raw, alt_palette, truncate;
   win_type_t win_type;
   char const * out_name, * title, * comment;
 
@@ -95,7 +95,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   p->dB_range = 120, p->spectrum_points = 249, p->perm = 1; /* Non-0 defaults */
   p->out_name = "spectrogram.png", p->comment = "Created by SoX";
 
-  while ((c = lsx_getopt(argc, argv, "+S:d:x:X:y:Y:z:Z:q:p:W:w:st:c:AamlhTo:")) != -1) switch (c) {
+  while ((c = lsx_getopt(argc, argv, "+S:d:x:X:y:Y:z:Z:q:p:W:w:st:c:AarmlhTo:")) != -1) switch (c) {
     GETOPT_NUMERIC('x', x_size0       , 100, 5000)
     GETOPT_NUMERIC('X', pixels_per_sec,  1 , 5000)
     GETOPT_NUMERIC('y', y_size        , 64 , 1200)
@@ -109,6 +109,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     case 's': p->slack_overlap    = sox_true;   break;
     case 'A': p->alt_palette      = sox_true;   break;
     case 'a': p->no_axes          = sox_true;   break;
+    case 'r': p->raw              = sox_true;   break;
     case 'm': p->monochrome       = sox_true;   break;
     case 'l': p->light_background = sox_true;   break;
     case 'h': p->high_colour      = sox_true;   break;
@@ -489,8 +490,8 @@ static int stop(sox_effect_t * effp)
   uLong       font_len = 96 * font_y;
   int         chans    = effp->in_signal.channels;
   int         c_rows   = p->rows * chans + chans - 1;
-  int         rows     = below + c_rows + 30 + 20 * !!p->title;
-  int         cols     = left + p->cols + between + spectrum_width + right;
+  int         rows     = p->raw? c_rows : below + c_rows + 30 + 20 * !!p->title;
+  int         cols     = p->raw? p->cols : left + p->cols + between + spectrum_width + right;
   png_byte *  pixels   = lsx_malloc(cols * rows * sizeof(*pixels));
   png_bytepp  png_rows = lsx_malloc(rows * sizeof(*png_rows));
   png_structp png      = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0,0);
@@ -518,77 +519,79 @@ static int stop(sox_effect_t * effp)
   for (j = 0; j < rows; ++j)               /* Put (0,0) at bottom-left of PNG */
     png_rows[rows - 1 - j] = (png_bytep)(pixels + j * cols);
 
-  if (p->title && (i = (int)strlen(p->title) * font_X) < cols + 1) /* Title */
-    print_at((cols - i) / 2, rows - font_y, Text, p->title);
-  if ((int)strlen(p->comment) * font_X < cols + 1)     /* Footer comment */
-    print_at(1, font_y, Text, p->comment);
-
   /* Spectrogram */
   for (k = 0; k < chans; ++k) {
     priv_t * q = (priv_t *)(effp - effp->flow + k)->priv;
-    base = below + (chans - 1 - k) * (p->rows + 1);
+    base = !p->raw * below + (chans - 1 - k) * (p->rows + 1);
     for (j = 0; j < p->rows; ++j) {
       for (i = 0; i < p->cols; ++i)
-        pixel(left + i, base + j) = colour(p, q->dBfs[i*p->rows + j]);
-      if (!p->no_axes)                                 /* Y-axis lines */
+        pixel(!p->raw * left + i, base + j) = colour(p, q->dBfs[i*p->rows + j]);
+      if (!p->raw && !p->no_axes)                                 /* Y-axis lines */
         pixel(left - 1, base + j) = pixel(left + p->cols, base + j) = Grid;
     }
-    if (!p->no_axes) for (i = -1; i <= p->cols; ++i)   /* X-axis lines */
+    if (!p->raw && !p->no_axes) for (i = -1; i <= p->cols; ++i)   /* X-axis lines */
       pixel(left + i, base - 1) = pixel(left + i, base + p->rows) = Grid;
   }
 
-  /* X-axis */
-  step = axis(secs(p->cols), p->cols / (font_X * 9 / 2), &limit, &prefix);
-  sprintf(text, "Time (%.1ss)", prefix);               /* Axis label */
-  print_at(left + (p->cols - font_X * (int)strlen(text)) / 2, 24, Text, text);
-  for (i = 0; i <= limit; i += step) {
-    int y, x = limit? (double)i / limit * p->cols + .5 : 0;
-    for (y = 0; y < tick_len; ++y)                     /* Ticks */
-      pixel(left-1+x, below-1-y) = pixel(left-1+x, below+c_rows+y) = Grid;
-    if (step == 5 && (i%10))
-      continue;
-    sprintf(text, "%g", .1 * i);                       /* Tick labels */
-    x = left + x - 3 * strlen(text);
-    print_at(x, below - 6, Labels, text);
-    print_at(x, below + c_rows + 14, Labels, text);
-  }
+  if (!p->raw) {
+    if (p->title && (i = (int)strlen(p->title) * font_X) < cols + 1) /* Title */
+      print_at((cols - i) / 2, rows - font_y, Text, p->title);
 
-  /* Y-axis */
-  step = axis(effp->in_signal.rate / 2,
-      (p->rows - 1) / ((font_y * 3 + 1) >> 1), &limit, &prefix);
-  sprintf(text, "Frequency (%.1sHz)", prefix);         /* Axis label */
-  print_up(10, below + (c_rows - font_X * (int)strlen(text)) / 2, Text, text);
-  for (k = 0; k < chans; ++k) {
-    base = below + k * (p->rows + 1);
+    if ((int)strlen(p->comment) * font_X < cols + 1)     /* Footer comment */
+      print_at(1, font_y, Text, p->comment);
+
+    /* X-axis */
+    step = axis(secs(p->cols), p->cols / (font_X * 9 / 2), &limit, &prefix);
+    sprintf(text, "Time (%.1ss)", prefix);               /* Axis label */
+    print_at(left + (p->cols - font_X * (int)strlen(text)) / 2, 24, Text, text);
     for (i = 0; i <= limit; i += step) {
-      int x, y = limit? (double)i / limit * (p->rows - 1) + .5 : 0;
-      for (x = 0; x < tick_len; ++x)                   /* Ticks */
-        pixel(left-1-x, base+y) = pixel(left+p->cols+x, base+y) = Grid;
-      if ((step == 5 && (i%10)) || (!i && k && chans > 1))
+      int y, x = limit? (double)i / limit * p->cols + .5 : 0;
+      for (y = 0; y < tick_len; ++y)                     /* Ticks */
+        pixel(left-1+x, below-1-y) = pixel(left-1+x, below+c_rows+y) = Grid;
+      if (step == 5 && (i%10))
         continue;
-      sprintf(text, i?"%5g":"   DC", .1 * i);          /* Tick labels */
-      print_at(left - 4 - font_X * 5, base + y + 5, Labels, text);
-      sprintf(text, i?"%g":"DC", .1 * i);
-      print_at(left + p->cols + 6, base + y + 5, Labels, text);
+      sprintf(text, "%g", .1 * i);                       /* Tick labels */
+      x = left + x - 3 * strlen(text);
+      print_at(x, below - 6, Labels, text);
+      print_at(x, below + c_rows + 14, Labels, text);
+    }
+
+    /* Y-axis */
+    step = axis(effp->in_signal.rate / 2,
+        (p->rows - 1) / ((font_y * 3 + 1) >> 1), &limit, &prefix);
+    sprintf(text, "Frequency (%.1sHz)", prefix);         /* Axis label */
+    print_up(10, below + (c_rows - font_X * (int)strlen(text)) / 2, Text, text);
+    for (k = 0; k < chans; ++k) {
+      base = below + k * (p->rows + 1);
+      for (i = 0; i <= limit; i += step) {
+        int x, y = limit? (double)i / limit * (p->rows - 1) + .5 : 0;
+        for (x = 0; x < tick_len; ++x)                   /* Ticks */
+          pixel(left-1-x, base+y) = pixel(left+p->cols+x, base+y) = Grid;
+        if ((step == 5 && (i%10)) || (!i && k && chans > 1))
+          continue;
+        sprintf(text, i?"%5g":"   DC", .1 * i);          /* Tick labels */
+        print_at(left - 4 - font_X * 5, base + y + 5, Labels, text);
+        sprintf(text, i?"%g":"DC", .1 * i);
+        print_at(left + p->cols + 6, base + y + 5, Labels, text);
+      }
+    }
+
+    /* Z-axis */
+    k = min(400, c_rows);
+    base = below + (c_rows - k) / 2;
+    print_at(cols - right - 2 - font_X, base - 13, Text, "dBFS");/* Axis label */
+    for (j = 0; j < k; ++j) {                            /* Spectrum */
+      png_byte b = colour(p, p->dB_range * (j / (k - 1.) - 1));
+      for (i = 0; i < spectrum_width; ++i)
+        pixel(cols - right - 1 - i, base + j) = b;
+    }
+    step = 10 * ceil(p->dB_range / 10. * (font_y + 2) / (k - 1));
+    for (i = 0; i <= p->dB_range; i += step) {           /* (Tick) labels */
+      int y = (double)i / p->dB_range * (k - 1) + .5;
+      sprintf(text, "%+i", i - p->gain - p->dB_range);
+      print_at(cols - right + 1, base + y + 5, Labels, text);
     }
   }
-
-  /* Z-axis */
-  k = min(400, c_rows);
-  base = below + (c_rows - k) / 2;
-  print_at(cols - right - 2 - font_X, base - 13, Text, "dBFS");/* Axis label */
-  for (j = 0; j < k; ++j) {                            /* Spectrum */
-    png_byte b = colour(p, p->dB_range * (j / (k - 1.) - 1));
-    for (i = 0; i < spectrum_width; ++i)
-      pixel(cols - right - 1 - i, base + j) = b;
-  }
-  step = 10 * ceil(p->dB_range / 10. * (font_y + 2) / (k - 1));
-  for (i = 0; i <= p->dB_range; i += step) {           /* (Tick) labels */
-    int y = (double)i / p->dB_range * (k - 1) + .5;
-    sprintf(text, "%+i", i - p->gain - p->dB_range);
-    print_at(cols - right + 1, base + y + 5, Labels, text);
-  }
-
   free(font);
   png_set_rows(png, png_info, png_rows);
   png_write_png(png, png_info, PNG_TRANSFORM_IDENTITY, NULL);
@@ -619,6 +622,7 @@ sox_effect_handler_t const * lsx_spectrogram_effect_fn(void)
     "\t-W num\tWindow adjust parameter (-10 - 10); applies only to Kaiser",
     "\t-s\tSlack overlap of windows",
     "\t-a\tSuppress axis lines",
+    "\t-r\tRaw spectrogram; no axes or legends",
     "\t-l\tLight background",
     "\t-m\tMonochrome",
     "\t-h\tHigh colour",
