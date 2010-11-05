@@ -36,6 +36,17 @@
   #include <machine/soundcard.h>
 #endif
 
+/* these appear in the sys/soundcard.h of OSS 4.x, and in Linux's
+ * sound/core/oss/pcm_oss.c (2.6.24 and later), but are typically
+ * not included in system header files.
+ */
+#ifndef AFMT_S32_LE
+#define AFMT_S32_LE 0x00001000
+#endif
+#ifndef AFMT_S32_BE
+#define AFMT_S32_BE 0x00002000
+#endif
+
 #include <sys/ioctl.h>
 
 typedef sox_fileinfo_t priv_t;
@@ -71,6 +82,21 @@ static int ossinit(sox_format_t * ft)
             lsx_report("Forcing to signed linear");
             ft->encoding.encoding = SOX_ENCODING_SIGN2;
         }
+    }
+    else if (ft->encoding.bits_per_sample == 32) {
+	/* Attempt to use endian that user specified */
+	if (ft->encoding.reverse_bytes)
+	    sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S32_LE : AFMT_S32_BE;
+	else
+	    sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S32_BE : AFMT_S32_LE;
+	samplesize = 32;
+	if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
+	    ft->encoding.encoding = SOX_ENCODING_SIGN2;
+	if (ft->encoding.encoding != SOX_ENCODING_SIGN2) {
+	    lsx_report("OSS driver only supports signed with words");
+	    lsx_report("Forcing to signed linear");
+	    ft->encoding.encoding = SOX_ENCODING_SIGN2;
+	}
     }
     else {
         /* Attempt to use endian that user specified */
@@ -199,7 +225,7 @@ LSX_FORMAT_HANDLER(oss)
 {
   static char const * const names[] = {"ossdsp", "oss", NULL};
   static unsigned const write_encodings[] = {
-    SOX_ENCODING_SIGN2, 16, 0,
+    SOX_ENCODING_SIGN2, 32, 16, 0,
     SOX_ENCODING_UNSIGNED, 8, 0,
     0};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
