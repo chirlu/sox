@@ -140,8 +140,6 @@ binaries=src/sox.exe
 dlls=""
 dlls="$dlls ${SYS_ROOT}/mingw/bin/zlib1.dll"
 dlls="$dlls ${SYS_ROOT}/mingw/bin/libgomp-1.dll"
-# libgomp-1 is using pthreadGC2
-dlls="$dlls ${SYS_ROOT}/mingw/bin/pthreadGC2.dll"
 
 cp -p \
   $binaries \
