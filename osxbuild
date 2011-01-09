@@ -13,39 +13,39 @@
 # libraries SoX ships with.
 #
 # cd libtool-2.2.6b
-#./configure --disable-shared --enable-static;make;sudo make install
+#./configure CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --disable-shared --enable-static;make;sudo make install
 #
 # cd libpng-1.2.41
-#./configure --disable-shared --enable-static;make;sudo make install
+#./configure CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --disable-shared --enable-static;make;sudo make install
 #
 # cd ../wavpack-4.60.1
-#./configure --disable-shared --enable-static;make;sudo make install
+#./configure CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --disable-shared --enable-static;make;sudo make install
 #
-# flac won't compile without following fix.  Edit src/libFLAC/ia32/nasmh and add following
-# to top of that file: %define FLAC__PUBLIC_NEEDS_UNDERSCORE
+# flac won't compile without following fix.  Edit src/libFLAC/ia32/nasm.h and
+# add following to top of that file: %define FLAC__PUBLIC_NEEDS_UNDERSCORE
 # cd ../flac-1.2.1
-#./configure --disable-shared --enable-static;make;sudo make install
+#./configure CXXFLAGS="-m32 -arch i386" CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --disable-shared --enable-static;make;sudo make install
 #
 # cd ../libogg-1.1.4
-#./configure --disable-shared --enable-static;make;sudo make install
+#./configure CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --disable-shared --enable-static;make;sudo make install
 #
 # cd ../libvorbis-1.2.3
-#./configure --disable-shared --enable-static;make;sudo make install
+#./configure CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --disable-shared --enable-static;make;sudo make install
 #
 # cd ../libsndfile-1.0.21
-#./configure --disable-shared --enable-static;make;sudo make install
+#./configure CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --disable-shared --enable-static;make;sudo make install
 #
 #
 # To get MP3 header files used to enable MP3 support (no libraries used):
 #
 # cd ../lame-398-2
-#./configure --enable-shared --disable-static;make;sudo make install
+#./configure CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --enable-shared --disable-static;make;sudo make install
 #
 # cd ../libid3tag-0.15.1b
-#./configure --enable-shared --disable-static;make;sudo make install
+#./configure CXXFLAGS="-m32 -arch i386" CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --enable-shared --disable-static;make;sudo make install
 #
 # cd ../libmad-0.15.1b
-#./configure --enable-shared --disable-static;make;sudo make install
+#./configure CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --enable-shared --disable-static;make;sudo make install
 
 [ ! -x configure ] && autoreconf -i
 
@@ -60,8 +60,9 @@ if [ $# -ne 0 -o ! -r Makefile ]; then
     --enable-dl-lame --enable-dl-mad \
     --enable-dl-amrnb --enable-dl-amrwb \
     CPP=cpp\
-    CPPFLAGS=-I/usr/local/include \
-    LDFLAGS="-L/usr/local/lib" \
+    CPPFLAGS="-I/usr/local/include" \
+    CFLAGS="-m32 -arch i386" \
+    LDFLAGS="-L/usr/local/lib -arch i386" \
     $*
 fi
 
