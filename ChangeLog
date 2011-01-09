@@ -13,6 +13,7 @@ File formats:
 
   o Fix regression where MP3 handler required libmad headers to be installed.
     (Samuli Suominen) 
+  o Add seek support to mp3 handler for speed improvements.  (Pavel Karneliuk)
 
 Audio device drivers:
 

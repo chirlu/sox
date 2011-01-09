@@ -524,6 +524,110 @@ static int stopread(sox_format_t * ft)
   LSX_DLLIBRARY_CLOSE(p, mad_dl);
   return SOX_SUCCESS;
 }
+
+static int sox_mp3seek(sox_format_t * ft, uint64_t offset)
+{
+  priv_t   * p = (priv_t *) ft->priv;
+  size_t   initial_bitrate = p->Frame.header.bitrate;
+  size_t   tagsize = 0, consumed = 0;
+  sox_bool vbr = sox_false; /* Variable Bit Rate */
+  sox_bool depadded = sox_false;
+  uint64_t to_skip_samples = 0;
+
+  /* Reset all */
+  rewind(ft->fp);
+  mad_timer_reset(&p->Timer);
+  p->FrameCount = 0;
+
+  /* They where opened in startread */
+  mad_synth_finish(&p->Synth);
+  p->mad_frame_finish(&p->Frame);
+  p->mad_stream_finish(&p->Stream);
+
+  p->mad_stream_init(&p->Stream);
+  p->mad_frame_init(&p->Frame);
+  p->mad_synth_init(&p->Synth);
+
+  offset /= ft->signal.channels;
+  to_skip_samples = offset;
+
+  while(sox_true) {  /* Read data from the MP3 file */
+    int read, padding = 0;
+    size_t leftover = p->Stream.bufend - p->Stream.next_frame;
+
+    memcpy(p->mp3_buffer, p->Stream.this_frame, leftover);
+    read = fread(p->mp3_buffer + leftover, (size_t) 1, p->mp3_buffer_size - leftover, ft->fp);
+    if (read <= 0) {
+      lsx_debug("seek failure. unexpected EOF (frames=%lu leftover=%lu)", (unsigned long)p->FrameCount, (unsigned long)leftover);
+      break;
+    }
+    for (; !depadded && padding < read && !p->mp3_buffer[padding]; ++padding);
+    depadded = sox_true;
+    p->mad_stream_buffer(&p->Stream, p->mp3_buffer + padding, leftover + read - padding);
+
+    while (to_skip_samples > 0) {  /* Decode frame headers */
+      static unsigned short samples;
+      p->Stream.error = MAD_ERROR_NONE;
+      
+      /* Not an audio frame */
+      if (p->mad_header_decode(&p->Frame.header, &p->Stream) == -1) {
+        if (p->Stream.error == MAD_ERROR_BUFLEN)
+          break;  /* Normal behaviour; get some more data from the file */
+        if (!MAD_RECOVERABLE(p->Stream.error)) {
+          lsx_warn("unrecoverable MAD error");
+          break;
+        }
+        if (p->Stream.error == MAD_ERROR_LOSTSYNC) {
+          unsigned available = (p->Stream.bufend - p->Stream.this_frame);
+          tagsize = tagtype(p->Stream.this_frame, (size_t) available);
+          if (tagsize) {   /* It's some ID3 tags, so just skip */
+            if (tagsize >= available) {
+              fseeko(ft->fp, (off_t)(tagsize - available), SEEK_CUR);
+              depadded = sox_false;
+            }
+            p->mad_stream_skip(&p->Stream, min(tagsize, available));
+          }
+          else lsx_warn("MAD lost sync");
+        }
+        else lsx_warn("recoverable MAD error");
+        continue;
+      }
+
+      consumed += p->Stream.next_frame - p->Stream.this_frame;
+      vbr      |= (p->Frame.header.bitrate != initial_bitrate);
+
+      samples = 32 * MAD_NSBSAMPLES(&p->Frame.header);
+
+      p->FrameCount++;
+      p->mad_timer_add(&p->Timer, p->Frame.header.duration);
+
+      if(to_skip_samples <= samples)
+      {
+        p->mad_frame_decode(&p->Frame,&p->Stream);
+        p->mad_synth_frame(&p->Synth, &p->Frame);
+        p->cursamp = to_skip_samples;
+        return SOX_SUCCESS;
+      }
+      else to_skip_samples -= samples;
+
+      /* If not VBR, we can extrapolate frame size */
+      if (p->FrameCount == 64 && !vbr) {
+        p->FrameCount = offset / samples;
+        to_skip_samples = offset % samples;
+
+        if (SOX_SUCCESS != lsx_seeki(ft, (p->FrameCount * consumed / 64) + tagsize, SEEK_SET))
+          return SOX_EOF;
+
+        /* Reset Stream for refilling buffer */
+        p->mad_stream_finish(&p->Stream);
+        p->mad_stream_init(&p->Stream);
+        break;
+      }
+    }
+  };
+
+  return SOX_EOF;
+}
 #else /*HAVE_MAD_H*/
 static int startread(sox_format_t * ft)
 {
@@ -532,6 +636,7 @@ static int startread(sox_format_t * ft)
 }
 #define sox_mp3read NULL
 #define stopread NULL
+#define sox_mp3seek NULL
 #endif /*HAVE_MAD_H*/
 
 #ifdef HAVE_LAME
@@ -1014,7 +1119,7 @@ LSX_FORMAT_HANDLER(mp3)
     "MPEG Layer 3 lossy audio compression", names, 0,
     startread, sox_mp3read, stopread,
     startwrite, sox_mp3write, stopwrite,
-    NULL, write_encodings, NULL, sizeof(priv_t)
+    sox_mp3seek, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
 }
