@@ -72,8 +72,9 @@
 # cd ../lame-398-2
 # mingw32-configure --enable-shared --disable-static;mingw32-make;sudo mingw32-make install
 #
+# libid3tag does not like to be compiled shared on mingw32 cross compiler.
 # cd ../libid3tag-0.15.1b
-# mingw32-configure --enable-shared --disable-static;mingw32-make;sudo mingw32-make install
+# mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
 # MINGW work around: Edit Makefile and remove -fforce-mem from CFLAGS
 # cd ../libmad-0.15.1b
@@ -139,6 +140,8 @@ binaries=src/sox.exe
 dlls=""
 dlls="$dlls ${SYS_ROOT}/mingw/bin/zlib1.dll"
 dlls="$dlls ${SYS_ROOT}/mingw/bin/libgomp-1.dll"
+# libgomp-1 is using pthreadGC2
+dlls="$dlls ${SYS_ROOT}/mingw/bin/pthreadGC2.dll"
 
 cp -p \
   $binaries \
