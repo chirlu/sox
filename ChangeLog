@@ -17,6 +17,7 @@ File formats:
   o Fix bug were WavPack header was not updated correctly when closing
     file.  Fixed libsox memory leak when closing WavPack files.
     (David Bryant)
+  o Fix RIFF chunk length error when writing 24-bit files. (David Bryant)
 
 Audio device drivers:
 

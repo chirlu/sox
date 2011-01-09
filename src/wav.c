@@ -1362,7 +1362,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
         wFmtSize += 2+wExtSize; /* plus ExtData */
 
     wRiffLength = 4 + (8+wFmtSize) + (8+dwDataLength);
-    if (wFormatTag != WAVE_FORMAT_PCM) /* PCM omits the "fact" chunk */
+    if (isExtensible || wFormatTag != WAVE_FORMAT_PCM) /* PCM omits the "fact" chunk */
         wRiffLength += (8+dwFactSize);
 
     /* dwAvgBytesPerSec <-- this is BEFORE compression, isn't it? guess not. */
