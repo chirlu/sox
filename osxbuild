@@ -33,7 +33,7 @@
 #./configure CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --disable-shared --enable-static;make;sudo make install
 #
 # cd ../libsndfile-1.0.21
-#./configure CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --disable-shared --enable-static;make;sudo make install
+#./configure CXXFLAGS="-m32 -arch i386" CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --disable-shared --enable-static;make;sudo make install
 #
 #
 # To get MP3 header files used to enable MP3 support (no libraries used):
