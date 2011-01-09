@@ -14,6 +14,9 @@ File formats:
   o Fix regression where MP3 handler required libmad headers to be installed.
     (Samuli Suominen) 
   o Add seek support to mp3 handler for speed improvements.  (Pavel Karneliuk)
+  o Fix bug were WavPack header was not updated correctly when closing
+    file.  Fixed libsox memory leak when closing WavPack files.
+    (David Bryant)
 
 Audio device drivers:
 

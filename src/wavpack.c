@@ -158,8 +158,12 @@ static int stop_write(sox_format_t * ft)
     char * buf = lsx_malloc(p->first_block_size);
     lsx_rewind(ft);
     lsx_readchars(ft, buf, p->first_block_size);
-    if (!memcmp(buf, "wvpk", (size_t)4))
+    if (!memcmp(buf, "wvpk", (size_t)4)) {
       WavpackUpdateNumSamples(p->codec, buf);
+      lsx_rewind(ft);
+      lsx_writebuf(ft, buf, p->first_block_size);
+    }
+    free(buf);
   }
   p->codec = WavpackCloseFile(p->codec);
   return SOX_SUCCESS;
