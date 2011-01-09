@@ -1393,12 +1393,25 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
     lsx_writew(ft, wBitsPerSample); /* end info common to all fmts */
 
     if (isExtensible) {
+      uint32_t dwChannelMask=0;  /* unassigned speaker mapping by default */
       static unsigned char const guids[][14] = {
         "\x00\x00\x00\x00\x10\x00\x80\x00\x00\xAA\x00\x38\x9B\x71",  /* wav */
         "\x00\x00\x21\x07\xd3\x11\x86\x44\xc8\xc1\xca\x00\x00\x00"}; /* amb */
+
+      /* if not amb, assume most likely channel masks from number of channels; not
+       * ideal solution, but will make files playable in many/most situations
+       */
+      if (strcmp(ft->filetype, "amb")) {
+        if      (wChannels == 1) dwChannelMask = 0x4;     /* 1 channel (mono) = FC */
+        else if (wChannels == 2) dwChannelMask = 0x3;     /* 2 channels (stereo) = FL, FR */
+        else if (wChannels == 4) dwChannelMask = 0x33;    /* 4 channels (quad) = FL, FR, BL, BR */
+        else if (wChannels == 6) dwChannelMask = 0x3F;    /* 6 channels (5.1) = FL, FR, FC, LF, BL, BR */
+        else if (wChannels == 8) dwChannelMask = 0x63F;   /* 8 channels (7.1) = FL, FR, FC, LF, BL, BR, SL, SR */
+      }
+ 
       lsx_writew(ft, 22);
       lsx_writew(ft, wBitsPerSample); /* No padding in container */
-      lsx_writedw(ft, 0);             /* Speaker mapping not specified */
+      lsx_writedw(ft, dwChannelMask); /* Speaker mapping is something reasonable */
       lsx_writew(ft, wFormatTag);
       lsx_writebuf(ft, guids[!strcmp(ft->filetype, "amb")], (size_t)14);
     }

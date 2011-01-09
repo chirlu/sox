@@ -18,6 +18,10 @@ File formats:
     file.  Fixed libsox memory leak when closing WavPack files.
     (David Bryant)
   o Fix RIFF chunk length error when writing 24-bit files. (David Bryant)
+  o 24-bit WAV files were leaving channel maps unassigned. Change to use
+    common channel mappings based on channel count.  This allows to
+    work more seemlessly with other apps such as WavPack and Foobar2000.
+    (David Bryant)
 
 Audio device drivers:
 
