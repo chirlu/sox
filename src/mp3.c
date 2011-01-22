@@ -565,7 +565,7 @@ static int sox_mp3seek(sox_format_t * ft, uint64_t offset)
     depadded = sox_true;
     p->mad_stream_buffer(&p->Stream, p->mp3_buffer + padding, leftover + read - padding);
 
-    while (to_skip_samples > 0) {  /* Decode frame headers */
+    while (to_skip_samples >= 0) {  /* Decode frame headers */
       static unsigned short samples;
       p->Stream.error = MAD_ERROR_NONE;
       
