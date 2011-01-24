@@ -97,7 +97,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\lpc10\analys.c" />
-    <ClCompile Include="..\lpc10\bitio.c" />
     <ClCompile Include="..\lpc10\bsynz.c" />
     <ClCompile Include="..\lpc10\chanwr.c" />
     <ClCompile Include="..\lpc10\dcbias.c" />
@@ -133,7 +132,6 @@
     <ClCompile Include="..\lpc10\vparms.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\lpc10\bitio.h" />
     <ClInclude Include="..\lpc10\f2c.h" />
     <ClInclude Include="..\lpc10\lpc10.h" />
   </ItemGroup>

@@ -172,10 +172,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\sox\lpc10\bitio.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\sox\lpc10\bsynz.c"
 				>
 			</File>
@@ -313,10 +309,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath="..\..\sox\lpc10\bitio.h"
-				>
-			</File>
 			<File
 				RelativePath="..\..\sox\lpc10\f2c.h"
 				>

@@ -14,9 +14,6 @@
     <ClCompile Include="..\lpc10\analys.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\lpc10\bitio.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\lpc10\bsynz.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -118,9 +115,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\lpc10\bitio.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\lpc10\f2c.h">
       <Filter>Header Files</Filter>
     </ClInclude>
