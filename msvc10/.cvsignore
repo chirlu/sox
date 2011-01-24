@@ -1,0 +1,6 @@
+*.user
+Sox.suo
+Sox.ncb
+Sox.sdf
+Sox.opensdf
+Makefile Makefile.in

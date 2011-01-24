@@ -40,6 +40,8 @@ Other new features:
 Internal improvements:
 
   o Distribute msvc9 project files that had been in CVS only. (cbagwell)
+  o Add msvc10 project files (also compatible with the Windows SDK 7.1).
+    (Doug Cook)
   o cmake now compiles waveaudio driver under windows environment. (cbagwell)
     [3072672]
 

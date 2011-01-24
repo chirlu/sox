@@ -1,4 +1,4 @@
-/* libSoX stub file for MSVC9: (c) 2009 SoX contributors
+/* libSoX libmp3lame config for MSVC9: (c) 2009 SoX contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -15,4 +15,5 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "../../src/soxstdint.h.cmake"
+#define HAVE_MPGLIB 1
+#include <configMS.h>
