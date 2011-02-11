@@ -22,6 +22,8 @@ File formats:
     common channel mappings based on channel count.  This allows to
     work more seemlessly with other apps such as WavPack and Foobar2000.
     (David Bryant)
+  o Fix ffmpeg playback bug caused by alignment requirements on some platforms.
+    Closes bug #3017690.  (Reuben Thomas).
 
 Audio device drivers:
 
