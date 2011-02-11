@@ -1,6 +1,6 @@
 /* libSoX ffmpeg formats.
  *
- * Copyright 2007 Reuben Thomas <rrt@sc3d.org>
+ * Copyright 2007, 2011 Reuben Thomas <rrt@sc3d.org>
  *
  * Based on ffplay.c and output_example.c Copyright 2003 Fabrice Bellard
  * Note: ffplay.c is distributed under the LGPL 2.1 or later;
@@ -63,8 +63,6 @@ typedef struct {
   AVFormatContext *ctxt;
   int audio_input_frame_size;
   AVPacket audio_pkt;
-  uint8_t *audio_pkt_data;
-  int audio_pkt_size;
 } priv_t;
 
 /* open a given stream. Return 0 if OK */
@@ -127,25 +125,26 @@ static int audio_decode_frame(priv_t * ffmpeg, uint8_t *audio_buf, int buf_size)
 
   for (;;) {
     /* NOTE: the audio packet can contain several frames */
-    while (ffmpeg->audio_pkt_size > 0) {
+    while (ffmpeg->audio_pkt.size > 0) {
       data_size = buf_size;
-      len1 = avcodec_decode_audio2(ffmpeg->audio_st->codec,
-                                   (int16_t *)audio_buf, &data_size,
-                                   ffmpeg->audio_pkt_data, ffmpeg->audio_pkt_size);
+      len1 = avcodec_decode_audio3(ffmpeg->audio_st->codec,
+				   (int16_t *)audio_buf, &data_size,
+				   pkt);
       if (len1 < 0) /* if error, we skip the rest of the packet */
 	return 0;
 
-      ffmpeg->audio_pkt_data += len1;
-      ffmpeg->audio_pkt_size -= len1;
+      ffmpeg->audio_pkt.data += len1;
+      ffmpeg->audio_pkt.size -= len1;
       if (data_size <= 0)
-        continue;
+	continue;
       return data_size;
     }
-
-    ffmpeg->audio_pkt_data = pkt->data;
-    ffmpeg->audio_pkt_size = pkt->size;
   }
 }
+
+/* On some platforms, libavcodec wants the output buffer aligned to 16
+ * bytes (because it uses SSE/Altivec internally). */
+#define ALIGN16(p) ((uint8_t *)(p) + (16 - (size_t)(p) % 16))
 
 static int startread(sox_format_t * ft)
 {
@@ -154,7 +153,7 @@ static int startread(sox_format_t * ft)
   int ret;
   int i;
 
-  ffmpeg->audio_buf = lsx_calloc(1, (size_t)AVCODEC_MAX_AUDIO_FRAME_SIZE);
+  ffmpeg->audio_buf = ALIGN16 (lsx_calloc(1, (size_t)AVCODEC_MAX_AUDIO_FRAME_SIZE + 16));
 
   /* Signal audio stream not found */
   ffmpeg->audio_index = -1;
@@ -201,8 +200,8 @@ static int startread(sox_format_t * ft)
   ft->encoding.encoding = SOX_ENCODING_SIGN2;
   ft->signal.channels = ffmpeg->audio_st->codec->channels;
   ft->signal.length = 0; /* Currently we can't seek; no idea how to get this
-                     info from ffmpeg anyway (in time, yes, but not in
-                     samples); but ffmpeg *can* seek */
+		     info from ffmpeg anyway (in time, yes, but not in
+		     samples); but ffmpeg *can* seek */
 
   return SOX_SUCCESS;
 }
@@ -224,7 +223,7 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
     if (ffmpeg->audio_buf_index * 2 >= ffmpeg->audio_buf_size) {
       if ((ret = av_read_frame(ffmpeg->ctxt, pkt)) < 0 &&
 	  (ret == AVERROR_EOF || url_ferror(ffmpeg->ctxt->pb)))
-        break;
+	break;
       ffmpeg->audio_buf_size = audio_decode_frame(ffmpeg, ffmpeg->audio_buf, AVCODEC_MAX_AUDIO_FRAME_SIZE);
       ffmpeg->audio_buf_index = 0;
     }
@@ -335,10 +334,10 @@ static int startwrite(sox_format_t * ft)
 
   /* auto detect the output format from the name. default is
      mpeg. */
-  ffmpeg->fmt = guess_format(NULL, ft->filename, NULL);
+  ffmpeg->fmt = av_guess_format(NULL, ft->filename, NULL);
   if (!ffmpeg->fmt) {
     lsx_warn("ffmpeg could not deduce output format from file extension; using MPEG");
-    ffmpeg->fmt = guess_format("mpeg", NULL, NULL);
+    ffmpeg->fmt = av_guess_format("mpeg", NULL, NULL);
     if (!ffmpeg->fmt) {
       lsx_fail("ffmpeg could not find suitable output format");
       return SOX_EOF;
@@ -346,7 +345,7 @@ static int startwrite(sox_format_t * ft)
   }
 
   /* allocate the output media context */
-  ffmpeg->ctxt = av_alloc_format_context();
+  ffmpeg->ctxt = avformat_alloc_context();
   if (!ffmpeg->ctxt) {
     fprintf(stderr, "ffmpeg out of memory error");
     return SOX_EOF;
@@ -408,12 +407,12 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
     if (ffmpeg->samples_index < ffmpeg->audio_input_frame_size) {
       SOX_SAMPLE_LOCALS;
       for (; nread < len && ffmpeg->samples_index < ffmpeg->audio_input_frame_size; nread++)
-        ffmpeg->samples[ffmpeg->samples_index++] = SOX_SAMPLE_TO_SIGNED_16BIT(buf[nread], ft->clips);
+	ffmpeg->samples[ffmpeg->samples_index++] = SOX_SAMPLE_TO_SIGNED_16BIT(buf[nread], ft->clips);
     }
 
     /* If output frame full or no more data to read, write it out */
     if (ffmpeg->samples_index == ffmpeg->audio_input_frame_size ||
-        (len == 0 && ffmpeg->samples_index > 0)) {
+	(len == 0 && ffmpeg->samples_index > 0)) {
       AVCodecContext *c = ffmpeg->audio_st->codec;
       AVPacket pkt;
 
@@ -426,10 +425,10 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
 
       /* write the compressed frame to the media file */
       if (av_write_frame(ffmpeg->ctxt, &pkt) != 0)
-        lsx_fail("ffmpeg had error while writing audio frame");
+	lsx_fail("ffmpeg had error while writing audio frame");
 
       /* Increment nwritten whether write succeeded or not; we have to
-         get rid of the input! */
+	 get rid of the input! */
       nwritten += ffmpeg->samples_index;
       ffmpeg->samples_index = 0;
     }
@@ -485,6 +484,7 @@ LSX_FORMAT_HANDLER(ffmpeg)
     "ffmpeg", /* special type to force use of ffmpeg */
     "mp4",
     "m4a",
+    "m4b",
     "avi",
     "wmv",
     "mpg",
