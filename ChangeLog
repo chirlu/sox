@@ -30,6 +30,8 @@ Audio device drivers:
   o Fix immediate segfault on OSX while attempting to record.  May also
     prevent segfaults on playing that some people reported.  (Adam Fritzler)
   o Add support for 32-bit samples to OSS driver. (Eric Lammerts)
+  o Add support for 24 and 32-bit samples to waveaudio (Win32) driver.
+    (Doug Cook)
 
 Effects:
 
