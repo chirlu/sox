@@ -184,17 +184,13 @@ with its optional gcc compiler installed.  The commands are ran from
 bash shell cygwin installs.
 
 Obtain the latest amrnb and amrwb source code from 
-http://www.penguin.cz/~utx/amr .
+http://sourceforge.net/projects/opencore-amr .
 
-cd amrnb-7.0.0.2
+cd opencore-amr-0.1.2
 ./configure
 make
-cp .libs/cygamrnb-3.dll /path/to/sox
-
-cd amrwb-7.0.0.3
-./configure
-make
-cp .libs/cygamrwb-3.dll /path/to/sox
+cp amrnb/.libs/cygopencore-amrnb.dll /path/to/sox
+cp amrwb/.libs/cygopencore-amrwb.dll /path/to/sox
 
 cp /bin/cygwin1.dll /path/to/sox
 [if compiling with cygwin 1.7 you also need to copy following:]

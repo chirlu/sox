@@ -67,6 +67,7 @@ http://en.wikipedia.org/wiki/MP3#Licensing_and_patent_issues
 MP3 support can be enabled by placing Lame encoding library and/or
 MAD decoding library into a standard library search location such
 as /usr/lib or /usr/local/lib..
+
 These can be compiled yourself, may turn up on searches of the internet
 or may be included with other MP3 applications already installed
 on your system. Try searching for libmp3lame.dylib and libmad.dylib.
@@ -88,3 +89,28 @@ cd libmad-0.15.1b
 ./configure
 make
 sudo make install
+
+Appendix - AMR-NB/AMR-WB Support
+--------------------------------
+
+SoX contains support for reading and writing AMR-NB and AMR-WB files but 
+does not ship with the DLL's that perform decoding and encoding of AMR
+data because of patent restrictions. 
+
+AMR-NB/AMR-WB support can be enabled by placing required libraries
+into a standard library search location such as /usr/lib or
+/usr/local/lib.
+
+These can be compiled yourself, may turn up on searches of the internet
+or may be included with other AMR applications already installed
+on your system. Try searching for libopencore-amrnb.dylib and 
+libopencore-amrwb.dylib.
+
+Obtain the latest amrnb and amrwb source code from 
+http://sourceforge.net/projects/opencore-amr
+
+cd opencore-amr-0.1.2
+./configure
+make
+sudo make install
+
