@@ -11,8 +11,6 @@ sox-x.x.x	xxxx-xx-xx
 
 File formats:
 
-  o Fix regression where MP3 handler required libmad headers to be installed.
-    (Samuli Suominen) 
   o Add seek support to mp3 handler for speed improvements.  (Pavel Karneliuk)
   o Fix bug were WavPack header was not updated correctly when closing
     file.  Fixed libsox memory leak when closing WavPack files.
@@ -24,6 +22,7 @@ File formats:
     (David Bryant)
   o Fix ffmpeg playback bug caused by alignment requirements on some platforms.
     Closes bug #3017690.  (Reuben Thomas).
+  o Fix memory leak in ffmpeg. (Doug Cook)
 
 Audio device drivers:
 
@@ -32,6 +31,10 @@ Audio device drivers:
   o Add support for 32-bit samples to OSS driver. (Eric Lammerts)
   o Add support for 24 and 32-bit samples to waveaudio (Win32) driver.
     (Doug Cook)
+  o Fix regression where MP3 handler required libmad headers to be installed.
+    (Samuli Suominen) 
+  o Allow dynamic loading of lame to be enabled even if lame header files
+    are not installed.  (Doug Cook)
 
 Effects:
 

@@ -344,8 +344,6 @@ AC_ARG_WITH(lame,
 using_lame=no
 if test "$with_lame" != "no"; then
     using_lame=yes
-    AC_CHECK_HEADERS(lame/lame.h,,
-        [AC_CHECK_HEADERS(lame.h,, using_lame=no)])
     AC_MSG_CHECKING([whether to dlopen lame])
     AC_ARG_ENABLE(dl_lame,
       AC_HELP_STRING([--enable-dl-lame], [Dlopen lame instead of linking in.]),
@@ -355,6 +353,8 @@ if test "$with_lame" != "no"; then
       AC_DEFINE(DL_LAME, 1, [Define to dlopen() lame.])
     else
       enable_dl_lame="no"
+      AC_CHECK_HEADERS(lame/lame.h,,
+        [AC_CHECK_HEADERS(lame.h,, using_lame=no)])
       AC_CHECK_LIB(mp3lame, lame_init, MP3_LIBS="$MP3_LIBS -lmp3lame",using_lame=no)
       AC_CHECK_LIB(mp3lame, lame_get_lametag_frame)
       if test "$ac_cv_lib_mp3lame_lame_get_lametag_frame" = yes; then
