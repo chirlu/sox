@@ -32,7 +32,7 @@ EXTRA_DIST= \
 	LibZLib.vcxproj \
 	LibZLib.vcxproj.filters \
 	Readme.txt \
-	Sox.sln \
+	SoX.sln \
 	SoX.vcxproj \
 	SoX.vcxproj.filters \
 	Mad/config.h \
@@ -42,6 +42,6 @@ EXTRA_DIST= \
 	SndFile/config.h \
 	SndFile/sndfile.h \
 	SndFile/sys/time.h \
-	Sox/soxconfig.h \
-	Sox/soxstdint.h
+	SoX/soxconfig.h \
+	SoX/soxstdint.h
 
