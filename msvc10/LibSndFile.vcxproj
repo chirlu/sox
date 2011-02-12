@@ -117,6 +117,7 @@
     <ClCompile Include="..\..\libsndfile\src\avr.c" />
     <ClCompile Include="..\..\libsndfile\src\broadcast.c" />
     <ClCompile Include="..\..\libsndfile\src\caf.c" />
+    <ClCompile Include="..\..\libsndfile\src\chanmap.c" />
     <ClCompile Include="..\..\libsndfile\src\chunk.c" />
     <ClCompile Include="..\..\libsndfile\src\command.c" />
     <ClCompile Include="..\..\libsndfile\src\common.c" />
@@ -130,6 +131,7 @@
     <ClCompile Include="..\..\libsndfile\src\g72x.c" />
     <ClCompile Include="..\..\libsndfile\src\gsm610.c" />
     <ClCompile Include="..\..\libsndfile\src\htk.c" />
+    <ClCompile Include="..\..\libsndfile\src\id3.c" />
     <ClCompile Include="..\..\libsndfile\src\ima_adpcm.c" />
     <ClCompile Include="..\..\libsndfile\src\ima_oki_adpcm.c" />
     <ClCompile Include="..\..\libsndfile\src\interleave.c" />
@@ -160,6 +162,7 @@
     <ClCompile Include="..\..\libsndfile\src\w64.c" />
     <ClCompile Include="..\..\libsndfile\src\wav.c" />
     <ClCompile Include="..\..\libsndfile\src\wav_w64.c" />
+    <ClCompile Include="..\..\libsndfile\src\windows.c" />
     <ClCompile Include="..\..\libsndfile\src\wve.c" />
     <ClCompile Include="..\..\libsndfile\src\xi.c" />
   </ItemGroup>

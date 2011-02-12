@@ -1,12 +1,14 @@
 This directory includes hand-crafted project files for building SoX using the
 Microsoft Visual C++ 10.0 compilers (available through Visual Studio 2010 or
 by downloading the freely-available Microsoft Windows SDK 7.1). The hand-made
-project files may be replaced by expanding CMAKE support in the future, but
+project files may be obsoleted by additional CMAKE support in the future, but
 for now, this is the easiest way to build SoX with MS Visual C++.
 The resulting sox.exe has support for all SoX features except magic, ffmpeg,
 and pulseaudio. LAME (libmp3lame.dll or lame_enc.dll), MAD (libmad.dll or
 cygmad-0.dll), libsndfile (libsndfile-1.dll), and AMR support (libamrnb-3.dll,
-libamrwb-3.dll) are loaded at runtime if they are available.
+libamrwb-3.dll) are loaded at runtime if they are available. OpenMP support is
+available only via Visual Studio 2010 Professional (it is not availalble if you
+build SoX via Visual Studio 2010 Express or via the Microsoft Windows SDK).
 
 How to build:
 
@@ -18,30 +20,31 @@ How to build:
    http://www.microsoft.com/downloads/en/details.aspx?FamilyID=6b6c21d2-2006-4afa-9702-529fa782d63b&displaylang=en
 
    Be sure to include at least the following features:
-   Windows Headers and Libraries\Windows Headers
-   Windows Headers and Libraries\x86 Libraries
-   Visual C++ Compilers
+   Windows Headers and Libraries - Windows Headers
+   Windows Headers and Libraries - x86 Libraries
+   Windows Native Code Development - Tools
+   Windows Native Code Development - Visual C++ Compilers
 
 2. Check out the SoX CVS code into a directory named sox.
 
    Extract the source code for the other libraries next to the sox
    directory. Remove the version numbers from the directory names.
    -- flac-1.2.1.tar.gz extracted into directory flac
-   -- lame-398-2.tar.gz extracted into directory lame
+   -- lame-398.4.tar.gz extracted into directory lame
    -- libid3tag-0.15.1b.tar.gz extracted into directory libid3tag
-   -- libmad-0.15.0b.tar.gz extracted into directory libmad
-   -- libogg-1.1.4.tar.gz extracted into directory libogg
-   -- libpng-1.2.39-no-config.tar.gz extracted into directory libpng
-   -- libsndfile-1.0.20.tar.gz extracted into directory libsndfile
-   -- libvorbis-1.2.3.tar.gz extracted into directory libvorbis
+   -- libmad-0.15.1b.tar.gz extracted into directory libmad
+   -- libogg-1.2.2.tar.gz extracted into directory libogg
+   -- libpng-1.2.44-no-config.tar.gz extracted into directory libpng
+   -- libsndfile-1.0.23.tar.gz extracted into directory libsndfile
+   -- libvorbis-1.3.2.tar.gz extracted into directory libvorbis
    -- speex-1.2rc1.tar.gz extracted into directory speex
-   -- wavpack-4.50.1.tar.gz extracted into directory wavpack
-   -- zlib-1.2.3.tar.gz extracted into directory zlib
+   -- wavpack-4.60.1.tar.bz2 extracted into directory wavpack
+   -- zlib-1.2.5.tar.gz extracted into directory zlib
 
 3. If using Visual Studio, open the sox\msvc10\SoX.sln solution in VS2010.
 
    If using the Windows SDK, open a normal command prompt, then run:
-   "c:\Program Files\Microsoft SDKs\Windows\v7.1\bin\SetEnv.Cmd" /x86 /Release
+"c:\Program Files\Microsoft SDKs\Windows\v7.1\bin\SetEnv.cmd" /x86 /Release /xp
    then CD to the sox\msvc10 folder.
 
 4. If any of the above libraries are not available or not wanted, adjust the
@@ -55,11 +58,15 @@ How to build:
    edit the soxconfig.h file (sox\msvc10\sox\soxconfig.h), and you'll have to
    manually remove the entries for the unwanted projects.
 
-5. If using Visual Studio, build the solution using the GUI.
+5. If using Visual Studio Professional or above and you want OpenMP support,
+   enable it in the project settings for the LibSox and SoX projects
+   (Configuration Properties, C/C++, Language, Open MP Support, set to Yes).
+
+6. If using Visual Studio, build the solution using the GUI.
 
    If using the Windows SDK, run: msbuild SoX.sln
 
-6. The resulting executable files will be in sox\msvc10\Debug or
+7. The resulting executable files will be in sox\msvc10\Debug or
    sox\msvc10\Release. The resulting sox.exe will dynamically link to
    libmp3lame.dll, libmad.dll, libsndfile-1.dll, libamrnb-3.dll, and
    libamrwb-3.dll if they are available, but will run without them (though the
@@ -82,17 +89,12 @@ Points to note:
   are part of the speex codec package. Support for the speex codec may be added
   later.
 
-- The included libsox project enables OpenMP support. You can disable this
-  in the libsox project properties under Configuration Properties, C/C++,
-  Language, OpenMP support. If you don't disable it, you will need vcomp100.dll
-  either installed on your machine or copied into the directory next to
-  sox.exe. If you have OpenMP support in your copy of Visual Studio, this file
-  can be found here:
+- If you enable Open MP support, you will need vcomp100.dll either installed on
+  your machine or copied into the directory next to sox.exe. If you have Open
+  MP support in your copy of Visual Studio, this file can be found here:
 
   c:\Program Files\Microsoft Visual Studio 10.0\
      vc\redist\x86\Microsoft.VC100.OPENMP
-
-  Note that some editions of Visual Studio might not include OpenMP support.
 
 - The included projects do not enable SSE2. You can enable this in the project
   properties under Configuration Properties, C/C++, Code Generation, Enable

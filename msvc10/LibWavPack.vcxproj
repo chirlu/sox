@@ -98,6 +98,7 @@
     <ClCompile Include="..\..\wavpack\src\float.c" />
     <ClCompile Include="..\..\wavpack\src\metadata.c" />
     <ClCompile Include="..\..\wavpack\src\pack.c" />
+    <ClCompile Include="..\..\wavpack\src\tags.c" />
     <ClCompile Include="..\..\wavpack\src\unpack.c" />
     <ClCompile Include="..\..\wavpack\src\unpack3.c" />
     <ClCompile Include="..\..\wavpack\src\words.c" />

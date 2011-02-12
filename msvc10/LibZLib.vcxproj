@@ -96,7 +96,6 @@
     <ClCompile Include="..\..\zlib\compress.c" />
     <ClCompile Include="..\..\zlib\crc32.c" />
     <ClCompile Include="..\..\zlib\deflate.c" />
-    <ClCompile Include="..\..\zlib\gzio.c" />
     <ClCompile Include="..\..\zlib\infback.c" />
     <ClCompile Include="..\..\zlib\inffast.c" />
     <ClCompile Include="..\..\zlib\inflate.c" />

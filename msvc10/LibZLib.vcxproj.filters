@@ -23,9 +23,6 @@
     <ClCompile Include="..\..\zlib\deflate.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\zlib\gzio.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\zlib\infback.c">
       <Filter>Source Files</Filter>
     </ClCompile>
