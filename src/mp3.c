@@ -12,10 +12,8 @@
 #include "sox_i.h"
 #include <string.h>
 
-#if defined(HAVE_LAME_LAME_H) || defined(HAVE_LAME_H)
+#if defined(HAVE_LAME_LAME_H) || defined(HAVE_LAME_H) || defined(DL_LAME)
 #define HAVE_LAME 1
-#else
-#undef HAVE_LAME
 #endif
 
 #if defined(HAVE_MAD_H) || defined(HAVE_LAME)
@@ -28,6 +26,12 @@
 #include <lame/lame.h>
 #elif defined(HAVE_LAME_H)
 #include <lame.h>
+#elif defined(DL_LAME)
+typedef struct lame_global_struct lame_global_flags;
+typedef enum {
+  vbr_off=0,
+  vbr_default=4
+} vbr_mode;
 #endif
 
 #if defined(HAVE_ID3TAG) && (defined(HAVE_IO_H) || defined(HAVE_UNISTD_H))

@@ -46,7 +46,6 @@
 
 #define HAVE_ID3TAG 1
 
-#define HAVE_LAME_H 1
 #define DL_LAME 1
 
 #define HAVE_LPC10 1
