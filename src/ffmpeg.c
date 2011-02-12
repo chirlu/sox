@@ -55,7 +55,7 @@ typedef struct {
   int audio_index;
   int audio_stream;
   AVStream *audio_st;
-  uint8_t *audio_buf;
+  uint8_t *audio_buf_aligned;
   int audio_buf_index, audio_buf_size;
   int16_t *samples;
   int samples_index;
@@ -63,6 +63,7 @@ typedef struct {
   AVFormatContext *ctxt;
   int audio_input_frame_size;
   AVPacket audio_pkt;
+  uint8_t *audio_buf_raw;
 } priv_t;
 
 /* open a given stream. Return 0 if OK */
@@ -153,7 +154,8 @@ static int startread(sox_format_t * ft)
   int ret;
   int i;
 
-  ffmpeg->audio_buf = ALIGN16 (lsx_calloc(1, (size_t)AVCODEC_MAX_AUDIO_FRAME_SIZE + 16));
+  ffmpeg->audio_buf_raw = lsx_calloc(1, (size_t)AVCODEC_MAX_AUDIO_FRAME_SIZE + 32);
+  ffmpeg->audio_buf_aligned = ALIGN16(ffmpeg->audio_buf_raw);
 
   /* Signal audio stream not found */
   ffmpeg->audio_index = -1;
@@ -224,14 +226,14 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
       if ((ret = av_read_frame(ffmpeg->ctxt, pkt)) < 0 &&
 	  (ret == AVERROR_EOF || url_ferror(ffmpeg->ctxt->pb)))
 	break;
-      ffmpeg->audio_buf_size = audio_decode_frame(ffmpeg, ffmpeg->audio_buf, AVCODEC_MAX_AUDIO_FRAME_SIZE);
+      ffmpeg->audio_buf_size = audio_decode_frame(ffmpeg, ffmpeg->audio_buf_aligned, AVCODEC_MAX_AUDIO_FRAME_SIZE);
       ffmpeg->audio_buf_index = 0;
     }
 
     /* Convert data into SoX samples up to size of buffer */
     nextra = min((ffmpeg->audio_buf_size - ffmpeg->audio_buf_index) / 2, (int)(len - nsamp));
     for (; nextra > 0; nextra--)
-      buf[nsamp++] = SOX_SIGNED_16BIT_TO_SAMPLE(((int16_t *)ffmpeg->audio_buf)[ffmpeg->audio_buf_index++], ft->clips);
+      buf[nsamp++] = SOX_SIGNED_16BIT_TO_SAMPLE(((int16_t *)ffmpeg->audio_buf_aligned)[ffmpeg->audio_buf_index++], ft->clips);
   } while (nsamp < len && nextra > 0);
 
   return nsamp;
@@ -251,6 +253,7 @@ static int stopread(sox_format_t * ft)
     ffmpeg->ctxt = NULL; /* safety */
   }
 
+  free(ffmpeg->audio_buf_raw);
   return SOX_SUCCESS;
 }
 
@@ -301,7 +304,8 @@ static int open_audio(priv_t * ffmpeg, AVStream *st)
     return SOX_EOF;
   }
 
-  ffmpeg->audio_buf = lsx_malloc((size_t)AVCODEC_MAX_AUDIO_FRAME_SIZE);
+  ffmpeg->audio_buf_raw = lsx_malloc((size_t)AVCODEC_MAX_AUDIO_FRAME_SIZE + 32);
+  ffmpeg->audio_buf_aligned = ALIGN16(ffmpeg->audio_buf_raw);
 
   /* ugly hack for PCM codecs (will be removed ASAP with new PCM
      support to compute the input frame size in samples */
@@ -417,11 +421,11 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
       AVPacket pkt;
 
       av_init_packet(&pkt);
-      pkt.size = avcodec_encode_audio(c, ffmpeg->audio_buf, AVCODEC_MAX_AUDIO_FRAME_SIZE, ffmpeg->samples);
+      pkt.size = avcodec_encode_audio(c, ffmpeg->audio_buf_aligned, AVCODEC_MAX_AUDIO_FRAME_SIZE, ffmpeg->samples);
       pkt.pts = av_rescale_q(c->coded_frame->pts, c->time_base, ffmpeg->audio_st->time_base);
       pkt.flags |= PKT_FLAG_KEY;
       pkt.stream_index = ffmpeg->audio_st->index;
-      pkt.data = ffmpeg->audio_buf;
+      pkt.data = ffmpeg->audio_buf_aligned;
 
       /* write the compressed frame to the media file */
       if (av_write_frame(ffmpeg->ctxt, &pkt) != 0)
@@ -448,9 +452,10 @@ static int stopwrite(sox_format_t * ft)
   /* Close CODEC */
   if (ffmpeg->audio_st) {
     avcodec_close(ffmpeg->audio_st->codec);
-    free(ffmpeg->samples);
-    free(ffmpeg->audio_buf);
   }
+
+  free(ffmpeg->samples);
+  free(ffmpeg->audio_buf_raw);
 
   /* Write the trailer, if any */
   av_write_trailer(ffmpeg->ctxt);
