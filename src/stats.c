@@ -37,7 +37,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
   p->time_constant = .05;
   p->scale = 1;
-  while ((c = lsx_getopt(argc, argv, "+x:b:t:s:")) != -1) switch (c) {
+  while ((c = lsx_getopt(argc, argv, "+x:b:w:s:")) != -1) switch (c) {
     GETOPT_NUMERIC('x', hex_bits      ,  2 , 32)
     GETOPT_NUMERIC('b', scale_bits    ,  2 , 32)
     GETOPT_NUMERIC('w', time_constant ,  .01 , 10)
