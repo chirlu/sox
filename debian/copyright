@@ -9,8 +9,8 @@ The following copyright applied to this software:
 
   Copyright 1991 Lance Norskog And Sundry Contributors
   This source code is freely redistributable and may be used for
-  any purpose.  This copyright notice must be maintained. 
-  Lance Norskog And Sundry Contributors are not responsible for 
+  any purpose.  This copyright notice must be maintained.
+  Lance Norskog And Sundry Contributors are not responsible for
   the consequences of using this software.
 
 Version 12.16 and above of sox is available from http://sox.sourceforge.net.
@@ -28,9 +28,8 @@ any program that requires LGPL only software.
 
 On Debian systems, the complete text of the GNU General Public License
 can be found in the '/usr/share/common-licenses/GPL-2' file.
-The complete text of the GNU Lesser General Public License can be found in the 
+The complete text of the GNU Lesser General Public License can be found in the
 '/usr/share/common-licenses/LGPL-2' file.
 
 The original copyright owner was Lance Norskog.
 Current upstream development is being made by Chris Bagwell and others.
-

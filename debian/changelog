@@ -1,12 +1,31 @@
-sox (14.3.1-1cvs1) UNRELEASED; urgency=low
+sox (14.3.1-2cvs1) UNRELEASED; urgency=low
 
   * CVS Version.
 
- -- Pascal Giard <evilynux@gmail.com>  Wed, 05 May 2010 15:22:01 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Fri, 11 Feb 2011 23:22:03 -0500
+
+sox (14.3.1-2) unstable; urgency=low
+
+  * [debian/patches/01_fix_ffmpeg_alignment.patch]:
+    - Fixed ffmpeg segfault caused by alignment requirements, thanks to
+      Reuben Thomas (closes: #537511).
+  * [debian/rules]:
+    - Set distro based on the build distribution, thanks to Benjamin Drung
+      <bdrung@debian.org> for the patch (closes: #612409).
+    - Removed -D_REENTRANT from CFLAGS.
+  * [debian/control, debian/copyright, debian/libsox-dev.install]:
+    - Executed wrap-and-sort from ubuntu-dev-tools as suggested by
+      Benjamin Drung <bdrung@debian.org>, thanks! (closes: #612410).
+  * [debian/control]:
+    - Bumped standard version to 3.9.1.
+  * [debian/source/format]:
+    - Specified format 1.0 (TODO: move to quilt 3.0).
+
+ -- Pascal Giard <pascal@debian.org>  Fri, 11 Feb 2011 21:13:57 -0500
 
 sox (14.3.1-1) unstable; urgency=medium
 
-  * New upstream candidate.
+  * New upstream release.
     - Single-threaded is now default (closes: #546944).
     - Support for OpenCore-derived implementation of AMR (closes: #193348).
   * [debian/control]:
