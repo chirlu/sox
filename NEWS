@@ -1,18 +1,20 @@
-We are happy to announce the release of SoX 14.3.1.
+We are happy to announce the release of SoX 14.3.2.
  
 Source code, Win32 binaries, and Mac OSX binaries can be downloaded from 
   https://sourceforge.net/project/showfiles.php?group_id=10706
  
 Primarily a maintenance release, highlights include:
- 
-  o Several fixes incl. multi-core MS-Windows threading problem.
-  o New MS-Windows native audio driver.
-  o New Grandstream ringtone file format.
-  o New support in libSoX for memory based file IO.
-  o Now able to set MP3 compression parameters.
+
+  o Seek support for MP3 files.
+  o Fix WavPack header bugs.
+  o Fix length error in 24-bit RIFF files.
+  o Add default channel mapping to 24-bit RIFF files.
+  o Fix ffmpeg crashes on some CPU's.
+  o Fix segfaults on OSX playback and recording.  
+  o Various fixes and improvements related to compiling.
 
 For the complete list of changes, see the ChangeLog at
-  http://sox.cvs.sourceforge.net/sox/sox/ChangeLog?revision=SOX_14_3_1&view=markup
+  http://sox.cvs.sourceforge.net/sox/sox/ChangeLog?revision=SOX_14_3_2&view=markup
 
 Thanks to all who contributed to this release.
 
