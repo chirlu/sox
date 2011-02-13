@@ -10,7 +10,7 @@ Primarily a maintenance release, highlights include:
   o Fix length error in 24-bit RIFF files.
   o Add default channel mapping to 24-bit RIFF files.
   o Fix ffmpeg crashes on some CPU's.
-  o Fix segfaults on OSX playback and recording.  
+  o Fix segfaults on OSX playback.  Recording now works on OSX.  
   o Various fixes and improvements related to compiling.
 
 For the complete list of changes, see the ChangeLog at
