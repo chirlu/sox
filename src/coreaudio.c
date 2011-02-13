@@ -29,10 +29,22 @@ static OSStatus PlaybackIOProc(AudioDeviceID inDevice UNUSED,
   sox_format_t *ft = (sox_format_t *)inClientData;
   priv_t *ac = (priv_t *)ft->priv;
   float *buf = outOutputData->mBuffers[0].mData;
+  int len;
+
+  /* mDataByteSize may be non-zero even when mData is NULL, but that is 
+   * not an error.
+   */
+  if (buf == NULL)
+    return kAudioHardwareNoError;
+
 
   pthread_mutex_lock(&ac->mutex);
 
-  memcpy(buf, ac->buffer, ac->buf_offset);
+  len = ac->buf_offset;
+
+  memcpy(buf, ac->buffer, len);
+  outOutputData->mBuffers[0].mDataByteSize = len;
+
   ac->buf_offset = 0;
 
   pthread_mutex_unlock(&ac->mutex);
@@ -56,11 +68,13 @@ static OSStatus RecIOProc(AudioDeviceID inDevice UNUSED,
   float *destbuf = (float *)((unsigned char *)ac->buffer + ac->buf_offset);
   int i;
 
-  /* mDataByteSize may be non-zero even when mData is NULL, but that is not an error */
+  /* mDataByteSize may be non-zero even when mData is NULL, but that is 
+   * not an error.
+   */
   if (buf == NULL)
     return kAudioHardwareNoError;
 
-  if (buflen > (ac->buf_size + ac->buf_offset))
+  if (buflen > (ac->buf_size - ac->buf_offset))
     buflen = ac->buf_size - ac->buf_offset;
 
   pthread_mutex_lock(&ac->mutex);
@@ -276,10 +290,7 @@ static size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, size_t ns
    * buf_size is in bytes
    */
   do {
-    /* Wait until callback has cleared the buffer. We move in
-     * lock-step with the callback; we never deal with a partially
-     * written buffer. */
-    while (ac->buf_offset != 0)
+    while (ac->buf_offset >= ac->buf_size)
       pthread_cond_wait(&ac->cond, &ac->mutex);
 
     len = nsamp - written;
