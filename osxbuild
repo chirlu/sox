@@ -42,7 +42,7 @@
 #./configure CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --enable-shared --disable-static;make;sudo make install
 #
 # cd ../libid3tag-0.15.1b
-#./configure CXXFLAGS="-m32 -arch i386" CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --enable-shared --disable-static;make;sudo make install
+#./configure CXXFLAGS="-m32 -arch i386" CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --enable-static --disable-shared;make;sudo make install
 #
 # cd ../libmad-0.15.1b
 #./configure CFLAGS="-m32 -arch i386" LDFLAGS="-arch i386" --enable-shared --disable-static;make;sudo make install
@@ -90,6 +90,8 @@ cp -p \
   soxi.txt \
   libsox.txt \
   $dir
+
+(cd $dir; ln -s sox soxi; ln -s sox play; ln -s sox rec)
 
 #if test -r "../wget-1.11.4/wget.exe"; then
 #  cp ../wget-1.11.4/wget.ini $dir

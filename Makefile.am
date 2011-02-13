@@ -26,9 +26,9 @@ play.1 rec.1: sox.1
 README: README.sh FEATURES.in
 	./README.sh
 
-# Rule for making text man pages
+# Rule for making text man pages.  Uses GNU nroff's -c so not portable.
 .1.txt .3.txt .7.txt:
-	tbl $(srcdir)/$< | nroff -man | sed "s/.//g" > $@
+	tbl $(srcdir)/$< | nroff -man -c | sed "s/.//g" > $@
 
 DOCTXT = sox.txt soxi.txt soxformat.txt libsox.txt README
 txt: $(DOCTXT)
