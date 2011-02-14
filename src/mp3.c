@@ -80,6 +80,7 @@ static const char* const mad_library_names[] =
 {
 #ifdef DL_MAD
     "libmad",
+    "libmad-0",
     "cygmad-0",
 #endif
     NULL
@@ -114,6 +115,7 @@ static const char* const lame_library_names[] =
 {
 #ifdef DL_LAME
   "libmp3lame",
+  "libmp3lame-0",
   "lame-enc",
   "cygmp3lame-0",
 #endif

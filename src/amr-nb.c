@@ -88,6 +88,7 @@ static const char* const amr_opencore_library_names[] =
 {
 #ifdef DL_AMRWB
   "libopencore-amrnb",
+  "libopencore-amrnb-0",
 #endif
   NULL
 };
