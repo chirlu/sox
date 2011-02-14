@@ -90,13 +90,13 @@ MAD decoding DLL into the same directory as SOX.EXE.  These
 can be compiled yourself, may turn up on searches of the internet
 or may be included with other MP3 applications already installed
 on your system. For encoding/writing, try searching for lame-enc.dll, 
-cygmp3lame-0.dll, or libmp3lame.dll.  For decoding/reading, try
-searching for libmad.dll or cygmad-0.dll.
+libmp3lame-0.dll, libmp3lame.dll, or cygmp3lame-0.dll.  For 
+decoding/reading, try searching for libmad-0.dll, libmad.dll or cygmad-0.dll.
 
-Instructions are included here for using Cygwin to create the DLL's. 
-It is assumed you already have cygwin installed on your system
-with its optional gcc compiler installed.  The commands are ran from
-bash shell cygwin installs.
+Instructions are included here for using MSYS to create the DLL's. 
+It is assumed you already have MSYS installed on your system
+with a working gcc compiler.  The commands are ran from MSYS
+bash shell.
 
 Obtain the latest Lame and MAD source code from approprate locations.
 
@@ -104,64 +104,20 @@ Lame MP3 encoder  http://lame.sourceforge.net
 MAD MP3 decoder   http://www.underbit.com/products/mad 
 
 cd lame-398-2
-./configure
+./configure --disabled-static --enable-shared
 make
-cp libmp3lame/.libs/cygmp3lame-0.dll /path/to/sox
-cp /bin/cygwin1.dll /path/to/sox
-[if compiling with cygwin 1.7 you also need to copy following:]
-cp /bin/cyggcc_s-1.dll /path/to/sox
+cp libmp3lame/.libs/libmp3lame-0.dll /path/to/sox
 
-MAD library up to 0.15.1b has a bug in configure that will not allow
-building DLL under cygwin.  So an additional command is needed to
-work around this.
+MAD libraries up to 0.15.1b have a bug in configure that will not allow
+building DLL under cygwin.  This can be resolved by adding LDFLAGS
+to configure and editing the generated Makefile to remove an invalid
+option.
 
 cd libmad-0.15.1b
-./configure
+./configure --enable-shared --disable-static LDFLAGS="-no-undefined"
+[edit Makefile, search for "-fforce-mem" and delete it.]
 make
-gcc -shared -Wl,-export-all -Wl,--out-implib=libmad.dll.a -o cygmad-0.dll version.o fixed.o bit.o timer.o stream.o frame.o synth.o decoder.o layer12.o layer3.o huffman.o
-cp cygmad-0.dll /path/to/sox/
-cp /bin/cygwin1.dll /path/to/sox
-[if compiling with cygwin 1.7 you also need to copy following:]
-cp /bin/cyggcc_s-1.dll /path/to/sox
-
-Alternatively, the MAD configure script can be patched to allow building and
-installing libmad under standard cygwin directories.
-
---- ../libmad-0.15.1b.orig/configure.ac	2004-01-23 03:41:32.000000000 -0600
-+++ configure.ac	2009-05-25 22:44:50.846400000 -0500
-@@ -51,17 +51,17 @@
- 	    esac
-     esac
- 
--dnl    case "$host" in
--dnl	*-*-cygwin* | *-*-mingw*)
--dnl	    LDFLAGS="$LDFLAGS -no-undefined -mdll"
--dnl	    ;;
--dnl    esac
-+    case "$host" in
-+	*-*-cygwin* | *-*-mingw*)
-+	    LDFLAGS="$LDFLAGS -no-undefined"
-+	    ;;
-+    esac
- fi
- 
- dnl Support for libtool.
- 
- dnl AC_DISABLE_SHARED
--dnl AC_LIBTOOL_WIN32_DLL
-+AC_LIBTOOL_WIN32_DLL
- AC_PROG_LIBTOOL
- 
- AC_SUBST(LIBTOOL_DEPS)
---- end diff
-
-cd libmad-0.15.1b
-patch -p0 < configure.ac.diff
-touch NEWS AUTHORS ChangeLog
-autoreconf -i -f
-./configure
-make
-cp .libs/cymad-0.dll /path/to/sox
+cp libmad-0.dll /path/to/sox/
 
 Appendix - AMR-NB/AMR-WB Support
 --------------------------------
@@ -174,25 +130,19 @@ AMR-NB/AMR-WB support can be enabled by placing required DLL's
 into the same directory as SOX.EXE.  These can be compiled yourself, 
 may turn up on searches of the internet or may be included with other 
 MP3 applications already installed on your system. For AMR-NB support,
-try searching for libamrnb-3.dll, libamrnb.dll, amrnb.dll, or
-opencore-amrnb.dll.  For AMR-WB support, try searching for libamrwb-3.dll,
-libamrwb.dll, amrwb.dll, or libopencore-amrwb.dll.
+try searching for libamrnb-3.dll, libopencore-amrnb-0.dll, or
+libopencore-amrnb.dll. For AMR-WB support, try searching for libamrwb-3.dll,
+libopencore-amrwb-0.dll, or libopencore-amrwb.dll.
 
-Instructions are included here for using Cygwin to create the DLL's. 
-It is assumed you already have cygwin installed on your system
-with its optional gcc compiler installed.  The commands are ran from
-bash shell cygwin installs.
+Instructions are included here for using MSYS to create the DLL's. 
+It is assumed you already have MSYS installed on your system with
+working gcc compiler.  These commands are ran from MSYS bash shell.
 
 Obtain the latest amrnb and amrwb source code from 
 http://sourceforge.net/projects/opencore-amr .
 
 cd opencore-amr-0.1.2
-./configure
+./configure --enable-shared --disable-static LDFLAGS="-no-undefined"
 make
-cp amrnb/.libs/cygopencore-amrnb.dll /path/to/sox
-cp amrwb/.libs/cygopencore-amrwb.dll /path/to/sox
-
-cp /bin/cygwin1.dll /path/to/sox
-[if compiling with cygwin 1.7 you also need to copy following:]
-cp /bin/cyggcc_s-1.dll /path/to/sox
-
+cp amrnb/.libs/libopencore-amrnb-0.dll /path/to/sox
+cp amrwb/.libs/libopencore-amrwb-0.dll /path/to/sox
