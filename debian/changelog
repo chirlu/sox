@@ -1,8 +1,13 @@
-sox (14.3.1-2cvs1) UNRELEASED; urgency=low
+sox (14.3.2-0cvs1) UNRELEASED; urgency=low
 
   * CVS Version.
+  * [debian/patches/01_fix_ffmpeg_alignment.patch]:
+    - Removed, fixed upstream.
+  * [debian/control]:
+    - Fixed build-dep minimum required version of liavcodec to 4:0.6.0. The
+      mips arch currently fails to build as it is still at 0.5.x.
 
- -- Pascal Giard <evilynux@gmail.com>  Fri, 11 Feb 2011 23:22:03 -0500
+ -- Pascal Giard <evilynux@gmail.com>  Sun, 13 Feb 2011 22:06:05 -0500
 
 sox (14.3.1-2) unstable; urgency=low
 
