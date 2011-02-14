@@ -47,11 +47,14 @@ then
   CFLAGS="$CFLAGS $FFMPEG_CFLAGS"
   CPPFLAGS="$CPPFLAGS $FFMPEG_CFLAGS"
   LIBS="$LIBS $FFMPEG_LIBS"
-  have_ffmpeg="no"
+
   AC_CHECK_HEADERS([libavformat/avformat.h ffmpeg/avformat.h],
-    [AC_CHECK_LIB(avformat, av_open_input_file, 
-                 have_ffmpeg=yes)
-    break])
+    [AC_CHECK_LIB(avformat, av_open_input_file, have_ffmpeg=yes, have_ffmpeg=no
+                  break)])
+  AC_CHECK_HEADERS([libavcodec/avcodec.h ffmpeg/avcodec.h],
+    [AC_CHECK_LIB(avcodec, avcodec_decode_audio3, have_ffmpeg=yes, have_ffmpeg=no
+                  break)])
+
   CFLAGS="$ac_save_CFLAGS"
   CPPFAGS="$ac_save_CPPFLAGS"
   LIBS="$ac_save_LIBS"
