@@ -354,17 +354,17 @@ if test "$with_lame" != "no"; then
     else
       enable_dl_lame="no"
       AC_CHECK_HEADERS(lame/lame.h,,
-        [AC_CHECK_HEADERS(lame.h,, using_lame=no)])
+        [AC_CHECK_HEADERS(lame.h, using_lame=$using_lame, using_lame=no)])
       AC_CHECK_LIB(mp3lame, lame_init, MP3_LIBS="$MP3_LIBS -lmp3lame",using_lame=no)
-      AC_CHECK_LIB(mp3lame, lame_get_lametag_frame)
+      AC_CHECK_LIB(mp3lame, lame_get_lametag_frame,using_lame=$using_lame,using_lame=no)
       if test "$ac_cv_lib_mp3lame_lame_get_lametag_frame" = yes; then
 	AC_DEFINE(HAVE_LAME_398, 1, [Define to 1 if you have lame 3.98 or greater.])
       fi
-      AC_CHECK_LIB(mp3lame, id3tag_init)
+      AC_CHECK_LIB(mp3lame, id3tag_init,using_lame=$using_lame,using_lame=no)
       if test "$ac_cv_lib_mp3lame_id3tag_init" = yes; then
         AC_DEFINE(HAVE_LAME_ID3TAG, 1, [Define to 1 if lame supports optional ID3 tags.])
       fi
-      AC_CHECK_LIB(mp3lame, id3tag_set_fieldvalue)
+      AC_CHECK_LIB(mp3lame, id3tag_set_fieldvalue,using_lame=$using_lame,using_lame=no)
       if test "$ac_cv_lib_mp3lame_id3tag_set_fieldvalue" = yes; then
         AC_DEFINE(HAVE_LAME_398_ID3TAG, 1, [Define to 1 if lame 3.98 or newer ID3 tag support.])
       fi
@@ -430,7 +430,7 @@ AC_OPTIONAL_FORMAT(flac, FLAC, [AC_CHECK_HEADER(FLAC/all.h, [AC_CHECK_LIB(FLAC, 
 dnl When enable_dl_amrbw, do not let add libraries to be linked in
 dnl since they will be dlopen()'ed instead.
 ac_sox_save_AMRWB_LIBS="$AMRWB_LIBS"
-tmp_using_amrwb=yes
+tmp_using_amrwb=$opt_default
 AC_CHECK_HEADERS(opencore-amrwb/dec_if.h,
 		 [AC_CHECK_LIB(opencore-amrwb, D_IF_init, 
 		  AMRWB_LIBS="$AMRWB_LIBS -lopencore-amrwb", tmp_using_amrwb=no)],
@@ -457,7 +457,7 @@ AC_OPTIONAL_FORMAT(amrwb, AMRWB, [using_amrwb=$tmp_using_amrwb])
 dnl When enable_dl_amrnb, do not let add libraries to be linked in
 dnl since they will be dlopen()'ed instead.
 ac_sox_save_AMRNB_LIBS="$AMRNB_LIBS"
-tmp_using_amrnb=yes
+tmp_using_amrnb=$opt_default
 AC_CHECK_HEADERS(opencore-amrnb/interf_dec.h, 
 		 [AC_CHECK_LIB(opencore-amrnb, Decoder_Interface_init, 
 		  AMRNB_LIBS="$AMRNB_LIBS -lopencore-amrnb", tmp_using_amrnb=no)],
@@ -510,7 +510,7 @@ AC_OPTIONAL_FORMAT(waveaudio, WAVEAUDIO, [AC_CHECK_HEADER(mmsystem.h, [WAVEAUDIO
 dnl When enable_dl_sndfile, do not let SOX_PATH_SNDFILE add libraries
 dnl to be linked in (since they will be dlopen()'ed instead).
 ac_sox_save_SNDFILE_LIBS="$SNDFILE_LIBS"
-SOX_PATH_SNDFILE(tmp_using_sndfile=yes, tmp_using_sndfile=no)
+SOX_PATH_SNDFILE(tmp_using_sndfile=$opt_default, tmp_using_sndfile=no)
 AC_ARG_ENABLE(dl_sndfile,
 	      AC_HELP_STRING([--enable-dl-sndfile], 
 			     [Dlopen sndfile instead of linking in.]),
