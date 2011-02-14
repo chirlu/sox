@@ -164,8 +164,7 @@ Architecture: any
 Section: libdevel
 Depends: libsox-fmt-all (=${binary:Version}),
          libsox1b (=${binary:Version}),
-         ${misc:Depends},
-         ${shlibs:Depends}
+         ${misc:Depends}
 Description: Development files for the SoX library
  SoX is the swiss army knife of sound processing.
  .
