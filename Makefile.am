@@ -81,6 +81,12 @@ install-html: html
 	@list='$(DOCHTML)'; for p in $$list; do \
 	if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	f=$(am__strip_dir) \
+	echo " $(INSTALL_DATA) '$$d$$p' '$(DESTDIR)$(htmldir)//$$f'"; \
+	$(INSTALL_DATA) "$$d$$p" "$(DESTDIR)$(htmldir)/$$f"; \
+	done; \
+	@for p in soxpng/*; do \
+	if test -f "$$p"; then d=; else d="$(srcdir)"; fi; \
+	f=$(am__strip_dir) \
 	echo " $(INSTALL_DATA) '$$d$$p' '$(DESTDIR)$(htmldir)/soxpng/$$f'"; \
 	$(INSTALL_DATA) "$$d$$p" "$(DESTDIR)$(htmldir)/soxpng/$$f"; \
 	done
@@ -91,7 +97,8 @@ uninstall-html:
 	f=$(am__strip_dir) \
 	echo " $(RM) '$(DESTDIR)$(htmldir)/$$f'"; \
 	$(RM) "$(DESTDIR)$(htmldir)/$$f"; \
-	done
+	done; \
+	$(RM) -fr "$(DESTDIR)$(htmldir)/soxpng";
 
 DISTCLEANFILES = $(DOCHTML) $(DOCPDF) $(DOCTXT)
 
