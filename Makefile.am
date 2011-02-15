@@ -60,6 +60,7 @@ uninstall-pdf:
 
 distclean-local:
 	$(RM) mingw32-config.cache
+	$(RM) -r -f soxpng
 
 # Rule for making HTML man pages
 #
@@ -69,12 +70,30 @@ distclean-local:
 FIXHTML = sed 's,<head>,&<link rel="stylesheet" href="http://sox.sourceforge.net/pub/skins/sox/sox.css" type="text/css"></link>,' 
 
 .1.html .3.html .7.html:
-	groff -t -man -Thtml $(srcdir)/$< | $(FIXHTML) > $@
+	groff -t -man -Thtml -P -Dsoxpng $(srcdir)/$< | $(FIXHTML) > $@
 
 DOCHTML = sox.html soxi.html soxformat.html libsox.html
 html: $(DOCHTML)
 
-DISTCLEANFILES = $(DOCHTML) $(DOCPDF) $(DOCTXT) grohtml*
+install-html: html 	 
+	@$(NORMAL_INSTALL) 	 
+	test -z "$(htmldir)/soxpng" || $(MKDIR_P) "$(DESTDIR)$(htmldir)/soxpng"
+	@list='$(DOCHTML)'; for p in $$list; do \
+	if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	f=$(am__strip_dir) \
+	echo " $(INSTALL_DATA) '$$d$$p' '$(DESTDIR)$(htmldir)/soxpng/$$f'"; \
+	$(INSTALL_DATA) "$$d$$p" "$(DESTDIR)$(htmldir)/soxpng/$$f"; \
+	done
+
+uninstall-html: 	 
+	@$(NORMAL_UNINSTALL)
+	@list='$(DOCHTML)'; for p in $$list; do \
+	f=$(am__strip_dir) \
+	echo " $(RM) '$(DESTDIR)$(htmldir)/$$f'"; \
+	$(RM) "$(DESTDIR)$(htmldir)/$$f"; \
+	done
+
+DISTCLEANFILES = $(DOCHTML) $(DOCPDF) $(DOCTXT)
 
 install-data-hook:
 	cd $(DESTDIR)$(mandir)/man1 && $(RM) play.1 && $(LN_S) sox.1 play.1
