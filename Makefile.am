@@ -35,7 +35,7 @@ txt: $(DOCTXT)
 
 # Rule for making PDF man pages
 .1.pdf .3.pdf .7.pdf:
-	tbl $(srcdir)/$< | groff -man -Tps |ps2pdfwr -dPDFSETTINGS=/printer - $@
+	groff -t -man -Tps $(srcdir)/$< |ps2pdfwr -dPDFSETTINGS=/printer - $@
 
 DOCPDF = sox.pdf soxi.pdf soxformat.pdf libsox.pdf
 pdf: $(DOCPDF)
@@ -66,39 +66,15 @@ distclean-local:
 # Get rid on unneeded Content-Type, man directory and manpage index in extension.
 # e.g. ../man1/soxi.1.html becomes ../soxi.html
 # Return to Main Contents and link to man2html are also modified.
-FIXHTML = sed 's,<HEAD>,&<link rel="stylesheet" href="http://sox.sourceforge.net/pub/skins/sox/sox.css" type="text/css"></link>,' | \
-	  tr '\n' '^' | sed 's,\^\^\^\^</PRE>,^</PRE>,g' | tr '^' '\n' | \
-	  sed 's,\<sr,\&radic;,g' | \
-	  sed '1s,^Content-type.*,,' | \
-	  sed 's,<A HREF="\.\./man[0-9]/\([-a-z]\+\)\.[0-9],<A HREF="\1,g' | \
-	  sed 's,<A HREF="\.\./index\.html">\(Return\ to\ Main\ Contents\),<A HREF=".">\1,' | \
-	  sed 's,<A HREF="/cgi-bin/man/man2html">man2html</A>,<A HREF="http://primates.ximian.com/~flucifredi/man/">man2html</A>,'
+FIXHTML = sed 's,<head>,&<link rel="stylesheet" href="http://sox.sourceforge.net/pub/skins/sox/sox.css" type="text/css"></link>,' 
 
 .1.html .3.html .7.html:
-	sed "s/\\\\://g" < $(srcdir)/$< | man2html -r | $(FIXHTML) > $@
+	groff -t -man -Thtml $(srcdir)/$< | $(FIXHTML) > $@
 
 DOCHTML = sox.html soxi.html soxformat.html libsox.html
 html: $(DOCHTML)
 
-install-html: html
-	@$(NORMAL_INSTALL)
-	test -z "$(htmldir)" || $(MKDIR_P) "$(DESTDIR)$(htmldir)"
-	@list='$(DOCHTML)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(INSTALL_DATA) '$$d$$p' '$(DESTDIR)$(htmldir)/$$f'"; \
-	  $(INSTALL_DATA) "$$d$$p" "$(DESTDIR)$(htmldir)/$$f"; \
-	  done
-
-uninstall-html:
-	@$(NORMAL_UNINSTALL)
-	@list='$(DOCHTML)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " $(RM) '$(DESTDIR)$(htmldir)/$$f'"; \
-	  $(RM) "$(DESTDIR)$(htmldir)/$$f"; \
-	  done
-
-DISTCLEANFILES = $(DOCHTML) $(DOCPDF) $(DOCTXT)
+DISTCLEANFILES = $(DOCHTML) $(DOCPDF) $(DOCTXT) grohtml*
 
 install-data-hook:
 	cd $(DESTDIR)$(mandir)/man1 && $(RM) play.1 && $(LN_S) sox.1 play.1
