@@ -24,6 +24,8 @@ File formats:
     Closes bug #3017690.  (Reuben Thomas).
   o Fix memory leak in ffmpeg. (Doug Cook)
   o Handle 0 length chunks in WAV files gracefully.  (Beat Jorg)
+  o When skipping over chunks, account for word alignment. Helps
+    with some Logic Pro generated files.  (D Lambley)
 
 Audio device drivers:
 

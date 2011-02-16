@@ -392,6 +392,9 @@ static int findChunk(sox_format_t * ft, const char *Label, uint32_t *len)
         if (strncmp(Label, magic, (size_t)4) == 0)
             break; /* Found the given chunk */
 
+	/* Chunks are required to be word aligned. */
+	if ((*len) % 2) (*len)++;
+
         /* skip to next chunk */
         if (*len > 0 && lsx_seeki(ft, (off_t)(*len), SEEK_CUR) != SOX_SUCCESS)
         {
