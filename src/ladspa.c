@@ -103,8 +103,9 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int argc, char **argv)
   path = getenv("LADSPA_PATH");
   if (path == NULL)
     path = LADSPA_PATH;
-  lt_dlsetsearchpath(path);
-  if ((l_st->lth = lt_dlopenext(l_st->name)) == NULL) {
+
+  if(lt_dlinit() || lt_dlsetsearchpath(path)
+      || (l_st->lth = lt_dlopenext(l_st->name)) == NULL) {
     lsx_fail("could not open LADSPA plugin %s", l_st->name);
     return SOX_EOF;
   }

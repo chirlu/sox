@@ -40,6 +40,7 @@ Effects:
 
   o F.R. [3051700] spectrogram -r for `raw' spectrogram, no legend.  (robs)
   o Fix -w option on stats effect. (Ronald Sprouse)
+  o Fix segfault with some ladspa plugins (Thor Andreassen)
 
 Other new features:
 
