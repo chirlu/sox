@@ -23,6 +23,7 @@ File formats:
   o Fix ffmpeg playback bug caused by alignment requirements on some platforms.
     Closes bug #3017690.  (Reuben Thomas).
   o Fix memory leak in ffmpeg. (Doug Cook)
+  o Handle 0 length chunks in WAV files gracefully.  (Beat Jorg)
 
 Audio device drivers:
 
