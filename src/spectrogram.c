@@ -29,6 +29,7 @@
 #else
 #include <png.h>
 #endif
+#include <zlib.h>
 
 #define MAX_FFT_SIZE 4096
 #define is_p2(x) !(x & (x - 1))
