@@ -24,7 +24,11 @@
 #include "sgetopt.h"
 #include <assert.h>
 #include <math.h>
+#ifdef HAVE_LIBPNG_PNG_H
+#include <libpng/png.h>
+#else
 #include <png.h>
+#endif
 
 #define MAX_FFT_SIZE 4096
 #define is_p2(x) !(x & (x - 1))

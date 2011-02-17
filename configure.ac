@@ -256,10 +256,13 @@ AC_ARG_WITH(png,
         [Don't try to use png]))
 using_png=no
 if test "$with_png" != "no"; then
-    using_png=yes
-    AC_CHECK_HEADER(png.h,
-        [AC_CHECK_LIB(png, png_set_rows, PNG_LIBS="$PNG_LIBS -lpng -lz" ,[AC_CHECK_LIB(png12, png_set_rows, PNG_LIBS="$PNG_LIBS -lpng12 -lz" ,using_png=no, -lz)], -lz)],
-        using_png=no)
+    AC_CHECK_HEADERS(png.h libpng/png.h,using_png=yes)
+    if test "$using_png" = "yes"; then
+        AC_CHECK_LIB(png, png_set_rows, PNG_LIBS="$PNG_LIBS -lpng -lz", 
+		     [AC_CHECK_LIB(png12, png_set_rows, 
+		      PNG_LIBS="$PNG_LIBS -lpng12 -lz", 
+		      using_png=no, -lz)], -lz)
+    fi
     if test "$with_png" = "yes" -a "$using_png" = "no"; then
         AC_MSG_FAILURE([cannot find png])
     fi
