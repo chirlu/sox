@@ -39,6 +39,7 @@ EXTRA_DIST= \
 	Mad/LibMad.def \
 	Mp3Lame/config.h \
 	Png/inttypes.h \
+	Png/pnglibconf.h \
 	SndFile/config.h \
 	SndFile/inttypes.h \
 	SndFile/sndfile.h \

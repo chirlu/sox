@@ -188,6 +188,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\wavpack\src\tags.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\wavpack\src\unpack.c"
 				>
 			</File>

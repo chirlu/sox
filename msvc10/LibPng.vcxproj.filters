@@ -20,9 +20,6 @@
     <ClCompile Include="..\..\libpng\pngerror.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\libpng\pnggccrd.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\libpng\pngget.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -50,9 +47,6 @@
     <ClCompile Include="..\..\libpng\pngtrans.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\libpng\pngvcrd.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\libpng\pngwio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -74,6 +68,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Png\inttypes.h">
+      <Filter>Config Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Png\pnglibconf.h">
       <Filter>Config Files</Filter>
     </ClInclude>
   </ItemGroup>

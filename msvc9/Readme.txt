@@ -12,17 +12,18 @@ How to build:
 
 2. Extract the source code for the other libraries next to the sox
    directory. Remove the version numbers from the directory names.
+   The following versions were tested and successfully built:
    -- flac-1.2.1.tar.gz extracted into directory flac
-   -- lame-398-2.tar.gz extracted into directory lame
+   -- lame-398.4.tar.gz extracted into directory lame
    -- libid3tag-0.15.1b.tar.gz extracted into directory libid3tag
-   -- libmad-0.15.0b.tar.gz extracted into directory libmad
-   -- libogg-1.1.4.tar.gz extracted into directory libogg
-   -- libpng-1.2.39-no-config.tar.gz extracted into directory libpng
-   -- libsndfile-1.0.20.tar.gz extracted into directory libsndfile
-   -- libvorbis-1.2.3.tar.gz extracted into directory libvorbis
+   -- libmad-0.15.1b.tar.gz extracted into directory libmad
+   -- libogg-1.2.2.tar.gz extracted into directory libogg
+   -- libpng-1.5.1.tar.gz extracted into directory libpng
+   -- libsndfile-1.0.23.tar.gz extracted into directory libsndfile
+   -- libvorbis-1.3.2.tar.gz extracted into directory libvorbis
    -- speex-1.2rc1.tar.gz extracted into directory speex
-   -- wavpack-4.50.1.tar.gz extracted into directory wavpack
-   -- zlib-1.2.3.tar.gz extracted into directory zlib
+   -- wavpack-4.60.1.tar.bz2 extracted into directory wavpack
+   -- zlib-1.2.5.tar.gz extracted into directory zlib
 
 3. Open the sox\msvc9\SoX.sln solution.
 

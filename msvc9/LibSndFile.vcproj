@@ -216,6 +216,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\libsndfile\src\chanmap.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\libsndfile\src\chunk.c"
 				>
 			</File>
@@ -265,6 +269,10 @@
 			</File>
 			<File
 				RelativePath="..\..\libsndfile\src\htk.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libsndfile\src\id3.c"
 				>
 			</File>
 			<File
@@ -385,6 +393,10 @@
 			</File>
 			<File
 				RelativePath="..\..\libsndfile\src\wav_w64.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libsndfile\src\windows.c"
 				>
 			</File>
 			<File

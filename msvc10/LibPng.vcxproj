@@ -96,7 +96,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\libpng\png.c" />
     <ClCompile Include="..\..\libpng\pngerror.c" />
-    <ClCompile Include="..\..\libpng\pnggccrd.c" />
     <ClCompile Include="..\..\libpng\pngget.c" />
     <ClCompile Include="..\..\libpng\pngmem.c" />
     <ClCompile Include="..\..\libpng\pngpread.c" />
@@ -106,7 +105,6 @@
     <ClCompile Include="..\..\libpng\pngrutil.c" />
     <ClCompile Include="..\..\libpng\pngset.c" />
     <ClCompile Include="..\..\libpng\pngtrans.c" />
-    <ClCompile Include="..\..\libpng\pngvcrd.c" />
     <ClCompile Include="..\..\libpng\pngwio.c" />
     <ClCompile Include="..\..\libpng\pngwrite.c" />
     <ClCompile Include="..\..\libpng\pngwtran.c" />
@@ -116,6 +114,7 @@
     <ClInclude Include="..\..\libpng\png.h" />
     <ClInclude Include="..\..\libpng\pngconf.h" />
     <ClInclude Include="Png\inttypes.h" />
+    <ClInclude Include="Png\pnglibconf.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

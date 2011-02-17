@@ -272,6 +272,9 @@ typedef unsigned __int16 uint16_t;
 /* The size of `void*', as computed by sizeof. */
 #define SIZEOF_VOIDP (4)
 
+/* The size of `wchar_t', as computed by sizeof. */
+#define SIZEOF_WCHAR_T (2)
+
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 

@@ -51,7 +51,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>SoX;../../ffmpeg;../../flac/include;../../lame/include;../../lame;../../libid3tag;../../libmad;../../libpng;../../libogg/include;sndfile;../../speex/include;../../libvorbis/include;../../wavpack/include;../../wavpack;../../zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>SoX;Png;../../ffmpeg;../../flac/include;../../lame/include;../../lame;../../libid3tag;../../libmad;../../libpng;../../libogg/include;sndfile;../../speex/include;../../libvorbis/include;../../wavpack/include;../../wavpack;../../zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>true</MinimalRebuild>
@@ -75,7 +75,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>SoX;../../ffmpeg;../../flac/include;../../lame/include;../../lame;../../libid3tag;../../libmad;../../libpng;../../libogg/include;sndfile;../../speex/include;../../libvorbis/include;../../wavpack/include;../../wavpack;../../zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>SoX;Png;../../ffmpeg;../../flac/include;../../lame/include;../../lame;../../libid3tag;../../libmad;../../libpng;../../libogg/include;sndfile;../../speex/include;../../libvorbis/include;../../wavpack/include;../../wavpack;../../zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>

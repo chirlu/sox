@@ -180,10 +180,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\zlib\gzio.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\zlib\infback.c"
 				>
 			</File>

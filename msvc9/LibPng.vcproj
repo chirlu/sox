@@ -174,10 +174,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\libpng\pnggccrd.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\libpng\pngget.c"
 				>
 			</File>
@@ -211,10 +207,6 @@
 			</File>
 			<File
 				RelativePath="..\..\libpng\pngtrans.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\libpng\pngvcrd.c"
 				>
 			</File>
 			<File
@@ -253,6 +245,10 @@
 			>
 			<File
 				RelativePath=".\Png\inttypes.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Png\pnglibconf.h"
 				>
 			</File>
 			<File
