@@ -40,6 +40,7 @@ EXTRA_DIST= \
 	Mp3Lame/config.h \
 	Png/inttypes.h \
 	SndFile/config.h \
+	SndFile/inttypes.h \
 	SndFile/sndfile.h \
 	SndFile/sys/time.h \
 	SoX/soxconfig.h \
