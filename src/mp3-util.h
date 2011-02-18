@@ -217,7 +217,7 @@ static size_t mp3_duration_ms(sox_format_t * ft)
       else vbr |= mad_header.bitrate != initial_bitrate;
 
       /* If not VBR, we can time just a few frames then extrapolate */
-      if (++frames == 10 && !vbr) {
+      if (++frames == 25 && !vbr) {
         struct stat filestat;
         fstat(fileno(fp), &filestat);
         mad_timer_mult(&time, (double)(filestat.st_size - tagsize) / consumed);
