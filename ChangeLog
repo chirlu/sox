@@ -26,6 +26,8 @@ File formats:
   o Handle 0 length chunks in WAV files gracefully.  (Beat Jorg)
   o When skipping over chunks, account for word alignment. Helps
     with some Logic Pro generated files.  (D Lambley)
+  o Fix incorrect MP3 file length determination with VBR & .5s initial
+    silence.  (robs)
 
 Audio device drivers:
 
