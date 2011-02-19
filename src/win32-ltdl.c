@@ -31,6 +31,12 @@ s_dwLastError;
 static char
 s_szLastError[MAX_PATH];
 
+/* keep 1 reserved to search with empty path */
+#define MAX_SEARCH_PATHS 2
+
+static char
+*s_szSearchPaths[MAX_SEARCH_PATHS];
+
 static int
 CopyPath(
     const char* szSource,
@@ -65,34 +71,56 @@ LoadLib(
     lt_dlhandle hMod = 0;
     char szFull[MAX_PATH];
     const char* szExt;
+    unsigned iPath;
     unsigned iExtension;
     unsigned iCur;
-    unsigned iEnd = CopyPath(szFileName, szFull, _countof(szFull), 0);
-    if (iEnd == 0)
+    unsigned iEnd = 0;
+
+    if (_countof(szFileName) == 0)
     {
-        s_dwLastError = ERROR_INVALID_PARAMETER;
-        goto Done;
+	s_dwLastError = ERROR_INVALID_PARAMETER;
+	goto Done;
     }
 
-    for (iExtension = 0; !hMod && szExtensions[iExtension]; iExtension++)
+    for (iPath = 0; !hMod && iPath < MAX_SEARCH_PATHS; iPath++)
     {
-        szExt = szExtensions[iExtension];
-        for (iCur = 0; szExt[iCur] && iEnd + iCur < _countof(szFull); iCur++)
-        {
-            szFull[iEnd + iCur] = szExt[iCur];
-        }
+	/* Add search path only if non-empty and filename does not
+	 * contain absolute path.
+	 */
+	if (s_szSearchPaths[iPath] && s_szSearchPaths[iPath][0] != 0 &&
+	    szFileName[0] != '/' && szFileName[0] != '\\')
+	{
+	    iEnd += CopyPath(s_szSearchPaths[iPath], szFull, _countof(szFull), 
+			    0);
 
-        if (iEnd + iCur >= _countof(szFull))
-        {
-            s_dwLastError = ERROR_BUFFER_OVERFLOW;
-            goto Done;
-        }
-        else
-        {
-            szFull[iEnd + iCur] = 0;
-        }
+	    if (szFull[iEnd-1] != '\\')
+	    {
+		iEnd += CopyPath("\\", &szFull[iEnd], _countof(szFull)-iEnd, 0);
+	    }
+	}
 
-        hMod = (lt_dlhandle)LoadLibraryA(szFull);
+    	iEnd += CopyPath(szFileName, &szFull[iEnd], _countof(szFull)-iEnd, 0);
+
+	for (iExtension = 0; !hMod && szExtensions[iExtension]; iExtension++)
+	{
+	    szExt = szExtensions[iExtension];
+	    for (iCur = 0; szExt[iCur] && iEnd + iCur < _countof(szFull); iCur++)
+	    {
+		szFull[iEnd + iCur] = szExt[iCur];
+	    }
+
+	    if (iEnd + iCur >= _countof(szFull))
+	    {
+		s_dwLastError = ERROR_BUFFER_OVERFLOW;
+		goto Done;
+	    }
+	    else
+	    {
+		szFull[iEnd + iCur] = 0;
+	    }
+
+	    hMod = (lt_dlhandle)LoadLibraryA(szFull);
+	}
     }
 
     s_dwLastError = hMod ? 0 : GetLastError();
@@ -105,7 +133,12 @@ int
 lt_dlinit(void)
 {
     int cErrors = 0;
+    int i;
     s_dwLastError = 0;
+
+    for (i = 0; i < MAX_SEARCH_PATHS; i++)
+    	s_szSearchPaths[i] = NULL;
+
     return cErrors;
 }
 
@@ -114,6 +147,25 @@ lt_dlexit(void)
 {
     int cErrors = 0;
     s_dwLastError = 0;
+    return cErrors;
+}
+
+int
+lt_dlsetsearchpath(const char *search_path)
+{
+    int cErrors=0;
+
+    /* location 0 is researched for current directory */
+
+    if (!s_szSearchPaths[1])
+    {
+	free(s_szSearchPaths[1]);
+	s_szSearchPaths[1] = NULL;
+    }
+
+    if (search_path)
+    	s_szSearchPaths[1] = strdup(search_path);
+
     return cErrors;
 }
 

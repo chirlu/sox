@@ -36,6 +36,9 @@ int
 lt_dlexit(void);
 
 int
+lt_dlsetsearchpath(const char *search_path);
+
+int
 lt_dlforeachfile(
   const char *szSearchPath,
   int (*pfCallback)(const char *szFileName, lt_ptr pData),
