@@ -3,7 +3,7 @@
 # This script will automates the steps used to producing a static win32
 # package of SoX.
 #
-# It requires cygwin with gcc-3 and zip packages installed.  Also, it 
+# It requires cygwin with gcc and zip packages installed.  Also, it
 # requires to already have several external libraries already installed
 # under /usr/local.
 #
@@ -53,10 +53,10 @@
 # cd ../libsndfile-1.0.20
 # ./configure --disable-shared --enable-static;make;sudo make install
 #
-# To get MP3 header files used to enable MP3 support (no libraries used):
+# cd ../libid3tag-0.15.1b
+# ./configure --disable-shared --enable-static;make;sudo make install
 #
-# cd ../lame-398-2
-# ./configure --enable-shared --disable-static;make;sudo make install
+# To get MP3 header files used to enable MP3 support (no libraries used):
 #
 # cd ../libmad
 # ./configure --enable-shared --disable-static;make;sudo make install
@@ -95,7 +95,7 @@ done
 binaries=src/sox
 
 [ ! -r "../wget-1.11.4/wget.exe" -a -r /usr/bin/wget ] && binaries+=" /usr/bin/wget"
- 
+
 binaries=$(for f in `cygcheck $binaries|dos2unix`
     do cygpath -u $f; done|sort|uniq|grep -v ^/cygdrive/)
 
