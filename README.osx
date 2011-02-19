@@ -16,7 +16,7 @@ wget
 ----
 
 SoX can make use of the wget command line utility to load files over
-the internet or list to shoutcast streams.  It only needs to be
+the internet or listen to shoutcast streams.  It only needs to be
 somewhere in your path to be used by SoX.
 
 Please consult wget's homepage for access to source code as well
@@ -54,17 +54,16 @@ Appendix - MP3 Support
 ----------------------
 
 SoX contains support for reading and writing MP3 files but does not ship
-with the DLL's that perform decoding and encoding of MP3 data because
+with the dylib's that perform decoding and encoding of MP3 data because
 of patent restrictions.  For further details, refer to:
 
 http://en.wikipedia.org/wiki/MP3#Licensing_and_patent_issues
 
 MP3 support can be enabled by placing Lame encoding library and/or
 MAD decoding library into a standard library search location such
-as /usr/lib or /usr/local/lib (or set LTDL_LIBRARY_PATH to search
-path).
+as /usr/lib or set LTDL_LIBRARY_PATH to location.
 
-These can be compiled yourself, may turn up on searches of the internet
+These can be compiled yourself, they may turn up on searches of the internet
 or may be included with other MP3 applications already installed
 on your system. Try searching for libmp3lame.dylib and libmad.dylib.
 
@@ -94,10 +93,10 @@ does not ship with the DLL's that perform decoding and encoding of AMR
 data because of patent restrictions.
 
 AMR-NB/AMR-WB support can be enabled by placing required libraries
-into a standard library search location such as /usr/lib or
-/usr/local/lib (or set LTDL_LIBRARY_PATH to search path).
+into a standard library search location such as /usr/lib
+or set LTDL_LIBRARY_PATH to search path.
 
-These can be compiled yourself, may turn up on searches of the internet
+These can be compiled yourself, they may turn up on searches of the internet
 or may be included with other AMR applications already installed
 on your system. Try searching for libopencore-amrnb.dylib and
 libopencore-amrwb.dylib.
@@ -120,7 +119,7 @@ Appendix - LADSPA Plugins
 
 SoX has built in support for LADSPA Plugins.  These plugins are
 mostly built for Linux but some are available for OS X.
-The Audacity GUI application has a page that points to a collect
+The Audacity GUI application has a page that points to a collection
 of OS X LADSPA plugins.
 
 http://audacity.sourceforge.net/download/plugins
