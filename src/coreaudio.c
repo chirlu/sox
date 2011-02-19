@@ -29,23 +29,34 @@ static OSStatus PlaybackIOProc(AudioDeviceID inDevice UNUSED,
   sox_format_t *ft = (sox_format_t *)inClientData;
   priv_t *ac = (priv_t *)ft->priv;
   float *buf = outOutputData->mBuffers[0].mData;
-  int len;
-
-  /* mDataByteSize may be non-zero even when mData is NULL, but that is 
-   * not an error.
-   */
-  if (buf == NULL)
-    return kAudioHardwareNoError;
-
+  unsigned int len;
+  unsigned int buf_num;
 
   pthread_mutex_lock(&ac->mutex);
 
-  len = ac->buf_offset;
+  for (buf_num = 0; buf_num <  outOutputData->mNumberBuffers; buf_num++)
+  {
+      /* TODO: Does more than 1 output buffer need to be handled? */
+      if (buf_num > 0)
+      {
+    	  outOutputData->mBuffers[buf_num].mDataByteSize = 0;
+	  continue;
+      }
 
-  memcpy(buf, ac->buffer, len);
-  outOutputData->mBuffers[0].mDataByteSize = len;
+      buf = outOutputData->mBuffers[0].mData;
 
-  ac->buf_offset = 0;
+      /* mDataByteSize may be non-zero even when mData is NULL, but that is
+       * not an error.
+       */
+      if (buf == NULL)
+	  continue;
+
+      len = ac->buf_offset;
+
+      memcpy(buf, ac->buffer, len);
+      outOutputData->mBuffers[buf_num].mDataByteSize = len;
+      ac->buf_offset = 0;
+  }
 
   pthread_mutex_unlock(&ac->mutex);
   pthread_cond_signal(&ac->cond);
@@ -63,26 +74,44 @@ static OSStatus RecIOProc(AudioDeviceID inDevice UNUSED,
 {
   sox_format_t *ft = (sox_format_t *)inClientData;
   priv_t *ac = (priv_t *)ft->priv;
-  float *buf = inInputData->mBuffers[0].mData;
-  size_t buflen = inInputData->mBuffers[0].mDataByteSize;
+  float *buf;
+  size_t buflen;
   float *destbuf = (float *)((unsigned char *)ac->buffer + ac->buf_offset);
   int i;
-
-  /* mDataByteSize may be non-zero even when mData is NULL, but that is 
-   * not an error.
-   */
-  if (buf == NULL)
-    return kAudioHardwareNoError;
-
-  if (buflen > (ac->buf_size - ac->buf_offset))
-    buflen = ac->buf_size - ac->buf_offset;
+  unsigned int buf_num;
 
   pthread_mutex_lock(&ac->mutex);
 
-  for (i = 0; i < (int)(buflen / sizeof(float)); i += 2) {
-    destbuf[i] = buf[i];
-    destbuf[i + 1] = buf[i + 1];
-    ac->buf_offset += sizeof(float) * 2;
+  for (buf_num = 0; buf_num <  inInputData->mNumberBuffers; buf_num++)
+  {
+      /* TODO: Does more than 1 input buffer need to be handled? */
+      if (buf_num > 0)
+      {
+	  lsx_warn("coreaudio: unhandled extra buffer.  Data discarded.");
+	  continue;
+      }
+
+      buf = inInputData->mBuffers[buf_num].mData;
+      buflen = inInputData->mBuffers[buf_num].mDataByteSize;
+
+      /* mDataByteSize may be non-zero even when mData is NULL, but that is
+       * not an error.
+       */
+      if (buf == NULL)
+	  continue;
+
+      if (buflen > (ac->buf_size - ac->buf_offset))
+	  buflen = ac->buf_size - ac->buf_offset;
+
+      /* FIXME: Handle buffer overrun. */
+      if (buflen < ac->buf_size)
+	  lsx_warn("coreaudio: unhandled buffer overrun.  Data discarded.");
+
+      for (i = 0; i < (int)(buflen / sizeof(float)); i += 2) {
+	  destbuf[i] = buf[i];
+	  destbuf[i + 1] = buf[i + 1];
+	  ac->buf_offset += sizeof(float) * 2;
+      }
   }
 
   pthread_mutex_unlock(&ac->mutex);
@@ -171,14 +200,14 @@ static int setup(sox_format_t *ft, int is_input)
 
   if (stream_desc.mChannelsPerFrame != ft->signal.channels)
   {
-    lsx_debug("audio device did not accept %d channels. Use %d channels instead.", (int)ft->signal.channels, 
+    lsx_debug("audio device did not accept %d channels. Use %d channels instead.", (int)ft->signal.channels,
               (int)stream_desc.mChannelsPerFrame);
     ft->signal.channels = stream_desc.mChannelsPerFrame;
   }
 
   if (stream_desc.mSampleRate != ft->signal.rate)
   {
-    lsx_debug("audio device did not accept %d sample rate. Use %d instead.", (int)ft->signal.rate, 
+    lsx_debug("audio device did not accept %d sample rate. Use %d instead.", (int)ft->signal.rate,
               (int)stream_desc.mSampleRate);
     ft->signal.rate = stream_desc.mSampleRate;
   }
