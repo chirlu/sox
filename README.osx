@@ -12,18 +12,6 @@ or rec it will perform the functions of those applications as defined
 in included documents.  Symlinks are included with this package
 but you can also make your own.
 
-wget
-----
-
-SoX can make use of the wget command line utility to load files over
-the internet or listen to shoutcast streams.  It only needs to be
-somewhere in your path to be used by SoX.
-
-Please consult wget's homepage for access to source code as well
-as further instructions on configuring and installing.
-
-http://www.gnu.org/software/wget
-
 Acknowledgements
 ----------------
 
@@ -49,6 +37,18 @@ The sox exectables included in this package makes use of the following projects:
 
 Enjoy,
 The SoX Development Team
+
+Appendix - wget Support
+-----------------------
+
+SoX can make use of the wget command line utility to load files over
+the internet or listen to shoutcast streams.  It only needs to be
+somewhere in your path to be used by SoX.
+
+Please consult wget's homepage for access to source code as well
+as further instructions on configuring and installing.
+
+http://www.gnu.org/software/wget
 
 Appendix - MP3 Support
 ----------------------

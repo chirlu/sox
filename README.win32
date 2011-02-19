@@ -5,7 +5,7 @@ This file contains information specific to the Win32 version of SoX.
 Please refer to the README file for general information.
 
 The binary SOX.EXE can be installed anywhere you desire.  The only
-restriction is that the included CYGWIN1.DLL and CYGGOMP-1.DLL must be
+restriction is that the included ZLIB1..DLL and LIBGOMP-1.DLL must be
 located in the same directory as SOX.EXE or somewhere within your PATH.
 
 SoX Helper Applications
@@ -36,24 +36,6 @@ play: sox [input files and options] -d [effects]
 rec: sox -d [output file and options] [effects]
 soxi: sox --info [input files and options]
 
-wget
-----
-
-SoX can make use of the wget command line utility to load files over
-the internet.  A binary copy of wget has been included with this
-package of SoX for your convience.
-
-For SoX to make use of wget, it must be located either in your PATH or
-within the same directory that SoX is ran from.
-
-Custom configuration of wget can be made by editing the file wget.ini
-contained in the same directory as wget.exe.
-
-Please consult wget's homepage for access to source code as well as
-further instructions on configuring.
-
-http://www.gnu.org/software/wget
-
 Acknowledgements
 ----------------
 
@@ -77,8 +59,28 @@ further information on how it was compiled and packaged.
 
   WavPack - http://www.wavpack.com
 
+  wget - http://www.gnu.org/software/wget
+
 Enjoy,
 The SoX Development Team
+
+Appendix - wget Support
+-----------------------
+
+SoX can make use of the wget command line utility to load files over
+the internet.  A binary copy of wget has been included with this
+package of SoX for your convience.
+
+For SoX to make use of wget, it must be located either in your PATH or
+within the same directory that SoX is ran from.
+
+Custom configuration of wget can be made by editing the file wget.ini
+contained in the same directory as wget.exe.
+
+Please consult wget's homepage for access to source code as well as
+further instructions on configuring.
+
+http://www.gnu.org/software/wget
 
 Appendix - MP3 Support
 ----------------------
@@ -91,13 +93,13 @@ http://en.wikipedia.org/wiki/MP3#Licensing_and_patent_issues
 
 MP3 support can be enabled by placing Lame encoding DLL and/or
 MAD decoding DLL into the same directory as SOX.EXE.  These
-can be compiled yourself, may turn up on searches of the internet
+can be compiled yourself, they may turn up on searches of the internet
 or may be included with other MP3 applications already installed
-on your system. For encoding/writing, try searching for lame-enc.dll, 
-libmp3lame-0.dll, libmp3lame.dll, or cygmp3lame-0.dll.  For 
+on your system. For encoding/writing, try searching for lame-enc.dll,
+libmp3lame-0.dll, libmp3lame.dll, or cygmp3lame-0.dll.  For
 decoding/reading, try searching for libmad-0.dll, libmad.dll or cygmad-0.dll.
 
-Instructions are included here for using MSYS to create the DLL's. 
+Instructions are included here for using MSYS to create the DLL's.
 It is assumed you already have MSYS installed on your system
 with a working gcc compiler.  The commands are ran from MSYS
 bash shell.
@@ -105,7 +107,7 @@ bash shell.
 Obtain the latest Lame and MAD source code from approprate locations.
 
 Lame MP3 encoder  http://lame.sourceforge.net
-MAD MP3 decoder   http://www.underbit.com/products/mad 
+MAD MP3 decoder   http://www.underbit.com/products/mad
 
 cd lame-398-2
 ./configure --disabled-static --enable-shared
@@ -113,7 +115,7 @@ make
 cp libmp3lame/.libs/libmp3lame-0.dll /path/to/sox
 
 MAD libraries up to 0.15.1b have a bug in configure that will not allow
-building DLL under cygwin.  This can be resolved by adding LDFLAGS
+building DLL under mingw.  This can be resolved by adding LDFLAGS
 to configure and editing the generated Makefile to remove an invalid
 option.
 
@@ -126,23 +128,23 @@ cp libmad-0.dll /path/to/sox/
 Appendix - AMR-NB/AMR-WB Support
 --------------------------------
 
-SoX contains support for reading and writing AMR-NB and AMR-WB files but 
+SoX contains support for reading and writing AMR-NB and AMR-WB files but
 does not ship with the DLL's that perform decoding and encoding of AMR
-data because of patent restrictions. 
+data because of patent restrictions.
 
 AMR-NB/AMR-WB support can be enabled by placing required DLL's
-into the same directory as SOX.EXE.  These can be compiled yourself, 
-may turn up on searches of the internet or may be included with other 
+into the same directory as SOX.EXE.  These can be compiled yourself,
+they may turn up on searches of the internet or may be included with other
 MP3 applications already installed on your system. For AMR-NB support,
 try searching for libamrnb-3.dll, libopencore-amrnb-0.dll, or
 libopencore-amrnb.dll. For AMR-WB support, try searching for libamrwb-3.dll,
 libopencore-amrwb-0.dll, or libopencore-amrwb.dll.
 
-Instructions are included here for using MSYS to create the DLL's. 
+Instructions are included here for using MSYS to create the DLL's.
 It is assumed you already have MSYS installed on your system with
 working gcc compiler.  These commands are ran from MSYS bash shell.
 
-Obtain the latest amrnb and amrwb source code from 
+Obtain the latest amrnb and amrwb source code from
 http://sourceforge.net/projects/opencore-amr .
 
 cd opencore-amr-0.1.2
@@ -156,7 +158,7 @@ Appendix - LADSPA Plugins
 
 SoX has built in support for LADSPA Plugins.  These plugins are
 mostly built for Linux but some are available for Windows.
-The Audacity GUI application has a page that points to a collect
+The Audacity GUI application has a page that points to a collection
 of Windows LADSPA plugins.
 
 http://audacity.sourceforge.net/download/plugins
