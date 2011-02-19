@@ -35,7 +35,7 @@ txt: $(DOCTXT)
 
 # Rule for making PDF man pages
 .1.pdf .3.pdf .7.pdf:
-	groff -t -man -Tps $(srcdir)/$< |ps2pdfwr -dPDFSETTINGS=/printer - $@
+	pdfroff -t -man -Tps $(srcdir)/$< > $@
 
 DOCPDF = sox.pdf soxi.pdf soxformat.pdf libsox.pdf
 pdf: $(DOCPDF)

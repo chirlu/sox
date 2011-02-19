@@ -86,9 +86,7 @@ case `uname` in
   MINGW32*)
   CONFIGURE=configure
   SYS_ROOT=""
-  # Can't build PDF's because lack of ps2pdfwr.  Need to install
-  # ghostscript for windows and then copy wrapper script ps2pdfwr
-  # into MinGW.
+  # Can't build PDF's on MSYS unless ghostscript is installed.
   DOC_TARGETS=""
   DOCS=""
   TMP_SNDFILE_LIBS=""
