@@ -40,6 +40,7 @@ Audio device drivers:
     (Samuli Suominen) 
   o Allow dynamic loading of lame to be enabled even if lame header files
     are not installed.  (Doug Cook)
+  o Support specifying audio device other than default on OSX (cbagwell)
 
 Effects:
 
@@ -47,12 +48,12 @@ Effects:
   o Fix -w option on stats effect. (Ronald Sprouse)
   o Fix segfault with some ladspa plugins (Thor Andreassen)
   o Optionally look for png.h in libpng directory to support OpenBSD
-    packaging.  Helps enable spectrograph effect.
-  o libpng15 requires application to include zlib.h header file.
+    packaging.  Helps enable spectrograph effect. (cbagwell)
+  o libpng15 requires application to include zlib.h header file. (cbagwell)
     Add this to spectrograph effect. [3184238]
   o Enable LADSPA effects on all platforms without any external
     dependencies.  Mainly useful for Linux, Windows and OS X which have
-    binaries readily available.
+    binaries readily available. (cbagwell)
 
 Other new features:
 

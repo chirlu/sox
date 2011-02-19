@@ -129,13 +129,50 @@ static int setup(sox_format_t *ft, int is_input)
   int32_t buf_size;
   int rc;
 
-  property_size = sizeof(ac->adid);
-  if (is_input)
-    status = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultInputDevice,
-                                      &property_size, &ac->adid);
+  if (strncmp(ft->filename, "default", (size_t)7) == 0)
+  {
+      property_size = sizeof(ac->adid);
+      if (is_input)
+	  status = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultInputDevice, &property_size, &ac->adid);
+      else
+	  status = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultOutputDevice, &property_size, &ac->adid);
+  }
   else
-    status = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultOutputDevice,
-                                      &property_size, &ac->adid);
+  {
+      Boolean is_writable;
+      status = AudioHardwareGetPropertyInfo(kAudioHardwarePropertyDevices, &property_size, &is_writable);
+
+      if (status == noErr)
+      {
+	  int device_count = property_size/sizeof(AudioDeviceID);
+	  AudioDeviceID *devices;
+
+	  devices = malloc(property_size);
+    	  status = AudioHardwareGetProperty(kAudioHardwarePropertyDevices, &property_size, devices);
+
+	  if (status == noErr)
+	  {
+	      int i;
+	      for (i = 0; i < property_size/sizeof(AudioDeviceID); i++)
+	      {
+		  char name[256];
+		  status = AudioDeviceGetProperty(devices[i],0,false,kAudioDevicePropertyDeviceName,&property_size,&name);
+
+		  lsx_report("Found Audio Device \"%s\"\n",name);
+
+		  /* String returned from OS is truncated so only compare
+		   * as much as returned.
+		   */
+		  if (strncmp(name,ft->filename,strlen(name)) == 0)
+		  {
+		      ac->adid = devices[i];
+		      break;
+		  }
+	      }
+	  }
+	  free(devices);
+      }
+  }
 
   if (status || ac->adid == kAudioDeviceUnknown)
   {
@@ -165,9 +202,10 @@ static int setup(sox_format_t *ft, int is_input)
   ft->signal.rate = 44100;
   ft->encoding.bits_per_sample = 32;
 
-  /* TODO: My limited experience with hardware can only get floats working which a fixed sample
-   * rate and stereo.  I know that is a limitiation of audio device I have so this may not be
-   * standard operating orders.  If some hardware supports setting sample rates and channel counts
+  /* TODO: My limited experience with hardware can only get floats working
+   * withh a fixed sample rate and stereo.  I know that is a limitiation of
+   * audio device I have so this may not be standard operating orders.
+   * If some hardware supports setting sample rates and channel counts
    * then should do that over resampling and mixing.
    */
 #if  0

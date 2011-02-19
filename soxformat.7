@@ -246,10 +246,16 @@ track is always a multiple of 588.
 .TP
 \fBcoreaudio\fR (optional)
 Mac OSX CoreAudio device driver: supports both playing and recording
-audio.  Examples:
+audio.  If a filename is not specific or if the name is "default" then
+the default audio device is selected.  Any other name will be used
+to select a specific device.  The valid names can be seen in the
+System Preferences->Sound menu and then under the Output and Input tabs.
+
+Examples:
 .EX
 	sox infile \-t coreaudio
 	sox infile \-t coreaudio default
+	sox infile \-t coreaudio "Internal Speakers"
 .EE
 See also
 .BR play (1),
