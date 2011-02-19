@@ -9,19 +9,8 @@ self-contained statically linked executable.
 
 If the sox executable is invoked with an executable name of soxi, play,
 or rec it will perform the functions of those applications as defined
-in included documents.
-
-Symlinks can be created for this purpose; such as:
-
-ln -s sox soxi
-ln -s sox play
-ln -s sox rec
-
-This also roughly equates to invoking sox with following options:
-
-soxi: sox --info [input files and options]
-play: sox [input files and options] -d [effects]
-rec: sox -d [output file and options] [effects]
+in included documents.  Symlinks are included with this package
+but you can also make your own.
 
 wget
 ----
@@ -42,15 +31,21 @@ The sox exectables included in this package makes use of the following projects:
 
   SoX - http://sox.sourceforge.net
 
-  Ogg Vorbis - http://www.vorbis.com
-
   FLAC - http://flac.sourceforge.net
+
+  LADSPA - http://www.ladspa.org
+
+  libid3tag - http://www.underbit.com/products/mad
+
+  libltdl - http://www.gnu.org/software/libtool
 
   libsndfile - http://www.mega-nerd.com/libsndfile
 
-  WavPack - http://www.wavpack.com
+  Ogg Vorbis - http://www.vorbis.com
 
   PNG - http://www.libpng.org/pub/png
+
+  WavPack - http://www.wavpack.com
 
 Enjoy,
 The SoX Development Team

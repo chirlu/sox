@@ -3,27 +3,27 @@
 # This script will automates the steps used to producing a static win32
 # package of SoX.
 #
-# It is used on a Fedora box with mingw cross compiler and wine to 
+# It is used on a Fedora box with mingw cross compiler and wine to
 # test.  It can also be used under MSYS but will not generate PDF docs.
 #
-# It will optionally package up VC++ version of wget if found in 
+# It will optionally package up VC++ version of wget if found in
 # ../wget-1.11.4.
 #
 # Various notes:
 #
 # Script makes use of "-static" option to tell compiler to prefer static
-# external libraries so that we do not need to distribute DLL's. 
+# external libraries so that we do not need to distribute DLL's.
 #
-# Libtool will get confused with this flag for external libraries 
-# that have a libtool lib*.la file and support shared libraries as 
-# well as static libraries (but usually only if that library 
-# further depends on other external libraries with lib*.la files). 
+# Libtool will get confused with this flag for external libraries
+# that have a libtool lib*.la file and support shared libraries as
+# well as static libraries (but usually only if that library
+# further depends on other external libraries with lib*.la files).
 # Libtool may ignore -static option or it may link first external
 # library as static but other dependent libraries as shared (usually
 # because it follows $dependency_libs and that ignores -static option).
 #
-# Work arounds include to only install static libraries, delete the lib*.la 
-# file, or edit the lib*.la file and set dlnames and library_names variables 
+# Work arounds include to only install static libraries, delete the lib*.la
+# file, or edit the lib*.la file and set dlnames and library_names variables
 # to empty string ("").
 #
 # The following command lines were used to generate the static external
@@ -53,20 +53,17 @@
 #
 # Compile libsndfile after FLAC and ogg vorbis so that it will include
 # support for that.
-# MINGW work around: Can either add -lwsock32 to end of *_LDADD for any 
+# MINGW work around: Can either add -lwsock32 to end of *_LDADD for any
 # failed program links or modify top leve Makefile and remove
 # "programs", "examples", "regtests", and "tests" from SUBDIRS.
 # cd ../libsndfile-1.0.21
 # mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
-# To get MP3 header files used to enable MP3 support (no libraries used):
-#
-# cd ../lame-398-2
-# mingw32-configure --enable-shared --disable-static;mingw32-make;sudo mingw32-make install
-#
 # libid3tag does not like to be compiled shared on mingw32 cross compiler.
 # cd ../libid3tag-0.15.1b
 # mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
+#
+# To get MP3 header files used to enable MP3 support (no libraries used):
 #
 # MINGW work around: Edit Makefile and remove -fforce-mem from CFLAGS
 # cd ../libmad-0.15.1b

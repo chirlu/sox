@@ -5,7 +5,7 @@ This file contains information specific to the Win32 version of SoX.
 Please refer to the README file for general information.
 
 The binary SOX.EXE can be installed anywhere you desire.  The only
-restriction is that the included CYGWIN1.DLL and CYGGOMP-1.DLL must be 
+restriction is that the included CYGWIN1.DLL and CYGGOMP-1.DLL must be
 located in the same directory as SOX.EXE or somewhere within your PATH.
 
 SoX Helper Applications
@@ -15,7 +15,7 @@ SoX also includes support for SOXI.EXE, PLAY.EXE and REC.EXE and their
 behaviors are documented in included PDF's.  They have the same
 install restrictions as SOX.EXE.
 
-SOXI.EXE, PLAY.EXE, and REC.EXE are not distributed with this package to 
+SOXI.EXE, PLAY.EXE, and REC.EXE are not distributed with this package to
 reduce size requirements. They are, in fact, only copies of the original
 SOX.EXE binary which changes SOX.EXE's behavior based on the
 executable's filename.
@@ -63,15 +63,19 @@ further information on how it was compiled and packaged.
 
   SoX - http://sox.sourceforge.net
 
-  Ogg Vorbis - http://www.vorbis.com
-
   FLAC - http://flac.sourceforge.net
+
+  LADSPA - http://www.ladspa.org
+
+  libid3tag - http://www.underbit.com/products/mad
 
   libsndfile - http://www.mega-nerd.com/libsndfile
 
-  WavPack - http://www.wavpack.com
+  Ogg Vorbis - http://www.vorbis.com
 
   PNG - http://www.libpng.org/pub/png
+
+  WavPack - http://www.wavpack.com
 
 Enjoy,
 The SoX Development Team
