@@ -84,6 +84,12 @@ LoadLib(
 
     for (iPath = 0; !hMod && iPath < MAX_SEARCH_PATHS; iPath++)
     {
+	/* Only loop through 1 time when user gives absolute paths
+	 * to prevent wasting time.
+	 */
+	if (iPath > 0 && (szFileName[0] != '/' || szFileName[0] != '\\'))
+	    break;
+
 	/* Add search path only if non-empty and filename does not
 	 * contain absolute path.
 	 */
