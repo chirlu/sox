@@ -120,3 +120,15 @@ If that does not work, then try this:
 cd opencore-amr-0.1.2
 ./build_osx.sh
 
+Appendix - LADSPA Plugins
+-------------------------
+
+SoX has built in support for LADSPA Plugins.  These plugins are
+mostly built for Linux but some are available for OS X.
+The Audacity GUI application has a page that points to a collect
+of OS X LADSPA plugins.
+
+http://audacity.sourceforge.net/download/plugins
+
+SoX will search for these plugins based on LADSPA_PATH
+enviornment variable.  See sox.txt for further information.

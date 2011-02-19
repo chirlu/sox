@@ -72,12 +72,13 @@ libsox_la_SOURCES += \
 	dft_filter.h dither.c dither.h divide.c earwax.c echo.c \
 	echos.c effects.c effects.h effects_i.c effects_i_dsp.c fade.c fft4g.c \
 	fft4g.h fifo.h filter.c fir.c firfit.c flanger.c gain.c input.c \
-	ladspa.c loudness.c mcompand.c mcompand_xover.h mixer.c noiseprof.c \
-	noisered.c noisered.h output.c overdrive.c pad.c pan.c phaser.c rate.c \
-	rate_filters.h rate_half_fir.h rate_poly_fir0.h rate_poly_fir.h \
-	remix.c repeat.c reverb.c reverse.c silence.c sinc.c skeleff.c speed.c \
-	speexdsp.c splice.c stat.c stats.c stretch.c swap.c synth.c tempo.c tremolo.c \
-	trim.c vad.c vol.c ignore-warning.h
+	ladspa.h ladspa.c loudness.c mcompand.c mcompand_xover.h mixer.c \
+	noiseprof.c noisered.c noisered.h output.c overdrive.c pad.c pan.c \
+	phaser.c rate.c rate_filters.h rate_half_fir.h rate_poly_fir0.h \
+	rate_poly_fir.h remix.c repeat.c reverb.c reverse.c silence.c \
+	sinc.c skeleff.c speed.c speexdsp.c splice.c stat.c stats.c \
+	stretch.c swap.c synth.c tempo.c tremolo.c trim.c vad.c vol.c \
+	ignore-warning.h
 if HAVE_PNG
     libsox_la_SOURCES += spectrogram.c
 endif

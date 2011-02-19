@@ -24,7 +24,7 @@
 #include <limits.h>
 #include <string.h>
 #include <ltdl.h>
-#include <ladspa.h>
+#include "ladspa.h"
 
 static sox_effect_handler_t sox_ladspa_effect;
 

@@ -50,6 +50,9 @@ Effects:
     packaging.  Helps enable spectrograph effect.
   o libpng15 requires application to include zlib.h header file.
     Add this to spectrograph effect. [3184238]
+  o Enable LADSPA effects on all platforms without any external
+    dependencies.  Mainly useful for Linux, Windows and OS X which have
+    binaries readily available.
 
 Other new features:
 

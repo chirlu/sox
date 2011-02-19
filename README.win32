@@ -146,3 +146,16 @@ cd opencore-amr-0.1.2
 make
 cp amrnb/.libs/libopencore-amrnb-0.dll /path/to/sox
 cp amrwb/.libs/libopencore-amrwb-0.dll /path/to/sox
+
+Appendix - LADSPA Plugins
+-------------------------
+
+SoX has built in support for LADSPA Plugins.  These plugins are
+mostly built for Linux but some are available for Windows.
+The Audacity GUI application has a page that points to a collect
+of Windows LADSPA plugins.
+
+http://audacity.sourceforge.net/download/plugins
+
+SoX will search for these plugins based on LADSPA_PATH
+enviornment variable.  See sox.txt for further information.

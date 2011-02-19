@@ -281,10 +281,7 @@ AC_ARG_WITH(ladspa,
 using_ladspa=no
 if test "$with_ladspa" != "no" -a "$using_libltdl" = "yes"; then
     using_ladspa=yes
-    AC_CHECK_HEADERS(ladspa.h,, using_ladspa=no)
-    if test "$with_ladspa" = "yes" -a "$using_ladspa" = "no"; then
-        AC_MSG_FAILURE([cannot find ladspa.h])
-    fi
+    AC_DEFINE(HAVE_LADSPA_H, 1, [1 if should enable LADSPA])
 fi
 LADSPA_PATH=${libdir}/ladspa
 AC_ARG_WITH(ladspa-path,
