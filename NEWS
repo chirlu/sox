@@ -12,10 +12,16 @@ Primarily a maintenance release, highlights include:
   o Fix length error in 24-bit RIFF files.
   o Add default channel mapping to 24-bit RIFF files.
   o Fix ffmpeg crashes on some CPU's.
-  o Fix segfaults on Mac OS X playback.  Recording now works on OSX.  
   o Read wider range of WAV files with chunks embedded.
+  o Fix incorrect MP3 length determination with some VBR files
+    with initial silence.
+  o Fix segfaults on Mac OS X playback.  Recording now works on OSX.  
   o Allow specifying non-default audio device on OS X.
   o Enable LADSPA support by default on all platforms if libltdl exists.
+  o Allow now legend on spectrogram.
+  o Fix -w option on stat effect.
+  o Support specifying absolute end position instead of offset from
+    beginning of trim operation.
   o Various fixes and improvements related to compiling.
 
 For the complete list of changes, see the ChangeLog at

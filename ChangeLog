@@ -5,7 +5,6 @@ This file contains a list of all changes starting after the release of
 sox-11gamma, followed by a list of prior authors and features.
 
 
-
 sox-14.3.2	2011-xx-xx
 ----------
 
@@ -36,10 +35,6 @@ Audio device drivers:
   o Add support for 32-bit samples to OSS driver. (Eric Lammerts)
   o Add support for 24 and 32-bit samples to waveaudio (Win32) driver.
     (Doug Cook)
-  o Fix regression where MP3 handler required libmad headers to be installed.
-    (Samuli Suominen) 
-  o Allow dynamic loading of lame to be enabled even if lame header files
-    are not installed.  (Doug Cook)
   o Support specifying audio device other than default on OSX (cbagwell)
 
 Effects:
@@ -56,6 +51,10 @@ Effects:
     binaries readily available. (cbagwell)
   o Support specifying an absolute end location for trim effect instead
     only an offset from trim begin location. (Ulrich Klauer)
+  o Fix regression where MP3 handler required libmad headers to be installed.
+    (Samuli Suominen) 
+  o Allow dynamic loading of lame to be enabled even if lame header files
+    are not installed.  (Doug Cook)
 
 Other new features:
 
