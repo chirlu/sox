@@ -13,6 +13,9 @@ Primarily a maintenance release, highlights include:
   o Add default channel mapping to 24-bit RIFF files.
   o Fix ffmpeg crashes on some CPU's.
   o Fix segfaults on Mac OS X playback.  Recording now works on OSX.  
+  o Read wider range of WAV files with chunks embedded.
+  o Allow specifying non-default audio device on OS X.
+  o Enable LADSPA support by default on all platforms if libltdl exists.
   o Various fixes and improvements related to compiling.
 
 For the complete list of changes, see the ChangeLog at
