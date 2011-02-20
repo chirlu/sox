@@ -54,6 +54,8 @@ Effects:
   o Enable LADSPA effects on all platforms without any external
     dependencies.  Mainly useful for Linux, Windows and OS X which have
     binaries readily available. (cbagwell)
+  o Support specifying an absolute end location for trim effect instead
+    only an offset from trim begin location. (Ulrich Klauer)
 
 Other new features:
 

@@ -3925,23 +3925,24 @@ and the depth as a percentage by
 .I depth
 (default 40).
 .TP
-\fBtrim \fIstart\fR [\fIlength\fR]
+\fBtrim \fIstart\fR [\fIlength\fR\^|\^\fB=\fIend\fR]
 Trim can trim off unwanted audio from the beginning and end of the
 audio.  Audio is not sent to the output stream until
 the \fIstart\fR location is reached.
 .SP
 The optional \fIlength\fR parameter gives the length of audio to output
 after the \fIstart\fR sample and is thus used to trim off the end of the
-audio.  Using a value of 0 for the \fIstart\fR parameter will allow
-trimming off the end only.
+audio.  Alternatively, an absolute end location can be given by
+preceding it with an equals sign.  Using a value of 0 for the \fIstart\fR
+parameter will allow trimming off the end only.
 .SP
-Both options can be specified using either an amount of time or an
+Both parameters can be specified using either an amount of time or an
 exact count of samples.  The format for specifying lengths in time is
 hh:mm:ss.frac.  A start value of 1:30\*d5 will not start until 1 minute,
 thirty and \(12 seconds into the audio.  The format for specifying
 sample counts is the number of samples with the letter `s' appended to
-it.  A value of 8000s will wait until 8000 samples are read before
-starting to process audio.
+it.  A value of 8000s for the \fIstart\fR parameter will wait until
+8000 samples are read before starting to process audio.
 .TP
 \fBvad \fR[\fIoptions\fR]
 Voice Activity Detector.  Attempts to trim silence and quiet

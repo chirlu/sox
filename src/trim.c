@@ -12,7 +12,8 @@
 typedef struct {
     /* options here */
     char *start_str;
-    char *length_str;
+    char *end_str;
+    sox_bool end_is_absolute;
 
     /* options converted to values */
     size_t start;
@@ -28,6 +29,7 @@ typedef struct {
  */
 static int sox_trim_getopts(sox_effect_t * effp, int argc, char **argv)
 {
+    char *end;
     priv_t * trim = (priv_t *) effp->priv;
   --argc, ++argv;
 
@@ -36,10 +38,15 @@ static int sox_trim_getopts(sox_effect_t * effp, int argc, char **argv)
      */
     switch (argc) {
         case 2:
-            trim->length_str = lsx_malloc(strlen(argv[1])+1);
-            strcpy(trim->length_str,argv[1]);
+            end = argv[1];
+            if (*end == '=') {
+                trim->end_is_absolute = sox_true;
+                end++;
+            } else trim->end_is_absolute = sox_false;
+            trim->end_str = lsx_malloc(strlen(end)+1);
+            strcpy(trim->end_str, end);
             /* Do a dummy parse to see if it will fail */
-            if (lsx_parsesamples(0., trim->length_str, &trim->length, 't') == NULL)
+            if (lsx_parsesamples(0., trim->end_str, &trim->length, 't') == NULL)
               return lsx_usage(effp);
         case 1:
             trim->start_str = lsx_malloc(strlen(argv[0])+1);
@@ -65,19 +72,29 @@ static int sox_trim_start(sox_effect_t * effp)
     if (lsx_parsesamples(effp->in_signal.rate, trim->start_str,
                         &trim->start, 't') == NULL)
       return lsx_usage(effp);
-    /* Account for # of channels */
-    trim->start *= effp->in_signal.channels;
 
-    if (trim->length_str)
+    if (trim->end_str)
     {
-        if (lsx_parsesamples(effp->in_signal.rate, trim->length_str,
+        if (lsx_parsesamples(effp->in_signal.rate, trim->end_str,
                     &trim->length, 't') == NULL)
           return lsx_usage(effp);
+        if (trim->end_is_absolute) {
+            if (trim->length < trim->start) {
+                lsx_warn("end earlier than start");
+                trim->length = 0;
+                  /* with trim->end_str != NULL, this really means zero */
+            } else
+                trim->length -= trim->start;
+        }
     }
     else
         trim->length = 0;
+          /* with trim->end_str == NULL, this means indefinite length */
+
+    lsx_debug("start at %lus, length %lu", trim->start, trim->length);
 
     /* Account for # of channels */
+    trim->start *= effp->in_signal.channels;
     trim->length *= effp->in_signal.channels;
 
     trim->index = 0;
@@ -130,7 +147,7 @@ static int sox_trim_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
     } /* !trimmed */
 
     if (trim->trimmed || start_trim) {
-        if (trim->length_str && ((trim->trimmed+done) >= trim->length)) {
+        if (trim->end_str && ((trim->trimmed+done) >= trim->length)) {
             /* Since we know the end is in this block, we set done
              * to the desired length less the amount already read.
              */
@@ -153,7 +170,7 @@ static int lsx_kill(sox_effect_t * effp)
     priv_t * trim = (priv_t *) effp->priv;
 
     free(trim->start_str);
-    free(trim->length_str);
+    free(trim->end_str);
 
     return (SOX_SUCCESS);
 }
@@ -173,7 +190,7 @@ void sox_trim_clear_start(sox_effect_t * effp)
 const sox_effect_handler_t *lsx_trim_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "trim", "start [length]", SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_MODIFY,
+    "trim", "start [length|=end]", SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_MODIFY,
     sox_trim_getopts, sox_trim_start, sox_trim_flow,
     NULL, NULL, lsx_kill, sizeof(priv_t)
   };
