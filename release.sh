@@ -18,7 +18,7 @@
 # TODO: Make sure releases are tagged in cvs/git and no files remain
 # uncommitted to make sure release is reproducable.
 
-build_files=no
+build_files=yes
 update_web=yes
 release_files=yes
 
