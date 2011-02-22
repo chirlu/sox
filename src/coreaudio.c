@@ -29,34 +29,28 @@ static OSStatus PlaybackIOProc(AudioDeviceID inDevice UNUSED,
   sox_format_t *ft = (sox_format_t *)inClientData;
   priv_t *ac = (priv_t *)ft->priv;
   float *buf = outOutputData->mBuffers[0].mData;
-  unsigned int len;
-  unsigned int buf_num;
+  unsigned int len, output_len;
+
+  if (outOutputData->mNumberBuffers != 1)
+  {
+	  lsx_warn("coreaudio: unhandled extra buffer.  Data discarded.");
+	  return kAudioHardwareNoError;
+  }
+
+  buf = outOutputData->mBuffers[0].mData;
+  output_len = outOutputData->mBuffers[0].mDataByteSize;
 
   pthread_mutex_lock(&ac->mutex);
 
-  for (buf_num = 0; buf_num <  outOutputData->mNumberBuffers; buf_num++)
-  {
-      /* TODO: Does more than 1 output buffer need to be handled? */
-      if (buf_num > 0)
-      {
-    	  outOutputData->mBuffers[buf_num].mDataByteSize = 0;
-	  continue;
-      }
+  len = (ac->buf_offset < output_len) ? ac->buf_offset : output_len;
 
-      buf = outOutputData->mBuffers[0].mData;
+  memcpy(buf, ac->buffer, len);
 
-      /* mDataByteSize may be non-zero even when mData is NULL, but that is
-       * not an error.
-       */
-      if (buf == NULL)
-	  continue;
+  /* Fill partial output buffers with silence */
+  if (len < output_len)
+      memset(buf+len, 0, output_len-len);
 
-      len = ac->buf_offset;
-
-      memcpy(buf, ac->buffer, len);
-      outOutputData->mBuffers[buf_num].mDataByteSize = len;
-      ac->buf_offset = 0;
-  }
+  ac->buf_offset = 0;
 
   pthread_mutex_unlock(&ac->mutex);
   pthread_cond_signal(&ac->cond);
