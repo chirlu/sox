@@ -50,7 +50,7 @@ static OSStatus PlaybackIOProc(AudioDeviceID inDevice UNUSED,
   if (len < output_len)
       memset(buf+len, 0, output_len-len);
 
-  ac->buf_offset = 0;
+  ac->buf_offset -= len;
 
   pthread_mutex_unlock(&ac->mutex);
   pthread_cond_signal(&ac->cond);
