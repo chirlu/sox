@@ -338,13 +338,21 @@ static size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, size_t ns
   float *p;
   SOX_SAMPLE_LOCALS;
 
+  pthread_mutex_lock(&ac->mutex);
+
+  /* Wait to start until mutex is locked to help prevent callback
+   * getting zero samples.
+   */
   if (!ac->device_started)
   {
-    status = AudioDeviceStart(ac->adid, PlaybackIOProc);
-    ac->device_started = 1;
+      status = AudioDeviceStart(ac->adid, PlaybackIOProc);
+      if (status)
+      {
+	  pthread_mutex_unlock(&ac->mutex);
+	  return SOX_EOF;
+      }
+      ac->device_started = 1;
   }
-
-  pthread_mutex_lock(&ac->mutex);
 
   /* globals.bufsize is in samples
    * buf_offset is in bytes
@@ -352,7 +360,7 @@ static size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, size_t ns
    */
   do {
     while (ac->buf_offset >= ac->buf_size)
-      pthread_cond_wait(&ac->cond, &ac->mutex);
+	pthread_cond_wait(&ac->cond, &ac->mutex);
 
     len = nsamp - written;
     if (len > (ac->buf_size - ac->buf_offset) / sizeof(float))
