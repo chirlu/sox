@@ -41,10 +41,14 @@ static void output_message(unsigned level, const char *filename, const char *fmt
 
 /*
  * On an alsa capable system, plays an audio file starting 10 seconds in.
- * Copes with sample-rate change if necessary.  E.g. example3 song2.ogg
+ * Copes with sample-rate and channel change if necessary since its
+ * common for audio drivers to to support subset of rates and channel
+ * counts..
+ * E.g. example3 song2.ogg
  *
  * Can easily be changed to work with other audio device drivers supported
- * by libSoX; e.g. "oss", "ao", etc.  See the soxformat(7) manual page.
+ * by libSoX; e.g. "oss", "ao", "coreaudio", etc.
+ * See the soxformat(7) manual page.
  */
 int main(int argc, char * argv[])
 {
@@ -74,6 +78,12 @@ int main(int argc, char * argv[])
 
   if (in->signal.rate != out->signal.rate) {
     e = sox_create_effect(sox_find_effect("rate"));
+    assert(sox_effect_options(e, 0, NULL) == SOX_SUCCESS);
+    assert(sox_add_effect(chain, e, &in->signal, &out->signal) == SOX_SUCCESS);
+  }
+
+  if (in->signal.channels != out->signal.channels) {
+    e = sox_create_effect(sox_find_effect("channels"));
     assert(sox_effect_options(e, 0, NULL) == SOX_SUCCESS);
     assert(sox_add_effect(chain, e, &in->signal, &out->signal) == SOX_SUCCESS);
   }
