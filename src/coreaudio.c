@@ -28,7 +28,7 @@ static OSStatus PlaybackIOProc(AudioDeviceID inDevice UNUSED,
 {
   sox_format_t *ft = (sox_format_t *)inClientData;
   priv_t *ac = (priv_t *)ft->priv;
-  float *buf = outOutputData->mBuffers[0].mData;
+  char *buf = outOutputData->mBuffers[0].mData;
   unsigned int len, output_len;
 
   if (outOutputData->mNumberBuffers != 1)
@@ -37,12 +37,16 @@ static OSStatus PlaybackIOProc(AudioDeviceID inDevice UNUSED,
 	  return kAudioHardwareNoError;
   }
 
-  buf = outOutputData->mBuffers[0].mData;
+  buf = (char *)outOutputData->mBuffers[0].mData;
   output_len = outOutputData->mBuffers[0].mDataByteSize;
 
   pthread_mutex_lock(&ac->mutex);
 
   len = (ac->buf_offset < output_len) ? ac->buf_offset : output_len;
+
+  /* Make sure to write 2 (stereo) floats at a time */
+  if (len % 8)
+      len -= len % 8;
 
   memcpy(buf, ac->buffer, len);
 
@@ -68,45 +72,44 @@ static OSStatus RecIOProc(AudioDeviceID inDevice UNUSED,
 {
   sox_format_t *ft = (sox_format_t *)inClientData;
   priv_t *ac = (priv_t *)ft->priv;
-  float *buf;
-  size_t buflen, output_buflen;
-  float *destbuf = (float *)((unsigned char *)ac->buffer + ac->buf_offset);
+  size_t len, output_len;
+  char *destbuf;
+  char *buf;
   int i;
-  unsigned int buf_num;
 
   pthread_mutex_lock(&ac->mutex);
 
-  for (buf_num = 0; buf_num <  inInputData->mNumberBuffers; buf_num++)
+  if (inInputData->mNumberBuffers != 1)
   {
-      /* TODO: Does more than 1 input buffer need to be handled? */
-      if (buf_num > 0)
-      {
-	  lsx_warn("coreaudio: unhandled extra buffer.  Data discarded.");
-	  continue;
-      }
-
-      buf = inInputData->mBuffers[buf_num].mData;
-      buflen = output_buflen = inInputData->mBuffers[buf_num].mDataByteSize;
-
-      /* mDataByteSize may be non-zero even when mData is NULL, but that is
-       * not an error.
-       */
-      if (buf == NULL)
-	  continue;
-
-      if (buflen > (ac->buf_size - ac->buf_offset))
-	  buflen = ac->buf_size - ac->buf_offset;
-
-      /* FIXME: Handle buffer overrun. */
-      if (buflen < output_buflen)
-	  lsx_warn("coreaudio: unhandled buffer overrun.  Data discarded.");
-
-      for (i = 0; i < (int)(buflen / sizeof(float)); i += 2) {
-	  destbuf[i] = buf[i];
-	  destbuf[i + 1] = buf[i + 1];
-	  ac->buf_offset += sizeof(float) * 2;
-      }
+    lsx_warn("coreaudio: unhandled extra buffer.  Data discarded.");
+    return kAudioHardwareNoError;
   }
+
+  destbuf = ((char *)ac->buffer + ac->buf_offset);
+  buf = inInputData->mBuffers[0].mData;
+  output_len = inInputData->mBuffers[0].mDataByteSize;
+
+  /* mDataByteSize may be non-zero even when mData is NULL, but that is
+   * not an error.
+   */
+  if (buf == NULL)
+    return kAudioHardwareNoError;
+
+  len = ac->buf_size - ac->buf_offset;
+
+  /* Make sure to read 2 (stereo) floats at a time */
+  if (len % 8)
+      len -= len % 8;
+
+  if (len > output_len)
+    len = output_len;
+
+  /* FIXME: Handle buffer overrun. */
+  if (len < output_len)
+      lsx_warn("coreaudio: unhandled buffer overrun.  Data discarded.");
+
+  memcpy(destbuf, buf, len);
+  ac->buf_offset += len;
 
   pthread_mutex_unlock(&ac->mutex);
   pthread_cond_signal(&ac->cond);
