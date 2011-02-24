@@ -62,6 +62,8 @@ Effects:
 Other new features:
 
   o Soxi now reports duration of AMR files.  (robs)
+  o Document the "multiple" combine option in man pages and in
+    usage output (Ulrich Klauer).
 
 Internal improvements:
 

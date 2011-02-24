@@ -552,7 +552,7 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, size_t * osam
             }
         }
       } /* sox_mix */ else if (combine_method == sox_multiply)  {
-        for (s = 0; s < effp->in_signal.channels; ++s, ++p) { /* multiple samples */
+        for (s = 0; s < effp->in_signal.channels; ++s, ++p) { /* multiply samples */
           i = 0;
           *p = ws < z->ilen[i] && s < files[i]->ft->signal.channels?
             z->ibuf[i][ws * files[i]->ft->signal.channels + s] : 0;
@@ -1805,6 +1805,7 @@ static void usage(char const * message)
 "--input-buffer BYTES     Override the input buffer size (default: as --buffer)",
 "--no-clobber             Prompt to overwrite output file",
 "-m, --combine mix        Mix multiple input files (instead of concatenating)",
+"--combine mix-power      Mix to equal power (instead of concatenating)",
 "-M, --combine merge      Merge multiple input files (instead of concatenating)",
 "--magic                  Use `magic' file-type detection",
 "--multi-threaded         Enable parallel effects channels processing (where",
@@ -1818,6 +1819,8 @@ static void usage(char const * message)
 "-S, --show-progress      Display progress while processing audio data",
 "--single-threaded        Disable parallel effects channels processing",
 "--temp DIRECTORY         Specify the directory to use for temporary files",
+"-T, --combine multiply   Multiply samples of corresponding channels from all",
+"                         input files (instead of concatenating)",
 "--version                Display version number of SoX and exit",
 "-V[LEVEL]                Increment or set verbosity level (default 2); levels:",
 "                           1: failure messages",

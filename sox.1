@@ -475,7 +475,8 @@ effects.
 .SS Input File Combining
 SoX's input combiner can be configured (see OPTIONS below) to
 combine multiple files using any of the
-following methods: `concatenate', `sequence', `mix', `mix-power', or `merge'.
+following methods: `concatenate', `sequence', `mix', `mix-power',
+`merge', or `multiply'.
 The default method is `sequence' for
 .BR play ,
 and `concatenate' for
@@ -521,6 +522,11 @@ For example, two mono files could be merged to form one stereo file. The
 first and second mono files would become the left and right channels of
 the stereo file.
 .SP
+The `multiply' combining method multiplies the sample values of
+corresponding channels (treated as numbers in the interval \-1 to +1).
+If the number of channels in the input files is not the same, the
+missing channels are considered to contain all zero.
+.SP
 When combining input files, SoX applies any specified effects
 (including, for example, the
 .B vol
@@ -561,7 +567,7 @@ correct this\*msee the
 effect.
 .SP
 With the `mix-power' combine method, the
-mixed volume is appropriately equal to that of one of the input signals.
+mixed volume is approximately equal to that of one of the input signals.
 This is achieved by balancing using a factor of
 \(S1/\s-2\(srn\s+2 instead of \(S1/\s-2n\s+2.
 Note that this balancing factor does not guarantee that clipping will not occur,
@@ -792,6 +798,19 @@ the current input file.
 Don't prompt before overwriting an existing file with the same name as that
 given for the output file.  This is the default behaviour.
 .TP
+\fB\-\-combine concatenate\fR\^|\^\fBmerge\fR\^|\^\fBmix\fR\^|\^\fBmix\-power\fR\^|\^\fBmultiply\fR\^|\^\fBsequence\fR
+Select the input file combining method;
+for some of these, short options are available:
+.B \-m
+selects `mix',
+.B \-M
+selects `merge', and
+.B \-T
+selects `multiply'.
+.SP
+See \fBInput File Combining\fR above for a description of the different
+combining methods.
+.TP
 \fB\-D\fR, \fB\-\-no\-dither\fR
 Disable automatic dither\*msee `Dither' above.  An example of why this
 might occasionally be useful is if a file has been converted from 16 to
@@ -848,15 +867,8 @@ behave as
 \fB\-\-interactive\fR
 Deprecated alias for \fB\-\-no\-clobber\fR.
 .TP
-\fB\-m\fR\^|\^\fB\-M\fR\^|\^\fB\-\-combine concatenate\fR\^|\^\fBmerge\fR\^|\^\fBmix\fR\^|\^\fBmix\-power\fR\^|\^\fBsequence\fR
-Select the input file combining method;
-.B \-m
-selects `mix',
-.B \-M
-selects `merge'.
-.SP
-See \fBInput File Combining\fR above for a description of the different
-combining methods.
+\fB\-m\fR\^|\^\fB\-M\fR
+Equivalent to \fB\-\-combine mix\fR and \fB\-\-combine merge\fR, respectively.
 .TP
 .B \-\-magic
 If SoX has been built with the optional `libmagic' library then this
@@ -991,6 +1003,9 @@ of the meter if this is below 6dB.
 .SP
 This option is enabled by default when using
 SoX to play or record audio.
+.TP
+\fB\-T\fR\fR
+Equivalent to \fB\-\-combine multiply\fR.
 .TP
 \fB\-\-temp\fI DIRECTORY\fR
 Specify that any temporary files should be created in the given
