@@ -320,6 +320,9 @@ static int stopread(sox_format_t * ft)
   priv_t *ac = (priv_t *)ft->priv;
 
   AudioDeviceStop(ac->adid, RecIOProc);
+  AudioDeviceRemoveIOProc(ac->adid, RecIOProc);
+  pthread_cond_destroy(&ac->cond);
+  pthread_mutex_destroy(&ac->mutex);
 
   return SOX_SUCCESS;
 }
@@ -386,7 +389,21 @@ static int stopwrite(sox_format_t * ft)
 {
   priv_t *ac = (priv_t *)ft->priv;
 
-  AudioDeviceStop(ac->adid, PlaybackIOProc);
+  if (!ac->device_started)
+  {
+    pthread_mutex_lock(&ac->mutex);
+
+    while (ac->buf_offset)
+	pthread_cond_wait(&ac->cond, &ac->mutex);
+
+    pthread_mutex_unlock(&ac->mutex);
+
+    AudioDeviceStop(ac->adid, PlaybackIOProc);
+  }
+
+  AudioDeviceRemoveIOProc(ac->adid, PlaybackIOProc);
+  pthread_cond_destroy(&ac->cond);
+  pthread_mutex_destroy(&ac->mutex);
 
   return SOX_SUCCESS;
 }

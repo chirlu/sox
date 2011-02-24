@@ -30,8 +30,11 @@ File formats:
 
 Audio device drivers:
 
-  o Fix immediate segfault on OSX while attempting to record.  May also
-    prevent segfaults on playing that some people reported.  (Adam Fritzler)
+  o Fix immediate segfault on OSX while attempting to record. (Adam Fritzler)
+  o Fix segfault on OSX playback for some HW that gives smaller then
+    requested buffers. (cbagwell)
+  o Clean up system resource in coreaudio on close.  Allows running
+    back-to-back open()/close()'s without exiting app first. (cbagwell)
   o Add support for 32-bit samples to OSS driver. (Eric Lammerts)
   o Add support for 24 and 32-bit samples to waveaudio (Win32) driver.
     (Doug Cook)
