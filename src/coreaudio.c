@@ -69,7 +69,7 @@ static OSStatus RecIOProc(AudioDeviceID inDevice UNUSED,
   sox_format_t *ft = (sox_format_t *)inClientData;
   priv_t *ac = (priv_t *)ft->priv;
   float *buf;
-  size_t buflen;
+  size_t buflen, output_buflen;
   float *destbuf = (float *)((unsigned char *)ac->buffer + ac->buf_offset);
   int i;
   unsigned int buf_num;
@@ -86,7 +86,7 @@ static OSStatus RecIOProc(AudioDeviceID inDevice UNUSED,
       }
 
       buf = inInputData->mBuffers[buf_num].mData;
-      buflen = inInputData->mBuffers[buf_num].mDataByteSize;
+      buflen = output_buflen = inInputData->mBuffers[buf_num].mDataByteSize;
 
       /* mDataByteSize may be non-zero even when mData is NULL, but that is
        * not an error.
@@ -98,7 +98,7 @@ static OSStatus RecIOProc(AudioDeviceID inDevice UNUSED,
 	  buflen = ac->buf_size - ac->buf_offset;
 
       /* FIXME: Handle buffer overrun. */
-      if (buflen < ac->buf_size)
+      if (buflen < output_buflen)
 	  lsx_warn("coreaudio: unhandled buffer overrun.  Data discarded.");
 
       for (i = 0; i < (int)(buflen / sizeof(float)); i += 2) {
