@@ -10,7 +10,8 @@
 #
 # After a release:
 # * Need to update sourceforge for recommended package to give to each 
-#   OS and send email using Mutt or similar. 
+#   OS.
+# * send announcement email using Mutt or similar (mutt -H sox-RELEASE.email).
 # * Update front page of web site to point to latest files and give
 #   latest news.
 #
@@ -77,7 +78,7 @@ cat NEWS
 }
 
 case $release_num in
-    *cvs|*cgit)
+    *cvs|*git)
 	echo "Aborting.  Should not release untracked version number."
 	exit 1
 	;;
@@ -126,11 +127,12 @@ fi
 if [ $release_files = "yes" ]; then
     echo "Checking for an existing release..."
     if ssh ${username}@${hostname} ls ${release_path}/${release_num}/$src_gz >/dev/null 2>&1; then
-    if [ "$release_force" != "yes" ]; then
-	echo "error: file already exists!"
-	exit 1
+	if [ "$release_force" != "yes" ]; then
+	    echo "error: file already exists!"
+	    exit 1
+	fi
     fi
     ssh ${username}@${hostname} mkdir -p ${release_path}/${release_num}
     scp -p $release_list ${username}@${hostname}:${release_path}/${release_num}
-    scp -p NEWS ${username}@${hostname}:${release_path}/${release_num}/README.txt
+    scp -p NEWS ${username}@${hostname}:${release_path}/${release_num}/README
 fi
