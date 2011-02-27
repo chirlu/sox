@@ -86,11 +86,11 @@ mkdir -p $dir
 
 # Judgement call.  If filename ends in .txt then user can view
 # by double clicking in Finder.
-for f in LICENSE.GPL; do
+for f in LICENSE.GPL README.osx; do
   cp -p $f $dir/$f.txt
 done
 
-for f in ChangeLog README README.osx; do
+for f in ChangeLog README; do
   cp -p $f $dir/$f
 done
 
