@@ -119,9 +119,10 @@ Description: SoX MP3 format library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX MP3 format library.
- Read support by libmad. Write support not available yet.
+ Read support by libmad. Write support is available if libmp3lame is installed.
  .
  libmad: http://www.underbit.com/products/mad/
+ lame: http://lame.sourceforge.net/
 
 Package: libsox-fmt-oss
 Architecture: any

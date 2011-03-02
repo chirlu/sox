@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- mode: makefile; coding: utf-8 -*-
 
-DEB_TAR_SRCDIR := sox-14.3.1
+DEB_TAR_SRCDIR := sox-14.3.2
 
 include /usr/share/cdbs/1/rules/tarball.mk
 include /usr/share/cdbs/1/rules/debhelper.mk
@@ -9,6 +9,6 @@ include /usr/share/cdbs/1/class/autotools.mk
 include /usr/share/cdbs/1/rules/simple-patchsys.mk
 
 CPPFLAGS += -I/usr/include/ffmpeg
-DEB_CONFIGURE_EXTRA_FLAGS := --without-lame --with-distro="$(shell dpkg-vendor --query vendor)" --with-dyn-default
+DEB_CONFIGURE_EXTRA_FLAGS := --enable-dl-lame --with-distro="$(shell dpkg-vendor --query vendor)" --with-dyn-default
 # Takes care of postinst-has-useless-call-to-ldconfig for libsox-fmt-*
 DEB_DH_MAKESHLIBS_ARGS := -Xfmt

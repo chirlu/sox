@@ -1,14 +1,28 @@
-sox (14.3.2-0cvs1) UNRELEASED; urgency=low
+sox (14.3.2-1cvs1) UNRELEASED; urgency=low
 
   * CVS Version.
+
+ -- Pascal Giard <evilynux@gmail.com>  Wed, 02 Mar 2011 11:20:15 -0500
+
+sox (14.3.2-1) unstable; urgency=low
+
+  * New upstream release (closes: #616098).
     - Fixed segfault for some LADSPA effects (closes: #555940).
+    - Fixed --with-dyn-default for sndfile, amr-nb and arm-wb.
   * [debian/patches/01_fix_ffmpeg_alignment.patch]:
     - Removed, fixed upstream.
   * [debian/control]:
     - Fixed build-dep minimum required version of liavcodec to 4:0.6.0. The
       mips arch currently fails to build as it is still at 0.5.x.
+    - Modified libsox-fmt-mp3 to include a note on mp3 support.
+  * [debian/rules]:
+    - Removed --without-lame and added --enable-dl-lame to configure flags.
+      LAME can now be detected at runtime; the user HAS to install LAME himself
+      (closes: #382275, #480180).
+  * [debian/libsox-fmt-base.install]:
+    - Added new dynamic libraries for sndfile, amr-nb and amr-wb.
 
- -- Pascal Giard <evilynux@gmail.com>  Wed, 16 Feb 2011 11:22:35 -0500
+ -- Pascal Giard <pascal@debian.org>  Wed, 02 Mar 2011 11:04:21 -0500
 
 sox (14.3.1-2) unstable; urgency=low
 
