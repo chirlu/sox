@@ -34,8 +34,8 @@ The current release handles the following audio file formats:
 * SoundBlaster .VOC files
 * Dialogic/OKI ADPCM files (.VOX)
 * Microsoft .WAV files
-** PCM, u-law, A-law
-** MS ADPCM, IMA ADPCM
+** PCM, floating point
+** u-law, A-law, MS ADPCM, IMA (DMI) ADPCM
 ** GSM
 ** RIFX (big endian)
 * WavPack files (with optional libwavpack library)

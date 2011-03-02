@@ -7,6 +7,10 @@ sox-11gamma, followed by a list of prior authors and features.
 sox-14.4.0	20xx-xx-xx
 ----------
 
+File formats:
+
+  o Mention in man pages that WAV files support floating point encodings.
+
 Effects:
 
   o Improvements to man pages for tempo effect.  Really made in 14.3.2.
