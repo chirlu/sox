@@ -1,4 +1,5 @@
 *.user
 Sox.suo
 Sox.ncb
-Makefile Makefile.in
+Makefile
+Makefile.in
