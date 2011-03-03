@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(SoX, 14.3.2, sox-devel@lists.sourceforge.net)
+AC_INIT(SoX, 14.4.0git, sox-devel@lists.sourceforge.net)
 
 m4_ifdef([AC_CONFIG_MACRO_DIR], [AC_CONFIG_MACRO_DIR([m4])])
 
@@ -22,7 +22,7 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 
 dnl Increase version when binary compatibility with previous version is broken
-SHLIB_VERSION=1:0:0
+SHLIB_VERSION=1:1:0
 AC_SUBST(SHLIB_VERSION)
 
 AC_ARG_WITH(libltdl,
