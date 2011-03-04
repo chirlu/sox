@@ -119,17 +119,17 @@ char const * lsx_sigfigs3(double number)
   static char const symbols[] = "\0kMGTPEZY";
   static char string[16][10];   /* FIXME: not thread-safe */
   static unsigned n;            /* ditto */
-  unsigned a, b, c;
+  off_t a, b, c;
   sprintf(string[n = (n+1) & 15], "%#.3g", number);
-  switch (sscanf(string[n], "%u.%ue%u", &a, &b, &c)) {
+  switch (sscanf(string[n], "%lu.%lue%lu", &a, &b, &c)) {
     case 2: if (b) return string[n]; /* Can fall through */
     case 1: c = 2; break;
     case 3: a = 100*a + b; break;
   }
   if (c < array_length(symbols) * 3 - 3) switch (c%3) {
-    case 0: sprintf(string[n], "%u.%02u%c", a/100,a%100, symbols[c/3]); break;
-    case 1: sprintf(string[n], "%u.%u%c"  , a/10 ,a%10 , symbols[c/3]); break;
-    case 2: sprintf(string[n], "%u%c"     , a          , symbols[c/3]); break;
+    case 0: sprintf(string[n], "%lu.%02lu%c", a/100,a%100, symbols[c/3]); break;
+    case 1: sprintf(string[n], "%lu.%lu%c"  , a/10 ,a%10 , symbols[c/3]); break;
+    case 2: sprintf(string[n], "%lu%c"     , a          , symbols[c/3]); break;
   }
   return string[n];
 }

@@ -201,7 +201,7 @@ typedef struct { /* Signal parameters; SOX_UNSPEC if unknown */
   sox_rate_t       rate;         /* sampling rate */
   unsigned         channels;     /* number of sound channels */
   unsigned         precision;    /* in bits */
-  size_t           length;       /* samples * chans in file */
+  off_t            length;       /* samples * chans in file */
   double           * mult;       /* Effects headroom multiplier; may be null */
 } sox_signalinfo_t;
 

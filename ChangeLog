@@ -16,6 +16,10 @@ Effects:
   o Improvements to man pages for tempo effect.  Really made in 14.3.2.
     (Jim Harkins).
 
+Other new features:
+
+  o Filelength display now uses 64-bit value to work with larger files.
+
 sox-14.3.2	2011-02-27
 ----------
 

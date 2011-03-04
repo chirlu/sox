@@ -39,7 +39,7 @@ typedef struct {
 static int startread(sox_format_t * ft)
 {
   priv_t * sk = (priv_t *)ft->priv;
-  size_t samples_in_file;
+  off_t samples_in_file;
 
   /* If you need to seek around the input file. */
   if (!ft->seekable) {
