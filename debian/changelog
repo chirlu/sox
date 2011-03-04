@@ -1,8 +1,10 @@
 sox (14.3.2-1cvs1) UNRELEASED; urgency=low
 
   * CVS Version.
+  * [debian/control]:
+    - Minor change to sox description mentioning mp3 support.
 
- -- Pascal Giard <evilynux@gmail.com>  Wed, 02 Mar 2011 11:20:15 -0500
+ -- Pascal Giard <evilynux@gmail.com>  Fri, 04 Mar 2011 11:26:23 -0500
 
 sox (14.3.2-1) unstable; urgency=low
 

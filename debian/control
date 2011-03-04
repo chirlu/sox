@@ -42,7 +42,7 @@ Description: Swiss army knife of sound processing
  SoX is able to handle formats like Ogg Vorbis, MP3, WAV, AIFF, VOC, SND, AU,
  GSM and several more.
  Any format support requires at least libsox-fmt-base. Some formats have their
- own package e.g. mp3 read support is provided by libsox-fmt-mp3.
+ own package e.g. mp3 support is provided by libsox-fmt-mp3.
  .
  SoX supports most common sound architectures i.e. Alsa, Libao, OSS and Pulse
  (respectively provided by libsox-fmt-alsa, libsox-fmt-ao, libsox-fmt-oss and
