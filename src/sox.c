@@ -190,9 +190,9 @@ static sox_signalinfo_t combiner_signal, ofile_signal_options;
 static sox_encodinginfo_t combiner_encoding, ofile_encoding_options;
 static size_t mixing_clips = 0;
 static size_t current_input = 0;
-static off_t input_wide_samples = 0;
-static off_t read_wide_samples = 0;
-static off_t output_samples = 0;
+static unsigned long input_wide_samples = 0;
+static unsigned long read_wide_samples = 0;
+static unsigned long output_samples = 0;
 static sox_bool input_eof = sox_false;
 static sox_bool output_eof = sox_false;
 static sox_bool user_abort = sox_false;
@@ -281,7 +281,7 @@ static void play_file_info(sox_format_t * ft, file_t * f, sox_bool full)
   FILE * const output = sox_mode == sox_soxi? stdout : stderr;
   char const * text, * text2 = NULL;
   char buffer[30];
-  off_t ws = ft->signal.length / ft->signal.channels;
+  size_t ws = ft->signal.length / ft->signal.channels;
   (void)full;
 
   fprintf(output, "\n");
@@ -376,13 +376,13 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
     ft->signal.precision);
 
   if (ft->signal.length && ft->signal.channels && ft->signal.rate) {
-    off_t ws = ft->signal.length / ft->signal.channels;
+    size_t ws = ft->signal.length / ft->signal.channels;
     char const * text, * text2 = NULL;
     fprintf(output,
         "Duration       : %s = %lu samples %c %g CDDA sectors\n",
-        str_time((double) ws / ft->signal.rate),
-        (off_t) ws, "~="[ft->signal.rate == 44100],
-        (double) ws / ft->signal.rate * 44100 / 588);
+        str_time((double)ws / ft->signal.rate),
+        (unsigned long)ws, "~="[ft->signal.rate == 44100],
+        (double)ws / ft->signal.rate * 44100 / 588);
     if (ft->mode == 'r' && (text = size_and_bitrate(ft, &text2))) {
       fprintf(output, "File Size      : %s\n", text);
       if (text2)
@@ -487,8 +487,7 @@ typedef struct {
 static int combiner_start(sox_effect_t *effp)
 {
   input_combiner_t * z = (input_combiner_t *) effp->priv;
-  off_t ws;
-  size_t i;
+  size_t ws, i;
 
   if (is_serial(combine_method))
     progress_to_next_input_file(files[current_input], effp);

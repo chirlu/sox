@@ -138,12 +138,12 @@ size_t lsx_writebuf(sox_format_t * ft, void const * buf, size_t len)
   return ret;
 }
 
-off_t lsx_filelength(sox_format_t * ft)
+size_t lsx_filelength(sox_format_t * ft)
 {
   struct stat st;
   int ret = fstat(fileno(ft->fp), &st);
 
-  return (!ret && (st.st_mode & S_IFREG))? st.st_size : 0;
+  return (!ret && (st.st_mode & S_IFREG))? (size_t)st.st_size : 0;
 }
 
 int lsx_flush(sox_format_t * ft)
