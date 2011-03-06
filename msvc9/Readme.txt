@@ -8,7 +8,7 @@ libamrwb-3.dll) are loaded at runtime if they are available.
 
 How to build:
 
-1. Check out the SoX CVS code into a directory named sox.
+1. Check out the SoX git code into a directory named sox.
 
 2. Extract the source code for the other libraries next to the sox
    directory. Remove the version numbers from the directory names.

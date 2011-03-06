@@ -18,7 +18,7 @@ be installed before compiling SoX.  The current list of supported
 libraries, where to get them (if not from your OS distribution), and
 their licence types, is as follows:
 
-OpencoreAMR-NB/WB http://.sourceforge.net/projects/opencore-amr  Apache
+OpencoreAMR-NB/WB http://sourceforge.net/projects/opencore-amr  Apache
 AMR-NB/WB         http://www.penguin.cz/~utx/amr        See library web page
 AO                http://xiph.org/ao                    GPL
 ffmpeg            http://ffmpeg.mplayerhq.hu            LGPL
@@ -43,7 +43,7 @@ First install any optional libraries that you need for SoX.  Some
 libraries may require pkg-config to be installed to be properly
 detected by SoX.
 
-[Only if you're compiling the CVS sources, first make sure you have
+[Only if you're compiling the git sources, first make sure you have
 the GNU autotools installed (automake >= 1.9, autoconf >= 2.59) and
 run
 

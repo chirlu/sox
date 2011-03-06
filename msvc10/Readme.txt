@@ -25,7 +25,7 @@ How to build:
    Windows Native Code Development - Tools
    Windows Native Code Development - Visual C++ Compilers
 
-2. Check out the SoX CVS code into a directory named sox.
+2. Check out the SoX git code into a directory named sox.
 
    Extract the source code for the other libraries next to the sox
    directory. Remove the version numbers from the directory names.

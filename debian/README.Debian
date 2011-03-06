@@ -1,6 +1,6 @@
-SoX from CVS
+SoX from git
 ------------
-If you downloaded SoX from the CVS, you may build the package by:
+If you downloaded SoX from git, you may build the package by:
 
 1) Generating the autotools files: autoreconf -i
 2) Configuring and making the release tarball: ./configure && make dist

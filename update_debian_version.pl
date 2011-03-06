@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
-# This script is meant to live in SoX CVS.
+# This script is meant to live in SoX git.
 # Its sole purpose is to update the versions in the debian directory
-# so users can always build a binary package after a CVS checkout.
+# so users can always build a binary package after a git checkout.
 #
 # Written by Pascal Giard <evilynux@gmail.com>.
 use strict;
