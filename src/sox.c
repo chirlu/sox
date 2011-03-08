@@ -173,7 +173,7 @@ static size_t output_count = 0;
  * the input effect, an optional resample effect, an optional mixer
  * effect, and the output effect.
  */
-#define MAX_USER_EFF (SOX_MAX_EFFECTS - 4)
+#define MAX_USER_EFF 16
 static sox_effect_t *user_efftab[MAX_USER_EFF];
 static sox_effects_chain_t *effects_chain = NULL;
 static sox_effect_t *save_output_eff = NULL;

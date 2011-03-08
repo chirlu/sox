@@ -1005,8 +1005,6 @@ SOX_API sox_find_format(
  * Structures for effects.
  */
 
-#define SOX_MAX_EFFECTS 20
-
 #define SOX_EFF_CHAN     1           /* Effect might alter the number of channels */
 #define SOX_EFF_RATE     2           /* Effect might alter sample rate */
 #define SOX_EFF_PREC     4           /* Effect might alter sample precision */
@@ -1129,7 +1127,8 @@ SOX_API sox_get_effect_fns(void);
 
 /* Chain of effects to be applied to a stream */
 typedef struct sox_effects_chain_t {
-  sox_effect_t * effects[SOX_MAX_EFFECTS]; /* Array of effects to be applied to a stream */
+  sox_effect_t **effects;                  /* Table of effects to be applied to a stream */
+  unsigned table_size;                     /* Number of entries in effects table */
   unsigned length;                         /* Number of effects to be applied */
   sox_sample_t **ibufc;                    /* Channel interleave buffer */
   sox_sample_t **obufc;                    /* Channel interleave buffer */

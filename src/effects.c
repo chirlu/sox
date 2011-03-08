@@ -102,6 +102,7 @@ void sox_delete_effects_chain(sox_effects_chain_t *ecp)
 {
     if (ecp && ecp->length)
         sox_delete_effects(ecp);
+    free(ecp->effects);
     free(ecp);
 } /* sox_delete_effects_chain */
 
@@ -116,6 +117,9 @@ int lsx_effect_set_imin(sox_effect_t * effp, size_t imin)
   effp->imin = imin;
   return SOX_SUCCESS;
 }
+
+/* Effects table to be extended in steps of EFF_TABLE_STEP */
+#define EFF_TABLE_STEP 8
 
 /* Add an effect to the chain. *in is the input signal for this effect. *out is
  * a suggestion as to what the output signal should be, but depending on its
@@ -168,11 +172,13 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
 
   *in = effp->out_signal;
 
-  if (chain->length == SOX_MAX_EFFECTS) {
-    lsx_fail("Too many effects!");
-    free(eff0.priv);
-    return SOX_EOF;
+  if (chain->length == chain->table_size) {
+    chain->table_size += EFF_TABLE_STEP;
+    lsx_debug_more("sox_add_effect: extending effects table, "
+      "new size = %lu", (unsigned long)chain->table_size);
+    lsx_revalloc(chain->effects, chain->table_size);
   }
+
   chain->effects[chain->length] =
     lsx_calloc(effp->flows, sizeof(chain->effects[chain->length][0]));
   chain->effects[chain->length][0] = *effp;
@@ -413,7 +419,14 @@ size_t sox_stop_effect(sox_effect_t *effp)
 
 void sox_push_effect_last(sox_effects_chain_t *chain, sox_effect_t *effp)
 {
-  chain->effects[chain->length++] = effp;;
+  if (chain->length == chain->table_size) {
+    chain->table_size += EFF_TABLE_STEP;
+    lsx_debug_more("sox_push_effect_last: extending effects table, "
+        "new size = %lu", (unsigned long)chain->table_size);
+    lsx_revalloc(chain->effects, chain->table_size);
+  }
+
+  chain->effects[chain->length++] = effp;
 } /* sox_push_effect_last */
 
 sox_effect_t *sox_pop_effect_last(sox_effects_chain_t *chain)
