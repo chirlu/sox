@@ -19,7 +19,6 @@ Effects:
     or disable use of parallel effects processing instead of directly calling
     omp_set_num_threads. (Doug Cook)
 
-
 sox-14.3.2	2011-02-27
 ----------
 
