@@ -27,14 +27,22 @@ README: README.sh FEATURES.in
 	./README.sh
 
 # Rule for making text man pages.  Uses GNU nroff's -c so not portable.
-.1.txt .3.txt .7.txt:
+.1.txt:
+	tbl $(srcdir)/$< | nroff -man -c | sed "s/.//g" > $@
+.3.txt:
+	tbl $(srcdir)/$< | nroff -man -c | sed "s/.//g" > $@
+.7.txt:
 	tbl $(srcdir)/$< | nroff -man -c | sed "s/.//g" > $@
 
 DOCTXT = sox.txt soxi.txt soxformat.txt libsox.txt README
 txt: $(DOCTXT)
 
 # Rule for making PDF man pages
-.1.pdf .3.pdf .7.pdf:
+.1.pdf:
+	pdfroff -t -man -Tps $(srcdir)/$< > $@
+.3.pdf:
+	pdfroff -t -man -Tps $(srcdir)/$< > $@
+.7.pdf:
 	pdfroff -t -man -Tps $(srcdir)/$< > $@
 
 DOCPDF = sox.pdf soxi.pdf soxformat.pdf libsox.pdf
@@ -69,7 +77,11 @@ distclean-local:
 # Return to Main Contents and link to man2html are also modified.
 FIXHTML = sed 's,<head>,&<link rel="stylesheet" href="http://sox.sourceforge.net/pub/skins/sox/sox.css" type="text/css"></link>,' 
 
-.1.html .3.html .7.html:
+.1.html:
+	groff -t -man -Thtml -P -Dsoxpng $(srcdir)/$< | $(FIXHTML) > $@
+.3.html:
+	groff -t -man -Thtml -P -Dsoxpng $(srcdir)/$< | $(FIXHTML) > $@
+.7.html:
 	groff -t -man -Thtml -P -Dsoxpng $(srcdir)/$< | $(FIXHTML) > $@
 
 DOCHTML = sox.html soxi.html soxformat.html libsox.html
