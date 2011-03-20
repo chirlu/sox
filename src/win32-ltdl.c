@@ -31,11 +31,8 @@ s_dwLastError;
 static char
 s_szLastError[MAX_PATH];
 
-/* keep 1 reserved to search with empty path */
-#define MAX_SEARCH_PATHS 2
-
 static char
-*s_szSearchPaths[MAX_SEARCH_PATHS];
+s_szSearchPath[MAX_PATH];
 
 static int
 CopyPath(
@@ -59,7 +56,11 @@ CopyPath(
         }
     }
 
-    szDest[i] = 0;
+    if (cchDest != 0)
+    {
+        szDest[i] = 0;
+    }
+
     return i;
 }
 
@@ -75,58 +76,71 @@ LoadLib(
     unsigned iExtension;
     unsigned iCur;
     unsigned iEnd = 0;
+    unsigned cPaths = 0;
+    const char* szPaths[2];
 
-    if (_countof(szFileName) == 0)
+    if (!szFileName || !szFileName[0])
     {
-	s_dwLastError = ERROR_INVALID_PARAMETER;
-	goto Done;
+        s_dwLastError = ERROR_INVALID_PARAMETER;
+        goto Done;
     }
 
-    for (iPath = 0; !hMod && iPath < MAX_SEARCH_PATHS; iPath++)
+    /* Search starting with current directory */
+    szPaths[cPaths++] = "";
+
+    /* If the file name doesn't already have a path, also search the search path. */
+    if (s_szSearchPath[0] &&
+        szFileName[0] != '/' &&
+        szFileName[0] != '\\' &&
+        szFileName[1] != ':')
     {
-	/* Only loop through 1 time when user gives absolute paths
-	 * to prevent wasting time.
-	 */
-	if (iPath > 0 && (szFileName[0] != '/' || szFileName[0] != '\\'))
-	    break;
+        szPaths[cPaths++] = s_szSearchPath;
+    }
 
-	/* Add search path only if non-empty and filename does not
-	 * contain absolute path.
-	 */
-	if (s_szSearchPaths[iPath] && s_szSearchPaths[iPath][0] != 0 &&
-	    szFileName[0] != '/' && szFileName[0] != '\\')
-	{
-	    iEnd += CopyPath(s_szSearchPaths[iPath], szFull, _countof(szFull), 
-			    0);
+    for (iPath = 0; !hMod && iPath < cPaths; iPath++)
+    {
+        iEnd = 0;
 
-	    if (szFull[iEnd-1] != '\\')
-	    {
-		iEnd += CopyPath("\\", &szFull[iEnd], _countof(szFull)-iEnd, 0);
-	    }
-	}
+        /* Add search path only if non-empty and filename does not
+         * contain absolute path.
+         */
+        if (szPaths[iPath][0])
+        {
+            iEnd += CopyPath(szPaths[iPath], szFull, _countof(szFull), 0);
 
-    	iEnd += CopyPath(szFileName, &szFull[iEnd], _countof(szFull)-iEnd, 0);
+            if (szFull[iEnd - 1] != '\\' && iEnd < _countof(szFull))
+            {
+                szFull[iEnd++] = '\\';
+            }
+        }
 
-	for (iExtension = 0; !hMod && szExtensions[iExtension]; iExtension++)
-	{
-	    szExt = szExtensions[iExtension];
-	    for (iCur = 0; szExt[iCur] && iEnd + iCur < _countof(szFull); iCur++)
-	    {
-		szFull[iEnd + iCur] = szExt[iCur];
-	    }
+        iEnd += CopyPath(szFileName, &szFull[iEnd], _countof(szFull)-iEnd, 0);
+        if (iEnd == _countof(szFull))
+        {
+            s_dwLastError = ERROR_BUFFER_OVERFLOW;
+            goto Done;
+        }
 
-	    if (iEnd + iCur >= _countof(szFull))
-	    {
-		s_dwLastError = ERROR_BUFFER_OVERFLOW;
-		goto Done;
-	    }
-	    else
-	    {
-		szFull[iEnd + iCur] = 0;
-	    }
+        for (iExtension = 0; !hMod && szExtensions[iExtension]; iExtension++)
+        {
+            szExt = szExtensions[iExtension];
+            for (iCur = 0; szExt[iCur] && iEnd + iCur < _countof(szFull); iCur++)
+            {
+                szFull[iEnd + iCur] = szExt[iCur];
+            }
 
-	    hMod = (lt_dlhandle)LoadLibraryA(szFull);
-	}
+            if (iEnd + iCur >= _countof(szFull))
+            {
+                s_dwLastError = ERROR_BUFFER_OVERFLOW;
+                goto Done;
+            }
+            else
+            {
+                szFull[iEnd + iCur] = 0;
+            }
+
+            hMod = (lt_dlhandle)LoadLibraryA(szFull);
+        }
     }
 
     s_dwLastError = hMod ? 0 : GetLastError();
@@ -139,12 +153,7 @@ int
 lt_dlinit(void)
 {
     int cErrors = 0;
-    int i;
     s_dwLastError = 0;
-
-    for (i = 0; i < MAX_SEARCH_PATHS; i++)
-    	s_szSearchPaths[i] = NULL;
-
     return cErrors;
 }
 
@@ -153,24 +162,27 @@ lt_dlexit(void)
 {
     int cErrors = 0;
     s_dwLastError = 0;
+    s_szSearchPath[0] = 0;
     return cErrors;
 }
 
 int
-lt_dlsetsearchpath(const char *search_path)
+lt_dlsetsearchpath(const char *szSearchPath)
 {
     int cErrors=0;
-
-    /* location 0 is researched for current directory */
-
-    if (!s_szSearchPaths[1])
+    s_dwLastError = 0;
+    s_szSearchPath[0] = 0;
+    if (szSearchPath)
     {
-	free(s_szSearchPaths[1]);
-	s_szSearchPaths[1] = NULL;
+        int iEnd = CopyPath(szSearchPath, s_szSearchPath, _countof(s_szSearchPath), 0);
+        if (szSearchPath[iEnd])
+        {
+            /* path was truncated. */
+            cErrors++;
+            s_dwLastError = ERROR_BUFFER_OVERFLOW;
+            s_szSearchPath[0] = 0;
+        }
     }
-
-    if (search_path)
-    	s_szSearchPaths[1] = strdup(search_path);
 
     return cErrors;
 }
