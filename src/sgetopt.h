@@ -145,14 +145,7 @@ struct option
    `getopt'.  */
 
 #if (defined __STDC__ && __STDC__) || defined __cplusplus
-# ifdef __GNU_LIBRARY__
-/* Many other libraries have conflicting prototypes for getopt, with
-   differences in the consts, in stdlib.h.  To avoid compilation
-   errors, only prototype getopt for the GNU C library.  */
 extern int lsx_getopt (int ___argc, char *const *___argv, const char *__shortopts);
-# else /* not __GNU_LIBRARY__ */
-extern int lsx_getopt ();
-# endif /* __GNU_LIBRARY__ */
 
 # ifndef __need_getopt
 extern int lsx_getopt_long (int ___argc, char *const *___argv,
