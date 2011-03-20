@@ -18,7 +18,7 @@
 /* Used only by sox.c: */
 #define MORE_INTERACTIVE
 
-#define PACKAGE_VERSION "14.3.1-msvc"
+#define PACKAGE_EXTRA "msvc"
 
 /* Special behavior defined by win32-ltdl: "./" is replaced with the name of the
    directory containing sox.exe. */

@@ -32,6 +32,79 @@ const char *sox_version(void)
   return(versionstr);
 }
 
+sox_version_info_t const * sox_version_info(void)
+{
+#define STRINGIZE1(x) #x
+#define STRINGIZE(x) STRINGIZE1(x)
+    static char arch[30];
+    static sox_version_info_t info = {
+        /* size */
+        sizeof(sox_version_info_t),
+        /* flags */
+        (sox_version_flags_t)(
+#if HAVE_POPEN
+        sox_version_have_popen +
+#endif
+#if  HAVE_MAGIC
+        sox_version_have_magic +
+#endif
+#if HAVE_OPENMP
+        sox_version_have_threads +
+#endif
+        sox_version_none),
+        /* version_code */
+        SOX_LIB_VERSION_CODE,
+        /* version */
+        NULL,
+        /* sox_version_extra */
+#ifdef PACKAGE_EXTRA
+        PACKAGE_EXTRA,
+#else
+        NULL,
+#endif
+        /* sox_time */
+        __DATE__ " " __TIME__,
+        /* sox_distro */
+#ifdef DISTRO
+        DISTRO,
+#else
+        NULL,
+#endif
+        /* sox_compiler */
+#if defined __GNUC__
+        "gcc " __VERSION__,
+#elif defined _MSC_VER
+        "msvc " STRINGIZE(_MSC_FULL_VER),
+#elif defined __SUNPRO_C
+    fprintf(file, "sun c " STRINGIZE(__SUNPRO_C),
+#else
+        NULL,
+#endif
+        /* sox_arch */
+        NULL
+    };
+
+    if (!info.version)
+    {
+        info.version = sox_version();
+    }
+
+    if (!info.arch)
+    {
+        snprintf(arch, sizeof(arch), "%u%u%u%u %u%u %u%u %c %s",
+            (unsigned)sizeof(char), (unsigned)sizeof(short),
+            (unsigned)sizeof(long), (unsigned)sizeof(off_t),
+            (unsigned)sizeof(float), (unsigned)sizeof(double),
+            (unsigned)sizeof(int *), (unsigned)sizeof(int (*)(void)),
+            MACHINE_IS_BIGENDIAN ? 'B' : 'L',
+            (info.flags & sox_version_have_threads) ? "OMP" : "");
+        arch[sizeof(arch) - 1] = 0;
+        info.arch = arch;
+    }
+
+    return &info;
+}
+
 /* Default routine to output messages; can be overridden */
 static void output_message(
     unsigned level, const char *filename, const char *fmt, va_list ap)
@@ -53,7 +126,8 @@ sox_globals_t sox_globals = {
   NULL,            /* char const * stdout_in_use_by */
   NULL,            /* char const * subsystem */
   NULL,            /* char       * tmp_path */
-  sox_false        /* sox_bool     use_magic */
+  sox_false,       /* sox_bool     use_magic */
+  sox_false        /* sox_bool     use_threads */
 };
 
 char const * sox_strerror(int sox_errno)

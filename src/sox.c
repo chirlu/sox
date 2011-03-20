@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "soxomp.h"  /* Make this 1st in list (for soxconfig) */
+#include "soxconfig.h"
 #include "sox.h"
 #include "util.h"
 #include "sgetopt.h"
@@ -200,10 +200,6 @@ static sox_bool user_skip = sox_false;
 static sox_bool user_restart_eff = sox_false;
 static int success = 0;
 static sox_sample_t omax[2], omin[2];
-
-/* Multi-processing */
-
-static sox_bool single_threaded = sox_true;
 
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
@@ -1679,38 +1675,28 @@ static void display_SoX_version(FILE * file)
 #if HAVE_SYS_UTSNAME_H
   struct utsname uts;
 #endif
+  const sox_version_info_t* info = sox_version_info();
 
-  fprintf(file, "%s: SoX v%s\n", myname, PACKAGE_VERSION);
+  fprintf(file, "%s:      SoX v%s%s%s\n",
+      myname,
+      info->version,
+      info->version_extra ? "-" : "",
+      info->version_extra ? info->version_extra : "");
 
   if (sox_globals.verbosity > 3) {
-    fprintf(file, "time:  %s %s\n", __DATE__, __TIME__);
-#if HAVE_DISTRO
-    fprintf(file, "issue: %s\n", DISTRO);
-#endif
+    if (info->time)
+      fprintf(file, "time:     %s\n", info->time);
+    if (info->distro)
+      fprintf(file, "issue:    %s\n", info->distro);
 #if HAVE_SYS_UTSNAME_H
     if (!uname(&uts))
-      fprintf(file, "uname: %s %s %s %s %s\n", uts.sysname, uts.nodename,
+      fprintf(file, "uname:    %s %s %s %s %s\n", uts.sysname, uts.nodename,
           uts.release, uts.version, uts.machine);
 #endif
-#if defined __GNUC__
-    fprintf(file, "gcc:   %s\n", __VERSION__);
-#elif defined _MSC_VER
-    fprintf(file, "msc:   %u\n", _MSC_VER);
-#elif defined __SUNPRO_C
-    fprintf(file, "sun c: %x\n", __SUNPRO_C);
-#endif
-    fprintf(file, "arch:  %lu%lu%lu%lu %lu%lu %lu%lu %c %s\n",
-        (unsigned long)sizeof(char), (unsigned long)sizeof(short),
-        (unsigned long)sizeof(long), (unsigned long)sizeof(off_t),
-        (unsigned long)sizeof(float), (unsigned long)sizeof(double),
-        (unsigned long)sizeof(int *), (unsigned long)sizeof(int (*)(void)),
-        "LB"[MACHINE_IS_BIGENDIAN],
-#ifdef HAVE_OPENMP
-        "OMP"
-#else
-        ""
-#endif
-        );
+    if (info->compiler)
+        fprintf(file, "compiler: %s\n", info->compiler);
+    if (info->arch)
+        fprintf(file, "arch:     %s\n", info->arch);
   }
 }
 
@@ -1777,18 +1763,21 @@ static void display_supported_effects(void)
 
 static void usage(char const * message)
 {
+  const sox_version_info_t * info = sox_version_info();
   size_t i;
-  static char const * const lines[] = {
+  static char const * const lines1[] = {
 "SPECIAL FILENAMES (infile, outfile):",
 "-                        Pipe/redirect input/output (stdin/stdout); may need -t",
 "-d, --default-device     Use the default audio device (where available)",
 "-n, --null               Use the `null' file handler; e.g. with synth effect",
-"-p, --sox-pipe           Alias for `-t sox -'",
-#ifdef HAVE_POPEN
+"-p, --sox-pipe           Alias for `-t sox -'"
+  };
+  static char const * const linesPopen[] = {
 "\nSPECIAL FILENAMES (infile only):",
 "\"|program [options] ...\" Pipe input from external program (where supported)",
-"http://server/file       Use the given URL as input file (where supported)",
-#endif
+"http://server/file       Use the given URL as input file (where supported)"
+  };
+  static char const * const lines2[] = {
 "",
 "GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):",
 "--buffer BYTES           Set the size of all processing buffers (default 8192)",
@@ -1806,10 +1795,15 @@ static void usage(char const * message)
 "--no-clobber             Prompt to overwrite output file",
 "-m, --combine mix        Mix multiple input files (instead of concatenating)",
 "--combine mix-power      Mix to equal power (instead of concatenating)",
-"-M, --combine merge      Merge multiple input files (instead of concatenating)",
-"--magic                  Use `magic' file-type detection",
-"--multi-threaded         Enable parallel effects channels processing (where",
-"                         available)",
+"-M, --combine merge      Merge multiple input files (instead of concatenating)"
+  };
+  static char const * const linesMagic[] = {
+"--magic                  Use `magic' file-type detection"
+  };
+  static char const * const linesThreads[] = {
+"--multi-threaded         Enable parallel effects channels processing"
+  };
+  static char const * const lines3[] = {
 "--norm                   Guard (see --guard) & normalise",
 "--play-rate-arg ARG      Default `rate' argument for auto-resample with `play'",
 "--plot gnuplot|octave    Generate script to plot response of filter effect",
@@ -1850,7 +1844,9 @@ static void usage(char const * message)
 "--add-comment TEXT       Append output file comment",
 "--comment TEXT           Specify comment text for the output file",
 "--comment-file FILENAME  File containing comment text for the output file",
+#if HAVE_GLOB_H
 "--no-glob                Don't `glob' wildcard match the following filename",
+#endif
 ""};
 
   if (!(sox_globals.verbosity > 2)) {
@@ -1863,8 +1859,21 @@ static void usage(char const * message)
 
   printf("Usage summary: [gopts] [[fopts] infile]... [fopts]%s [effect [effopt]]...\n\n",
          sox_mode == sox_play? "" : " outfile");
-  for (i = 0; i < array_length(lines); ++i)
-    puts(lines[i]);
+  for (i = 0; i < array_length(lines1); ++i)
+    puts(lines1[i]);
+  if (info->flags & sox_version_have_popen)
+    for (i = 0; i < array_length(linesPopen); ++i)
+      puts(linesPopen[i]);
+  for (i = 0; i < array_length(lines2); ++i)
+    puts(lines2[i]);
+  if (info->flags & sox_version_have_magic)
+    for (i = 0; i < array_length(linesMagic); ++i)
+      puts(linesMagic[i]);
+  if (info->flags & sox_version_have_threads)
+    for (i = 0; i < array_length(linesThreads); ++i)
+      puts(linesThreads[i]);
+  for (i = 0; i < array_length(lines3); ++i)
+    puts(lines3[i]);
   display_supported_formats();
   display_supported_effects();
   printf("EFFECT OPTIONS (effopts): effect dependent; see --help-effect\n");
@@ -2133,6 +2142,7 @@ static int enum_option(int option_index, lsx_enum_item const * items)
 
 static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
 {
+  const sox_version_info_t* info = sox_version_info();
   while (sox_true) {
     int c, option_index;
     int i; /* sscanf silently accepts negative numbers for %u :( */
@@ -2203,18 +2213,19 @@ static char parse_gopts_and_fopts(file_t * f, int argc, char **argv)
       case 14: break;
       case 15: effects_filename = strdup(lsx_optarg); break;
       case 16: sox_globals.tmp_path = strdup(lsx_optarg); break;
-      case 17: single_threaded = sox_true; break;
+      case 17: sox_globals.use_threads = sox_false; break;
       case 18: f->signal.length = SOX_IGNORE_LENGTH; break;
       case 19: do_guarded_norm = is_guarded = sox_true; break;
-#if HAVE_MAGIC
-      case 20: sox_globals.use_magic = sox_true; break;
-#else
-      case 20: lsx_warn("this build of SoX does not include `magic'"); break;
-#endif
+      case 20:
+        if (info->flags & sox_version_have_magic)
+          sox_globals.use_magic = sox_true;
+        else
+          lsx_warn("this build of SoX does not include `magic'");
+        break;
       case 21: play_rate_arg = strdup(lsx_optarg); break;
       case 22: no_clobber = sox_false; break;
       case 23: no_clobber = sox_true; break;
-      case 24: single_threaded = sox_false; break;
+      case 24: sox_globals.use_threads = sox_true; break;
       }
       break;
 
@@ -2728,11 +2739,6 @@ int main(int argc, char **argv)
           sox_globals.tmp_path = ".";
     sox_globals.tmp_path = lsx_strdup(sox_globals.tmp_path);
   }
-#endif
-
-#ifdef HAVE_OPENMP
-  if (single_threaded)
-    omp_set_num_threads(1);
 #endif
 
   if (sox_globals.verbosity > 2)

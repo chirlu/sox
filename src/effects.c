@@ -223,29 +223,41 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
         chain->ibufc[f][i / effp->flows] = *ibuf++;
 
 #ifdef HAVE_OPENMP
-    #pragma omp parallel for
-#endif
-    for (f = 0; f < (int)effp->flows; ++f) {
-      size_t idonec = idone / effp->flows;
-      size_t odonec = obeg / effp->flows;
-      int eff_status_c = effp->handler.flow(&chain->effects[n][f],
-          chain->ibufc[f], chain->obufc[f], &idonec, &odonec);
-#ifndef HAVE_OPENMP
-      if (f && (idonec != idone_last || odonec != odone_last)) {
-        lsx_fail("flowed asymmetrically!");
-        effstatus = SOX_EOF;
+    if (sox_globals.use_threads && effp->flows > 1)
+    {
+      #pragma omp parallel for
+      for (f = 0; f < (int)effp->flows; ++f) {
+        size_t idonec = idone / effp->flows;
+        size_t odonec = obeg / effp->flows;
+        int eff_status_c = effp->handler.flow(&chain->effects[n][f],
+            chain->ibufc[f], chain->obufc[f], &idonec, &odonec);
+        if (!f) {
+          idone_last = idonec;
+          odone_last = odonec;
+        }
+
+        if (eff_status_c != SOX_SUCCESS)
+          effstatus = SOX_EOF;
       }
-      idone_last = idonec;
-      odone_last = odonec;
-#else
-      if (!f) {
+    }
+    else /* sox_globals.use_threads */
+#endif
+    {
+      for (f = 0; f < (int)effp->flows; ++f) {
+        size_t idonec = idone / effp->flows;
+        size_t odonec = obeg / effp->flows;
+        int eff_status_c = effp->handler.flow(&chain->effects[n][f],
+            chain->ibufc[f], chain->obufc[f], &idonec, &odonec);
+        if (f && (idonec != idone_last || odonec != odone_last)) {
+          lsx_fail("flowed asymmetrically!");
+          effstatus = SOX_EOF;
+        }
         idone_last = idonec;
         odone_last = odonec;
-      }
-#endif
 
-      if (eff_status_c != SOX_SUCCESS)
-        effstatus = SOX_EOF;
+        if (eff_status_c != SOX_SUCCESS)
+          effstatus = SOX_EOF;
+      }
     }
 
     for (i = 0; i < odone_last; ++i)

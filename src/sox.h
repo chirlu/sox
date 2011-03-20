@@ -45,6 +45,28 @@ extern "C" {
 
 const char *sox_version(void);   /* Returns version number */
 
+typedef enum { /* Flags indicating whether optional features are present in this build of SoX */
+    sox_version_none = 0,
+    sox_version_have_popen = 1,
+    sox_version_have_magic = 2,
+    sox_version_have_threads = 4
+} sox_version_flags_t;
+
+typedef struct { /* Information about this build of SoX */
+    unsigned     size;         /* sizeof(sox_version_info_t) */
+    sox_version_flags_t flags; /* feature flags */
+    unsigned     version_code; /* version number, SOX_LIB_VERSION_CODE i.e. 0x140400 */
+    const char * version;      /* version string, sox_version() i.e. "14.4.0" */
+    const char * version_extra;/* version info or null, PACKAGE_EXTRA i.e. "beta" */
+    const char * time;         /* build time, __DATE__ __TIME__ i.e. "Jan  7 2010 03:31:50" */
+    const char * distro;       /* distro or null, DISTRO i.e. Debian */
+    const char * compiler;     /* compiler info or null, i.e. msvc: 1500 */
+    const char * arch;         /* arch: 1248 48 44 L OMP */
+    /* new info should be added at the end for version backwards-compatibility. */
+} sox_version_info_t;
+
+sox_version_info_t const * sox_version_info(void); /* gets information about libsox */
+
 #define SOX_SUCCESS 0            /* Function succeeded (= 0) */
 #define SOX_EOF (-1)             /* End Of File or other error (= -1) */
 
@@ -192,6 +214,7 @@ typedef struct { /* Global parameters (for effects & formats) */
   char const * subsystem;        /* tracks the name of the handler currently writing an output message */
   char       * tmp_path;         /* client-configured path to use for temporary files */
   sox_bool     use_magic;        /* true if client has requested use of 'magic' file-type detection */
+  sox_bool     use_threads;      /* true if client has requested parallel effects processing */
 } sox_globals_t;
 extern sox_globals_t sox_globals; /* the SoX global settings */
 
