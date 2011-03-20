@@ -224,6 +224,8 @@ typedef struct mp3_priv_t {
 #endif /*HAVE_LAME*/
 } priv_t;
 
+#ifdef HAVE_MAD_H
+
 /* This function merges the functions tagtype() and id3_tag_query()
    from MAD's libid3tag, so we don't have to link to it
    Returns 0 if the frame is not an ID3 tag, tag length if it is */
@@ -252,6 +254,8 @@ static int tagtype(const unsigned char *data, size_t length)
 
     return 0;
 }
+
+#endif /*HAVE_MAD_H*/
 
 #include "mp3-util.h"
 
