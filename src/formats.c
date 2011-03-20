@@ -591,7 +591,7 @@ sox_bool sox_format_supports_encoding(
   unsigned i = 0, s;
   sox_encoding_t e;
 
-  assert(path);
+  assert(path || filetype);
   assert(encoding);
   if (!filetype)
     filetype = lsx_find_file_extension(path);
