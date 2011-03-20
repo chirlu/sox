@@ -17,6 +17,8 @@
 
 #include <sys/stat.h>
 
+#ifdef USING_ID3TAG
+
 static char const * id3tagmap[][2] =
 {
   {"TIT2", "Title"},
@@ -29,6 +31,8 @@ static char const * id3tagmap[][2] =
   {"TPOS", "Discnumber"},
   {NULL, NULL}
 };
+
+#endif /* USING_ID3TAG */
 
 #if defined(HAVE_LAME)
 
