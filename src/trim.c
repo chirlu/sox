@@ -91,7 +91,7 @@ static int sox_trim_start(sox_effect_t * effp)
         trim->length = 0;
           /* with trim->end_str == NULL, this means indefinite length */
 
-    lsx_debug("start at %lus, length %lu", trim->start, trim->length);
+    lsx_debug("start at %lus, length %lu", (unsigned long)trim->start, (unsigned long)trim->length);
 
     /* Account for # of channels */
     trim->start *= effp->in_signal.channels;
