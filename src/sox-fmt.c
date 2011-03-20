@@ -77,8 +77,11 @@ static int write_header(sox_format_t * ft)
   size_t comments_len = strlen(comments);
   size_t comments_bytes = (comments_len + 7) & ~7u; /* Multiple of 8 bytes */
   uint64_t size   = ft->olength? ft->olength : ft->signal.length;
-  sox_bool error  = sox_false
-  ||lsx_writedw(ft, *(uint32_t *)&magic[MACHINE_IS_BIGENDIAN])
+  int error;
+  uint32_t header;
+  memcpy(&header, magic[MACHINE_IS_BIGENDIAN], sizeof(header));
+  error = 0
+  ||lsx_writedw(ft, header)
   ||lsx_writedw(ft, FIXED_HDR + (unsigned)comments_bytes)
   ||lsx_writeqw(ft, size)
   ||lsx_writedf(ft, ft->signal.rate)
