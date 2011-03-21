@@ -16,7 +16,11 @@
 #include <stddef.h> /* Ensure NULL etc. are available throughout SoX */
 #include <stdio.h>
 #include <stdlib.h>
+
+/* TODO: soxstdint.h can conflict with standard C headers -- needs work. */
 #include "soxstdint.h"
+typedef int32_t int24_t;   /* int24_t == int32_t (beware of the extra byte) */
+typedef uint32_t uint24_t; /* uint24_t == uint32_t (beware of the extra byte) */
 
 #if defined(__cplusplus)
 extern "C" {
@@ -24,11 +28,11 @@ extern "C" {
 
 /* Avoid warnings about unused parameters. */
 #ifdef __GNUC__
-#define UNUSED __attribute__ ((unused))
-#define PRINTF __attribute__ ((format (printf, 1, 2)))
+#define LSX_UNUSED __attribute__ ((unused))
+#define LSX_PRINTF __attribute__ ((format (printf, 1, 2)))
 #else
-#define UNUSED
-#define PRINTF
+#define LSX_UNUSED
+#define LSX_PRINTF
 #endif
 #ifdef _MSC_VER
 #define LSX_UNUSED_VAR(x) ((void)(x))
@@ -38,39 +42,43 @@ extern "C" {
 
 /* The following is the API version of libSoX.  It is not meant
  * to follow the version number of SoX but it has historically.
- * Please do not count on these numbers being in sync.
- */
+ * Please do not count on these numbers being in sync. */
 #define SOX_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
-#define SOX_LIB_VERSION_CODE SOX_LIB_VERSION(14, 4, 0)
+#define SOX_LIB_VERSION_CODE   SOX_LIB_VERSION(14, 4, 0)
 
-const char *sox_version(void);   /* Returns version number */
+/* Returns version number */
+const char *sox_version(void);
 
-typedef enum { /* Flags indicating whether optional features are present in this build of SoX */
+/* Flags indicating whether optional features are present in this build of SoX */
+typedef enum sox_version_flags_t {
     sox_version_none = 0,
     sox_version_have_popen = 1,
     sox_version_have_magic = 2,
-    sox_version_have_threads = 4
+    sox_version_have_threads = 4,
+    sox_version_have_memopen = 8
 } sox_version_flags_t;
 
-typedef struct { /* Information about this build of SoX */
-    unsigned     size;         /* sizeof(sox_version_info_t) */
-    sox_version_flags_t flags; /* feature flags */
-    unsigned     version_code; /* version number, SOX_LIB_VERSION_CODE i.e. 0x140400 */
-    const char * version;      /* version string, sox_version() i.e. "14.4.0" */
-    const char * version_extra;/* version info or null, PACKAGE_EXTRA i.e. "beta" */
-    const char * time;         /* build time, __DATE__ __TIME__ i.e. "Jan  7 2010 03:31:50" */
-    const char * distro;       /* distro or null, DISTRO i.e. Debian */
-    const char * compiler;     /* compiler info or null, i.e. msvc: 1500 */
-    const char * arch;         /* arch: 1248 48 44 L OMP */
+/* Information about this build of SoX */
+typedef struct sox_version_info_t {
+    size_t       size;         /* structure size = sizeof(sox_version_info_t) */
+    sox_version_flags_t flags; /* feature flags = popen | magic | threads | memopen */
+    uint32_t     version_code; /* version number = SOX_LIB_VERSION_CODE, i.e. 0x140400 */
+    const char * version;      /* version string = sox_version(), i.e. "14.4.0" */
+    const char * version_extra;/* version extra info or null = "PACKAGE_EXTRA", i.e. "beta" */
+    const char * time;         /* build time = "__DATE__ __TIME__", i.e. "Jan  7 2010 03:31:50" */
+    const char * distro;       /* distro or null = "DISTRO", i.e. "Debian" */
+    const char * compiler;     /* compiler info or null, i.e. "msvc 160040219" */
+    const char * arch;         /* arch, i.e. "1248 48 44 L OMP" */
     /* new info should be added at the end for version backwards-compatibility. */
 } sox_version_info_t;
 
-sox_version_info_t const * sox_version_info(void); /* gets information about libsox */
+/* gets information about this build of libsox */
+sox_version_info_t const * sox_version_info(void);
 
-#define SOX_SUCCESS 0            /* Function succeeded (= 0) */
-#define SOX_EOF (-1)             /* End Of File or other error (= -1) */
-
-enum { /* libSoX-specific error codes.  The rest directly map from errno. */
+/* libSoX-specific error codes.  The rest directly map from errno. */
+enum sox_error_t {
+  SOX_SUCCESS = 0,     /* Function succeeded = 0 */
+  SOX_EOF = -1,        /* End Of File or other error = -1 */
   SOX_EHDR = 2000,     /* Invalid Audio Header */
   SOX_EFMT,            /* Unsupported data format */
   SOX_ENOMEM,          /* Can't alloc memory */
@@ -79,12 +87,11 @@ enum { /* libSoX-specific error codes.  The rest directly map from errno. */
   SOX_EINVAL           /* Invalid argument */
 };
 
-/* Boolean type, assignment (but not necessarily binary) compatible with
- * C++ bool */
-typedef enum {sox_false, sox_true} sox_bool;
-
-typedef int32_t int24_t;   /* int24_t == int32_t (beware of the extra byte) */
-typedef uint32_t uint24_t; /* uint24_t == uint32_t (beware of the extra byte) */
+/* Boolean type, assignment (but not necessarily binary) compatible with C++ bool */
+typedef enum sox_bool {
+    sox_false,
+    sox_true
+} sox_bool;
 
 #define SOX_INT_MIN(bits) (1 <<((bits)-1)) /* i.e. 0x80, 0x8000, 0x80000000 */
 #define SOX_INT_MAX(bits) (((unsigned)-1)>>(33-(bits))) /* i.e. 0x7F, 0x7FFF, 0x7FFFFFFF */
@@ -95,13 +102,13 @@ typedef uint32_t uint24_t; /* uint24_t == uint32_t (beware of the extra byte) */
 #define SOX_INT24_MAX SOX_INT_MAX(24) /* = 0x007FFFFF */
 #define SOX_INT32_MAX SOX_INT_MAX(32) /* = 0x7FFFFFFF */
 
-typedef int32_t sox_sample_t; /* native SoX audio sample type */
+/* native SoX audio sample type */
+typedef int32_t sox_sample_t;
 
 /* Minimum and maximum values a sample can hold. */
-#define SOX_SAMPLE_PRECISION 32                      /* bits in a sox_sample_t (= 32) */
-#define SOX_SAMPLE_MAX (sox_sample_t)SOX_INT_MAX(32) /* max value for sox_sample_t (= 0x7FFFFFFF) */
-#define SOX_SAMPLE_MIN (sox_sample_t)SOX_INT_MIN(32) /* min value for sox_sample_t (= 0x80000000) */
-
+#define SOX_SAMPLE_PRECISION 32                      /* bits in a sox_sample_t = 32 */
+#define SOX_SAMPLE_MAX (sox_sample_t)SOX_INT_MAX(32) /* max value for sox_sample_t = 0x7FFFFFFF */
+#define SOX_SAMPLE_MIN (sox_sample_t)SOX_INT_MIN(32) /* min value for sox_sample_t = 0x80000000 */
 
 
 /*                Conversions: Linear PCM <--> sox_sample_t
@@ -127,10 +134,10 @@ typedef int32_t sox_sample_t; /* native SoX audio sample type */
  * the upper-most bit then treating them as signed integers.
  */
 
-#define SOX_SAMPLE_LOCALS sox_sample_t sox_macro_temp_sample UNUSED; \
-  double sox_macro_temp_double UNUSED
+#define SOX_SAMPLE_LOCALS sox_sample_t sox_macro_temp_sample LSX_UNUSED; \
+  double sox_macro_temp_double LSX_UNUSED
 
-#define SOX_SAMPLE_NEG SOX_INT_MIN(32) /* sign bit for sox_sample_t (= 0x80000000) */
+#define SOX_SAMPLE_NEG SOX_INT_MIN(32) /* sign bit for sox_sample_t = 0x80000000 */
 #define SOX_SAMPLE_TO_UNSIGNED(bits,d,clips) \
   (uint##bits##_t)(SOX_SAMPLE_TO_SIGNED(bits,d,clips)^SOX_INT_MIN(bits))
 #define SOX_SAMPLE_TO_SIGNED(bits,d,clips) \
@@ -158,7 +165,6 @@ typedef int32_t sox_sample_t; /* native SoX audio sample type */
 #define SOX_SAMPLE_TO_SIGNED_32BIT(d,clips) (int32_t)(d)
 #define SOX_SAMPLE_TO_FLOAT_32BIT(d,clips) (LSX_UNUSED_VAR(sox_macro_temp_double),sox_macro_temp_sample=(d),sox_macro_temp_sample>SOX_SAMPLE_MAX-128?++(clips),1:(((sox_macro_temp_sample+128)&~255)*(1./(SOX_SAMPLE_MAX+1.))))
 #define SOX_SAMPLE_TO_FLOAT_64BIT(d,clips) ((d)*(1./(SOX_SAMPLE_MAX+1.)))
-
 
 
 /* MACRO to clip a data type that is greater then sox_sample_t to
@@ -189,13 +195,16 @@ typedef int32_t sox_sample_t; /* native SoX audio sample type */
 #define SOX_24BIT_CLIP_COUNT(i,clips) SOX_INTEGER_CLIP_COUNT(24,i,clips)
 
 
-
 #define SOX_SIZE_MAX ((size_t)(-1)) /* maximum value of size_t */
 
 /* function-pointer type of globals.output_message_handler */
-typedef void (*sox_output_message_handler_t)(unsigned level, const char *filename, const char *fmt, va_list ap);
+typedef void (*sox_output_message_handler_t)(
+    unsigned level,
+    const char *filename,
+    const char *fmt, va_list ap);
 
-typedef struct { /* Global parameters (for effects & formats) */
+/* Global parameters (for effects & formats) */
+typedef struct sox_globals_t {
 /* public: */
   unsigned     verbosity; /* messages are only written if globals.verbosity >= message.level */
   sox_output_message_handler_t output_message_handler; /* client-specified message output callback */
@@ -206,6 +215,7 @@ typedef struct { /* Global parameters (for effects & formats) */
  * data to get max performance. */
   size_t       bufsiz;       /* default size (in bytes) used for blocks of sample data */
   size_t       input_bufsiz; /* default size (in bytes) used for blocks of input sample data */
+
   int32_t      ranqd1;       /* Can be used to re-seed libSoX's PRNG */
 
 /* private: */
@@ -216,21 +226,27 @@ typedef struct { /* Global parameters (for effects & formats) */
   sox_bool     use_magic;        /* true if client has requested use of 'magic' file-type detection */
   sox_bool     use_threads;      /* true if client has requested parallel effects processing */
 } sox_globals_t;
-extern sox_globals_t sox_globals; /* the SoX global settings */
 
-typedef double sox_rate_t; /* samples per second (= double) */
+/* the SoX global settings */
+extern sox_globals_t sox_globals;
 
-#define SOX_UNSPEC 0 /* unknown value for signal parameter (= 0) */
-#define SOX_IGNORE_LENGTH (size_t)(-1) /* unspecified length for signal.length (= -1) */
-typedef struct { /* Signal parameters; SOX_UNSPEC (= 0) if unknown */
+/* samples per second = double */
+typedef double sox_rate_t;
+
+#define SOX_UNSPEC 0 /* unknown value for signal parameter = 0 */
+#define SOX_IGNORE_LENGTH (size_t)(-1) /* unspecified length for signal.length = -1 */
+
+/* Signal parameters; SOX_UNSPEC (= 0) if unknown */
+typedef struct sox_signalinfo_t {
   sox_rate_t       rate;         /* samples per second, 0 if unknown */
   unsigned         channels;     /* number of sound channels, 0 if unknown */
   unsigned         precision;    /* bits per sample, 0 if unknown */
-  size_t           length;       /* samples * chans in file, 0 if unknown */
+  size_t           length;       /* samples * chans in file, 0 if unknown, -1 if unspecified */
   double           * mult;       /* Effects headroom multiplier; may be null */
 } sox_signalinfo_t;
 
-typedef enum {
+/* Format of sample data */
+typedef enum sox_encoding_t {
   SOX_ENCODING_UNKNOWN   , /* encoding has not yet been determined */
 
   SOX_ENCODING_SIGN2     , /* signed linear 2's comp: Mac */
@@ -264,22 +280,36 @@ typedef enum {
   SOX_ENCODINGS            /* End of list marker */
 } sox_encoding_t;
 
-typedef struct {
-  unsigned flags;          /* lossy once (SOX_LOSSY1), lossy twice (SOX_LOSSY2), or lossless (0) */
-  #define SOX_LOSSY1 1     /* encode, decode: lossy once */
-  #define SOX_LOSSY2 2     /* encode, decode, encode, decode: lossy twice */
+/* Flags for sox_encodings_info_t: lossless/lossy1/lossy2 */
+typedef enum sox_encodings_flags_t {
+  sox_encodings_none   = 0, /* no flags specified (implies lossless encoding) */
+  sox_encodings_lossy1 = 1, /* encode, decode: lossy once */
+  sox_encodings_lossy2 = 2  /* encode, decode, encode, decode: lossy twice */
+} sox_encodings_flags_t;
 
-  char const * name;       /* encoding name */
-  char const * desc;       /* encoding description */
+#define SOX_LOSSY1 sox_encodings_lossy1 /* encode, decode: lossy once */
+#define SOX_LOSSY2 sox_encodings_lossy2 /* encode, decode, encode, decode: lossy twice */
+
+typedef struct sox_encodings_info_t {
+  sox_encodings_flags_t flags; /* lossy once (lossy1), lossy twice (lossy2), or lossless (0) */
+  char const * name;           /* encoding name */
+  char const * desc;           /* encoding description */
 } sox_encodings_info_t;
 
-extern sox_encodings_info_t const sox_encodings_info[]; /* the list of available encodings */
+/* the list of available encodings */
+extern sox_encodings_info_t const sox_encodings_info[];
 
-typedef enum {SOX_OPTION_NO, SOX_OPTION_YES, SOX_OPTION_DEFAULT} sox_option_t;
+/* yes, no, or default (auto-detect) */
+typedef enum sox_option_t {
+    SOX_OPTION_NO,
+    SOX_OPTION_YES,
+    SOX_OPTION_DEFAULT
+} sox_option_t;
 
-typedef struct { /* Encoding parameters */
+/* Encoding parameters */
+typedef struct sox_encodinginfo_t {
   sox_encoding_t encoding; /* format of sample numbers */
-  unsigned bits_per_sample;  /* 0 if unknown or variable; uncompressed value if lossless; compressed value if lossy */
+  unsigned bits_per_sample;/* 0 if unknown or variable; uncompressed value if lossless; compressed value if lossy */
   double compression;      /* compression factor (where applicable) */
 
   /* If these 3 variables are set to SOX_OPTION_DEFAULT, then, during
@@ -292,47 +322,61 @@ typedef struct { /* Encoding parameters */
   sox_bool opposite_endian;
 } sox_encodinginfo_t;
 
-void sox_init_encodinginfo(sox_encodinginfo_t * e); /* fills in an encodinginfo with default values */
+/* fills in an encodinginfo with default values */
+void sox_init_encodinginfo(sox_encodinginfo_t * e);
 
 /* Given an encoding (i.e. SIGN2) and the encoded bits_per_sample (i.e. 16),
  * returns the number of useful bits per sample in the decoded data (i.e. 16).
  * Returns 0 to indicate that the value returned by the format handler should
  * be used instead of a pre-determined precision. */
-unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample);
+unsigned sox_precision(
+    sox_encoding_t encoding,
+    unsigned bits_per_sample);
 
 /* Defaults for common hardware */
-#define SOX_DEFAULT_CHANNELS  2
-#define SOX_DEFAULT_RATE      48000
-#define SOX_DEFAULT_PRECISION 16
-#define SOX_DEFAULT_ENCODING  SOX_ENCODING_SIGN2
+#define SOX_DEFAULT_CHANNELS  2     /* = 2 (stereo) */
+#define SOX_DEFAULT_RATE      48000 /* = 48000Hz */
+#define SOX_DEFAULT_PRECISION 16    /* = 16 bits per sample */
+#define SOX_DEFAULT_ENCODING  SOX_ENCODING_SIGN2 /* = SIGN2 (linear 2's complement PCM) */
 
 /* Loop parameters */
 
-typedef struct { /* Looping parameters (out-of-band data) */
-  size_t    start;          /* first sample */
-  size_t    length;         /* length */
-  unsigned int  count;      /* number of repeats, 0=forever */
-  unsigned char type;       /* 0=no, 1=forward, 2=forward/back */
+/* Loop modes, upper 4 bits mask the loop blass, lower 4 bits describe */
+/* the loop behaviour, ie. single shot, bidirectional etc. */
+enum sox_loop_flags_t {
+  sox_loop_none = 0,          /* single-shot = 0 */
+  sox_loop_forward = 1,       /* forward loop = 1 */
+  sox_loop_forward_back = 2,  /* forward/back loop = 2 */
+  sox_loop_8 = 32,            /* 8 loops (??) = 32 */
+  sox_loop_sustain_decay = 64 /* AIFF style, one sustain & one decay loop = 64 */
+};
+#define SOX_LOOP_NONE          ((uint8_t)sox_loop_none)          /* single-shot = 0 */
+#define SOX_LOOP_8             ((uint8_t)sox_loop_8)             /* 8 loops (??) = 32 */
+#define SOX_LOOP_SUSTAIN_DECAY ((uint8_t)sox_loop_sustain_decay) /* AIFF style, one sustain & one decay loop = 64 */
+
+/* Looping parameters (out-of-band data) */
+typedef struct sox_loopinfo_t {
+  size_t    start;      /* first sample */
+  size_t    length;     /* length */
+  unsigned  count;      /* number of repeats, 0=forever */
+  uint8_t   type;       /* 0=no, 1=forward, 2=forward/back (see sox_loop_... for valid values) */
 } sox_loopinfo_t;
 
 /* Instrument parameters */
 
 /* vague attempt at generic information for sampler-specific info */
 
-typedef struct { /* instrument information */
-  int8_t MIDInote;       /* for unity pitch playback */
-  int8_t MIDIlow, MIDIhi;/* MIDI pitch-bend range */
-  char loopmode;       /* semantics of loop data */
-  unsigned nloops;     /* number of active loops (max SOX_MAX_NLOOPS) */
+/* instrument information */
+typedef struct sox_instrinfo_t{
+  int8_t MIDInote;  /* for unity pitch playback */
+  int8_t MIDIlow;   /* MIDI pitch-bend low range */
+  int8_t MIDIhi;    /* MIDI pitch-bend high range */
+  uint8_t loopmode; /* 0=no, 1=forward, 2=forward/back (see sox_loop_... values) */
+  unsigned nloops;  /* number of active loops (max SOX_MAX_NLOOPS) */
 } sox_instrinfo_t;
 
-/* Loop modes, upper 4 bits mask the loop blass, lower 4 bits describe */
-/* the loop behaviour, ie. single shot, bidirectional etc. */
-#define SOX_LOOP_NONE          0
-#define SOX_LOOP_8             32 /* 8 loops: don't know ?? */
-#define SOX_LOOP_SUSTAIN_DECAY 64 /* AIFF style: one sustain & one decay loop */
-
-typedef struct { /* File buffer info.  Holds info so that data can be read in blocks. */
+/* File buffer info.  Holds info so that data can be read in blocks. */
+typedef struct sox_fileinfo_t {
   char          *buf;                 /* Pointer to data buffer */
   size_t        size;                 /* Size of buffer in bytes */
   size_t        count;                /* Count read into buffer */
@@ -340,9 +384,10 @@ typedef struct { /* File buffer info.  Holds info so that data can be read in bl
 } sox_fileinfo_t;
 
 
-typedef struct sox_format sox_format_t; /* file format definition */
+typedef struct sox_format_t sox_format_t; /* file format definition */
 
-typedef struct { /* Handler structure for each format. */
+/* Handler structure defined by each format. */
+typedef struct sox_format_handler_t {
   unsigned     sox_lib_version_code; /* Checked on load; must be 1st in struct*/
   char         const * description; /* short description of format */
   char         const * const * names; /* null-terminated array of filename extensions that are handled by this format */
@@ -383,7 +428,8 @@ typedef struct { /* Handler structure for each format. */
  *  Format information for input and output files.
  */
 
-typedef char * * sox_comments_t; /* File's metadata. Access via sox_***_comments functions. */
+/* File's metadata. Access via sox_..._comments functions. */
+typedef char * * sox_comments_t;
 
 size_t sox_num_comments(sox_comments_t comments); /* Returns the number of items in the metadata block. */
 void sox_append_comment(sox_comments_t * comments, char const * comment); /* Adds a "id=value" item to the metadata block. */
@@ -394,7 +440,8 @@ char const * sox_find_comment(sox_comments_t comments, char const * id); /* If "
 
 #define SOX_MAX_NLOOPS           8
 
-typedef struct { /* comments, instrument info, loop info (out-of-band data) */
+/* comments, instrument info, loop info (out-of-band data) */
+typedef struct sox_oob_t{
   /* Decoded: */
   sox_comments_t   comments;              /* Comment strings in id=value format. */
   sox_instrinfo_t  instr;                 /* Instrument specification */
@@ -403,9 +450,15 @@ typedef struct { /* comments, instrument info, loop info (out-of-band data) */
   /* TBD: Non-decoded chunks, etc: */
 } sox_oob_t;
 
-typedef enum {lsx_io_file, lsx_io_pipe, lsx_io_url} lsx_io_type;
+/* Is file a real file, a pipe, or a url? */
+typedef enum lsx_io_type
+{
+    lsx_io_file,
+    lsx_io_pipe,
+    lsx_io_url
+} lsx_io_type;
 
-struct sox_format { /* Data passed to/from the format handler */
+struct sox_format_t { /* Data passed to/from the format handler */
   char             * filename;      /* File name */
   
   /* Signal specifications for reader (decoder) or writer (encoder):
@@ -468,12 +521,14 @@ int sox_quit(void); /* Close effects library and unload format handler plugins. 
 /* callback to retrieve information about a format handler */
 typedef const sox_format_handler_t *(*sox_format_fn_t)(void);
 
-typedef struct { /* Information about a loaded format handler: name and function pointer */
+/* Information about a loaded format handler: name and function pointer */
+typedef struct sox_format_tab_t {
   char *name;         /* Name of format handler */
   sox_format_fn_t fn; /* Function to call to get format handler's information */
 } sox_format_tab_t;
 
-extern sox_format_tab_t sox_format_fns[]; /* table of format handler names and functions */
+/* the table of format handler names and functions */
+extern sox_format_tab_t sox_format_fns[];
 
 /* Opens a decoding session for a file. Returned handle must be closed with sox_close(). */
 sox_format_t * sox_open_read(
@@ -564,19 +619,29 @@ sox_format_handler_t const * sox_find_format(char const * name, sox_bool ignore_
 #define SOX_EFF_ALPHA    512         /* Effect is experimental/incomplete */
 #define SOX_EFF_INTERNAL 1024        /* Effect present libSoX but not valid for use by SoX command-line tools */
 
-typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot, sox_plot_data} sox_plot_t;
-typedef struct sox_effect sox_effect_t;
-struct sox_effects_globals { /* Global parameters for effects */
+typedef enum sox_plot_t {
+    sox_plot_off,
+    sox_plot_octave,
+    sox_plot_gnuplot,
+    sox_plot_data
+} sox_plot_t;
+
+typedef struct sox_effect_t sox_effect_t;
+
+/* Global parameters for effects */
+typedef struct sox_effects_globals_t {
   sox_plot_t plot;         /* To help the user choose effect & options */
   sox_globals_t * global_info; /* Pointer to associated SoX globals */
-};
-typedef struct sox_effects_globals sox_effects_globals_t; /* Global parameters for effects */
-extern sox_effects_globals_t sox_effects_globals; /* Global parameters for effects */
+} sox_effects_globals_t;
 
-typedef struct { /* Effect handler information */
+/* Global parameters for effects */
+extern sox_effects_globals_t sox_effects_globals;
+
+/* Effect handler information */
+typedef struct sox_effect_handler_t {
   char const * name;  /* Effect name */
   char const * usage; /* Short explanation of parameters accepted by effect */
-  unsigned int flags; /* Combination of SOX_EFF_*** flags */
+  unsigned int flags; /* Combination of SOX_EFF_... flags */
 
   int (*getopts)(sox_effect_t * effp, int argc, char *argv[]); /* Called to parse command-line arguments (called once per effect) */
   int (*start)(sox_effect_t * effp);                           /* Called to initialize effect (called once per flow) */
@@ -588,7 +653,8 @@ typedef struct { /* Effect handler information */
   size_t       priv_size;                                      /* Size of private data SoX should pre-allocate for effect */
 } sox_effect_handler_t;
 
-struct sox_effect { /* Effect information */
+/* Effect information */
+struct sox_effect_t {
   sox_effects_globals_t    * global_info; /* global effect parameters */
   sox_signalinfo_t         in_signal;     /* Information about the incoming data stream */
   sox_signalinfo_t         out_signal;    /* Information about the outgoing data stream */
@@ -622,7 +688,8 @@ typedef const sox_effect_handler_t *(*sox_effect_fn_t)(void);
 /* Array of known effect handlers */
 extern sox_effect_fn_t sox_effect_fns[];
 
-struct sox_effects_chain { /* Chain of effects to be applied to a stream */
+/* Chain of effects to be applied to a stream */
+typedef struct sox_effects_chain_t {
   sox_effect_t * effects[SOX_MAX_EFFECTS]; /* Array of effects to be applied to a stream */
   unsigned length;                         /* Number of effects to be applied */
   sox_sample_t **ibufc;                    /* Channel interleave buffer */
@@ -630,8 +697,7 @@ struct sox_effects_chain { /* Chain of effects to be applied to a stream */
   sox_effects_globals_t global_info;       /* Copy of global effects settings */
   sox_encodinginfo_t const * in_enc;       /* Input encoding */
   sox_encodinginfo_t const * out_enc;      /* Output encoding */
-};
-typedef struct sox_effects_chain sox_effects_chain_t;
+} sox_effects_chain_t;
 
 /* Initializes an effects chain. Returned handle must be closed with sox_delete_effects_chain(). */
 sox_effects_chain_t * sox_create_effects_chain(
@@ -701,17 +767,20 @@ void sox_output_message(FILE *file, const char *filename, const char *fmt, va_li
  * in public API because sox (the application) make use of them but
  * may not be supported and may change rapidly.
  */
-void lsx_fail(const char *, ...) PRINTF;
-void lsx_warn(const char *, ...) PRINTF;
-void lsx_report(const char *, ...) PRINTF;
-void lsx_debug(const char *, ...) PRINTF;
+void lsx_fail(const char *, ...) LSX_PRINTF;
+void lsx_warn(const char *, ...) LSX_PRINTF;
+void lsx_report(const char *, ...) LSX_PRINTF;
+void lsx_debug(const char *, ...) LSX_PRINTF;
 
 #define lsx_fail       sox_globals.subsystem=__FILE__,lsx_fail
 #define lsx_warn       sox_globals.subsystem=__FILE__,lsx_warn
 #define lsx_report     sox_globals.subsystem=__FILE__,lsx_report
 #define lsx_debug      sox_globals.subsystem=__FILE__,lsx_debug
 
-typedef struct {char const *text; unsigned value;} lsx_enum_item;
+typedef struct lsx_enum_item {
+    char const *text;
+    unsigned value;
+} lsx_enum_item;
 #define LSX_ENUM_ITEM(prefix, item) {#item, prefix##item},
 
 lsx_enum_item const * lsx_find_enum_text(char const * text, lsx_enum_item const * lsx_enum_items, unsigned flags);
