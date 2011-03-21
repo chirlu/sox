@@ -55,8 +55,8 @@ static int input_drain(
  * In this example, we store the samples in a SoX-opened audio file.
  * In a different application, they might perhaps be analysed in some way,
  * or displayed as a wave-form */
-static int output_flow(sox_effect_t *effp UNUSED, sox_sample_t const * ibuf,
-    sox_sample_t * obuf UNUSED, size_t * isamp, size_t * osamp)
+static int output_flow(sox_effect_t *effp LSX_UNUSED, sox_sample_t const * ibuf,
+    sox_sample_t * obuf LSX_UNUSED, size_t * isamp, size_t * osamp)
 {
   /* Write out *isamp samples */
   size_t len = sox_write(out, ibuf, *isamp);
