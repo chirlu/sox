@@ -114,7 +114,7 @@ static int start_read(sox_format_t * ft)
   lsx_skipbytes(ft, PADDING_SIZE);
 
   return lsx_check_read_params(ft, 1, 8000., encoding,
-      bits_per_sample, num_samples, sox_true);
+      bits_per_sample, (uint64_t)num_samples, sox_true);
 }
 
 static int start_write(sox_format_t * ft)

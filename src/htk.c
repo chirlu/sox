@@ -43,16 +43,22 @@ static int start_read(sox_format_t * ft)
     return SOX_EOF;
   }
   return lsx_check_read_params(ft, 1, 1e7 / period_100ns, SOX_ENCODING_SIGN2,
-      (unsigned)bytes_per_sample << 3, (off_t)num_samples, sox_true);
+      (unsigned)bytes_per_sample << 3, (uint64_t)num_samples, sox_true);
 }
 
 static int write_header(sox_format_t * ft)
 {
   double period_100ns = 1e7 / ft->signal.rate;
+  uint64_t len = ft->olength? ft->olength:ft->signal.length;
 
+  if (len > UINT_MAX)
+  {
+    lsx_warn("length greater than 32 bits - cannot fit actual length in header");
+    len = UINT_MAX;
+  }
   if (!ft->olength && floor(period_100ns) != period_100ns)
     lsx_warn("rounding sample period %f (x 100ns) to nearest integer", period_100ns);
-  return lsx_writedw(ft, (unsigned)(ft->olength? ft->olength:ft->signal.length))
+  return lsx_writedw(ft, (unsigned)len)
       || lsx_writedw(ft, (unsigned)(period_100ns + .5))
       || lsx_writew(ft, ft->encoding.bits_per_sample >> 3)
       || lsx_writew(ft, Waveform) ? SOX_EOF : SOX_SUCCESS;

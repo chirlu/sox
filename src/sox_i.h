@@ -128,6 +128,9 @@ void lsx_plot_fir(double * h, int num_points, sox_rate_t rate, sox_plot_t type, 
 #include <byteswap.h>
 #define lsx_swapw(x) bswap_16(x)
 #define lsx_swapdw(x) bswap_32(x)
+#elif defined(_MSC_VER)
+#define lsx_swapw(x) _byteswap_ushort(x)
+#define lsx_swapdw(x) _byteswap_ulong(x)
 #else
 #define lsx_swapw(uw) (((uw >> 8) | (uw << 8)) & 0xffff)
 #define lsx_swapdw(udw) ((udw >> 24) | ((udw >> 8) & 0xff00) | ((udw << 8) & 0xff0000) | (udw << 24))
@@ -198,7 +201,7 @@ int lsx_error(sox_format_t * ft);
 int lsx_flush(sox_format_t * ft);
 int lsx_seeki(sox_format_t * ft, off_t offset, int whence);
 int lsx_unreadb(sox_format_t * ft, unsigned ub);
-size_t lsx_filelength(sox_format_t * ft);
+uint64_t lsx_filelength(sox_format_t * ft);
 off_t lsx_tell(sox_format_t * ft);
 void lsx_clearerr(sox_format_t * ft);
 void lsx_rewind(sox_format_t * ft);
@@ -222,11 +225,11 @@ typedef struct sox_formats_globals { /* Global parameters (for formats) */
 
 int lsx_check_read_params(sox_format_t * ft, unsigned channels,
     sox_rate_t rate, sox_encoding_t encoding, unsigned bits_per_sample,
-    off_t num_samples, sox_bool check_length);
+    uint64_t num_samples, sox_bool check_length);
 #define LSX_FORMAT_HANDLER(name) \
 sox_format_handler_t const * lsx_##name##_format_fn(void); \
 sox_format_handler_t const * lsx_##name##_format_fn(void)
-#define div_bits(size, bits) (off_t)((double)(size) * 8 / bits)
+#define div_bits(size, bits) ((uint64_t)(size) * 8 / bits)
 
 /* Raw I/O */
 int lsx_rawstartread(sox_format_t * ft);
@@ -235,7 +238,7 @@ int lsx_rawstopread(sox_format_t * ft);
 int lsx_rawstartwrite(sox_format_t * ft);
 size_t lsx_rawwrite(sox_format_t * ft, const sox_sample_t *buf, size_t nsamp);
 int lsx_rawseek(sox_format_t * ft, uint64_t offset);
-int lsx_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_bool default_length, sox_encoding_t encoding, unsigned size);
+int lsx_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_bool default_length, sox_encoding_t encoding, unsigned bits_per_sample);
 #define lsx_rawstartread(ft) lsx_rawstart(ft, sox_false, sox_false, sox_false, SOX_ENCODING_UNKNOWN, 0)
 #define lsx_rawstartwrite lsx_rawstartread
 #define lsx_rawstopread NULL

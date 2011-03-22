@@ -236,7 +236,7 @@ static sf_count_t vio_get_filelen(void *user_data)
   /* lsf excepts unbuffered I/O behavior for get_filelen() so force that */
   fflush(ft->fp);
 
-  return lsx_filelength((sox_format_t *)user_data);
+  return (sf_count_t)lsx_filelength((sox_format_t *)user_data);
 }
 
 static sf_count_t vio_seek(sf_count_t offset, int whence, void *user_data)
@@ -329,9 +329,9 @@ static int start(sox_format_t * ft)
 }
 
 static int check_read_params(sox_format_t * ft, unsigned channels,
-    sox_rate_t rate, sox_encoding_t encoding, unsigned bits_per_sample, off_t length)
+    sox_rate_t rate, sox_encoding_t encoding, unsigned bits_per_sample, uint64_t length)
 {
-  ft->signal.length = (size_t)length;
+  ft->signal.length = length;
 
   if (channels && ft->signal.channels && ft->signal.channels != channels)
     lsx_warn("`%s': overriding number of channels", ft->filename);
@@ -407,7 +407,7 @@ static int startread(sox_format_t * ft)
 #endif
 
   return check_read_params(ft, (unsigned)sf->sf_info->channels, rate,
-      encoding, bits_per_sample, (off_t)(sf->sf_info->frames * sf->sf_info->channels));
+      encoding, bits_per_sample, (uint64_t)(sf->sf_info->frames * sf->sf_info->channels));
 }
 
 /*

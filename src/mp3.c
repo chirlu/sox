@@ -218,7 +218,7 @@ typedef struct mp3_priv_t {
   lame_global_flags *gfp;
   float *pcm_buffer;
   size_t pcm_buffer_size;
-  unsigned long num_samples;
+  uint64_t num_samples;
   int vbr_tag;
   LSX_DLENTRIES_TO_PTRS(LAME_FUNC_ENTRIES, lame_dl);
 #endif /*HAVE_LAME*/
@@ -441,7 +441,7 @@ static int startread(sox_format_t * ft)
   if (ignore_length)
     ft->signal.length = SOX_UNSPEC;
   else {
-    ft->signal.length = (size_t)(ft->signal.length * .001 * ft->signal.rate + .5);
+    ft->signal.length = (uint64_t)(ft->signal.length * .001 * ft->signal.rate + .5);
     ft->signal.length *= ft->signal.channels;  /* Keep separate from line above! */
   }
 
@@ -740,7 +740,7 @@ static int get_id3v2_tag_size(sox_format_t * ft)
   return id3v2_size;
 }
 
-static void rewrite_id3v2_tag(sox_format_t * ft, size_t id3v2_size, size_t num_samples)
+static void rewrite_id3v2_tag(sox_format_t * ft, size_t id3v2_size, uint64_t num_samples)
 {
   priv_t *p = (priv_t *)ft->priv;
   FILE *fp = ft->fp;
@@ -763,8 +763,13 @@ static void rewrite_id3v2_tag(sox_format_t * ft, size_t id3v2_size, size_t num_s
     return;
   }
 
-  p->lame_set_num_samples(p->gfp, num_samples);
-  lsx_debug("updated MP3 TLEN to %d samples", num_samples);
+  if (num_samples > ULONG_MAX)
+  {
+    lsx_warn("cannot accurately update track length info - file is too long");
+    num_samples = 0;
+  }
+  p->lame_set_num_samples(p->gfp, (unsigned long)num_samples);
+  lsx_debug("updated MP3 TLEN to %ld samples", (unsigned long)num_samples);
 
   new_size = p->lame_get_id3v2_tag(p->gfp, buffer, id3v2_size);
 
@@ -794,7 +799,7 @@ static void rewrite_id3v2_tag(sox_format_t * ft, size_t id3v2_size, size_t num_s
   free(buffer);
 }
 
-static void rewrite_tags(sox_format_t * ft, unsigned long num_samples)
+static void rewrite_tags(sox_format_t * ft, uint64_t num_samples)
 {
   priv_t *p = (priv_t *)ft->priv;
   FILE *fp = ft->fp;
@@ -889,7 +894,7 @@ static int startwrite(sox_format_t * ft)
   p->lame_set_msgf  (p->gfp,msgf);
 
   p->num_samples = ft->signal.length == SOX_IGNORE_LENGTH ? 0 : ft->signal.length / max(ft->signal.channels, 1);
-  p->lame_set_num_samples(p->gfp, p->num_samples);
+  p->lame_set_num_samples(p->gfp, p->num_samples > ULONG_MAX ? 0 : (unsigned long)p->num_samples);
 
   ft->signal.precision = MP3_LAME_PRECISION;
 
@@ -1093,7 +1098,7 @@ static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t sa
 static int stopwrite(sox_format_t * ft)
 {
   priv_t *p = (priv_t *) ft->priv;
-  unsigned long num_samples = ft->olength == SOX_IGNORE_LENGTH ? 0 : ft->olength / max(ft->signal.channels, 1);
+  uint64_t num_samples = ft->olength == SOX_IGNORE_LENGTH ? 0 : ft->olength / max(ft->signal.channels, 1);
   int written = p->lame_encode_flush(p->gfp, p->mp3_buffer, (int)p->mp3_buffer_size);
 
   if (written < 0)

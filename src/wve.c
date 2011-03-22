@@ -35,13 +35,15 @@ static int start_read(sox_format_t * ft)
     lsx_fail_errno(ft, SOX_EHDR, "wve: can't find Psion identifier");
     return SOX_EOF;
   }
-  return lsx_check_read_params(ft, 1, 8000., SOX_ENCODING_ALAW, 8, (off_t)num_samples, sox_true);
+  return lsx_check_read_params(ft, 1, 8000., SOX_ENCODING_ALAW, 8, (uint64_t)num_samples, sox_true);
 }
 
 static int write_header(sox_format_t * ft)
 {
+  uint64_t size64 = ft->olength? ft->olength:ft->signal.length;
+  unsigned size = size64 > UINT_MAX ? 0 : (unsigned)size64;
   return lsx_writechars(ft, ID1, sizeof(ID1))
-      || lsx_writedw(ft, (unsigned)(ft->olength? ft->olength:ft->signal.length))
+      || lsx_writedw(ft, size)
       || lsx_writechars(ft, ID2, sizeof(ID2))? SOX_EOF:SOX_SUCCESS;
 }
 

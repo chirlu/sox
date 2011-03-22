@@ -885,7 +885,7 @@ static int startread(sox_format_t * ft)
     }
 
     /* Horrible way to find Cool Edit marker points. Taken from Quake source*/
-    ft->oob.loops[0].start = ~0u;
+    ft->oob.loops[0].start = SOX_IGNORE_LENGTH;
     if(ft->seekable){
         /*Got this from the quake source.  I think it 32bit aligns the chunks
          * doubt any machine writing Cool Edit Chunks writes them at an odd
@@ -1615,7 +1615,7 @@ static int seek(sox_format_t * ft, uint64_t offset)
   if (ft->encoding.bits_per_sample & 7)
     lsx_fail_errno(ft, SOX_ENOTSUP, "seeking not supported with this encoding");
   else if (wav->formatTag == WAVE_FORMAT_GSM610) {
-    int new_offset, alignment;
+    int alignment;
     size_t gsmoff;
 
     /* rounding bytes to blockAlign so that we
@@ -1627,7 +1627,7 @@ static int seek(sox_format_t * ft, uint64_t offset)
     ft->sox_errno = lsx_seeki(ft, (off_t)(gsmoff + wav->dataStart), SEEK_SET);
     if (ft->sox_errno == SOX_SUCCESS) {
       /* offset is in samples */
-      new_offset = offset;
+      uint64_t new_offset = offset;
       alignment = offset % wav->samplesPerBlock;
       if (alignment != 0)
           new_offset += (wav->samplesPerBlock - alignment);

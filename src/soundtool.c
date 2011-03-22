@@ -39,14 +39,14 @@ static int start_read(sox_format_t * ft)
   }
   comments[text_field_len] = '\0'; /* Be defensive against incorrect files */
   sox_append_comments(&ft->oob.comments, comments);
-  return lsx_check_read_params(ft, 1, (sox_rate_t)rate, SOX_ENCODING_UNSIGNED, 8, (off_t)nsamples, sox_true);
+  return lsx_check_read_params(ft, 1, (sox_rate_t)rate, SOX_ENCODING_UNSIGNED, 8, (uint64_t)nsamples, sox_true);
 }
 
 static int write_header(sox_format_t * ft)
 {
   char * comment = lsx_cat_comments(ft->oob.comments);
   char text_buf[text_field_len];
-  size_t length = ft->olength? ft->olength:ft->signal.length;
+  uint64_t length = ft->olength? ft->olength:ft->signal.length;
 
   memset(text_buf, 0, sizeof(text_buf));
   strncpy(text_buf, comment, text_field_len - 1);

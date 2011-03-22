@@ -60,8 +60,8 @@ struct smptrailer {
 
 /* Private data for SMP file */
 typedef struct {
-  uint32_t NoOfSamps;           /* Sample data count in words */
-  size_t dataStart;
+  uint64_t NoOfSamps;           /* Sample data count in words */
+  uint64_t dataStart;
   /* comment memory resides in private data because it's small */
   char comment[COMMENTLEN + NAMELEN + 3];
 } priv_t;
@@ -114,9 +114,13 @@ static void settrailer(sox_format_t * ft, struct smptrailer *trailer, sox_rate_t
 
         for(i = 0; i < 8; i++) {        /* copy the 8 loops */
             if (ft->oob.loops[i].type != 0) {
-                trailer->loops[i].start = ft->oob.loops[i].start;
+                trailer->loops[i].start = ft->oob.loops[i].start > UINT_MAX
+                    ? UINT_MAX
+                    : ft->oob.loops[i].start;
                 /* to mark it as not set */
-                trailer->loops[i].end = ft->oob.loops[i].start + ft->oob.loops[i].length;
+                trailer->loops[i].end = ft->oob.loops[i].start + ft->oob.loops[i].length > UINT_MAX
+                    ? UINT_MAX
+                    : ft->oob.loops[i].start + ft->oob.loops[i].length;
                 trailer->loops[i].type = ft->oob.loops[i].type;
                 trailer->loops[i].count = ft->oob.loops[i].count;
             } else {
@@ -170,7 +174,8 @@ static int writetrailer(sox_format_t * ft, struct smptrailer *trailer)
 
 static int sox_smpseek(sox_format_t * ft, uint64_t offset)
 {
-    size_t new_offset, channel_block, alignment;
+    uint64_t new_offset;
+    size_t channel_block, alignment;
     priv_t * smp = (priv_t *) ft->priv;
 
     new_offset = offset * (ft->encoding.bits_per_sample >> 3);
@@ -203,7 +208,9 @@ static int sox_smpstartread(sox_format_t * ft)
 {
         priv_t * smp = (priv_t *) ft->priv;
         int namelen, commentlen;
-        size_t samplestart, i;
+        off_t samplestart;
+        size_t i;
+        unsigned dw;
         struct smpheader header;
         struct smptrailer trailer;
 
@@ -245,7 +252,8 @@ static int sox_smpstartread(sox_format_t * ft)
         sox_append_comments(&ft->oob.comments, smp->comment);
 
         /* Extract out the sample size (always intel format) */
-        lsx_readdw(ft, &(smp->NoOfSamps));
+        lsx_readdw(ft, &dw);
+        smp->NoOfSamps = dw;
         /* mark the start of the sample data */
         samplestart = lsx_tell(ft);
 
@@ -391,7 +399,7 @@ static int sox_smpstopwrite(sox_format_t * ft)
                 lsx_fail_errno(ft,errno,"SMP unable to seek back to save size");
                 return(SOX_EOF);
         }
-        lsx_writedw(ft, smp->NoOfSamps);
+        lsx_writedw(ft, smp->NoOfSamps > UINT_MAX ? UINT_MAX : (unsigned)smp->NoOfSamps);
 
         return(SOX_SUCCESS);
 }

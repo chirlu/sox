@@ -133,19 +133,19 @@ static int start_read(sox_format_t * ft)
 
   num_samples = num_samples_ul;
   return lsx_check_read_params(ft, channels, (sox_rate_t)rate, encoding,
-      bytes_per_sample << 3, (off_t)(num_samples * channels), sox_true);
+      bytes_per_sample << 3, (uint64_t)num_samples * channels, sox_true);
 }
 
 static int write_header(sox_format_t * ft)
 {
   char buf[128];
-  long samples = (ft->olength ? ft->olength : ft->signal.length) / ft->signal.channels;
+  uint64_t samples = (ft->olength ? ft->olength : ft->signal.length) / ft->signal.channels;
 
   lsx_writes(ft, "NIST_1A\n");
   lsx_writes(ft, "   1024\n");
 
   if (samples) {
-    sprintf(buf, "sample_count -i %ld\n", samples);
+    sprintf(buf, "sample_count -i %lu\n", (unsigned long)samples);
     lsx_writes(ft, buf);
   }
 

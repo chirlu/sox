@@ -26,8 +26,8 @@
 
 /* forward declarations */
 static double read_ieee_extended(sox_format_t *);
-static int aiffwriteheader(sox_format_t *, size_t);
-static int aifcwriteheader(sox_format_t *, size_t);
+static int aiffwriteheader(sox_format_t *, uint64_t);
+static int aifcwriteheader(sox_format_t *, uint64_t);
 static void write_ieee_extended(sox_format_t *, double);
 static double ConvertFromIeeeExtended(unsigned char*);
 static void ConvertToIeeeExtended(double, char *);
@@ -408,7 +408,7 @@ int lsx_aiffstartread(sox_format_t * ft)
   reportInstrument(ft);
 
   return lsx_check_read_params(
-      ft, channels, rate, SOX_ENCODING_SIGN2, bits, (off_t)ssndsize, sox_false);
+      ft, channels, rate, SOX_ENCODING_SIGN2, bits, (uint64_t)ssndsize, sox_false);
 }
 
 /* print out the MIDI key allocations, loop points, directions etc */
@@ -582,7 +582,7 @@ int lsx_aiffstartwrite(sox_format_t * ft)
            At 48 kHz, 16 bits stereo, this gives ~3 hours of audio.
            Sorry, the AIFF format does not provide for an indefinite
            number of samples. */
-        return(aiffwriteheader(ft, (size_t) 0x7f000000 / ((ft->encoding.bits_per_sample>>3)*ft->signal.channels)));
+        return(aiffwriteheader(ft, (uint64_t) 0x7f000000 / ((ft->encoding.bits_per_sample>>3)*ft->signal.channels)));
 }
 
 int lsx_aiffstopwrite(sox_format_t * ft)
@@ -608,13 +608,14 @@ int lsx_aiffstopwrite(sox_format_t * ft)
         return(aiffwriteheader(ft, ft->olength / ft->signal.channels));
 }
 
-static int aiffwriteheader(sox_format_t * ft, size_t nframes)
+static int aiffwriteheader(sox_format_t * ft, uint64_t nframes)
 {
         int hsize =
                 8 /*COMM hdr*/ + 18 /*COMM chunk*/ +
                 8 /*SSND hdr*/ + 12 /*SSND chunk*/;
         unsigned bits = 0;
         unsigned i;
+        uint64_t size;
         size_t padded_comment_size = 0, comment_size = 0;
         size_t comment_chunk_size = 0;
         char * comment = lsx_cat_comments(ft->oob.comments);
@@ -660,7 +661,13 @@ static int aiffwriteheader(sox_format_t * ft, size_t nframes)
 
         lsx_writes(ft, "FORM"); /* IFF header */
         /* file size */
-        lsx_writedw(ft, (unsigned) (hsize + nframes * (ft->encoding.bits_per_sample >> 3) * ft->signal.channels));
+        size = hsize + nframes * (ft->encoding.bits_per_sample >> 3) * ft->signal.channels;
+        if (size > UINT_MAX)
+        {
+            lsx_warn("file size too big for accurate AIFF header");
+            size = UINT_MAX;
+        }
+        lsx_writedw(ft, (unsigned)size);
         lsx_writes(ft, "AIFF"); /* File type */
 
         /* Now we write the COMT comment chunk using the precomputed sizes */
@@ -705,12 +712,18 @@ static int aiffwriteheader(sox_format_t * ft, size_t nframes)
                 lsx_writew(ft, ft->oob.instr.nloops);
 
                 for(i = 0; i < ft->oob.instr.nloops; i++) {
+                        unsigned start = ft->oob.loops[i].start > UINT_MAX
+                            ? UINT_MAX
+                            : ft->oob.loops[i].start;
+                        unsigned end = ft->oob.loops[i].start + ft->oob.loops[i].length > UINT_MAX
+                            ? UINT_MAX
+                            : ft->oob.loops[i].start + ft->oob.loops[i].length;
                         lsx_writew(ft, i + 1);
-                        lsx_writedw(ft, (unsigned) ft->oob.loops[i].start);
+                        lsx_writedw(ft, start);
                         lsx_writeb(ft, 0);
                         lsx_writeb(ft, 0);
                         lsx_writew(ft, i*2 + 1);
-                        lsx_writedw(ft, (unsigned) (ft->oob.loops[i].start + ft->oob.loops[i].length));
+                        lsx_writedw(ft, end);
                         lsx_writeb(ft, 0);
                         lsx_writeb(ft, 0);
                 }
@@ -766,7 +779,7 @@ int lsx_aifcstartwrite(sox_format_t * ft)
            At 48 kHz, 16 bits stereo, this gives ~3 hours of music.
            Sorry, the AIFC format does not provide for an "infinite"
            number of samples. */
-        return(aifcwriteheader(ft, (size_t) 0x7f000000 / ((ft->encoding.bits_per_sample >> 3)*ft->signal.channels)));
+        return(aifcwriteheader(ft, (uint64_t) 0x7f000000 / ((ft->encoding.bits_per_sample >> 3)*ft->signal.channels)));
 }
 
 int lsx_aifcstopwrite(sox_format_t * ft)
@@ -792,12 +805,13 @@ int lsx_aifcstopwrite(sox_format_t * ft)
         return(aifcwriteheader(ft, ft->olength / ft->signal.channels));
 }
 
-static int aifcwriteheader(sox_format_t * ft, size_t nframes)
+static int aifcwriteheader(sox_format_t * ft, uint64_t nframes)
 {
         unsigned hsize =
                 12 /*FVER*/ + 8 /*COMM hdr*/ + 18+4+1+15 /*COMM chunk*/ +
                 8 /*SSND hdr*/ + 12 /*SSND chunk*/;
         unsigned bits = 0;
+        uint64_t size;
 
         if (ft->encoding.encoding == SOX_ENCODING_SIGN2 &&
             ft->encoding.bits_per_sample == 8)
@@ -819,7 +833,13 @@ static int aifcwriteheader(sox_format_t * ft, size_t nframes)
 
         lsx_writes(ft, "FORM"); /* IFF header */
         /* file size */
-        lsx_writedw(ft, (unsigned) (hsize + nframes * (ft->encoding.bits_per_sample >> 3) * ft->signal.channels));
+        size = hsize + nframes * (ft->encoding.bits_per_sample >> 3) * ft->signal.channels;
+        if (size > UINT_MAX)
+        {
+            lsx_warn("file size too big for accurate AIFC header");
+            size = UINT_MAX;
+        }
+        lsx_writedw(ft, (unsigned)size);
         lsx_writes(ft, "AIFC"); /* File type */
 
         /* FVER chunk */

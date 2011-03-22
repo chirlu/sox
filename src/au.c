@@ -197,12 +197,17 @@ static int write_header(sox_format_t * ft)
   char * comment  = lsx_cat_comments(ft->oob.comments);
   size_t len      = strlen(comment) + 1;     /* Write out null-terminated */
   size_t info_len = max(4, (len + 3) & ~3u); /* Minimum & multiple of 4 bytes */
-  size_t size     = ft->olength? ft->olength : ft->signal.length;
   int i = ft->encoding.reverse_bytes == MACHINE_IS_BIGENDIAN? 2 : 0;
-  sox_bool error  = sox_false
+  uint64_t size64 = ft->olength ? ft->olength : ft->signal.length;
+  unsigned size = size64 == SOX_UNSPEC
+      ? SUN_UNSPEC
+      : size64*(ft->encoding.bits_per_sample >> 3) > UINT_MAX
+      ? SUN_UNSPEC
+      : (unsigned)(size64*(ft->encoding.bits_per_sample >> 3));
+  sox_bool error = sox_false
   ||lsx_writechars(ft, id[i].str, sizeof(id[i].str))
   ||lsx_writedw(ft, FIXED_HDR + (unsigned)info_len)
-  ||lsx_writedw(ft, (unsigned) (size != SOX_UNSPEC? size*(ft->encoding.bits_per_sample >> 3) : SUN_UNSPEC))
+  ||lsx_writedw(ft, size)
   ||lsx_writedw(ft, ft_enc(ft->encoding.bits_per_sample, ft->encoding.encoding))
   ||lsx_writedw(ft, (unsigned)(ft->signal.rate + .5))
   ||lsx_writedw(ft, ft->signal.channels)

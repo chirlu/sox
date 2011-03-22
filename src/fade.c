@@ -24,7 +24,7 @@
 
 /* Private data for fade file */
 typedef struct { /* These are measured as samples */
-    size_t in_start, in_stop, out_start, out_stop, samplesdone;
+    uint64_t in_start, in_stop, out_start, out_stop, samplesdone;
     char *in_stop_str, *out_start_str, *out_stop_str;
     char in_fadetype, out_fadetype;
     char do_out;
@@ -32,7 +32,7 @@ typedef struct { /* These are measured as samples */
 } priv_t;
 
 /* prototypes */
-static double fade_gain(size_t index, size_t range, int fadetype);
+static double fade_gain(uint64_t index, uint64_t range, int fadetype);
 
 /*
  * Process options
@@ -47,6 +47,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int argc, char **argv)
     priv_t * fade = (priv_t *) effp->priv;
     char t_char[2];
     int t_argno;
+    size_t samples;
   --argc, ++argv;
 
     if (argc < 1 || argc > 4)
@@ -74,9 +75,10 @@ static int sox_fade_getopts(sox_effect_t * effp, int argc, char **argv)
     fade->in_stop_str = lsx_malloc(strlen(argv[0])+1);
     strcpy(fade->in_stop_str,argv[0]);
     /* Do a dummy parse to see if it will fail */
-    if (lsx_parsesamples(0., fade->in_stop_str, &fade->in_stop, 't') == NULL)
+    if (lsx_parsesamples(0., fade->in_stop_str, &samples, 't') == NULL)
       return lsx_usage(effp);
 
+    fade->in_stop = samples;
     fade->out_start_str = fade->out_stop_str = 0;
 
     for (t_argno = 1; t_argno < argc && t_argno < 3; t_argno++)
@@ -89,8 +91,9 @@ static int sox_fade_getopts(sox_effect_t * effp, int argc, char **argv)
 
             /* Do a dummy parse to see if it will fail */
             if (lsx_parsesamples(0., fade->out_stop_str,
-                                &fade->out_stop, 't') == NULL)
+                                &samples, 't') == NULL)
               return lsx_usage(effp);
+            fade->out_stop = samples;
         }
         else
         {
@@ -99,8 +102,9 @@ static int sox_fade_getopts(sox_effect_t * effp, int argc, char **argv)
 
             /* Do a dummy parse to see if it will fail */
             if (lsx_parsesamples(0., fade->out_start_str,
-                                &fade->out_start, 't') == NULL)
+                                &samples, 't') == NULL)
               return lsx_usage(effp);
+            fade->out_start = samples;
         }
     } /* End for(t_argno) */
 
@@ -115,21 +119,24 @@ static int sox_fade_start(sox_effect_t * effp)
 {
     priv_t * fade = (priv_t *) effp->priv;
     sox_bool truncate = sox_false;
+    size_t samples;
 
     /* converting time values to samples */
     fade->in_start = 0;
     if (lsx_parsesamples(effp->in_signal.rate, fade->in_stop_str,
-                        &fade->in_stop, 't') == NULL)
+                        &samples, 't') == NULL)
       return lsx_usage(effp);
 
+    fade->in_stop = samples;
     fade->do_out = 0;
     /* See if user specified a stop time */
     if (fade->out_stop_str)
     {
         fade->do_out = 1;
         if (lsx_parsesamples(effp->in_signal.rate, fade->out_stop_str,
-                            &fade->out_stop, 't') == NULL)
+                            &samples, 't') == NULL)
           return lsx_usage(effp);
+        fade->out_stop = samples;
 
         if (!(truncate = !!fade->out_stop)) {
           fade->out_stop = effp->in_signal.length / effp->in_signal.channels;
@@ -143,11 +150,10 @@ static int sox_fade_start(sox_effect_t * effp)
         if (fade->out_start_str)
         {
             if (lsx_parsesamples(effp->in_signal.rate, fade->out_start_str,
-                        &fade->out_start, 't') == NULL)
+                        &samples, 't') == NULL)
               return lsx_usage(effp);
             /* Fade time is relative to stop time. */
-            fade->out_start = fade->out_stop - fade->out_start;
-
+            fade->out_start = fade->out_stop - samples;
         }
         else
             /* If user doesn't specify fade out length then
@@ -320,7 +326,7 @@ static int lsx_kill(sox_effect_t * effp)
 /* Function returns gain value 0.0 - 1.0 according index / range ratio
 * and -1.0 if  type is invalid
 * todo: to optimize performance calculate gain every now and then and interpolate */
-static double fade_gain(size_t index, size_t range, int type)
+static double fade_gain(uint64_t index, uint64_t range, int type)
 {
     double retval = 0.0, findex = 0.0;
 

@@ -190,9 +190,9 @@ static sox_signalinfo_t combiner_signal, ofile_signal_options;
 static sox_encodinginfo_t combiner_encoding, ofile_encoding_options;
 static size_t mixing_clips = 0;
 static size_t current_input = 0;
-static unsigned long input_wide_samples = 0;
-static unsigned long read_wide_samples = 0;
-static unsigned long output_samples = 0;
+static uint64_t input_wide_samples = 0;
+static uint64_t read_wide_samples = 0;
+static uint64_t output_samples = 0;
 static sox_bool input_eof = sox_false;
 static sox_bool output_eof = sox_false;
 static sox_bool user_abort = sox_false;
@@ -277,7 +277,7 @@ static void play_file_info(sox_format_t * ft, file_t * f, sox_bool full)
   FILE * const output = sox_mode == sox_soxi? stdout : stderr;
   char const * text, * text2 = NULL;
   char buffer[30];
-  size_t ws = ft->signal.length / ft->signal.channels;
+  uint64_t ws = ft->signal.length / ft->signal.channels;
   (void)full;
 
   fprintf(output, "\n");
@@ -372,7 +372,7 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
     ft->signal.precision);
 
   if (ft->signal.length && ft->signal.channels && ft->signal.rate) {
-    size_t ws = ft->signal.length / ft->signal.channels;
+    uint64_t ws = ft->signal.length / ft->signal.channels;
     char const * text, * text2 = NULL;
     fprintf(output,
         "Duration       : %s = %lu samples %c %g CDDA sectors\n",
@@ -1552,7 +1552,8 @@ static void calculate_combiner_signal_parameters(void)
 static void calculate_output_signal_parameters(void)
 {
   sox_bool known_length = combine_method != sox_sequence;
-  size_t i, olen = 0;
+  size_t i;
+  uint64_t olen = 0;
 
   /* Report all input files and gather info on differing rates & numbers of
    * channels, and on the resulting output audio length: */
@@ -1591,7 +1592,7 @@ static void calculate_output_signal_parameters(void)
 
   if (!known_length)
     olen = 0;
-  ofile->signal.length = (size_t)(olen * ofile->signal.channels * ofile->signal.rate / combiner_signal.rate + .5);
+  ofile->signal.length = (uint64_t)(olen * ofile->signal.channels * ofile->signal.rate / combiner_signal.rate + .5);
 }
 
 static void set_combiner_and_output_encoding_parameters(void)
@@ -2533,7 +2534,7 @@ static int soxi1(soxi_t const * type, char * filename)
 {
   sox_format_t * ft = sox_open_read(filename, NULL, NULL, NULL);
   double secs;
-  size_t ws;
+  uint64_t ws;
   char const * text = NULL;
 
   if (!ft)

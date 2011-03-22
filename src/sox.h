@@ -234,14 +234,14 @@ extern sox_globals_t sox_globals;
 typedef double sox_rate_t;
 
 #define SOX_UNSPEC 0 /* unknown value for signal parameter = 0 */
-#define SOX_IGNORE_LENGTH (size_t)(-1) /* unspecified length for signal.length = -1 */
+#define SOX_IGNORE_LENGTH (uint64_t)(-1) /* unspecified length for signal.length = -1 */
 
 /* Signal parameters; SOX_UNSPEC (= 0) if unknown */
 typedef struct sox_signalinfo_t {
   sox_rate_t       rate;         /* samples per second, 0 if unknown */
   unsigned         channels;     /* number of sound channels, 0 if unknown */
   unsigned         precision;    /* bits per sample, 0 if unknown */
-  size_t           length;       /* samples * chans in file, 0 if unknown, -1 if unspecified */
+  uint64_t         length;       /* samples * chans in file, 0 if unknown, -1 if unspecified */
   double           * mult;       /* Effects headroom multiplier; may be null */
 } sox_signalinfo_t;
 
@@ -356,8 +356,8 @@ enum sox_loop_flags_t {
 
 /* Looping parameters (out-of-band data) */
 typedef struct sox_loopinfo_t {
-  size_t    start;      /* first sample */
-  size_t    length;     /* length */
+  uint64_t  start;      /* first sample */
+  uint64_t  length;     /* length */
   unsigned  count;      /* number of repeats, 0=forever */
   uint8_t   type;       /* 0=no, 1=forward, 2=forward/back (see sox_loop_... for valid values) */
 } sox_loopinfo_t;
@@ -483,14 +483,14 @@ struct sox_format_t { /* Data passed to/from the format handler */
   sox_oob_t        oob;             /* comments, instrument info, loop info (out-of-band data) */
   sox_bool         seekable;        /* Can seek on this file */
   char             mode;            /* Read or write mode ('r' or 'w') */
-  size_t           olength;         /* Samples * chans written to file */
+  uint64_t         olength;         /* Samples * chans written to file */
   size_t           clips;           /* Incremented if clipping occurs */
   int              sox_errno;       /* Failure error code */
   char             sox_errstr[256]; /* Failure error text */
   FILE             * fp;            /* File stream pointer */
   lsx_io_type      io_type;         /* Stores whether this is a file, pipe or URL */
-  long             tell_off;        /* Current offset within file */
-  long             data_start;      /* Offset at which headers end and sound data begins (set by lsx_check_read_params) */
+  uint64_t         tell_off;        /* Current offset within file */
+  uint64_t         data_start;      /* Offset at which headers end and sound data begins (set by lsx_check_read_params) */
   sox_format_handler_t handler;     /* Format handler for this file */
   void             * priv;          /* Format handler's private data area */
 };
@@ -742,9 +742,9 @@ void sox_delete_effects(sox_effects_chain_t *chain);
  * wants to trim and use a sox_seek() operation instead.  After
  * sox_seek()'ing, you should set the trim option to 0.
  */
-size_t sox_trim_get_start(sox_effect_t * effp);
+uint64_t sox_trim_get_start(sox_effect_t * effp);
 void sox_trim_clear_start(sox_effect_t * effp);
-size_t sox_crop_get_start(sox_effect_t * effp);
+uint64_t sox_crop_get_start(sox_effect_t * effp);
 void sox_crop_clear_start(sox_effect_t * effp);
 
 typedef int (* sox_playlist_callback_t)(void *, char *);

@@ -16,12 +16,12 @@ typedef struct {
     sox_bool end_is_absolute;
 
     /* options converted to values */
-    size_t start;
-    size_t length;
+    uint64_t start;
+    uint64_t length;
 
     /* internal stuff */
-    size_t index;
-    size_t trimmed;
+    uint64_t index;
+    uint64_t trimmed;
 } priv_t;
 
 /*
@@ -31,6 +31,7 @@ static int sox_trim_getopts(sox_effect_t * effp, int argc, char **argv)
 {
     char *end;
     priv_t * trim = (priv_t *) effp->priv;
+    size_t samples;
   --argc, ++argv;
 
     /* Do not know sample rate yet so hold off on completely parsing
@@ -46,14 +47,16 @@ static int sox_trim_getopts(sox_effect_t * effp, int argc, char **argv)
             trim->end_str = lsx_malloc(strlen(end)+1);
             strcpy(trim->end_str, end);
             /* Do a dummy parse to see if it will fail */
-            if (lsx_parsesamples(0., trim->end_str, &trim->length, 't') == NULL)
+            if (lsx_parsesamples(0., trim->end_str, &samples, 't') == NULL)
               return lsx_usage(effp);
+            trim->length = samples;
         case 1:
             trim->start_str = lsx_malloc(strlen(argv[0])+1);
             strcpy(trim->start_str,argv[0]);
             /* Do a dummy parse to see if it will fail */
-            if (lsx_parsesamples(0., trim->start_str, &trim->start, 't') == NULL)
+            if (lsx_parsesamples(0., trim->start_str, &samples, 't') == NULL)
               return lsx_usage(effp);
+            trim->start = samples;
             break;
         default:
             return lsx_usage(effp);
@@ -68,16 +71,19 @@ static int sox_trim_getopts(sox_effect_t * effp, int argc, char **argv)
 static int sox_trim_start(sox_effect_t * effp)
 {
     priv_t * trim = (priv_t *) effp->priv;
+    size_t samples;
 
     if (lsx_parsesamples(effp->in_signal.rate, trim->start_str,
-                        &trim->start, 't') == NULL)
+                        &samples, 't') == NULL)
       return lsx_usage(effp);
+    trim->start = samples;
 
     if (trim->end_str)
     {
         if (lsx_parsesamples(effp->in_signal.rate, trim->end_str,
-                    &trim->length, 't') == NULL)
+                    &samples, 't') == NULL)
           return lsx_usage(effp);
+        trim->length = samples;
         if (trim->end_is_absolute) {
             if (trim->length < trim->start) {
                 lsx_warn("end earlier than start");
@@ -175,7 +181,7 @@ static int lsx_kill(sox_effect_t * effp)
     return (SOX_SUCCESS);
 }
 
-size_t sox_trim_get_start(sox_effect_t * effp)
+uint64_t sox_trim_get_start(sox_effect_t * effp)
 {
     priv_t * trim = (priv_t *)effp->priv;
     return trim->start;

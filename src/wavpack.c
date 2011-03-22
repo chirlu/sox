@@ -45,7 +45,7 @@ static int ft_seek_rel(void * ft, int32_t offset, int mode) {
 static int ft_unreadb(void * ft, int b) {
   return lsx_unreadb((sox_format_t *)ft, (unsigned)b);}
 static uint32_t ft_filelength(void * ft) {
-  return lsx_filelength((sox_format_t *)ft);}
+  return (uint32_t)lsx_filelength((sox_format_t *)ft);}
 static int ft_is_seekable(void *ft) {
   return ((sox_format_t *)ft)->seekable;}
 static int32_t ft_write_b_buf(void * ft, void * buf, int32_t len) {
@@ -71,7 +71,7 @@ static int start_read(sox_format_t * ft)
     lsx_warn("`%s': overriding sample rate", ft->filename);
   else ft->signal.rate = WavpackGetSampleRate(p->codec);
 
-  ft->signal.length = WavpackGetNumSamples(p->codec) * ft->signal.channels;
+  ft->signal.length = (uint64_t)WavpackGetNumSamples(p->codec) * ft->signal.channels;
   ft->encoding.encoding = (WavpackGetMode(p->codec) & MODE_FLOAT)?
     SOX_ENCODING_WAVPACKF : SOX_ENCODING_WAVPACK;
   return SOX_SUCCESS;
@@ -105,6 +105,7 @@ static int start_write(sox_format_t * ft)
 {
   priv_t * p = (priv_t *)ft->priv;
   WavpackConfig config;
+  uint64_t size64;
 
   p->codec = WavpackOpenFileOutput(ft_write_b_buf, ft, NULL);
   memset(&config, 0, sizeof(config));
@@ -115,7 +116,8 @@ static int start_write(sox_format_t * ft)
   config.num_channels      = ft->signal.channels;
   config.sample_rate       = (int32_t)(ft->signal.rate + .5);
   config.flags = CONFIG_VERY_HIGH_FLAG;
-  if (!WavpackSetConfiguration(p->codec, &config, ft->signal.length? (uint32_t) ft->signal.length / ft->signal.channels : (uint32_t)-1)) {
+  size64 = ft->signal.length / ft->signal.channels;
+  if (!WavpackSetConfiguration(p->codec, &config, size64 && size64 <= UINT_MAX ? (uint32_t)size64 : (uint32_t)-1)) {
     lsx_fail_errno(ft, SOX_EHDR, "%s", WavpackGetErrorMessage(p->codec));
     return SOX_EOF;
   }

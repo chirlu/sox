@@ -45,7 +45,7 @@ typedef struct {
   unsigned bits_per_sample;
   unsigned channels;
   unsigned sample_rate;
-  unsigned total_samples;
+  uint64_t total_samples;
 
   /* Decode buffer: */
   FLAC__int32 const * const * decoded_wide_samples;

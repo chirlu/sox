@@ -53,7 +53,7 @@ void lsx_set_signal_defaults(sox_format_t * ft)
 
 int lsx_check_read_params(sox_format_t * ft, unsigned channels,
     sox_rate_t rate, sox_encoding_t encoding, unsigned bits_per_sample,
-    off_t num_samples, sox_bool check_length)
+    uint64_t num_samples, sox_bool check_length)
 {
   ft->signal.length = ft->signal.length == SOX_IGNORE_LENGTH? SOX_UNSPEC : num_samples;
 
@@ -77,7 +77,7 @@ int lsx_check_read_params(sox_format_t * ft, unsigned channels,
   ft->encoding.bits_per_sample = bits_per_sample;
 
   if (check_length && ft->encoding.bits_per_sample && lsx_filelength(ft)) {
-    off_t calculated_length = div_bits(lsx_filelength(ft) - ft->data_start, ft->encoding.bits_per_sample);
+    uint64_t calculated_length = div_bits(lsx_filelength(ft) - ft->data_start, ft->encoding.bits_per_sample);
     if (!ft->signal.length)
       ft->signal.length = calculated_length;
     else if (num_samples != calculated_length)
@@ -138,12 +138,12 @@ size_t lsx_writebuf(sox_format_t * ft, void const * buf, size_t len)
   return ret;
 }
 
-size_t lsx_filelength(sox_format_t * ft)
+uint64_t lsx_filelength(sox_format_t * ft)
 {
   struct stat st;
   int ret = fstat(fileno(ft->fp), &st);
 
-  return (!ret && (st.st_mode & S_IFREG))? (size_t)st.st_size : 0;
+  return (!ret && (st.st_mode & S_IFREG))? (uint64_t)st.st_size : 0;
 }
 
 int lsx_flush(sox_format_t * ft)
@@ -153,7 +153,7 @@ int lsx_flush(sox_format_t * ft)
 
 off_t lsx_tell(sox_format_t * ft)
 {
-  return ft->seekable? (ptrdiff_t)ftello(ft->fp) : ft->tell_off;
+  return ft->seekable? (off_t)ftello(ft->fp) : (off_t)ft->tell_off;
 }
 
 int lsx_eof(sox_format_t * ft)

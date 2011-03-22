@@ -25,13 +25,14 @@
 
 typedef struct {
   int argc;
-  struct {int flag; char * str; size_t at;} pos[2];
+  struct {int flag; char * str; uint64_t at;} pos[2];
 } priv_t;
 
 static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
 {
   priv_t * p = (priv_t *)effp->priv;
   char const * s, * q;
+  size_t samples;
   int i;
 
   for (i = p->argc - 1; i == 0 || i == 1; --i) {
@@ -40,7 +41,10 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
     s = p->pos[i].str;
     if (strchr("+-" + 1 - i, *s))
       p->pos[i].flag = *s++;
-    if (!(q = lsx_parsesamples(rate, s, &p->pos[i].at, 't')) || *q)
+
+    q = lsx_parsesamples(rate, s, &samples, 't');
+    p->pos[i].at = samples;
+    if (!q || *q)
       break;
   }
   return i >= 0 ? lsx_usage(effp) : SOX_SUCCESS;
@@ -59,7 +63,7 @@ static int start(sox_effect_t * effp)
   priv_t * p = (priv_t *)effp->priv;
   int i;
 
-  p->pos[1].at = SIZE_MAX / 2 / effp->in_signal.channels;
+  p->pos[1].at = ((uint64_t)(-1)) / 2 / effp->in_signal.channels;
   parse(effp, 0, effp->in_signal.rate); /* Re-parse now rate is known */
   for (i = 0; i < 2; ++i) {
     p->pos[i].at *= effp->in_signal.channels;
@@ -140,7 +144,7 @@ sox_effect_handler_t const * lsx_crop_effect_fn(void)
   return &handler;
 }
 
-size_t sox_crop_get_start(sox_effect_t * effp)
+uint64_t sox_crop_get_start(sox_effect_t * effp)
 {
   return ((priv_t *)effp->priv)->pos[0].at;
 }

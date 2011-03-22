@@ -114,8 +114,9 @@ static void read_comments(sox_format_t * ft)
           free(utf8);
         }
       if ((utf8 = utf8_id3tag_findframe(tag, "TLEN", 0))) {
-        if (atoi((char *)utf8) > 0) {
-          ft->signal.length = atoi((char *)utf8); /* In ms; convert to samples later */
+        unsigned long tlen = strtoul((char *)utf8, NULL, 10);
+        if (tlen > 0 && tlen < ULONG_MAX) {
+          ft->signal.length= tlen; /* In ms; convert to samples later */
           lsx_debug("got exact duration from ID3 TLEN");
         }
         free(utf8);
