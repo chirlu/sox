@@ -103,7 +103,7 @@ static void write_bits(sox_format_t * ft, INT32 *bits, int len)
 static int read_bits(sox_format_t * ft, INT32 *bits, int len)
 {
   int i;
-  uint8_t c;
+  uint8_t c = 0;
 
   /* Unpack the array bits into coded_frame. */
   for (i = 0; i < len; i++) {

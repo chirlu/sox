@@ -331,7 +331,7 @@ static size_t read(sox_format_t * ft, sox_sample_t* buf, size_t len)
 {
   size_t copied = 0;
   priv_t *priv = (priv_t*)ft->priv;
-  if (priv == NULL) return SOX_EOF;
+  if (priv == NULL) return (size_t)SOX_EOF;
 
   while (!priv->error && copied < len)
   {
@@ -399,7 +399,7 @@ static size_t write(sox_format_t * ft, const sox_sample_t* buf, size_t len)
   unsigned clips = 0;
   size_t copied = 0;
   priv_t *priv = (priv_t*)ft->priv;
-  if (priv == NULL) return SOX_EOF;
+  if (priv == NULL) return (size_t)SOX_EOF;
 
   while (!priv->error && copied < len)
   {

@@ -617,7 +617,7 @@ sox_bool sox_format_supports_encoding(
 
 static void set_output_format(sox_format_t * ft)
 {
-  sox_encoding_t e;
+  sox_encoding_t e = SOX_ENCODING_UNKNOWN;
   unsigned i, s;
   unsigned const * encodings = ft->handler.write_formats;
 #define enc_arg(T) (T)encodings[i++]

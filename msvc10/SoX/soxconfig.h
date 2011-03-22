@@ -20,6 +20,24 @@
 
 #define PACKAGE_EXTRA "msvc"
 
+/* Enable some extra warnings.
+   Track the number of times each warning has been helpful. */
+#pragma warning(3: 4287) /* 0 - constant sign mismatch */
+#pragma warning(3: 4296) /* 1 - expression is always false */
+#pragma warning(3: 4365) /* 0 - conversion sign mismatch */
+#pragma warning(3: 4431) /* 0 - default int assumed */
+#pragma warning(3: 4545) /* 0 - comma expression */
+#pragma warning(3: 4546) /* 0 - comma expression */
+#pragma warning(3: 4547) /* 0 - comma expression */
+#pragma warning(3: 4548) /* 0 - comma expression */
+#pragma warning(3: 4549) /* 0 - comma expression */
+#pragma warning(3: 4555) /* 0 - expression has no effect */
+#pragma warning(3: 4628) /* 0 - digraph */
+#pragma warning(3: 4826) /* 0 - conversion sign extension */
+#pragma warning(3: 4837) /* 0 - trigraph */
+#pragma warning(3: 4905) /* 0 - string assignment mismatch */
+#pragma warning(3: 4906) /* 0 - string assignment mismatch */
+
 /* Special behavior defined by win32-ltdl: "./" is replaced with the name of the
    directory containing sox.exe. */
 #define PKGLIBDIR "./soxlib"

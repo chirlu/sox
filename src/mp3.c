@@ -575,7 +575,7 @@ static int sox_mp3seek(sox_format_t * ft, uint64_t offset)
     depadded = sox_true;
     p->mad_stream_buffer(&p->Stream, p->mp3_buffer + padding, leftover + read - padding);
 
-    while (to_skip_samples >= 0) {  /* Decode frame headers */
+    while (sox_true) {  /* Decode frame headers */
       static unsigned short samples;
       p->Stream.error = MAD_ERROR_NONE;
       
@@ -625,7 +625,7 @@ static int sox_mp3seek(sox_format_t * ft, uint64_t offset)
         p->FrameCount = offset / samples;
         to_skip_samples = offset % samples;
 
-        if (SOX_SUCCESS != lsx_seeki(ft, (p->FrameCount * consumed / 64) + tagsize, SEEK_SET))
+        if (SOX_SUCCESS != lsx_seeki(ft, (off_t)(p->FrameCount * consumed / 64 + tagsize), SEEK_SET))
           return SOX_EOF;
 
         /* Reset Stream for refilling buffer */
