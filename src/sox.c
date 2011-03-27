@@ -230,8 +230,8 @@ static void cleanup(void)
     if (ofile->ft) {
       if (!success && ofile->ft->fp) {   /* If we failed part way through */
         struct stat st;                  /* writing a normal file, remove it. */
-        fstat(fileno(ofile->ft->fp), &st);
-        if ((st.st_mode & S_IFMT) == S_IFREG)
+        if (!stat(ofile->ft->filename, &st) &&
+            (st.st_mode & S_IFMT) == S_IFREG)
           unlink(ofile->ft->filename);
       }
       sox_close(ofile->ft); /* Assume we can unlink a file before closing it. */
@@ -1204,7 +1204,7 @@ static void adjust_volume(int delta)
 #elif defined(HAVE_AUDIOIO_H)
 static void adjust_volume(int delta)
 {
-  int vol1 = 0, vol2 = 0, fd = fileno(ofile->ft->fp);
+  int vol1 = 0, vol2 = 0, fd = fileno((FILE*)ofile->ft->fp);
   if (fd >= 0) {
     audio_info_t audio_info;
     if (ioctl(fd, AUDIO_GETINFO, &audio_info) >= 0) {
@@ -2673,8 +2673,10 @@ static void output_message(unsigned level, const char *filename, const char *fmt
 {
   char const * const str[] = {"FAIL", "WARN", "INFO", "DBUG"};
   if (sox_globals.verbosity >= level) {
-    fprintf(stderr, "%s %s ", myname, str[min(level - 1, 3)]);
-    sox_output_message(stderr, filename, fmt, ap);
+    char base_name[128];
+    sox_basename(base_name, sizeof(base_name), filename);
+    fprintf(stderr, "%s %s %s: ", myname, str[min(level - 1, 3)], base_name);
+    vfprintf(stderr, fmt, ap);
     fprintf(stderr, "\n");
   }
 }

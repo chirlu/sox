@@ -323,10 +323,6 @@
 				RelativePath=".\SoX\soxconfig.h"
 				>
 			</File>
-			<File
-				RelativePath=".\SoX\soxstdint.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Excluded Sources"

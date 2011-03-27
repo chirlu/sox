@@ -186,12 +186,12 @@ static size_t read_(sox_format_t * ft, sox_sample_t * buf, size_t len)
         break;
       }
       case SND_PCM_FORMAT_S24: {
-        int24_t * buf1 = (int24_t *)p->buf;
+        sox_int24_t * buf1 = (sox_int24_t *)p->buf;
         while (i--) *buf++ = SOX_SIGNED_24BIT_TO_SAMPLE(*buf1++,);
         break;
       }
       case SND_PCM_FORMAT_U24: {
-        uint24_t * buf1 = (uint24_t *)p->buf;
+        sox_uint24_t * buf1 = (sox_uint24_t *)p->buf;
         while (i--) *buf++ = SOX_UNSIGNED_24BIT_TO_SAMPLE(*buf1++,);
         break;
       }
@@ -249,12 +249,12 @@ static size_t write_(sox_format_t * ft, sox_sample_t const * buf, size_t len)
         break;
       }
       case SND_PCM_FORMAT_S24: {
-        int24_t * buf1 = (int24_t *)p->buf;
+        sox_int24_t * buf1 = (sox_int24_t *)p->buf;
         while (i--) *buf1++ = SOX_SAMPLE_TO_SIGNED_24BIT(*buf++, ft->clips);
         break;
       }
       case SND_PCM_FORMAT_U24: {
-        uint24_t * buf1 = (uint24_t *)p->buf;
+        sox_uint24_t * buf1 = (sox_uint24_t *)p->buf;
         while (i--) *buf1++ = SOX_SAMPLE_TO_UNSIGNED_24BIT(*buf++, ft->clips);
         break;
       }

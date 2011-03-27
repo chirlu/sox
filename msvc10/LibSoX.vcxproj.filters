@@ -136,9 +136,6 @@
     <ClInclude Include="SoX\soxconfig.h">
       <Filter>Config Headers</Filter>
     </ClInclude>
-    <ClInclude Include="SoX\soxstdint.h">
-      <Filter>Config Headers</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\alsa.c">

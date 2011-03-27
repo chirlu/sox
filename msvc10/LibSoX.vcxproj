@@ -132,7 +132,6 @@
     <ClInclude Include="..\src\win32-ltdl.h" />
     <ClInclude Include="..\src\xmalloc.h" />
     <ClInclude Include="SoX\soxconfig.h" />
-    <ClInclude Include="SoX\soxstdint.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\alsa.c">

@@ -15,11 +15,6 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* Used only by sox.c: */
-#define MORE_INTERACTIVE
-
-#define PACKAGE_EXTRA "msvc"
-
 /* Enable some extra warnings.
    Track the number of times each warning has been helpful. */
 #pragma warning(3: 4287) /* 0 - constant sign mismatch */
@@ -37,6 +32,11 @@
 #pragma warning(3: 4837) /* 0 - trigraph */
 #pragma warning(3: 4905) /* 0 - string assignment mismatch */
 #pragma warning(3: 4906) /* 0 - string assignment mismatch */
+
+/* Used only by sox.c: */
+#define MORE_INTERACTIVE
+
+#define PACKAGE_EXTRA "msvc"
 
 /* Special behavior defined by win32-ltdl: "./" is replaced with the name of the
    directory containing sox.exe. */
@@ -105,6 +105,7 @@
 #define HAVE_MEMORY_H 1
 #define HAVE_POPEN 1
 #define HAVE_SPEEXDSP 1
+#define HAVE_STDINT_H 1
 #define HAVE_STDLIB_H 1
 #define HAVE_STRDUP 1
 #define HAVE_STRING_H 1

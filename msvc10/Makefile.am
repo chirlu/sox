@@ -44,6 +44,4 @@ EXTRA_DIST= \
 	SndFile/inttypes.h \
 	SndFile/sndfile.h \
 	SndFile/sys/time.h \
-	SoX/soxconfig.h \
-	SoX/soxstdint.h
-
+	SoX/soxconfig.h

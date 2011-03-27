@@ -17,6 +17,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h> /* For off_t not found in stdio.h */
 #endif
@@ -28,6 +31,40 @@
 #include "xmalloc.h"
 
 /*---------------------------- Portability stuff -----------------------------*/
+
+#if defined(HAVE_INTTYPES_H)
+  #include <inttypes.h>
+#elif defined(HAVE_STDINT_H)
+  #include <stdint.h>
+#else
+  typedef sox_int8_t   int8_t;
+  typedef sox_uint8_t  uint8_t;
+  typedef sox_int16_t  int16_t;
+  typedef sox_uint16_t uint16_t;
+  typedef sox_int32_t  int32_t;
+  typedef sox_uint32_t uint32_t;
+  typedef sox_int64_t  int64_t;
+  typedef sox_uint64_t uint64_t;
+#endif
+
+/* Define the format specifier to use for int64_t values.
+ * Example: printf("You may have already won $ %" PRId64 " !!!", n64); */
+#ifndef PRId64 /* Maybe <inttypes.h> already defined this. */
+#ifdef _MSC_VER /* Older versions of MSC don't recognize %lld. */
+#define PRId64 "I64d"
+#else
+#define PRId64 "lld"
+#endif
+#endif /* PRId64 */
+
+/* Define the format specifier to use for uint64_t values. */
+#ifndef PRIu64 /* Maybe <inttypes.h> already defined this. */
+#ifdef _MSC_VER /* Older versions of MSC don't recognize %llu. */
+#define PRIu64 "I64u"
+#else
+#define PRIu64 "llu"
+#endif
+#endif /* PRIu64 */
 
 #ifdef __GNUC__
 #define NORET __attribute__((noreturn))

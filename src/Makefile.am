@@ -38,7 +38,6 @@ bin_PROGRAMS = sox
 EXTRA_PROGRAMS = example0 example1 example2 example3 example4 example5 sox_sample_test
 lib_LTLIBRARIES = libsox.la
 include_HEADERS = sox.h
-nodist_include_HEADERS = soxstdint.h
 sox_SOURCES = sox.c
 if HAVE_WIN32_GLOB
 sox_SOURCES += win32-glob.c win32-glob.h
@@ -141,7 +140,7 @@ example4_LDADD = ${sox_LDADD}
 example5_LDADD = ${sox_LDADD}
 
 EXTRA_DIST = monkey.au monkey.wav optional-fmts.am \
-	     CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake \
+	     CMakeLists.txt soxconfig.h.cmake \
 	     tests.sh testall.sh tests.bat testall.bat test-comments
 
 all: sox$(EXEEXT) play rec soxi sox_sample_test$(EXEEXT) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT) example5$(EXEEXT)
@@ -178,12 +177,10 @@ clean-local:
 	$(RM) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT) example5$(EXEEXT)
 
 distclean-local:
-	$(RM) soxstdint.h
 
 loc:
 	sloccount \
 	$(include_HEADERS) \
-	$(nodist_include_HEADERS) \
 	$(sox_SOURCES) \
 	$(example0_SOURCES) \
 	$(example1_SOURCES) \

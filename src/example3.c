@@ -33,8 +33,10 @@ static void output_message(unsigned level, const char *filename, const char *fmt
 {
   char const * const str[] = {"FAIL", "WARN", "INFO", "DBUG"};
   if (sox_globals.verbosity >= level) {
-    fprintf(stderr, "%s ", str[min(level - 1, 3)]);
-    sox_output_message(stderr, filename, fmt, ap);
+    char base_name[128];
+    sox_basename(base_name, sizeof(base_name), filename);
+    fprintf(stderr, "%s %s: ", str[min(level - 1, 3)], base_name);
+    vfprintf(stderr, fmt, ap);
     fprintf(stderr, "\n");
   }
 }

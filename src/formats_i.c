@@ -95,8 +95,8 @@ int lsx_check_read_params(sox_format_t * ft, unsigned channels,
  */
 size_t lsx_readbuf(sox_format_t * ft, void *buf, size_t len)
 {
-  size_t ret = fread(buf, (size_t) 1, len, ft->fp);
-  if (ret != len && ferror(ft->fp))
+  size_t ret = fread(buf, (size_t) 1, len, (FILE*)ft->fp);
+  if (ret != len && ferror((FILE*)ft->fp))
     lsx_fail_errno(ft, errno, "lsx_readbuf");
   ft->tell_off += ret;
   return ret;
@@ -129,10 +129,10 @@ int lsx_padbytes(sox_format_t * ft, size_t n)
  */
 size_t lsx_writebuf(sox_format_t * ft, void const * buf, size_t len)
 {
-  size_t ret = fwrite(buf, (size_t) 1, len, ft->fp);
+  size_t ret = fwrite(buf, (size_t) 1, len, (FILE*)ft->fp);
   if (ret != len) {
     lsx_fail_errno(ft, errno, "error writing output file");
-    clearerr(ft->fp); /* Allows us to seek back to write header */
+    clearerr((FILE*)ft->fp); /* Allows us to seek back to write header */
   }
   ft->tell_off += ret;
   return ret;
@@ -141,40 +141,40 @@ size_t lsx_writebuf(sox_format_t * ft, void const * buf, size_t len)
 uint64_t lsx_filelength(sox_format_t * ft)
 {
   struct stat st;
-  int ret = fstat(fileno(ft->fp), &st);
+  int ret = fstat(fileno((FILE*)ft->fp), &st);
 
   return (!ret && (st.st_mode & S_IFREG))? (uint64_t)st.st_size : 0;
 }
 
 int lsx_flush(sox_format_t * ft)
 {
-  return fflush(ft->fp);
+  return fflush((FILE*)ft->fp);
 }
 
 off_t lsx_tell(sox_format_t * ft)
 {
-  return ft->seekable? (off_t)ftello(ft->fp) : (off_t)ft->tell_off;
+  return ft->seekable? (off_t)ftello((FILE*)ft->fp) : (off_t)ft->tell_off;
 }
 
 int lsx_eof(sox_format_t * ft)
 {
-  return feof(ft->fp);
+  return feof((FILE*)ft->fp);
 }
 
 int lsx_error(sox_format_t * ft)
 {
-  return ferror(ft->fp);
+  return ferror((FILE*)ft->fp);
 }
 
 void lsx_rewind(sox_format_t * ft)
 {
-  rewind(ft->fp);
+  rewind((FILE*)ft->fp);
   ft->tell_off = 0;
 }
 
 void lsx_clearerr(sox_format_t * ft)
 {
-  clearerr(ft->fp);
+  clearerr((FILE*)ft->fp);
   ft->sox_errno = 0;
 }
 
@@ -194,8 +194,8 @@ int lsx_seeki(sox_format_t * ft, off_t offset, int whence)
     if (ft->seekable == 0) {
         /* If a stream peel off chars else EPERM */
         if (whence == SEEK_CUR) {
-            while (offset > 0 && !feof(ft->fp)) {
-                getc(ft->fp);
+            while (offset > 0 && !feof((FILE*)ft->fp)) {
+                getc((FILE*)ft->fp);
                 offset--;
                 ++ft->tell_off;
             }
@@ -206,7 +206,7 @@ int lsx_seeki(sox_format_t * ft, off_t offset, int whence)
         } else
             lsx_fail_errno(ft,SOX_EPERM, "file not seekable");
     } else {
-        if (fseeko(ft->fp, offset, whence) == -1)
+        if (fseeko((FILE*)ft->fp, offset, whence) == -1)
             lsx_fail_errno(ft,errno, "%s", strerror(errno));
         else
             ft->sox_errno = SOX_SUCCESS;
@@ -374,7 +374,7 @@ static uint8_t const cswap[256] = {
 
 READ_FUNC(b, 1, uint8_t, TWIDDLE_BYTE)
 READ_FUNC(w, 2, uint16_t, TWIDDLE_WORD)
-READ_FUNC_UNPACK(3, 3, uint24_t, TWIDDLE_WORD)
+READ_FUNC_UNPACK(3, 3, sox_uint24_t, TWIDDLE_WORD)
 READ_FUNC(dw, 4, uint32_t, TWIDDLE_WORD)
 READ_FUNC(qw, 8, uint64_t, TWIDDLE_WORD)
 READ_FUNC(f, sizeof(float), float, TWIDDLE_FLOAT)
@@ -393,7 +393,7 @@ static char const premature_eof[] = "premature EOF";
 
 READ1_FUNC(b,  uint8_t)
 READ1_FUNC(w,  uint16_t)
-READ1_FUNC(3,  uint24_t)
+READ1_FUNC(3,  sox_uint24_t)
 READ1_FUNC(dw, uint32_t)
 READ1_FUNC(qw, uint64_t)
 READ1_FUNC(f,  float)
@@ -445,7 +445,7 @@ int lsx_readchars(sox_format_t * ft, char * chars, size_t len)
 
 WRITE_FUNC(b, 1, uint8_t, TWIDDLE_BYTE)
 WRITE_FUNC(w, 2, uint16_t, TWIDDLE_WORD)
-WRITE_FUNC_PACK(3, 3, uint24_t, TWIDDLE_WORD)
+WRITE_FUNC_PACK(3, 3, sox_uint24_t, TWIDDLE_WORD)
 WRITE_FUNC(dw, 4, uint32_t, TWIDDLE_WORD)
 WRITE_FUNC(qw, 8, uint64_t, TWIDDLE_WORD)
 WRITE_FUNC(f, sizeof(float), float, TWIDDLE_FLOAT)
@@ -471,7 +471,7 @@ WRITE_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
 
 WRITE1U_FUNC(b, uint8_t)
 WRITE1U_FUNC(w, uint16_t)
-WRITE1U_FUNC(3, uint24_t)
+WRITE1U_FUNC(3, sox_uint24_t)
 WRITE1U_FUNC(dw, uint32_t)
 WRITE1_FUNC(qw, uint64_t)
 WRITE1S_FUNC(b, uint8_t)

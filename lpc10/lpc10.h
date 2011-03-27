@@ -23,7 +23,7 @@ with anything else, and I'll get on that case before we go stable.
 #ifndef __LPC10_H__
 #define __LPC10_H__
 
-#include "soxstdint.h"
+#include <limits.h>
 
 /* aliases */
 #define analys_ lsx_lpc10_analys_
@@ -73,17 +73,21 @@ with anything else, and I'll get on that case before we go stable.
 #define LPC10_BITS_IN_COMPRESSED_FRAME 54
 
 
-/*
+#if defined(SHRT_MAX) && defined(SHRT_MIN) && SHRT_MAX==32767 && SHRT_MIN==(-32768)
+typedef short INT16;
+#elif defined(INT_MAX) && defined(INT_MIN) && INT_MAX==32767 && INT_MIN==(-32768)
+typedef int INT16;
+#else
+#error Unable to determine an appropriate definition for INT16.
+#endif
 
-  The "#if defined"'s in this file are by no means intended to be
-  complete.  They are what Nautilus uses, which has been successfully
-  compiled under DOS with the Microsoft C compiler, and under a few
-  versions of Unix with the GNU C compiler.
-
- */
-
-typedef int16_t		INT16;
-typedef int32_t		INT32;
+#if defined(INT_MAX) && defined(INT_MIN) && INT_MAX==2147483647 && INT_MIN==(-2147483647-1)
+typedef int INT32;
+#elif defined(LONG_MAX) && defined(LONG_MIN) && LONG_MAX==2147483647 && LONG_MIN==(-2147483647-1)
+typedef long INT32;
+#else
+#error Unable to determine an appropriate definition for INT32.
+#endif
 
 
 /* The initial values for every member of this structure is 0, except

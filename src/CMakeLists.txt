@@ -20,12 +20,6 @@ if (NOT EXTERNAL_GSM)
   set(optional_libs ${optional_libs} gsm)
 endif (NOT EXTERNAL_GSM)
 
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/soxstdint.h
-  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/soxstdint.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/soxstdint.h
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/soxstdint.h.cmake
-)
-
 # Format with: !xargs echo|tr ' ' '\n'|sort|column|expand|sed 's/^/  /'
 set(effects_srcs
   bend            dither          gain            phaser          stat
@@ -62,7 +56,7 @@ set(formats_srcs
 add_library(lib${PROJECT_NAME}
   effects                 formats_i               libsox_i
   effects_i               ${formats_srcs}         ${optional_srcs}
-  effects_i_dsp           getopt                  soxstdint
+  effects_i_dsp           getopt
   ${effects_srcs}         getopt1                 util
   formats                 libsox                  xmalloc
 )

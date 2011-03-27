@@ -13,14 +13,83 @@
 
 #include <limits.h>
 #include <stdarg.h>
-#include <stddef.h> /* Ensure NULL etc. are available throughout SoX */
-#include <stdio.h>
-#include <stdlib.h>
+#include <stddef.h>
 
-/* TODO: soxstdint.h can conflict with standard C headers -- needs work. */
-#include "soxstdint.h"
-typedef int32_t int24_t;   /* int24_t == int32_t (beware of the extra byte) */
-typedef uint32_t uint24_t; /* uint24_t == uint32_t (beware of the extra byte) */
+/* Suppress warnings from use of type long long */
+#if defined __GNUC__
+#pragma GCC system_header
+#endif
+
+#if SCHAR_MAX==127 && SCHAR_MIN==(-128)
+typedef signed char sox_int8_t;
+#elif CHAR_MAX==127 && CHAR_MIN==(-128)
+typedef char sox_int8_t;
+#else
+#error Unable to determine an appropriate definition for sox_int8_t.
+#endif
+
+#if UCHAR_MAX==0xff
+typedef unsigned char sox_uint8_t;
+#elif CHAR_MAX==0xff && CHAR_MIN==0
+typedef char sox_uint8_t;
+#else
+#error Unable to determine an appropriate definition for sox_uint8_t.
+#endif
+
+#if SHRT_MAX==32767 && SHRT_MIN==(-32768)
+typedef short sox_int16_t;
+#elif INT_MAX==32767 && INT_MIN==(-32768)
+typedef int sox_int16_t;
+#else
+#error Unable to determine an appropriate definition for sox_int16_t.
+#endif
+
+#if USHRT_MAX==0xffff
+typedef unsigned short sox_uint16_t;
+#elif UINT_MAX==0xffff
+typedef unsigned int sox_uint16_t;
+#else
+#error Unable to determine an appropriate definition for sox_uint16_t.
+#endif
+
+#if INT_MAX==2147483647 && INT_MIN==(-2147483647-1)
+typedef int sox_int32_t;
+#elif LONG_MAX==2147483647 && LONG_MIN==(-2147483647-1)
+typedef long sox_int32_t;
+#else
+#error Unable to determine an appropriate definition for sox_int32_t.
+#endif
+
+#if UINT_MAX==0xffffffff
+typedef unsigned int sox_uint32_t;
+#elif ULONG_MAX==0xffffffff
+typedef unsigned long sox_uint32_t;
+#else
+#error Unable to determine an appropriate definition for sox_uint32_t.
+#endif
+
+#if LONG_MAX==9223372036854775807 && LONG_MIN==(-9223372036854775807-1)
+typedef long sox_int64_t;
+#elif defined(LLONG_MAX) && defined(LLONG_MIN) && LLONG_MAX==9223372036854775807 && LLONG_MIN==(-9223372036854775807-1)
+typedef long long sox_int64_t;
+#elif defined(_MSC_VER)
+typedef __int64 sox_int64_t;
+#else
+#error Unable to determine an appropriate definition for sox_int64_t.
+#endif
+
+#if ULONG_MAX==0xffffffffffffffff
+typedef unsigned long sox_uint64_t;
+#elif ULLONG_MAX==0xffffffffffffffff
+typedef unsigned long long sox_uint64_t;
+#elif defined(_MSC_VER)
+typedef unsigned __int64 sox_uint64_t;
+#else
+#error Unable to determine an appropriate definition for sox_uint64_t.
+#endif
+
+typedef sox_int32_t sox_int24_t;   /* sox_int24_t == sox_int32_t (beware of the extra byte) */
+typedef sox_uint32_t sox_uint24_t; /* sox_uint24_t == sox_uint32_t (beware of the extra byte) */
 
 #if defined(__cplusplus)
 extern "C" {
@@ -62,7 +131,7 @@ typedef enum sox_version_flags_t {
 typedef struct sox_version_info_t {
     size_t       size;         /* structure size = sizeof(sox_version_info_t) */
     sox_version_flags_t flags; /* feature flags = popen | magic | threads | memopen */
-    uint32_t     version_code; /* version number = SOX_LIB_VERSION_CODE, i.e. 0x140400 */
+    sox_uint32_t version_code; /* version number = SOX_LIB_VERSION_CODE, i.e. 0x140400 */
     const char * version;      /* version string = sox_version(), i.e. "14.4.0" */
     const char * version_extra;/* version extra info or null = "PACKAGE_EXTRA", i.e. "beta" */
     const char * time;         /* build time = "__DATE__ __TIME__", i.e. "Jan  7 2010 03:31:50" */
@@ -103,7 +172,7 @@ typedef enum sox_bool {
 #define SOX_INT32_MAX SOX_INT_MAX(32) /* = 0x7FFFFFFF */
 
 /* native SoX audio sample type */
-typedef int32_t sox_sample_t;
+typedef sox_int32_t sox_sample_t;
 
 /* Minimum and maximum values a sample can hold. */
 #define SOX_SAMPLE_PRECISION 32                      /* bits in a sox_sample_t = 32 */
@@ -139,9 +208,9 @@ typedef int32_t sox_sample_t;
 
 #define SOX_SAMPLE_NEG SOX_INT_MIN(32) /* sign bit for sox_sample_t = 0x80000000 */
 #define SOX_SAMPLE_TO_UNSIGNED(bits,d,clips) \
-  (uint##bits##_t)(SOX_SAMPLE_TO_SIGNED(bits,d,clips)^SOX_INT_MIN(bits))
+  (sox_uint##bits##_t)(SOX_SAMPLE_TO_SIGNED(bits,d,clips)^SOX_INT_MIN(bits))
 #define SOX_SAMPLE_TO_SIGNED(bits,d,clips) \
-  (int##bits##_t)(LSX_UNUSED_VAR(sox_macro_temp_double),sox_macro_temp_sample=(d),sox_macro_temp_sample>SOX_SAMPLE_MAX-(1<<(31-bits))?++(clips),SOX_INT_MAX(bits):((uint32_t)(sox_macro_temp_sample+(1<<(31-bits))))>>(32-bits))
+  (sox_int##bits##_t)(LSX_UNUSED_VAR(sox_macro_temp_double),sox_macro_temp_sample=(d),sox_macro_temp_sample>SOX_SAMPLE_MAX-(1<<(31-bits))?++(clips),SOX_INT_MAX(bits):((sox_uint32_t)(sox_macro_temp_sample+(1<<(31-bits))))>>(32-bits))
 #define SOX_SIGNED_TO_SAMPLE(bits,d)((sox_sample_t)(d)<<(32-bits))
 #define SOX_UNSIGNED_TO_SAMPLE(bits,d)(SOX_SIGNED_TO_SAMPLE(bits,d)^SOX_SAMPLE_NEG)
 
@@ -161,8 +230,8 @@ typedef int32_t sox_sample_t;
 #define SOX_SAMPLE_TO_SIGNED_16BIT(d,clips) SOX_SAMPLE_TO_SIGNED(16,d,clips)
 #define SOX_SAMPLE_TO_UNSIGNED_24BIT(d,clips) SOX_SAMPLE_TO_UNSIGNED(24,d,clips)
 #define SOX_SAMPLE_TO_SIGNED_24BIT(d,clips) SOX_SAMPLE_TO_SIGNED(24,d,clips)
-#define SOX_SAMPLE_TO_UNSIGNED_32BIT(d,clips) (uint32_t)((d)^SOX_SAMPLE_NEG)
-#define SOX_SAMPLE_TO_SIGNED_32BIT(d,clips) (int32_t)(d)
+#define SOX_SAMPLE_TO_UNSIGNED_32BIT(d,clips) (sox_uint32_t)((d)^SOX_SAMPLE_NEG)
+#define SOX_SAMPLE_TO_SIGNED_32BIT(d,clips) (sox_int32_t)(d)
 #define SOX_SAMPLE_TO_FLOAT_32BIT(d,clips) (LSX_UNUSED_VAR(sox_macro_temp_double),sox_macro_temp_sample=(d),sox_macro_temp_sample>SOX_SAMPLE_MAX-128?++(clips),1:(((sox_macro_temp_sample+128)&~255)*(1./(SOX_SAMPLE_MAX+1.))))
 #define SOX_SAMPLE_TO_FLOAT_64BIT(d,clips) ((d)*(1./(SOX_SAMPLE_MAX+1.)))
 
@@ -201,7 +270,8 @@ typedef int32_t sox_sample_t;
 typedef void (*sox_output_message_handler_t)(
     unsigned level,
     const char *filename,
-    const char *fmt, va_list ap);
+    const char *fmt,
+    va_list ap);
 
 /* Global parameters (for effects & formats) */
 typedef struct sox_globals_t {
@@ -216,7 +286,7 @@ typedef struct sox_globals_t {
   size_t       bufsiz;       /* default size (in bytes) used for blocks of sample data */
   size_t       input_bufsiz; /* default size (in bytes) used for blocks of input sample data */
 
-  int32_t      ranqd1;       /* Can be used to re-seed libSoX's PRNG */
+  sox_int32_t  ranqd1;       /* Can be used to re-seed libSoX's PRNG */
 
 /* private: */
   char const * stdin_in_use_by;  /* tracks the name of the handler currently using stdin */
@@ -234,14 +304,14 @@ extern sox_globals_t sox_globals;
 typedef double sox_rate_t;
 
 #define SOX_UNSPEC 0 /* unknown value for signal parameter = 0 */
-#define SOX_IGNORE_LENGTH (uint64_t)(-1) /* unspecified length for signal.length = -1 */
+#define SOX_IGNORE_LENGTH (sox_uint64_t)(-1) /* unspecified length for signal.length = -1 */
 
 /* Signal parameters; SOX_UNSPEC (= 0) if unknown */
 typedef struct sox_signalinfo_t {
   sox_rate_t       rate;         /* samples per second, 0 if unknown */
   unsigned         channels;     /* number of sound channels, 0 if unknown */
   unsigned         precision;    /* bits per sample, 0 if unknown */
-  uint64_t         length;       /* samples * chans in file, 0 if unknown, -1 if unspecified */
+  sox_uint64_t     length;       /* samples * chans in file, 0 if unknown, -1 if unspecified */
   double           * mult;       /* Effects headroom multiplier; may be null */
 } sox_signalinfo_t;
 
@@ -350,16 +420,16 @@ enum sox_loop_flags_t {
   sox_loop_8 = 32,            /* 8 loops (??) = 32 */
   sox_loop_sustain_decay = 64 /* AIFF style, one sustain & one decay loop = 64 */
 };
-#define SOX_LOOP_NONE          ((uint8_t)sox_loop_none)          /* single-shot = 0 */
-#define SOX_LOOP_8             ((uint8_t)sox_loop_8)             /* 8 loops (??) = 32 */
-#define SOX_LOOP_SUSTAIN_DECAY ((uint8_t)sox_loop_sustain_decay) /* AIFF style, one sustain & one decay loop = 64 */
+#define SOX_LOOP_NONE          ((unsigned char)sox_loop_none)          /* single-shot = 0 */
+#define SOX_LOOP_8             ((unsigned char)sox_loop_8)             /* 8 loops (??) = 32 */
+#define SOX_LOOP_SUSTAIN_DECAY ((unsigned char)sox_loop_sustain_decay) /* AIFF style, one sustain & one decay loop = 64 */
 
 /* Looping parameters (out-of-band data) */
 typedef struct sox_loopinfo_t {
-  uint64_t  start;      /* first sample */
-  uint64_t  length;     /* length */
-  unsigned  count;      /* number of repeats, 0=forever */
-  uint8_t   type;       /* 0=no, 1=forward, 2=forward/back (see sox_loop_... for valid values) */
+  sox_uint64_t  start;  /* first sample */
+  sox_uint64_t  length; /* length */
+  unsigned      count;  /* number of repeats, 0=forever */
+  unsigned char type;   /* 0=no, 1=forward, 2=forward/back (see sox_loop_... for valid values) */
 } sox_loopinfo_t;
 
 /* Instrument parameters */
@@ -368,10 +438,10 @@ typedef struct sox_loopinfo_t {
 
 /* instrument information */
 typedef struct sox_instrinfo_t{
-  int8_t MIDInote;  /* for unity pitch playback */
-  int8_t MIDIlow;   /* MIDI pitch-bend low range */
-  int8_t MIDIhi;    /* MIDI pitch-bend high range */
-  uint8_t loopmode; /* 0=no, 1=forward, 2=forward/back (see sox_loop_... values) */
+  signed char MIDInote;   /* for unity pitch playback */
+  signed char MIDIlow;    /* MIDI pitch-bend low range */
+  signed char MIDIhi;     /* MIDI pitch-bend high range */
+  unsigned char loopmode; /* 0=no, 1=forward, 2=forward/back (see sox_loop_... values) */
   unsigned nloops;  /* number of active loops (max SOX_MAX_NLOOPS) */
 } sox_instrinfo_t;
 
@@ -398,7 +468,7 @@ typedef struct sox_format_handler_t {
   int          (*startwrite)(sox_format_t * ft); /* called to initialize writer (encoder) */
   size_t   (*write)(sox_format_t * ft, const sox_sample_t *buf, size_t len); /* called to write (encode) a block of samples */
   int          (*stopwrite)(sox_format_t * ft); /* called to close writer (decoder); may be null if no closing necessary */
-  int          (*seek)(sox_format_t * ft, uint64_t offset); /* called to reposition reader; may be null if not supported */
+  int          (*seek)(sox_format_t * ft, sox_uint64_t offset); /* called to reposition reader; may be null if not supported */
 
   /* Array of values indicating the encodings and precisions supported for
    * writing (encoding). Precisions specified with default precision first.
@@ -483,14 +553,14 @@ struct sox_format_t { /* Data passed to/from the format handler */
   sox_oob_t        oob;             /* comments, instrument info, loop info (out-of-band data) */
   sox_bool         seekable;        /* Can seek on this file */
   char             mode;            /* Read or write mode ('r' or 'w') */
-  uint64_t         olength;         /* Samples * chans written to file */
+  sox_uint64_t     olength;         /* Samples * chans written to file */
   size_t           clips;           /* Incremented if clipping occurs */
   int              sox_errno;       /* Failure error code */
   char             sox_errstr[256]; /* Failure error text */
-  FILE             * fp;            /* File stream pointer */
+  void             * fp;            /* File stream pointer */
   lsx_io_type      io_type;         /* Stores whether this is a file, pipe or URL */
-  uint64_t         tell_off;        /* Current offset within file */
-  uint64_t         data_start;      /* Offset at which headers end and sound data begins (set by lsx_check_read_params) */
+  sox_uint64_t     tell_off;        /* Current offset within file */
+  sox_uint64_t     data_start;      /* Offset at which headers end and sound data begins (set by lsx_check_read_params) */
   sox_format_handler_t handler;     /* Format handler for this file */
   void             * priv;          /* Format handler's private data area */
 };
@@ -596,7 +666,7 @@ int sox_close(sox_format_t * ft);
 #define SOX_SEEK_SET 0
 
 /* Sets the location at which next samples will be decoded. Returns SOX_SUCCESS if successful. */
-int sox_seek(sox_format_t * ft, uint64_t offset, int whence);
+int sox_seek(sox_format_t * ft, sox_uint64_t offset, int whence);
 
 /* Finds a format handler by name. */
 sox_format_handler_t const * sox_find_format(char const * name, sox_bool ignore_devices);
@@ -742,9 +812,9 @@ void sox_delete_effects(sox_effects_chain_t *chain);
  * wants to trim and use a sox_seek() operation instead.  After
  * sox_seek()'ing, you should set the trim option to 0.
  */
-uint64_t sox_trim_get_start(sox_effect_t * effp);
+sox_uint64_t sox_trim_get_start(sox_effect_t * effp);
 void sox_trim_clear_start(sox_effect_t * effp);
-uint64_t sox_crop_get_start(sox_effect_t * effp);
+sox_uint64_t sox_crop_get_start(sox_effect_t * effp);
 void sox_crop_clear_start(sox_effect_t * effp);
 
 typedef int (* sox_playlist_callback_t)(void *, char *);
@@ -758,8 +828,9 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
 /* Converts a SoX error code into an error string. */
 char const * sox_strerror(int sox_errno);
 
-/* Writes an error message regarding the specified filename to the given output file stream */
-void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap);
+/* Gets the basename of the specified file, i.e. for "/a/b/c.d", gets "c".
+ * Returns the number of characters written to base_buffer, excluding the null. */
+int sox_basename(char * base_buffer, size_t base_buffer_len, const char * filename);
 
 /* WARNING BEGIN
  *

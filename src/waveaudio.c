@@ -360,7 +360,7 @@ static size_t read(sox_format_t * ft, sox_sample_t* buf, size_t len)
       case 3:
           for (i = 0; i < ready; ++i)
           {
-            int24_t x = *(UNALIGNED int24_t*)(header->lpData + header->dwUser * 3);
+            sox_int24_t x = *(UNALIGNED sox_int24_t*)(header->lpData + header->dwUser * 3);
             buf[copied++] = SOX_SIGNED_24BIT_TO_SAMPLE(x, dummy);
             header->dwUser++;
           }
@@ -431,7 +431,7 @@ static size_t write(sox_format_t * ft, const sox_sample_t* buf, size_t len)
           {
             SOX_SAMPLE_LOCALS;
             unsigned char* pdata = (unsigned char*)header->lpData + header->dwUser * 3;
-            int24_t x = SOX_SAMPLE_TO_SIGNED_24BIT(buf[copied++], clips);
+            sox_int24_t x = SOX_SAMPLE_TO_SIGNED_24BIT(buf[copied++], clips);
             *pdata++ = x;
             *pdata++ = x >> 8;
             *pdata++ = x >> 16;

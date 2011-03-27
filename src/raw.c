@@ -10,10 +10,10 @@
 #include "sox_i.h"
 #include "g711.h"
 
-typedef uint16_t uint14_t;
-typedef uint16_t uint13_t;
-typedef int16_t int14_t;
-typedef int16_t int13_t;
+typedef sox_uint16_t sox_uint14_t;
+typedef sox_uint16_t sox_uint13_t;
+typedef sox_int16_t sox_int14_t;
+typedef sox_int16_t sox_int13_t;
 #define SOX_ULAW_BYTE_TO_SAMPLE(d,clips)   SOX_SIGNED_16BIT_TO_SAMPLE(sox_ulaw2linear16(d),clips)
 #define SOX_ALAW_BYTE_TO_SAMPLE(d,clips)   SOX_SIGNED_16BIT_TO_SAMPLE(sox_alaw2linear16(d),clips)
 #define SOX_SAMPLE_TO_ULAW_BYTE(d,c) sox_14linear2ulaw(SOX_SAMPLE_TO_UNSIGNED(14,d,c) - 0x2000)
@@ -87,8 +87,8 @@ READ_SAMPLES_FUNC(b, 1, ulaw, uint8_t, uint8_t, SOX_ULAW_BYTE_TO_SAMPLE)
 READ_SAMPLES_FUNC(b, 1, alaw, uint8_t, uint8_t, SOX_ALAW_BYTE_TO_SAMPLE)
 READ_SAMPLES_FUNC(w, 2, u, uint16_t, uint16_t, SOX_UNSIGNED_16BIT_TO_SAMPLE)
 READ_SAMPLES_FUNC(w, 2, s, int16_t, uint16_t, SOX_SIGNED_16BIT_TO_SAMPLE)
-READ_SAMPLES_FUNC(3, 3, u, uint24_t, uint24_t, SOX_UNSIGNED_24BIT_TO_SAMPLE)
-READ_SAMPLES_FUNC(3, 3, s, int24_t, uint24_t, SOX_SIGNED_24BIT_TO_SAMPLE)
+READ_SAMPLES_FUNC(3, 3, u, sox_uint24_t, sox_uint24_t, SOX_UNSIGNED_24BIT_TO_SAMPLE)
+READ_SAMPLES_FUNC(3, 3, s, sox_int24_t, sox_uint24_t, SOX_SIGNED_24BIT_TO_SAMPLE)
 READ_SAMPLES_FUNC(dw, 4, u, uint32_t, uint32_t, SOX_UNSIGNED_32BIT_TO_SAMPLE)
 READ_SAMPLES_FUNC(dw, 4, s, int32_t, uint32_t, SOX_SIGNED_32BIT_TO_SAMPLE)
 READ_SAMPLES_FUNC(f, sizeof(float), su, float, float, SOX_FLOAT_32BIT_TO_SAMPLE)
@@ -116,8 +116,8 @@ WRITE_SAMPLES_FUNC(b, 1, ulaw, uint8_t, uint8_t, SOX_SAMPLE_TO_ULAW_BYTE)
 WRITE_SAMPLES_FUNC(b, 1, alaw, uint8_t, uint8_t, SOX_SAMPLE_TO_ALAW_BYTE)
 WRITE_SAMPLES_FUNC(w, 2, u, uint16_t, uint16_t, SOX_SAMPLE_TO_UNSIGNED_16BIT) 
 WRITE_SAMPLES_FUNC(w, 2, s, int16_t, uint16_t, SOX_SAMPLE_TO_SIGNED_16BIT)
-WRITE_SAMPLES_FUNC(3, 3, u, uint24_t, uint24_t, SOX_SAMPLE_TO_UNSIGNED_24BIT) 
-WRITE_SAMPLES_FUNC(3, 3, s, int24_t, uint24_t, SOX_SAMPLE_TO_SIGNED_24BIT)
+WRITE_SAMPLES_FUNC(3, 3, u, sox_uint24_t, sox_uint24_t, SOX_SAMPLE_TO_UNSIGNED_24BIT) 
+WRITE_SAMPLES_FUNC(3, 3, s, sox_int24_t, sox_uint24_t, SOX_SAMPLE_TO_SIGNED_24BIT)
 WRITE_SAMPLES_FUNC(dw, 4, u, uint32_t, uint32_t, SOX_SAMPLE_TO_UNSIGNED_32BIT) 
 WRITE_SAMPLES_FUNC(dw, 4, s, int32_t, uint32_t, SOX_SAMPLE_TO_SIGNED_32BIT)
 WRITE_SAMPLES_FUNC(f, sizeof(float), su, float, float, SOX_SAMPLE_TO_FLOAT_32BIT) 

@@ -18,6 +18,7 @@
  */
 
 #include "sox.h"
+#include <stdio.h>
 
 /* Concatenate audio files.  Note that the files must have the same number
  * of channels and the same sample rate.

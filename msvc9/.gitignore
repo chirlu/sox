@@ -1,5 +1,7 @@
 *.user
-Sox.suo
-Sox.ncb
+Debug
 Makefile
 Makefile.in
+Release
+Sox.ncb
+Sox.suo

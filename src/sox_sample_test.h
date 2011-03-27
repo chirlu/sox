@@ -147,17 +147,17 @@
 
 int main()
 {
-  int8_t int8;
-  int16_t int16;
-  int24_t int24;
+  sox_int8_t int8;
+  sox_int16_t int16;
+  sox_int24_t int24;
 
-  uint8_t uint8;
-  uint16_t uint16;
-  uint24_t uint24;
+  sox_uint8_t uint8;
+  sox_uint16_t uint16;
+  sox_uint24_t uint24;
 
-  int8_t int8_2;
-  int16_t int16_2;
-  int24_t int24_2;
+  sox_int8_t int8_2;
+  sox_int16_t int16_2;
+  sox_int24_t int24_2;
 
   sox_sample_t sample;
   size_t clips = 0;

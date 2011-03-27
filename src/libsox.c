@@ -113,7 +113,10 @@ static void output_message(
     unsigned level, const char *filename, const char *fmt, va_list ap)
 {
   if (sox_globals.verbosity >= level) {
-    sox_output_message(stderr, filename, fmt, ap);
+    char base_name[128];
+    sox_basename(base_name, sizeof(base_name), filename);
+    fprintf(stderr, "%s: ", base_name);
+    vfprintf(stderr, fmt, ap);
     fprintf(stderr, "\n");
   }
 }
@@ -151,13 +154,28 @@ char const * sox_strerror(int sox_errno)
   return errors[sox_errno];
 }
 
-void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap)
+int sox_basename(char * base_buffer, size_t base_buffer_len, const char * filename)
 {
-  char const * slash_pos = LAST_SLASH(filename);
-  char const * base_name = slash_pos? slash_pos + 1 : filename;
-  char const * dot_pos   = strrchr(base_name, '.');
-  fprintf(file, "%.*s: ", dot_pos? (int)(dot_pos - base_name) : -1, base_name);
-  vfprintf(file, fmt, ap);
+  if (!base_buffer || !base_buffer_len)
+  {
+    return 0;
+  }
+  else
+  {
+    char const * slash_pos = LAST_SLASH(filename);
+    char const * base_name = slash_pos ? slash_pos + 1 : filename;
+    char const * dot_pos   = strrchr(base_name, '.');
+    size_t i, len;
+    dot_pos = dot_pos ? dot_pos : base_name + strlen(base_name);
+    len = dot_pos - base_name;
+    len = min(len, base_buffer_len - 1);
+    for (i = 0; i < len; i++)
+    {
+      base_buffer[i] = base_name[i];
+    }
+    base_buffer[i] = 0;
+    return i;
+  }
 }
 
 #undef lsx_fail

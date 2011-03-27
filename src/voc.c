@@ -554,7 +554,7 @@ static int getblock(sox_format_t * ft)
 {
   priv_t * v = (priv_t *) ft->priv;
   unsigned char uc, block;
-  uint24_t sblen;
+  sox_uint24_t sblen;
   uint16_t new_rate_16;
   uint32_t new_rate_32;
 

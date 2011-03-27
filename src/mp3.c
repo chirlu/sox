@@ -362,7 +362,7 @@ static int startread(sox_format_t * ft)
   if (ft->seekable) {
 #ifdef USING_ID3TAG
     read_comments(ft);
-    rewind(ft->fp);
+    rewind((FILE*)ft->fp);
     if (!ft->signal.length)
 #endif
       if (!ignore_length)
@@ -381,7 +381,7 @@ static int startread(sox_format_t * ft)
    * can be processed later.
    */
   ReadSize = lsx_readbuf(ft, p->mp3_buffer, p->mp3_buffer_size);
-  if (ReadSize != p->mp3_buffer_size && ferror(ft->fp))
+  if (ReadSize != p->mp3_buffer_size && ferror((FILE*)ft->fp))
     return SOX_EOF;
 
   p->mad_stream_buffer(&p->Stream, p->mp3_buffer, ReadSize);
@@ -545,7 +545,7 @@ static int sox_mp3seek(sox_format_t * ft, uint64_t offset)
   uint64_t to_skip_samples = 0;
 
   /* Reset all */
-  rewind(ft->fp);
+  rewind((FILE*)ft->fp);
   mad_timer_reset(&p->Timer);
   p->FrameCount = 0;
 
@@ -566,7 +566,7 @@ static int sox_mp3seek(sox_format_t * ft, uint64_t offset)
     size_t leftover = p->Stream.bufend - p->Stream.next_frame;
 
     memcpy(p->mp3_buffer, p->Stream.this_frame, leftover);
-    read = fread(p->mp3_buffer + leftover, (size_t) 1, p->mp3_buffer_size - leftover, ft->fp);
+    read = fread(p->mp3_buffer + leftover, (size_t) 1, p->mp3_buffer_size - leftover, (FILE*)ft->fp);
     if (read <= 0) {
       lsx_debug("seek failure. unexpected EOF (frames=%lu leftover=%lu)", (unsigned long)p->FrameCount, (unsigned long)leftover);
       break;
@@ -592,7 +592,7 @@ static int sox_mp3seek(sox_format_t * ft, uint64_t offset)
           tagsize = tagtype(p->Stream.this_frame, (size_t) available);
           if (tagsize) {   /* It's some ID3 tags, so just skip */
             if (tagsize >= available) {
-              fseeko(ft->fp, (off_t)(tagsize - available), SEEK_CUR);
+              fseeko((FILE*)ft->fp, (off_t)(tagsize - available), SEEK_CUR);
               depadded = sox_false;
             }
             p->mad_stream_skip(&p->Stream, min(tagsize, available));

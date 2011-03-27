@@ -13,14 +13,18 @@
 #ifndef SOX_I_H
 #define SOX_I_H
 
-#include "soxomp.h"  /* Make this 1st in list (for soxconfig) */
+#include "soxomp.h"  /* Note: soxomp.h includes soxconfig.h */
+#include "sox.h"
+
 #if defined HAVE_FMEMOPEN
 #define _GNU_SOURCE
 #endif
-#include "sox.h"
-#include "util.h"
 
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "util.h"
 
 #if defined(LSX_EFF_ALIAS)
 #undef lsx_debug
@@ -150,7 +154,7 @@ int lsx_writes(sox_format_t * ft, char const * c);
 void lsx_set_signal_defaults(sox_format_t * ft);
 #define lsx_writechars(ft, chars, len) (lsx_writebuf(ft, chars, len) == len? SOX_SUCCESS : SOX_EOF)
 
-size_t lsx_read_3_buf(sox_format_t * ft, uint24_t *buf, size_t len);
+size_t lsx_read_3_buf(sox_format_t * ft, sox_uint24_t *buf, size_t len);
 size_t lsx_read_b_buf(sox_format_t * ft, uint8_t *buf, size_t len);
 size_t lsx_read_df_buf(sox_format_t * ft, double *buf, size_t len);
 size_t lsx_read_dw_buf(sox_format_t * ft, uint32_t *buf, size_t len);
@@ -158,7 +162,7 @@ size_t lsx_read_qw_buf(sox_format_t * ft, uint64_t *buf, size_t len);
 size_t lsx_read_f_buf(sox_format_t * ft, float *buf, size_t len);
 size_t lsx_read_w_buf(sox_format_t * ft, uint16_t *buf, size_t len);
 
-size_t lsx_write_3_buf(sox_format_t * ft, uint24_t *buf, size_t len);
+size_t lsx_write_3_buf(sox_format_t * ft, sox_uint24_t *buf, size_t len);
 size_t lsx_write_b_buf(sox_format_t * ft, uint8_t *buf, size_t len);
 size_t lsx_write_df_buf(sox_format_t * ft, double *buf, size_t len);
 size_t lsx_write_dw_buf(sox_format_t * ft, uint32_t *buf, size_t len);
@@ -166,7 +170,7 @@ size_t lsx_write_qw_buf(sox_format_t * ft, uint64_t *buf, size_t len);
 size_t lsx_write_f_buf(sox_format_t * ft, float *buf, size_t len);
 size_t lsx_write_w_buf(sox_format_t * ft, uint16_t *buf, size_t len);
 
-int lsx_read3(sox_format_t * ft, uint24_t * u3);
+int lsx_read3(sox_format_t * ft, sox_uint24_t * u3);
 int lsx_readb(sox_format_t * ft, uint8_t * ub);
 int lsx_readchars(sox_format_t * ft, char * chars, size_t len);
 int lsx_readdf(sox_format_t * ft, double * d);
