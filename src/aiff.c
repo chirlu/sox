@@ -369,20 +369,20 @@ int lsx_aiffstartread(sox_format_t * ft)
     foundinstr = 0;
   }
   if (foundmark && foundinstr) {
-    int i;
+    int i2;
     int slbIndex = 0, sleIndex = 0;
     int rlbIndex = 0, rleIndex = 0;
 
     /* find our loop markers and save their marker indexes */
-    for(i = 0; i < nmarks; i++) {
-      if(marks[i].id == sustainLoopBegin)
-        slbIndex = i;
-      if(marks[i].id == sustainLoopEnd)
-        sleIndex = i;
-      if(marks[i].id == releaseLoopBegin)
-        rlbIndex = i;
-      if(marks[i].id == releaseLoopEnd)
-        rleIndex = i;
+    for(i2 = 0; i2 < nmarks; i2++) {
+      if(marks[i2].id == sustainLoopBegin)
+        slbIndex = i2;
+      if(marks[i2].id == sustainLoopEnd)
+        sleIndex = i2;
+      if(marks[i2].id == releaseLoopBegin)
+        rlbIndex = i2;
+      if(marks[i2].id == releaseLoopEnd)
+        rleIndex = i2;
     }
 
     ft->oob.instr.nloops = 0;

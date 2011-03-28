@@ -26,7 +26,7 @@ static void FUNCTION(stage_t * p, fifo_t * output_fifo)
   sample_t const * input = stage_read_p(p);
   int i, num_in = stage_occupancy(p), max_num_out = 1 + num_in*p->out_in_ratio;
   sample_t * output = fifo_reserve(output_fifo, max_num_out);
-  div_t divided;
+  div_t divided2;
 
   for (i = 0; p->at.parts.integer < num_in * p->divisor; ++i, p->at.parts.integer += p->step.parts.integer) {
     div_t divided = div(p->at.parts.integer, p->divisor);
@@ -39,9 +39,9 @@ static void FUNCTION(stage_t * p, fifo_t * output_fifo)
   }
   assert(max_num_out - i >= 0);
   fifo_trim_by(output_fifo, max_num_out - i);
-  divided = div(p->at.parts.integer, p->divisor);
-  fifo_read(&p->fifo, divided.quot, NULL);
-  p->at.parts.integer -= divided.quot * p->divisor;
+  divided2 = div(p->at.parts.integer, p->divisor);
+  fifo_read(&p->fifo, divided2.quot, NULL);
+  p->at.parts.integer -= divided2.quot * p->divisor;
 }
 
 #undef _

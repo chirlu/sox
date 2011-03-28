@@ -399,7 +399,7 @@ void lsx_fir_to_phase(double * * h, int * len, int * post_len, double phase)
     begin = peak - begin - (begin & 1);
     end   = peak + 1 + end + (end & 1);
     *len = end - begin;
-    *h = realloc(*h, *len * sizeof(**h));
+    *h = lsx_realloc(*h, *len * sizeof(**h));
   }
   for (i = 0; i < *len; ++i) (*h)[i] =
     work[(begin + (phase > 50 ? *len - 1 - i : i) + work_len) & (work_len - 1)];

@@ -26,10 +26,6 @@
 
 #define DEBUG_EFFECTS_CHAIN 0
 
-/* FIXME: Not thread safe using globals */
-sox_effects_globals_t sox_effects_globals =
-    {sox_plot_off, &sox_globals};
-
 /* Default effect handler functions for do-nothing situations: */
 
 static int default_function(sox_effect_t * effp UNUSED)
@@ -65,7 +61,7 @@ sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh)
 {
   sox_effect_t * effp = lsx_calloc(1, sizeof(*effp));
 
-  effp->global_info = &sox_effects_globals;
+  effp->global_info = sox_get_effects_globals();
   effp->handler = *eh;
   if (!effp->handler.getopts) effp->handler.getopts = default_getopts;
   if (!effp->handler.start  ) effp->handler.start   = default_function;
@@ -99,7 +95,7 @@ sox_effects_chain_t * sox_create_effects_chain(
     sox_encodinginfo_t const * in_enc, sox_encodinginfo_t const * out_enc)
 {
   sox_effects_chain_t * result = lsx_calloc(1, sizeof(sox_effects_chain_t));
-  result->global_info = sox_effects_globals;
+  result->global_info = *sox_get_effects_globals();
   result->in_enc = in_enc;
   result->out_enc = out_enc;
   return result;
@@ -479,20 +475,26 @@ void sox_delete_effects(sox_effects_chain_t * chain)
 
 /*----------------------------- Effects library ------------------------------*/
 
-sox_effect_fn_t sox_effect_fns[] = {
+static sox_effect_fn_t s_sox_effect_fns[] = {
 #define EFFECT(f) lsx_##f##_effect_fn,
 #include "effects.h"
 #undef EFFECT
   NULL
 };
 
+const sox_effect_fn_t*
+sox_get_effect_fns(void)
+{
+    return s_sox_effect_fns;
+}
+
 /* Find a named effect in the effects library */
 sox_effect_handler_t const * sox_find_effect(char const * name)
 {
   int e;
-
-  for (e = 0; sox_effect_fns[e]; ++e) {
-    const sox_effect_handler_t *eh = sox_effect_fns[e] ();
+  sox_effect_fn_t const * fns = sox_get_effect_fns();
+  for (e = 0; fns[e]; ++e) {
+    const sox_effect_handler_t *eh = fns[e] ();
     if (eh && eh->name && strcasecmp(eh->name, name) == 0)
       return eh;                 /* Found it. */
   }

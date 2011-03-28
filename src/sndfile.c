@@ -283,8 +283,10 @@ static int name_to_format(const char *name)
 
     for (k = 0; buffer[k]; k++)
       buffer[k] = tolower((buffer[k]));
-  } else
+  } else {
     strncpy(buffer, name, FILE_TYPE_BUFLEN);
+    buffer[FILE_TYPE_BUFLEN] = '\0';
+  }
 
   for (k = 0; k < (int)(sizeof(format_map) / sizeof(format_map [0])); k++) {
     if (strcmp(buffer, format_map[k].ext) == 0)

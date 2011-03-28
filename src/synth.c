@@ -266,15 +266,15 @@ static void set_default_parameters(channel_t *  chan, size_t c)
 
 #undef NUMERIC_PARAMETER
 #define NUMERIC_PARAMETER(p, min, max) { \
-char * end_ptr; \
-double d = strtod(argv[argn], &end_ptr); \
-if (end_ptr == argv[argn]) \
+char * end_ptr_np; \
+double d_np = strtod(argv[argn], &end_ptr_np); \
+if (end_ptr_np == argv[argn]) \
   break; \
-if (d < min || d > max || *end_ptr != '\0') { \
+if (d_np < min || d_np > max || *end_ptr_np != '\0') { \
   lsx_fail("parameter error"); \
   return SOX_EOF; \
 } \
-chan->p = d / 100; /* adjust so abs(parameter) <= 1 */\
+chan->p = d_np / 100; /* adjust so abs(parameter) <= 1 */\
 if (++argn == argc) \
   break; \
 }
@@ -458,13 +458,13 @@ static int start(sox_effect_t * effp)
       /* Exitation: */
       chan->buffer = lsx_calloc(chan->buffer_len, sizeof(*chan->buffer));
       for (k = 0, p2 = chan->p2; k < 2 && p2 >= 0; ++k, p2 = chan->p3) {
-        double d1 = 0, d, colour = pow(2., 4 * (p2 - 1));
+        double d1 = 0, d2, colour = pow(2., 4 * (p2 - 1));
         int32_t r = p2 * 100 + .5;
         for (j = 0; j < chan->buffer_len; ++j) {
-          do d = d1 + (chan->phase? DRANQD1:dranqd1(r)) * colour;
-          while (fabs(d) > 1);
-          chan->buffer[j] += d * (1 - .3 * k);
-          d1 = d * (colour != 1);
+          do d2 = d1 + (chan->phase? DRANQD1:dranqd1(r)) * colour;
+          while (fabs(d2) > 1);
+          chan->buffer[j] += d2 * (1 - .3 * k);
+          d1 = d2 * (colour != 1);
 #ifdef TEST_PLUCK
           chan->buffer[j] = sin(2 * M_PI * j / chan->buffer_len);
 #endif
@@ -473,13 +473,13 @@ static int start(sox_effect_t * effp)
 
       /* In-delay filter graduation: */
       for (j = 0, min = max = 0; j < chan->buffer_len; ++j) {
-        double d, t = (double)j / chan->buffer_len;
-        chan->lp_last_out = d =
+        double d2, t = (double)j / chan->buffer_len;
+        chan->lp_last_out = d2 =
           chan->buffer[j] * chan->c1 + chan->lp_last_out * chan->c0;
 
         chan->ap_last_out =
-          d * chan->c4 + chan->ap_last_in - chan->ap_last_out * chan->c4;
-        chan->ap_last_in = d;
+          d2 * chan->c4 + chan->ap_last_in - chan->ap_last_out * chan->c4;
+        chan->ap_last_in = d2;
 
         chan->buffer[j] = chan->buffer[j] * (1 - t) + chan->ap_last_out * t;
         min = min(min, chan->buffer[j]);

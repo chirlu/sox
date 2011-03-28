@@ -33,7 +33,7 @@ extern const short lsx_ms_adpcm_i_coef[7][2];
 extern const char *lsx_ms_adpcm_block_expand_i(
 	unsigned chans,          /* total channels             */
 	int nCoef,
-	const short *lsx_ms_adpcm_i_coef,
+	const short *coef,
 	const unsigned char *ibuff,/* input buffer[blockAlign]   */
 	SAMPL *obuff,       /* output samples, n*chans    */
 	int n               /* samples to decode PER channel, REQUIRE n % 8 == 1  */

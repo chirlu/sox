@@ -199,18 +199,18 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
     f->post_peak = num_taps / 2;
   }
   else {
-    double * h = lsx_design_lpf(Fp, 1., 2., allow_aliasing, att, &num_taps, 0);
+    double * h2 = lsx_design_lpf(Fp, 1., 2., allow_aliasing, att, &num_taps, 0);
 
     if (phase != 50)
-      lsx_fir_to_phase(&h, &num_taps, &f->post_peak, phase);
+      lsx_fir_to_phase(&h2, &num_taps, &f->post_peak, phase);
     else f->post_peak = num_taps / 2;
 
     dft_length = lsx_set_dft_length(num_taps);
     f->coefs = calloc(dft_length, sizeof(*f->coefs));
     for (i = 0; i < num_taps; ++i)
       f->coefs[(i + dft_length - num_taps + 1) & (dft_length - 1)]
-          = h[i] / dft_length * 2 * multiplier;
-    free(h);
+          = h2[i] / dft_length * 2 * multiplier;
+    free(h2);
   }
   assert(num_taps & 1);
   f->num_taps = num_taps;

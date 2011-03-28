@@ -39,7 +39,7 @@
 
 typedef struct {
         sox_sample_t  step;      /* step size */
-        short lsx_ms_adpcm_i_coef[2];
+        short coef[2];
 } MsState_t;
 
 #define lsbshortldi(x,p) { (x)=((short)((int)(p)[0] + ((int)(p)[1]<<8))); (p) += 2; }
@@ -88,8 +88,8 @@ static inline sox_sample_t AdpcmDecode(sox_sample_t c, MsState_t *state,
 
         /** make linear prediction for next sample **/
         vlin =
-                        ((sample1 * state->lsx_ms_adpcm_i_coef[0]) +
-                         (sample2 * state->lsx_ms_adpcm_i_coef[1])) >> 8;
+                        ((sample1 * state->coef[0]) +
+                         (sample2 * state->coef[1])) >> 8;
         /** then add the code*step adjustment **/
         c -= (c & 0x08) << 1;
         sample = (c * step) + vlin;
@@ -104,7 +104,7 @@ static inline sox_sample_t AdpcmDecode(sox_sample_t c, MsState_t *state,
 const char *lsx_ms_adpcm_block_expand_i(
         unsigned chans,          /* total channels             */
         int nCoef,
-        const short *lsx_ms_adpcm_i_coef,
+        const short *coef,
         const unsigned char *ibuff,/* input buffer[blockAlign]   */
         SAMPL *obuff,       /* output samples, n*chans    */
         int n               /* samples to decode PER channel */
@@ -123,8 +123,8 @@ const char *lsx_ms_adpcm_block_expand_i(
       errmsg = "MSADPCM bpred >= nCoef, arbitrarily using 0\n";
       bpred = 0;
     }
-    state[ch].lsx_ms_adpcm_i_coef[0] = lsx_ms_adpcm_i_coef[(int)bpred*2+0];
-    state[ch].lsx_ms_adpcm_i_coef[1] = lsx_ms_adpcm_i_coef[(int)bpred*2+1];
+    state[ch].coef[0] = coef[(int)bpred*2+0];
+    state[ch].coef[1] = coef[(int)bpred*2+1];
   }
 
   for (ch = 0; ch < chans; ch++)
@@ -139,7 +139,7 @@ const char *lsx_ms_adpcm_block_expand_i(
     lsbshortldi(obuff[ch], ip);
 
   {
-    unsigned ch;
+    unsigned ch2;
     unsigned char b;
     short *op, *top, *tmp;
 
@@ -147,15 +147,15 @@ const char *lsx_ms_adpcm_block_expand_i(
     op = obuff + 2*chans;
     top = obuff + n*chans;
 
-    ch = 0;
+    ch2 = 0;
     while (op < top) { /*** N.B. Without int casts, crashes on 64-bit arch ***/
       b = *ip++;
       tmp = op;
-      *op++ = AdpcmDecode(b >> 4, state+ch, tmp[-(int)chans], tmp[-(int)(2*chans)]);
-      if (++ch == chans) ch = 0;
+      *op++ = AdpcmDecode(b >> 4, state+ch2, tmp[-(int)chans], tmp[-(int)(2*chans)]);
+      if (++ch2 == chans) ch2 = 0;
       tmp = op;
-      *op++ = AdpcmDecode(b&0x0f, state+ch, tmp[-(int)chans], tmp[-(int)(2*chans)]);
-      if (++ch == chans) ch = 0;
+      *op++ = AdpcmDecode(b&0x0f, state+ch2, tmp[-(int)chans], tmp[-(int)(2*chans)]);
+      if (++ch2 == chans) ch2 = 0;
     }
   }
   return errmsg;
@@ -165,7 +165,7 @@ static int AdpcmMashS(
         unsigned ch,              /* channel number to encode, REQUIRE 0 <= ch < chans  */
         unsigned chans,           /* total channels */
         SAMPL v[2],          /* values to use as starting 2 */
-        const short lsx_ms_adpcm_i_coef[2],/* lin predictor coeffs */
+        const short coef[2],/* lin predictor coeffs */
         const SAMPL *ibuff,  /* ibuff[] is interleaved input samples */
         int n,               /* samples to encode PER channel */
         int *iostep,         /* input/output step, REQUIRE 16 <= *st <= 0x7fff */
@@ -202,12 +202,12 @@ static int AdpcmMashS(
                 ox = 4*ch;
         }
         for (i = 0; ip < itop; ip+=chans) {
-                int vlin,d,dp,c;
+                int vlin,d3,dp,c;
 
           /* make linear prediction for next sample */
-                vlin = (v0 * lsx_ms_adpcm_i_coef[0] + v1 * lsx_ms_adpcm_i_coef[1]) >> 8;
-                d = *ip - vlin;  /* difference between linear prediction and current sample */
-                dp = d + (step<<3) + (step>>1);
+                vlin = (v0 * coef[0] + v1 * coef[1]) >> 8;
+                d3 = *ip - vlin;  /* difference between linear prediction and current sample */
+                dp = d3 + (step<<3) + (step>>1);
                 c = 0;
                 if (dp>0) {
                         c = dp/step;
@@ -222,8 +222,8 @@ static int AdpcmMashS(
                 if (v0<-0x8000) v0 = -0x8000;
                 else if (v0>0x7fff) v0 = 0x7fff;
 
-                d = *ip - v0;
-                d2 += d*d; /* update square-error */
+                d3 = *ip - v0;
+                d2 += d3*d3; /* update square-error */
 
                 if (op) {   /* if we want output, put it in proper place */
                         op[ox>>3] |= (ox&4)? c:(c<<4);

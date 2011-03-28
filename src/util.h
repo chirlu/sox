@@ -68,11 +68,9 @@
 
 #ifdef __GNUC__
 #define NORET __attribute__((noreturn))
-#define PRINTF __attribute__ ((format (printf, 1, 2)))
 #define UNUSED __attribute__ ((unused))
 #else
 #define NORET
-#define PRINTF
 #define UNUSED
 #endif
 

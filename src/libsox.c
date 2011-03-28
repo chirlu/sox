@@ -121,7 +121,7 @@ static void output_message(
   }
 }
 
-sox_globals_t sox_globals = {
+static sox_globals_t s_sox_globals = {
   2,               /* unsigned     verbosity */
   output_message,  /* sox_output_message_handler */
   sox_false,       /* sox_bool     repeatable */
@@ -135,6 +135,21 @@ sox_globals_t sox_globals = {
   sox_false,       /* sox_bool     use_magic */
   sox_false        /* sox_bool     use_threads */
 };
+
+sox_globals_t * sox_get_globals(void)
+{
+    return &s_sox_globals;
+}
+
+/* FIXME: Not thread safe using globals */
+static sox_effects_globals_t s_sox_effects_globals =
+    {sox_plot_off, &s_sox_globals};
+
+sox_effects_globals_t *
+sox_get_effects_globals(void)
+{
+    return &s_sox_effects_globals;
+}
 
 char const * sox_strerror(int sox_errno)
 {
@@ -154,7 +169,7 @@ char const * sox_strerror(int sox_errno)
   return errors[sox_errno];
 }
 
-int sox_basename(char * base_buffer, size_t base_buffer_len, const char * filename)
+size_t sox_basename(char * base_buffer, size_t base_buffer_len, const char * filename)
 {
   if (!base_buffer || !base_buffer_len)
   {
@@ -178,13 +193,6 @@ int sox_basename(char * base_buffer, size_t base_buffer_len, const char * filena
   }
 }
 
-#undef lsx_fail
-#undef lsx_warn
-#undef lsx_report
-#undef lsx_debug
-#undef lsx_debug_more
-#undef lsx_debug_most
-
 #define SOX_MESSAGE_FUNCTION(name,level) \
 void name(char const * fmt, ...) { \
   va_list ap; \
@@ -194,12 +202,12 @@ void name(char const * fmt, ...) { \
   va_end(ap); \
 }
 
-SOX_MESSAGE_FUNCTION(lsx_fail  , 1)
-SOX_MESSAGE_FUNCTION(lsx_warn  , 2)
-SOX_MESSAGE_FUNCTION(lsx_report, 3)
-SOX_MESSAGE_FUNCTION(lsx_debug , 4)
-SOX_MESSAGE_FUNCTION(lsx_debug_more , 5)
-SOX_MESSAGE_FUNCTION(lsx_debug_most , 6)
+SOX_MESSAGE_FUNCTION(lsx_fail_impl  , 1)
+SOX_MESSAGE_FUNCTION(lsx_warn_impl  , 2)
+SOX_MESSAGE_FUNCTION(lsx_report_impl, 3)
+SOX_MESSAGE_FUNCTION(lsx_debug_impl , 4)
+SOX_MESSAGE_FUNCTION(lsx_debug_more_impl , 5)
+SOX_MESSAGE_FUNCTION(lsx_debug_most_impl , 6)
 
 #undef SOX_MESSAGE_FUNCTION
 

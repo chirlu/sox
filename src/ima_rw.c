@@ -269,21 +269,21 @@ inline static void ImaMashChannel(
                 hi0 = hi+opt; if (hi0>ISSTMAX) hi0=ISSTMAX;
                 while (low>low0 || hi<hi0) {
                         if (!w && low>low0) {
-                                int d;
+                                int d2;
                                 snext = --low;
-                                d = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL);
-                                if (d<d0) {
-                                        d0=d; s0=low;
+                                d2 = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL);
+                                if (d2<d0) {
+                                        d0=d2; s0=low;
                                         low0 = low-opt; if (low0<0) low0=0;
                                         hi0 = low+opt; if (hi0>ISSTMAX) hi0=ISSTMAX;
                                 }
                         }
                         if (w && hi<hi0) {
-                                int d;
+                                int d2;
                                 snext = ++hi;
-                                d = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL);
-                                if (d<d0) {
-                                        d0=d; s0=hi;
+                                d2 = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL);
+                                if (d2<d0) {
+                                        d0=d2; s0=hi;
                                         low0 = hi-opt; if (low0<0) low0=0;
                                         hi0 = hi+opt; if (hi0>ISSTMAX) hi0=ISSTMAX;
                                 }

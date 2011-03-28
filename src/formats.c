@@ -112,7 +112,7 @@ static char const * auto_detect_format(sox_format_t * ft, char const * ext)
   return NULL;
 }
 
-sox_encodings_info_t const sox_encodings_info[] = {
+static sox_encodings_info_t const s_sox_encodings_info[] = {
   {0         , "n/a"          , "Unknown or not applicable"},
   {0         , "Signed PCM"   , "Signed Integer PCM"},
   {0         , "Unsigned PCM" , "Unsigned Integer PCM"},
@@ -143,8 +143,14 @@ sox_encodings_info_t const sox_encodings_info[] = {
   {SOX_LOSSY2, "LPC10"        , "LPC10"},
 };
 
-assert_static(array_length(sox_encodings_info) == SOX_ENCODINGS,
+assert_static(array_length(s_sox_encodings_info) == SOX_ENCODINGS,
     SIZE_MISMATCH_BETWEEN_sox_encoding_t_AND_sox_encodings_info);
+
+sox_encodings_info_t const *
+sox_get_encodings_info(void)
+{
+    return s_sox_encodings_info;
+}
 
 unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample)
 {
@@ -1150,7 +1156,28 @@ static sox_bool plugins_initted = sox_false;
   #define MAX_FORMATS (NSTATIC_FORMATS + MAX_DYNAMIC_FORMATS)
   #define MAX_FORMATS_1 (MAX_FORMATS + 1)
   #define MAX_NAME_LEN (size_t)1024 /* FIXME: Use vasprintf */
+#else
+  #define MAX_FORMATS_1
+#endif
 
+#define FORMAT(f) extern sox_format_handler_t const * lsx_##f##_format_fn(void);
+#include "formats.h"
+#undef FORMAT
+
+static sox_format_tab_t s_sox_format_fns[MAX_FORMATS_1] = {
+  #define FORMAT(f) {NULL, lsx_##f##_format_fn},
+  #include "formats.h"
+  #undef FORMAT
+  {NULL, NULL}
+};
+
+const sox_format_tab_t *
+sox_get_format_fns(void)
+{
+    return s_sox_format_fns;
+}
+
+#ifdef HAVE_LIBLTDL /* Plugin format handlers */
   static unsigned nformats = NSTATIC_FORMATS;
 
   static int init_format(const char *file, lt_ptr data)
@@ -1176,26 +1203,13 @@ static sox_bool plugins_initted = sox_false;
             lsx_warn("too many plugin formats");
             return -1;
           }
-          sox_format_fns[nformats++].fn = ltptr.fn;
+          s_sox_format_fns[nformats++].fn = ltptr.fn;
         }
       }
     }
     return 0;
   }
-#else
-  #define MAX_FORMATS_1
 #endif
-
-#define FORMAT(f) extern sox_format_handler_t const * lsx_##f##_format_fn(void);
-#include "formats.h"
-#undef FORMAT
-
-sox_format_tab_t sox_format_fns[MAX_FORMATS_1] = {
-  #define FORMAT(f) {NULL, lsx_##f##_format_fn},
-  #include "formats.h"
-  #undef FORMAT
-  {NULL, NULL}
-};
 
 int sox_format_init(void) /* Find & load format handlers.  */
 {
@@ -1245,8 +1259,8 @@ sox_format_handler_t const * sox_find_format(char const * name0, sox_bool no_dev
     char * pos = strchr(name, ';');
     if (pos) /* Use only the 1st clause of a mime string */
       *pos = '\0';
-    for (f = 0; sox_format_fns[f].fn; ++f) {
-      sox_format_handler_t const * handler = sox_format_fns[f].fn();
+    for (f = 0; s_sox_format_fns[f].fn; ++f) {
+      sox_format_handler_t const * handler = s_sox_format_fns[f].fn();
 
       if (!(no_dev && (handler->flags & SOX_FILE_DEVICE)))
         for (n = 0; handler->names[n]; ++n)

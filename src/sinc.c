@@ -40,7 +40,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   while (i < 2) {
     int c = 1;
     while (c && (c = lsx_getopt(argc, argv, "+ra:b:p:MILt:n:")) != -1) switch (c) {
-      char * parse_ptr;
+      char * parse_ptr2;
       case 'r': p->round = sox_true; break;
       GETOPT_NUMERIC('a', att,  40 , 180)
       GETOPT_NUMERIC('b', beta,  0 , 256)
@@ -49,8 +49,8 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
       case 'I': p->phase = 25; break;
       case 'L': p->phase = 50; break;
       GETOPT_NUMERIC('n', num_taps[1], 11, 32767)
-      case 't': p->tbw1 = lsx_parse_frequency(lsx_optarg, &parse_ptr);
-        if (p->tbw1 < 1 || *parse_ptr) return lsx_usage(effp);
+      case 't': p->tbw1 = lsx_parse_frequency(lsx_optarg, &parse_ptr2);
+        if (p->tbw1 < 1 || *parse_ptr2) return lsx_usage(effp);
         break;
       default: c = 0;
     }

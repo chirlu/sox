@@ -31,10 +31,10 @@
 #undef lsx_fail
 #undef lsx_report
 #undef lsx_warn
-#define lsx_debug sox_globals.subsystem=effp->handler.name,lsx_debug
-#define lsx_fail sox_globals.subsystem=effp->handler.name,lsx_fail
-#define lsx_report sox_globals.subsystem=effp->handler.name,lsx_report
-#define lsx_warn sox_globals.subsystem=effp->handler.name,lsx_warn
+#define lsx_debug sox_globals.subsystem=effp->handler.name,lsx_debug_impl
+#define lsx_fail sox_globals.subsystem=effp->handler.name,lsx_fail_impl
+#define lsx_report sox_globals.subsystem=effp->handler.name,lsx_report_impl
+#define lsx_warn sox_globals.subsystem=effp->handler.name,lsx_warn_impl
 #endif
 
 #define RANQD1 ranqd1(sox_globals.ranqd1)
@@ -64,11 +64,11 @@ assert_static(sizeof(off_t) == _FILE_OFFSET_BITS >> 3, OFF_T_BUILD_PROBLEM);
 
 FILE * lsx_tmpfile(void);
 
-void lsx_debug_more(char const * fmt, ...) PRINTF;
-void lsx_debug_most(char const * fmt, ...) PRINTF;
+void lsx_debug_more_impl(char const * fmt, ...) LSX_PRINTF12;
+void lsx_debug_most_impl(char const * fmt, ...) LSX_PRINTF12;
 
-#define lsx_debug_more sox_globals.subsystem=__FILE__,lsx_debug_more
-#define lsx_debug_most sox_globals.subsystem=__FILE__,lsx_debug_most
+#define lsx_debug_more sox_get_globals()->subsystem=__FILE__,lsx_debug_more_impl
+#define lsx_debug_most sox_get_globals()->subsystem=__FILE__,lsx_debug_most_impl
 
 /* Digitise one cycle of a wave and store it as
  * a table of samples of a specified data-type.

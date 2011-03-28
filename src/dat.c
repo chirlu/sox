@@ -91,6 +91,7 @@ static size_t sox_datread(sox_format_t * ft, sox_sample_t *buf, size_t nsamp)
       /* Read a line or grab the buffered first line */
       if (((priv_t *)ft->priv)->buffered) {
         strncpy(inpstr, ((priv_t *)ft->priv)->prevline, (size_t)LINEWIDTH);
+        inpstr[LINEWIDTH-1] = 0;
         ((priv_t *)ft->priv)->buffered=0;
       } else {
         lsx_reads(ft, inpstr, LINEWIDTH-1);

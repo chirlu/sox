@@ -299,7 +299,7 @@ int lsx_parse_note(char const * text, char * * end_ptr)
     result = (int)(5/3. * (*text++ - 'A') + 9.5) % 12 - 9;
     if (*text == 'b') {--result; ++text;}
     else if (*text == '#') {++result; ++text;}
-    if (isdigit(*text))
+    if (isdigit((unsigned char)*text))
       result += 12 * (*text++ - '4'); 
   }
   *end_ptr = (char *)text;
@@ -323,8 +323,8 @@ double lsx_parse_frequency_k(char const * text, char * * end_ptr, int key)
     return calc_note_freq(result, key);
   }
   if (*text >= 'A' && *text <= 'G') {
-    int result = lsx_parse_note(text, end_ptr);
-    return result == INT_MAX? - 1 : calc_note_freq((double)result, key);
+    int result2 = lsx_parse_note(text, end_ptr);
+    return result2 == INT_MAX? - 1 : calc_note_freq((double)result2, key);
   }
   result = strtod(text, end_ptr);
   if (end_ptr) {

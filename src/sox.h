@@ -15,6 +15,10 @@
 #include <stdarg.h>
 #include <stddef.h>
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 /* Suppress warnings from use of type long long */
 #if defined __GNUC__
 #pragma GCC system_header
@@ -91,32 +95,259 @@ typedef unsigned __int64 sox_uint64_t;
 typedef sox_int32_t sox_int24_t;   /* sox_int24_t == sox_int32_t (beware of the extra byte) */
 typedef sox_uint32_t sox_uint24_t; /* sox_uint24_t == sox_uint32_t (beware of the extra byte) */
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
-/* Avoid warnings about unused parameters. */
-#ifdef __GNUC__
-#define LSX_UNUSED __attribute__ ((unused))
-#define LSX_PRINTF __attribute__ ((format (printf, 1, 2)))
-#else
-#define LSX_UNUSED
-#define LSX_PRINTF
-#endif
-#ifdef _MSC_VER
-#define LSX_UNUSED_VAR(x) ((void)(x))
-#else
-#define LSX_UNUSED_VAR(x) ((void)0)
-#endif
-
 /* The following is the API version of libSoX.  It is not meant
  * to follow the version number of SoX but it has historically.
  * Please do not count on these numbers being in sync. */
 #define SOX_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 #define SOX_LIB_VERSION_CODE   SOX_LIB_VERSION(14, 4, 0)
 
-/* Returns version number */
-const char *sox_version(void);
+/* SOX_API: Attribute required on all functions declared by SoX and on all
+ * function pointer types used by SoX. */
+#ifdef __GNUC__
+#define SOX_API  __attribute__ ((cdecl))
+#elif _MSC_VER
+#define SOX_API  __cdecl
+#else
+#define SOX_API
+#endif
+
+/* LSX_USE_VAR(x): Expression that "uses" a potentially-unused variable to
+ * avoid compiler warnings (i.e. for macro-generated code). */
+#ifdef _PREFAST_
+/* During static analysis, initialize unused variables to 0. */
+#define LSX_USE_VAR(x)  ((void)(x=0))
+#else
+#define LSX_USE_VAR(x)  ((void)(x))
+#endif
+
+/*
+ * API decorations:
+ * Mostly for documentation purposes. For some compilers, decorations also
+ * influence compiler warnings or activate compiler optimizations.
+ */
+
+/* LSX_UNUSED: Attribute applied to a parameter or local variable to suppress
+ * warnings about the variable being unused (i.e. for macro-generated code). */
+#ifdef __GNUC__
+#define LSX_UNUSED  __attribute__ ((unused))
+#else
+#define LSX_UNUSED
+#endif
+
+/* LSX_PRINTF12: Attribute applied to a function to indicate that it requires
+ * a printf-style format string for arg1 and that printf parameters start at
+ * arg2. */
+#ifdef __GNUC__
+#define LSX_PRINTF12  __attribute__ ((format (printf, 1, 2)))
+#else
+#define LSX_PRINTF12
+#endif
+
+/* LSX_RETURN_PURE: Attribute applied to a function to indicate that it has no
+ * side effects and depends only its input parameters and global memory. If
+ * called repeatedly, it returns the same result each time. */
+#ifdef __GNUC__
+#define LSX_RETURN_PURE __attribute__ ((pure)) /* Function is pure. */
+#else
+#define LSX_RETURN_PURE /* Function is pure. */
+#endif
+
+/* LSX_RETURN_VALID: Attribute applied to a function to indicate that the
+ * return value is always a pointer to a valid object (never NULL). */
+#ifdef _Ret_
+#define LSX_RETURN_VALID _Ret_ /* Function always returns a valid object (never NULL). */
+#else
+#define LSX_RETURN_VALID /* Function always returns a valid object (never NULL). */
+#endif
+
+/* LSX_RETURN_ARRAY: Attribute applied to a function to indicate that the
+ * return value is always a pointer to a valid array (never NULL). */
+#ifdef _Ret_valid_
+#define LSX_RETURN_ARRAY _Ret_valid_ /* Function always returns a valid array (never NULL). */
+#else
+#define LSX_RETURN_ARRAY /* Function always returns a valid array (never NULL). */
+#endif
+
+/* LSX_RETURN_VALID_Z: Attribute applied to a function to indicate that the
+ * return value is always a pointer to a valid 0-terminated array (never
+ * NULL). */
+#ifdef _Ret_z_
+#define LSX_RETURN_VALID_Z _Ret_z_ /* Function always returns a 0-terminated array (never NULL). */
+#else
+#define LSX_RETURN_VALID_Z /* Function always returns a 0-terminated array (never NULL). */
+#endif
+
+/* LSX_RETURN_OPT: Attribute applied to a function to indicate that the
+ * returned pointer may be null. */
+#ifdef _Ret_opt_
+#define LSX_RETURN_OPT _Ret_opt_ /* Function may return NULL. */
+#else
+#define LSX_RETURN_OPT /* Function may return NULL. */
+#endif
+
+/* LSX_PARAM_IN: Attribute applied to a parameter to indicate that the
+ * parameter is a valid pointer to one const element of the pointed-to type
+ * (never NULL). */
+#ifdef _In_
+#define LSX_PARAM_IN _In_ /* Required const pointer to a valid object (never NULL). */
+#else
+#define LSX_PARAM_IN /* Required const pointer to a valid object (never NULL). */
+#endif
+
+/* LSX_PARAM_IN_Z: Attribute applied to a parameter to indicate that the
+ * parameter is a valid pointer to a const 0-terminated string (never NULL). */
+#ifdef _In_z_
+#define LSX_PARAM_IN_Z _In_z_ /* Required const pointer to 0-terminated string (never NULL). */
+#else
+#define LSX_PARAM_IN_Z /* Required const pointer to 0-terminated string (never NULL). */
+#endif
+
+/* LSX_PARAM_IN_PRINTF: Attribute applied to a parameter to indicate that the
+ * parameter is a const pointer to a 0-terminated printf format string. */
+#ifdef _Printf_format_string_
+#define LSX_PARAM_IN_PRINTF _Printf_format_string_ /* Required const pointer to 0-terminated printf format string (never NULL). */
+#else
+#define LSX_PARAM_IN_PRINTF /* Required const pointer to 0-terminated printf format string (never NULL). */
+#endif
+
+/* LSX_PARAM_IN_COUNT(len): Attribute applied to a parameter to indicate that
+ * the parameter is a valid pointer to (len) const elements of the pointed-to
+ * type, where (len) is the name of another parameter. */
+#ifdef _In_count_
+#define LSX_PARAM_IN_COUNT(len) _In_count_(len) /* Required const pointer to (len) valid objects (never NULL). */
+#else
+#define LSX_PARAM_IN_COUNT(len) /* Required const pointer to (len) valid objects (never NULL). */
+#endif
+
+/* LSX_PARAM_IN_BYTECOUNT(len): Attribute applied to a parameter to indicate that
+ * the parameter is a valid pointer to (len) bytes of initialized data, where
+ * (len) is the name of another parameter. */
+#ifdef _In_bytecount_
+#define LSX_PARAM_IN_BYTECOUNT(len) _In_bytecount_(len) /* Required const pointer to (len) bytes of data (never NULL). */
+#else
+#define LSX_PARAM_IN_BYTECOUNT(len) /* Required const pointer to (len) bytes of data (never NULL). */
+#endif
+
+/* LSX_PARAM_IN_OPT: Attribute applied to a parameter to indicate that the
+ * parameter is either NULL or a valid pointer to one const element of the
+ * pointed-to type. */
+#ifdef _In_opt_
+#define LSX_PARAM_IN_OPT _In_opt_ /* Optional const pointer to a valid object (may be NULL). */
+#else
+#define LSX_PARAM_IN_OPT /* Optional const pointer to a valid object (may be NULL). */
+#endif
+
+/* LSX_PARAM_IN_OPT_Z: Attribute applied to a parameter to indicate that the
+ * parameter is either NULL or a valid pointer to a const 0-terminated string. */
+#ifdef _In_opt_z_
+#define LSX_PARAM_IN_OPT_Z _In_opt_z_ /* Optional const pointer to 0-terminated string (may be NULL). */
+#else
+#define LSX_PARAM_IN_OPT_Z /* Optional const pointer to 0-terminated string (may be NULL). */
+#endif
+
+/* LSX_PARAM_INOUT: Attribute applied to a parameter to indicate that the
+ * parameter is a valid pointer to one initialized element of the pointed-to
+ * type (never NULL). The function may modify the element. */
+#ifdef _Inout_
+#define LSX_PARAM_INOUT _Inout_ /* Required pointer to a valid object (never NULL). */
+#else
+#define LSX_PARAM_INOUT /* Required pointer to a valid object (never NULL). */
+#endif
+
+/* LSX_PARAM_INOUT_COUNT(len): Attribute applied to a parameter to indicate
+ * that the parameter is a valid pointer to (len) initialized elements of the
+ * pointed-to type (never NULL). The function may modify the elements. */
+#ifdef _Inout_count_x_
+#define LSX_PARAM_INOUT_COUNT(len) _Inout_count_x_(len) /* Required pointer to (len) valid objects (never NULL). */
+#else
+#define LSX_PARAM_INOUT_COUNT(len) /* Required pointer to (len) valid objects (never NULL). */
+#endif
+
+/* LSX_PARAM_OUT: Attribute applied to a parameter to indicate that the
+ * parameter is a valid pointer to memory sufficient for one element of the
+ * pointed-to type (never NULL). The function will initialize the element. */
+#ifdef _Out_
+#define LSX_PARAM_OUT _Out_ /* Required pointer to an object to be initialized (never NULL). */
+#else
+#define LSX_PARAM_OUT /* Required pointer to an object to be initialized (never NULL). */
+#endif
+
+/* LSX_PARAM_OUT_BYTECAP(len): Attribute applied to a parameter to indicate
+ * that the parameter is a valid pointer to memory sufficient for (len) bytes
+ * of data (never NULL), where (len) is the name of another parameter. The
+ * function may write up to len bytes of data to this memory. */
+#ifdef _Out_bytecap_
+#define LSX_PARAM_OUT_BYTECAP(len) _Out_bytecap_(len) /* Required pointer to writable buffer with room for len bytes. */
+#else
+#define LSX_PARAM_OUT_BYTECAP(len) /* Required pointer to writable buffer with room for len bytes. */
+#endif
+
+/* LSX_PARAM_OUT_CAP_POST_COUNT(len,filled): Attribute applied to a parameter
+ * to indicate that the parameter is a valid pointer to memory sufficient for
+ * (len) elements of the pointed-to type (never NULL), where (len) is the name
+ * of another parameter. On return, (filled) elements will have been
+ * initialized, where (filled) is either the dereference of another pointer
+ * parameter (i.e. "*written") or the "return" parameter (indicating that the
+ * function returns the number of elements written). */
+#ifdef _Out_cap_post_count_
+#define LSX_PARAM_OUT_CAP_POST_COUNT(len,filled) _Out_cap_post_count_(len,filled) /* Required pointer to buffer for (len) elements (never NULL); on return, (filled) elements will have been initialized. */
+#else
+#define LSX_PARAM_OUT_CAP_POST_COUNT(len,filled) /* Required pointer to buffer for (len) elements (never NULL); on return, (filled) elements will have been initialized. */
+#endif
+
+/* LSX_PARAM_OUT_Z_CAP_POST_COUNT(len,filled): Attribute applied to a parameter
+ * to indicate that the parameter is a valid pointer to memory sufficient for
+ * (len) elements of the pointed-to type (never NULL), where (len) is the name
+ * of another parameter. On return, (filled+1) elements will have been
+ * initialized, with the last element having been initialized to 0, where
+ * (filled) is either the dereference of another pointer parameter (i.e.
+ * "*written") or the "return" parameter (indicating that the function returns
+ * the number of elements written). */
+#ifdef _Out_z_cap_post_count_
+#define LSX_PARAM_OUT_Z_CAP_POST_COUNT(len,filled) _Out_z_cap_post_count_(len,filled) /* Required pointer to buffer for (len) elements (never NULL); on return, (filled+1) elements will have been initialized, and the array will be 0-terminated. */
+#else
+#define LSX_PARAM_OUT_Z_CAP_POST_COUNT(len,filled) /* Required pointer to buffer for (len) elements (never NULL); on return, (filled+1) elements will have been initialized, and the array will be 0-terminated. */
+#endif
+
+/* LSX_PARAM_OUT_OPT: Attribute applied to a parameter to indicate that the
+ * parameter is either NULL or a valid pointer to memory sufficient for one
+ * element of the pointed-to type. The function will initialize the element. */
+#ifdef _Out_opt_
+#define LSX_PARAM_OUT_OPT _Out_opt_ /* Optional pointer to an object to be initialized (may be NULL). */
+#else
+#define LSX_PARAM_OUT_OPT /* Optional pointer to an object to be initialized (may be NULL). */
+#endif
+
+/* LSX_PARAM_DEREF_PRE_MAYBENULL: Attribute applied to a parameter to indicate
+ * that the parameter is a valid pointer (never NULL) to another pointer which
+ * may be NULL when the function is invoked. */
+#ifdef _Deref_pre_maybenull_
+#define LSX_PARAM_DEREF_PRE_MAYBENULL _Deref_pre_maybenull_ /* Required pointer (never NULL) to another pointer (may be NULL). */
+#else
+#define LSX_PARAM_DEREF_PRE_MAYBENULL /* Required pointer (never NULL) to another pointer (may be NULL). */
+#endif
+
+/* LSX_PARAM_DEREF_POST_NULL: Attribute applied to a parameter to indicate
+ * that the parameter is a valid pointer (never NULL) to another pointer which
+ * will be NULL when the function returns. */
+#ifdef _Deref_post_null_
+#define LSX_PARAM_DEREF_POST_NULL _Deref_post_null_ /* Required pointer (never NULL) to another pointer, which will be NULL on exit. */
+#else
+#define LSX_PARAM_DEREF_POST_NULL /* Required pointer (never NULL) to another pointer, which will be NULL on exit. */
+#endif
+
+/* LSX_PARAM_DEREF_POST_NOTNULL: Attribute applied to a parameter to indicate
+ * that the parameter is a valid pointer (never NULL) to another pointer which
+ * will be non-NULL when the function returns. */
+#ifdef _Deref_post_notnull_
+#define LSX_PARAM_DEREF_POST_NOTNULL _Deref_post_notnull_ /* Required pointer (never NULL) to another pointer, which will be valid (not NULL) on exit. */
+#else
+#define LSX_PARAM_DEREF_POST_NOTNULL /* Required pointer (never NULL) to another pointer, which will be valid (not NULL) on exit. */
+#endif
+
+/* Returns version number string, i.e. "14.4.0". */
+LSX_RETURN_VALID_Z LSX_RETURN_PURE const char *
+SOX_API sox_version(void);
 
 /* Flags indicating whether optional features are present in this build of SoX */
 typedef enum sox_version_flags_t {
@@ -141,8 +372,9 @@ typedef struct sox_version_info_t {
     /* new info should be added at the end for version backwards-compatibility. */
 } sox_version_info_t;
 
-/* gets information about this build of libsox */
-sox_version_info_t const * sox_version_info(void);
+/* Returns information about this build of libsox. */
+LSX_RETURN_VALID LSX_RETURN_PURE sox_version_info_t const *
+SOX_API sox_version_info(void);
 
 /* libSoX-specific error codes.  The rest directly map from errno. */
 enum sox_error_t {
@@ -210,7 +442,7 @@ typedef sox_int32_t sox_sample_t;
 #define SOX_SAMPLE_TO_UNSIGNED(bits,d,clips) \
   (sox_uint##bits##_t)(SOX_SAMPLE_TO_SIGNED(bits,d,clips)^SOX_INT_MIN(bits))
 #define SOX_SAMPLE_TO_SIGNED(bits,d,clips) \
-  (sox_int##bits##_t)(LSX_UNUSED_VAR(sox_macro_temp_double),sox_macro_temp_sample=(d),sox_macro_temp_sample>SOX_SAMPLE_MAX-(1<<(31-bits))?++(clips),SOX_INT_MAX(bits):((sox_uint32_t)(sox_macro_temp_sample+(1<<(31-bits))))>>(32-bits))
+  (sox_int##bits##_t)(LSX_USE_VAR(sox_macro_temp_double),sox_macro_temp_sample=(d),sox_macro_temp_sample>SOX_SAMPLE_MAX-(1<<(31-bits))?++(clips),SOX_INT_MAX(bits):((sox_uint32_t)(sox_macro_temp_sample+(1<<(31-bits))))>>(32-bits))
 #define SOX_SIGNED_TO_SAMPLE(bits,d)((sox_sample_t)(d)<<(32-bits))
 #define SOX_UNSIGNED_TO_SAMPLE(bits,d)(SOX_SIGNED_TO_SAMPLE(bits,d)^SOX_SAMPLE_NEG)
 
@@ -222,8 +454,8 @@ typedef sox_int32_t sox_sample_t;
 #define SOX_SIGNED_24BIT_TO_SAMPLE(d,clips) SOX_SIGNED_TO_SAMPLE(24,d)
 #define SOX_UNSIGNED_32BIT_TO_SAMPLE(d,clips) ((sox_sample_t)(d)^SOX_SAMPLE_NEG)
 #define SOX_SIGNED_32BIT_TO_SAMPLE(d,clips) (sox_sample_t)(d)
-#define SOX_FLOAT_32BIT_TO_SAMPLE(d,clips) (sox_sample_t)(LSX_UNUSED_VAR(sox_macro_temp_sample),sox_macro_temp_double=(d)*(SOX_SAMPLE_MAX+1.),sox_macro_temp_double<SOX_SAMPLE_MIN?++(clips),SOX_SAMPLE_MIN:sox_macro_temp_double>=SOX_SAMPLE_MAX+1.?sox_macro_temp_double>SOX_SAMPLE_MAX+1.?++(clips),SOX_SAMPLE_MAX:SOX_SAMPLE_MAX:sox_macro_temp_double)
-#define SOX_FLOAT_64BIT_TO_SAMPLE(d,clips) (sox_sample_t)(LSX_UNUSED_VAR(sox_macro_temp_sample),sox_macro_temp_double=(d)*(SOX_SAMPLE_MAX+1.),sox_macro_temp_double<0?sox_macro_temp_double<=SOX_SAMPLE_MIN-.5?++(clips),SOX_SAMPLE_MIN:sox_macro_temp_double-.5:sox_macro_temp_double>=SOX_SAMPLE_MAX+.5?sox_macro_temp_double>SOX_SAMPLE_MAX+1.?++(clips),SOX_SAMPLE_MAX:SOX_SAMPLE_MAX:sox_macro_temp_double+.5)
+#define SOX_FLOAT_32BIT_TO_SAMPLE(d,clips) (sox_sample_t)(LSX_USE_VAR(sox_macro_temp_sample),sox_macro_temp_double=(d)*(SOX_SAMPLE_MAX+1.),sox_macro_temp_double<SOX_SAMPLE_MIN?++(clips),SOX_SAMPLE_MIN:sox_macro_temp_double>=SOX_SAMPLE_MAX+1.?sox_macro_temp_double>SOX_SAMPLE_MAX+1.?++(clips),SOX_SAMPLE_MAX:SOX_SAMPLE_MAX:sox_macro_temp_double)
+#define SOX_FLOAT_64BIT_TO_SAMPLE(d,clips) (sox_sample_t)(LSX_USE_VAR(sox_macro_temp_sample),sox_macro_temp_double=(d)*(SOX_SAMPLE_MAX+1.),sox_macro_temp_double<0?sox_macro_temp_double<=SOX_SAMPLE_MIN-.5?++(clips),SOX_SAMPLE_MIN:sox_macro_temp_double-.5:sox_macro_temp_double>=SOX_SAMPLE_MAX+.5?sox_macro_temp_double>SOX_SAMPLE_MAX+1.?++(clips),SOX_SAMPLE_MAX:SOX_SAMPLE_MAX:sox_macro_temp_double+.5)
 #define SOX_SAMPLE_TO_UNSIGNED_8BIT(d,clips) SOX_SAMPLE_TO_UNSIGNED(8,d,clips)
 #define SOX_SAMPLE_TO_SIGNED_8BIT(d,clips) SOX_SAMPLE_TO_SIGNED(8,d,clips)
 #define SOX_SAMPLE_TO_UNSIGNED_16BIT(d,clips) SOX_SAMPLE_TO_UNSIGNED(16,d,clips)
@@ -232,7 +464,7 @@ typedef sox_int32_t sox_sample_t;
 #define SOX_SAMPLE_TO_SIGNED_24BIT(d,clips) SOX_SAMPLE_TO_SIGNED(24,d,clips)
 #define SOX_SAMPLE_TO_UNSIGNED_32BIT(d,clips) (sox_uint32_t)((d)^SOX_SAMPLE_NEG)
 #define SOX_SAMPLE_TO_SIGNED_32BIT(d,clips) (sox_int32_t)(d)
-#define SOX_SAMPLE_TO_FLOAT_32BIT(d,clips) (LSX_UNUSED_VAR(sox_macro_temp_double),sox_macro_temp_sample=(d),sox_macro_temp_sample>SOX_SAMPLE_MAX-128?++(clips),1:(((sox_macro_temp_sample+128)&~255)*(1./(SOX_SAMPLE_MAX+1.))))
+#define SOX_SAMPLE_TO_FLOAT_32BIT(d,clips) (LSX_USE_VAR(sox_macro_temp_double),sox_macro_temp_sample=(d),sox_macro_temp_sample>SOX_SAMPLE_MAX-128?++(clips),1:(((sox_macro_temp_sample+128)&~255)*(1./(SOX_SAMPLE_MAX+1.))))
 #define SOX_SAMPLE_TO_FLOAT_64BIT(d,clips) ((d)*(1./(SOX_SAMPLE_MAX+1.)))
 
 
@@ -267,11 +499,11 @@ typedef sox_int32_t sox_sample_t;
 #define SOX_SIZE_MAX ((size_t)(-1)) /* maximum value of size_t */
 
 /* function-pointer type of globals.output_message_handler */
-typedef void (*sox_output_message_handler_t)(
-    unsigned level,
-    const char *filename,
-    const char *fmt,
-    va_list ap);
+typedef void (SOX_API * sox_output_message_handler_t)(
+    unsigned level,                      /* 1 = FAIL, 2 = WARN, 3 = INFO, 4 = DEBUG, 5 = DEBUG_MORE, 6 = DEBUG_MOST. */
+    LSX_PARAM_IN_Z const char *filename, /* Source code __FILENAME__ from which message originates. */
+    LSX_PARAM_IN_PRINTF const char *fmt, /* Message format string. */
+    LSX_PARAM_IN va_list ap);            /* Message format parameters. */
 
 /* Global parameters (for effects & formats) */
 typedef struct sox_globals_t {
@@ -297,8 +529,11 @@ typedef struct sox_globals_t {
   sox_bool     use_threads;      /* true if client has requested parallel effects processing */
 } sox_globals_t;
 
-/* the SoX global settings */
-extern sox_globals_t sox_globals;
+/* Returns the SoX global settings. */
+LSX_RETURN_VALID LSX_RETURN_PURE sox_globals_t *
+SOX_API sox_get_globals(void);
+
+#define sox_globals (*sox_get_globals())
 
 /* samples per second = double */
 typedef double sox_rate_t;
@@ -366,8 +601,11 @@ typedef struct sox_encodings_info_t {
   char const * desc;           /* encoding description */
 } sox_encodings_info_t;
 
-/* the list of available encodings */
-extern sox_encodings_info_t const sox_encodings_info[];
+/* Returns the list of available encodings. End of list indicated by name == NULL. */
+LSX_RETURN_ARRAY LSX_RETURN_PURE sox_encodings_info_t const *
+SOX_API sox_get_encodings_info(void);
+
+#define sox_encodings_info (sox_get_encodings_info())
 
 /* yes, no, or default (auto-detect) */
 typedef enum sox_option_t {
@@ -393,15 +631,18 @@ typedef struct sox_encodinginfo_t {
 } sox_encodinginfo_t;
 
 /* fills in an encodinginfo with default values */
-void sox_init_encodinginfo(sox_encodinginfo_t * e);
+void
+SOX_API sox_init_encodinginfo(
+    LSX_PARAM_OUT sox_encodinginfo_t * e);
 
 /* Given an encoding (i.e. SIGN2) and the encoded bits_per_sample (i.e. 16),
  * returns the number of useful bits per sample in the decoded data (i.e. 16).
  * Returns 0 to indicate that the value returned by the format handler should
  * be used instead of a pre-determined precision. */
-unsigned sox_precision(
-    sox_encoding_t encoding,
-    unsigned bits_per_sample);
+LSX_RETURN_PURE unsigned /* Returns the number of useful decoded bits per sample */
+SOX_API sox_precision(
+    sox_encoding_t encoding,   /* Encoded format */
+    unsigned bits_per_sample); /* Encoded bits per sample */
 
 /* Defaults for common hardware */
 #define SOX_DEFAULT_CHANNELS  2     /* = 2 (stereo) */
@@ -462,13 +703,39 @@ typedef struct sox_format_handler_t {
   char         const * description; /* short description of format */
   char         const * const * names; /* null-terminated array of filename extensions that are handled by this format */
   unsigned int flags; /* File flags (SOX_FILE_...) */
-  int          (*startread)(sox_format_t * ft); /* called to initialize reader (decoder) */
-  size_t   (*read)(sox_format_t * ft, sox_sample_t *buf, size_t len); /* called to read (decode) a block of samples */
-  int          (*stopread)(sox_format_t * ft); /* called to close reader (decoder); may be null if no closing necessary */
-  int          (*startwrite)(sox_format_t * ft); /* called to initialize writer (encoder) */
-  size_t   (*write)(sox_format_t * ft, const sox_sample_t *buf, size_t len); /* called to write (encode) a block of samples */
-  int          (*stopwrite)(sox_format_t * ft); /* called to close writer (decoder); may be null if no closing necessary */
-  int          (*seek)(sox_format_t * ft, sox_uint64_t offset); /* called to reposition reader; may be null if not supported */
+
+  /* called to initialize reader (decoder) */
+  int (SOX_API*startread)( /* Returns SOX_SUCCESS if successful */
+      LSX_PARAM_INOUT sox_format_t * ft);
+
+  /* called to read (decode) a block of samples */
+  size_t (SOX_API*read)( /* Returns number of samples read, or 0 if unsuccessful */
+      LSX_PARAM_INOUT sox_format_t * ft,
+      LSX_PARAM_OUT_CAP_POST_COUNT(len,return) sox_sample_t *buf,
+      size_t len);
+
+  /* called to close reader (decoder); may be null if no closing necessary */
+  int (SOX_API*stopread)( /* Returns SOX_SUCCESS if successful */
+      LSX_PARAM_INOUT sox_format_t * ft);
+
+  /* called to initialize writer (encoder) */
+  int (SOX_API*startwrite)( /* Returns SOX_SUCCESS if successful */
+      LSX_PARAM_INOUT sox_format_t * ft);
+
+  /* called to write (encode) a block of samples */
+  size_t (SOX_API*write)( /* Returns number of samples written, or 0 if unsuccessful */
+      LSX_PARAM_INOUT sox_format_t * ft,
+      LSX_PARAM_IN_COUNT(len) const sox_sample_t *buf,
+      size_t len);
+
+  /* called to close writer (decoder); may be null if no closing necessary */
+  int (SOX_API*stopwrite)( /* Returns SOX_SUCCESS if successful */
+      LSX_PARAM_INOUT sox_format_t * ft);
+
+  /* called to reposition reader; may be null if not supported */
+  int (SOX_API*seek)( /* Returns SOX_SUCCESS if successful */
+      LSX_PARAM_INOUT sox_format_t * ft,
+      sox_uint64_t offset);
 
   /* Array of values indicating the encodings and precisions supported for
    * writing (encoding). Precisions specified with default precision first.
@@ -501,12 +768,38 @@ typedef struct sox_format_handler_t {
 /* File's metadata. Access via sox_..._comments functions. */
 typedef char * * sox_comments_t;
 
-size_t sox_num_comments(sox_comments_t comments); /* Returns the number of items in the metadata block. */
-void sox_append_comment(sox_comments_t * comments, char const * comment); /* Adds a "id=value" item to the metadata block. */
-void sox_append_comments(sox_comments_t * comments, char const * comment); /* Adds a newline-delimited list of "id=value" items to the metadata block. */
-sox_comments_t sox_copy_comments(sox_comments_t comments); /* Duplicates the metadata block. */
-void sox_delete_comments(sox_comments_t * comments); /* Frees the metadata block. */
-char const * sox_find_comment(sox_comments_t comments, char const * id); /* If "id=value" is found, return value, else return null. */
+/* Returns the number of items in the metadata block. */
+size_t
+SOX_API sox_num_comments(
+    LSX_PARAM_IN_OPT sox_comments_t comments); /* _In_opt_ */
+
+/* Adds an "id=value" item to the metadata block. */
+void
+SOX_API sox_append_comment(
+    LSX_PARAM_DEREF_PRE_MAYBENULL LSX_PARAM_DEREF_POST_NOTNULL sox_comments_t * comments, /* Metadata block pointer. */
+    LSX_PARAM_IN_Z char const * item); /* Item to be added. */
+
+/* Adds a newline-delimited list of "id=value" items to the metadata block. */
+void
+SOX_API sox_append_comments(
+    LSX_PARAM_DEREF_PRE_MAYBENULL LSX_PARAM_DEREF_POST_NOTNULL sox_comments_t * comments,  /* Metadata block pointer. */
+    LSX_PARAM_IN_Z char const * items); /* Newline-separated list of items to be added. */
+
+/* Duplicates the metadata block. */
+LSX_RETURN_OPT sox_comments_t /* Copied metadata block. */
+SOX_API sox_copy_comments(
+    LSX_PARAM_IN_OPT sox_comments_t comments); /* Metadata block to copy. */
+
+/* Frees the metadata block. */
+void
+SOX_API sox_delete_comments(
+    LSX_PARAM_DEREF_PRE_MAYBENULL LSX_PARAM_DEREF_POST_NULL sox_comments_t * comments);
+
+/* If "id=value" is found, return value, else return null. */
+char const * /* _Ret_opt_z_: Value if found, else null. */
+SOX_API sox_find_comment(
+    LSX_PARAM_IN_OPT sox_comments_t comments, /* Metadata block in which to search. */
+    LSX_PARAM_IN_Z char const * id); /* Id for which to search */
 
 #define SOX_MAX_NLOOPS           8
 
@@ -582,14 +875,24 @@ struct sox_format_t { /* Data passed to/from the format handler */
 #define SOX_FILE_LIT_END (SOX_FILE_ENDIAN | 0)                             /* File is little-endian */
 #define SOX_FILE_BIG_END (SOX_FILE_ENDIAN | SOX_FILE_ENDBIG)               /* File is big-endian */
 
-int sox_format_init(void);  /* Find & load format handler plugins. */
-void sox_format_quit(void); /* Unload format handler plugins. */
+/* Find & load format handler plugins. */
+int /* Returns SOX_SUCCESS if successful */
+SOX_API sox_format_init(void);
 
-int sox_init(void); /* Initialize effects library. */
-int sox_quit(void); /* Close effects library and unload format handler plugins. */
+/* Unload format handler plugins. */
+void
+SOX_API sox_format_quit(void);
+
+/* Initialize effects library. */
+int /* Returns SOX_SUCCESS if successful */
+SOX_API sox_init(void);
+
+/* Close effects library and unload format handler plugins. */
+int /* Returns SOX_SUCCESS if successful */
+sox_quit(void);
 
 /* callback to retrieve information about a format handler */
-typedef const sox_format_handler_t *(*sox_format_fn_t)(void);
+typedef const sox_format_handler_t *(SOX_API *sox_format_fn_t)(void);
 
 /* Information about a loaded format handler: name and function pointer */
 typedef struct sox_format_tab_t {
@@ -597,79 +900,106 @@ typedef struct sox_format_tab_t {
   sox_format_fn_t fn; /* Function to call to get format handler's information */
 } sox_format_tab_t;
 
-/* the table of format handler names and functions */
-extern sox_format_tab_t sox_format_fns[];
+/* Returns the table of format handler names and functions */
+LSX_RETURN_ARRAY LSX_RETURN_PURE sox_format_tab_t const *
+SOX_API sox_get_format_fns(void);
+
+#define sox_format_fns (sox_get_format_fns())
 
 /* Opens a decoding session for a file. Returned handle must be closed with sox_close(). */
-sox_format_t * sox_open_read(
-    char               const * path,      /* Path to file to be opened (required). */
-    sox_signalinfo_t   const * signal,    /* Information already known about audio stream, or NULL if none. */
-    sox_encodinginfo_t const * encoding,  /* Information already known about sample encoding, or NULL if none. */
-    char               const * filetype); /* Previously-determined file type, or NULL to auto-detect. */
+LSX_RETURN_OPT sox_format_t * /* Returns NULL on failure. */
+SOX_API sox_open_read(
+    LSX_PARAM_IN_Z   char               const * path,      /* Path to file to be opened (required). */
+    LSX_PARAM_IN_OPT sox_signalinfo_t   const * signal,    /* Information already known about audio stream, or NULL if none. */
+    LSX_PARAM_IN_OPT sox_encodinginfo_t const * encoding,  /* Information already known about sample encoding, or NULL if none. */
+    LSX_PARAM_IN_OPT_Z char             const * filetype); /* Previously-determined file type, or NULL to auto-detect. */
 
 /* Opens a decoding session for a memory buffer. Returned handle must be closed with sox_close(). */
-sox_format_t * sox_open_mem_read(
-    void                     * buffer,      /* Pointer to audio data buffer (required). */
-    size_t                     buffer_size, /* Number of bytes to read from audio data buffer. */
-    sox_signalinfo_t   const * signal,      /* Information already known about audio stream, or NULL if none. */
-    sox_encodinginfo_t const * encoding,    /* Information already known about sample encoding, or NULL if none. */
-    char               const * filetype);   /* Previously-determined file type, or NULL to auto-detect. */
+LSX_RETURN_OPT sox_format_t * /* Returns NULL on failure. */
+SOX_API sox_open_mem_read(
+    LSX_PARAM_IN_BYTECOUNT(buffer_size) void  * buffer,     /* Pointer to audio data buffer (required). */
+    size_t                                      buffer_size,/* Number of bytes to read from audio data buffer. */
+    LSX_PARAM_IN_OPT sox_signalinfo_t   const * signal,     /* Information already known about audio stream, or NULL if none. */
+    LSX_PARAM_IN_OPT sox_encodinginfo_t const * encoding,   /* Information already known about sample encoding, or NULL if none. */
+    LSX_PARAM_IN_OPT_Z char             const * filetype);  /* Previously-determined file type, or NULL to auto-detect. */
 
 /* Returns true if the format handler for the specified file type supports the specified encoding. */
-sox_bool sox_format_supports_encoding(
-    char               const * path,       /* Path to file to be examined (required if filetype is NULL). */
-    char               const * filetype,   /* Previously-determined file type, or NULL to use extension from path. */
-    sox_encodinginfo_t const * encoding);  /* Encoding for which format handler should be queried. */
+sox_bool
+SOX_API sox_format_supports_encoding(
+    LSX_PARAM_IN_OPT_Z char               const * path,       /* Path to file to be examined (required if filetype is NULL). */
+    LSX_PARAM_IN_OPT_Z char               const * filetype,   /* Previously-determined file type, or NULL to use extension from path. */
+    LSX_PARAM_IN       sox_encodinginfo_t const * encoding);  /* Encoding for which format handler should be queried. */
 
 /* Gets the format handler for a specified file type. */
-sox_format_handler_t const * sox_write_handler(
-    char               const * path,         /* Path to file (required if filetype is NULL). */
-    char               const * filetype,     /* Filetype for which handler is needed, or NULL to use extension from path. */
-    char               const * * filetype1); /* Receives the filetype that was detected. Pass NULL if not needed. */
+LSX_RETURN_OPT sox_format_handler_t const * /* Returns NULL on failure. */
+SOX_API sox_write_handler(
+    LSX_PARAM_IN_OPT_Z char               const * path,         /* Path to file (required if filetype is NULL). */
+    LSX_PARAM_IN_OPT_Z char               const * filetype,     /* Filetype for which handler is needed, or NULL to use extension from path. */
+    LSX_PARAM_OUT_OPT  char               const * * filetype1); /* Receives the filetype that was detected. Pass NULL if not needed. */
 
 /* Opens an encoding session for a file. Returned handle must be closed with sox_close(). */
-sox_format_t * sox_open_write(
-    char               const * path,     /* Path to file to be written (required). */
-    sox_signalinfo_t   const * signal,   /* Information about desired audio stream (required). */
-    sox_encodinginfo_t const * encoding, /* Information about desired sample encoding, or NULL to use defaults. */
-    char               const * filetype, /* Previously-determined file type, or NULL to auto-detect. */
-    sox_oob_t          const * oob,      /* Out-of-band data to add to file, or NULL if none. */
-    sox_bool           (*overwrite_permitted)(const char *filename)); /* Called if file exists to determine whether overwrite is ok. */
+LSX_RETURN_OPT sox_format_t * /* Returns NULL on failure. */
+SOX_API sox_open_write(
+    LSX_PARAM_IN_Z     char               const * path,     /* Path to file to be written (required). */
+    LSX_PARAM_IN       sox_signalinfo_t   const * signal,   /* Information about desired audio stream (required). */
+    LSX_PARAM_IN_OPT   sox_encodinginfo_t const * encoding, /* Information about desired sample encoding, or NULL to use defaults. */
+    LSX_PARAM_IN_OPT_Z char               const * filetype, /* Previously-determined file type, or NULL to auto-detect. */
+    LSX_PARAM_IN_OPT   sox_oob_t          const * oob,      /* Out-of-band data to add to file, or NULL if none. */
+    LSX_PARAM_IN_OPT   sox_bool           (SOX_API*overwrite_permitted)(LSX_PARAM_IN_Z const char *filename)); /* Called if file exists to determine whether overwrite is ok. */
 
 /* Opens an encoding session for a memory buffer. Returned handle must be closed with sox_close(). */
-sox_format_t * sox_open_mem_write(
-    void                     * buffer,      /* Pointer to audio data buffer that will receive data (required). */
-    size_t                     buffer_size, /* Maximum number of bytes to write to audio data buffer. */
-    sox_signalinfo_t   const * signal,      /* Information about desired audio stream (required). */
-    sox_encodinginfo_t const * encoding,    /* Information about desired sample encoding, or NULL to use defaults. */
-    char               const * filetype,    /* Previously-determined file type, or NULL to auto-detect. */
-    sox_oob_t          const * oob);        /* Out-of-band data to add to file, or NULL if none. */
+LSX_RETURN_OPT sox_format_t * /* Returns NULL on failure. */
+SOX_API sox_open_mem_write(
+    LSX_PARAM_OUT_BYTECAP(buffer_size) void                     * buffer,      /* Pointer to audio data buffer that receives data (required). */
+    LSX_PARAM_IN                       size_t                     buffer_size, /* Maximum number of bytes to write to audio data buffer. */
+    LSX_PARAM_IN                       sox_signalinfo_t   const * signal,      /* Information about desired audio stream (required). */
+    LSX_PARAM_IN_OPT                   sox_encodinginfo_t const * encoding,    /* Information about desired sample encoding, or NULL to use defaults. */
+    LSX_PARAM_IN_OPT_Z                 char               const * filetype,    /* Previously-determined file type, or NULL to auto-detect. */
+    LSX_PARAM_IN_OPT                   sox_oob_t          const * oob);        /* Out-of-band data to add to file, or NULL if none. */
 
 /* Opens an encoding session for a memstream buffer. Returned handle must be closed with sox_close(). */
-sox_format_t * sox_open_memstream_write(
-    char                     * * buffer_ptr,    /* Receives pointer to audio data buffer that receives data (required). */
-    size_t                   * buffer_size_ptr, /* Receives size of data written to audio data buffer (required). */
-    sox_signalinfo_t   const * signal,          /* Information about desired audio stream (required). */
-    sox_encodinginfo_t const * encoding,        /* Information about desired sample encoding, or NULL to use defaults. */
-    char               const * filetype,        /* Previously-determined file type, or NULL to auto-detect. */
-    sox_oob_t          const * oob);            /* Out-of-band data to add to file, or NULL if none. */
+LSX_RETURN_OPT sox_format_t * /* Returns NULL on failure. */
+SOX_API sox_open_memstream_write(
+    LSX_PARAM_OUT      char                     * * buffer_ptr,    /* Receives pointer to audio data buffer that receives data (required). */
+    LSX_PARAM_OUT      size_t                   * buffer_size_ptr, /* Receives size of data written to audio data buffer (required). */
+    LSX_PARAM_IN       sox_signalinfo_t   const * signal,          /* Information about desired audio stream (required). */
+    LSX_PARAM_IN_OPT   sox_encodinginfo_t const * encoding,        /* Information about desired sample encoding, or NULL to use defaults. */
+    LSX_PARAM_IN_OPT_Z char               const * filetype,        /* Previously-determined file type, or NULL to auto-detect. */
+    LSX_PARAM_IN_OPT   sox_oob_t          const * oob);            /* Out-of-band data to add to file, or NULL if none. */
 
 /* Reads samples from a decoding session into a sample buffer. Returns # of samples decoded, or 0 for EOF. */
-size_t sox_read(sox_format_t * ft, sox_sample_t *buf, size_t len);
+size_t
+SOX_API sox_read(
+    LSX_PARAM_INOUT sox_format_t * ft,
+    LSX_PARAM_OUT_CAP_POST_COUNT(len,return) sox_sample_t *buf,
+    size_t len);
 
 /* Writes samples to an encoding session from a sample buffer. Returns # of samples encoded. */
-size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, size_t len);
+size_t
+SOX_API sox_write(
+    LSX_PARAM_INOUT sox_format_t * ft,
+    LSX_PARAM_IN_COUNT(len) const sox_sample_t *buf,
+    size_t len);
 
 /* Closes an encoding or decoding session. */
-int sox_close(sox_format_t * ft);
+int /* Returns SOX_SUCCESS if successful */
+SOX_API sox_close(
+    LSX_PARAM_INOUT sox_format_t * ft);
 
 #define SOX_SEEK_SET 0
 
 /* Sets the location at which next samples will be decoded. Returns SOX_SUCCESS if successful. */
-int sox_seek(sox_format_t * ft, sox_uint64_t offset, int whence);
+int /* Returns SOX_SUCCESS if successful */
+SOX_API sox_seek(
+    LSX_PARAM_INOUT sox_format_t * ft,
+    sox_uint64_t offset,
+    int whence);
 
 /* Finds a format handler by name. */
-sox_format_handler_t const * sox_find_format(char const * name, sox_bool ignore_devices);
+LSX_RETURN_OPT sox_format_handler_t const *
+SOX_API sox_find_format(
+    LSX_PARAM_IN_Z char const * name,
+    sox_bool ignore_devices);
 
 /*
  * Structures for effects.
@@ -704,8 +1034,11 @@ typedef struct sox_effects_globals_t {
   sox_globals_t * global_info; /* Pointer to associated SoX globals */
 } sox_effects_globals_t;
 
-/* Global parameters for effects */
-extern sox_effects_globals_t sox_effects_globals;
+/* Returns global parameters for effects */
+LSX_RETURN_VALID LSX_RETURN_PURE sox_effects_globals_t *
+SOX_API sox_get_effects_globals(void);
+
+#define sox_effects_globals (*sox_get_effects_globals())
 
 /* Effect handler information */
 typedef struct sox_effect_handler_t {
@@ -713,14 +1046,39 @@ typedef struct sox_effect_handler_t {
   char const * usage; /* Short explanation of parameters accepted by effect */
   unsigned int flags; /* Combination of SOX_EFF_... flags */
 
-  int (*getopts)(sox_effect_t * effp, int argc, char *argv[]); /* Called to parse command-line arguments (called once per effect) */
-  int (*start)(sox_effect_t * effp);                           /* Called to initialize effect (called once per flow) */
-  int (*flow)(sox_effect_t * effp, const sox_sample_t *ibuf,
-      sox_sample_t *obuf, size_t *isamp, size_t *osamp);       /* Called to process samples */
-  int (*drain)(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp); /* Called to finish getting output after input is complete */
-  int (*stop)(sox_effect_t * effp);                            /* Called to shut down effect (called once per flow) */
-  int (*kill)(sox_effect_t * effp);                            /* Called to shut down effect (called once per effect) */
-  size_t       priv_size;                                      /* Size of private data SoX should pre-allocate for effect */
+  /* Called to parse command-line arguments (called once per effect) */
+  int (SOX_API*getopts)( /* Returns SOX_SUCCESS if successful */
+      LSX_PARAM_INOUT sox_effect_t * effp,
+      int argc,
+      LSX_PARAM_IN_COUNT(argc) char *argv[]);
+
+  /* Called to initialize effect (called once per flow) */
+  int (SOX_API*start)( /* Returns SOX_SUCCESS if successful */
+      LSX_PARAM_INOUT sox_effect_t * effp);
+
+  /* Called to process samples */
+  int (SOX_API*flow)( /* Returns SOX_SUCCESS if successful */
+      LSX_PARAM_INOUT sox_effect_t * effp,
+      LSX_PARAM_IN_COUNT(*isamp) const sox_sample_t *ibuf,
+      LSX_PARAM_OUT_CAP_POST_COUNT(*osamp,*osamp) sox_sample_t *obuf,
+      LSX_PARAM_INOUT size_t *isamp,
+      LSX_PARAM_INOUT size_t *osamp);
+
+  /* Called to finish getting output after input is complete */
+  int (SOX_API*drain)( /* Returns SOX_SUCCESS if successful */
+      LSX_PARAM_INOUT sox_effect_t * effp,
+      LSX_PARAM_OUT_CAP_POST_COUNT(*osamp,*osamp) sox_sample_t *obuf,
+      LSX_PARAM_INOUT size_t *osamp);
+
+  /* Called to shut down effect (called once per flow) */
+  int (SOX_API*stop)( /* Returns SOX_SUCCESS if successful */
+      LSX_PARAM_INOUT sox_effect_t * effp);
+
+  /* Called to shut down effect (called once per effect) */
+  int (SOX_API*kill)( /* Returns SOX_SUCCESS if successful */
+      LSX_PARAM_INOUT sox_effect_t * effp);
+
+  size_t       priv_size; /* Size of private data SoX should pre-allocate for effect */
 } sox_effect_handler_t;
 
 /* Effect information */
@@ -742,21 +1100,32 @@ struct sox_effect_t {
 };
 
 /* Finds the effect handler with the given name */
-sox_effect_handler_t const * sox_find_effect(char const * name);
+LSX_RETURN_OPT LSX_RETURN_PURE sox_effect_handler_t const * /* Returns NULL if unable to find the effect. */
+SOX_API sox_find_effect(
+    LSX_PARAM_IN_Z char const * name);
 
 /* Creates an effect using the given handler */
-sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh);
+LSX_RETURN_OPT sox_effect_t * /* Returns NULL if unable to create the effect. */
+SOX_API sox_create_effect(
+    LSX_PARAM_IN sox_effect_handler_t const * eh);
 
 /* Applies the command-line options to the effect. Returns the number of arguments consumed. */
-int sox_effect_options(sox_effect_t *effp, int argc, char * const argv[]);
+int
+SOX_API sox_effect_options(
+    LSX_PARAM_IN sox_effect_t *effp,
+    int argc,
+    LSX_PARAM_IN_COUNT(argc) char * const argv[]);
 
 /* Effects chain */
 
 /* Function that returns information about an effect handler */
-typedef const sox_effect_handler_t *(*sox_effect_fn_t)(void);
+typedef const sox_effect_handler_t * (SOX_API *sox_effect_fn_t)(void);
 
-/* Array of known effect handlers */
-extern sox_effect_fn_t sox_effect_fns[];
+/* Returns an array containing the known effect handlers */
+LSX_RETURN_VALID_Z LSX_RETURN_PURE sox_effect_fn_t const *
+SOX_API sox_get_effect_fns(void);
+
+#define sox_effect_fns (sox_get_effect_fns())
 
 /* Chain of effects to be applied to a stream */
 typedef struct sox_effects_chain_t {
@@ -770,38 +1139,66 @@ typedef struct sox_effects_chain_t {
 } sox_effects_chain_t;
 
 /* Initializes an effects chain. Returned handle must be closed with sox_delete_effects_chain(). */
-sox_effects_chain_t * sox_create_effects_chain(
-    sox_encodinginfo_t const * in_enc, sox_encodinginfo_t const * out_enc);
+LSX_RETURN_OPT sox_effects_chain_t *
+SOX_API sox_create_effects_chain(
+    LSX_PARAM_IN sox_encodinginfo_t const * in_enc,
+    LSX_PARAM_IN sox_encodinginfo_t const * out_enc);
 
 /* Closes an effects chain. */
-void sox_delete_effects_chain(sox_effects_chain_t *ecp);
+void
+SOX_API sox_delete_effects_chain(
+    LSX_PARAM_INOUT sox_effects_chain_t *ecp);
 
 /* Adds an effect to the effects chain, returns SOX_SUCCESS if successful. */
-int sox_add_effect( sox_effects_chain_t * chain, sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out);
+int /* Returns SOX_SUCCESS if successful */
+SOX_API sox_add_effect(
+    LSX_PARAM_INOUT sox_effects_chain_t * chain,
+    LSX_PARAM_INOUT sox_effect_t * effp,
+    LSX_PARAM_INOUT sox_signalinfo_t * in,
+    LSX_PARAM_IN    sox_signalinfo_t const * out);
 
 /* Runs the effects chain, returns SOX_SUCCESS if successful. */
-int sox_flow_effects(sox_effects_chain_t *, int (* callback)(sox_bool all_done, void * client_data), void * client_data);
+int /* Returns SOX_SUCCESS if successful */
+SOX_API sox_flow_effects(
+    LSX_PARAM_INOUT  sox_effects_chain_t *,
+    LSX_PARAM_IN     int (SOX_API * callback)(sox_bool all_done, void * client_data),
+    LSX_PARAM_IN_OPT void * client_data);
 
 /* Gets the number of clips that occurred while running an effects chain */
-size_t sox_effects_clips(sox_effects_chain_t *);
+size_t
+SOX_API sox_effects_clips(
+    LSX_PARAM_IN sox_effects_chain_t *);
 
 /* Shuts down an effect (calls stop on each of its flows) */
-size_t sox_stop_effect(sox_effect_t *effp);
+size_t
+SOX_API sox_stop_effect(
+    LSX_PARAM_INOUT_COUNT(effp->flows) sox_effect_t *effp);
 
 /* Adds an already-initialized effect to the end of the chain */
-void sox_push_effect_last(sox_effects_chain_t *chain, sox_effect_t *effp);
+void
+SOX_API sox_push_effect_last(
+    LSX_PARAM_INOUT sox_effects_chain_t *chain,
+    LSX_PARAM_INOUT sox_effect_t *effp);
 
 /* Removes and returns an effect from the end of the chain */
-sox_effect_t *sox_pop_effect_last(sox_effects_chain_t *chain);
+LSX_RETURN_OPT sox_effect_t *
+SOX_API sox_pop_effect_last(
+    LSX_PARAM_INOUT sox_effects_chain_t *chain);
 
 /* Shut down and delete an effect */
-void sox_delete_effect(sox_effect_t *effp);
+void
+SOX_API sox_delete_effect(
+    LSX_PARAM_INOUT_COUNT(effp->flows) sox_effect_t *effp);
 
 /* Shut down and delete the last effect in the chain */
-void sox_delete_effect_last(sox_effects_chain_t *chain);
+void
+SOX_API sox_delete_effect_last(
+    LSX_PARAM_INOUT sox_effects_chain_t *chain);
 
 /* Shut down and delete all effects in the chain */
-void sox_delete_effects(sox_effects_chain_t *chain);
+void
+SOX_API sox_delete_effects(
+    LSX_PARAM_INOUT sox_effects_chain_t *chain);
 
 /* The following routines are unique to the trim effect.
  * sox_trim_get_start can be used to find what is the start
@@ -812,25 +1209,45 @@ void sox_delete_effects(sox_effects_chain_t *chain);
  * wants to trim and use a sox_seek() operation instead.  After
  * sox_seek()'ing, you should set the trim option to 0.
  */
-sox_uint64_t sox_trim_get_start(sox_effect_t * effp);
-void sox_trim_clear_start(sox_effect_t * effp);
-sox_uint64_t sox_crop_get_start(sox_effect_t * effp);
-void sox_crop_clear_start(sox_effect_t * effp);
+sox_uint64_t
+SOX_API sox_trim_get_start(
+    LSX_PARAM_IN sox_effect_t * effp);
+void
+SOX_API sox_trim_clear_start(
+    LSX_PARAM_INOUT sox_effect_t * effp);
+sox_uint64_t
+SOX_API sox_crop_get_start(
+    LSX_PARAM_IN sox_effect_t * effp);
+void
+SOX_API sox_crop_clear_start(
+    LSX_PARAM_INOUT sox_effect_t * effp);
 
-typedef int (* sox_playlist_callback_t)(void *, char *);
+typedef int (SOX_API * sox_playlist_callback_t)(void * callback_data, LSX_PARAM_IN_Z char const * filename);
 
 /* Returns true if the specified file is a known playlist file type */
-sox_bool sox_is_playlist(char const * filename);
+sox_bool
+SOX_API sox_is_playlist(
+    LSX_PARAM_IN_Z char const * filename);
 
 /* Parses the specified playlist file */
-int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * const listname);
+int /* Returns SOX_SUCCESS if successful */
+SOX_API sox_parse_playlist(
+    LSX_PARAM_IN sox_playlist_callback_t callback,
+    void * p,
+    LSX_PARAM_IN char const * const listname);
 
 /* Converts a SoX error code into an error string. */
-char const * sox_strerror(int sox_errno);
+LSX_RETURN_VALID_Z LSX_RETURN_PURE char const *
+SOX_API sox_strerror(
+    int sox_errno);
 
 /* Gets the basename of the specified file, i.e. for "/a/b/c.d", gets "c".
  * Returns the number of characters written to base_buffer, excluding the null. */
-int sox_basename(char * base_buffer, size_t base_buffer_len, const char * filename);
+size_t
+SOX_API sox_basename(
+    LSX_PARAM_OUT_Z_CAP_POST_COUNT(base_buffer_len,return) char * base_buffer,
+    size_t base_buffer_len,
+    LSX_PARAM_IN_Z const char * filename);
 
 /* WARNING BEGIN
  *
@@ -838,15 +1255,31 @@ int sox_basename(char * base_buffer, size_t base_buffer_len, const char * filena
  * in public API because sox (the application) make use of them but
  * may not be supported and may change rapidly.
  */
-void lsx_fail(const char *, ...) LSX_PRINTF;
-void lsx_warn(const char *, ...) LSX_PRINTF;
-void lsx_report(const char *, ...) LSX_PRINTF;
-void lsx_debug(const char *, ...) LSX_PRINTF;
+void
+SOX_API lsx_fail_impl(
+    LSX_PARAM_IN_PRINTF const char *,
+    ...)
+    LSX_PRINTF12;
+void
+SOX_API lsx_warn_impl(
+    LSX_PARAM_IN_PRINTF const char *,
+    ...)
+    LSX_PRINTF12;
+void
+SOX_API lsx_report_impl(
+    LSX_PARAM_IN_PRINTF const char *,
+    ...)
+    LSX_PRINTF12;
+void
+SOX_API lsx_debug_impl(
+    LSX_PARAM_IN_PRINTF const char *,
+    ...)
+    LSX_PRINTF12;
 
-#define lsx_fail       sox_globals.subsystem=__FILE__,lsx_fail
-#define lsx_warn       sox_globals.subsystem=__FILE__,lsx_warn
-#define lsx_report     sox_globals.subsystem=__FILE__,lsx_report
-#define lsx_debug      sox_globals.subsystem=__FILE__,lsx_debug
+#define lsx_fail       sox_get_globals()->subsystem=__FILE__,lsx_fail_impl
+#define lsx_warn       sox_get_globals()->subsystem=__FILE__,lsx_warn_impl
+#define lsx_report     sox_get_globals()->subsystem=__FILE__,lsx_report_impl
+#define lsx_debug      sox_get_globals()->subsystem=__FILE__,lsx_debug_impl
 
 typedef struct lsx_enum_item {
     char const *text;
@@ -854,17 +1287,46 @@ typedef struct lsx_enum_item {
 } lsx_enum_item;
 #define LSX_ENUM_ITEM(prefix, item) {#item, prefix##item},
 
-lsx_enum_item const * lsx_find_enum_text(char const * text, lsx_enum_item const * lsx_enum_items, unsigned flags);
+LSX_RETURN_OPT LSX_RETURN_PURE lsx_enum_item const *
+SOX_API lsx_find_enum_text(
+    LSX_PARAM_IN_Z char const * text,
+    LSX_PARAM_IN lsx_enum_item const * lsx_enum_items,
+    unsigned flags);
 #define LSX_FET_CASE 1
-lsx_enum_item const * lsx_find_enum_value(unsigned value, lsx_enum_item const * lsx_enum_items);
-int lsx_enum_option(int c, lsx_enum_item const * items);
-sox_bool lsx_strends(char const * str, char const * end);
-char const * lsx_find_file_extension(char const * pathname);
-char const * lsx_sigfigs3(double number);
-char const * lsx_sigfigs3p(double percentage);
-void *lsx_realloc(void *ptr, size_t newsize);
-int lsx_strcasecmp(const char * s1, const char * s2);
-int lsx_strncasecmp(char const * s1, char const * s2, size_t n);
+LSX_RETURN_OPT LSX_RETURN_PURE lsx_enum_item const *
+SOX_API lsx_find_enum_value(
+    unsigned value,
+    LSX_PARAM_IN lsx_enum_item const * lsx_enum_items);
+int
+SOX_API LSX_RETURN_PURE lsx_enum_option(
+    int c,
+    LSX_PARAM_IN lsx_enum_item const * items);
+sox_bool
+SOX_API LSX_RETURN_PURE lsx_strends(
+    LSX_PARAM_IN_Z char const * str,
+    LSX_PARAM_IN_Z char const * end);
+LSX_RETURN_VALID_Z char const *
+SOX_API LSX_RETURN_PURE lsx_find_file_extension(
+    LSX_PARAM_IN_Z char const * pathname);
+LSX_RETURN_VALID_Z char const *
+SOX_API lsx_sigfigs3(
+    double number);
+LSX_RETURN_VALID_Z char const *
+SOX_API lsx_sigfigs3p(
+    double percentage);
+LSX_RETURN_OPT void *
+SOX_API lsx_realloc(
+    LSX_PARAM_IN_OPT void *ptr,
+    size_t newsize);
+int
+SOX_API LSX_RETURN_PURE lsx_strcasecmp(
+    LSX_PARAM_IN_Z const char * s1,
+    LSX_PARAM_IN_Z const char * s2);
+int
+SOX_API LSX_RETURN_PURE lsx_strncasecmp(
+    LSX_PARAM_IN_Z char const * s1,
+    LSX_PARAM_IN_Z char const * s2,
+    size_t n);
 
 /* WARNING END */
 

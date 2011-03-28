@@ -36,7 +36,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   priv_t * p = (priv_t *)effp->priv;
   char const * q;
   for (--argc, ++argv; argc && **argv == '-' && argv[0][1] &&
-      !isdigit(argv[0][1]) && argv[0][1] != '.'; --argc, ++argv)
+      !isdigit((unsigned char)argv[0][1]) && argv[0][1] != '.'; --argc, ++argv)
     for (q = &argv[0][1]; *q; ++q) switch (*q) {
       case 'n': p->do_scan = p->do_normalise = sox_true; break;
       case 'e': p->do_scan = p->do_equalise = sox_true; break;
