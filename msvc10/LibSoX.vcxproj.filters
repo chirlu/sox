@@ -106,9 +106,6 @@
     <ClInclude Include="..\src\raw.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\sgetopt.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\sox.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -589,9 +586,6 @@
       <Filter>Shared Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\src\getopt.c">
-      <Filter>Shared Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\getopt1.c">
       <Filter>Shared Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libsox.c">

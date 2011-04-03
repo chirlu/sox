@@ -20,7 +20,6 @@
 #endif
 
 #include "sox_i.h"
-#include "sgetopt.h"
 #include <assert.h>
 
 #undef RANQD1
@@ -329,20 +328,22 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
   int c;
+  lsx_getopt_t optstate;
+  lsx_getopt_init(argc, argv, "+aSsf:rt", NULL, lsx_getopt_flag_none, 1, &optstate);
 
-  while ((c = lsx_getopt(argc, argv, "+aSsf:""rt")) != -1) switch (c) {
+  while ((c = lsx_getopt(&optstate)) != -1) switch (c) {
     case 'a': p->auto_detect = sox_true; break;
     case 'S': p->alt_tpdf = sox_true; break;
     case 'r': case 't': break; /* No longer in use */
     case 's': p->filter_name = Shape_shibata; break;
     case 'f':
-      p->filter_name = lsx_enum_option(c, filter_names);
+      p->filter_name = lsx_enum_option(c, optstate.arg, filter_names);
       if (p->filter_name == INT_MAX)
         return SOX_EOF;
       break;
-    default: lsx_fail("invalid option `-%c'", optopt); return lsx_usage(effp);
+    default: lsx_fail("invalid option `-%c'", optstate.opt); return lsx_usage(effp);
   }
-  argc -= lsx_optind, argv += lsx_optind;
+  argc -= optstate.ind, argv += optstate.ind;
   do {NUMERIC_PARAMETER(dummy, 0.5, 1)} while (0); /* No longer in use */
   return argc? lsx_usage(effp) : SOX_SUCCESS;
 }

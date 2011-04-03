@@ -122,7 +122,6 @@
     <ClInclude Include="..\src\rate_poly_fir.h" />
     <ClInclude Include="..\src\rate_poly_fir0.h" />
     <ClInclude Include="..\src\raw.h" />
-    <ClInclude Include="..\src\sgetopt.h" />
     <ClInclude Include="..\src\sox.h" />
     <ClInclude Include="..\src\sox_i.h" />
     <ClInclude Include="..\src\sox_sample_test.h" />
@@ -333,7 +332,6 @@
     <ClCompile Include="..\src\g723_40.c" />
     <ClCompile Include="..\src\g72x.c" />
     <ClCompile Include="..\src\getopt.c" />
-    <ClCompile Include="..\src\getopt1.c" />
     <ClCompile Include="..\src\libsox.c" />
     <ClCompile Include="..\src\libsox_i.c" />
     <ClCompile Include="..\src\raw.c" />

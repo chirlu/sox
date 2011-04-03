@@ -17,7 +17,6 @@
 
 #include "sox_i.h"
 #include "dft_filter.h"
-#include "sgetopt.h"
 #include <string.h>
 
 typedef struct {
@@ -33,23 +32,25 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   dft_filter_priv_t * b = &p->base;
   char * parse_ptr = argv[0];
   int i = 0;
+  lsx_getopt_t optstate;
+  lsx_getopt_init(argc, argv, "+ra:b:p:MILt:n:", NULL, lsx_getopt_flag_none, 1, &optstate);
 
   b->filter_ptr = &b->filter;
   p->phase = 50;
   p->beta = -1;
   while (i < 2) {
     int c = 1;
-    while (c && (c = lsx_getopt(argc, argv, "+ra:b:p:MILt:n:")) != -1) switch (c) {
+    while (c && (c = lsx_getopt(&optstate)) != -1) switch (c) {
       char * parse_ptr2;
       case 'r': p->round = sox_true; break;
-      GETOPT_NUMERIC('a', att,  40 , 180)
-      GETOPT_NUMERIC('b', beta,  0 , 256)
-      GETOPT_NUMERIC('p', phase, 0, 100)
+      GETOPT_NUMERIC(optstate, 'a', att,  40 , 180)
+      GETOPT_NUMERIC(optstate, 'b', beta,  0 , 256)
+      GETOPT_NUMERIC(optstate, 'p', phase, 0, 100)
       case 'M': p->phase =  0; break;
       case 'I': p->phase = 25; break;
       case 'L': p->phase = 50; break;
-      GETOPT_NUMERIC('n', num_taps[1], 11, 32767)
-      case 't': p->tbw1 = lsx_parse_frequency(lsx_optarg, &parse_ptr2);
+      GETOPT_NUMERIC(optstate, 'n', num_taps[1], 11, 32767)
+      case 't': p->tbw1 = lsx_parse_frequency(optstate.arg, &parse_ptr2);
         if (p->tbw1 < 1 || *parse_ptr2) return lsx_usage(effp);
         break;
       default: c = 0;
@@ -58,14 +59,14 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
       return lsx_usage(effp);
     if (!i || !p->Fc1)
       p->tbw0 = p->tbw1, p->num_taps[0] = p->num_taps[1];
-    if (!i++ && lsx_optind < argc) {
-      if (*(parse_ptr = argv[lsx_optind++]) != '-')
+    if (!i++ && optstate.ind < argc) {
+      if (*(parse_ptr = argv[optstate.ind++]) != '-')
         p->Fc0 = lsx_parse_frequency(parse_ptr, &parse_ptr);
       if (*parse_ptr == '-')
         p->Fc1 = lsx_parse_frequency(parse_ptr + 1, &parse_ptr);
     }
   }
-  return lsx_optind != argc || p->Fc0 < 0 || p->Fc1 < 0 || *parse_ptr ?
+  return optstate.ind != argc || p->Fc0 < 0 || p->Fc1 < 0 || *parse_ptr ?
       lsx_usage(effp) : SOX_SUCCESS;
 }
 

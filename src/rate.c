@@ -25,7 +25,6 @@
 
 #include "sox_i.h"
 #include "fft4g.h"
-#include "sgetopt.h"
 #include "dft_filter.h"
 #include <assert.h>
 #include <string.h>
@@ -440,24 +439,26 @@ static int create(sox_effect_t * effp, int argc, char **argv)
   priv_t * p = (priv_t *) effp->priv;
   int c;
   char * dummy_p, * found_at, * opts = "+i:b:p:MILasqlmhv", * qopts = opts +12;
+  lsx_getopt_t optstate;
+  lsx_getopt_init(argc, argv, opts, NULL, lsx_getopt_flag_none, 1, &optstate);
 
   p->quality = -1;
   p->phase = 50;
   p->shared_ptr = &p->shared;
 
-  while ((c = lsx_getopt(argc, argv, opts)) != -1) switch (c) {
-    GETOPT_NUMERIC('i', coef_interp, 1 , 3)
-    GETOPT_NUMERIC('p', phase,  0 , 100)
-    GETOPT_NUMERIC('b', bandwidth,  100 - LSX_MAX_TBW3, 99.7)
+  while ((c = lsx_getopt(&optstate)) != -1) switch (c) {
+    GETOPT_NUMERIC(optstate, 'i', coef_interp, 1 , 3)
+    GETOPT_NUMERIC(optstate, 'p', phase,  0 , 100)
+    GETOPT_NUMERIC(optstate, 'b', bandwidth,  100 - LSX_MAX_TBW3, 99.7)
     case 'M': p->phase =  0; break;
     case 'I': p->phase = 25; break;
     case 'L': p->phase = 50; break;
     case 's': p->bandwidth = 99; break;
     case 'a': p->allow_aliasing = sox_true; break;
     default: if ((found_at = strchr(qopts, c))) p->quality = found_at - qopts;
-      else {lsx_fail("unknown option `-%c'", optopt); return lsx_usage(effp);}
+      else {lsx_fail("unknown option `-%c'", optstate.opt); return lsx_usage(effp);}
   }
-  argc -= lsx_optind, argv += lsx_optind;
+  argc -= optstate.ind, argv += optstate.ind;
 
   if ((unsigned)p->quality < 2 && (p->bandwidth || p->phase != 50 || p->allow_aliasing)) {
     lsx_fail("override options not allowed with this quality level");

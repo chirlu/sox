@@ -17,7 +17,6 @@
 
 #define LSX_EFF_ALIAS
 #include "sox_i.h"
-#include "sgetopt.h"
 #include <assert.h>
 #include <string.h>
 #ifdef HAVE_STRINGS_H
@@ -77,14 +76,12 @@ sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh)
 
 int sox_effect_options(sox_effect_t *effp, int argc, char * const argv[])
 {
-  int result, callers_optind = lsx_optind, callers_opterr = opterr;
+  int result;
 
   char * * argv2 = lsx_malloc((argc + 1) * sizeof(*argv2));
   argv2[0] = (char *)effp->handler.name;
   memcpy(argv2 + 1, argv, argc * sizeof(*argv2));
-  lsx_optind = 1, opterr = 0;
   result = effp->handler.getopts(effp, argc + 1, argv2);
-  lsx_optind = callers_optind, opterr = callers_opterr;
   free(argv2);
   return result;
 } /* sox_effect_options */

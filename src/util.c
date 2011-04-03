@@ -17,7 +17,6 @@
  */
 
 #include "sox_i.h"
-#include "sgetopt.h"
 #include <ctype.h>
 #include <stdio.h>
 
@@ -96,9 +95,9 @@ lsx_enum_item const * lsx_find_enum_value(unsigned value, lsx_enum_item const * 
   return NULL;
 }
 
-int lsx_enum_option(int c, lsx_enum_item const * items)
+int lsx_enum_option(int c, char const * arg, lsx_enum_item const * items)
 {
-  lsx_enum_item const * p = lsx_find_enum_text(lsx_optarg, items, sox_false);
+  lsx_enum_item const * p = lsx_find_enum_text(arg, items, sox_false);
   if (p == NULL) {
     size_t len = 1;
     char * set = lsx_malloc(len);
@@ -107,7 +106,7 @@ int lsx_enum_option(int c, lsx_enum_item const * items)
       set = lsx_realloc(set, len += 2 + strlen(p->text));
       strcat(set, ", "); strcat(set, p->text);
     }
-    lsx_fail("-%c: `%s' is not one of: %s.", c, lsx_optarg, set + 2);
+    lsx_fail("-%c: `%s' is not one of: %s.", c, arg, set + 2);
     free(set);
     return INT_MAX;
   }
