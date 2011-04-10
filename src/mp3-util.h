@@ -203,6 +203,7 @@ static size_t mp3_duration_ms(sox_format_t * ft)
       p->mad_timer_add(&time, mad_header.duration);
       consumed += mad_stream.next_frame - mad_stream.this_frame;
 
+      lsx_debug_more("bitrate=%lu", mad_header.bitrate);
       if (!frames) {
         initial_bitrate = mad_header.bitrate;
 
