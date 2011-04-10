@@ -1297,16 +1297,17 @@ LSX_RETURN_OPT LSX_RETURN_PURE lsx_enum_item const *
 SOX_API lsx_find_enum_value(
     unsigned value,
     LSX_PARAM_IN lsx_enum_item const * lsx_enum_items);
-int
-SOX_API LSX_RETURN_PURE lsx_enum_option(
+LSX_RETURN_PURE int
+SOX_API lsx_enum_option(
     int c,
+    LSX_PARAM_IN_Z char const * arg,
     LSX_PARAM_IN lsx_enum_item const * items);
-sox_bool
-SOX_API LSX_RETURN_PURE lsx_strends(
+LSX_RETURN_PURE sox_bool
+SOX_API lsx_strends(
     LSX_PARAM_IN_Z char const * str,
     LSX_PARAM_IN_Z char const * end);
-LSX_RETURN_VALID_Z char const *
-SOX_API LSX_RETURN_PURE lsx_find_file_extension(
+LSX_RETURN_VALID_Z LSX_RETURN_PURE char const *
+SOX_API lsx_find_file_extension(
     LSX_PARAM_IN_Z char const * pathname);
 LSX_RETURN_VALID_Z char const *
 SOX_API lsx_sigfigs3(
@@ -1318,15 +1319,69 @@ LSX_RETURN_OPT void *
 SOX_API lsx_realloc(
     LSX_PARAM_IN_OPT void *ptr,
     size_t newsize);
-int
-SOX_API LSX_RETURN_PURE lsx_strcasecmp(
+LSX_RETURN_PURE int
+SOX_API lsx_strcasecmp(
     LSX_PARAM_IN_Z const char * s1,
     LSX_PARAM_IN_Z const char * s2);
-int
-SOX_API LSX_RETURN_PURE lsx_strncasecmp(
+LSX_RETURN_PURE int
+SOX_API lsx_strncasecmp(
     LSX_PARAM_IN_Z char const * s1,
     LSX_PARAM_IN_Z char const * s2,
     size_t n);
+
+typedef enum lsx_option_arg_t {
+    lsx_option_arg_none,
+    lsx_option_arg_required,
+    lsx_option_arg_optional
+} lsx_option_arg_t;
+
+typedef struct lsx_option_t {
+    char const *     name;
+    lsx_option_arg_t has_arg;
+    int *            flag;
+    int              val;
+} lsx_option_t;
+
+typedef enum lsx_getopt_flags_t {
+    lsx_getopt_flag_none = 0,      /* no flags (no output, not long-only) */
+    lsx_getopt_flag_opterr = 1,    /* if set, invalid options trigger lsx_warn output */
+    lsx_getopt_flag_longonly = 2   /* if set, recognize accept -option as a long option */
+} lsx_getopt_flags_t;
+
+typedef struct lsx_getopt_t {
+    int                  argc;     /* IN    argc:      Number of arguments in argv */
+    char * const *       argv;     /* IN    argv:      Array of arguments */
+    char const *         shortopts;/* IN    shortopts: Short option characters */
+    lsx_option_t const * longopts; /* IN    longopts:  Array of long option descriptors */
+    lsx_getopt_flags_t   flags;    /* IN    flags:     Flags for longonly and opterr */
+    char const *         curpos;   /* INOUT curpos:    Maintains state between calls to lsx_getopt */
+    int                  ind;      /* INOUT optind:    Maintains the index of next element to be processed */
+    int                  opt;      /* OUT   optopt:    Receives the option character that caused error */
+    char const *         arg;      /* OUT   optarg:    Receives the value of the option's argument */
+    int                  lngind;   /* OUT   lngind:    Receives the index of the matched long option or -1 if not a long option */
+} lsx_getopt_t;
+
+/* Initializes an lsx_getopt_t structure for use with lsx_getopt. */
+void
+SOX_API lsx_getopt_init(
+    LSX_PARAM_IN             int argc,                      /* Number of arguments in argv */
+    LSX_PARAM_IN_COUNT(argc) char * const * argv,           /* Array of arguments */
+    LSX_PARAM_IN_Z           char const * shortopts,        /* Short options, i.e. ":abc:def::ghi" (+/- not supported) */
+    LSX_PARAM_IN_OPT         lsx_option_t const * longopts, /* Array of long option descriptors */
+    LSX_PARAM_IN             lsx_getopt_flags_t flags,      /* Flags for longonly and opterr */
+    LSX_PARAM_IN             int first,                     /* First argv to check (usually 1) */
+    LSX_PARAM_OUT            lsx_getopt_t * state);         /* State object to be initialized */
+
+/* Gets the next option. Options are parameters that start with "-" or "--".
+ * If no more options, returns -1. If unrecognized short option, returns '?'.
+ * If a recognized short option is missing a required argument,
+ * return (shortopts[0]==':' ? ':' : '?'). If successfully recognized short
+ * option, return the recognized character. If successfully recognized long
+ * option, returns (option.flag ? 0 : option.val).
+ * Note: lsx_getopt does not permute the non-option arguments. */
+int /* Returns option character (short), val or 0 (long), or -1 (no more) */
+SOX_API lsx_getopt(
+    LSX_PARAM_INOUT lsx_getopt_t * state);
 
 /* WARNING END */
 

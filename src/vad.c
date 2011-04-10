@@ -16,7 +16,6 @@
  */
 
 #include "sox_i.h"
-#include "sgetopt.h"
 #include <string.h>
 
 typedef struct {
@@ -41,8 +40,8 @@ typedef struct {                /* Configuration parameters: */
   chan_t    * channels;
 } priv_t;
 
-#define GETOPT_FREQ(c, name, min) \
-    case c: p->name = lsx_parse_frequency(lsx_optarg, &parseIndex); \
+#define GETOPT_FREQ(optstate, c, name, min) \
+    case c: p->name = lsx_parse_frequency(optstate.arg, &parseIndex); \
       if (p->name < min || *parseIndex) return lsx_usage(effp); \
       break;
 
@@ -51,6 +50,8 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   priv_t * p = (priv_t *)effp->priv;
   #define opt_str "+b:N:n:r:f:m:M:h:l:H:L:T:t:s:g:p:"
   int c;
+  lsx_getopt_t optstate;
+  lsx_getopt_init(argc, argv, opt_str, NULL, lsx_getopt_flag_none, 1, &optstate);
 
   p->bootTime        = .35;
   p->noiseTcUp       = .1;
@@ -72,27 +73,27 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   p->searchTime      = 1;
   p->gapTime         = .25;
 
-  while ((c = lsx_getopt(argc, argv, opt_str)) != -1) switch (c) {
+  while ((c = lsx_getopt(&optstate)) != -1) switch (c) {
     char * parseIndex;
-    GETOPT_NUMERIC('b', bootTime      ,  .1 , 10)
-    GETOPT_NUMERIC('N', noiseTcUp     ,  .1 , 10)
-    GETOPT_NUMERIC('n', noiseTcDown   ,.001 , .1)
-    GETOPT_NUMERIC('r', noiseReductionAmount,0 , 2)
-    GETOPT_NUMERIC('f', measureFreq   ,   5 , 50)
-    GETOPT_NUMERIC('m', measureDuration, .01 , 1)
-    GETOPT_NUMERIC('M', measureTc     ,  .1 , 1)
-    GETOPT_FREQ(   'h', hpFilterFreq  ,  10)
-    GETOPT_FREQ(   'l', lpFilterFreq  ,  1000)
-    GETOPT_FREQ(   'H', hpLifterFreq  ,  10)
-    GETOPT_FREQ(   'L', lpLifterFreq  ,  1000)
-    GETOPT_NUMERIC('T', triggerTc     , .01 , 1)
-    GETOPT_NUMERIC('t', triggerLevel  ,   0 , 20)
-    GETOPT_NUMERIC('s', searchTime    ,  .1 , 4)
-    GETOPT_NUMERIC('g', gapTime       ,  .1 , 1)
-    GETOPT_NUMERIC('p', preTriggerTime,   0 , 4)
-    default: lsx_fail("invalid option `-%c'", optopt); return lsx_usage(effp);
+    GETOPT_NUMERIC(optstate, 'b', bootTime      ,  .1 , 10)
+    GETOPT_NUMERIC(optstate, 'N', noiseTcUp     ,  .1 , 10)
+    GETOPT_NUMERIC(optstate, 'n', noiseTcDown   ,.001 , .1)
+    GETOPT_NUMERIC(optstate, 'r', noiseReductionAmount,0 , 2)
+    GETOPT_NUMERIC(optstate, 'f', measureFreq   ,   5 , 50)
+    GETOPT_NUMERIC(optstate, 'm', measureDuration, .01 , 1)
+    GETOPT_NUMERIC(optstate, 'M', measureTc     ,  .1 , 1)
+    GETOPT_FREQ(   optstate, 'h', hpFilterFreq  ,  10)
+    GETOPT_FREQ(   optstate, 'l', lpFilterFreq  ,  1000)
+    GETOPT_FREQ(   optstate, 'H', hpLifterFreq  ,  10)
+    GETOPT_FREQ(   optstate, 'L', lpLifterFreq  ,  1000)
+    GETOPT_NUMERIC(optstate, 'T', triggerTc     , .01 , 1)
+    GETOPT_NUMERIC(optstate, 't', triggerLevel  ,   0 , 20)
+    GETOPT_NUMERIC(optstate, 's', searchTime    ,  .1 , 4)
+    GETOPT_NUMERIC(optstate, 'g', gapTime       ,  .1 , 1)
+    GETOPT_NUMERIC(optstate, 'p', preTriggerTime,   0 , 4)
+    default: lsx_fail("invalid option `-%c'", optstate.opt); return lsx_usage(effp);
   }
-  return lsx_optind !=argc? lsx_usage(effp) : SOX_SUCCESS;
+  return optstate.ind !=argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static int start(sox_effect_t * effp)

@@ -57,7 +57,7 @@ add_library(lib${PROJECT_NAME}
   effects                 formats_i               libsox_i
   effects_i               ${formats_srcs}         ${optional_srcs}
   effects_i_dsp           getopt
-  ${effects_srcs}         getopt1                 util
+  ${effects_srcs}         util
   formats                 libsox                  xmalloc
 )
 add_executable(${PROJECT_NAME} ${PROJECT_NAME}.c)

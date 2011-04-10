@@ -4,7 +4,6 @@ sox_sample_test
 example?
 soxconfig.h.in
 soxconfig.h
-soxstdint.h
 .deps
 stamp-h1
 .libs

@@ -19,7 +19,6 @@
 
 #include "sox_i.h"
 #include "fifo.h"
-#include "sgetopt.h"
 #include <math.h>
 
 typedef struct {
@@ -216,16 +215,18 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   static const double overlaps_div[] = {6.833, 7,  2.5 , 2};
   static const double searches_div[] = {5.587, 6,  2.14, 2};
   int c;
+  lsx_getopt_t optstate;
+  lsx_getopt_init(argc, argv, "+qmls", NULL, lsx_getopt_flag_none, 1, &optstate);
 
   p->segment_ms = p->search_ms = p->overlap_ms = HUGE_VAL;
-  while ((c = lsx_getopt(argc, argv, "+qmls")) != -1) switch (c) {
+  while ((c = lsx_getopt(&optstate)) != -1) switch (c) {
     case 'q': p->quick_search  = sox_true;   break;
     case 'm': profile = Music; break;
     case 's': profile = Speech; break;
     case 'l': profile = Linear; p->search_ms = 0; break;
-    default: lsx_fail("unknown option `-%c'", optopt); return lsx_usage(effp);
+    default: lsx_fail("unknown option `-%c'", optstate.opt); return lsx_usage(effp);
   }
-  argc -= lsx_optind, argv += lsx_optind;
+  argc -= optstate.ind, argv += optstate.ind;
   do {                    /* break-able block */
     NUMERIC_PARAMETER(factor      ,0.1 , 100 )
     NUMERIC_PARAMETER(segment_ms  , 10 , 120)

@@ -590,7 +590,6 @@ AC_SUBST(PLAYRECLINKS)
 AM_CONDITIONAL(STATIC_LIBSOX_ONLY, test "$enable_shared" = "no" -a "$enable_static" = "yes")
 
 dnl Generate output files.
-AX_CREATE_STDINT_H(src/soxstdint.h)
 AC_CONFIG_FILES(Makefile src/Makefile libgsm/Makefile lpc10/Makefile msvc9/Makefile msvc10/Makefile sox.pc)
 AC_OUTPUT
 

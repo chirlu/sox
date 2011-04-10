@@ -16,7 +16,6 @@
  */
 
 #include "sox_i.h"
-#include "sgetopt.h"
 #include <ctype.h>
 #include <string.h>
 
@@ -34,19 +33,21 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *)effp->priv;
   int c;
+  lsx_getopt_t optstate;
+  lsx_getopt_init(argc, argv, "+x:b:w:s:", NULL, lsx_getopt_flag_none, 1, &optstate);
 
   p->time_constant = .05;
   p->scale = 1;
-  while ((c = lsx_getopt(argc, argv, "+x:b:w:s:")) != -1) switch (c) {
-    GETOPT_NUMERIC('x', hex_bits      ,  2 , 32)
-    GETOPT_NUMERIC('b', scale_bits    ,  2 , 32)
-    GETOPT_NUMERIC('w', time_constant ,  .01 , 10)
-    GETOPT_NUMERIC('s', scale         ,  -99, 99)
-    default: lsx_fail("invalid option `-%c'", optopt); return lsx_usage(effp);
+  while ((c = lsx_getopt(&optstate)) != -1) switch (c) {
+    GETOPT_NUMERIC(optstate, 'x', hex_bits      ,  2 , 32)
+    GETOPT_NUMERIC(optstate, 'b', scale_bits    ,  2 , 32)
+    GETOPT_NUMERIC(optstate, 'w', time_constant ,  .01 , 10)
+    GETOPT_NUMERIC(optstate, 's', scale         ,  -99, 99)
+    default: lsx_fail("invalid option `-%c'", optstate.opt); return lsx_usage(effp);
   }
   if (p->hex_bits)
     p->scale_bits = p->hex_bits;
-  return lsx_optind != argc? lsx_usage(effp) : SOX_SUCCESS;
+  return optstate.ind != argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static int start(sox_effect_t * effp)

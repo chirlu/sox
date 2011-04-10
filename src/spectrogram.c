@@ -21,7 +21,6 @@
 
 #include "sox_i.h"
 #include "fft4g.h"
-#include "sgetopt.h"
 #include <assert.h>
 #include <math.h>
 #ifdef HAVE_LIBPNG_PNG_H
@@ -96,21 +95,23 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   size_t duration;
   char const * next;
   int c;
+  lsx_getopt_t optstate;
+  lsx_getopt_init(argc, argv, "+S:d:x:X:y:Y:z:Z:q:p:W:w:st:c:AarmlhTo:", NULL, lsx_getopt_flag_none, 1, &optstate);
 
   p->dB_range = 120, p->spectrum_points = 249, p->perm = 1; /* Non-0 defaults */
   p->out_name = "spectrogram.png", p->comment = "Created by SoX";
 
-  while ((c = lsx_getopt(argc, argv, "+S:d:x:X:y:Y:z:Z:q:p:W:w:st:c:AarmlhTo:")) != -1) switch (c) {
-    GETOPT_NUMERIC('x', x_size0       , 100, 5000)
-    GETOPT_NUMERIC('X', pixels_per_sec,  1 , 5000)
-    GETOPT_NUMERIC('y', y_size        , 64 , 1200)
-    GETOPT_NUMERIC('Y', Y_size        , 130, MAX_FFT_SIZE / 2 + 2)
-    GETOPT_NUMERIC('z', dB_range      , 20 , 180)
-    GETOPT_NUMERIC('Z', gain          ,-100, 100)
-    GETOPT_NUMERIC('q', spectrum_points, 0 , p->spectrum_points)
-    GETOPT_NUMERIC('p', perm          ,  1 , 6)
-    GETOPT_NUMERIC('W', window_adjust , -10, 10)
-    case 'w': p->win_type = lsx_enum_option(c, window_options);   break;
+  while ((c = lsx_getopt(&optstate)) != -1) switch (c) {
+    GETOPT_NUMERIC(optstate, 'x', x_size0       , 100, 5000)
+    GETOPT_NUMERIC(optstate, 'X', pixels_per_sec,  1 , 5000)
+    GETOPT_NUMERIC(optstate, 'y', y_size        , 64 , 1200)
+    GETOPT_NUMERIC(optstate, 'Y', Y_size        , 130, MAX_FFT_SIZE / 2 + 2)
+    GETOPT_NUMERIC(optstate, 'z', dB_range      , 20 , 180)
+    GETOPT_NUMERIC(optstate, 'Z', gain          ,-100, 100)
+    GETOPT_NUMERIC(optstate, 'q', spectrum_points, 0 , p->spectrum_points)
+    GETOPT_NUMERIC(optstate, 'p', perm          ,  1 , 6)
+    GETOPT_NUMERIC(optstate, 'W', window_adjust , -10, 10)
+    case 'w': p->win_type = lsx_enum_option(c, optstate.arg, window_options);   break;
     case 's': p->slack_overlap    = sox_true;   break;
     case 'A': p->alt_palette      = sox_true;   break;
     case 'a': p->no_axes          = sox_true;   break;
@@ -119,16 +120,16 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     case 'l': p->light_background = sox_true;   break;
     case 'h': p->high_colour      = sox_true;   break;
     case 'T': p->truncate         = sox_true;   break;
-    case 't': p->title            = lsx_optarg; break;
-    case 'c': p->comment          = lsx_optarg; break;
-    case 'o': p->out_name         = lsx_optarg; break;
-    case 'S': next = lsx_parsesamples(1e5, lsx_optarg, &duration, 't');
+    case 't': p->title            = optstate.arg; break;
+    case 'c': p->comment          = optstate.arg; break;
+    case 'o': p->out_name         = optstate.arg; break;
+    case 'S': next = lsx_parsesamples(1e5, optstate.arg, &duration, 't');
       if (next && !*next) {p->start_time = duration * 1e-5; break;}
       return lsx_usage(effp);
-    case 'd': next = lsx_parsesamples(1e5, lsx_optarg, &duration, 't');
+    case 'd': next = lsx_parsesamples(1e5, optstate.arg, &duration, 't');
       if (next && !*next) {p->duration = duration * 1e-5; break;}
       return lsx_usage(effp);
-    default: lsx_fail("invalid option `-%c'", optopt); return lsx_usage(effp);
+    default: lsx_fail("invalid option `-%c'", optstate.opt); return lsx_usage(effp);
   }
   if (!!p->x_size0 + !!p->pixels_per_sec + !!p->duration > 2) {
     lsx_fail("only two of -x, -X, -d may be given");
@@ -144,7 +145,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   if (p->alt_palette)
     p->spectrum_points = min(p->spectrum_points, (int)alt_palette_len);
   p->shared_ptr = &p->shared;
-  return lsx_optind !=argc || p->win_type == INT_MAX? lsx_usage(effp) : SOX_SUCCESS;
+  return optstate.ind !=argc || p->win_type == INT_MAX? lsx_usage(effp) : SOX_SUCCESS;
 }
 
 static double make_window(priv_t * p, int end)
