@@ -187,7 +187,7 @@ You may have to give the word size and rate for the file. For example,
 this command will make a sound file with a data rate of 12,500 samples
 per second and the data formatted as 2-byte (16-bit) signed integers:
 
-	./sox monkey.voc -r 12500 -2 -s monkey.xxx
+	./sox monkey.wav -r 12500 -2 -s monkey.xxx
 
 If playback support was compiled in then it can be played like this:
 
