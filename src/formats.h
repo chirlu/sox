@@ -44,6 +44,7 @@
   FORMAT(s3)
   FORMAT(s4)
   FORMAT(sf)
+  FORMAT(sln)
   FORMAT(smp)
   FORMAT(sounder)
   FORMAT(soundtool)
