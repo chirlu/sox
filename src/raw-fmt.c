@@ -1,4 +1,4 @@
-/* libSoX file formats: raw         (c) 2007-8 SoX contributors
+/* libSoX file formats: raw         (c) 2007-11 SoX contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -36,6 +36,26 @@ LSX_FORMAT_HANDLER(raw)
     raw_start, lsx_rawread , NULL,
     raw_start, lsx_rawwrite, NULL,
     lsx_rawseek, encodings, NULL, 0
+  };
+  return &handler;
+}
+
+static int sln_start(sox_format_t * ft)
+{
+  return lsx_check_read_params(ft, 1, 8000., SOX_ENCODING_SIGN2, 16, (uint64_t)0, sox_false);
+}
+
+LSX_FORMAT_HANDLER(sln)
+{
+  static char const * const names[] = {"sln", NULL};
+  static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
+  static sox_rate_t const write_rates[] = {8000, 0};
+  static sox_format_handler_t handler = {SOX_LIB_VERSION_CODE,
+    "Asterisk PBX headerless format",
+    names, SOX_FILE_LIT_END|SOX_FILE_MONO,
+    sln_start, lsx_rawread, NULL,
+    NULL, lsx_rawwrite, NULL,
+    lsx_rawseek, write_encodings, write_rates, 0
   };
   return &handler;
 }
