@@ -170,6 +170,8 @@ static int stop(sox_effect_t * effp)
       priv_t * q = (priv_t *)(effp - effp->flow + i)->priv;
       min = min(min, q->min);
       max = max(max, q->max);
+      if (q->num_samples < q->tc_samples)
+        q->min_sigma_x2 = q->max_sigma_x2 = q->sigma_x2 / q->num_samples;
       min_sigma_x2 = min(min_sigma_x2, q->min_sigma_x2);
       max_sigma_x2 = max(max_sigma_x2, q->max_sigma_x2);
       sigma_x += q->sigma_x;
