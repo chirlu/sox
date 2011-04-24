@@ -106,6 +106,9 @@
 
 /*#define MORE_INTERACTIVE 1*/
 
+#define SOX_OPTS "SOX_OPTS"
+static lsx_getopt_t optstate;
+
 /* argv[0] options */
 
 static char const * myname = NULL;
@@ -131,7 +134,6 @@ static lsx_enum_item const rg_modes[] = {
   {0, 0}};
 static rg_mode replay_gain_mode = RG_default;
 static sox_option_t show_progress = SOX_OPTION_DEFAULT;
-#define SOX_OPTS "SOX_OPTS"
 
 
 /* Input & output files */
@@ -742,9 +744,9 @@ static sox_bool is_pseudo_effect(const char *s)
   return sox_false;
 } /* is_pseudo_effect */
 
-static void parse_effects(int * argi, int argc, char ** argv)
+static void parse_effects(int argc, char ** argv)
 {
-  while (*argi < argc) {
+  while (optstate.ind < argc) {
     unsigned eff_offset;
     int j;
     int newline_mode = 0;
@@ -756,7 +758,7 @@ static void parse_effects(int * argi, int argc, char ** argv)
     }
 
     /* psuedo-effect ":" is used to create a new effects chain */
-    if (strcmp(argv[*argi], ":") == 0)
+    if (strcmp(argv[optstate.ind], ":") == 0)
     {
       /* Only create a new chain if current one has effects.
        * Error checking will be done when loop is restarted.
@@ -766,15 +768,15 @@ static void parse_effects(int * argi, int argc, char ** argv)
         eff_chain_count++;
         add_eff_chain();
       }
-      (*argi)++;
+      optstate.ind++;
       continue;
     }
 
-    if (strcmp(argv[*argi], "newfile") == 0)
+    if (strcmp(argv[optstate.ind], "newfile") == 0)
     {
       /* Start a new effect chain for newfile if user doesn't
        * manually do it.  Restart loop without advancing
-       * argi to do error checking.
+       * optstate.ind to do error checking.
        */
       if (nuser_effects[eff_chain_count] != 0)
       {
@@ -784,11 +786,11 @@ static void parse_effects(int * argi, int argc, char ** argv)
       }
       newline_mode = 1;
     }
-    else if (strcmp(argv[*argi], "restart") == 0)
+    else if (strcmp(argv[optstate.ind], "restart") == 0)
     {
       /* Start a new effect chain for restart if user doesn't
        * manually do it.  Restart loop without advancing
-       * argi to do error checking.
+       * optstate.ind to do error checking.
        */
       if (nuser_effects[eff_chain_count] != 0)
       {
@@ -800,13 +802,13 @@ static void parse_effects(int * argi, int argc, char ** argv)
     }
 
     /* Name should always be correct! */
-    user_effargs[eff_chain_count][eff_offset].name = strdup(argv[(*argi)++]);
-    for (j = 0; j < argc - *argi && !sox_find_effect(argv[*argi + j]) &&
-         !is_pseudo_effect(argv[*argi + j]); ++j)
-      user_effargs[eff_chain_count][eff_offset].argv[j] = strdup(argv[*argi + j]);
+    user_effargs[eff_chain_count][eff_offset].name = strdup(argv[optstate.ind++]);
+    for (j = 0; j < argc - optstate.ind && !sox_find_effect(argv[optstate.ind + j]) &&
+         !is_pseudo_effect(argv[optstate.ind + j]); ++j)
+      user_effargs[eff_chain_count][eff_offset].argv[j] = strdup(argv[optstate.ind + j]);
     user_effargs[eff_chain_count][eff_offset].argc = j;
 
-    *argi += j; /* Skip past the effect arguments */
+    optstate.ind += j; /* Skip past the effect arguments */
     nuser_effects[eff_chain_count]++;
     if (newline_mode)
     {
@@ -877,8 +879,6 @@ static void read_user_effects(char const *filename)
       argv = strtoargv(s, &argc);
 
       if (argv) {
-        int argi;
-
         /* Make sure first option is an effect name. */
         if (!sox_find_effect(argv[0]) && !is_pseudo_effect(argv[0]))
         {
@@ -886,8 +886,12 @@ static void read_user_effects(char const *filename)
           exit(1);
         }
 
-        argi = 0;
-        parse_effects(&argi, argc, argv);
+        /* parse_effects normally parses options from command line.
+         * Reset opt index so it thinks its back at beginning of
+         * main()'s argv[].
+         */
+        optstate.ind = 0;
+        parse_effects(argc, argv);
 
         /* Advance to next effect but only if current chain has been
          * filled in.  This recovers from side affects of psuedo-effects.
@@ -2138,11 +2142,9 @@ static int enum_option(char const * arg, int option_index, lsx_enum_item const *
   return p->value;
 }
 
-static char parse_gopts_and_fopts(file_t * f, int * argi, int argc, char **argv)
+static char parse_gopts_and_fopts(file_t * f)
 {
-  lsx_getopt_t optstate;
   const sox_version_info_t* info = sox_version_info();
-  lsx_getopt_init(argc, argv, getoptstr, long_options, lsx_getopt_flag_opterr, *argi, &optstate);
   while (sox_true) {
     int c;
     int i; /* sscanf silently accepts negative numbers for %u :( */
@@ -2150,7 +2152,6 @@ static char parse_gopts_and_fopts(file_t * f, int * argi, int argc, char **argv)
 
     switch (c=lsx_getopt(&optstate)) {
     case -1:        /* @ one of: file-name, effect name, end of arg-list. */
-      *argi = optstate.ind;
       return '\0'; /* i.e. not device. */
 
     case 0:         /* Long options with no short equivalent. */
@@ -2240,7 +2241,7 @@ static char parse_gopts_and_fopts(file_t * f, int * argi, int argc, char **argv)
       break;
 
     case 'd': case 'n': case 'p':
-      *argi = optstate.ind;
+      optstate.ind = optstate.ind;
       return c;
 
     case 'h':
@@ -2466,7 +2467,7 @@ static void init_file(file_t * f)
   f->replay_gain = HUGE_VAL;
 }
 
-static void parse_options_and_filenames(int * argi, int argc, char **argv)
+static void parse_options_and_filenames(int argc, char **argv)
 {
   char const * env_opts = getenv(SOX_OPTS);
   file_t opts, opts_none;
@@ -2478,12 +2479,12 @@ static void parse_options_and_filenames(int * argi, int argc, char **argv)
   if (env_opts && *env_opts) {
     char * * argv2, * str = lsx_malloc(strlen(argv[0]) + strlen(env_opts) + 2);
     int argc2;
-    int argi2 = 1;
     strcpy(str, argv[0]);
     strcat(str, " ");
     strcat(str, env_opts);
     argv2 = strtoargv(str, &argc2);
-    if (parse_gopts_and_fopts(&opts, &argi2, argc2, argv2)) {
+    lsx_getopt_init(argc2, argv2, getoptstr, long_options, lsx_getopt_flag_opterr, 1, &optstate);
+    if (parse_gopts_and_fopts(&opts)) {
       lsx_fail("invalid option for "SOX_OPTS);
       exit(1);
     }
@@ -2491,8 +2492,9 @@ static void parse_options_and_filenames(int * argi, int argc, char **argv)
     free(argv2);
   }
 
-  for (; *argi < argc && !sox_find_effect(argv[*argi]); init_file(&opts)) {
-    char c = parse_gopts_and_fopts(&opts, argi, argc, argv);
+  lsx_getopt_init(argc, argv, getoptstr, long_options, lsx_getopt_flag_opterr, 1, &optstate);
+  for (; optstate.ind < argc && !sox_find_effect(argv[optstate.ind]); init_file(&opts)) {
+    char c = parse_gopts_and_fopts(&opts);
     if (c == 'n') { /* is null file? */
       if (opts.filetype != NULL && strcmp(opts.filetype, "null") != 0)
         lsx_warn("ignoring `-t %s'.", opts.filetype);
@@ -2507,11 +2509,11 @@ static void parse_options_and_filenames(int * argi, int argc, char **argv)
       opts.filetype = "sox";
       add_file(&opts, "-");
     }
-    else if (*argi >= argc || sox_find_effect(argv[*argi]))
+    else if (optstate.ind >= argc || sox_find_effect(argv[optstate.ind]))
       break;
-    else if (!sox_is_playlist(argv[*argi]))
-      add_glob_file(&opts, argv[(*argi)++]);
-    else if (sox_parse_playlist((sox_playlist_callback_t)add_file, &opts, argv[(*argi)++]) != SOX_SUCCESS)
+    else if (!sox_is_playlist(argv[optstate.ind]))
+      add_glob_file(&opts, argv[optstate.ind++]);
+    else if (sox_parse_playlist((sox_playlist_callback_t)add_file, &opts, argv[optstate.ind++]) != SOX_SUCCESS)
       exit(1);
   }
   if (env_opts && *env_opts) {
@@ -2594,17 +2596,16 @@ static void soxi_usage(int return_code)
   exit(return_code);
 }
 
-static int soxi(int * argi, int argc, char * const * argv)
+static int soxi(int argc, char * const * argv)
 {
   static char const opts[] = "trcsdDbBea?TV::";
   soxi_t type = Full;
   int opt, num_errors = 0;
   sox_bool do_total = sox_false;
-  lsx_getopt_t optstate;
 
-  if (argc - *argi < 1)
+  if (argc < 2)
     soxi_usage(0);
-  lsx_getopt_init(argc, argv, opts, NULL, lsx_getopt_flag_opterr, *argi, &optstate);
+  lsx_getopt_init(argc, argv, opts, NULL, lsx_getopt_flag_opterr, 1, &optstate);
   while ((opt = lsx_getopt(&optstate)) > 0) /* act only on last option */
     if (opt == 'V') {
       int i; /* sscanf silently accepts negative numbers for %u :( */
@@ -2700,7 +2701,6 @@ static char * check_dir(char * name)
 int main(int argc, char **argv)
 {
   size_t i;
-  int argi = 1;
 
   myname = argv[0];
   sox_globals.output_message_handler = output_message;
@@ -2714,7 +2714,7 @@ int main(int argc, char **argv)
 
   if (!sox_mode && argc > 1 &&
       (!strcmp(argv[1], "--i") || !strcmp(argv[1], "--info")))
-    ++argi, sox_mode = sox_soxi;
+    --argc, ++argv, sox_mode = sox_soxi;
 
   if (sox_init() != SOX_SUCCESS)
     exit(1);
@@ -2725,9 +2725,9 @@ int main(int argc, char **argv)
   atexit(cleanup);
 
   if (sox_mode == sox_soxi)
-    exit(soxi(&argi, argc, argv));
+    exit(soxi(argc, argv));
 
-  parse_options_and_filenames(&argi, argc, argv);
+  parse_options_and_filenames(argc, argv);
 
 #if defined(__CYGWIN__) || defined(__MINGW32__) 
   /* Workarounds for a couple of cygwin/mingw problems: */
@@ -2835,7 +2835,7 @@ int main(int argc, char **argv)
   init_eff_chains();
 
   /* Loop through the rest of the arguments looking for effects */
-  parse_effects(&argi, argc, argv);
+  parse_effects(argc, argv);
   if (eff_chain_count == 0 || nuser_effects[eff_chain_count] > 0)
   {
     eff_chain_count++;
