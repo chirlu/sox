@@ -1,6 +1,7 @@
 #!/bin/sh
 
 tmp=/tmp/`basename $0`-$$
+input=$tmp.wav # no comment support
 
 check_file () {
   ./sox --i -a $1 > $tmp.comments
@@ -21,7 +22,9 @@ com0="Processed by SoX"
 com1="foo bar"
 com2="bar foo"
 
-./sox monkey.au $tmp.au # Apply default comment
+./sox -n $input trim 0 .1
+
+./sox $input $tmp.au # Apply default comment
 check $tmp.au "$com0"
 
 cp $tmp.au $tmp.comment.au
@@ -33,19 +36,19 @@ ALBUM=A Collection Of Songs
 TRACKNUMBER=01
 .
 
-./sox monkey.au --comment-file $tmp.i $tmp.comments.au
+./sox $input --comment-file $tmp.i $tmp.comments.au
 check_file $tmp.comments.au $tmp.i
 
-./sox monkey.au --comment= $tmp.au # Don't apply default comment
+./sox $input --comment= $tmp.au # Don't apply default comment
 check $tmp.au
 
-./sox monkey.au --add-comment "$com1" $tmp.au
+./sox $input --add-comment "$com1" $tmp.au
 check $tmp.au "$com1"
 
 ./sox $tmp.comment.au --add-comment "$com1" $tmp.au
 check $tmp.au "$com0" "$com1"
 
-./sox monkey.au --add-comment "$com1" --add-comment "$com2" $tmp.au
+./sox $input --add-comment "$com1" --add-comment "$com2" $tmp.au
 check $tmp.au "$com1" "$com2"
 
 ./sox $tmp.comment.au --add-comment "$com1" --add-comment "$com2" $tmp.au
