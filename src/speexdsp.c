@@ -197,7 +197,7 @@ static int start(sox_effect_t* effp)
         goto Done;
     }
 
-    p->sps = speex_preprocess_state_init(p->buffer_end, effp->in_signal.rate);
+    p->sps = speex_preprocess_state_init((int)p->buffer_end, (int)(effp->in_signal.rate + .5));
     if (!p->sps)
     {
         lsx_fail("Failed to initialize preprocessor DSP.");
@@ -323,24 +323,27 @@ const sox_effect_handler_t* lsx_speexdsp_effect_fn(void)
    * the 6 functions, then the function above can be deleted
    * and NULL used in place of the its name below.
    */
-    static sox_effect_handler_t sox_speexdsp_effect = {
-        "speexdsp",
-        "Uses the Speex DSP library to improve perceived sound quality.\n"
-        "If no options are specified, the -agc and -denoise features are enabled.\n"
-        "Options:\n"
-        "-agc [target_level]    Enable automatic gain control, and optionally specify a\n"
-        "                       target volume level from 1-100 (default is 100).\n"
-        "-denoise [max_dB]      Enable noise reduction, and optionally specify the max\n"
-        "                       attenuation (default is 15).\n"
-        "-dereverb              Enable reverb reduction.\n"
-        "-fps frames_per_second Specify the number of frames per second from 1-100\n"
-        "                       (default is 20).\n"
-        "-spf samples_per_frame Specify the number of samples per frame. Default is to\n"
-        "                       use the -fps setting.",
-        SOX_EFF_PREC | SOX_EFF_GAIN | SOX_EFF_ALPHA,
-        getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
-    };
-  return &sox_speexdsp_effect;
+  static sox_effect_handler_t descriptor = {
+    "speexdsp", 0, SOX_EFF_PREC | SOX_EFF_GAIN | SOX_EFF_ALPHA,
+    getopts, start, flow, drain, stop, NULL, sizeof(priv_t)
+  };
+  static char const * lines[] = {
+    "Uses the Speex DSP library to improve perceived sound quality.",
+    "If no options are specified, the -agc and -denoise features are enabled.",
+    "Options:",
+    "-agc [target_level]    Enable automatic gain control, and optionally specify a",
+    "                       target volume level from 1-100 (default is 100).",
+    "-denoise [max_dB]      Enable noise reduction, and optionally specify the max",
+    "                       attenuation (default is 15).",
+    "-dereverb              Enable reverb reduction.",
+    "-fps frames_per_second Specify the number of frames per second from 1-100",
+    "                       (default is 20).",
+    "-spf samples_per_frame Specify the number of samples per frame. Default is to",
+    "                       use the -fps setting.",
+  };
+  static char * usage;
+  descriptor.usage = lsx_usage_lines(&usage, lines, array_length(lines));
+  return &descriptor;
 }
 
 #endif /* HAVE_SPEEXDSP */
