@@ -91,7 +91,7 @@ static int stream_component_open(priv_t * ffmpeg, int stream_index)
 
   if (!codec || avcodec_open(enc, codec) < 0)
     return -1;
-  if (enc->codec_type != CODEC_TYPE_AUDIO) {
+  if (enc->codec_type != AVMEDIA_TYPE_AUDIO) {
     lsx_fail("ffmpeg CODEC %x is not an audio CODEC", enc->codec_type);
     return -1;
   }
@@ -182,7 +182,7 @@ static int startread(sox_format_t * ft)
   /* Find audio stream (FIXME: allow different stream to be selected) */
   for (i = 0; (unsigned)i < ffmpeg->ctxt->nb_streams; i++) {
     AVCodecContext *enc = ffmpeg->ctxt->streams[i]->codec;
-    if (enc->codec_type == CODEC_TYPE_AUDIO && ffmpeg->audio_index < 0) {
+    if (enc->codec_type == AVMEDIA_TYPE_AUDIO && ffmpeg->audio_index < 0) {
       ffmpeg->audio_index = i;
       break;
     }
@@ -273,7 +273,7 @@ static AVStream *add_audio_stream(sox_format_t * ft, AVFormatContext *oc, enum C
 
   c = st->codec;
   c->codec_id = codec_id;
-  c->codec_type = CODEC_TYPE_AUDIO;
+  c->codec_type = AVMEDIA_TYPE_AUDIO;
 
   /* put sample parameters */
   c->bit_rate = 256000;  /* FIXME: allow specification */
@@ -423,7 +423,7 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
       av_init_packet(&pkt);
       pkt.size = avcodec_encode_audio(c, ffmpeg->audio_buf_aligned, AVCODEC_MAX_AUDIO_FRAME_SIZE, ffmpeg->samples);
       pkt.pts = av_rescale_q(c->coded_frame->pts, c->time_base, ffmpeg->audio_st->time_base);
-      pkt.flags |= PKT_FLAG_KEY;
+      pkt.flags |= AV_PKT_FLAG_KEY;
       pkt.stream_index = ffmpeg->audio_st->index;
       pkt.data = ffmpeg->audio_buf_aligned;
 
