@@ -3375,6 +3375,27 @@ audio sections as input files and the
 effect given with the position at which to perform the splice\*mthis is
 length of the first audio section (including the excess).
 .SP
+The following diagram uses the tape analogy to illustrate the splice
+operation.  The effect simulates the diagonal cuts and joins the two pieces:
+.EX
+
+      length1   excess
+    -----------><--->
+    _________   :   :  _________________
+             \\  :   : :\\     `         
+              \\ :   : : \\     `        
+               \\:   : :  \\     `       
+                *   : :   * - - *      
+                 \\  : :   :\\     `     
+                  \\ : :   : \\     `    
+    _______________\\: :   :  \\_____`____
+                      :   :   :     :
+                      <--->   <----->
+                      excess  leeway
+
+.EE
+where * indicates the joining points.
+.SP
 For example, a long song begins with two verses which start (as
 determined e.g. by using the
 .B play
