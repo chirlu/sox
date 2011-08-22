@@ -50,6 +50,13 @@
 #include <ctype.h>
 #include "ffmpeg.h"
 
+#ifndef CODEC_TYPE_AUDIO
+#define CODEC_TYPE_AUDIO AVMEDIA_TYPE_AUDIO
+#endif
+#ifndef PKT_FLAG_KEY
+#define PKT_FLAG_KEY AV_PKT_FLAG_KEY
+#endif
+
 /* Private data for ffmpeg files */
 typedef struct {
   int audio_index;
