@@ -16,6 +16,7 @@ Build-Depends: cdbs,
                libltdl3-dev,
                libmad0-dev,
                libmagic-dev,
+               libmp3lame-dev,
                libopencore-amrnb-dev,
                libopencore-amrwb-dev,
                libpng12-dev,
@@ -42,7 +43,7 @@ Description: Swiss army knife of sound processing
  SoX is able to handle formats like Ogg Vorbis, MP3, WAV, AIFF, VOC, SND, AU,
  GSM and several more.
  Any format support requires at least libsox-fmt-base. Some formats have their
- own package e.g. mp3 support is provided by libsox-fmt-mp3.
+ own package e.g. mp3 read and write support is provided by libsox-fmt-mp3.
  .
  SoX supports most common sound architectures i.e. Alsa, Libao, OSS and Pulse
  (respectively provided by libsox-fmt-alsa, libsox-fmt-ao, libsox-fmt-oss and
@@ -119,7 +120,7 @@ Description: SoX MP3 format library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX MP3 format library.
- Read support by libmad. Write support is available if libmp3lame is installed.
+ Read support by libmad. Write support by libmp3lame.
  .
  libmad: http://www.underbit.com/products/mad/
  lame: http://lame.sourceforge.net/
