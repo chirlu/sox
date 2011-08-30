@@ -1,10 +1,25 @@
-sox (14.3.2-1cvs1) UNRELEASED; urgency=low
+sox (14.3.2-2cvs1) UNRELEASED; urgency=low
 
   * CVS Version.
-  * [debian/control]:
-    - Minor change to sox description mentioning mp3 support.
+  * [debian/patches/01_transition_to_libav.patch]:
+    - Removed, fixed upstream.
 
- -- Pascal Giard <evilynux@gmail.com>  Fri, 04 Mar 2011 11:26:23 -0500
+ -- Pascal Giard <evilynux@gmail.com>  Mon, 22 Aug 2011 00:47:21 -0400
+
+sox (14.3.2-2) unstable; urgency=low
+
+  * Dynamically link against libmp3lame now that it's part of main
+    (closes: #627687).
+  * Preparing for transition from ffmpeg to libav (closes: #638206).
+  * [debian/rules]:
+    - Removed --enable-dl-lame, no longer needed.
+  * [debian/control]:
+    - Added Build-Dep on libmp3lame-dev.
+    - Updated libsox-fmt-mp3 to reflect the change.
+  * [debian/patches/01_transition_to_libav.patch]:
+    - Added support for libav while still supporting ffmpeg.
+
+ -- Pascal Giard <pascal@debian.org>  Sun, 21 Aug 2011 23:57:28 -0400
 
 sox (14.3.2-1) unstable; urgency=low
 

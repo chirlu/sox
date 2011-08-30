@@ -9,6 +9,6 @@ include /usr/share/cdbs/1/class/autotools.mk
 include /usr/share/cdbs/1/rules/simple-patchsys.mk
 
 CPPFLAGS += -I/usr/include/ffmpeg
-DEB_CONFIGURE_EXTRA_FLAGS := --enable-dl-lame --with-distro="$(shell dpkg-vendor --query vendor)" --with-dyn-default
+DEB_CONFIGURE_EXTRA_FLAGS := --with-distro="$(shell dpkg-vendor --query vendor)" --with-dyn-default
 # Takes care of postinst-has-useless-call-to-ldconfig for libsox-fmt-*
 DEB_DH_MAKESHLIBS_ARGS := -Xfmt
