@@ -3979,6 +3979,11 @@ sample counts is the number of samples with the letter `s' appended to
 it.  A value of 8000s for the \fIstart\fR parameter will wait until
 8000 samples are read before starting to process audio.
 .TP
+\fBupsample [\fIfactor\fR]
+Upsample the signal by an integer factor: \fIfactor\fR\-1 zero-value
+samples are inserted between each input sample.  Typically use is in
+combination with filtering effects.
+.TP
 \fBvad \fR[\fIoptions\fR]
 Voice Activity Detector.  Attempts to trim silence and quiet
 background sounds from the ends of (fairly high resolution

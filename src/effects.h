@@ -91,5 +91,6 @@
   EFFECT(treble)
   EFFECT(tremolo)
   EFFECT(trim)
+  EFFECT(upsample)
   EFFECT(vad)
   EFFECT(vol)
