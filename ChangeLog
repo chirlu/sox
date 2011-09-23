@@ -26,6 +26,13 @@ Effects:
     omp_set_num_threads. (Doug Cook)
   o Fix to effects pipeline to let fade affect specify time from end of
     file again. (cbagwell and Thor Andreassen)
+  o Fix man page default error for splice effect. (Ulrich Klauer)
+  o Enable support for -plot option on biquad effect. (Ulrich Klauer)
+
+Misc:
+
+  o Fixed man page description for unsigned samples and change
+    CVS to git references. (Ulrich Klauer)
 
 sox-14.3.2	2011-02-27
 ----------

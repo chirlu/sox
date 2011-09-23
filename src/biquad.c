@@ -152,7 +152,7 @@ sox_effect_handler_t const * lsx_biquad_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "biquad", "b0 b1 b2 a0 a1 a2", 0,
-    create, start, lsx_biquad_flow, NULL, NULL, NULL, sizeof(priv_t)
+    create, lsx_biquad_start, lsx_biquad_flow, NULL, NULL, NULL, sizeof(priv_t)
   };
   return &handler;
 }
