@@ -28,6 +28,7 @@ Effects:
     file again. (cbagwell and Thor Andreassen)
   o Fix man page default error for splice effect. (Ulrich Klauer)
   o Enable support for -plot option on biquad effect. (Ulrich Klauer)
+  o Effect chain can now be unlimitted in length. (Ulrich Klauer)
 
 Misc:
 

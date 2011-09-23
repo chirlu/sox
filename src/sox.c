@@ -167,19 +167,17 @@ static size_t output_count = 0;
  * the real effects chain.  This allows scanning all effects to give
  * hints to what input effect options should be as well as determining
  * when mixer or resample effects need to be auto-inserted as well.
- *
- * User effects table must be 4 entries smaller then the real
- * effects table.  This is because at most we will need to add
- * the input effect, an optional resample effect, an optional mixer
- * effect, and the output effect.
  */
-#define MAX_USER_EFF 16
-static sox_effect_t *user_efftab[MAX_USER_EFF];
+static sox_effect_t **user_efftab = NULL;
+static size_t user_efftab_size = 0;
 static sox_effects_chain_t *effects_chain = NULL;
 static sox_effect_t *save_output_eff = NULL;
 
-static struct { char *name; int argc; char *argv[FILENAME_MAX]; } (*user_effargs)[MAX_USER_EFF] = NULL;
-static unsigned *nuser_effects = NULL;
+static struct { char *name; int argc; char *argv[FILENAME_MAX]; } **user_effargs = NULL;
+static size_t *user_effargs_size = NULL;  /* array: size of user_effargs for each chain */
+/* user_effargs[i] size to be extended in steps of USER_EFFARGS_STEP */
+#define USER_EFFARGS_STEP 8
+static unsigned *nuser_effects = NULL;  /* array: number of effects in each chain */
 static int current_eff_chain = 0;
 static int eff_chain_count = 0;
 static char *effects_filename = NULL;
@@ -244,6 +242,8 @@ static void cleanup(void)
   if (interactive)
     tcsetattr(fileno(stdin), TCSANOW, &original_termios);
 #endif
+
+  free(user_efftab);
 
   sox_quit();
 }
@@ -687,7 +687,11 @@ static void auto_effect(sox_effects_chain_t *chain, char const *name, int argc,
 
 static void init_eff_chains(void)
 {
-  user_effargs = lsx_malloc(sizeof(user_effargs[0][0]) * MAX_USER_EFF);
+  user_effargs = lsx_malloc(sizeof(*user_effargs));
+  user_effargs[0] = lsx_malloc(sizeof(**user_effargs));
+
+  user_effargs_size = lsx_malloc(sizeof(*user_effargs_size));
+  user_effargs_size[0] = 0;
   nuser_effects = lsx_malloc(sizeof(*nuser_effects));
   nuser_effects[0] = 0;
 } /* init_eff_chains */
@@ -698,10 +702,12 @@ static void init_eff_chains(void)
  */
 static void add_eff_chain(void)
 {
-  user_effargs = lsx_realloc(user_effargs, (eff_chain_count+1) *
-                             sizeof(user_effargs[0][0]) * MAX_USER_EFF);
-  nuser_effects = lsx_realloc(nuser_effects, (eff_chain_count+1) *
-                              sizeof(*nuser_effects));
+  lsx_revalloc(user_effargs, eff_chain_count+1);
+  user_effargs[eff_chain_count] = lsx_malloc(sizeof(**user_effargs));
+
+  lsx_revalloc(user_effargs_size, eff_chain_count+1);
+  user_effargs_size[eff_chain_count] = 0;
+  lsx_revalloc(nuser_effects, eff_chain_count+1);
   nuser_effects[eff_chain_count] = 0;
 } /* add_eff_chain */
 
@@ -726,10 +732,13 @@ static void delete_eff_chains(void)
       user_effargs[i][j].argc = 0;
     }
     nuser_effects[i] = 0;
+    free(user_effargs[i]);
   }
   free(user_effargs);
+  free(user_effargs_size);
   free(nuser_effects);
   user_effargs = NULL;
+  user_effargs_size = NULL;
   nuser_effects = NULL;
   eff_chain_count = 0;
 } /* delete_eff_chains */
@@ -752,12 +761,12 @@ static void parse_effects(int argc, char ** argv)
     int newline_mode = 0;
 
     eff_offset = nuser_effects[eff_chain_count];
-    if (eff_offset >= MAX_USER_EFF) {
-      lsx_fail("too many effects specified (at most %i allowed)", MAX_USER_EFF);
-      exit(1);
+    if (eff_offset == user_effargs_size[eff_chain_count]) {
+      user_effargs_size[eff_chain_count] += USER_EFFARGS_STEP;
+      lsx_revalloc(user_effargs[eff_chain_count], user_effargs_size[eff_chain_count]);
     }
 
-    /* psuedo-effect ":" is used to create a new effects chain */
+    /* pseudo-effect ":" is used to create a new effects chain */
     if (strcmp(argv[optstate.ind], ":") == 0)
     {
       /* Only create a new chain if current one has effects.
@@ -923,8 +932,15 @@ static void create_user_effects(void)
 {
   unsigned i;
   sox_effect_t *effp;
+  size_t num_effects = nuser_effects[current_eff_chain];
 
-  for (i = 0; i < nuser_effects[current_eff_chain]; i++) {
+  /* extend user_efftab, if needed */
+  if (user_efftab_size < num_effects) {
+    user_efftab_size = num_effects;
+    lsx_revalloc(user_efftab, num_effects);
+  }
+
+  for (i = 0; i < num_effects; i++) {
     effp = sox_create_effect(sox_find_effect(user_effargs[current_eff_chain][i].name));
 
     if (effp->handler.flags & SOX_EFF_DEPRECATED)
