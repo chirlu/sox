@@ -11,6 +11,12 @@ File formats:
 
   o Mention in man pages that WAV files support floating point encodings.
 
+Audio device drivers:
+
+  o Give pulseaudio driver higher priority than alsa or oss now that
+    its proven stable and gives user more features; such as per app
+    volume control. (cbagwell)
+
 Effects:
 
   o Improvements to man pages for tempo effect.  Really made in 14.3.2.
