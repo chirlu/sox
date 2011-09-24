@@ -812,7 +812,7 @@ See \fBInput File Combining\fR above for a description of the different
 combining methods.
 .TP
 \fB\-D\fR, \fB\-\-no\-dither\fR
-Disable automatic dither\*msee `Dither' above.  An example of why this
+Disable automatic dither\*msee `Dithering' above.  An example of why this
 might occasionally be useful is if a file has been converted from 16 to
 24 bit with the intention of doing some processing on it, but in fact
 no processing is needed after all and the original 16 bit file has
@@ -1923,7 +1923,7 @@ and this plays a guitar chord:
 	delay 0 .05 .1 .15 .2 .25 remix \- fade 0 4 .1 norm \-1
 .EE
 .TP
-\fBdither\fR [\fB\-a\fR] [\fB\-S\fR\^|\^\fB\-s\fR\^|\^\fB\-f \fIfilter\fR]
+\fBdither\fR [\fB\-S\fR\^|\^\fB\-s\fR\^|\^\fB\-f \fIfilter\fR] [\fB\-a\fR] [\fB\-p \fIprecision\fR]
 Apply dithering to the audio.
 Dithering deliberately adds a small amount of noise to the signal in
 order to mask audible quantization effects that can occur if the output
@@ -1964,6 +1964,10 @@ file, or use
 .BR fade ,
 and concatencate.
 .SP
+The
+.B \-p
+option allows overriding the target precision.
+.SP
 If the SoX global option
 .B \-R
 option is not given, then the pseudo-random number generator used to
@@ -1973,7 +1977,7 @@ will be different between invocations.
 This effect should not be followed by any other effect that
 affects the audio.
 .SP
-See also the `Dither' section above.
+See also the `Dithering' section above.
 .TP
 \fBearwax\fR
 Makes audio easier to listen to on headphones.
