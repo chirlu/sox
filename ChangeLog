@@ -7,6 +7,13 @@ sox-11gamma, followed by a list of prior authors and features.
 sox-14.4.0	20xx-xx-xx
 ----------
 
+Previously deprecated features that have been removed in this release:
+
+  Deprec-  Feature    [O(ption)]
+  ated in  [F(ormat)] [E(ffect)]   Replacement
+  -------  ----------------------  ----------------------
+  14.3.0   O --interactive         --no-clobber
+
 File formats:
 
   o Mention in man pages that WAV files support floating point encodings.

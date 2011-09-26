@@ -203,6 +203,7 @@ static sox_sample_t omax[2], omin[2];
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
 static struct termios original_termios;
+static sox_bool original_termios_saved = sox_false;
 #endif
 
 static sox_bool stdin_is_a_tty, is_player, is_guarded, do_guarded_norm, no_dither, reported_sox_opts;
@@ -239,7 +240,7 @@ static void cleanup(void)
   }
 
 #ifdef HAVE_TERMIOS_H
-  if (interactive)
+  if (original_termios_saved)
     tcsetattr(fileno(stdin), TCSANOW, &original_termios);
 #endif
 
@@ -1666,18 +1667,31 @@ static int process(void)
   optimize_trim();
 
 #if defined(HAVE_TERMIOS_H) || defined(HAVE_CONIO_H)
-  /* so we can be fully interactive. */
-  if (show_progress && !interactive && is_player && stdin_is_a_tty) {
+  if (stdin_is_a_tty) {
+    if (show_progress && is_player && !interactive) {
+      lsx_debug("automatically entering interactive mode");
+      interactive = sox_true;
+    }
+  } else if (interactive) {
+    /* User called for interactive mode, but ... */
+    lsx_warn("Standard input has to be a terminal for interactive mode");
+    interactive = sox_false;
+  }
+#endif
 #ifdef HAVE_TERMIOS_H
+  /* Prepare terminal for interactive mode and save the original termios
+     settings. Do this only once, otherwise the "original" settings won't
+     be original anymore after a second call to process() (next/restarted
+     effects chain). */
+  if (interactive && !original_termios_saved) {
     struct termios modified_termios;
 
+    original_termios_saved = sox_true;
     tcgetattr(fileno(stdin), &original_termios);
     modified_termios = original_termios;
     modified_termios.c_lflag &= ~(ICANON | ECHO);
     modified_termios.c_cc[VMIN] = modified_termios.c_cc[VTIME] = 0;
     tcsetattr(fileno(stdin), TCSANOW, &modified_termios);
-#endif
-    interactive = sox_true;
   }
 #endif
 
@@ -2229,7 +2243,13 @@ static char parse_gopts_and_fopts(file_t * f)
         sox_globals.input_bufsiz = i;
         break;
 
-      case 7: no_clobber = sox_true; break;
+      case 7:
+#if defined(HAVE_TERMIOS_H) || defined(HAVE_CONIO_H)
+        interactive = sox_true; break;
+#else
+        lsx_fail("Interactive mode has not been enabled at compile time.");
+        exit(1); break;
+#endif
       case 8: usage_effect(optstate.arg); break;
       case 9: usage_format(optstate.arg); break;
       case 10: f->no_glob = sox_true; break;
