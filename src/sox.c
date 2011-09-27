@@ -564,13 +564,15 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, size_t * osam
             *p++ = (ws < z->ilen[i]) * z->ibuf[i][ws * files[i]->ft->signal.channels + s];
       } /* sox_merge */
     } /* wide samples */
-    current_input += input_count;
   } /* is_parallel */
   read_wide_samples += olen;
   olen *= effp->in_signal.channels;
   *osamp = olen;
 
   input_eof = olen ? sox_false : sox_true;
+
+  if (input_eof && is_parallel(combine_method))
+    current_input += input_count;
 
   return olen? SOX_SUCCESS : SOX_EOF;
 }
