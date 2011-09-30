@@ -150,7 +150,7 @@ static int setup(sox_format_t *ft, int is_input)
 	  if (status == noErr)
 	  {
 	      int i;
-	      for (i = 0; i < property_size/sizeof(AudioDeviceID); i++)
+	      for (i = 0; i < device_count; i++)
 	      {
 		  char name[256];
 		  status = AudioDeviceGetProperty(devices[i],0,false,kAudioDevicePropertyDeviceName,&property_size,&name);
