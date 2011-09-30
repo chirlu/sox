@@ -181,7 +181,7 @@ static int lsx_kill(sox_effect_t * effp)
     return (SOX_SUCCESS);
 }
 
-uint64_t sox_trim_get_start(sox_effect_t * effp)
+sox_uint64_t sox_trim_get_start(sox_effect_t * effp)
 {
     priv_t * trim = (priv_t *)effp->priv;
     return trim->start;

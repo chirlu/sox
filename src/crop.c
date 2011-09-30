@@ -144,7 +144,7 @@ sox_effect_handler_t const * lsx_crop_effect_fn(void)
   return &handler;
 }
 
-uint64_t sox_crop_get_start(sox_effect_t * effp)
+sox_uint64_t sox_crop_get_start(sox_effect_t * effp)
 {
   return ((priv_t *)effp->priv)->pos[0].at;
 }

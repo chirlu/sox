@@ -1008,7 +1008,7 @@ int sox_close(sox_format_t * ft)
   return result;
 }
 
-int sox_seek(sox_format_t * ft, uint64_t offset, int whence)
+int sox_seek(sox_format_t * ft, sox_uint64_t offset, int whence)
 {
     /* FIXME: Implement SOX_SEEK_CUR and SOX_SEEK_END. */
     if (whence != SOX_SEEK_SET)
