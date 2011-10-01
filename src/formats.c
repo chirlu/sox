@@ -771,7 +771,7 @@ static void set_output_format(sox_format_t * ft)
       ft->encoding.bits_per_sample = max_p_s;
     }
   }
-  ft->signal.precision = min(ft->signal.precision, sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample));
+  ft->signal.precision = sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample);
   #undef enc_arg
 }
 
