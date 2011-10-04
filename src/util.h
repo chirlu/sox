@@ -106,6 +106,7 @@
 #define open _open
 #define pclose _pclose
 #define popen _popen
+#define POPEN_MODE "rb"
 #define setmode _setmode
 #define snprintf _snprintf
 

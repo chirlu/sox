@@ -44,6 +44,7 @@ Misc:
 
   o Fixed man page description for unsigned samples and change
     CVS to git references. (Ulrich Klauer)
+  o When using pipes (-p) on Windows, set file mode to binary. (cbagwell)
 
 sox-14.3.2	2011-02-27
 ----------

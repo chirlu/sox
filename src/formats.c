@@ -372,7 +372,10 @@ static FILE * xfopen(char const * identifier, char const * mode, lsx_io_type * i
   if (*identifier == '|') {
     FILE * f = NULL;
 #ifdef HAVE_POPEN
-    f = popen(identifier + 1, "r");
+#ifndef POPEN_MODE
+#define POPEN_MODE "r"
+#endif
+    f = popen(identifier + 1, POPEN_MODE);
     *io_type = lsx_io_pipe;
 #else
     lsx_fail("this build of SoX cannot open pipes");
@@ -385,7 +388,7 @@ static FILE * xfopen(char const * identifier, char const * mode, lsx_io_type * i
     char const * const command_format = "wget --no-check-certificate -q -O- \"%s\"";
     char * command = lsx_malloc(strlen(command_format) + strlen(identifier));
     sprintf(command, command_format, identifier);
-    f = popen(command, "r");
+    f = popen(command, POPEN_MODE);
     free(command);
     *io_type = lsx_io_url;
 #else
