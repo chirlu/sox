@@ -41,6 +41,7 @@ int lsx_aiffstartread(sox_format_t * ft)
   uint32_t totalsize;
   uint32_t chunksize;
   unsigned short channels = 0;
+  sox_encoding_t enc = SOX_ENCODING_SIGN2;
   uint32_t frames;
   unsigned short bits = 0;
   double rate = 0.0;
@@ -111,10 +112,28 @@ int lsx_aiffstartread(sox_format_t * ft)
           /* Need to endian swap all the data */
           is_sowt = 1;
         }
+        else if (strncmp(buf, "fl32", (size_t)4) == 0 ||
+            strncmp(buf, "FL32", (size_t)4) == 0) {
+          enc = SOX_ENCODING_FLOAT;
+          if (bits != 32) {
+            lsx_fail_errno(ft, SOX_EHDR,
+              "Sample size of %u is not consistent with `fl32' compression type", bits);
+            return SOX_EOF;
+          }
+        }
+        else if (strncmp(buf, "fl64", (size_t)4) == 0 ||
+            strncmp(buf, "FL64", (size_t)4) == 0) {
+          enc = SOX_ENCODING_FLOAT;
+          if (bits != 64) {
+            lsx_fail_errno(ft, SOX_EHDR,
+              "Sample size of %u is not consistent with `fl64' compression type", bits);
+            return SOX_EOF;
+          }
+        }
         else if (strncmp(buf, "NONE", (size_t)4) != 0 &&
             strncmp(buf, "twos", (size_t)4) != 0) {
           buf[4] = 0;
-          lsx_fail_errno(ft,SOX_EHDR,"AIFC files that contain compressed data are not supported: %s",buf);
+          lsx_fail_errno(ft, SOX_EHDR, "Unsupported AIFC compression type `%s'", buf);
           return(SOX_EOF);
         }
       }
@@ -331,13 +350,11 @@ int lsx_aiffstartread(sox_format_t * ft)
   }
 
   if (foundcomm) {
-    if (ft->encoding.encoding != SOX_ENCODING_UNKNOWN && ft->encoding.encoding != SOX_ENCODING_SIGN2)
-      lsx_report("AIFF only supports signed data.  Forcing to signed.");
-    ft->encoding.encoding = SOX_ENCODING_SIGN2;
     if      (bits <=  8) bits = 8;
     else if (bits <= 16) bits = 16;
     else if (bits <= 24) bits = 24;
     else if (bits <= 32) bits = 32;
+    else if (bits == 64 && enc == SOX_ENCODING_FLOAT) /* no-op */;
     else {
       lsx_fail_errno(ft,SOX_EFMT,"unsupported sample size in AIFF header: %d", bits);
       return(SOX_EOF);
@@ -408,7 +425,7 @@ int lsx_aiffstartread(sox_format_t * ft)
   reportInstrument(ft);
 
   return lsx_check_read_params(
-      ft, channels, rate, SOX_ENCODING_SIGN2, bits, (uint64_t)ssndsize, sox_false);
+      ft, channels, rate, enc, bits, (uint64_t)ssndsize, sox_false);
 }
 
 /* print out the MIDI key allocations, loop points, directions etc */
@@ -807,11 +824,11 @@ int lsx_aifcstopwrite(sox_format_t * ft)
 
 static int aifcwriteheader(sox_format_t * ft, uint64_t nframes)
 {
-        unsigned hsize =
-                12 /*FVER*/ + 8 /*COMM hdr*/ + 18+4+1+15 /*COMM chunk*/ +
-                8 /*SSND hdr*/ + 12 /*SSND chunk*/;
+        unsigned hsize;
         unsigned bits = 0;
         uint64_t size;
+        char *ctype = NULL, *cname = NULL;
+        unsigned cname_len = 0, comm_len = 0, comm_padding = 0;
 
         if (ft->encoding.encoding == SOX_ENCODING_SIGN2 &&
             ft->encoding.bits_per_sample == 8)
@@ -825,11 +842,42 @@ static int aifcwriteheader(sox_format_t * ft, uint64_t nframes)
         else if (ft->encoding.encoding == SOX_ENCODING_SIGN2 &&
                  ft->encoding.bits_per_sample == 32)
                 bits = 32;
+        else if (ft->encoding.encoding == SOX_ENCODING_FLOAT &&
+                 ft->encoding.bits_per_sample == 32)
+                bits = 32;
+        else if (ft->encoding.encoding == SOX_ENCODING_FLOAT &&
+                 ft->encoding.bits_per_sample == 64)
+                bits = 64;
         else
         {
                 lsx_fail_errno(ft,SOX_EFMT,"unsupported output encoding/size for AIFC header");
                 return(SOX_EOF);
         }
+
+        /* calculate length of COMM chunk (without header) */
+        switch (ft->encoding.encoding) {
+          case SOX_ENCODING_SIGN2:
+            ctype = "NONE";
+            cname = "not compressed";
+            break;
+          case SOX_ENCODING_FLOAT:
+            if (bits == 32) {
+              ctype = "fl32";
+              cname = "32-bit floating point";
+            } else {
+              ctype = "fl64";
+              cname = "64-bit floating point";
+            }
+            break;
+          default: /* can't happen */
+            break;
+        }
+        cname_len = strlen(cname);
+        comm_len = 18+4+1+cname_len;
+        comm_padding = comm_len%2;
+
+        hsize = 12 /*FVER*/ + 8 /*COMM hdr*/ + comm_len+comm_padding /*COMM chunk*/ +
+                8 /*SSND hdr*/ + 12 /*SSND chunk*/;
 
         lsx_writes(ft, "FORM"); /* IFF header */
         /* file size */
@@ -849,16 +897,17 @@ static int aifcwriteheader(sox_format_t * ft, uint64_t nframes)
 
         /* COMM chunk -- describes encoding (and #frames) */
         lsx_writes(ft, "COMM");
-        lsx_writedw(ft, 18+4+1+15); /* COMM chunk size */
+        lsx_writedw(ft, comm_len+comm_padding); /* COMM chunk size */
         lsx_writew(ft, ft->signal.channels); /* nchannels */
         lsx_writedw(ft, (unsigned) nframes); /* number of frames */
         lsx_writew(ft, bits); /* sample width, in bits */
         write_ieee_extended(ft, (double)ft->signal.rate);
 
-        lsx_writes(ft, "NONE"); /*compression_type*/
-        lsx_writeb(ft, 14);
-        lsx_writes(ft, "not compressed");
-        lsx_writeb(ft, 0);
+        lsx_writes(ft, ctype); /*compression_type*/
+        lsx_writeb(ft, cname_len);
+        lsx_writes(ft, cname);
+        if (comm_padding)
+          lsx_writeb(ft, 0);
 
         /* SSND chunk -- describes data */
         lsx_writes(ft, "SSND");

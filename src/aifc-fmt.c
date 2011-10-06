@@ -22,9 +22,11 @@ LSX_FORMAT_HANDLER(aifc)
 {
   static char const * const names[] = {"aifc", "aiffc", NULL};
   static unsigned const write_encodings[] = {
-    SOX_ENCODING_SIGN2, 32, 24, 16, 8, 0, 0};
+    SOX_ENCODING_SIGN2, 32, 24, 16, 8, 0,
+    SOX_ENCODING_FLOAT, 32, 64, 0,
+    0};
   static sox_format_handler_t const sox_aifc_format = {SOX_LIB_VERSION_CODE,
-    "AIFF-C (not compressed, linear), defined in DAVIC 1.4 Part 9 Annex B",
+    "AIFF-C (not compressed), defined in DAVIC 1.4 Part 9 Annex B",
     names, SOX_FILE_BIG_END,
     lsx_aiffstartread, lsx_rawread, lsx_aiffstopread,
     lsx_aifcstartwrite, lsx_rawwrite, lsx_aifcstopwrite,

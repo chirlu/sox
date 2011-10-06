@@ -17,6 +17,7 @@ Previously deprecated features that have been removed in this release:
 File formats:
 
   o Mention in man pages that WAV files support floating point encodings.
+  o Add support for floating point encodings in AIFF-C files. (Ulrich Klauer)
 
 Audio device drivers:
 
