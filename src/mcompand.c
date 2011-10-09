@@ -270,9 +270,10 @@ static void doVolume(double *v, double samp, comp_band_t * l, size_t chan)
 
 static int sox_mcompand_flow_1(sox_effect_t * effp, priv_t * c, comp_band_t * l, const sox_sample_t *ibuf, sox_sample_t *obuf, size_t len, size_t filechans)
 {
-  size_t done, chan;
+  size_t idone, odone;
 
-  for (done = 0; done < len; ibuf += filechans) {
+  for (idone = 0, odone = 0; idone < len; ibuf += filechans) {
+    size_t chan;
 
     /* Maintain the volume fields by simulating a leaky pump circuit */
 
@@ -300,8 +301,8 @@ static int sox_mcompand_flow_1(sox_effect_t * effp, priv_t * c, comp_band_t * l,
       if (c->delay_buf_size <= 0) {
         checkbuf = ibuf[chan] * level_out_lin;
         SOX_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
-        obuf[done++] = checkbuf;
-
+        obuf[odone++] = checkbuf;
+        idone++;
       } else {
         /* FIXME: note that this lookahead algorithm is really lame:
            the response to a peak is released before the peak
@@ -321,14 +322,28 @@ static int sox_mcompand_flow_1(sox_effect_t * effp, priv_t * c, comp_band_t * l,
           SOX_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
           l->delay_buf[(l->delay_buf_ptr + c->delay_buf_size - l->delay_size)%c->delay_buf_size] = checkbuf;
         }
-        if (l->delay_buf_cnt >= c->delay_buf_size)
-          obuf[done++] = l->delay_buf[l->delay_buf_ptr];
-        else
+        if (l->delay_buf_cnt >= c->delay_buf_size) {
+          obuf[odone] = l->delay_buf[l->delay_buf_ptr];
+          odone++;
+          idone++;
+        } else {
           l->delay_buf_cnt++;
+          idone++; /* no "odone++" because we did not fill obuf[...] */
+        }
         l->delay_buf[l->delay_buf_ptr++] = ibuf[chan];
         l->delay_buf_ptr %= c->delay_buf_size;
       }
     }
+  }
+
+  if (idone != odone || idone != len) {
+    /* Emergency brake - will lead to memory corruption otherwise since we
+       cannot report back to flow() how many samples were consumed/emitted.
+       Additionally, flow() doesn't know how to handle diverging
+       sub-compander delays. */
+    lsx_fail("Using a compander delay within mcompand is currently not supported");
+    exit(1);
+    /* FIXME */
   }
 
   return (SOX_SUCCESS);
@@ -353,6 +368,8 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
     c->band_buf3 = lsx_realloc(c->band_buf3,len*sizeof(sox_sample_t));
     c->band_buf_len = len;
   }
+
+  len -= len % effp->out_signal.channels;
 
   ibuf_copy = lsx_malloc(*isamp * sizeof(sox_sample_t));
   memcpy(ibuf_copy, ibuf, *isamp * sizeof(sox_sample_t));
@@ -419,6 +436,8 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
   size_t band, drained, mostdrained = 0;
   priv_t * c = (priv_t *)effp->priv;
   comp_band_t * l;
+
+  *osamp -= *osamp % effp->out_signal.channels;
 
   memset(obuf,0,*osamp * sizeof *obuf);
   for (band=0;band<c->nBands;++band) {
