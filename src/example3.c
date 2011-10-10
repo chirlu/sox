@@ -73,26 +73,31 @@ int main(int argc, char * argv[])
   e = sox_create_effect(sox_find_effect("input"));
   args[0] = (char *)in, assert(sox_effect_options(e, 1, args) == SOX_SUCCESS);
   assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
+  free(e);
 
   e = sox_create_effect(sox_find_effect("trim"));
   args[0] = "10", assert(sox_effect_options(e, 1, args) == SOX_SUCCESS);
   assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
+  free(e);
 
   if (in->signal.rate != out->signal.rate) {
     e = sox_create_effect(sox_find_effect("rate"));
     assert(sox_effect_options(e, 0, NULL) == SOX_SUCCESS);
     assert(sox_add_effect(chain, e, &in->signal, &out->signal) == SOX_SUCCESS);
+    free(e);
   }
 
   if (in->signal.channels != out->signal.channels) {
     e = sox_create_effect(sox_find_effect("channels"));
     assert(sox_effect_options(e, 0, NULL) == SOX_SUCCESS);
     assert(sox_add_effect(chain, e, &in->signal, &out->signal) == SOX_SUCCESS);
+    free(e);
   }
 
   e = sox_create_effect(sox_find_effect("output"));
   args[0] = (char *)out, assert(sox_effect_options(e, 1, args) == SOX_SUCCESS);
   assert(sox_add_effect(chain, e, &in->signal, &out->signal) == SOX_SUCCESS);
+  free(e);
 
   sox_flow_effects(chain, NULL, NULL);
 

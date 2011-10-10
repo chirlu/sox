@@ -223,6 +223,7 @@ static void cleanup(void)
     if (files[i]->ft) {
       sox_close(files[i]->ft);
     }
+    free(files[i]->filename);
     free(files[i]);
   }
 
@@ -236,6 +237,7 @@ static void cleanup(void)
       }
       sox_close(ofile->ft); /* Assume we can unlink a file before closing it. */
     }
+    free(ofile->filename);
     free(ofile);
   }
 
@@ -583,10 +585,13 @@ static int combiner_stop(sox_effect_t *effp)
   input_combiner_t * z = (input_combiner_t *) effp->priv;
   size_t i;
 
-  if (is_parallel(combine_method))
+  if (is_parallel(combine_method)) {
     /* Free input buffers now that they are not used */
     for (i = 0; i < input_count; i++)
       free(z->ibuf[i]);
+    free(z->ibuf);
+  }
+  free(z->ilen);
 
   return SOX_SUCCESS;
 }
@@ -686,6 +691,7 @@ static void auto_effect(sox_effects_chain_t *chain, char const *name, int argc,
 
   if (add_effect(chain, effp, signal, &ofile->ft->signal, guard) != SOX_SUCCESS)
     exit(2); /* The effects chain should have displayed an error message */
+  free(effp);
 }
 
 static void init_eff_chains(void)
@@ -987,14 +993,17 @@ static void add_effects(sox_effects_chain_t *chain)
   if (chain->length == 0) {
     effp = sox_create_effect(input_combiner_effect_fn());
     sox_add_effect(chain, effp, &signal, &ofile->ft->signal);
+    free(effp);
   }
 
   /* Add user specified effects; stop before `dither' */
   for (i = 0; i < nuser_effects[current_eff_chain] &&
-      strcmp(user_efftab[i]->handler.name, "dither"); i++)
+      strcmp(user_efftab[i]->handler.name, "dither"); i++) {
     if (add_effect(chain, user_efftab[i], &signal, &ofile->ft->signal,
           &guard) != SOX_SUCCESS)
       exit(2); /* Effects chain should have displayed an error message */
+    free(user_efftab[i]);
+  }
 
   /* Add auto effects if still needed at this point */
   if (signal.channels < ofile->ft->signal.channels &&
@@ -1017,10 +1026,12 @@ static void add_effects(sox_effects_chain_t *chain)
     auto_effect(chain, "dither", 0, NULL, &signal, &guard);
 
   /* Add user specified effects from `dither' onwards */
-  for (; i < nuser_effects[current_eff_chain]; i++, guard = 2)
+  for (; i < nuser_effects[current_eff_chain]; i++, guard = 2) {
     if (add_effect(chain, user_efftab[i], &signal, &ofile->ft->signal,
           &guard) != SOX_SUCCESS)
       exit(2); /* Effects chain should have displayed an error message */
+    free(user_efftab[i]);
+  }
 
   if (!save_output_eff)
   {
@@ -1028,6 +1039,7 @@ static void add_effects(sox_effects_chain_t *chain)
     effp = sox_create_effect(output_effect_fn());
     if (sox_add_effect(chain, effp, &signal, &ofile->ft->signal) != SOX_SUCCESS)
       exit(2);
+    free(effp);
   }
   else
   {

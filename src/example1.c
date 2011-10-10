@@ -22,6 +22,7 @@
 #endif
 
 #include "sox.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 
@@ -131,24 +132,28 @@ int main(int argc, char * argv[])
   e = sox_create_effect(input_handler());
   /* This becomes the first `effect' in the chain */
   assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
+  free(e);
 
   /* Create the `vol' effect, and initialise it with the desired parameters: */
   e = sox_create_effect(sox_find_effect("vol"));
   assert(sox_effect_options(e, 1, vol) == SOX_SUCCESS);
   /* Add the effect to the end of the effects processing chain: */
   assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
+  free(e);
 
   /* Create the `flanger' effect, and initialise it with default parameters: */
   e = sox_create_effect(sox_find_effect("flanger"));
   assert(sox_effect_options(e, 0, NULL) == SOX_SUCCESS);
   /* Add the effect to the end of the effects processing chain: */
   assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
+  free(e);
 
   /* The last effect in the effect chain must be something that only consumes
    * samples; in this case, we have defined an output handler that outputs
    * data to an audio file */
   e = sox_create_effect(output_handler());
   assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
+  free(e);
 
   /* Flow samples through the effects processing chain until EOF is reached */
   sox_flow_effects(chain, NULL, NULL);
