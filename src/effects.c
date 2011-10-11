@@ -161,6 +161,8 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
   if (ret == SOX_EFF_NULL) {
     lsx_report("has no effect in this configuration");
     free(eff0.priv);
+    free(effp->priv);
+    effp->priv = NULL;
     return SOX_SUCCESS;
   }
   if (ret != SOX_SUCCESS) {

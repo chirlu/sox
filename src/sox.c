@@ -155,7 +155,7 @@ typedef struct {
   rg_mode replay_gain_mode;
 } file_t;
 
-static file_t * * files; /* Array tracking input and output files */
+static file_t * * files = NULL; /* Array tracking input and output files */
 #define ofile files[file_count - 1]
 static size_t file_count = 0;
 static size_t input_count = 0;
@@ -240,6 +240,8 @@ static void cleanup(void)
     free(ofile->filename);
     free(ofile);
   }
+
+  free(files);
 
 #ifdef HAVE_TERMIOS_H
   if (original_termios_saved)
