@@ -53,7 +53,7 @@ static int start(sox_effect_t * effp)
   int           i;
 
   if (!f->num_taps) {
-    if (!p->n) {
+    if (!p->n && p->filename) {
       FILE * file = lsx_open_input_file(effp, p->filename);
       if (!file)
         return SOX_EOF;
@@ -63,7 +63,6 @@ static int start(sox_effect_t * effp)
           p->h = lsx_realloc(p->h, p->n * sizeof(*p->h));
           p->h[p->n - 1] = d;
         }
-      lsx_report("%i coefficients", p->n);
       if (!feof(file)) {
         lsx_fail("error reading coefficient file");
         if (file != stdin) fclose(file);
@@ -71,6 +70,9 @@ static int start(sox_effect_t * effp)
       }
       if (file != stdin) fclose(file);
     }
+    lsx_report("%i coefficients", p->n);
+    if (!p->n)
+      return SOX_EFF_NULL;
     lsx_set_dft_filter(f, p->h, p->n, p->n >> 1);
   }
   return lsx_dft_filter_effect_fn()->start(effp);
