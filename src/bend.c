@@ -109,7 +109,8 @@ static int create(sox_effect_t * effp, int argc, char **argv)
   }
   argc -= optstate.ind, argv += optstate.ind;
 
-  p->bends = lsx_calloc(p->nbends = argc, sizeof(*p->bends));
+  p->nbends = argc;
+  p->bends = lsx_calloc(p->nbends, sizeof(*p->bends));
   return parse(effp, argv, 0.);     /* No rate yet; parse with dummy */
 }
 

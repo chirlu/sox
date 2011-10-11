@@ -165,7 +165,8 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
     else if (!strcmp(*argv, "-q")) p->fade_type = Cosine_4  , --argc, ++argv;
     else if (!strcmp(*argv, "-h")) p->fade_type = Cosine_2  , --argc, ++argv;
   }
-  p->splices = lsx_calloc(p->nsplices = argc, sizeof(*p->splices));
+  p->nsplices = argc;
+  p->splices = lsx_calloc(p->nsplices, sizeof(*p->splices));
   return parse(effp, argv, 1e5); /* No rate yet; parse with dummy */
 }
 

@@ -59,7 +59,8 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
   --argc, ++argv;
-  p->pads = lsx_calloc(p->npads = argc, sizeof(*p->pads));
+  p->npads = argc;
+  p->pads = lsx_calloc(p->npads, sizeof(*p->pads));
   return parse(effp, argv, 1e5); /* No rate yet; parse with dummy */
 }
 

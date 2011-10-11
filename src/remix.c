@@ -121,7 +121,8 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
     lsx_fail("must specify at least one output channel");
     return SOX_EOF;
   }
-  p->out_specs = lsx_calloc(p->num_out_channels = argc, sizeof(*p->out_specs));
+  p->num_out_channels = argc;
+  p->out_specs = lsx_calloc(p->num_out_channels, sizeof(*p->out_specs));
   return parse(effp, argv, 1); /* No channels yet; parse with dummy */
 }
 

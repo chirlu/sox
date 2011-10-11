@@ -56,6 +56,10 @@ Other bug fixes:
 
   o Fix several memory leaks. [3309913] (Jin-Myung Won and Ulrich Klauer)
 
+Internal improvements:
+
+  o Fix compiler warnings. [P. 3072301] (Cristian Morales Vega)
+
 sox-14.3.2	2011-02-27
 ----------
 
