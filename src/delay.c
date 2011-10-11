@@ -74,6 +74,10 @@ static int start(sox_effect_t * effp)
 
   if (!p->max_arg)
     return SOX_EFF_NULL;
+  if (p->argc > effp->in_signal.channels) {
+    lsx_fail("too few input channels");
+    return SOX_EOF;
+  }
   if (effp->flow < p->argc)
     lsx_parsesamples(effp->in_signal.rate, p->argv[effp->flow], &p->buffer_size, 't');
   lsx_parsesamples(effp->in_signal.rate, p->max_arg, &max_delay, 't');
