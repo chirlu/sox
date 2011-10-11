@@ -21,8 +21,9 @@
 typedef struct {
   size_t argc;
   char * * argv, * max_arg;
-  size_t delay, pad, buffer_size, buffer_index;
+  size_t delay, pre_pad, pad, buffer_size, buffer_index;
   sox_sample_t * buffer;
+  sox_bool drain_started;
 } priv_t;
 
 static int lsx_kill(sox_effect_t * effp)
@@ -43,7 +44,8 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   unsigned i;
 
   --argc, ++argv;
-  p->argv = lsx_calloc(p->argc = argc, sizeof(*p->argv));
+  p->argc = argc;
+  p->argv = lsx_calloc(p->argc, sizeof(*p->argv));
   for (i = 0; i < p->argc; ++i) {
     char const * next = lsx_parsesamples(1e5, p->argv[i] = lsx_strdup(argv[i]), &delay, 't');
     if (!next || *next) {
@@ -75,9 +77,12 @@ static int start(sox_effect_t * effp)
   if (effp->flow < p->argc)
     lsx_parsesamples(effp->in_signal.rate, p->argv[effp->flow], &p->buffer_size, 't');
   lsx_parsesamples(effp->in_signal.rate, p->max_arg, &max_delay, 't');
-  p->buffer_index = p->delay = 0;
+  if (effp->flow == 0)
+    lsx_debug("extending audio by %" FMT_size_t " samples", max_delay);
+  p->buffer_index = p->delay = p->pre_pad = 0;
   p->pad = max_delay - p->buffer_size;
   p->buffer = lsx_malloc(p->buffer_size * sizeof(*p->buffer));
+  p->drain_started = sox_false;
   return SOX_SUCCESS;
 }
 
@@ -105,8 +110,18 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  size_t len = *osamp = min(p->delay + p->pad, *osamp);
+  size_t len;
+  if (! p->drain_started) {
+    p->drain_started = sox_true;
+    p->pre_pad = p->buffer_size - p->delay;
+      /* If the input was too short to fill the buffer completely,
+         flow() has not yet output enough silence to reach the
+         desired delay. */
+  }
+  len = *osamp = min(p->pre_pad + p->delay + p->pad, *osamp);
 
+  for (; p->pre_pad && len; --p->pre_pad, --len)
+    *obuf++ = 0;
   for (; p->delay && len; --p->delay, --len) {
     *obuf++ = p->buffer[p->buffer_index++];
     p->buffer_index %= p->buffer_size;

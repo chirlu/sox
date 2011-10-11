@@ -41,6 +41,8 @@ Effects:
   o Effect chain can now be unlimitted in length. (Ulrich Klauer)
   o Fix newfile/restart effects when merging or mixing files. (Ulrich Klauer)
   o Fix crashes in compand and mcompand effects. [3420893] (Ulrich Klauer)
+  o Let the delay effect gracefully handle the special case that a delay can
+    be more than the input length. [3055399] (Ulrich Klauer)
 
 Misc:
 
