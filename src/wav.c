@@ -1193,6 +1193,7 @@ PCM formats then go straight to the data chunk:
 36 - 39    'data'
 40 - 43     dwDataLength   length of data chunk minus 8 byte header
 44 - (dwDataLength + 43)   the data
+(+ a padding byte if dwDataLength is odd)
 
 non-PCM formats must write an extended format chunk and a fact chunk:
 
@@ -1204,6 +1205,7 @@ ULAW, ALAW formats:
 50 - 53    'data'
 54 - 57     dwDataLength  length of data chunk minus 8 byte header
 58 - (dwDataLength + 57)  the data
+(+ a padding byte if dwDataLength is odd)
 
 
 GSM6.10  format:
@@ -1214,8 +1216,8 @@ GSM6.10  format:
 48 - 51    dwSamplesWritten   actual number of samples written out
 52 - 55    'data'
 56 - 59     dwDataLength  length of data chunk minus 8 byte header
-60 - (dwDataLength + 59)  the data
-(+ a padding byte if dwDataLength is odd)
+60 - (dwDataLength + 59)  the data (including a padding byte, if necessary,
+                            so dwDataLength is always even)
 
 
 note that header contains (up to) 3 separate ways of describing the
@@ -1364,7 +1366,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
     else if (wFormatTag != WAVE_FORMAT_PCM)
         wFmtSize += 2+wExtSize; /* plus ExtData */
 
-    wRiffLength = 4 + (8+wFmtSize) + (8+dwDataLength);
+    wRiffLength = 4 + (8+wFmtSize) + (8+dwDataLength+dwDataLength%2);
     if (isExtensible || wFormatTag != WAVE_FORMAT_PCM) /* PCM omits the "fact" chunk */
         wRiffLength += (8+dwFactSize);
 
@@ -1534,6 +1536,13 @@ static int stopwrite(sox_format_t * ft)
             wavgsmstopwrite(ft);
             break;
         }
+
+        /* Add a pad byte if the number of data bytes is odd.
+           See wavwritehdr() above for the calculation. */
+        if (wav->formatTag != WAVE_FORMAT_GSM610 &&
+            ((wav->numSamples + wav->samplesPerBlock - 1)/wav->samplesPerBlock*wav->blockAlign) % 2)
+          lsx_writeb(ft, 0);
+
         free(wav->packet);
         free(wav->samples);
         free(wav->lsx_ms_adpcm_i_coefs);

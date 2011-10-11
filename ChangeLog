@@ -18,6 +18,8 @@ File formats:
 
   o Mention in man pages that WAV files support floating point encodings.
   o Add support for floating point encodings in AIFF-C files. (Ulrich Klauer)
+  o Pad WAV data chunk to an even number of bytes (as required by the
+    specification). [3203418] (Ulrich Klauer)
 
 Audio device drivers:
 
