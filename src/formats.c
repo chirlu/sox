@@ -37,7 +37,7 @@
   #include <magic.h>
 #endif
 
-#define AUTO_DETECT_SIZE 256
+#define AUTO_DETECT_SIZE 4096
 
 static char const * auto_detect_format(sox_format_t * ft, char const * ext)
 {
