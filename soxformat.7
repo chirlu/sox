@@ -284,15 +284,27 @@ be used with any bit-rate.  E.g.
 Text Data files.
 These files contain a textual representation of the
 sample data.  There is one line at the beginning
-that contains the sample rate.  Subsequent lines
-contain two numeric data items: the time since
-the beginning of the first sample and the sample value.
+that contains the sample rate, and one line that
+contains the number of channels.
+Subsequent lines contain two or more numeric data intems:
+the time since the beginning of the first sample and the sample value
+for each channel.
+.SP
 Values are normalized so that the maximum and minimum
 are 1 and \-1.  This file format can be used to
 create data files for external programs such as
 FFT analysers or graph routines.  SoX can also convert
 a file in this format back into one of the other file
 formats.
+.SP
+Example containing only 2 stereo samples of silence:
+.SP
+.EX
+    ; Sample Rate 8012
+    ; Channels 2
+                0	0	0
+    0.00012481278	0	0
+.EE
 .TP
 \&\fB.dvms\fR, \fB.vms\fR
 Used in Germany to compress speech audio for voice mail.

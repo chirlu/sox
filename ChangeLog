@@ -51,6 +51,7 @@ Misc:
   o Fixed man page description for unsigned samples and change
     CVS to git references. (Ulrich Klauer)
   o When using pipes (-p) on Windows, set file mode to binary. (cbagwell)
+  o Updated .dat format description in soxformat. (Jan Stary)
 
 Other bug fixes:
 
