@@ -1142,8 +1142,8 @@ of channels in the audio signal to the number given.  For
 example, the following two commands are equivalent:
 .EX
 .ne 2
-   sox input.wav \-c 1 output.wav bass \-3
-   sox input.wav      output.wav bass \-3 channels 1
+   sox input.wav \-c 1 output.wav bass \-b 24
+   sox input.wav      output.wav bass \-b 24 channels 1
 .EE
 though the second form is more flexible as it allows the effects to
 be ordered arbitrarily.
@@ -1273,8 +1273,8 @@ rate of the audio signal to the given value.  For example, the
 following two commands are equivalent:
 .EX
 .ne 2
-   sox input.wav \-r 48k output.wav bass \-3
-   sox input.wav        output.wav bass \-3 rate 48k
+   sox input.wav \-r 48k output.wav bass \-b 24
+   sox input.wav        output.wav bass \-b 24 rate 48k
 .EE
 though the second form is more flexible as it allows
 .B rate
@@ -1650,8 +1650,8 @@ option need not be given.  For example, the following two commands are
 equivalent:
 .EX
 .ne 2
-   sox input.wav \-c 1 output.wav bass \-3
-   sox input.wav      output.wav bass \-3 channels 1
+   sox input.wav \-c 1 output.wav bass \-b 24
+   sox input.wav      output.wav bass \-b 24 channels 1
 .EE
 though the second form is more flexible as it allows the effects to
 be ordered arbitrarily.
@@ -2657,8 +2657,8 @@ option need not be given.  For example, the following two commands are
 equivalent:
 .EX
 .ne 2
-   sox input.wav \-r 48k output.wav bass \-3
-   sox input.wav        output.wav bass \-3 rate 48k
+   sox input.wav \-r 48k output.wav bass \-b 24
+   sox input.wav        output.wav bass \-b 24 rate 48k
 .EE
 though the second command is more flexible as it allows
 .B rate
