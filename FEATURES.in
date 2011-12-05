@@ -59,6 +59,7 @@ The audio effects/tools included in this release are as follows:
 ** fir: FFT convolution FIR filter using externally provided coefficients
 ** firfit+: FFT convolution FIR filter using given freq. response (W.I.P.)
 ** highpass: High-pass filter: Single pole or RBJ biquad IIR
+** hilbert: Hilbert transform filter (90 degrees phase shift)
 ** lowpass: Low-pass filter: single pole or RBJ biquad IIR
 ** sinc: Sinc-windowed low/high-pass/band-pass/reject FIR
 ** treble: Tone control: RBJ shelving biquad IIR filter

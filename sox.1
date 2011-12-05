@@ -2317,6 +2317,22 @@ These effects support the \fB\-\-plot\fR global option.
 .SP
 See also \fBsinc\fR for filters with a steeper roll-off.
 .TP
+\fBhilbert\fR [\fB\-n \fItaps\fR]
+Apply an odd-tap Hilbert transform filter, phase-shifting the signal
+by 90 degrees.
+.SP
+This is used in many matrix coding schemes and for analytic signal
+generation.  The process is often written as a multiplication by \fIi\fR
+(or \fIj\fR), the imaginary unit.
+.SP
+An odd-tap Hilbert transform filter has a bandpass characteristic,
+attenuating the lowest and highest frequencies.  Its bandwidth can be
+controlled by the number of filter taps, which can be specified with
+\fB-n\fR.  By default, the number of taps is chosen for a cutoff
+frequency of about 75 Hz.
+.SP
+This effect supports the \fB\-\-plot\fR global option.
+.TP
 \fBladspa\fR \fBmodule\fR [\fBplugin\fR] [\fBargument\fR...]
 Apply a LADSPA [5] (Linux Audio Developer's Simple Plugin API) plugin.
 Despite the name, LADSPA is not Linux-specific, and a wide range of

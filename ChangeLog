@@ -45,6 +45,7 @@ Effects:
   o Fix crashes in compand and mcompand effects. [3420893] (Ulrich Klauer)
   o Let the delay effect gracefully handle the special case that a delay can
     be more than the input length. [3055399] (Ulrich Klauer)
+  o New hilbert effect. (Ulrich Klauer)
 
 Misc:
 
