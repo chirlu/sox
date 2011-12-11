@@ -14,10 +14,13 @@
  * along with this library; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-/* In order to use this format with SoX, first build & install:
- *   http://ftp.penguin.cz/pub/users/utx/amr/amrwb-w.x.y.z.tar.bz2
- * or install equivalent package(s) e.g. marillat.
+ 
+/*
+ * In order to use the AMR format with SoX, you need to have an AMR
+ * library installed at SoX build time. Currently, the SoX build system
+ * recognizes two AMR implementations, in the following order:
+ *   http://opencore-amr.sourceforge.net/
+ *   http://ftp.penguin.cz/pub/users/utx/amr/
  */
 
 #include "sox_i.h"
