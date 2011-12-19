@@ -47,10 +47,15 @@ char * lsx_usage_lines(char * * usage, char const * const * lines, size_t n)
   return *usage;
 }
 
-lsx_enum_item const lsx_wave_enum[] = {
+static lsx_enum_item const s_lsx_wave_enum[] = {
   LSX_ENUM_ITEM(SOX_WAVE_,SINE)
   LSX_ENUM_ITEM(SOX_WAVE_,TRIANGLE)
   {0, 0}};
+
+lsx_enum_item const * lsx_get_wave_enum(void)
+{
+  return s_lsx_wave_enum;
+}
 
 void lsx_generate_wave_table(
     lsx_wave_t wave_type,

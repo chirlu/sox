@@ -76,7 +76,7 @@ static int getopts(sox_effect_t * effp, int argc, char *argv[])
     NUMERIC_PARAMETER(feedback_gain,-95 , 95 )
     NUMERIC_PARAMETER(delay_gain   , 0  , 100)
     NUMERIC_PARAMETER(speed        , 0.1, 10 )
-    TEXTUAL_PARAMETER(wave_shape, lsx_wave_enum)
+    TEXTUAL_PARAMETER(wave_shape, lsx_get_wave_enum())
     NUMERIC_PARAMETER(channel_phase, 0  , 100)
     TEXTUAL_PARAMETER(interpolation, interp_enum)
   } while (0);
@@ -98,7 +98,7 @@ static int getopts(sox_effect_t * effp, int argc, char *argv[])
       p->feedback_gain,
       p->delay_gain,
       p->speed,
-      lsx_wave_enum[p->wave_shape].text,
+      lsx_get_wave_enum()[p->wave_shape].text,
       p->channel_phase,
       interp_enum[p->interpolation].text);
 

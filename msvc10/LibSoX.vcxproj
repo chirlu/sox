@@ -165,6 +165,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\hilbert.c" />
     <ClCompile Include="..\src\oss.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -246,6 +247,7 @@
     <ClCompile Include="..\src\tempo.c" />
     <ClCompile Include="..\src\tremolo.c" />
     <ClCompile Include="..\src\trim.c" />
+    <ClCompile Include="..\src\upsample.c" />
     <ClCompile Include="..\src\vad.c" />
     <ClCompile Include="..\src\vol.c" />
     <ClCompile Include="..\src\8svx.c" />

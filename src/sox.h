@@ -15,6 +15,9 @@
 #include <stdarg.h>
 #include <stddef.h>
 
+#define lsx_static_assert(e,f) \
+    enum {lsx_static_assert_##f = 1/(e)}
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -79,7 +82,8 @@ typedef long long sox_int64_t;
 #elif defined(_MSC_VER)
 typedef __int64 sox_int64_t;
 #else
-#error Unable to determine an appropriate definition for sox_int64_t.
+typedef long long sox_int64_t;
+lsx_static_assert(sizeof(sox_int64_t)==8, sox_int64_size);
 #endif
 
 #if ULONG_MAX==0xffffffffffffffff
@@ -89,7 +93,8 @@ typedef unsigned long long sox_uint64_t;
 #elif defined(_MSC_VER)
 typedef unsigned __int64 sox_uint64_t;
 #else
-#error Unable to determine an appropriate definition for sox_uint64_t.
+typedef unsigned long long sox_uint64_t;
+lsx_static_assert(sizeof(sox_uint64_t)==8, sox_uint64_size);
 #endif
 
 typedef sox_int32_t sox_int24_t;   /* sox_int24_t == sox_int32_t (beware of the extra byte) */

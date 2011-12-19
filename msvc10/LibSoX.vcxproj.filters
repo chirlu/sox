@@ -606,5 +606,11 @@
     <ClCompile Include="..\src\xmalloc.c">
       <Filter>Shared Sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hilbert.c">
+      <Filter>Effect Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\upsample.c">
+      <Filter>Effect Sources</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

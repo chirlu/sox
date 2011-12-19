@@ -42,7 +42,7 @@
 
 typedef enum {SOX_SHORT, SOX_INT, SOX_FLOAT, SOX_DOUBLE} sox_data_t;
 typedef enum {SOX_WAVE_SINE, SOX_WAVE_TRIANGLE} lsx_wave_t;
-extern lsx_enum_item const lsx_wave_enum[];
+lsx_enum_item const * lsx_get_wave_enum(void);
 
 /* Define fseeko and ftello for platforms lacking them */
 #ifndef HAVE_FSEEKO

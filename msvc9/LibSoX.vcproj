@@ -716,6 +716,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\hilbert.c"
+				>
+			</File>
+			<File
 				RelativePath="..\src\input.c"
 				>
 			</File>
@@ -837,6 +841,10 @@
 			</File>
 			<File
 				RelativePath="..\src\trim.c"
+				>
+			</File>
+			<File
+				RelativePath="..\src\upsample.c"
 				>
 			</File>
 			<File
