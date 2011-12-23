@@ -359,7 +359,7 @@ static int start(sox_effect_t * effp)
 
   if (effp->in_signal.precision <= p->prec || p->prec > 24)
     return SOX_EFF_NULL;   /* Dithering not needed at this resolution */
-  effp->out_signal.precision = effp->in_signal.precision;
+  effp->out_signal.precision = p->prec;
 
   p->flow = flow_no_shape;
   if (p->filter_name) {

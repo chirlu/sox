@@ -674,9 +674,10 @@ static int add_effect(sox_effects_chain_t * chain, sox_effect_t * effp,
     }
     break;
     case 2: if (!(effp->handler.flags & SOX_EFF_MODIFY)) {
-      lsx_fail("effects that modify audio must not follow dither");
-      exit(1);
+      lsx_warn("%s: effects that modify audio should not follow dither",
+        effp->handler.name);
     }
+    break;
   }
   return sox_add_effect(chain, effp, in, out);
 }
