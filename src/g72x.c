@@ -425,7 +425,7 @@ void update(int code_size, int y, int wi, int fi, int dq, int sr,
                 state_ptr->dq[cnt] = state_ptr->dq[cnt-1];
         /* FLOAT A : convert dq[0] to 4-bit exp, 6-bit mantissa f.p. */
         if (mag == 0) {
-                state_ptr->dq[0] = (dq >= 0) ? 0x20 : (short)0xFC20;
+                state_ptr->dq[0] = (dq >= 0) ? 0x20 : (short)(unsigned short)0xFC20;
         } else {
                 exp = log2plus1(mag);
                 state_ptr->dq[0] = (dq >= 0) ?
@@ -445,7 +445,7 @@ void update(int code_size, int y, int wi, int fi, int dq, int sr,
                 exp = log2plus1(mag);
                 state_ptr->sr[0] =  (exp << 6) + ((mag << 6) >> exp) - 0x400;
         } else
-                state_ptr->sr[0] = (short)(0xFC20);
+                state_ptr->sr[0] = (short)(unsigned short)0xFC20;
 
         /* DELAY A */
         state_ptr->pk[1] = state_ptr->pk[0];

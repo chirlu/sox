@@ -67,6 +67,14 @@ typedef struct {
 } priv_t;
 
 
+#if defined(__MINGW32__)
+/* Provide a local definition of ntohl so we don't need to load wsock32.dll. */
+unsigned long __stdcall ntohl(unsigned long val)
+{
+    return lsx_swapdw(val);
+}
+#endif
+
 
 static void FLAC__decoder_metadata_callback(FLAC__StreamDecoder const * const flac, FLAC__StreamMetadata const * const metadata, void * const client_data)
 {

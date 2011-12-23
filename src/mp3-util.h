@@ -101,7 +101,7 @@ static void read_comments(sox_format_t * ft)
   struct id3_file   * id3struct;
   struct id3_tag    * tag;
   id3_utf8_t        * utf8;
-  int               i, fd = dup(fileno(ft->fp));
+  int               i, fd = dup(fileno((FILE*)ft->fp));
 
   if ((id3struct = id3_file_fdopen(fd, ID3_FILE_MODE_READONLY))) {
     if ((tag = id3_file_tag(id3struct)) && tag->frames)

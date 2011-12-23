@@ -163,7 +163,7 @@ static int parse_subarg(char *s, char **subargv, size_t *subargc) {
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   char *subargv[6], *cp;
-  size_t subargc, i, len;
+  size_t subargc, i;
 
   priv_t * c = (priv_t *) effp->priv;
   --argc, ++argv;
@@ -182,7 +182,6 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   c->bands = lsx_calloc(c->nBands, sizeof(comp_band_t));
 
   for (i=0;i<c->nBands;++i) {
-    len = strlen(argv[i<<1]);
     if (parse_subarg(argv[i<<1],subargv,&subargc) != SOX_SUCCESS)
       return SOX_EOF;
     if (sox_mcompand_getopts_1(&c->bands[i], subargc, &subargv[0]) != SOX_SUCCESS)

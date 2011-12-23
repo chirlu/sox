@@ -212,7 +212,6 @@ static void blockstart(sox_format_t *);
  *-----------------------------------------------------------------*/
 static int startread(sox_format_t * ft)
 {
-  int rtn = SOX_SUCCESS;
   char header[20];
   priv_t * v = (priv_t *) ft->priv;
   unsigned short sbseek;
@@ -292,7 +291,6 @@ static int startread(sox_format_t * ft)
       break;
     default:
       lsx_fail("Unknown VOC format %d", v->format);
-      rtn = SOX_EOF;
       break;
   }
   ft->encoding.bits_per_sample = v->size;

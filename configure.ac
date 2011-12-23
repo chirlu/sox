@@ -46,7 +46,6 @@ AC_LIBTOOL_DLOPEN
 case $target in
   *cygwin* | *mingw*)
   AC_LIBTOOL_WIN32_DLL
-  LDFLAGS="$LDFLAGS -no-undefined"
    ;;
 esac
 AC_PROG_LIBTOOL
@@ -419,11 +418,6 @@ AC_OPTIONAL_FORMAT(oggvorbis, OGG_VORBIS, [AC_CHECK_HEADER(vorbis/codec.h,
 #  support for OGG and if OGG libraries are found on this
 #  system then its highly likely to be compiled into FLAC
 #  and will require these at link time.
-case $target in
-  *mingw*)
-  FLAC_LIBS="-lwsock32"
-  ;;
-esac
 AC_OPTIONAL_FORMAT(flac, FLAC, [AC_CHECK_HEADER(FLAC/all.h, [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new, FLAC_LIBS="-lFLAC $FLAC_LIBS $OGG_VORBIS_LIBS",using_flac=no, $FLAC_LIBS $OGG_VORBIS_LIBS)], using_flac=no)])
 
 

@@ -894,7 +894,7 @@ SOX_API sox_init(void);
 
 /* Close effects library and unload format handler plugins. */
 int /* Returns SOX_SUCCESS if successful */
-sox_quit(void);
+SOX_API sox_quit(void);
 
 /* callback to retrieve information about a format handler */
 typedef const sox_format_handler_t *(SOX_API *sox_format_fn_t)(void);

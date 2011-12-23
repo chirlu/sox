@@ -54,10 +54,10 @@ lsx_enum_item const * lsx_get_wave_enum(void);
 assert_static(sizeof(off_t) == _FILE_OFFSET_BITS >> 3, OFF_T_BUILD_PROBLEM);
 #endif
 
-#if defined __GNUC__
-#define FMT_size_t "zu"
-#elif defined _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define FMT_size_t "Iu"
+#elif defined __GNUC__
+#define FMT_size_t "zu"
 #else
 #define FMT_size_t "lu"
 #endif

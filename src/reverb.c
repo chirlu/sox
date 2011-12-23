@@ -67,9 +67,17 @@ static void filter_array_create(filter_array_t * p, double rate,
   double r = rate * (1 / 44100.); /* Compensate for actual sample-rate */
 
   for (i = 0; i < array_length(comb_lengths); ++i, offset = -offset)
-    filter_create(&p->comb[i], scale * r * (comb_lengths[i] + stereo_adjust * offset) + .5);
+  {
+    filter_t * pcomb = &p->comb[i];
+    double n = scale * r * (comb_lengths[i] + stereo_adjust * offset) + .5;
+    filter_create(pcomb, n);
+  }
   for (i = 0; i < array_length(allpass_lengths); ++i, offset = -offset)
-    filter_create(&p->allpass[i], r * (allpass_lengths[i] + stereo_adjust * offset) + .5);
+  {
+    filter_t * pallpass = &p->allpass[i];
+    double n = r * (allpass_lengths[i] + stereo_adjust * offset) + .5;
+    filter_create(pallpass, n);
+  }
 }
 
 static void filter_array_process(filter_array_t * p,

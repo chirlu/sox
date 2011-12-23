@@ -306,7 +306,7 @@ static void set_endiannesses(sox_format_t * ft)
     if (ft->encoding.reverse_bytes == (sox_option_t)
         (!(ft->handler.flags & SOX_FILE_ENDBIG) != MACHINE_IS_BIGENDIAN))
       lsx_report("`%s': overriding file-type byte-order", ft->filename);
-  } else if (ft->encoding.reverse_bytes == sox_true)
+  } else if (ft->encoding.reverse_bytes == SOX_OPTION_YES)
     lsx_report("`%s': overriding machine byte-order", ft->filename);
 
   if (ft->encoding.reverse_bits == SOX_OPTION_DEFAULT)

@@ -175,7 +175,7 @@ static int AdpcmMashS(
         const SAMPL *ip, *itop;
         unsigned char *op;
         int ox = 0;      /*  */
-        int i, d, v0, v1, step;
+        int d, v0, v1, step;
         double d2;       /* long long is okay also, speed abt the same */
 
         ip = ibuff + ch;       /* point ip to 1st input sample for this channel */
@@ -201,7 +201,7 @@ static int AdpcmMashS(
                 op = obuff+7*chans;  /* point to base of output nibbles */
                 ox = 4*ch;
         }
-        for (i = 0; ip < itop; ip+=chans) {
+        for (; ip < itop; ip+=chans) {
                 int vlin,d3,dp,c;
 
           /* make linear prediction for next sample */
@@ -255,7 +255,7 @@ static inline void AdpcmMashChannel(
 {
         SAMPL v[2];
         int n0,s0,s1,ss,smin;
-        int d,dmin,k,kmin;
+        int dmin,k,kmin;
 
         n0 = n/2; if (n0>32) n0=32;
         if (*st<16) *st = 16;
@@ -290,7 +290,7 @@ static inline void AdpcmMashChannel(
         }
         *st = smin;
         lsx_debug_more("kmin %d, smin %5d, ",kmin,smin);
-        d=AdpcmMashS(ch, chans, v, lsx_ms_adpcm_i_coef[kmin], ip, n, st, obuff);
+        AdpcmMashS(ch, chans, v, lsx_ms_adpcm_i_coef[kmin], ip, n, st, obuff);
         obuff[ch] = kmin;
 }
 
