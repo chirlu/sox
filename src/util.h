@@ -51,8 +51,10 @@
 /* Define the format specifier to use for int64_t values.
  * Example: printf("You may have already won $ %" PRId64 " !!!", n64); */
 #ifndef PRId64 /* Maybe <inttypes.h> already defined this. */
-#ifdef _MSC_VER /* Older versions of MSC don't recognize %lld. */
+#if defined(_MSC_VER) || defined(__MINGW32__) /* Older versions of msvcrt.dll don't recognize %lld. */
 #define PRId64 "I64d"
+#elif LONG_MAX==9223372036854775807
+#define PRId64 "ld"
 #else
 #define PRId64 "lld"
 #endif
@@ -60,12 +62,24 @@
 
 /* Define the format specifier to use for uint64_t values. */
 #ifndef PRIu64 /* Maybe <inttypes.h> already defined this. */
-#ifdef _MSC_VER /* Older versions of MSC don't recognize %llu. */
+#if defined(_MSC_VER) || defined(__MINGW32__) /* Older versions of msvcrt.dll don't recognize %llu. */
 #define PRIu64 "I64u"
+#elif ULONG_MAX==0xffffffffffffffff
+#define PRIu64 "lu"
 #else
 #define PRIu64 "llu"
 #endif
 #endif /* PRIu64 */
+
+/* Define the format specifier to use for size_t values.
+ * Example: printf("Sizeof(x) = %" PRIuPTR " bytes", sizeof(x)); */
+#ifndef PRIuPTR /* Maybe <inttypes.h> already defined this. */
+#if defined(_MSC_VER) || defined(__MINGW32__) /* Older versions of msvcrt.dll don't recognize %zu. */
+#define PRIuPTR "Iu"
+#else
+#define PRIuPTR "zu"
+#endif
+#endif /* PRIuPTR */
 
 #ifdef __GNUC__
 #define NORET __attribute__((noreturn))

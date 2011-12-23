@@ -34,6 +34,7 @@ typedef char sox_int8_t;
 #else
 #error Unable to determine an appropriate definition for sox_int8_t.
 #endif
+lsx_static_assert(sizeof(sox_int8_t)==1, sox_int8_size);
 
 #if UCHAR_MAX==0xff
 typedef unsigned char sox_uint8_t;
@@ -42,6 +43,7 @@ typedef char sox_uint8_t;
 #else
 #error Unable to determine an appropriate definition for sox_uint8_t.
 #endif
+lsx_static_assert(sizeof(sox_uint8_t)==1, sox_uint8_size);
 
 #if SHRT_MAX==32767 && SHRT_MIN==(-32768)
 typedef short sox_int16_t;
@@ -50,6 +52,7 @@ typedef int sox_int16_t;
 #else
 #error Unable to determine an appropriate definition for sox_int16_t.
 #endif
+lsx_static_assert(sizeof(sox_int16_t)==2, sox_int16_size);
 
 #if USHRT_MAX==0xffff
 typedef unsigned short sox_uint16_t;
@@ -58,6 +61,7 @@ typedef unsigned int sox_uint16_t;
 #else
 #error Unable to determine an appropriate definition for sox_uint16_t.
 #endif
+lsx_static_assert(sizeof(sox_uint16_t)==2, sox_uint16_size);
 
 #if INT_MAX==2147483647 && INT_MIN==(-2147483647-1)
 typedef int sox_int32_t;
@@ -66,6 +70,7 @@ typedef long sox_int32_t;
 #else
 #error Unable to determine an appropriate definition for sox_int32_t.
 #endif
+lsx_static_assert(sizeof(sox_int32_t)==4, sox_int32_size);
 
 #if UINT_MAX==0xffffffff
 typedef unsigned int sox_uint32_t;
@@ -74,28 +79,25 @@ typedef unsigned long sox_uint32_t;
 #else
 #error Unable to determine an appropriate definition for sox_uint32_t.
 #endif
+lsx_static_assert(sizeof(sox_uint32_t)==4, sox_uint32_size);
 
 #if LONG_MAX==9223372036854775807 && LONG_MIN==(-9223372036854775807-1)
 typedef long sox_int64_t;
-#elif defined(LLONG_MAX) && defined(LLONG_MIN) && LLONG_MAX==9223372036854775807 && LLONG_MIN==(-9223372036854775807-1)
-typedef long long sox_int64_t;
 #elif defined(_MSC_VER)
 typedef __int64 sox_int64_t;
 #else
 typedef long long sox_int64_t;
-lsx_static_assert(sizeof(sox_int64_t)==8, sox_int64_size);
 #endif
+lsx_static_assert(sizeof(sox_int64_t)==8, sox_int64_size);
 
 #if ULONG_MAX==0xffffffffffffffff
 typedef unsigned long sox_uint64_t;
-#elif ULLONG_MAX==0xffffffffffffffff
-typedef unsigned long long sox_uint64_t;
 #elif defined(_MSC_VER)
 typedef unsigned __int64 sox_uint64_t;
 #else
 typedef unsigned long long sox_uint64_t;
-lsx_static_assert(sizeof(sox_uint64_t)==8, sox_uint64_size);
 #endif
+lsx_static_assert(sizeof(sox_uint64_t)==8, sox_uint64_size);
 
 typedef sox_int32_t sox_int24_t;   /* sox_int24_t == sox_int32_t (beware of the extra byte) */
 typedef sox_uint32_t sox_uint24_t; /* sox_uint24_t == sox_uint32_t (beware of the extra byte) */
