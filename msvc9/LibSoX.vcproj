@@ -680,6 +680,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\downsample.c"
+				>
+			</File>
+			<File
 				RelativePath="..\src\earwax.c"
 				>
 			</File>

@@ -33,6 +33,7 @@
   EFFECT(dft_filter) /* abstract */
   EFFECT(dither)
   EFFECT(divide)
+  EFFECT(downsample)
   EFFECT(earwax)
   EFFECT(echo)
   EFFECT(echos)

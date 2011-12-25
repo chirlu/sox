@@ -612,5 +612,8 @@
     <ClCompile Include="..\src\upsample.c">
       <Filter>Effect Sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\downsample.c">
+      <Filter>Effect Sources</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

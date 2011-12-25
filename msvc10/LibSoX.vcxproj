@@ -165,7 +165,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\hilbert.c" />
     <ClCompile Include="..\src\oss.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -207,6 +206,7 @@
     <ClCompile Include="..\src\dft_filter.c" />
     <ClCompile Include="..\src\dither.c" />
     <ClCompile Include="..\src\divide.c" />
+    <ClCompile Include="..\src\downsample.c" />
     <ClCompile Include="..\src\earwax.c" />
     <ClCompile Include="..\src\echo.c" />
     <ClCompile Include="..\src\echos.c" />
@@ -216,6 +216,7 @@
     <ClCompile Include="..\src\firfit.c" />
     <ClCompile Include="..\src\flanger.c" />
     <ClCompile Include="..\src\gain.c" />
+    <ClCompile Include="..\src\hilbert.c" />
     <ClCompile Include="..\src\input.c" />
     <ClCompile Include="..\src\ladspa.c" />
     <ClCompile Include="..\src\loudness.c" />

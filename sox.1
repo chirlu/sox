@@ -1979,6 +1979,17 @@ affects the audio.
 .SP
 See also the `Dithering' section above.
 .TP
+\fBdownsample [\fIfactor\fR(2)]
+Downsample the signal by an integer factor: Only the first out of
+each \fIfactor\fR samples is retained, the others are discarded.
+.SP
+No decimation filter is applied.  If the input is not a properly
+bandlimited baseband signal, aliasing will occur.  This may be
+desirable, e.g., for frequency translation.
+.SP
+For a general resampling effect with anti-aliasing, see \fBrate\fR.  See
+also \fBupsample\fR.
+.TP
 \fBearwax\fR
 Makes audio easier to listen to on headphones.
 Adds `cues' to 44\*d1kHz stereo (i.e. audio CD format) audio so that
