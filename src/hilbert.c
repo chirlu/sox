@@ -59,9 +59,9 @@ static int start(sox_effect_t *effp)
   if (!f->num_taps) {
     int i;
     if (!p->taps) {
-      p->taps = effp->in_signal.rate/100 + 2;
+      p->taps = effp->in_signal.rate/76.5 + 2;
       p->taps += 1 - (p->taps%2);
-      /* results in a cutoff frequency of about 75 Hz */
+      /* results in a cutoff frequency of about 75 Hz with a Blackman window */
       lsx_debug("choosing number of taps = %d (override with -n)", p->taps);
     }
     lsx_valloc(p->h, p->taps);
@@ -74,7 +74,7 @@ static int start(sox_effect_t *effp)
         p->h[i] = (1 - cos(pk))/pk;
       }
     }
-    lsx_apply_hamming(p->h, p->taps);
+    lsx_apply_blackman(p->h, p->taps, .16);
 
     if (effp->global_info->plot != sox_plot_off) {
       char title[100];
