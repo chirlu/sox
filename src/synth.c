@@ -287,6 +287,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   channel_t master, * chan = &master;
   int key = INT_MAX, argn = 0;
   char dummy, * end_ptr;
+  const char *n;
   --argc, ++argv;
 
   if (argc && !strcmp(*argv, "-n")) p->no_headroom = sox_true, ++argv, --argc;
@@ -304,7 +305,8 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     p->length_str = lsx_malloc(strlen(argv[argn]) + 1);
     strcpy(p->length_str, argv[argn]);
     /* Do a dummy parse of to see if it will fail */
-    if (lsx_parsesamples(0., p->length_str, &p->samples_to_do, 't') == NULL)
+    n = lsx_parsesamples(0., p->length_str, &p->samples_to_do, 't');
+    if (!n || *n)
       return lsx_usage(effp);
     argn++;
   }

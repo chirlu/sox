@@ -32,6 +32,7 @@ static int sox_trim_getopts(sox_effect_t * effp, int argc, char **argv)
     char *end;
     priv_t * trim = (priv_t *) effp->priv;
     size_t samples;
+    const char *n;
   --argc, ++argv;
 
     /* Do not know sample rate yet so hold off on completely parsing
@@ -47,14 +48,16 @@ static int sox_trim_getopts(sox_effect_t * effp, int argc, char **argv)
             trim->end_str = lsx_malloc(strlen(end)+1);
             strcpy(trim->end_str, end);
             /* Do a dummy parse to see if it will fail */
-            if (lsx_parsesamples(0., trim->end_str, &samples, 't') == NULL)
+            n = lsx_parsesamples(0., trim->end_str, &samples, 't');
+            if (!n || *n)
               return lsx_usage(effp);
             trim->length = samples;
         case 1:
             trim->start_str = lsx_malloc(strlen(argv[0])+1);
             strcpy(trim->start_str,argv[0]);
             /* Do a dummy parse to see if it will fail */
-            if (lsx_parsesamples(0., trim->start_str, &samples, 't') == NULL)
+            n = lsx_parsesamples(0., trim->start_str, &samples, 't');
+            if (!n || *n)
               return lsx_usage(effp);
             trim->start = samples;
             break;
