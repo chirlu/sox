@@ -73,6 +73,14 @@ static int start(sox_effect_t * effp)
     lsx_report("%i coefficients", p->n);
     if (!p->n)
       return SOX_EFF_NULL;
+    if (effp->global_info->plot != sox_plot_off) {
+      char title[100];
+      sprintf(title, "SoX effect: fir (%d coefficients)", p->n);
+      lsx_plot_fir(p->h, p->n, effp->in_signal.rate,
+          effp->global_info->plot, title, -30., 30.);
+      free(p->h);
+      return SOX_EOF;
+    }
     lsx_set_dft_filter(f, p->h, p->n, p->n >> 1);
   }
   return lsx_dft_filter_effect_fn()->start(effp);
