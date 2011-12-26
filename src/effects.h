@@ -61,7 +61,6 @@
   EFFECT(output)
   EFFECT(overdrive)
   EFFECT(pad)
-  EFFECT(pan)
   EFFECT(phaser)
   EFFECT(pitch)
   EFFECT(rate)

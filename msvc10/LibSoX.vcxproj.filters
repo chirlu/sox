@@ -276,9 +276,6 @@
     <ClCompile Include="..\src\pad.c">
       <Filter>Effect Sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\pan.c">
-      <Filter>Effect Sources</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\phaser.c">
       <Filter>Effect Sources</Filter>
     </ClCompile>

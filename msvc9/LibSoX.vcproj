@@ -764,10 +764,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\pan.c"
-				>
-			</File>
-			<File
 				RelativePath="..\src\phaser.c"
 				>
 			</File>

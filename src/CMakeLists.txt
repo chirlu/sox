@@ -32,7 +32,7 @@ set(effects_srcs
   crop            filter          output          skeleff         vad
   dcshift         fir             overdrive       speed           vol
   delay           firfit          pad             splice
-  dft_filter      flanger         pan             stat
+  dft_filter      flanger                         stat
   dither          gain            phaser          stats
 )
 set(formats_srcs

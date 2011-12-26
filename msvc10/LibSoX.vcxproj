@@ -227,7 +227,6 @@
     <ClCompile Include="..\src\output.c" />
     <ClCompile Include="..\src\overdrive.c" />
     <ClCompile Include="..\src\pad.c" />
-    <ClCompile Include="..\src\pan.c" />
     <ClCompile Include="..\src\phaser.c" />
     <ClCompile Include="..\src\rate.c" />
     <ClCompile Include="..\src\remix.c" />
