@@ -13,6 +13,9 @@ Previously deprecated features that have been removed in this release:
   ated in  [F(ormat)] [E(ffect)]   Replacement
   -------  ----------------------  ----------------------
   14.3.0   O --interactive         --no-clobber
+  14.1.0   E resample alias        rate
+  14.1.0   E polyphase alias       rate
+  14.1.0   E rabbit alias          rate
 
 Previously deprecated features (to be removed in future):
 
@@ -30,9 +33,6 @@ Previously deprecated features (to be removed in future):
   14.3.0   O -A/-U/-o/-i/-a/-g     -e                      14.4.0
   14.2.0   E key alias             pitch                   (now)
   14.2.0   E pan                   ~= mixer/remix          (now)
-  14.1.0   E resample alias        rate                    (now)
-  14.1.0   E polyphase alias       rate                    (now)
-  14.1.0   E rabbit alias          rate                    (now)
 
 File formats:
 

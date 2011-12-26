@@ -23,11 +23,11 @@ $|=1;
 
 # set default values
 my $sox='../src/sox';
-my $effect='resample';
-#my $effect='resample -qs';
-#my $effect='resample -q';
-#my $effect='resample -ql';
-#my $effect='polyphase -cutoff 0.90';
+my $effect='rate';
+#my $effect='rate -q';
+#my $effect='rate -l';
+#my $effect='rate -h -M';
+#my $effect='rate -h -b 90';
 #my $effect='filter 400-2000';
 #my $effect='filter 400-2000 1024';
 
@@ -60,7 +60,7 @@ if ($#ARGV >= 0) {
 }
 
 my $ratechange=0;
-if ($effect =~ m{^(rabbit|resample|polyphase|rate)}) {
+if ($effect =~ m{^(rate|upsample|downsample|speed)}) {
   $ratechange=1;
 }
 
