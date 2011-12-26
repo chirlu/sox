@@ -1886,11 +1886,10 @@ static void usage(char const * message)
 "-v|--volume FACTOR       Input file volume adjustment factor (real number)",
 "--ignore-length          Ignore input file length given in header; read to EOF",
 "-t|--type FILETYPE       File type of audio",
-"-s/-u/-f/-U/-A/-i/-a/-g  Encoding type=signed-integer/unsigned-integer/floating",
-"                         point/mu-law/a-law/ima-adpcm/ms-adpcm/gsm-full-rate",
-"-e|--encoding ENCODING   Set encoding (ENCODING in above list)",
+"-e|--encoding ENCODING   Set encoding (ENCODING may be one of signed-integer,",
+"                         unsigned-integer, floating-point, mu-law, a-law,",
+"                         ima-adpcm, ms-adpcm, gsm-full-rate)",
 "-b|--bits BITS           Encoded sample size in bits",
-"-1/-2/-3/-4/-8           Encoded sample size in bytes",
 "-N|--reverse-nibbles     Encoded nibble-order",
 "-X|--reverse-bits        Encoded bit-order",
 "--endian little|big|swap Encoded byte-order; swap means opposite to default",
@@ -2383,29 +2382,33 @@ static char parse_gopts_and_fopts(file_t * f)
       }
       break;
 
-    case '1': f->encoding.bits_per_sample = 8;  break;
-    case '2': f->encoding.bits_per_sample = 16; break;
-    case '3': f->encoding.bits_per_sample = 24; break;
-    case '4': f->encoding.bits_per_sample = 32; break;
-    case '8': f->encoding.bits_per_sample = 64; break;
+#define DEPRECATED lsx_warn("Option `-%c' is deprecated, use `-b %i' instead.", c, (c-'0')*8)
+    case '1': f->encoding.bits_per_sample = 8;  DEPRECATED; break;
+    case '2': f->encoding.bits_per_sample = 16; DEPRECATED; break;
+    case '3': f->encoding.bits_per_sample = 24; DEPRECATED; break;
+    case '4': f->encoding.bits_per_sample = 32; DEPRECATED; break;
+    case '8': f->encoding.bits_per_sample = 64; DEPRECATED; break;
+#undef DEPRECATED
 
-    case 's': f->encoding.encoding = SOX_ENCODING_SIGN2;     break;
-    case 'u': f->encoding.encoding = SOX_ENCODING_UNSIGNED;  break;
-    case 'f': f->encoding.encoding = SOX_ENCODING_FLOAT;     break;
-    case 'a': f->encoding.encoding = SOX_ENCODING_MS_ADPCM;  break;
-    case 'i': f->encoding.encoding = SOX_ENCODING_IMA_ADPCM; break;
-    case 'o': f->encoding.encoding = SOX_ENCODING_OKI_ADPCM; break;
-    case 'g': f->encoding.encoding = SOX_ENCODING_GSM;       break;
+#define DEPRECATED(encname) lsx_warn("Option `-%c' is deprecated, use `-e %s' instead.", c, encname)
+    case 's': f->encoding.encoding = SOX_ENCODING_SIGN2;     DEPRECATED("signed-integer"); break;
+    case 'u': f->encoding.encoding = SOX_ENCODING_UNSIGNED;  DEPRECATED("unsigned-integer"); break;
+    case 'f': f->encoding.encoding = SOX_ENCODING_FLOAT;     DEPRECATED("floating-point"); break;
+    case 'a': f->encoding.encoding = SOX_ENCODING_MS_ADPCM;  DEPRECATED("ms-adpcm"); break;
+    case 'i': f->encoding.encoding = SOX_ENCODING_IMA_ADPCM; DEPRECATED("ima-adpcm"); break;
+    case 'o': f->encoding.encoding = SOX_ENCODING_OKI_ADPCM; DEPRECATED("oki-adpcm"); break;
+    case 'g': f->encoding.encoding = SOX_ENCODING_GSM;       DEPRECATED("gsm-full-rate"); break;
 
-    case 'U': f->encoding.encoding = SOX_ENCODING_ULAW;
+    case 'U': f->encoding.encoding = SOX_ENCODING_ULAW; DEPRECATED("mu-law");
       if (f->encoding.bits_per_sample == 0)
         f->encoding.bits_per_sample = 8;
       break;
 
-    case 'A': f->encoding.encoding = SOX_ENCODING_ALAW;
+    case 'A': f->encoding.encoding = SOX_ENCODING_ALAW; DEPRECATED("a-law");
       if (f->encoding.bits_per_sample == 0)
         f->encoding.bits_per_sample = 8;
       break;
+#undef DEPRECATED
 
     case 'L': case 'B': case 'x':
       if (f->encoding.reverse_bytes != SOX_OPTION_DEFAULT || f->encoding.opposite_endian)
