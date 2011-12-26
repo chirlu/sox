@@ -740,7 +740,7 @@ environment variable can be used to provide alternative default values for
 SoX's global options.
 For example:
 .EX
-   SOX_OPTS="\-\-buffer 20000 \-\-play-rate-arg \-hs \-\-temp /mnt/temp"
+   SOX_OPTS="\-\-buffer 20000 \-\-play\-rate\-arg \-hs \-\-temp /mnt/temp"
 .EE
 Note that setting SOX_OPTS can potentially create unwanted changes in
 the behaviour of scripts or other programs that invoke SoX.  SOX_OPTS
@@ -2664,7 +2664,8 @@ is the percentage of the audio frequency band that is preserved and
 .I Rej dB
 is the level of noise rejection.  Increasing levels of resampling
 quality come at the expense of increasing amounts of time to process the
-audio.  If no quality option is given, the quality level used is `high'.
+audio.  If no quality option is given, the quality level used is `high'
+(but see `Playing & Recording Audio' above regarding playback).
 .SP
 The `quick' algorithm uses cubic interpolation; all others use
 band-limited interpolation.  By default, all algorithms have
