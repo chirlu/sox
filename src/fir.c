@@ -34,7 +34,9 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
 
   b->filter_ptr = &b->filter;
   --argc, ++argv;
-  if (argc == 1)
+  if (!argc)
+    p->filename = "-"; /* default to stdin */
+  else if (argc == 1)
     p->filename = argv[0], --argc;
   else for (; argc && sscanf(*argv, "%lf%c", &d, &c) == 1; --argc, ++argv) {
     p->n++;
@@ -57,12 +59,16 @@ static int start(sox_effect_t * effp)
       FILE * file = lsx_open_input_file(effp, p->filename);
       if (!file)
         return SOX_EOF;
-      while (fscanf(file, " #%*[^\n]%c", &c) + (i = fscanf(file, "%lf", &d)) >0)
-        if (i > 0) {
+      while ((i = fscanf(file, " #%*[^\n]%c", &c)) >= 0) {
+        if (i >= 1) continue; /* found and skipped a comment */
+        if ((i = fscanf(file, "%lf", &d)) > 0) {
+          /* found a coefficient value */
           p->n++;
           p->h = lsx_realloc(p->h, p->n * sizeof(*p->h));
           p->h[p->n - 1] = d;
-        }
+        } else break; /* either EOF, or something went wrong
+                         (read or syntax error) */
+      }
       if (!feof(file)) {
         lsx_fail("error reading coefficient file");
         if (file != stdin) fclose(file);
