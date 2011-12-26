@@ -347,14 +347,3 @@ sox_effect_handler_t const * lsx_pitch_effect_fn(void)
   handler.flags &= ~SOX_EFF_LENGTH;
   return &handler;
 }
-
-/*------------------------- key (old name for pitch) -------------------------*/
-
-sox_effect_handler_t const * lsx_key_effect_fn(void)
-{
-  static sox_effect_handler_t handler;
-  handler = *lsx_pitch_effect_fn();
-  handler.name = "key";
-  handler.flags |= SOX_EFF_DEPRECATED;
-  return &handler;
-}

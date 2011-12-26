@@ -47,7 +47,6 @@
   EFFECT(highpass)
   EFFECT(hilbert)
   EFFECT(input)
-  EFFECT(key)
 #ifdef HAVE_LADSPA_H
   EFFECT(ladspa)
 #endif
