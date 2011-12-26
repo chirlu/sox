@@ -29,7 +29,7 @@ set(effects_srcs
   compand         echos           mixer           reverse         tremolo
   compandt        fade            noiseprof       silence         trim
   contrast        fft4g           noisered        sinc            upsample
-  crop            filter          output          skeleff         vad
+  crop                            output          skeleff         vad
   dcshift         fir             overdrive       speed           vol
   delay           firfit          pad             splice
   dft_filter      flanger                         stat

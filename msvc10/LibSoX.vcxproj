@@ -211,7 +211,6 @@
     <ClCompile Include="..\src\echo.c" />
     <ClCompile Include="..\src\echos.c" />
     <ClCompile Include="..\src\fade.c" />
-    <ClCompile Include="..\src\filter.c" />
     <ClCompile Include="..\src\fir.c" />
     <ClCompile Include="..\src\firfit.c" />
     <ClCompile Include="..\src\flanger.c" />

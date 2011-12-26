@@ -700,10 +700,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\filter.c"
-				>
-			</File>
-			<File
 				RelativePath="..\src\fir.c"
 				>
 			</File>

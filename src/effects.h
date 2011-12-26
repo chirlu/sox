@@ -39,7 +39,6 @@
   EFFECT(echos)
   EFFECT(equalizer)
   EFFECT(fade)
-  EFFECT(filter)
   EFFECT(fir)
   EFFECT(firfit)
   EFFECT(flanger)

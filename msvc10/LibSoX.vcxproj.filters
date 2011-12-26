@@ -231,9 +231,6 @@
     <ClCompile Include="..\src\fade.c">
       <Filter>Effect Sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\filter.c">
-      <Filter>Effect Sources</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\fir.c">
       <Filter>Effect Sources</Filter>
     </ClCompile>

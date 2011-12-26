@@ -4174,43 +4174,6 @@ See also
 for a volume-changing effect with different capabilities, and
 .B compand
 for a dynamic-range compression/expansion/limiting effect.
-.SS Deprecated Effects
-The following effects have been renamed or have their functionality
-included in another effect; they continue to work in this version of
-SoX but may be removed in future.
-.TP
-\fBfilter\fR [\fIlow\fR]\fB\-\fR[\fIhigh\fR] [\fIwindow-len\fR [\fIbeta\fR]]
-Apply a sinc-windowed lowpass, highpass, or bandpass filter of given
-window length to the signal.
-This effect has been superseded by the \fBsinc\fR effect.
-Compared with `sinc', `filter' is slower and has fewer capabilities.
-.SP
-\fIlow\fR refers to the frequency of the lower 6dB corner of the filter.
-\fIhigh\fR refers to the frequency of the upper 6dB corner of the filter.
-.SP
-A low-pass filter is obtained by leaving \fIlow\fR unspecified, or 0.
-A high-pass filter is obtained by leaving \fIhigh\fR unspecified, or 0,
-or greater than or equal to the Nyquist frequency.
-.SP
-The \fIwindow-len\fR, if unspecified, defaults to 128.
-Longer windows give a sharper cut-off, smaller windows a more gradual cut-off.
-.SP
-The \fIbeta\fR parameter
-determines the type of filter window used.  Any value greater than 2 is
-the beta for a Kaiser window.  Beta \(<= 2 selects a Blackman-Nuttall window.
-If unspecified, the default is a Kaiser window with beta 16.
-.SP
-In the case of Kaiser window (beta > 2), lower betas produce a
-somewhat faster transition from pass-band to stop-band, at the cost of
-noticeable artifacts. A beta of 16 is the default, beta less than 10
-is not recommended. If you want a sharper cut-off, don't use low
-beta's, use a longer sample window. A Blackman-Nuttall window is selected by
-specifying any `beta' \(<= 2, and the Blackman-Nuttall window has somewhat
-steeper cut-off than the default Kaiser window. You will probably not
-need to use the beta parameter at all, unless you are just curious
-about comparing the effects of Blackman-Nuttall vs. Kaiser windows.
-.SP
-This effect supports the \fB\-\-plot\fR global option.
 .SH DIAGNOSTICS
 Exit status is 0 for no error, 1 if there is a problem with the
 command-line parameters, or 2 if an error occurs during file processing.

@@ -70,7 +70,7 @@ libsox_la_SOURCES += \
 	compandt.c compandt.h contrast.c dcshift.c delay.c dft_filter.c \
 	dft_filter.h dither.c dither.h divide.c earwax.c echo.c \
 	echos.c effects.c effects.h effects_i.c effects_i_dsp.c fade.c fft4g.c \
-	fft4g.h fifo.h filter.c fir.c firfit.c flanger.c gain.c input.c \
+	fft4g.h fifo.h fir.c firfit.c flanger.c gain.c input.c \
 	ladspa.h ladspa.c loudness.c mcompand.c mcompand_xover.h mixer.c \
 	noiseprof.c noisered.c noisered.h output.c overdrive.c pad.c \
 	phaser.c rate.c rate_filters.h rate_half_fir.h rate_poly_fir0.h \
