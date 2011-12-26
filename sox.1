@@ -131,7 +131,7 @@ plays a synthesised `A minor seventh' chord with a pipe-organ sound,
 .EE
 records half an hour of stereo audio, and
 .EX
-   play \-q take1.aiff & rec \-M take1.aiff take1-dub.aiff
+   play \-q take1.aiff & rec \-M take1.aiff take1\-dub.aiff
 .EE
 (with POSIX shell and where supported by hardware)
 records a new track in a multi-track recording.  Finally,
@@ -194,7 +194,7 @@ contains six or more channels.
 The term `bit-rate' is a measure of the amount of storage occupied by an
 encoded audio signal over a unit of time.  It can depend on all of the
 above and is typically denoted as a number of kilo-bits per second
-(kbps).  An A-law telephony signal has a bit-rate of 64 kbs. MP3-encoded
+(kbps).  An A-law telephony signal has a bit-rate of 64 kbps. MP3-encoded
 stereo music typically has a bit-rate of 128\-196 kbps. FLAC-encoded
 stereo music typically has a bit-rate of 550\-760 kbps.
 .SP
@@ -342,7 +342,7 @@ See also \fB\-S\fR below.
 Many file formats that compress audio discard some of the audio signal
 information whilst doing so. Converting to such a format and then converting
 back again will not produce an exact copy of the original audio.  This
-is the case for many formats used in telephony (e.g.  A-law, GSM) where
+is the case for many formats used in telephony (e.g. A-law, GSM) where
 low signal bandwidth is more important than high audio fidelity, and for
 many formats used in portable music players (e.g. MP3, Vorbis) where
 adequate fidelity can be retained even with the large compression ratios
@@ -1882,11 +1882,11 @@ de-emphasised audio to a new CD (which will then play correctly on any
 CD player), or simply play the correctly de-emphasised audio files on the
 PC.  For example:
 .EX
-   sox track1.wav track1-deemph.wav deemph
+   sox track1.wav track1\-deemph.wav deemph
 .EE
 and then burn track1-deemph.wav to CD, or
 .EX
-   play track1-deemph.wav
+   play track1\-deemph.wav
 .EE
 or simply
 .EX
@@ -2343,7 +2343,7 @@ generation.  The process is often written as a multiplication by \fIi\fR
 An odd-tap Hilbert transform filter has a bandpass characteristic,
 attenuating the lowest and highest frequencies.  Its bandwidth can be
 controlled by the number of filter taps, which can be specified with
-\fB-n\fR.  By default, the number of taps is chosen for a cutoff
+\fB\-n\fR.  By default, the number of taps is chosen for a cutoff
 frequency of about 75 Hz.
 .SP
 This effect supports the \fB\-\-plot\fR global option.
@@ -2718,7 +2718,7 @@ T}
 .TE
 .DT
 .SP
-N.B.  Override options can not be used with the `quick' or `low'
+N.B.  Override options cannot be used with the `quick' or `low'
 quality algorithms.
 .SP
 All resamplers use filters that can sometimes create `echo' (a.k.a.
@@ -2841,7 +2841,7 @@ creates an output file with four channels, where channels 1, 2, and 3 are
 copies of channels 6, 7, and 8 in the input file, and channel 4 is silent.
 Whereas
 .EX
-   sox input.wav output.wav remix 1-3,7 3
+   sox input.wav output.wav remix 1\-3,7 3
 .EE
 creates a (somewhat bizarre) stereo output file where the left channel
 is a mix-down of input channels 1, 2, 3, and 7, and the right channel is
@@ -2939,7 +2939,7 @@ script) is useful:
 chans=\`soxi \-c "$1"\`
 while [ $chans \-ge 1 ]; do
    chans0=\`printf %02i $chans\`   # 2 digits hence up to 99 chans
-   out=\`echo "$1"|sed "s/\\(.*\\)\\.\\(.*\\)/\\1-$chans0.\\2/"\`
+   out=\`echo "$1"|sed "s/\\(.*\\)\\.\\(.*\\)/\\1\-$chans0.\\2/"\`
    sox "$1" "$out" remix $chans
    chans=\`expr $chans \- 1\`
 done
@@ -3770,31 +3770,31 @@ effect that can has an associated length).
 For example, the following produces a 3 second, 48kHz,
 audio file containing a sine-wave swept from 300 to 3300\ Hz:
 .EX
-   sox \-n output.wav synth 3 sine 300-3300
+   sox \-n output.wav synth 3 sine 300\-3300
 .EE
 and this produces an 8\ kHz version:
 .EX
-   sox \-r 8000 \-n output.wav synth 3 sine 300-3300
+   sox \-r 8000 \-n output.wav synth 3 sine 300\-3300
 .EE
 Multiple channels can be synthesised by specifying the set of
 parameters shown between braces multiple times;
 the following puts the swept tone in the left channel and adds `brown'
 noise in the right:
 .EX
-   sox \-n output.wav synth 3 sine 300-3300 brownnoise
+   sox \-n output.wav synth 3 sine 300\-3300 brownnoise
 .EE
 The following example shows how two synth effects can be cascaded
 to create a more complex waveform:
 .EX
 .ne 2
-   play \-n synth 0.5 sine 200-500 synth 0.5 sine fmod 700-100
+   play \-n synth 0.5 sine 200\-500 synth 0.5 sine fmod 700\-100
 .EE
 Frequencies can also be given in `scientific' note notation, or, by
 prefixing a `%' character, as a number of semitones relative to
 `middle A' (440\ Hz).  For example, the following could be used to
 help tune a guitar's low `E' string:
 .EX
-   play \-n synth 4 pluck %-29
+   play \-n synth 4 pluck %\-29
 .EE
 or with a (Bourne shell) loop, the whole guitar:
 .EX
@@ -4011,7 +4011,7 @@ combination with filtering effects.
 \fBvad \fR[\fIoptions\fR]
 Voice Activity Detector.  Attempts to trim silence and quiet
 background sounds from the ends of (fairly high resolution
-i.e. 16-bit, 44-48kHz) recordings of speech.  The algorithm currently
+i.e. 16-bit, 44\-48kHz) recordings of speech.  The algorithm currently
 uses a simple cepstral power measurement to detect voice, so may be
 fooled by other things, especially music.  The effect can trim only
 from the front of the audio, so in order to trim from the back, the
@@ -4090,10 +4090,10 @@ detector algorithm.
 `Brick-wall' frequency of low-pass filter applied at the input to the
 detector algorithm.
 .IP \fB\-H\ \fInum\fR
-`Brick-wall' quefrency of high-pass lifter used in the detector
+`Brick-wall' frequency of high-pass lifter used in the detector
 algorithm.
 .IP \fB\-L\ \fInum\fR
-`Brick-wall' quefrency of low-pass lifter used in the detector
+`Brick-wall' frequency of low-pass lifter used in the detector
 algorithm.
 .RE
 .TP

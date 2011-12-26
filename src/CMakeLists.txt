@@ -22,18 +22,17 @@ endif (NOT EXTERNAL_GSM)
 
 # Format with: !xargs echo|tr ' ' '\n'|sort|column|expand|sed 's/^/  /'
 set(effects_srcs
-  bend            divide          hilbert         rate            stretch
-  biquad          downsample      input           remix           swap
-  biquads         earwax          loudness        repeat          synth
-  chorus          echo            mcompand        reverb          tempo
-  compand         echos           mixer           reverse         tremolo
-  compandt        fade            noiseprof       silence         trim
-  contrast        fft4g           noisered        sinc            upsample
-  crop                            output          skeleff         vad
-  dcshift         fir             overdrive       speed           vol
-  delay           firfit          pad             splice
-  dft_filter      flanger                         stat
-  dither          gain            phaser          stats
+  bend            dither          gain            phaser          stat
+  biquad          divide          hilbert         rate            stats
+  biquads         downsample      input           remix           stretch
+  chorus          earwax          loudness        repeat          swap
+  compand         echo            mcompand        reverb          synth
+  compandt        echos           mixer           reverse         tempo
+  contrast        fade            noiseprof       silence         tremolo
+  crop            fft4g           noisered        sinc            trim
+  dcshift         fir             output          skeleff         upsample
+  delay           firfit          overdrive       speed           vad
+  dft_filter      flanger         pad             splice          vol
 )
 set(formats_srcs
   8svx            dat             htk             s2-fmt          u2-fmt
