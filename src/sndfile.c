@@ -30,7 +30,7 @@
 
 #define LOG_MAX 2048 /* As per the SFC_GET_LOG_INFO example */
 
-#if !defined(HAVE_LIBLTDL) || !defined(HAVE_SNDFILE_1_0_12)
+#if !defined(HAVE_LIBLTDL)
 #undef DL_SNDFILE
 #endif
 
@@ -56,12 +56,8 @@ static const char* const sndfile_library_names[] =
 #endif
 #endif /* DL_SNDFILE */
 
-#ifdef HAVE_SNDFILE_1_0_12
 #define SNDFILE_FUNC_OPEN(f,x) \
   SNDFILE_FUNC(f,x, SNDFILE*, sf_open_virtual, (SF_VIRTUAL_IO *sfvirtual, int mode, SF_INFO *sfinfo, void *user_data))
-#else
-  SNDFILE_FUNC(f,x, SNDFILE*, sf_open_fd, (int fd, int mode, SF_INFO *sfinfo, int close_desc))
-#endif
 
 #define SNDFILE_FUNC_ENTRIES(f,x) \
   SNDFILE_FUNC_OPEN(f,x) \
@@ -133,12 +129,10 @@ static int ft_enc(unsigned size, sox_encoding_t e)
   if (e == SOX_ENCODING_DWVW      && size == 24) return SF_FORMAT_DWVW_24;
   if (e == SOX_ENCODING_DWVWN     && size ==  0) return SF_FORMAT_DWVW_N;
   if (e == SOX_ENCODING_GSM       && size ==  0) return SF_FORMAT_GSM610;
-#ifdef HAVE_SNDFILE_1_0_12
   if (e == SOX_ENCODING_FLAC      && size ==  8) return SF_FORMAT_PCM_S8;
   if (e == SOX_ENCODING_FLAC      && size == 16) return SF_FORMAT_PCM_16;
   if (e == SOX_ENCODING_FLAC      && size == 24) return SF_FORMAT_PCM_24;
   if (e == SOX_ENCODING_FLAC      && size == 32) return SF_FORMAT_PCM_32;
-#endif
   return 0; /* Bad encoding */
 }
 
@@ -148,13 +142,11 @@ static sox_encoding_t sox_enc(int ft_encoding, unsigned * size)
   int sub = ft_encoding & SF_FORMAT_SUBMASK;
   int type = ft_encoding & SF_FORMAT_TYPEMASK;
 
-#ifdef HAVE_SNDFILE_1_0_12
   if (type == SF_FORMAT_FLAC) switch (sub) {
     case SF_FORMAT_PCM_S8   : *size =  8; return SOX_ENCODING_FLAC;
     case SF_FORMAT_PCM_16   : *size = 16; return SOX_ENCODING_FLAC;
     case SF_FORMAT_PCM_24   : *size = 24; return SOX_ENCODING_FLAC;
   }
-#endif
   switch (sub) {
     case SF_FORMAT_ULAW     : *size =  8; return SOX_ENCODING_ULAW;
     case SF_FORMAT_ALAW     : *size =  8; return SOX_ENCODING_ALAW;
@@ -192,10 +184,8 @@ static struct {
   { "wav",      SF_FORMAT_WAV },
   { "au",       SF_FORMAT_AU },
   { "snd",      SF_FORMAT_AU },
-#ifdef HAVE_SNDFILE_1_0_12
   { "caf",      SF_FORMAT_CAF },
   { "flac",     SF_FORMAT_FLAC },
-#endif
 #ifdef HAVE_SNDFILE_1_0_18
   { "wve",      SF_FORMAT_WVE },
   { "ogg",      SF_FORMAT_OGG },
@@ -226,8 +216,6 @@ static int sf_stop_stub(SNDFILE *sndfile UNUSED)
 {
     return 1;
 }
-
-#ifdef HAVE_SNDFILE_1_0_12
 
 static sf_count_t vio_get_filelen(void *user_data)
 {
@@ -267,8 +255,6 @@ static SF_VIRTUAL_IO vio =
     vio_write,
     vio_tell
 };
-
-#endif /* HAVE_SNDFILE_1_0_12 */
 
 /* Convert file name or type to libsndfile format */
 static int name_to_format(const char *name)
@@ -370,12 +356,7 @@ static int startread(sox_format_t * ft)
   if (start(ft) == SOX_EOF)
       return SOX_EOF;
 
-#ifdef HAVE_SNDFILE_1_0_12
   sf->sf_file = sf->sf_open_virtual(&vio, SFM_READ, sf->sf_info, ft);
-#else
-  sf->sf_file = sf->sf_open_fd(fileno(ft->fp), SFM_READ, sf->sf_info, 1);
-  ft->fp = NULL; /* Transfer ownership of fp to LSF */
-#endif
   drain_log_buffer(ft);
 
   if (sf->sf_file == NULL) {
@@ -397,12 +378,10 @@ static int startread(sox_format_t * ft)
   }
   else rate = sf->sf_info->samplerate;
 
-#ifdef HAVE_SFC_SET_SCALE_FLOAT_INT_READ
   if ((sf->sf_info->format & SF_FORMAT_SUBMASK) == SF_FORMAT_FLOAT) {
     sf->sf_command(sf->sf_file, SFC_SET_SCALE_FLOAT_INT_READ, NULL, SF_TRUE);
     sf->sf_command(sf->sf_file, SFC_SET_CLIPPING, NULL, SF_TRUE);
   }
-#endif
 
 #if 0 /* FIXME */
     sox_append_comments(&ft->oob.comments, buf);
@@ -468,12 +447,7 @@ static int startwrite(sox_format_t * ft)
       lsx_warn("cannot use desired output encoding, choosing default");
   }
 
-#ifdef HAVE_SNDFILE_1_0_12
   sf->sf_file = sf->sf_open_virtual(&vio, SFM_WRITE, sf->sf_info, ft);
-#else
-  sf->sf_file = sf->sf_open_fd(fileno(ft->fp), SFM_WRITE, sf->sf_info, 1);
-  ft->fp = NULL; /* Transfer ownership of fp to LSF */
-#endif
   drain_log_buffer(ft);
 
   if (sf->sf_file == NULL) {
@@ -487,7 +461,7 @@ static int startwrite(sox_format_t * ft)
   if ((sf->sf_info->format & SF_FORMAT_SUBMASK) == SF_FORMAT_FLOAT)
     sf->sf_command(sf->sf_file, SFC_SET_SCALE_INT_FLOAT_WRITE, NULL, SF_TRUE);
 #endif
-           
+
   return SOX_SUCCESS;
 }
 

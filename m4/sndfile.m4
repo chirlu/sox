@@ -49,13 +49,11 @@ then
   LIBS="$LIBS $SNDFILE_LIBS"
   AC_CHECK_HEADER([sndfile.h], [
     AC_DEFINE([HAVE_SNDFILE_H], 1, [Define if you have <sndfile.h>])
-    AC_CHECK_FUNC([sf_open], [
+    AC_CHECK_FUNC([sf_open_virtual], [
       ifelse([$1], , :, [$1])
       have_sndfile="yes"
     ])
-    AC_CHECK_FUNC([sf_open_virtual], AC_DEFINE([HAVE_SNDFILE_1_0_12], 1, [Define if you have libsndfile >= 1.0.12]))
     AC_CHECK_DECL([SF_FORMAT_OGG], AC_DEFINE([HAVE_SNDFILE_1_0_18], 1, [Define if you have libsndfile >= 1.0.18]),, [#include <sndfile.h>])
-    AC_CHECK_DECL([SFC_SET_SCALE_FLOAT_INT_READ], AC_DEFINE([HAVE_SFC_SET_SCALE_FLOAT_INT_READ], 1, [Define if you have libsndfile with SFC_SET_SCALE_FLOAT_INT_READ]),, [#include <sndfile.h>])
     AC_CHECK_DECL([SFC_SET_SCALE_INT_FLOAT_WRITE], AC_DEFINE([HAVE_SFC_SET_SCALE_INT_FLOAT_WRITE], 1, [Define if you have libsndfile with SFC_SFC_SET_SCALE_INT_FLOAT_WRITE]),, [#include <sndfile.h>])
   ])
   CFLAGS="$ac_save_CFLAGS"
