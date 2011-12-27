@@ -152,6 +152,8 @@ static int start(sox_effect_t * effp)
     *effp->in_signal.mult /= max_sum;
   if (!non_integer)
     effp->out_signal.precision = effp->in_signal.precision;
+  else
+    effp->out_signal.precision = SOX_SAMPLE_PRECISION;
   show(p);
   return SOX_SUCCESS;
 }
@@ -190,7 +192,7 @@ sox_effect_handler_t const * lsx_remix_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "remix", "[-m|-a] [-p] <0|in-chan[v|p|i volume]{,in-chan[v|p|i volume]}>",
-    SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_GAIN,
+    SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_GAIN | SOX_EFF_PREC,
     create, start, flow, NULL, NULL, closedown, sizeof(priv_t)
   };
   return &handler;
@@ -236,7 +238,6 @@ static int channels_start(sox_effect_t * effp)
         p->out_specs[j].in_specs[i].multiplier = 1. / in_per_out;
       }
     }
-    effp->out_signal.precision = SOX_SAMPLE_PRECISION;
   }
   else for (j = 0; j < num_out_channels; j++) {
     lsx_valloc(p->out_specs[j].in_specs, 1);
@@ -245,6 +246,8 @@ static int channels_start(sox_effect_t * effp)
     p->out_specs[j].in_specs[0].multiplier = 1;
   }
   effp->out_signal.channels = p->num_out_channels = num_out_channels;
+  effp->out_signal.precision = (effp->in_signal.channels > num_out_channels) ?
+    SOX_SAMPLE_PRECISION : effp->in_signal.precision;
   show(p);
   return SOX_SUCCESS;
 }
@@ -252,7 +255,7 @@ static int channels_start(sox_effect_t * effp)
 sox_effect_handler_t const * lsx_channels_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "channels", "number", SOX_EFF_MCHAN | SOX_EFF_CHAN,
+    "channels", "number", SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_PREC,
     channels_create, channels_start, flow, NULL, closedown, NULL, sizeof(priv_t)
   };
   return &handler;
