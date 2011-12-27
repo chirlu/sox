@@ -359,6 +359,16 @@ static int start(sox_effect_t * effp)
 
   if (effp->in_signal.precision <= p->prec || p->prec > 24)
     return SOX_EFF_NULL;   /* Dithering not needed at this resolution */
+
+  if (p->prec == 1) {
+    /* The general dither routines don't work in this case, so notify
+       user and leave it at that for now.
+       TODO: Some special-case treatment of 1-bit noise shaping will be
+         needed for meaningful DSD write support. */
+    lsx_warn("Dithering/noise-shaping to 1 bit is currently not supported.");
+    return SOX_EFF_NULL;
+  }
+
   effp->out_signal.precision = p->prec;
 
   p->flow = flow_no_shape;
