@@ -56,10 +56,11 @@ Effects:
   o Added use_threads variable to sox_globals. This should be used to enable
     or disable use of parallel effects processing instead of directly calling
     omp_set_num_threads. (Doug Cook)
+  o New upsample effect. (robs)
   o Fix to effects pipeline to let fade effect specify time from end of
     file again. (cbagwell and Thor Andreassen)
   o Fix man page default error for splice effect. (Ulrich Klauer)
-  o Enable support for -plot option on biquad effect. (Ulrich Klauer)
+  o Enable support for --plot option on biquad and fir effects. (Ulrich Klauer)
   o Effect chain can now be unlimitted in length. (Ulrich Klauer)
   o Fix newfile/restart effects when merging or mixing files. (Ulrich Klauer)
   o Fix crashes in compand and mcompand effects. [3420893] (Ulrich Klauer)
@@ -69,10 +70,10 @@ Effects:
 
 Misc:
 
-  o Fixed man page description for unsigned samples and change
-    CVS to git references. (Ulrich Klauer)
+  o Minor improvements to the man page. (Ulrich Klauer)
   o When using pipes (-p) on Windows, set file mode to binary. (cbagwell)
   o Updated .dat format description in soxformat. (Jan Stary)
+  o Doxygen documentation for libSoX. (Doug Cook)
 
 Other bug fixes:
 
@@ -80,7 +81,7 @@ Other bug fixes:
 
 Internal improvements:
 
-  o Fix compiler warnings. [P. 3072301] (Cristian Morales Vega)
+  o Fix compiler warnings. (Cristian Morales Vega [P. 3072301], Doug Cook)
 
 sox-14.3.2	2011-02-27
 ----------
