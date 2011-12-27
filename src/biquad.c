@@ -118,6 +118,25 @@ int lsx_biquad_start(sox_effect_t * effp)
       , p->b0, p->b1, p->b2, p->a1, p->a2);
     return SOX_EOF;
   }
+  if (effp->global_info->plot == sox_plot_data) {
+    printf("# SoX effect: %s gain=%g frequency=%g %s=%g (rate=%g)\n"
+      "# IIR filter\n"
+      "# rate: %g\n"
+      "# name: b\n"
+      "# type: matrix\n"
+      "# rows: 3\n"
+      "# columns: 1\n"
+      "%24.16e\n%24.16e\n%24.16e\n"
+      "# name: a\n"
+      "# type: matrix\n"
+      "# rows: 3\n"
+      "# columns: 1\n"
+      "%24.16e\n%24.16e\n%24.16e\n"
+      , effp->handler.name, p->gain, p->fc, width_str[p->width_type], p->width
+      , effp->in_signal.rate, effp->in_signal.rate
+      , p->b0, p->b1, p->b2, 1. /* a0 */, p->a1, p->a2);
+    return SOX_EOF;
+  }
   return SOX_SUCCESS;
 }
 

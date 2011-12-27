@@ -454,10 +454,12 @@ void lsx_plot_fir(double * h, int num_points, sox_rate_t rate, sox_plot_t type, 
   }
   else if (type == sox_plot_data) {
     printf("# %s\n"
+        "# FIR filter\n"
+        "# rate: %g\n"
         "# name: b\n"
         "# type: matrix\n"
         "# rows: %i\n"
-        "# columns: 1\n", title, num_points);
+        "# columns: 1\n", title, rate, num_points);
     for (i = 0; i < num_points; ++i)
       printf("%24.16e\n", h[i]);
   }
