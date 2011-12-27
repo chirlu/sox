@@ -80,6 +80,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int argc, char **argv)
 {
     priv_t *   silence = (priv_t *) effp->priv;
     int parse_count;
+    const char *n;
   --argc, ++argv;
 
     /* check for option switches */
@@ -120,8 +121,8 @@ static int sox_silence_getopts(sox_effect_t * effp, int argc, char **argv)
         silence->start_duration_str = lsx_malloc(strlen(argv[0])+1);
         strcpy(silence->start_duration_str,argv[0]);
         /* Perform a fake parse to do error checking */
-        if (lsx_parsesamples(0.,silence->start_duration_str,
-                    &silence->start_duration,'s') == NULL)
+        n = lsx_parsesamples(0.,silence->start_duration_str,&silence->start_duration,'s');
+        if (!n || *n)
           return lsx_usage(effp);
 
         parse_count = sscanf(argv[1], "%lf%c", &silence->start_threshold,
@@ -161,8 +162,8 @@ static int sox_silence_getopts(sox_effect_t * effp, int argc, char **argv)
         silence->stop_duration_str = lsx_malloc(strlen(argv[0])+1);
         strcpy(silence->stop_duration_str,argv[0]);
         /* Perform a fake parse to do error checking */
-        if (lsx_parsesamples(0.,silence->stop_duration_str,
-                    &silence->stop_duration,'s') == NULL)
+        n = lsx_parsesamples(0.,silence->stop_duration_str,&silence->stop_duration,'s');
+        if (!n || *n)
           return lsx_usage(effp);
 
         parse_count = sscanf(argv[1], "%lf%c", &silence->stop_threshold,

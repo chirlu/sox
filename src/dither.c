@@ -329,7 +329,7 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
   priv_t * p = (priv_t *)effp->priv;
   int c;
   lsx_getopt_t optstate;
-  lsx_getopt_init(argc, argv, "+aSsf:rt", NULL, lsx_getopt_flag_none, 1, &optstate);
+  lsx_getopt_init(argc, argv, "+aSsf:p:rt", NULL, lsx_getopt_flag_none, 1, &optstate);
 
   while ((c = lsx_getopt(&optstate)) != -1) switch (c) {
     case 'a': p->auto_detect = sox_true; break;
@@ -341,6 +341,7 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
       if (p->filter_name == INT_MAX)
         return SOX_EOF;
       break;
+    GETOPT_NUMERIC(optstate, 'p', prec, 1, 24)
     default: lsx_fail("invalid option `-%c'", optstate.opt); return lsx_usage(effp);
   }
   argc -= optstate.ind, argv += optstate.ind;
@@ -353,10 +354,12 @@ static int start(sox_effect_t * effp)
   priv_t * p = (priv_t *)effp->priv;
   double mult = 1; /* Amount the noise shaping multiplies up the TPDF (+/-1) */
 
-  p->prec = effp->out_signal.precision;
+  if (p->prec == 0)
+    p->prec = effp->out_signal.precision;
+
   if (effp->in_signal.precision <= p->prec || p->prec > 24)
     return SOX_EFF_NULL;   /* Dithering not needed at this resolution */
-  effp->out_signal.precision = effp->in_signal.precision;
+  effp->out_signal.precision = p->prec;
 
   p->flow = flow_no_shape;
   if (p->filter_name) {
@@ -404,14 +407,15 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 sox_effect_handler_t const * lsx_dither_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "dither", "[-a] [-S|-s|-f filter]"
+    "dither", "[-S|-s|-f filter] [-a] [-p precision]"
     "\n  (none)   Use TPDF"
-    "\n  -a       Automatically turn on & off dithering as needed (use with caution!)"
     "\n  -S       Use sloped TPDF (without noise shaping)"
     "\n  -s       Shape noise (with shibata filter)"
     "\n  -f name  Set shaping filter to one of: lipshitz, f-weighted,"
     "\n           modified-e-weighted, improved-e-weighted, gesemann,"
-    "\n           shibata, low-shibata, high-shibata.",
+    "\n           shibata, low-shibata, high-shibata."
+    "\n  -a       Automatically turn on & off dithering as needed (use with caution!)"
+    "\n  -p bits  Override the target sample precision",
     SOX_EFF_PREC, getopts, start, flow, 0, 0, 0, sizeof(priv_t)
   };
   return &handler;

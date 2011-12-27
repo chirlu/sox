@@ -680,6 +680,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\downsample.c"
+				>
+			</File>
+			<File
 				RelativePath="..\src\earwax.c"
 				>
 			</File>
@@ -693,10 +697,6 @@
 			</File>
 			<File
 				RelativePath="..\src\fade.c"
-				>
-			</File>
-			<File
-				RelativePath="..\src\filter.c"
 				>
 			</File>
 			<File
@@ -757,10 +757,6 @@
 			</File>
 			<File
 				RelativePath="..\src\pad.c"
-				>
-			</File>
-			<File
-				RelativePath="..\src\pan.c"
 				>
 			</File>
 			<File

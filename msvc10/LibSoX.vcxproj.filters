@@ -231,9 +231,6 @@
     <ClCompile Include="..\src\fade.c">
       <Filter>Effect Sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\filter.c">
-      <Filter>Effect Sources</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\fir.c">
       <Filter>Effect Sources</Filter>
     </ClCompile>
@@ -274,9 +271,6 @@
       <Filter>Effect Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\src\pad.c">
-      <Filter>Effect Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\pan.c">
       <Filter>Effect Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\src\phaser.c">
@@ -610,6 +604,9 @@
       <Filter>Effect Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\src\upsample.c">
+      <Filter>Effect Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\downsample.c">
       <Filter>Effect Sources</Filter>
     </ClCompile>
   </ItemGroup>

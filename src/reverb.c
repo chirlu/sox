@@ -21,7 +21,6 @@
 #include "fifo.h"
 
 #define lsx_zalloc(var, n) var = lsx_calloc(n, sizeof(*var))
-#define filter_create(p, n) (p)->ptr=lsx_zalloc((p)->buffer, (p)->size=(size_t)(n))
 #define filter_advance(p) if (--(p)->ptr < (p)->buffer) (p)->ptr += (p)->size
 #define filter_delete(p) free((p)->buffer)
 
@@ -69,14 +68,14 @@ static void filter_array_create(filter_array_t * p, double rate,
   for (i = 0; i < array_length(comb_lengths); ++i, offset = -offset)
   {
     filter_t * pcomb = &p->comb[i];
-    double n = scale * r * (comb_lengths[i] + stereo_adjust * offset) + .5;
-    filter_create(pcomb, n);
+    pcomb->size = (size_t)(scale * r * (comb_lengths[i] + stereo_adjust * offset) + .5);
+    pcomb->ptr = lsx_zalloc(pcomb->buffer, pcomb->size);
   }
   for (i = 0; i < array_length(allpass_lengths); ++i, offset = -offset)
   {
     filter_t * pallpass = &p->allpass[i];
-    double n = r * (allpass_lengths[i] + stereo_adjust * offset) + .5;
-    filter_create(pallpass, n);
+    pallpass->size = (size_t)(r * (allpass_lengths[i] + stereo_adjust * offset) + .5);
+    pallpass->ptr = lsx_zalloc(pallpass->buffer, pallpass->size);
   }
 }
 

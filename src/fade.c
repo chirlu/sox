@@ -48,6 +48,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int argc, char **argv)
     char t_char[2];
     int t_argno;
     size_t samples;
+    const char *n;
   --argc, ++argv;
 
     if (argc < 1 || argc > 4)
@@ -75,7 +76,8 @@ static int sox_fade_getopts(sox_effect_t * effp, int argc, char **argv)
     fade->in_stop_str = lsx_malloc(strlen(argv[0])+1);
     strcpy(fade->in_stop_str,argv[0]);
     /* Do a dummy parse to see if it will fail */
-    if (lsx_parsesamples(0., fade->in_stop_str, &samples, 't') == NULL)
+    n = lsx_parsesamples(0., fade->in_stop_str, &samples, 't');
+    if (!n || *n)
       return lsx_usage(effp);
 
     fade->in_stop = samples;
@@ -90,8 +92,8 @@ static int sox_fade_getopts(sox_effect_t * effp, int argc, char **argv)
             strcpy(fade->out_stop_str,argv[t_argno]);
 
             /* Do a dummy parse to see if it will fail */
-            if (lsx_parsesamples(0., fade->out_stop_str,
-                                &samples, 't') == NULL)
+            n = lsx_parsesamples(0., fade->out_stop_str, &samples, 't');
+            if (!n || *n)
               return lsx_usage(effp);
             fade->out_stop = samples;
         }
@@ -101,8 +103,8 @@ static int sox_fade_getopts(sox_effect_t * effp, int argc, char **argv)
             strcpy(fade->out_start_str,argv[t_argno]);
 
             /* Do a dummy parse to see if it will fail */
-            if (lsx_parsesamples(0., fade->out_start_str,
-                                &samples, 't') == NULL)
+            n = lsx_parsesamples(0., fade->out_start_str, &samples, 't');
+            if (!n || *n)
               return lsx_usage(effp);
             fade->out_start = samples;
         }

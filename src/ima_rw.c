@@ -252,16 +252,15 @@ inline static void ImaMashChannel(
         int opt             /* non-zero allows some cpu-intensive code to improve output */
 )
 {
-        int snext,d;
+        int snext;
         int s0,d0;
-        int s32,d32;
 
-        s32 = s0 = *st;
+        s0 = *st;
         if (opt>0) {
                 int low,hi,w;
                 int low0,hi0;
                 snext = s0;
-                d32 = d0 = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL);
+                d0 = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL);
 
                 w = 0;
                 low=hi=s0;
@@ -292,7 +291,7 @@ inline static void ImaMashChannel(
                 }
                 *st = s0;
         }
-        d = ImaMashS(ch, chans, ip[0], ip,n,st, obuff);
+        ImaMashS(ch, chans, ip[0], ip,n,st, obuff);
 }
 
 /* mash one block.  if you want to use opt>0, 9 is a reasonable value */

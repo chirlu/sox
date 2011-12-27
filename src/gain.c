@@ -251,16 +251,10 @@ sox_effect_handler_t const * lsx_gain_effect_fn(void)
 static int norm_getopts(sox_effect_t * effp, int argc, char * * argv)
 {
   char * argv2[3];
-  int argc2 = 0;
+  int argc2 = 2;
 
-  argv2[argc2++] = argv[0], --argc, ++argv;
-  if (argc && !strcmp(*argv, "-i"))
-    argv2[argc2++] = "-en", --argc, ++argv;
-  else if (argc && !strcmp(*argv, "-b"))
-    argv2[argc2++] = "-B", --argc, ++argv;
-  if (argc2 > 1)
-    lsx_warn("this usage is deprecated; use `gain %s' instead", argv2[1]);
-  else argv2[argc2++] = "-n";
+  argv2[0] = argv[0], --argc, ++argv;
+  argv2[1] = "-n";
   if (argc)
     argv2[argc2++] = *argv, --argc, ++argv;
   return argc? lsx_usage(effp) :
