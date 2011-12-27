@@ -1979,7 +1979,7 @@ affects the audio.
 .SP
 See also the `Dithering' section above.
 .TP
-\fBdownsample [\fIfactor\fR(2)]
+\fBdownsample\fR [\fIfactor\fR(2)]
 Downsample the signal by an integer factor: Only the first out of
 each \fIfactor\fR samples is retained, the others are discarded.
 .SP
@@ -4005,10 +4005,16 @@ sample counts is the number of samples with the letter `s' appended to
 it.  A value of 8000s for the \fIstart\fR parameter will wait until
 8000 samples are read before starting to process audio.
 .TP
-\fBupsample [\fIfactor\fR]
+\fBupsample\fR [\fIfactor\fR]
 Upsample the signal by an integer factor: \fIfactor\fR\-1 zero-value
-samples are inserted between each input sample.  Typically use is in
-combination with filtering effects.
+samples are inserted between each pair of input samples.  As a result, the
+original spectrum is replicated into the new frequency space (aliasing) and
+attenuated.  This attenuation can be compensated for by adding
+\fBvol \fIfactor\fR after any further processing.  The upsample effect is
+typically used in combination with filtering effects.
+.SP
+For a general resampling effect with anti-aliasing, see \fBrate\fR.  See
+also \fBdownsample\fR.
 .TP
 \fBvad \fR[\fIoptions\fR]
 Voice Activity Detector.  Attempts to trim silence and quiet

@@ -28,9 +28,6 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   p->factor = 2;
   --argc, ++argv;
   do {NUMERIC_PARAMETER(factor, 1, 256)} while (0);
-  /* TODO: something like this may be needed here to inform libSoX client
-   * that the rate change indicated in start() is intended to be the final rate:
-  effp->out_signal.rate = effp->in_signal.rate * p->factor; */
   return argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
@@ -62,6 +59,6 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 sox_effect_handler_t const * lsx_upsample_effect_fn(void)
 {
   static sox_effect_handler_t handler = {"upsample", "[factor (2)]",
-    SOX_EFF_RATE, create, start, flow, NULL, NULL, NULL, sizeof(priv_t)};
+    SOX_EFF_RATE | SOX_EFF_MODIFY, create, start, flow, NULL, NULL, NULL, sizeof(priv_t)};
   return &handler;
 }
