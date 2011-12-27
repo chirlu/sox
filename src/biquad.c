@@ -109,6 +109,7 @@ int lsx_biquad_start(sox_effect_t * effp)
       "o=2*pi/Fs\n"
       "H(f)=sqrt((b0*b0+b1*b1+b2*b2+2.*(b0*b1+b1*b2)*cos(f*o)+2.*(b0*b2)*cos(2.*f*o))/(1.+a1*a1+a2*a2+2.*(a1+a1*a2)*cos(f*o)+2.*a2*cos(2.*f*o)))\n"
       "set logscale x\n"
+      "set samples 250\n"
       "set grid xtics ytics\n"
       "set key off\n"
       "plot [f=10:Fs/2] [-35:25] 20*log10(H(f))\n"
