@@ -133,7 +133,7 @@ static lsx_enum_item const rg_modes[] = {
   LSX_ENUM_ITEM(RG_,album)
   {0, 0}};
 static rg_mode replay_gain_mode = RG_default;
-static sox_option_t show_progress = SOX_OPTION_DEFAULT;
+static sox_option_t show_progress = sox_option_default;
 
 
 /* Input & output files */
@@ -1502,7 +1502,7 @@ static void open_output_file(void)
   /* If whether to enable the progress display (similar to that of ogg123) has
    * not been specified by the user, auto turn on when outputting to an audio
    * device: */
-  if (show_progress == SOX_OPTION_DEFAULT)
+  if (show_progress == sox_option_default)
     show_progress = (ofile->ft->handler.flags & SOX_FILE_DEVICE) != 0 &&
                     (ofile->ft->handler.flags & SOX_FILE_PHONY) == 0;
 
@@ -2240,7 +2240,7 @@ static char parse_gopts_and_fopts(file_t * f)
         break;
 
       case 5:
-        if (f->encoding.reverse_bytes != SOX_OPTION_DEFAULT || f->encoding.opposite_endian)
+        if (f->encoding.reverse_bytes != sox_option_default || f->encoding.opposite_endian)
           usage("only one endian option per file is allowed");
         switch (enum_option(optstate.arg, optstate.lngind, endian_options)) {
           case ENDIAN_little: f->encoding.reverse_bytes = MACHINE_IS_BIGENDIAN; break;
@@ -2407,7 +2407,7 @@ static char parse_gopts_and_fopts(file_t * f)
       break;
 
     case 'L': case 'B': case 'x':
-      if (f->encoding.reverse_bytes != SOX_OPTION_DEFAULT || f->encoding.opposite_endian)
+      if (f->encoding.reverse_bytes != sox_option_default || f->encoding.opposite_endian)
         usage("only one endian option per file is allowed");
       switch (c) {
         case 'L': f->encoding.reverse_bytes   = MACHINE_IS_BIGENDIAN;    break;
@@ -2415,11 +2415,11 @@ static char parse_gopts_and_fopts(file_t * f)
         case 'x': f->encoding.opposite_endian = sox_true;            break;
       }
       break;
-    case 'X': f->encoding.reverse_bits    = SOX_OPTION_YES;      break;
-    case 'N': f->encoding.reverse_nibbles = SOX_OPTION_YES;      break;
+    case 'X': f->encoding.reverse_bits    = sox_option_yes;      break;
+    case 'N': f->encoding.reverse_nibbles = sox_option_yes;      break;
 
-    case 'S': show_progress = SOX_OPTION_YES; break;
-    case 'q': show_progress = SOX_OPTION_NO;  break;
+    case 'S': show_progress = sox_option_yes; break;
+    case 'q': show_progress = sox_option_no;  break;
     case 'D': no_dither = sox_true; break;
 
     case 'V':
@@ -2870,10 +2870,10 @@ int main(int argc, char **argv)
       /* sox_open_read() will call lsx_warn for most errors.
        * Rely on that printing something. */
       exit(2);
-    if (show_progress == SOX_OPTION_DEFAULT &&
+    if (show_progress == sox_option_default &&
         (files[j]->ft->handler.flags & SOX_FILE_DEVICE) != 0 &&
         (files[j]->ft->handler.flags & SOX_FILE_PHONY) == 0)
-      show_progress = SOX_OPTION_YES;
+      show_progress = sox_option_yes;
   }
 
   if (replay_gain_mode == RG_default)

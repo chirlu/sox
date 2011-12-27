@@ -113,34 +113,34 @@ static char const * auto_detect_format(sox_format_t * ft, char const * ext)
 }
 
 static sox_encodings_info_t const s_sox_encodings_info[] = {
-  {0         , "n/a"          , "Unknown or not applicable"},
-  {0         , "Signed PCM"   , "Signed Integer PCM"},
-  {0         , "Unsigned PCM" , "Unsigned Integer PCM"},
-  {0         , "F.P. PCM"     , "Floating Point PCM"},
-  {0         , "F.P. PCM"     , "Floating Point (text) PCM"},
-  {0         , "FLAC"         , "FLAC"},
-  {0         , "HCOM"         , "HCOM"},
-  {0         , "WavPack"      , "WavPack"},
-  {0         , "F.P. WavPack" , "Floating Point WavPack"},
-  {SOX_LOSSY1, "u-law"        , "u-law"},
-  {SOX_LOSSY1, "A-law"        , "A-law"},
-  {SOX_LOSSY1, "G.721 ADPCM"  , "G.721 ADPCM"},
-  {SOX_LOSSY1, "G.723 ADPCM"  , "G.723 ADPCM"},
-  {SOX_LOSSY1, "CL ADPCM (8)" , "CL ADPCM (from 8-bit)"},
-  {SOX_LOSSY1, "CL ADPCM (16)", "CL ADPCM (from 16-bit)"},
-  {SOX_LOSSY1, "MS ADPCM"     , "MS ADPCM"},
-  {SOX_LOSSY1, "IMA ADPCM"    , "IMA ADPCM"},
-  {SOX_LOSSY1, "OKI ADPCM"    , "OKI ADPCM"},
-  {SOX_LOSSY1, "DPCM"         , "DPCM"},
-  {0         , "DWVW"         , "DWVW"},
-  {0         , "DWVWN"        , "DWVWN"},
-  {SOX_LOSSY2, "GSM"          , "GSM"},
-  {SOX_LOSSY2, "MPEG audio"   , "MPEG audio (layer I, II or III)"},
-  {SOX_LOSSY2, "Vorbis"       , "Vorbis"},
-  {SOX_LOSSY2, "AMR-WB"       , "AMR-WB"},
-  {SOX_LOSSY2, "AMR-NB"       , "AMR-NB"},
-  {SOX_LOSSY2, "CVSD"         , "CVSD"},
-  {SOX_LOSSY2, "LPC10"        , "LPC10"},
+  {sox_encodings_none  , "n/a"          , "Unknown or not applicable"},
+  {sox_encodings_none  , "Signed PCM"   , "Signed Integer PCM"},
+  {sox_encodings_none  , "Unsigned PCM" , "Unsigned Integer PCM"},
+  {sox_encodings_none  , "F.P. PCM"     , "Floating Point PCM"},
+  {sox_encodings_none  , "F.P. PCM"     , "Floating Point (text) PCM"},
+  {sox_encodings_none  , "FLAC"         , "FLAC"},
+  {sox_encodings_none  , "HCOM"         , "HCOM"},
+  {sox_encodings_none  , "WavPack"      , "WavPack"},
+  {sox_encodings_none  , "F.P. WavPack" , "Floating Point WavPack"},
+  {sox_encodings_lossy1, "u-law"        , "u-law"},
+  {sox_encodings_lossy1, "A-law"        , "A-law"},
+  {sox_encodings_lossy1, "G.721 ADPCM"  , "G.721 ADPCM"},
+  {sox_encodings_lossy1, "G.723 ADPCM"  , "G.723 ADPCM"},
+  {sox_encodings_lossy1, "CL ADPCM (8)" , "CL ADPCM (from 8-bit)"},
+  {sox_encodings_lossy1, "CL ADPCM (16)", "CL ADPCM (from 16-bit)"},
+  {sox_encodings_lossy1, "MS ADPCM"     , "MS ADPCM"},
+  {sox_encodings_lossy1, "IMA ADPCM"    , "IMA ADPCM"},
+  {sox_encodings_lossy1, "OKI ADPCM"    , "OKI ADPCM"},
+  {sox_encodings_lossy1, "DPCM"         , "DPCM"},
+  {sox_encodings_none  , "DWVW"         , "DWVW"},
+  {sox_encodings_none  , "DWVWN"        , "DWVWN"},
+  {sox_encodings_lossy2, "GSM"          , "GSM"},
+  {sox_encodings_lossy2, "MPEG audio"   , "MPEG audio (layer I, II or III)"},
+  {sox_encodings_lossy2, "Vorbis"       , "Vorbis"},
+  {sox_encodings_lossy2, "AMR-WB"       , "AMR-WB"},
+  {sox_encodings_lossy2, "AMR-NB"       , "AMR-NB"},
+  {sox_encodings_lossy2, "CVSD"         , "CVSD"},
+  {sox_encodings_lossy2, "LPC10"        , "LPC10"},
 };
 
 assert_static(array_length(s_sox_encodings_info) == SOX_ENCODINGS,
@@ -197,9 +197,9 @@ unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample)
 
 void sox_init_encodinginfo(sox_encodinginfo_t * e)
 {
-  e->reverse_bytes = SOX_OPTION_DEFAULT;
-  e->reverse_nibbles = SOX_OPTION_DEFAULT;
-  e->reverse_bits = SOX_OPTION_DEFAULT;
+  e->reverse_bytes = sox_option_default;
+  e->reverse_nibbles = sox_option_default;
+  e->reverse_bits = sox_option_default;
   e->compression = HUGE_VAL;
 }
 
@@ -295,7 +295,7 @@ static void set_endiannesses(sox_format_t * ft)
   if (ft->encoding.opposite_endian)
     ft->encoding.reverse_bytes = (ft->handler.flags & SOX_FILE_ENDIAN)?
       !(ft->handler.flags & SOX_FILE_ENDBIG) != MACHINE_IS_BIGENDIAN : sox_true;
-  else if (ft->encoding.reverse_bytes == SOX_OPTION_DEFAULT)
+  else if (ft->encoding.reverse_bytes == sox_option_default)
     ft->encoding.reverse_bytes = (ft->handler.flags & SOX_FILE_ENDIAN)?
       !(ft->handler.flags & SOX_FILE_ENDBIG) == MACHINE_IS_BIGENDIAN : sox_false;
 
@@ -306,15 +306,15 @@ static void set_endiannesses(sox_format_t * ft)
     if (ft->encoding.reverse_bytes == (sox_option_t)
         (!(ft->handler.flags & SOX_FILE_ENDBIG) != MACHINE_IS_BIGENDIAN))
       lsx_report("`%s': overriding file-type byte-order", ft->filename);
-  } else if (ft->encoding.reverse_bytes == SOX_OPTION_YES)
+  } else if (ft->encoding.reverse_bytes == sox_option_yes)
     lsx_report("`%s': overriding machine byte-order", ft->filename);
 
-  if (ft->encoding.reverse_bits == SOX_OPTION_DEFAULT)
+  if (ft->encoding.reverse_bits == sox_option_default)
     ft->encoding.reverse_bits = !!(ft->handler.flags & SOX_FILE_BIT_REV);
   else if (ft->encoding.reverse_bits == !(ft->handler.flags & SOX_FILE_BIT_REV))
       lsx_report("`%s': overriding file-type bit-order", ft->filename);
 
-  if (ft->encoding.reverse_nibbles == SOX_OPTION_DEFAULT)
+  if (ft->encoding.reverse_nibbles == sox_option_default)
     ft->encoding.reverse_nibbles = !!(ft->handler.flags & SOX_FILE_NIB_REV);
   else
     if (ft->encoding.reverse_nibbles == !(ft->handler.flags & SOX_FILE_NIB_REV))
@@ -737,7 +737,7 @@ static void set_output_format(sox_format_t * ft)
     i = 0;
     while ((e = enc_arg(sox_encoding_t)))
       while ((s = enc_arg(unsigned)))
-        if (!(sox_encodings_info[e].flags & (SOX_LOSSY1 | SOX_LOSSY2)) &&
+        if (!(sox_encodings_info[e].flags & (sox_encodings_lossy1 | sox_encodings_lossy2)) &&
             sox_precision(e, s) >= ft->signal.precision && s < ft->encoding.bits_per_sample) {
           ft->encoding.encoding = e;
           ft->encoding.bits_per_sample = s;

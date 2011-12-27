@@ -67,10 +67,10 @@ char const * lsx_find_file_extension(char const * pathname)
   return result;
 }
 
-lsx_enum_item const * lsx_find_enum_text(char const * text, lsx_enum_item const * enum_items, unsigned flags)
+lsx_enum_item const * lsx_find_enum_text(char const * text, lsx_enum_item const * enum_items, int flags)
 {
   lsx_enum_item const * result = NULL; /* Assume not found */
-  sox_bool sensitive = !!(flags & LSX_FET_CASE);
+  sox_bool sensitive = !!(flags & lsx_find_enum_item_case_sensitive);
 
   while (enum_items->text) {
     if ((!sensitive && !strcasecmp(text, enum_items->text)) ||

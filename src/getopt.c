@@ -23,7 +23,7 @@
 #include <string.h>
 
 void
-SOX_API lsx_getopt_init(
+LSX_API lsx_getopt_init(
     LSX_PARAM_IN             int argc,                      /* Number of arguments in argv */
     LSX_PARAM_IN_COUNT(argc) char * const * argv,           /* Array of arguments */
     LSX_PARAM_IN_Z           char const * shortopts,        /* Short option characters */
@@ -78,7 +78,7 @@ static void CheckCurPosEnd(
 }
 
 int
-SOX_API lsx_getopt(
+LSX_API lsx_getopt(
     LSX_PARAM_INOUT lsx_getopt_t * state)
 {
     int oerr;

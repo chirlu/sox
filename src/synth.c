@@ -321,7 +321,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   }
 
   while (argn < argc) { /* type [combine] [f1[-f2] [off [ph [p1 [p2 [p3]]]]]] */
-    lsx_enum_item const * enum_p = lsx_find_enum_text(argv[argn], synth_type, LSX_FET_CASE);
+    lsx_enum_item const * enum_p = lsx_find_enum_text(argv[argn], synth_type, lsx_find_enum_item_case_sensitive);
 
     if (enum_p == NULL) {
       lsx_fail("no type given");
@@ -335,7 +335,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
       break;
 
     /* maybe there is a combine-type in next arg */
-    enum_p = lsx_find_enum_text(argv[argn], combine_type, LSX_FET_CASE);
+    enum_p = lsx_find_enum_text(argv[argn], combine_type, lsx_find_enum_item_case_sensitive);
     if (enum_p != NULL) {
       chan->combine = enum_p->value;
       if (++argn == argc)
@@ -343,7 +343,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     }
 
     /* read frequencies if given */
-    if (!lsx_find_enum_text(argv[argn], synth_type, LSX_FET_CASE) &&
+    if (!lsx_find_enum_text(argv[argn], synth_type, lsx_find_enum_item_case_sensitive) &&
         argv[argn][0] != '-') {
       static const char sweeps[] = ":+/-";
 
