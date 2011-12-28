@@ -24,19 +24,6 @@
 
 #include <FLAC/all.h>
 
-#if !defined(FLAC_API_VERSION_CURRENT)
-#define FLAC_API_VERSION_CURRENT 7
-#define FLAC__StreamDecoder FLAC__FileDecoder
-#define FLAC__stream_decoder_new FLAC__file_decoder_new
-#define FLAC__stream_decoder_set_metadata_respond_all FLAC__file_decoder_set_metadata_respond_all
-#define FLAC__stream_decoder_set_md5_checking FLAC__file_decoder_set_md5_checking
-#define FLAC__stream_decoder_process_until_end_of_metadata FLAC__file_decoder_process_until_end_of_metadata
-#define FLAC__stream_decoder_process_single FLAC__file_decoder_process_single
-#define FLAC__stream_decoder_finish FLAC__file_decoder_finish
-#define FLAC__stream_decoder_delete FLAC__file_decoder_delete
-#define FLAC__stream_decoder_seek_absolute FLAC__file_decoder_seek_absolute
-#endif
-
 #define MAX_COMPRESSION 8
 
 
@@ -151,19 +138,6 @@ static int start_read(sox_format_t * const ft)
 
   FLAC__stream_decoder_set_md5_checking(p->decoder, sox_true);
   FLAC__stream_decoder_set_metadata_respond_all(p->decoder);
-#if FLAC_API_VERSION_CURRENT <= 7
-  /* This is wrong: not using SoX IO, and there will be 2 FILEs open;
-   * however, it's an old FLAC API, so not worth fixing now. */
-  FLAC__file_decoder_set_filename(p->decoder, ft->filename);
-  FLAC__file_decoder_set_write_callback(p->decoder, FLAC__frame_decode_callback);
-  FLAC__file_decoder_set_metadata_callback(p->decoder, FLAC__decoder_metadata_callback);
-  FLAC__file_decoder_set_error_callback(p->decoder, FLAC__decoder_error_callback);
-  FLAC__file_decoder_set_client_data(p->decoder, ft);
-  if (FLAC__file_decoder_init(p->decoder) != FLAC__FILE_DECODER_OK) {
-    lsx_fail_errno(ft, SOX_EHDR, "FLAC ERROR initialising decoder");
-    return SOX_EOF;
-  }
-#else
   if (FLAC__stream_decoder_init_FILE(p->decoder, ft->fp, /* Not using SoX IO */
       FLAC__frame_decode_callback, FLAC__decoder_metadata_callback,
       FLAC__decoder_error_callback, ft) != FLAC__STREAM_DECODER_INIT_STATUS_OK){
@@ -171,18 +145,13 @@ static int start_read(sox_format_t * const ft)
     return SOX_EOF;
   }
   ft->fp = NULL; /* Transfer ownership of fp to FLAC */
-#endif
 
   if (!FLAC__stream_decoder_process_until_end_of_metadata(p->decoder)) {
     lsx_fail_errno(ft, SOX_EHDR, "FLAC ERROR whilst decoding metadata");
     return SOX_EOF;
   }
 
-#if FLAC_API_VERSION_CURRENT <= 7
-  if (FLAC__file_decoder_get_state(p->decoder) != FLAC__FILE_DECODER_OK && FLAC__file_decoder_get_state(p->decoder) != FLAC__FILE_DECODER_END_OF_FILE) {
-#else
   if (FLAC__stream_decoder_get_state(p->decoder) > FLAC__STREAM_DECODER_END_OF_STREAM) {
-#endif
     lsx_fail_errno(ft, SOX_EHDR, "FLAC ERROR during metadata decoding");
     return SOX_EOF;
   }
@@ -260,7 +229,6 @@ static void flac_stream_encoder_metadata_callback(FLAC__StreamEncoder const * en
 
 
 
-#if FLAC_API_VERSION_CURRENT >= 8
 static FLAC__StreamEncoderSeekStatus flac_stream_encoder_seek_callback(FLAC__StreamEncoder const * encoder, FLAC__uint64 absolute_byte_offset, void * client_data)
 {
   sox_format_t * const ft = (sox_format_t *) client_data;
@@ -289,7 +257,6 @@ static FLAC__StreamEncoderTellStatus flac_stream_encoder_tell_callback(FLAC__Str
     return FLAC__STREAM_ENCODER_TELL_STATUS_OK;
   }
 }
-#endif
 
 
 
@@ -388,13 +355,7 @@ static int start_write(sox_format_t * const ft)
       return SOX_EOF;
     }
     {
-#if FLAC_API_VERSION_CURRENT >= 8
       if (!FLAC__metadata_object_seektable_template_append_spaced_points_by_samples(p->metadata[p->num_metadata], (unsigned)(10 * ft->signal.rate + .5), (FLAC__uint64)(ft->signal.length/ft->signal.channels))) {
-#else
-      size_t samples = 10 * ft->signal.rate;
-      size_t total_samples = ft->signal.length/ft->signal.channels;
-      if (!FLAC__metadata_object_seektable_template_append_spaced_points(p->metadata[p->num_metadata], total_samples / samples + (total_samples % samples != 0), (FLAC__uint64)total_samples)) {
-#endif
         lsx_fail_errno(ft, SOX_ENOMEM, "FLAC ERROR creating the encoder seek table points");
         return SOX_EOF;
       }
@@ -425,15 +386,8 @@ static int start_write(sox_format_t * const ft)
   if (p->num_metadata)
     FLAC__stream_encoder_set_metadata(p->encoder, p->metadata, p->num_metadata);
 
-#if FLAC_API_VERSION_CURRENT <= 7
-  FLAC__stream_encoder_set_write_callback(p->encoder, flac_stream_encoder_write_callback);
-  FLAC__stream_encoder_set_metadata_callback(p->encoder, flac_stream_encoder_metadata_callback);
-  FLAC__stream_encoder_set_client_data(p->encoder, ft);
-  status = FLAC__stream_encoder_init(p->encoder);
-#else
   status = FLAC__stream_encoder_init_stream(p->encoder, flac_stream_encoder_write_callback,
       flac_stream_encoder_seek_callback, flac_stream_encoder_tell_callback, flac_stream_encoder_metadata_callback, ft);
-#endif
 
   if (status != FLAC__STREAM_ENCODER_OK) {
     lsx_fail_errno(ft, SOX_EINVAL, "%s", FLAC__StreamEncoderStateString[status]);
