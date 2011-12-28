@@ -130,13 +130,6 @@ static const char* const lame_library_names[] =
   /* id3tag support is an optional component of LAME. Use if available. */
   #define LAME_FUNC_ID3       LSX_DLENTRY_STUB
 
-  /* Added in LAME 3.98: lame_get_lametag_frame. Use if available. */
-  #define LAME_FUNC_398       LSX_DLENTRY_STUB
-
-  /* Added in LAME 3.98.1 (optional): id3tag_set_pad, lame_get_id3v2_tag,
-     id3tag_set_fieldvalue. Use if available. */
-  #define LAME_FUNC_398_ID3   LSX_DLENTRY_STUB
-
 #else /* DL_LAME */
 
   /* Expected to be present in all builds of LAME. */
@@ -147,21 +140,6 @@ static const char* const lame_library_names[] =
     #define LAME_FUNC_ID3     LSX_DLENTRY_STATIC
   #else
     #define LAME_FUNC_ID3     LSX_DLENTRY_STUB
-  #endif
-
-  /* Added in LAME 3.98: lame_get_lametag_frame. Use if available. */
-  #ifdef HAVE_LAME_398
-    #define LAME_FUNC_398     LSX_DLENTRY_STATIC
-  #else
-    #define LAME_FUNC_398     LSX_DLENTRY_STUB
-  #endif
-
-  /* Added in LAME 3.98.1 (optional): id3tag_set_pad, lame_get_id3v2_tag,
-     id3tag_set_fieldvalue. Use if available. */
-  #ifdef HAVE_LAME_398_ID3TAG
-    #define LAME_FUNC_398_ID3 LSX_DLENTRY_STATIC
-  #else
-    #define LAME_FUNC_398_ID3 LSX_DLENTRY_STUB
   #endif
 
 #endif /* DL_LAME */
@@ -186,6 +164,7 @@ static const char* const lame_library_names[] =
   LAME_FUNC(f,x, int, lame_encode_buffer_float, (lame_global_flags *, const float[], const float[], const int, unsigned char *, const int)) \
   LAME_FUNC(f,x, int, lame_encode_flush, (lame_global_flags *, unsigned char *, int)) \
   LAME_FUNC(f,x, int, lame_close, (lame_global_flags *)) \
+  LAME_FUNC(f,x, size_t, lame_get_lametag_frame, (const lame_global_flags *, unsigned char*, size_t)) \
   LAME_FUNC_ID3(f,x, void, id3tag_init, (lame_global_flags *)) \
   LAME_FUNC_ID3(f,x, void, id3tag_set_title, (lame_global_flags *, const char* title)) \
   LAME_FUNC_ID3(f,x, void, id3tag_set_artist, (lame_global_flags *, const char* artist)) \
@@ -194,10 +173,9 @@ static const char* const lame_library_names[] =
   LAME_FUNC_ID3(f,x, void, id3tag_set_comment, (lame_global_flags *, const char* comment)) \
   LAME_FUNC_ID3(f,x, int, id3tag_set_track, (lame_global_flags *, const char* track)) \
   LAME_FUNC_ID3(f,x, int, id3tag_set_genre, (lame_global_flags *, const char* genre)) \
-  LAME_FUNC_398(f,x, size_t, lame_get_lametag_frame, (const lame_global_flags *, unsigned char*, size_t)) \
-  LAME_FUNC_398_ID3(f,x, size_t, id3tag_set_pad, (lame_global_flags *, size_t)) \
-  LAME_FUNC_398_ID3(f,x, size_t, lame_get_id3v2_tag, (lame_global_flags *, unsigned char*, size_t)) \
-  LAME_FUNC_398_ID3(f,x, int, id3tag_set_fieldvalue, (lame_global_flags *, const char *))
+  LAME_FUNC_ID3(f,x, size_t, id3tag_set_pad, (lame_global_flags *, size_t)) \
+  LAME_FUNC_ID3(f,x, size_t, lame_get_id3v2_tag, (lame_global_flags *, unsigned char*, size_t)) \
+  LAME_FUNC_ID3(f,x, int, id3tag_set_fieldvalue, (lame_global_flags *, const char *))
 
 /* Private data */
 typedef struct mp3_priv_t {
@@ -696,8 +674,6 @@ static void id3tag_set_track_stub(lame_global_flags * gfp UNUSED, const char* tr
   { return; }
 static int id3tag_set_genre_stub(lame_global_flags * gfp UNUSED, const char* genre UNUSED)
   { return 0; }
-static size_t lame_get_lametag_frame_stub(const lame_global_flags * gfp UNUSED, unsigned char * buffer UNUSED, size_t size UNUSED)
-  { return 0; }
 static size_t id3tag_set_pad_stub(lame_global_flags * gfp UNUSED, size_t n UNUSED)
   { return 0; }
 static size_t lame_get_id3v2_tag_stub(lame_global_flags * gfp UNUSED, unsigned char * buffer UNUSED, size_t size UNUSED)
@@ -969,11 +945,7 @@ static int startwrite(sox_format_t * ft)
         p->lame_set_VBR(p->gfp, vbr_default);
 
       if (ft->seekable) {
-        if (!LSX_DLFUNC_IS_STUB(p, lame_get_lametag_frame)) {
-          p->vbr_tag = 1;
-        } else {
-          lsx_report("unable to write VBR tag because lametag update is not supported with this version of LAME");
-        }
+        p->vbr_tag = 1;
       } else {
         lsx_warn("unable to write VBR tag because we can't seek");
       }
