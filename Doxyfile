@@ -703,7 +703,7 @@ EXCLUDE_SYMLINKS       = NO
 # against the file with absolute path, so to exclude all test directories 
 # for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       = 
+EXCLUDE_PATTERNS       = lsx_static_assert_*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names 
 # (namespaces, classes, functions, etc.) that should be excluded from the 
@@ -1514,7 +1514,8 @@ PREDEFINED             = SCHAR_MIN=(-128) \
                          USHRT_MAX=0xffff \
                          INT_MAX=2147483647 \
                          INT_MIN=(-2147483647-1) \
-                         UINT_MAX=0xffffffff
+                         UINT_MAX=0xffffffff \
+                         _DOXYGEN_
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then 
 # this tag can be used to specify a list of macro names that should be expanded. 
