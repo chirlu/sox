@@ -170,17 +170,19 @@ static int sox_fade_start(sox_effect_t * effp)
          */
         fade->out_stop = 0;
 
-    /* Sanity check for fade times vs total time */
-    if (fade->in_stop > fade->out_start && fade->out_start != 0)
-    { /* Fades too long */
-        lsx_fail("Fade: End of fade-in should not happen before beginning of fade-out");
-        return(SOX_EOF);
-    } /* endif fade time sanity */
+    if (fade->out_start) {              /* Sanity check */
+      if (fade->in_stop > fade->out_start)
+        --fade->in_stop;                /* 1 sample grace for rounding error. */
+      if (fade->in_stop > fade->out_start) {
+        lsx_fail("fade-out overlaps fade-in");
+        return SOX_EOF;
+      }
+    }
 
     fade->samplesdone = fade->in_start;
     fade->endpadwarned = 0;
 
-    lsx_debug("fade: in_start = %lu in_stop = %lu out_start = %lu out_stop = %lu", (unsigned long)fade->in_start, (unsigned long)fade->in_stop, (unsigned long)fade->out_start, (unsigned long)fade->out_stop);
+    lsx_debug("in_start = %lu in_stop = %lu out_start = %lu out_stop = %lu", (unsigned long)fade->in_start, (unsigned long)fade->in_stop, (unsigned long)fade->out_start, (unsigned long)fade->out_stop);
 
     if (fade->in_start == fade->in_stop && !truncate &&
         fade->out_start == fade->out_stop)
