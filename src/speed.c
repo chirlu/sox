@@ -63,7 +63,7 @@ sox_effect_handler_t const * lsx_speed_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "speed", "factor[c]",
-	SOX_EFF_MCHAN | SOX_EFF_RATE | SOX_EFF_LENGTH,
+    SOX_EFF_MCHAN | SOX_EFF_RATE | SOX_EFF_LENGTH | SOX_EFF_MODIFY,
     getopts, start, lsx_flow_copy, 0, 0, 0, sizeof(priv_t)};
   return &handler;
 }
