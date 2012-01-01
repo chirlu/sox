@@ -67,6 +67,8 @@ Effects:
   o Let the delay effect gracefully handle the special case that a delay can
     be more than the input length. [3055399] (Ulrich Klauer)
   o New hilbert and downsample effects. (Ulrich Klauer)
+  o Fix problem where fade would sometimes fail if specifying a fade-out
+    immediately after a fade-in. (robs)
 
 Misc:
 

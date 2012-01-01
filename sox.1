@@ -3086,15 +3086,24 @@ that does not contain the delay at the start which usually occurs between
 .EE
 .na
 .TP
-\fBsinc\fR [\fB\-a\fI att\fR\^|\^\fB\-b\fI beta\fR] [\fB\-p\fI phase\fR\^|\^\fB\-M\fR\^|\^\fB\-I\fR\^|\^\fB\-L\fR] \:[\fB\-t\fI tbw\fR\^|\^\fB\-n\fI taps\fR] [\fIfreqHP\fR][\fB\-\fIfreqLP\fR [\fB\-t\fR tbw\^|\^\fB\-n\fR taps]]
+\fBsinc\fR [\fB\-a\fI att\fR\^|\^\fB\-b\fI beta\fR] [\fB\-p\fI phase\fR\^|\^\fB\-M\fR\^|\^\fB\-I\fR\^|\^\fB\-L\fR] \:[\fB\-t\fI tbw\fR\^|\^\fB\-n\fI taps\fR] [\fIfreqHP\fR]\:[\fB\-\fIfreqLP\fR [\fB\-t\fR tbw\^|\^\fB\-n\fR taps]]
 .ad
 Apply a sinc kaiser-windowed low-pass, high-pass, band-pass, or band-reject filter
 to the signal.
 The \fIfreqHP\fR and \fIfreqLP\fR parameters give the frequencies of the
 6dB points of a high-pass and low-pass filter that may be invoked
 individually, or together.  If both are
-given, then \fIfreqHP\fR < \fIfreqLP\fR creates a band-pass filter,
-\fIfreqHP\fR > \fIfreqLP\fR creates a band-reject filter.
+given, then \fIfreqHP\fR less than \fIfreqLP\fR creates a band-pass filter,
+\fIfreqHP\fR greater than \fIfreqLP\fR creates a band-reject filter.
+For example, the invocations
+.EX
+   sinc 3k
+   sinc -4k
+   sinc 3k-4k
+   sinc 4k-3k
+.EE
+create a high-pass, low-pass, band-pass, and band-reject filter
+respectively.
 .SP
 The default stop-band attenuation of 120dB can be overridden with
 \fB\-a\fR; alternatively, the kaiser-window `beta' parameter can be
