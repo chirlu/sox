@@ -45,16 +45,14 @@ static int sox_trim_getopts(sox_effect_t * effp, int argc, char **argv)
                 trim->end_is_absolute = sox_true;
                 end++;
             } else trim->end_is_absolute = sox_false;
-            trim->end_str = lsx_malloc(strlen(end)+1);
-            strcpy(trim->end_str, end);
+            trim->end_str = lsx_strdup(end);
             /* Do a dummy parse to see if it will fail */
             n = lsx_parsesamples(0., trim->end_str, &samples, 't');
             if (!n || *n)
               return lsx_usage(effp);
             trim->length = samples;
         case 1:
-            trim->start_str = lsx_malloc(strlen(argv[0])+1);
-            strcpy(trim->start_str,argv[0]);
+            trim->start_str = lsx_strdup(argv[0]);
             /* Do a dummy parse to see if it will fail */
             n = lsx_parsesamples(0., trim->start_str, &samples, 't');
             if (!n || *n)

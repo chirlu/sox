@@ -302,8 +302,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
   /* Get duration if given (if first arg starts with digit) */
   if (argc && (isdigit((int)argv[argn][0]) || argv[argn][0] == '.')) {
-    p->length_str = lsx_malloc(strlen(argv[argn]) + 1);
-    strcpy(p->length_str, argv[argn]);
+    p->length_str = lsx_strdup(argv[argn]);
     /* Do a dummy parse of to see if it will fail */
     n = lsx_parsesamples(0., p->length_str, &p->samples_to_do, 't');
     if (!n || *n)

@@ -118,8 +118,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int argc, char **argv)
          * parse the duration info yet.  So save argument off
          * for future processing.
          */
-        silence->start_duration_str = lsx_malloc(strlen(argv[0])+1);
-        strcpy(silence->start_duration_str,argv[0]);
+        silence->start_duration_str = lsx_strdup(argv[0]);
         /* Perform a fake parse to do error checking */
         n = lsx_parsesamples(0.,silence->start_duration_str,&silence->start_duration,'s');
         if (!n || *n)
@@ -159,8 +158,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int argc, char **argv)
          * parse the duration info yet.  So save argument off
          * for future processing.
          */
-        silence->stop_duration_str = lsx_malloc(strlen(argv[0])+1);
-        strcpy(silence->stop_duration_str,argv[0]);
+        silence->stop_duration_str = lsx_strdup(argv[0]);
         /* Perform a fake parse to do error checking */
         n = lsx_parsesamples(0.,silence->stop_duration_str,&silence->stop_duration,'s');
         if (!n || *n)
