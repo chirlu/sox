@@ -25,7 +25,7 @@ typedef struct {
   double dsum1, dsum2;          /* deltas */
   double scale;                 /* scale-factor */
   double last;                  /* previous sample */
-  size_t read;               /* samples processed */
+  uint64_t read;               /* samples processed */
   int volume;
   int srms;
   int fft;
@@ -265,7 +265,7 @@ static int sox_stat_stop(sox_effect_t * effp)
   if (stat->volume == 2)
     fprintf(stderr, "\n\n");
   /* print out the info */
-  fprintf(stderr, "Samples read:      %12lu\n", (unsigned long)stat->read);
+  fprintf(stderr, "Samples read:      %12" PRIu64 "\n", stat->read);
   fprintf(stderr, "Length (seconds):  %12.6f\n", (double)stat->read/effp->in_signal.rate/effp->in_signal.channels);
   if (stat->srms)
     fprintf(stderr, "Scaled by rms:     %12.6f\n", rms);

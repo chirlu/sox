@@ -186,8 +186,8 @@ typedef struct {
   char *        length_str;
   channel_t *   getopts_channels;
   size_t        getopts_nchannels;
-  size_t        samples_done;
-  size_t        samples_to_do;
+  uint64_t      samples_done;
+  uint64_t      samples_to_do;
   channel_t *   channels;
   size_t        number_of_channels;
   sox_bool      no_headroom;
@@ -514,11 +514,11 @@ static int start(sox_effect_t * effp)
           (log(chan->freq2) - log(chan->freq)) / p->samples_to_do : 1;
         break;
     }
-    lsx_debug("type=%s, combine=%s, samples_to_do=%lu, f1=%g, f2=%g, "
+    lsx_debug("type=%s, combine=%s, samples_to_do=%" PRIu64 ", f1=%g, f2=%g, "
               "offset=%g, phase=%g, p1=%g, p2=%g, p3=%g mult=%g",
         lsx_find_enum_value(chan->type, synth_type)->text,
         lsx_find_enum_value(chan->combine, combine_type)->text,
-        (unsigned long)p->samples_to_do, chan->freq, chan->freq2,
+        p->samples_to_do, chan->freq, chan->freq2,
         chan->offset, chan->phase, chan->p1, chan->p2, chan->p3, chan->mult);
   }
   p->gain = 1;

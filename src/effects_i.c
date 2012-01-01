@@ -145,7 +145,7 @@ void lsx_generate_wave_table(
  * # of samples.
  * Returns NULL on error, pointer to next char to parse otherwise.
  */
-char const * lsx_parsesamples(sox_rate_t rate, const char *str0, size_t *samples, int def)
+char const * lsx_parsesamples(sox_rate_t rate, const char *str0, uint64_t *samples, int def)
 {
   int i, found_samples = 0, found_time = 0;
   char const * end;
@@ -214,7 +214,7 @@ char const * lsx_parsesamples(sox_rate_t rate, const char *str0, size_t *samples
 int main(int argc, char * * argv)
 {
   char const * str, * next;
-  size_t samples;
+  uint64_t samples;
 
   TEST("0"  , 0, 1)
   TEST("1" , 10000, 1)

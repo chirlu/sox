@@ -73,7 +73,7 @@ void lsx_generate_wave_table(
     double min,         /* Minimum value on the y-axis. (e.g. -1) */
     double max,         /* Maximum value on the y-axis. (e.g. +1) */
     double phase);      /* Phase at 1st point; 0..2pi. (e.g. pi/2 for cosine) */
-char const * lsx_parsesamples(sox_rate_t rate, const char *str, size_t *samples, int def);
+char const * lsx_parsesamples(sox_rate_t rate, const char *str, uint64_t *samples, int def);
 int lsx_parse_note(char const * text, char * * end_ptr);
 double lsx_parse_frequency_k(char const * text, char * * end_ptr, int key);
 #define lsx_parse_frequency(a, b) lsx_parse_frequency_k(a, b, INT_MAX)

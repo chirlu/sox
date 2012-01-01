@@ -32,7 +32,7 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
 {
   priv_t * p = (priv_t *)effp->priv;
   char const * s, * q;
-  size_t samples;
+  uint64_t samples;
   int i;
 
   for (i = p->argc - 1; i == 0 || i == 1; --i) {
@@ -105,7 +105,7 @@ static int flow(sox_effect_t * effp, sox_sample_t const * ibuf,
     sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  size_t skipped;
+  uint64_t skipped;
 
   p->pos[0].at -= skipped = min(p->pos[0].at, *isamp);
   *osamp = !p->pos[0].at * min(p->pos[1].at, min(*isamp - skipped, *osamp));

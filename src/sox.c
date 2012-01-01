@@ -151,7 +151,7 @@ typedef struct {
   sox_bool no_glob;
 
   sox_format_t * ft;  /* libSoX file descriptor */
-  size_t volume_clips;
+  uint64_t volume_clips;
   rg_mode replay_gain_mode;
 } file_t;
 
@@ -187,7 +187,7 @@ static char * play_rate_arg = NULL;
 
 static sox_signalinfo_t combiner_signal, ofile_signal_options;
 static sox_encodinginfo_t combiner_encoding, ofile_encoding_options;
-static size_t mixing_clips = 0;
+static uint64_t mixing_clips = 0;
 static size_t current_input = 0;
 static uint64_t input_wide_samples = 0;
 static uint64_t read_wide_samples = 0;
@@ -381,9 +381,9 @@ static void display_file_info(sox_format_t * ft, file_t * f, sox_bool full)
     uint64_t ws = ft->signal.length / ft->signal.channels;
     char const * text, * text2 = NULL;
     fprintf(output,
-        "Duration       : %s = %lu samples %c %g CDDA sectors\n",
+        "Duration       : %s = %" PRIu64 " samples %c %g CDDA sectors\n",
         str_time((double)ws / ft->signal.rate),
-        (unsigned long)ws, "~="[ft->signal.rate == 44100],
+        ws, "~="[ft->signal.rate == 44100],
         (double)ws / ft->signal.rate * 44100 / 588);
     if (ft->mode == 'r' && (text = size_and_bitrate(ft, &text2))) {
       fprintf(output, "File Size      : %s\n", text);
@@ -489,7 +489,8 @@ typedef struct {
 static int combiner_start(sox_effect_t *effp)
 {
   input_combiner_t * z = (input_combiner_t *) effp->priv;
-  size_t ws, i;
+  uint64_t ws;
+  size_t i;
 
   if (is_serial(combine_method))
     progress_to_next_input_file(files[current_input], effp);
@@ -1113,10 +1114,10 @@ static int advance_eff_chain(void)
   return SOX_SUCCESS;
 } /* advance_eff_chain */
 
-static size_t total_clips(void)
+static uint64_t total_clips(void)
 {
   unsigned i;
-  size_t clips = 0;
+  uint64_t clips = 0;
   for (i = 0; i < file_count; ++i)
     clips += files[i]->ft->clips + files[i]->volume_clips;
   return clips + mixing_clips + sox_effects_clips(effects_chain);
@@ -2615,7 +2616,7 @@ static int soxi1(soxi_t const * type, char const * filename)
     case Type: printf("%s\n", ft->filetype); break;
     case Rate: printf("%g\n", ft->signal.rate); break;
     case Channels: printf("%u\n", ft->signal.channels); break;
-    case Samples: if (soxi_total ==-1) printf("%lu\n",(unsigned long)ws); break;
+    case Samples: if (soxi_total ==-1) printf("%" PRIu64 "\n", ws); break;
     case Duration: if (soxi_total ==-1) printf("%s\n", str_time(secs)); break;
     case Duration_secs: if (soxi_total ==-1) printf("%f\n", secs); break;
     case Bits: printf("%u\n", ft->encoding.bits_per_sample); break;
@@ -2952,19 +2953,19 @@ int main(int argc, char **argv)
 
   for (i = 0; i < file_count; ++i)
     if (files[i]->ft->clips != 0)
-      lsx_warn(i < input_count?"`%s' input clipped %lu samples" :
-                              "`%s' output clipped %lu samples; decrease volume?",
+      lsx_warn(i < input_count?"`%s' input clipped %" PRIu64 " samples" :
+                              "`%s' output clipped %" PRIu64 " samples; decrease volume?",
           (files[i]->ft->handler.flags & SOX_FILE_DEVICE)?
                        files[i]->ft->handler.names[0] : files[i]->ft->filename,
-          (unsigned long)files[i]->ft->clips);
+          files[i]->ft->clips);
 
   if (mixing_clips > 0)
-    lsx_warn("mix-combining clipped %lu samples; decrease volume?", (unsigned long)mixing_clips);
+    lsx_warn("mix-combining clipped %" PRIu64 " samples; decrease volume?", mixing_clips);
 
   for (i = 0; i < file_count; i++)
     if (files[i]->volume_clips > 0)
-      lsx_warn("`%s' balancing clipped %lu samples; decrease volume?",
-          files[i]->filename, (unsigned long)files[i]->volume_clips);
+      lsx_warn("`%s' balancing clipped %" PRIu64 " samples; decrease volume?",
+          files[i]->filename, files[i]->volume_clips);
 
   if (show_progress) {
     if (user_abort)

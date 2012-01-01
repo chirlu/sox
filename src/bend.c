@@ -43,7 +43,7 @@ typedef struct {
     char *str;           /* Command-line argument to parse for this bend */
     size_t start;        /* Start bending when in_pos equals this */
     double cents;
-    size_t duration;     /* Number of samples to bend */
+    uint64_t duration;     /* Number of samples to bend */
   } *bends;
 
   unsigned frame_rate;
@@ -69,7 +69,8 @@ typedef struct {
 static int parse(sox_effect_t * effp, char **argv, sox_rate_t rate)
 {
   priv_t *p = (priv_t *) effp->priv;
-  size_t i, time = 0, delay;
+  size_t i;
+  uint64_t time = 0, delay;
   char const *next;
 
   for (i = 0; i < p->nbends; ++i) {

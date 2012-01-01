@@ -31,7 +31,7 @@ static int sox_trim_getopts(sox_effect_t * effp, int argc, char **argv)
 {
     char *end;
     priv_t * trim = (priv_t *) effp->priv;
-    size_t samples;
+    uint64_t samples;
     const char *n;
   --argc, ++argv;
 
@@ -72,7 +72,7 @@ static int sox_trim_getopts(sox_effect_t * effp, int argc, char **argv)
 static int sox_trim_start(sox_effect_t * effp)
 {
     priv_t * trim = (priv_t *) effp->priv;
-    size_t samples;
+    uint64_t samples;
 
     if (lsx_parsesamples(effp->in_signal.rate, trim->start_str,
                         &samples, 't') == NULL)
@@ -98,7 +98,7 @@ static int sox_trim_start(sox_effect_t * effp)
         trim->length = 0;
           /* with trim->end_str == NULL, this means indefinite length */
 
-    lsx_debug("start at %lus, length %lu", (unsigned long)trim->start, (unsigned long)trim->length);
+    lsx_debug("start at %" PRIu64 ", length %" PRIu64, trim->start, trim->length);
 
     /* Account for # of channels */
     trim->start *= effp->in_signal.channels;

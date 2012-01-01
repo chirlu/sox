@@ -397,20 +397,20 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
   return flow_status;
 }
 
-size_t sox_effects_clips(sox_effects_chain_t * chain)
+uint64_t sox_effects_clips(sox_effects_chain_t * chain)
 {
   unsigned i, f;
-  size_t clips = 0;
+  uint64_t clips = 0;
   for (i = 1; i < chain->length - 1; ++i)
     for (f = 0; f < chain->effects[i][0].flows; ++f)
       clips += chain->effects[i][f].clips;
   return clips;
 }
 
-size_t sox_stop_effect(sox_effect_t *effp)
+uint64_t sox_stop_effect(sox_effect_t *effp)
 {
   unsigned f;
-  size_t clips = 0;
+  uint64_t clips = 0;
 
   for (f = 0; f < effp->flows; ++f) {
     effp[f].handler.stop(&effp[f]);
@@ -451,12 +451,12 @@ sox_effect_t *sox_pop_effect_last(sox_effects_chain_t *chain)
  */
 void sox_delete_effect(sox_effect_t *effp)
 {
-  size_t clips;
+  uint64_t clips;
   unsigned f;
 
   if ((clips = sox_stop_effect(effp)) != 0)
-    lsx_warn("%s clipped %lu samples; decrease volume?",
-        effp->handler.name, (unsigned long)clips);
+    lsx_warn("%s clipped %" PRIu64 " samples; decrease volume?",
+        effp->handler.name, clips);
   effp->handler.kill(effp); /* N.B. only one kill; not one per flow */
   for (f = 0; f < effp->flows; ++f)
     free(effp[f].priv);

@@ -21,13 +21,13 @@ typedef struct {
   unsigned npads;     /* Number of pads requested */
   struct {
     char * str;       /* Command-line argument to parse for this pad */
-    size_t start; /* Start padding when in_pos equals this */
-    size_t pad;   /* Number of samples to pad */
+    uint64_t start; /* Start padding when in_pos equals this */
+    uint64_t pad;   /* Number of samples to pad */
   } * pads;
 
-  size_t in_pos;  /* Number of samples read from the input stream */
+  uint64_t in_pos;  /* Number of samples read from the input stream */
   unsigned pads_pos;  /* Number of pads completed so far */
-  size_t pad_pos; /* Number of samples through the current pad */
+  uint64_t pad_pos; /* Number of samples through the current pad */
 } priv_t;
 
 static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
@@ -42,7 +42,7 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
     next = lsx_parsesamples(rate, p->pads[i].str, &p->pads[i].pad, 't');
     if (next == NULL) break;
     if (*next == '\0')
-      p->pads[i].start = i? SOX_SIZE_MAX : 0;
+      p->pads[i].start = i? UINT64_MAX : 0;
     else {
       if (*next != '@') break;
       next = lsx_parsesamples(rate, next+1, &p->pads[i].start, 't');
@@ -118,7 +118,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
   priv_t * p = (priv_t *)effp->priv;
   static size_t isamp = 0;
   if (p->pads_pos != p->npads && p->in_pos != p->pads[p->pads_pos].start)
-    p->in_pos = SOX_SIZE_MAX;  /* Invoke the final pad (with no given start) */
+    p->in_pos = UINT64_MAX;  /* Invoke the final pad (with no given start) */
   return flow(effp, 0, obuf, &isamp, osamp);
 }
 

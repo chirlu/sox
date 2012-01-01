@@ -47,7 +47,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int argc, char **argv)
     priv_t * fade = (priv_t *) effp->priv;
     char t_char[2];
     int t_argno;
-    size_t samples;
+    uint64_t samples;
     const char *n;
   --argc, ++argv;
 
@@ -118,7 +118,7 @@ static int sox_fade_start(sox_effect_t * effp)
 {
     priv_t * fade = (priv_t *) effp->priv;
     sox_bool truncate = sox_false;
-    size_t samples;
+    uint64_t samples;
 
     /* converting time values to samples */
     fade->in_start = 0;
@@ -179,7 +179,9 @@ static int sox_fade_start(sox_effect_t * effp)
     fade->samplesdone = fade->in_start;
     fade->endpadwarned = 0;
 
-    lsx_debug("in_start = %lu in_stop = %lu out_start = %lu out_stop = %lu", (unsigned long)fade->in_start, (unsigned long)fade->in_stop, (unsigned long)fade->out_start, (unsigned long)fade->out_stop);
+    lsx_debug("in_start = %" PRIu64 " in_stop = %" PRIu64 " "
+      "out_start = %" PRIu64 " out_stop = %" PRIu64,
+      fade->in_start, fade->in_stop, fade->out_start, fade->out_stop);
 
     if (fade->in_start == fade->in_stop && !truncate &&
         fade->out_start == fade->out_stop)
@@ -285,7 +287,7 @@ static int sox_fade_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp
     if (fade->do_out && fade->samplesdone < fade->out_stop &&
         !(fade->endpadwarned))
     { /* Warning about padding silence into end of sample */
-        lsx_warn("Fade: warning: End time passed end-of-file. Padding with silence");
+        lsx_warn("End time past end of audio. Padding with silence");
         fade->endpadwarned = 1;
     } /* endif endpadwarned */
 

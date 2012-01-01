@@ -50,12 +50,12 @@ typedef struct {
   unsigned nsplices;     /* Number of splices requested */
   struct {
     char * str;          /* Command-line argument to parse for this splice */
-    size_t overlap;      /* Number of samples to overlap */
-    size_t search;       /* Number of samples to search */
-    size_t start;        /* Start splicing when in_pos equals this */
+    uint64_t overlap;    /* Number of samples to overlap */
+    uint64_t search;     /* Number of samples to search */
+    uint64_t start;      /* Start splicing when in_pos equals this */
   } * splices;
 
-  size_t in_pos;         /* Number of samples read from the input stream */
+  uint64_t in_pos;       /* Number of samples read from the input stream */
   unsigned splices_pos;  /* Number of splices completed so far */
   size_t buffer_pos;     /* Number of samples through the current splice */
   size_t max_buffer_size;
@@ -64,7 +64,7 @@ typedef struct {
 } priv_t;
 
 static void splice(sox_effect_t * effp, const sox_sample_t * in1, const
-    sox_sample_t * in2, sox_sample_t * output, size_t overlap, size_t channels)
+    sox_sample_t * in2, sox_sample_t * output, uint64_t overlap, size_t channels)
 {
   priv_t * p = (priv_t *)effp->priv;
   size_t i, j, k = 0;
@@ -104,10 +104,10 @@ static void splice(sox_effect_t * effp, const sox_sample_t * in1, const
   }
 }
 
-static size_t do_splice(sox_effect_t * effp,
-    sox_sample_t * f, size_t overlap, size_t search, size_t channels)
+static uint64_t do_splice(sox_effect_t * effp,
+    sox_sample_t * f, uint64_t overlap, uint64_t search, size_t channels)
 {
-  size_t offset = search? best_overlap_position(
+  uint64_t offset = search? best_overlap_position(
       f, f + overlap * channels, overlap, search, channels) : 0;
   splice(effp, f, f + (overlap + offset) * channels,
       f + (overlap + offset) * channels, overlap, channels);

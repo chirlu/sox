@@ -56,7 +56,7 @@ typedef struct {
 
   /* Per-channel work area */
   int        WORK;  /* Start of work area is marked by this dummy variable. */
-  size_t     skip;
+  uint64_t   skip;
   int        dft_size, step_size, block_steps, block_num, rows, cols, read;
   int        x_size, end, end_min, last_end;
   sox_bool   truncated;
@@ -92,7 +92,7 @@ static unsigned char const alt_palette[] =
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *)effp->priv;
-  size_t duration;
+  uint64_t duration;
   char const * next;
   int c;
   lsx_getopt_t optstate;

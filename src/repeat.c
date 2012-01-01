@@ -20,7 +20,7 @@
 
 typedef struct {
   unsigned      num_repeats, remaining_repeats;
-  off_t         num_samples, remaining_samples;
+  uint64_t      num_samples, remaining_samples;
   FILE          * tmp_file;
 } priv_t;
 
@@ -74,7 +74,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
       --p->remaining_repeats;
       rewind(p->tmp_file);
     }
-    n = min(p->remaining_samples, (off_t)(*osamp - odone));
+    n = min(p->remaining_samples, *osamp - odone);
     if ((fread(obuf + odone, sizeof(*obuf), n, p->tmp_file)) != n) {
       lsx_fail("error reading temporary file: %s", strerror(errno));
       return SOX_EOF;

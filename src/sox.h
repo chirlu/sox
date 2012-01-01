@@ -1515,7 +1515,7 @@ Data passed to/from the format handler
 */
 struct sox_format_t {
   char             * filename;      /**< File name */
-  
+
   /**
   Signal specifications for reader (decoder) or writer (encoder):
   sample rate, number of channels, precision, length, headroom multiplier.
@@ -1543,7 +1543,7 @@ struct sox_format_t {
   sox_bool         seekable;        /**< Can seek on this file */
   char             mode;            /**< Read or write mode ('r' or 'w') */
   sox_uint64_t     olength;         /**< Samples * chans written to file */
-  size_t           clips;           /**< Incremented if clipping occurs */
+  sox_uint64_t     clips;           /**< Incremented if clipping occurs */
   int              sox_errno;       /**< Failure error code */
   char             sox_errstr[256]; /**< Failure error text */
   void             * fp;            /**< File stream pointer */
@@ -1606,7 +1606,7 @@ struct sox_effect_t {
   size_t                   obeg;      /**< output buffer consumed */
   size_t                   oend;      /**< output buffer total length */
   size_t               imin;          /**< minimum input buffer size */
-  size_t               clips;         /**< increment if clipping occurs */
+  sox_uint64_t         clips;         /**< increment if clipping occurs */
   size_t               flows;         /**< 1 if MCHAN, number of chans otherwise */
   size_t               flow;          /**< flow number */
   void                 * priv;        /**< Effect's private data area */
@@ -2129,7 +2129,7 @@ Client API:
 Gets the number of clips that occurred while running an effects chain.
 @returns the number of clips that occurred while running an effects chain.
 */
-size_t
+sox_uint64_t
 LSX_API
 sox_effects_clips(
     LSX_PARAM_IN sox_effects_chain_t * chain /**< Effects chain from which to read clip information. */
@@ -2140,7 +2140,7 @@ Client API:
 Shuts down an effect (calls stop on each of its flows).
 @returns the number of clips from all flows.
 */
-size_t
+sox_uint64_t
 LSX_API
 sox_stop_effect(
     LSX_PARAM_INOUT_COUNT(effp->flows) sox_effect_t * effp /**< Effect to stop. */

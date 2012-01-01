@@ -204,7 +204,7 @@ static int ossinit(sox_format_t * ft)
     file->size = 0;
     ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &file->size);
     if (file->size < 4 || file->size > 65536) {
-            lsx_fail_errno(ft,SOX_EOF,"Invalid audio buffer size %lu", (unsigned long)file->size);
+            lsx_fail_errno(ft,SOX_EOF,"Invalid audio buffer size %" PRIuPTR, file->size);
             return (SOX_EOF);
     }
     file->count = 0;
