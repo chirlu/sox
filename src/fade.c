@@ -187,6 +187,9 @@ static int sox_fade_start(sox_effect_t * effp)
         fade->out_start == fade->out_stop)
       return SOX_EFF_NULL;
 
+    effp->out_signal.length = truncate ?
+        fade->out_stop * effp->in_signal.channels : effp->in_signal.length;
+
     return SOX_SUCCESS;
 }
 

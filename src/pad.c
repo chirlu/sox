@@ -76,7 +76,29 @@ static int start(sox_effect_t * effp)
   priv_t * p = (priv_t *)effp->priv;
   unsigned i;
 
-  parse(effp, 0, effp->in_signal.rate); /* Re-parse now rate is known */
+  /* Re-parse now rate is known */
+  if (parse(effp, 0, effp->in_signal.rate) != SOX_SUCCESS)
+    return SOX_EOF;
+
+  if ((effp->out_signal.length = effp->in_signal.length) != 0) {
+    for (i = 0; i < p->npads; ++i)
+      effp->out_signal.length +=
+        p->pads[i].pad * effp->in_signal.channels;
+
+    /* Check that the last pad position (except for "at the end")
+       is within bounds. */
+    i = p->npads;
+    if (i > 0 && p->pads[i-1].start == UINT64_MAX)
+      i--;
+    if (i > 0 &&
+        p->pads[i-1].start * effp->in_signal.channels
+          > effp->in_signal.length)
+    {
+      lsx_fail("pad position after end of audio");
+      return SOX_EOF;
+    }
+  }
+
   p->in_pos = p->pad_pos = p->pads_pos = 0;
   for (i = 0; i < p->npads; ++i)
     if (p->pads[i].pad)

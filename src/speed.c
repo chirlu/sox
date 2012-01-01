@@ -56,6 +56,10 @@ static int start(sox_effect_t * effp)
     return SOX_EFF_NULL;
 
   effp->out_signal.rate = effp->in_signal.rate * p->factor;
+
+  effp->out_signal.length = effp->in_signal.length;
+    /* audio length if measured in samples doesn't change */
+
   return SOX_SUCCESS;
 }
 

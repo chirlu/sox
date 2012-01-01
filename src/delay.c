@@ -84,8 +84,11 @@ static int start(sox_effect_t * effp)
     p->buffer_size = temp;
   }
   lsx_parsesamples(effp->in_signal.rate, p->max_arg, &max_delay, 't');
-  if (effp->flow == 0)
+  if (effp->flow == 0) {
+    effp->out_signal.length = effp->in_signal.length ?
+       effp->in_signal.length + max_delay * effp->in_signal.channels : 0;
     lsx_debug("extending audio by %" PRIu64 " samples", max_delay);
+  }
   p->buffer_index = p->delay = p->pre_pad = 0;
   p->pad = max_delay - p->buffer_size;
   p->buffer = lsx_malloc(p->buffer_size * sizeof(*p->buffer));
