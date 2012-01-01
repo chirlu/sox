@@ -48,7 +48,14 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
       next = lsx_parsesamples(rate, next+1, &p->pads[i].start, 't');
       if (next == NULL || *next != '\0') break;
     }
-    if (i > 0 && p->pads[i].start <= p->pads[i-1].start) break;
+    if (!argv) {
+      /* Do this check only during the second pass when the actual
+         sample rate is known, otherwise it might fail on legal
+         commands like
+           pad 1@5 1@30000s
+         if the rate is, e.g., 48k. */
+      if (i > 0 && p->pads[i].start <= p->pads[i-1].start) break;
+    }
   }
   if (i < p->npads)
     return lsx_usage(effp);
