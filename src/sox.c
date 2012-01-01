@@ -1052,12 +1052,17 @@ static void add_effects(sox_effects_chain_t *chain)
 
   for (i = 0; i < chain->length; ++i) {
     char const * format = sox_globals.verbosity > 3?
-      "effects chain: %-10s %gHz %u channels %u bits %s" :
-      "effects chain: %-10s %gHz %u channels";
+      "effects chain: %-10s %7gHz %2u channels %7s %2u bits %s" :
+      "effects chain: %-10s %7gHz %2u channels";
     sox_effect_t const * effp = &chain->effects[i][0];
     lsx_report(format, effp->handler.name, effp->out_signal.rate,
-        effp->out_signal.channels, effp->out_signal.precision,
-        (effp->handler.flags & SOX_EFF_MCHAN)? "(multi)" : "");
+        effp->out_signal.channels,
+        (effp->handler.flags & SOX_EFF_MCHAN)? "(multi)" : "",
+        effp->out_signal.precision,
+        effp->out_signal.length ?
+          str_time(effp->out_signal.length/effp->out_signal.channels/effp->out_signal.rate) :
+          "unknown length"
+        );
   }
 }
 
