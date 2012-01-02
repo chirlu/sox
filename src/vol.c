@@ -20,8 +20,8 @@ typedef struct {
   sox_bool  uselimiter;
   double    limiterthreshhold;
   double    limitergain;
-  int       limited; /* number of limited values to report. */
-  int       totalprocessed;
+  uint64_t  limited; /* number of limited values to report. */
+  uint64_t  totalprocessed;
 } priv_t;
 
 enum {vol_amplitude, vol_dB, vol_power};
@@ -169,7 +169,7 @@ static int stop(sox_effect_t * effp)
 {
   priv_t * vol = (priv_t *) effp->priv;
   if (vol->limited) {
-    lsx_warn("limited %d values (%d percent).",
+    lsx_warn("limited %" PRIu64 " values (%d percent).",
          vol->limited, (int) (vol->limited * 100.0 / vol->totalprocessed));
   }
   return SOX_SUCCESS;

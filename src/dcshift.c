@@ -17,9 +17,8 @@ typedef struct {
     int uselimiter; /* boolean: are we using the limiter? */
     double limiterthreshhold;
     double limitergain; /* limiter gain. */
-    int limited; /* number of limited values to report. */
-    int totalprocessed;
-    int clipped;    /* number of clipped values to report. */
+    uint64_t limited; /* number of limited values to report. */
+    uint64_t totalprocessed;
 } priv_t;
 
 /*
@@ -66,7 +65,6 @@ static int sox_dcshift_start(sox_effect_t * effp)
     if (dcs->dcshift == 0)
       return SOX_EFF_NULL;
 
-    dcs->clipped = 0;
     dcs->limited = 0;
     dcs->totalprocessed = 0;
 
@@ -120,7 +118,7 @@ static int sox_dcshift_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_s
                         sample = dcshift * SOX_SAMPLE_MAX + sample;
                 }
 
-                SOX_SAMPLE_CLIP_COUNT(sample, dcs->clipped);
+                SOX_SAMPLE_CLIP_COUNT(sample, effp->clips);
                 *obuf++ = sample;
             }
     }
@@ -141,21 +139,8 @@ static int sox_dcshift_stop(sox_effect_t * effp)
 
     if (dcs->limited)
     {
-        lsx_warn("DCSHIFT limited %d values (%d percent).",
+        lsx_warn("DCSHIFT limited %" PRIu64 " values (%d percent).",
              dcs->limited, (int) (dcs->limited * 100.0 / dcs->totalprocessed));
-    }
-    if (dcs->clipped)
-    {
-        if (dcs->dcshift > 0)
-        {
-             lsx_warn("DCSHIFT clipped %d values, dcshift=%f too high...",
-                  dcs->clipped, dcs->dcshift);
-        }
-        else
-        {
-             lsx_warn("DCSHIFT clipped %d values, dcshift=%f too low...",
-                  dcs->clipped, dcs->dcshift);
-        }
     }
     return SOX_SUCCESS;
 }
