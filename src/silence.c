@@ -80,6 +80,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int argc, char **argv)
 {
     priv_t *   silence = (priv_t *) effp->priv;
     int parse_count;
+    uint64_t temp;
     const char *n;
   --argc, ++argv;
 
@@ -120,9 +121,10 @@ static int sox_silence_getopts(sox_effect_t * effp, int argc, char **argv)
          */
         silence->start_duration_str = lsx_strdup(argv[0]);
         /* Perform a fake parse to do error checking */
-        n = lsx_parsesamples(0.,silence->start_duration_str,&silence->start_duration,'s');
+        n = lsx_parsesamples(0.,silence->start_duration_str,&temp,'s');
         if (!n || *n)
           return lsx_usage(effp);
+        silence->start_duration = temp;
 
         parse_count = sscanf(argv[1], "%lf%c", &silence->start_threshold,
                 &silence->start_unit);
@@ -160,9 +162,10 @@ static int sox_silence_getopts(sox_effect_t * effp, int argc, char **argv)
          */
         silence->stop_duration_str = lsx_strdup(argv[0]);
         /* Perform a fake parse to do error checking */
-        n = lsx_parsesamples(0.,silence->stop_duration_str,&silence->stop_duration,'s');
+        n = lsx_parsesamples(0.,silence->stop_duration_str,&temp,'s');
         if (!n || *n)
           return lsx_usage(effp);
+        silence->stop_duration = temp;
 
         parse_count = sscanf(argv[1], "%lf%c", &silence->stop_threshold,
                              &silence->stop_unit);
@@ -221,6 +224,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int argc, char **argv)
 static int sox_silence_start(sox_effect_t * effp)
 {
     priv_t *silence = (priv_t *)effp->priv;
+    uint64_t temp;
 
     /* When you want to remove silence, small window sizes are
      * better or else RMS will look like non-silence at
@@ -236,8 +240,9 @@ static int sox_silence_start(sox_effect_t * effp)
     if (silence->start)
     {
         if (lsx_parsesamples(effp->in_signal.rate, silence->start_duration_str,
-                             &silence->start_duration, 's') == NULL)
+                             &temp, 's') == NULL)
             return lsx_usage(effp);
+        silence->start_duration = temp;
         /* Align to multiple of channels */
         silence->start_duration += (silence->start_duration % 
                                     effp->in_signal.channels);
@@ -245,8 +250,9 @@ static int sox_silence_start(sox_effect_t * effp)
     if (silence->stop)
     {
         if (lsx_parsesamples(effp->in_signal.rate,silence->stop_duration_str,
-                             &silence->stop_duration,'s') == NULL)
+                             &temp,'s') == NULL)
             return lsx_usage(effp);
+        silence->stop_duration = temp;
         /* Align to multiple of channels */
         silence->stop_duration += (silence->stop_duration % 
                                    effp->in_signal.channels);

@@ -71,7 +71,7 @@ static int stop(sox_effect_t * effp)
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  uint64_t max_delay;
+  uint64_t max_delay, temp;
 
   if (!p->max_arg)
     return SOX_EFF_NULL;
@@ -79,8 +79,10 @@ static int start(sox_effect_t * effp)
     lsx_fail("too few input channels");
     return SOX_EOF;
   }
-  if (effp->flow < p->argc)
-    lsx_parsesamples(effp->in_signal.rate, p->argv[effp->flow], &p->buffer_size, 't');
+  if (effp->flow < p->argc) {
+    lsx_parsesamples(effp->in_signal.rate, p->argv[effp->flow], &temp, 't');
+    p->buffer_size = temp;
+  }
   lsx_parsesamples(effp->in_signal.rate, p->max_arg, &max_delay, 't');
   if (effp->flow == 0)
     lsx_debug("extending audio by %" PRIu64 " samples", max_delay);

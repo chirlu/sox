@@ -31,13 +31,13 @@ static double difference(
 
 /* Find where the two segments are most alike over the overlap period. */
 static size_t best_overlap_position(sox_sample_t const * f1,
-    sox_sample_t const * f2, size_t overlap, size_t search, size_t channels)
+    sox_sample_t const * f2, uint64_t overlap, uint64_t search, size_t channels)
 {
   size_t i, best_pos = 0;
-  double diff, least_diff = difference(f2, f1, channels * overlap);
+  double diff, least_diff = difference(f2, f1, (size_t) (channels * overlap));
 
   for (i = 1; i < search; ++i) { /* linear search */
-    diff = difference(f2 + channels * i, f1, channels * overlap);
+    diff = difference(f2 + channels * i, f1, (size_t) (channels * overlap));
     if (diff < least_diff)
       least_diff = diff, best_pos = i;
   }
