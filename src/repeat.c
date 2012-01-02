@@ -44,7 +44,7 @@ static int start(sox_effect_t * effp)
     return SOX_EOF;
   }
   p->num_samples = p->remaining_samples = 0;
-  p->remaining_repeats = p->num_repeats + 1;
+  p->remaining_repeats = p->num_repeats;
   return SOX_SUCCESS;
 }
 
@@ -52,12 +52,14 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  if (fwrite(ibuf, sizeof(*ibuf), *isamp, p->tmp_file) != *isamp) {
+  size_t len = min(*isamp, *osamp);
+  memcpy(obuf, ibuf, len * sizeof(*obuf));
+  if (fwrite(ibuf, sizeof(*ibuf), len, p->tmp_file) != len) {
     lsx_fail("error writing temporary file: %s", strerror(errno));
     return SOX_EOF;
   }
-  p->num_samples += *isamp;
-  (void)obuf, *osamp = 0; /* samples not output until drain */
+  p->num_samples += len;
+  *isamp = *osamp = len;
   return SOX_SUCCESS;
 }
 
