@@ -81,7 +81,7 @@ int lsx_check_read_params(sox_format_t * ft, unsigned channels,
     if (!ft->signal.length)
       ft->signal.length = calculated_length;
     else if (num_samples != calculated_length)
-      lsx_warn("`%s': file header gives the total number of samples as %u but file length indicates the number is in fact %u", ft->filename, (unsigned)num_samples, (unsigned)calculated_length); /* FIXME: casts */
+      lsx_warn("`%s': file header gives the total number of samples as %" PRIu64 " but file length indicates the number is in fact %" PRIu64, ft->filename, num_samples, calculated_length);
   }
 
   if (sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample))

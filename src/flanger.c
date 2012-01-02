@@ -154,8 +154,8 @@ static int start(sox_effect_t * effp)
       f->delay_buf_length - 2.,
       3 * M_PI_2);  /* Start the sweep at minimum delay (for mono at least) */
 
-  lsx_debug("delay_buf_length=%lu lfo_length=%lu\n",
-      (unsigned long)f->delay_buf_length, (unsigned long)f->lfo_length);
+  lsx_debug("delay_buf_length=%" PRIuPTR " lfo_length=%" PRIuPTR "\n",
+      f->delay_buf_length, f->lfo_length);
 
   return SOX_SUCCESS;
 }

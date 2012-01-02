@@ -168,7 +168,7 @@ static size_t mp3_duration_ms(sox_format_t * ft)
     memcpy(p->mp3_buffer, mad_stream.this_frame, leftover);
     read = fread(p->mp3_buffer + leftover, (size_t) 1, p->mp3_buffer_size - leftover, fp);
     if (read <= 0) {
-      lsx_debug("got exact duration by scan to EOF (frames=%lu leftover=%lu)", (unsigned long)frames, (unsigned long)leftover);
+      lsx_debug("got exact duration by scan to EOF (frames=%" PRIuPTR " leftover=%" PRIuPTR ")", frames, leftover);
       break;
     }
     for (; !depadded && padding < read && !p->mp3_buffer[padding]; ++padding);
@@ -216,7 +216,7 @@ static size_t mp3_duration_ms(sox_format_t * ft)
           }
         if ((frames = xing_frames(p, mad_stream.anc_ptr, mad_stream.anc_bitlen))) {
           p->mad_timer_multiply(&time, (signed long)frames);
-          lsx_debug("got exact duration from XING frame count (%lu)", (unsigned long)frames);
+          lsx_debug("got exact duration from XING frame count (%" PRIuPTR ")", frames);
           break;
         }
       }

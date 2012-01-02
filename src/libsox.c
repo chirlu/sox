@@ -94,11 +94,11 @@ sox_version_info_t const * sox_version_info(void)
 
     if (!info.arch)
     {
-        snprintf(arch, sizeof(arch), "%u%u%u%u %u%u %u%u %c %s",
-            (unsigned)sizeof(char), (unsigned)sizeof(short),
-            (unsigned)sizeof(long), (unsigned)sizeof(off_t),
-            (unsigned)sizeof(float), (unsigned)sizeof(double),
-            (unsigned)sizeof(int *), (unsigned)sizeof(int (*)(void)),
+        snprintf(arch, sizeof(arch),
+            "%" PRIuPTR "%" PRIuPTR "%" PRIuPTR "%" PRIuPTR
+            " %" PRIuPTR "%" PRIuPTR " %" PRIuPTR "%" PRIuPTR " %c %s",
+            sizeof(char), sizeof(short), sizeof(long), sizeof(off_t),
+            sizeof(float), sizeof(double), sizeof(int *), sizeof(int (*)(void)),
             MACHINE_IS_BIGENDIAN ? 'B' : 'L',
             (info.flags & sox_version_have_threads) ? "OMP" : "");
         arch[sizeof(arch) - 1] = 0;

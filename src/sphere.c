@@ -145,7 +145,7 @@ static int write_header(sox_format_t * ft)
   lsx_writes(ft, "   1024\n");
 
   if (samples) {
-    sprintf(buf, "sample_count -i %lu\n", (unsigned long)samples);
+    sprintf(buf, "sample_count -i %" PRIu64 "\n", samples);
     lsx_writes(ft, buf);
   }
 

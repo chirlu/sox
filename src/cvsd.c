@@ -611,7 +611,7 @@ int lsx_dvmsstartread(sox_format_t * ft)
         lsx_debug("  time      %s", ctime(&hdr.Unixtime)); /* ctime generates lf */
         lsx_debug("  usender   %u", hdr.Usender);
         lsx_debug("  ureceiver %u", hdr.Ureceiver);
-        lsx_debug("  length    %lu", (unsigned long)hdr.Length);
+        lsx_debug("  length    %" PRIuPTR, hdr.Length);
         lsx_debug("  srate     %u", hdr.Srate);
         lsx_debug("  days      %u", hdr.Days);
         lsx_debug("  custom1   %u", hdr.Custom1);

@@ -174,11 +174,11 @@ static int start(sox_effect_t * effp)
     p->fade_coefs[0] = 1.0;
 
   lsx_debug("start: (factor=%g segment=%g shift=%g overlap=%g)\nstate=%d\n"
-      "segment=%lu\nindex=%lu\nishift=%lu\noindex=%lu\noshift=%lu\noverlap=%lu",
+      "segment=%" PRIuPTR "\nindex=%" PRIuPTR "\n"
+      "ishift=%" PRIuPTR "\noindex=%" PRIuPTR "\n"
+      "oshift=%" PRIuPTR "\noverlap=%" PRIuPTR,
       p->factor, p->window, p->shift, p->fading, p->state,
-      (unsigned long)p->segment, (unsigned long)p->index,
-      (unsigned long)p->ishift, (unsigned long)p->oindex,
-      (unsigned long)p->oshift, (unsigned long)p->overlap);
+      p->segment, p->index, p->ishift, p->oindex, p->oshift, p->overlap);
 
   return SOX_SUCCESS;
 }

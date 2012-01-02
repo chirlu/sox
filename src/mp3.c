@@ -546,7 +546,7 @@ static int sox_mp3seek(sox_format_t * ft, uint64_t offset)
     memcpy(p->mp3_buffer, p->Stream.this_frame, leftover);
     read = fread(p->mp3_buffer + leftover, (size_t) 1, p->mp3_buffer_size - leftover, (FILE*)ft->fp);
     if (read <= 0) {
-      lsx_debug("seek failure. unexpected EOF (frames=%lu leftover=%lu)", (unsigned long)p->FrameCount, (unsigned long)leftover);
+      lsx_debug("seek failure. unexpected EOF (frames=%" PRIuPTR " leftover=%" PRIuPTR ")", p->FrameCount, leftover);
       break;
     }
     for (; !depadded && padding < read && !p->mp3_buffer[padding]; ++padding);
@@ -556,7 +556,7 @@ static int sox_mp3seek(sox_format_t * ft, uint64_t offset)
     while (sox_true) {  /* Decode frame headers */
       static unsigned short samples;
       p->Stream.error = MAD_ERROR_NONE;
-      
+
       /* Not an audio frame */
       if (p->mad_header_decode(&p->Frame.header, &p->Stream) == -1) {
         if (p->Stream.error == MAD_ERROR_BUFLEN)
@@ -745,7 +745,7 @@ static void rewrite_id3v2_tag(sox_format_t * ft, size_t id3v2_size, uint64_t num
     num_samples = 0;
   }
   p->lame_set_num_samples(p->gfp, (unsigned long)num_samples);
-  lsx_debug("updated MP3 TLEN to %ld samples", (unsigned long)num_samples);
+  lsx_debug("updated MP3 TLEN to %" PRIu64 " samples", num_samples);
 
   new_size = p->lame_get_id3v2_tag(p->gfp, buffer, id3v2_size);
 
@@ -768,7 +768,7 @@ static void rewrite_id3v2_tag(sox_format_t * ft, size_t id3v2_size, uint64_t num
     fseeko(fp, (off_t)0, SEEK_SET);
     /* Overwrite the Id3v2 tag (this time TLEN should be accurate) */
     if (fwrite(buffer, id3v2_size, 1, fp) != 1) {
-      lsx_debug("Rewrote Id3v2 tag (%d bytes)", id3v2_size);
+      lsx_debug("Rewrote Id3v2 tag (%" PRIuPTR " bytes)", id3v2_size);
     }
   }
 
@@ -886,7 +886,7 @@ static int startwrite(sox_format_t * ft)
   p->lame_set_in_samplerate(p->gfp,(int)ft->signal.rate);
   p->lame_set_out_samplerate(p->gfp,(int)ft->signal.rate);
 
-  
+
   if (!LSX_DLFUNC_IS_STUB(p, id3tag_init))
     write_comments(ft);
 
