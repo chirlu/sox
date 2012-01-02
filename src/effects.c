@@ -147,9 +147,6 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
         in->precision : SOX_SAMPLE_PRECISION;
   if (!(effp->handler.flags & SOX_EFF_GAIN))
     effp->out_signal.mult = in->mult;
-  if (!(effp->handler.flags & SOX_EFF_LENGTH))
-    effp->out_signal.length = in->length;
-
 
   effp->flows =
     (effp->handler.flags & SOX_EFF_MCHAN)? 1 : effp->in_signal.channels;
@@ -171,6 +168,16 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
   }
   if (in->mult)
     lsx_debug("mult=%g", *in->mult);
+
+  if (!(effp->handler.flags & SOX_EFF_LENGTH)) {
+    effp->out_signal.length = in->length;
+    if (effp->handler.flags & SOX_EFF_CHAN)
+      effp->out_signal.length =
+        effp->out_signal.length / in->channels * effp->out_signal.channels;
+    if (effp->handler.flags & SOX_EFF_RATE)
+      effp->out_signal.length =
+        effp->out_signal.length / in->rate * effp->out_signal.rate + .5;
+  }
 
   *in = effp->out_signal;
 
