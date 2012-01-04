@@ -260,3 +260,22 @@ sox_effect_handler_t const * lsx_channels_effect_fn(void)
   };
   return &handler;
 }
+
+/*------------------------- The `oops' effect alias --------------------------*/
+
+static int oops_getopts(sox_effect_t *effp, int argc, char **argv)
+{
+  char *args[] = {0, "1,2i", "1,2i"};
+  args[0] = argv[0];
+  return --argc? lsx_usage(effp) : create(effp, 3, args);
+}
+
+sox_effect_handler_t const * lsx_oops_effect_fn(void)
+{
+  static sox_effect_handler_t handler;
+  handler = *lsx_remix_effect_fn();
+  handler.name = "oops";
+  handler.usage = NULL;
+  handler.getopts = oops_getopts;
+  return &handler;
+}

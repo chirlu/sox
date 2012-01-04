@@ -551,23 +551,3 @@ sox_effect_handler_t const * lsx_mixer_effect_fn(void)
   };
   return &handler;
 }
-
-/*------------------------------- oops effect --------------------------------*/
-
-static int oops_getopts(sox_effect_t * effp, int argc, char * * argv)
-{
-  char * args[] = {0, "1,1,-1,-1"};
-  args[0] = argv[0];
-  return --argc? lsx_usage(effp) : lsx_mixer_effect_fn()->getopts(effp, (int)array_length(args), args);
-}
-
-sox_effect_handler_t const * lsx_oops_effect_fn(void)
-{
-  static sox_effect_handler_t handler;
-  handler = *lsx_mixer_effect_fn();
-  handler.name = "oops";
-  handler.usage = NULL;
-  handler.flags &= ~SOX_EFF_DEPRECATED;
-  handler.getopts = oops_getopts;
-  return &handler;
-}
