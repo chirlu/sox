@@ -28,6 +28,9 @@ static int sox_swap_getopts(sox_effect_t * effp, int argc, char **argv)
     priv_t * swap = (priv_t *) effp->priv;
   --argc, ++argv;
 
+    if (argc)
+      lsx_warn("Invoking this effect with parameters is deprecated; use `remix' instead.");
+
     swap->order[0] = swap->order[1] = swap->order[2] = swap->order[3] = 0;
     if (argc)
     {
@@ -181,7 +184,7 @@ static int sox_swap_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
 const sox_effect_handler_t *lsx_swap_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "swap", "[1 2 | 1 2 3 4]", SOX_EFF_MCHAN | SOX_EFF_MODIFY,
+    "swap", NULL, SOX_EFF_MCHAN | SOX_EFF_MODIFY,
     sox_swap_getopts, sox_swap_start, sox_swap_flow,
     NULL, NULL, NULL, sizeof(priv_t)
   };

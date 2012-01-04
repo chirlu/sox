@@ -31,6 +31,7 @@ Newly deprecated features (to be removed in future):
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
   -------  ----------------------  ----------------------  -------
   14.4.0   E mixer                 remix                   14.4.0 + 1 year
+  14.4.0   E swap with parameters  remix                   14.4.0
 
 Previously deprecated features (to be removed in future):
 
