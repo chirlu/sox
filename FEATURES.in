@@ -99,7 +99,6 @@ The audio effects/tools included in this release are as follows:
 * Mixing effects
 ** channels: Auto mix or duplicate to change number of channels
 ** divide+: Divide sample values by those in the 1st channel (W.I.P.)
-** mixer: Mix up to 4 channels in certain ways
 ** remix: Produce arbitrarily mixed output channels
 ** swap: Swap stereo channels
 
