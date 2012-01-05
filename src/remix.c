@@ -254,10 +254,13 @@ static int channels_start(sox_effect_t * effp)
 
 sox_effect_handler_t const * lsx_channels_effect_fn(void)
 {
-  static sox_effect_handler_t handler = {
-    "channels", "number", SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_PREC,
-    channels_create, channels_start, flow, NULL, closedown, NULL, sizeof(priv_t)
-  };
+  static sox_effect_handler_t handler;
+  handler = *lsx_remix_effect_fn();
+  handler.name = "channels";
+  handler.usage = "number";
+  handler.flags &= ~SOX_EFF_GAIN;
+  handler.getopts = channels_create;
+  handler.start = channels_start;
   return &handler;
 }
 
