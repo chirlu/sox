@@ -102,6 +102,12 @@ static int setup(sox_format_t * ft)
   _(snd_pcm_hw_params_set_channels_near, (p->pcm, params, &n));
   ft->signal.channels = n;
 
+  /* Get number of significant bits: */
+  if ((err = snd_pcm_hw_params_get_sbits(params)) > 0)
+    ft->signal.precision = min(err, SOX_SAMPLE_PRECISION);
+  else lsx_debug("snd_pcm_hw_params_get_sbits can't tell precision: %s",
+           snd_strerror(err));
+
   /* Set buf_len > > sox_globals.bufsiz for no underrun: */
   p->buf_len = sox_globals.bufsiz * 8 / NBYTES / ft->signal.channels;
   _(snd_pcm_hw_params_get_buffer_size_min, (params, &min));
