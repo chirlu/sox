@@ -1,4 +1,4 @@
-/* libSoX device driver: ALSA   (c) 2006-9 SoX contributors
+/* libSoX device driver: ALSA   (c) 2006-2012 SoX contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -22,51 +22,79 @@ typedef struct {
   snd_pcm_uframes_t  buf_len, period;
   snd_pcm_t          * pcm;
   char               * buf;
-  int                format;
+  unsigned int       format;
 } priv_t;
 
-#define NBYTES bytes_size[(ft->encoding.bits_per_sample >> 3) - 1]
-#define NSIZES array_length(bytes_size)
-
-static const int bytes_size[] = {1, 2, 4, 4}, formats[][NSIZES] = {
-    {SND_PCM_FORMAT_S8, SND_PCM_FORMAT_S16, SND_PCM_FORMAT_S24,
-         SND_PCM_FORMAT_S32},
-    {SND_PCM_FORMAT_U8, SND_PCM_FORMAT_U16, SND_PCM_FORMAT_U24,
-          SND_PCM_FORMAT_U32}};
+static const
+  struct {
+    unsigned int bits;
+    enum _snd_pcm_format alsa_fmt;
+    unsigned int bytes; /* occupied in the buffer per sample */
+    sox_encoding_t enc;
+  } formats[] = {
+    /* order by # of bits; within that, preferred first */
+    {  8, SND_PCM_FORMAT_S8, 1, SOX_ENCODING_SIGN2 },
+    {  8, SND_PCM_FORMAT_U8, 1, SOX_ENCODING_UNSIGNED },
+    { 16, SND_PCM_FORMAT_S16, 2, SOX_ENCODING_SIGN2 },
+    { 16, SND_PCM_FORMAT_U16, 2, SOX_ENCODING_UNSIGNED },
+    { 24, SND_PCM_FORMAT_S24, 4, SOX_ENCODING_SIGN2 },
+    { 24, SND_PCM_FORMAT_U24, 4, SOX_ENCODING_UNSIGNED },
+    { 32, SND_PCM_FORMAT_S32, 4, SOX_ENCODING_SIGN2 },
+    { 32, SND_PCM_FORMAT_U32, 4, SOX_ENCODING_UNSIGNED },
+    {  0, 0, 0, SOX_ENCODING_UNKNOWN } /* end of list */
+  };
 
 static int select_format(
     sox_encoding_t              * encoding_,
     unsigned                    * nbits_,
     snd_pcm_format_mask_t const * mask,
-    int                         * format)
+    unsigned int                * format)
 {
-  unsigned can_do[NSIZES], i, j, index = (*nbits_ >> 3) - 1, nbits;
-  sox_encoding_t encoding = *encoding_;
+  unsigned int from = 0, to; /* NB: "to" actually points one after the last */
+  int cand = -1;
 
-  for (i = 0; i < NSIZES; ++i) for (can_do[i] = 0, j = 0; j < 2; ++j)
-    can_do[i] |= snd_pcm_format_mask_test(mask, formats[j][i]);
+  while (formats[from].bits < *nbits_ && formats[from].bits != 0)
+    from++;  /* find the first entry with at least *nbits_ bits */
+  for (to = from; formats[to].bits != 0; to++) ;  /* find end of list */
 
-  if (index >= NSIZES ||
-      (encoding != SOX_ENCODING_SIGN2 && encoding != SOX_ENCODING_UNSIGNED)){
-    encoding = SOX_ENCODING_SIGN2;
-    index = 2;
+  while (to > 0) {
+    unsigned int i, bits_next = 0;
+    for (i = from; i < to; i++) {
+      lsx_debug_most("select_format: trying #%u", i);
+      if (snd_pcm_format_mask_test(mask, formats[i].alsa_fmt)) {
+        if (formats[i].enc == *encoding_) {
+          cand = i;
+          break; /* found a match */
+        } else if (cand == -1) /* don't overwrite a candidate that
+                                       was earlier in the list */
+          cand = i; /* will work, but encoding differs */
+      }
+    }
+    if (cand != -1)
+      break;
+    /* no candidate found yet; now try formats with less bits: */
+    to = from;
+    if (from > 0)
+      bits_next = formats[from-1].bits;
+    while (from && formats[from-1].bits == bits_next)
+      from--; /* go back to the first entry with bits_next bits */
   }
-  while (!can_do[index]) if (++index == NSIZES)           /* Search up */
-    for (--index; !can_do[index];) if (--index >= NSIZES) /* then down */
-      return -1;
-  nbits = (index + 1) << 3;
 
-  if (encoding == SOX_ENCODING_SIGN2 &&
-      !snd_pcm_format_mask_test(mask, formats[0][index]))
-    encoding = SOX_ENCODING_UNSIGNED;
+  if (cand == -1) {
+    lsx_debug("select_format: no suitable ALSA format found");
+    return -1;
+  }
 
-  if (*nbits_ != nbits || *encoding_ != encoding) {
+  if (*nbits_ != formats[cand].bits || *encoding_ != formats[cand].enc) {
     lsx_warn("can't encode %u-bit %s", *nbits_,
         sox_encodings_info[*encoding_].desc);
-    *nbits_ = nbits;
-    *encoding_ = encoding;
+    *nbits_ = formats[cand].bits;
+    *encoding_ = formats[cand].enc;
   }
-  *format = formats[encoding == SOX_ENCODING_UNSIGNED][index];
+  lsx_debug("selecting format %d: %s (%s)", cand,
+      snd_pcm_format_name(formats[cand].alsa_fmt),
+      snd_pcm_format_description(formats[cand].alsa_fmt));
+  *format = cand;
   return 0;
 }
 
@@ -91,7 +119,7 @@ static int setup(sox_format_t * ft)
   _(snd_pcm_format_mask_malloc, (&mask));           /* Set format: */
   snd_pcm_hw_params_get_format_mask(params, mask);
   _(select_format, (&ft->encoding.encoding, &ft->encoding.bits_per_sample, mask, &p->format));
-  _(snd_pcm_hw_params_set_format, (p->pcm, params, p->format));
+  _(snd_pcm_hw_params_set_format, (p->pcm, params, formats[p->format].alsa_fmt));
   snd_pcm_format_mask_free(mask), mask = NULL;
 
   n = ft->signal.rate;                              /* Set rate: */
@@ -109,7 +137,8 @@ static int setup(sox_format_t * ft)
            snd_strerror(err));
 
   /* Set buf_len > > sox_globals.bufsiz for no underrun: */
-  p->buf_len = sox_globals.bufsiz * 8 / NBYTES / ft->signal.channels;
+  p->buf_len = sox_globals.bufsiz * 8 / formats[p->format].bytes /
+      ft->signal.channels;
   _(snd_pcm_hw_params_get_buffer_size_min, (params, &min));
   _(snd_pcm_hw_params_get_buffer_size_max, (params, &max));
   p->period = range_limit(p->buf_len, min, max) / 8;
@@ -125,7 +154,7 @@ static int setup(sox_format_t * ft)
   snd_pcm_hw_params_free(params), params = NULL;
   _(snd_pcm_prepare, (p->pcm));
   p->buf_len *= ft->signal.channels;                /* No longer in `frames' */
-  p->buf = lsx_malloc(p->buf_len * NBYTES);
+  p->buf = lsx_malloc(p->buf_len * formats[p->format].bytes);
   return SOX_SUCCESS;
 
 error:
@@ -164,7 +193,7 @@ static size_t read_(sox_format_t * ft, sox_sample_t * buf, size_t len)
     } while (n <= 0);
 
     i = n *= ft->signal.channels;
-    switch (p->format) {
+    switch (formats[p->format].alsa_fmt) {
       case SND_PCM_FORMAT_S8: {
         int8_t * buf1 = (int8_t *)p->buf;
         while (i--) *buf++ = SOX_SIGNED_8BIT_TO_SAMPLE(*buf1++,);
@@ -211,7 +240,7 @@ static size_t read_(sox_format_t * ft, sox_sample_t * buf, size_t len)
         while (i--) *buf++ = SOX_UNSIGNED_32BIT_TO_SAMPLE(*buf1++,);
         break;
       }
-     default: lsx_fail_errno(ft, SOX_EFMT, "invalid format");
+      default: lsx_fail_errno(ft, SOX_EFMT, "invalid format");
         return 0;
     }
   }
@@ -227,7 +256,7 @@ static size_t write_(sox_format_t * ft, sox_sample_t const * buf, size_t len)
 
   for (done = 0; done < len; done += n) {
     i = n = min(len - done, p->buf_len);
-    switch (p->format) {
+    switch (formats[p->format].alsa_fmt) {
       case SND_PCM_FORMAT_S8: {
         int8_t * buf1 = (int8_t *)p->buf;
         while (i--) *buf1++ = SOX_SAMPLE_TO_SIGNED_8BIT(*buf++, ft->clips);
@@ -274,10 +303,13 @@ static size_t write_(sox_format_t * ft, sox_sample_t const * buf, size_t len)
         while (i--) *buf1++ = SOX_SAMPLE_TO_UNSIGNED_32BIT(*buf++, ft->clips);
         break;
       }
+      default: lsx_fail_errno(ft, SOX_EFMT, "invalid format");
+        return 0;
     }
     for (i = 0; i < n; i += actual * ft->signal.channels) do {
-      actual = snd_pcm_writei(
-          p->pcm, p->buf + i * NBYTES, (n - i) / ft->signal.channels);
+      actual = snd_pcm_writei(p->pcm,
+          p->buf + i * formats[p->format].bytes,
+          (n - i) / ft->signal.channels);
       if (errno == EAGAIN)     /* Happens naturally; don't report it: */
         errno = 0;
       if (actual < 0 && recover(ft, p->pcm, (int)actual) < 0)
