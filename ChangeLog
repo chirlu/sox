@@ -13,7 +13,7 @@ Previously deprecated features that have been removed in this release:
   ated in  [F(ormat)] [E(ffect)]   Replacement
   -------  ----------------------  ----------------------
   14.3.0   O --interactive         --no-clobber
-  14.3.0   E filter                ~=sinc
+  14.3.0   E filter                ~= sinc
   14.3.0   E norm -b, norm -i      gain -B, gain -en
   14.3.0   PLAY_RATE_ARG           SOX_OPTS
   14.2.0   E key alias             pitch
@@ -61,7 +61,7 @@ Effects:
     file again. (cbagwell and Thor Andreassen)
   o Fix man page default error for splice effect. (Ulrich Klauer)
   o Enable support for --plot option on biquad and fir effects. (Ulrich Klauer)
-  o Effect chain can now be unlimitted in length. (Ulrich Klauer)
+  o Effects chain can now be unlimited in length. (Ulrich Klauer)
   o Fix newfile/restart effects when merging or mixing files. (Ulrich Klauer)
   o Fix crashes in compand and mcompand effects. [3420893] (Ulrich Klauer)
   o Let the delay effect gracefully handle the special case that a delay can
@@ -69,6 +69,9 @@ Effects:
   o New hilbert and downsample effects. (Ulrich Klauer)
   o Fix problem where fade would sometimes fail if specifying a fade-out
     immediately after a fade-in. (robs)
+  o Stricter syntax checking for several effects (might reveal bugs hidden
+    in existing scripts). (Ulrich Klauer)
+  o Calculate output audio length for most effects. (Ulrich Klauer)
 
 Misc:
 
@@ -84,6 +87,8 @@ Other bug fixes:
 Internal improvements:
 
   o Fix compiler warnings. (Cristian Morales Vega [P. 3072301], Doug Cook)
+  o Improve large file support by using 64-bit numbers to count
+    samples. (Doug Cook, Thor Andreassen, Ulrich Klauer)
 
 sox-14.3.2	2011-02-27
 ----------
