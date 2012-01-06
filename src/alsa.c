@@ -39,6 +39,7 @@ static const
     { 16, SND_PCM_FORMAT_U16, 2, SOX_ENCODING_UNSIGNED },
     { 24, SND_PCM_FORMAT_S24, 4, SOX_ENCODING_SIGN2 },
     { 24, SND_PCM_FORMAT_U24, 4, SOX_ENCODING_UNSIGNED },
+    { 24, SND_PCM_FORMAT_S24_3LE, 3, SOX_ENCODING_SIGN2 },
     { 32, SND_PCM_FORMAT_S32, 4, SOX_ENCODING_SIGN2 },
     { 32, SND_PCM_FORMAT_U32, 4, SOX_ENCODING_UNSIGNED },
     {  0, 0, 0, SOX_ENCODING_UNKNOWN } /* end of list */
@@ -225,6 +226,17 @@ static size_t read_(sox_format_t * ft, sox_sample_t * buf, size_t len)
         while (i--) *buf++ = SOX_SIGNED_24BIT_TO_SAMPLE(*buf1++,);
         break;
       }
+      case SND_PCM_FORMAT_S24_3LE: {
+        unsigned char *buf1 = (unsigned char *)p->buf;
+        while (i--) {
+          uint32_t temp;
+          temp  = *buf1++;
+          temp |= *buf1++ << 8;
+          temp |= *buf1++ << 16;
+          *buf++ = SOX_SIGNED_24BIT_TO_SAMPLE((sox_int24_t)temp,);
+        }
+        break;
+      }
       case SND_PCM_FORMAT_U24: {
         sox_uint24_t * buf1 = (sox_uint24_t *)p->buf;
         while (i--) *buf++ = SOX_UNSIGNED_24BIT_TO_SAMPLE(*buf1++,);
@@ -286,6 +298,16 @@ static size_t write_(sox_format_t * ft, sox_sample_t const * buf, size_t len)
       case SND_PCM_FORMAT_S24: {
         sox_int24_t * buf1 = (sox_int24_t *)p->buf;
         while (i--) *buf1++ = SOX_SAMPLE_TO_SIGNED_24BIT(*buf++, ft->clips);
+        break;
+      }
+      case SND_PCM_FORMAT_S24_3LE: {
+        unsigned char *buf1 = (unsigned char *)p->buf;
+        while (i--) {
+          uint32_t temp = (uint32_t)SOX_SAMPLE_TO_SIGNED_24BIT(*buf++, ft->clips);
+          *buf1++ = (temp & 0x000000FF);
+          *buf1++ = (temp & 0x0000FF00) >> 8;
+          *buf1++ = (temp & 0x00FF0000) >> 16;
+        }
         break;
       }
       case SND_PCM_FORMAT_U24: {
