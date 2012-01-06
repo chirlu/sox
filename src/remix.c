@@ -39,7 +39,7 @@ typedef struct {
   else { \
     SEP = (SEPARATORS)[strlen(SEPARATORS) - 1]; \
     n = sscanf(text, SCAN"%c", &VAR, &SEP); \
-    if (VAR < MIN || (n == 2 && !strchr(SEPARATORS, SEP))) \
+    if (n == 0 || VAR < MIN || (n == 2 && !strchr(SEPARATORS, SEP))) \
       return lsx_usage(effp); \
     text = end? end + 1 : text + strlen(text); \
   } \
