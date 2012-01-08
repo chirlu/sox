@@ -704,17 +704,6 @@ static void auto_effect(sox_effects_chain_t *chain, char const *name, int argc,
   free(effp);
 }
 
-static void init_eff_chains(void)
-{
-  user_effargs = lsx_malloc(sizeof(*user_effargs));
-  user_effargs[0] = lsx_malloc(sizeof(**user_effargs));
-
-  user_effargs_size = lsx_malloc(sizeof(*user_effargs_size));
-  user_effargs_size[0] = 0;
-  nuser_effects = lsx_malloc(sizeof(*nuser_effects));
-  nuser_effects[0] = 0;
-} /* init_eff_chains */
-
 /* add_eff_chain() - NOTE: this only adds memory for one
  * additional effects chain beyond value of eff_chain_count.  It
  * does not unconditionally increase size of effects chain.
@@ -889,7 +878,6 @@ static void read_user_effects(char const *filename)
      */
     delete_eff_chains();
     current_eff_chain = 0;
-    init_eff_chains();
 
     if (file == NULL)
     {
@@ -915,6 +903,8 @@ static void read_user_effects(char const *filename)
           exit(1);
         }
 
+        add_eff_chain();
+
         /* parse_effects normally parses options from command line.
          * Reset opt index so it thinks its back at beginning of
          * main()'s argv[].
@@ -923,13 +913,11 @@ static void read_user_effects(char const *filename)
         parse_effects(argc, argv);
 
         /* Advance to next effect but only if current chain has been
-         * filled in.  This recovers from side affects of psuedo-effects.
+         * filled in.  This recovers from side affects of pseudo-effects.
          */
         if (nuser_effects[eff_chain_count] > 0)
-        {
           eff_chain_count++;
-          add_eff_chain();
-        }
+
         free(argv);
       }
     }
@@ -2908,9 +2896,8 @@ int main(int argc, char **argv)
 
   signal(SIGINT, SIG_DFL);
 
-  init_eff_chains();
-
   /* Loop through the rest of the arguments looking for effects */
+  add_eff_chain();
   parse_effects(argc, argv);
   if (eff_chain_count == 0 || nuser_effects[eff_chain_count] > 0)
   {
