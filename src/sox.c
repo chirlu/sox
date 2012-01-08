@@ -911,7 +911,7 @@ static void read_user_effects(char const *filename)
         /* Make sure first option is an effect name. */
         if (!sox_find_effect(argv[0]) && !is_pseudo_effect(argv[0]))
         {
-          printf("Cannot find an effect called `%s'.\n", argv[0]);
+          lsx_fail("Cannot find an effect called `%s'.", argv[0]);
           exit(1);
         }
 
