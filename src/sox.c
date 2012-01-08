@@ -824,10 +824,11 @@ static void parse_effects(int argc, char ** argv)
     }
 
     /* Name should always be correct! */
-    user_effargs[eff_chain_count][eff_offset].name = strdup(argv[optstate.ind++]);
+    user_effargs[eff_chain_count][eff_offset].name = lsx_strdup(argv[optstate.ind]);
+    optstate.ind++;
     for (j = 0; j < argc - optstate.ind && !sox_find_effect(argv[optstate.ind + j]) &&
          !is_pseudo_effect(argv[optstate.ind + j]); ++j)
-      user_effargs[eff_chain_count][eff_offset].argv[j] = strdup(argv[optstate.ind + j]);
+      user_effargs[eff_chain_count][eff_offset].argv[j] = lsx_strdup(argv[optstate.ind + j]);
     user_effargs[eff_chain_count][eff_offset].argc = j;
 
     optstate.ind += j; /* Skip past the effect arguments */
@@ -1494,7 +1495,7 @@ static void open_output_file(void)
   if (output_method == sox_multiple)
     expand_fn = fndup_with_count(ofile->filename, ++output_count);
   else
-    expand_fn = strdup(ofile->filename);
+    expand_fn = lsx_strdup(ofile->filename);
   ofile->ft = sox_open_write(expand_fn, &ofile->signal, &ofile->encoding,
       ofile->filetype, &oob, overwrite_permitted);
   sox_delete_comments(&oob.comments);
@@ -2278,8 +2279,8 @@ static char parse_gopts_and_fopts(file_t * f)
       case 12: replay_gain_mode = enum_option(optstate.arg, optstate.lngind, rg_modes); break;
       case 13: display_SoX_version(stdout); exit(0); break;
       case 14: break;
-      case 15: effects_filename = strdup(optstate.arg); break;
-      case 16: sox_globals.tmp_path = strdup(optstate.arg); break;
+      case 15: effects_filename = lsx_strdup(optstate.arg); break;
+      case 16: sox_globals.tmp_path = lsx_strdup(optstate.arg); break;
       case 17: sox_globals.use_threads = sox_false; break;
       case 18: f->signal.length = SOX_IGNORE_LENGTH; break;
       case 19: do_guarded_norm = is_guarded = sox_true; break;
@@ -2289,7 +2290,7 @@ static char parse_gopts_and_fopts(file_t * f)
         else
           lsx_warn("this build of SoX does not include `magic'");
         break;
-      case 21: play_rate_arg = strdup(optstate.arg); break;
+      case 21: play_rate_arg = lsx_strdup(optstate.arg); break;
       case 22: no_clobber = sox_false; break;
       case 23: no_clobber = sox_true; break;
       case 24: sox_globals.use_threads = sox_true; break;
