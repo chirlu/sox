@@ -250,6 +250,12 @@ static void cleanup(void)
 
   free(user_efftab);
 
+  free(sox_globals.tmp_path);
+  sox_globals.tmp_path = NULL;
+
+  free(play_rate_arg);
+  free(effects_filename);
+
   sox_quit();
 }
 
