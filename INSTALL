@@ -25,6 +25,7 @@ ffmpeg            http://ffmpeg.mplayerhq.hu            LGPL
 FLAC              http://flac.sourceforge.net           BSD
 LADSPA            http://www.ladspa.org                 LGPL + plugins' licence
 Lame MP3 encoder  http://lame.sourceforge.net           LGPL
+Twolame MP2 enc.  http://www.twolame.org                LGPL
 libltdl           http://www.gnu.org/software/libtool   LGPL
 MAD MP3 decoder   http://www.underbit.com/products/mad  GPL
 MP3 ID3 tags      http://www.underbit.com/products/mad  GPL

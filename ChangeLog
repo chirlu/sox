@@ -48,6 +48,7 @@ File formats:
   o Add support for floating point encodings in AIFF-C files. (Ulrich Klauer)
   o Pad WAV data chunk to an even number of bytes (as required by the
     specification). [3203418] (Ulrich Klauer)
+  o Add optional MP2 write support with twolame library. (Paul Kelly)
 
 Audio device drivers:
 

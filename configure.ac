@@ -365,6 +365,32 @@ if test "$with_lame" != "no"; then
     fi
 fi
 
+
+
+dnl Check for Twolame library
+AC_ARG_WITH(twolame,
+    AC_HELP_STRING([--without-twolame],
+        [Don't try to use Twolame (MP2 Audio Encoder)]))
+using_twolame=no
+if test "$with_twolame" != "no"; then
+    using_twolame=yes
+    AC_CHECK_HEADERS(twolame.h,, using_twolame=no)
+    AC_MSG_CHECKING([whether to dlopen twolame])
+    AC_ARG_ENABLE(dl_twolame,
+      AC_HELP_STRING([--enable-dl-twolame], [Dlopen twolame instead of linking in.]),
+      enable_dl_twolame=$enableval, enable_dl_twolame=no)
+    AC_MSG_RESULT($enable_dl_twolame)
+    if test "x$using_libltdl" = "xyes" -a "x$enable_dl_twolame" = "xyes"; then
+      AC_DEFINE(DL_TWOLAME, 1, [Define to dlopen() libtwolame.])
+    else
+      enable_dl_twolame="no"
+      AC_CHECK_LIB(twolame, twolame_init, MP3_LIBS="$MP3_LIBS -ltwolame",using_twolame=no)
+      if test "$with_twolame" = "yes" -a "$using_twolame" = "no"; then
+        AC_MSG_FAILURE([cannot find libtwolame])
+      fi
+    fi
+fi
+
 # Check for libgsm
 found_libgsm=yes
 AC_CHECK_HEADERS(gsm/gsm.h, ,
@@ -529,9 +555,9 @@ AC_OPTIONAL_FORMAT(sunaudio, SUN_AUDIO, [AC_CHECK_HEADERS(sys/audioio.h,,
 
 
 
-# MP3 format depends on libmad || LAME
+# MP2/MP3 format depends on libmad || LAME || twolame
 AC_OPTIONAL_FORMAT(mp3, MP3, [
-  if test "$using_mad" != yes -a "$using_lame" != yes; then
+  if test "$using_mad" != yes -a "$using_lame" != yes -a "$using_twolame" != yes; then
     using_mp3=no
   fi])
 
@@ -634,7 +660,7 @@ echo "ffmpeg.....................$using_ffmpeg"
 echo "flac.......................$using_flac"
 echo "gsm........................$using_gsm $gsm_option"
 echo "lpc10......................$using_lpc10 $lpc10_option"
-echo "mp3........................$using_mp3"
+echo "mp2/mp3....................$using_mp3"
 echo " id3tag....................$using_id3tag"
 echo " lame......................$using_lame"
 if test "x$using_lame" = "xyes"; then
@@ -646,6 +672,10 @@ fi
 echo " mad.......................$using_mad"
 if test "x$using_mad" = "xyes"; then
 echo " dlopen mad................$enable_dl_mad"
+fi
+echo " twolame...................$using_twolame"
+if test "x$using_twolame" = "xyes"; then
+echo " dlopen twolame............$enable_dl_twolame"
 fi
 echo "oggvorbis..................$using_oggvorbis"
 echo "sndfile....................$using_sndfile"

@@ -20,7 +20,7 @@ The current release handles the following audio file formats:
 * Macintosh HCOM files
 * Amiga MAUD files
 * AMR-WB & AMR-NB (with optional libamrwb & libamrnb libraries)
-* MP3 (with optional libmad and libmp3lame libraries)
+* MP2/MP3 (with optional libmad, libtwolame and libmp3lame libraries)
 * MP4, AAC, AC3, WAVPACK, AMR-NB files (with optional ffmpeg library)
 * AVI, WMV, Ogg Theora, MPEG video files (with optional ffmpeg library)
 (:cell:)

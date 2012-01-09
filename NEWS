@@ -15,6 +15,7 @@ Highlights for this release include:
  o New trim effect with enhanced capabilities.
  o Fix -p option on Windows.
  o Improved large file support.
+ o MP2 write support.
 
 For the complete list of changes, see the ChangeLog at
   http://sox.git.sourceforge.net/git/gitweb.cgi?p=sox/sox;a=blob;f=ChangeLog
