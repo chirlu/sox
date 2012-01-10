@@ -719,28 +719,35 @@ static void add_eff_chain(void)
   nuser_effects[eff_chain_count] = 0;
 } /* add_eff_chain */
 
-static void delete_eff_chains(void)
+/* free_eff_chain() - the inverse of add_eff_chain().  Frees
+ * one effects chain (with index eff_chain_count) such that
+ * there are eff_chain_count left, the last having index
+ * eff_chain_count-1.
+ */
+static void free_eff_chain(void)
 {
   unsigned j;
-  int i, k;
-
-  for (i = 0; i < eff_chain_count; i++)
+  int k;
+  for (j = 0; j < nuser_effects[eff_chain_count]; j++)
   {
-    for (j = 0; j < nuser_effects[i]; j++)
+    free(user_effargs[eff_chain_count][j].name);
+    user_effargs[eff_chain_count][j].name = NULL;
+    for (k = 0; k < user_effargs[eff_chain_count][j].argc; k++)
     {
-      if (user_effargs[i][j].name)
-        free(user_effargs[i][j].name);
-      user_effargs[i][j].name = NULL;
-      for (k = 0; k < user_effargs[i][j].argc; k++)
-      {
-        if (user_effargs[i][j].argv[k])
-          free(user_effargs[i][j].argv[k]);
-        user_effargs[i][j].argv[k] = NULL;
-      }
-      user_effargs[i][j].argc = 0;
+      free(user_effargs[eff_chain_count][j].argv[k]);
+      user_effargs[eff_chain_count][j].argv[k] = NULL;
     }
-    nuser_effects[i] = 0;
-    free(user_effargs[i]);
+    user_effargs[eff_chain_count][j].argc = 0;
+  }
+  nuser_effects[eff_chain_count] = 0;
+  free(user_effargs[eff_chain_count]);
+} /* free_eff_chain */
+
+static void delete_eff_chains(void)
+{
+  while (eff_chain_count > 0) {
+    eff_chain_count--;
+    free_eff_chain();
   }
   free(user_effargs);
   free(user_effargs_size);
@@ -748,7 +755,6 @@ static void delete_eff_chains(void)
   user_effargs = NULL;
   user_effargs_size = NULL;
   nuser_effects = NULL;
-  eff_chain_count = 0;
 } /* delete_eff_chains */
 
 static sox_bool is_pseudo_effect(const char *s)
