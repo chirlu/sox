@@ -889,10 +889,12 @@ static char * * strtoargv(char * s, int * argc)
 static void read_user_effects(char const *filename)
 {
     FILE *file = fopen(filename, "rt");
-    char s[FILENAME_MAX];
+    const size_t buffer_size_step = 1024;
+    size_t buffer_size = buffer_size_step;
+    char *s = lsx_malloc(buffer_size); /* buffer for one input line */
+    int pos = 0;
     int argc;
     char * * argv;
-    int len;
 
     /* Free any command line options and then re-initialize to
      * starter user_effargs.
@@ -900,19 +902,32 @@ static void read_user_effects(char const *filename)
     delete_eff_chains();
     current_eff_chain = 0;
 
-    if (file == NULL)
-    {
-        lsx_fail("Cannot open effects file `%s'", filename);
+    if (!file) {
+        lsx_fail("Cannot open effects file `%s': %s", filename, strerror(errno));
         exit(1);
     }
 
     lsx_report("Reading effects from file `%s'", filename);
 
-    while (fgets(s, FILENAME_MAX, file))
-    {
-      len = strlen(s);
-      if (s[len-1] == '\n')
-        s[len-1] = 0;
+    while(fgets(s + pos, (int) (buffer_size - pos), file)) {
+      int len = strlen(s + pos);
+      if (len && s[pos+len-1] == '\n')
+        s[pos+len-1] = '\0', pos = 0; /* we've read a complete line */
+      else if (len == (int)(buffer_size - pos - 1)) {
+        /* line was longer than buffer size */
+        buffer_size += buffer_size_step;
+        s = lsx_realloc(s, buffer_size);
+        pos += len;
+        continue; /* read next part */
+      } else {
+        /* something strange happened; the file might have ended
+           without a '\n', might contain '\0', or a read error
+           occurred */
+        if (ferror(file))
+          break; /* use error reporting after loop */
+        lsx_fail("Error reading effects file `%s' (not a text file?)", filename);
+        exit(1);
+      }
 
       argv = strtoargv(s, &argc);
 
@@ -942,8 +957,12 @@ static void read_user_effects(char const *filename)
         free(argv);
       }
     }
+    if (ferror(file)) {
+      lsx_fail("Error reading effects file `%s': %s", filename, strerror(errno));
+      exit(1);
+    }
     fclose(file);
-
+    free(s);
 } /* read_user_effects */
 
 /* Creates users effects and passes in user specified options.
