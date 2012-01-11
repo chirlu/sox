@@ -825,9 +825,12 @@ file.
 \fB\-\-effects\-file \fIFILENAME\fR
 Use FILENAME to obtain all effects and their arguments.
 The file is parsed as if the values were specified on the
-command line.  A new line can be used in place of the special ":" marker
-to separate effect chains.  This option causes any effects specified on
-the command line to be discarded.
+command line.  A new line can be used in place of the special \fB:\fR
+marker to separate effect chains.  For convenience, such markers at the
+end of the file are normally ignored; if you want to specify an empty
+last effects chain, use an explicit \fB:\fR by itself on the last line
+of the file.  This option causes any effects specified on the command
+line to be discarded.
 .TP
 \fB\-G\fR, \fB\-\-guard\fR
 Automatically invoke the

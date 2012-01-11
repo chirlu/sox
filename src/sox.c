@@ -895,12 +895,14 @@ static void read_user_effects(char const *filename)
     int pos = 0;
     int argc;
     char * * argv;
+    sox_bool last_was_colon = sox_false; /* last line read consisted of ":" only */
 
     /* Free any command line options and then re-initialize to
      * starter user_effargs.
      */
     delete_eff_chains();
     current_eff_chain = 0;
+    add_eff_chain();
 
     if (!file) {
         lsx_fail("Cannot open effects file `%s': %s", filename, strerror(errno));
@@ -929,7 +931,12 @@ static void read_user_effects(char const *filename)
         exit(1);
       }
 
+      last_was_colon = sox_false;
+
       argv = strtoargv(s, &argc);
+
+      if (argv && argc == 1 && strcmp(argv[0], ":") == 0)
+        last_was_colon = sox_true;
 
       if (argv) {
         /* Make sure first option is an effect name. */
@@ -938,8 +945,6 @@ static void read_user_effects(char const *filename)
           lsx_fail("Cannot find an effect called `%s'.", argv[0]);
           exit(1);
         }
-
-        add_eff_chain();
 
         /* parse_effects normally parses options from command line.
          * Reset opt index so it thinks its back at beginning of
@@ -951,8 +956,10 @@ static void read_user_effects(char const *filename)
         /* Advance to next effect but only if current chain has been
          * filled in.  This recovers from side affects of pseudo-effects.
          */
-        if (nuser_effects[eff_chain_count] > 0)
+        if (nuser_effects[eff_chain_count] > 0) {
           eff_chain_count++;
+          add_eff_chain();
+        }
 
         free(argv);
       }
@@ -963,6 +970,15 @@ static void read_user_effects(char const *filename)
     }
     fclose(file);
     free(s);
+
+    if (last_was_colon || eff_chain_count == 0) {
+      /* user explicitly wanted an empty last effects chain,
+         or didn't specify any chains at all */
+      eff_chain_count++;
+    } else {
+      /* there's one unneeded effects chain */
+      free_eff_chain();
+    }
 } /* read_user_effects */
 
 /* Creates users effects and passes in user specified options.
