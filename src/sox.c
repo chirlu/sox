@@ -2905,13 +2905,10 @@ int main(int argc, char **argv)
   /* Loop through the rest of the arguments looking for effects */
   add_eff_chain();
   parse_effects(argc, argv);
-  if (eff_chain_count == 0 || nuser_effects[eff_chain_count] > 0)
-  {
-    eff_chain_count++;
-    /* Note: Purposely not calling add_eff_chain() to save some
-     * memory although it would be more consistent to do so.
-     */
-  }
+  eff_chain_count++;
+  /* Note: Purposely not calling add_eff_chain() to save some
+   * memory although it would be more consistent to do so.
+   */
 
   /* Not the best way for users to do this; now deprecated in favour of soxi. */
   if (!show_progress && !nuser_effects[current_eff_chain] &&
