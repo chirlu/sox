@@ -173,10 +173,11 @@ static size_t user_efftab_size = 0;
 static sox_effects_chain_t *effects_chain = NULL;
 static sox_effect_t *save_output_eff = NULL;
 
-static struct { char *name; int argc; char *argv[FILENAME_MAX]; } **user_effargs = NULL;
+static struct { char *name; int argc; char **argv; size_t argv_size; } **user_effargs = NULL;
 static size_t *user_effargs_size = NULL;  /* array: size of user_effargs for each chain */
-/* user_effargs[i] size to be extended in steps of USER_EFFARGS_STEP */
-#define USER_EFFARGS_STEP 8
+/* Size of memory structures related to effects arguments (user_effargs[i],
+ * user_effargs[i][j].argv) to be extended in steps of EFFARGS_STEP */
+#define EFFARGS_STEP 8
 static unsigned *nuser_effects = NULL;  /* array: number of effects in each chain */
 static int current_eff_chain = 0;
 static int eff_chain_count = 0;
@@ -738,6 +739,9 @@ static void free_eff_chain(void)
       user_effargs[eff_chain_count][j].argv[k] = NULL;
     }
     user_effargs[eff_chain_count][j].argc = 0;
+    free(user_effargs[eff_chain_count][j].argv);
+    user_effargs[eff_chain_count][j].argv = NULL;
+    user_effargs[eff_chain_count][j].argv_size = 0;
   }
   nuser_effects[eff_chain_count] = 0;
   free(user_effargs[eff_chain_count]);
@@ -771,13 +775,18 @@ static void parse_effects(int argc, char ** argv)
 {
   while (optstate.ind < argc) {
     unsigned eff_offset;
-    int j;
+    size_t j;
     int newline_mode = 0;
 
     eff_offset = nuser_effects[eff_chain_count];
     if (eff_offset == user_effargs_size[eff_chain_count]) {
-      user_effargs_size[eff_chain_count] += USER_EFFARGS_STEP;
+      size_t i = user_effargs_size[eff_chain_count];
+      user_effargs_size[eff_chain_count] += EFFARGS_STEP;
       lsx_revalloc(user_effargs[eff_chain_count], user_effargs_size[eff_chain_count]);
+      for (; i < user_effargs_size[eff_chain_count]; i++) {
+        user_effargs[eff_chain_count][i].argv = NULL;
+        user_effargs[eff_chain_count][i].argv_size = 0;
+      }
     }
 
     /* pseudo-effect ":" is used to create a new effects chain */
@@ -827,9 +836,15 @@ static void parse_effects(int argc, char ** argv)
     /* Name should always be correct! */
     user_effargs[eff_chain_count][eff_offset].name = lsx_strdup(argv[optstate.ind]);
     optstate.ind++;
-    for (j = 0; j < argc - optstate.ind && !sox_find_effect(argv[optstate.ind + j]) &&
-         !is_pseudo_effect(argv[optstate.ind + j]); ++j)
+    for (j = 0; j < (size_t)(argc - optstate.ind) && !sox_find_effect(argv[optstate.ind + j]) &&
+         !is_pseudo_effect(argv[optstate.ind + j]); ++j) {
+      if (j >= user_effargs[eff_chain_count][eff_offset].argv_size) {
+        user_effargs[eff_chain_count][eff_offset].argv_size += EFFARGS_STEP;
+        lsx_revalloc(user_effargs[eff_chain_count][eff_offset].argv,
+            user_effargs[eff_chain_count][eff_offset].argv_size);
+      }
       user_effargs[eff_chain_count][eff_offset].argv[j] = lsx_strdup(argv[optstate.ind + j]);
+    }
     user_effargs[eff_chain_count][eff_offset].argc = j;
 
     optstate.ind += j; /* Skip past the effect arguments */
