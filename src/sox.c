@@ -183,6 +183,7 @@ static int current_eff_chain = 0;
 static int eff_chain_count = 0;
 static char *effects_filename = NULL;
 static char * play_rate_arg = NULL;
+static char *norm_level = NULL;
 
 /* Flowing */
 
@@ -256,6 +257,7 @@ static void cleanup(void)
 
   free(play_rate_arg);
   free(effects_filename);
+  free(norm_level);
 
   sox_quit();
 }
@@ -1069,9 +1071,11 @@ static void add_effects(sox_effects_chain_t *chain)
     auto_effect(chain, "rate", rate_arg != NULL, &rate_arg, &signal, &guard);
 
   if (is_guarded && (do_guarded_norm || !(signal.mult && *signal.mult == 1))) {
-    char * arg = do_guarded_norm? "-nh" : guard? "-rh" : "-h";
+    char *args[2];
     int no_guard = -1;
-    auto_effect(chain, "gain", 1, &arg, &signal, &no_guard);
+    args[0] = do_guarded_norm? "-nh" : guard? "-rh" : "-h";
+    args[1] = norm_level;
+    auto_effect(chain, "gain", norm_level ? 2 : 1, args, &signal, &no_guard);
     guard = 1;
   }
 
@@ -2155,7 +2159,7 @@ static struct lsx_option_t const long_options[] = {
   {"temp"            , lsx_option_arg_required, NULL, 0},
   {"single-threaded" , lsx_option_arg_none    , NULL, 0},
   {"ignore-length"   , lsx_option_arg_none    , NULL, 0},
-  {"norm"            , lsx_option_arg_none    , NULL, 0},
+  {"norm"            , lsx_option_arg_optional, NULL, 0},
   {"magic"           , lsx_option_arg_none    , NULL, 0},
   {"play-rate-arg"   , lsx_option_arg_required, NULL, 0},
   {"clobber"         , lsx_option_arg_none    , NULL, 0},
@@ -2333,7 +2337,9 @@ static char parse_gopts_and_fopts(file_t * f)
       case 16: sox_globals.tmp_path = lsx_strdup(optstate.arg); break;
       case 17: sox_globals.use_threads = sox_false; break;
       case 18: f->signal.length = SOX_IGNORE_LENGTH; break;
-      case 19: do_guarded_norm = is_guarded = sox_true; break;
+      case 19: do_guarded_norm = is_guarded = sox_true;
+        norm_level = lsx_strdup(optstate.arg);
+        break;
       case 20:
         if (info->flags & sox_version_have_magic)
           sox_globals.use_magic = sox_true;

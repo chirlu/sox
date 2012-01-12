@@ -903,7 +903,7 @@ this option is recommended. SOX_OPTS (above), a `shell'
 alias, script, or batch file may be an appropriate way of permanently
 enabling it.
 .TP
-\fB\-\-norm\fR
+\fB\-\-norm\fR[\fB=\fIdB-level\fR]
 Automatically invoke the
 .B gain
 effect to guard against clipping and to normalise the audio. E.g.
@@ -914,6 +914,12 @@ is shorthand for
 .EX
    sox infile \-b 16 outfile gain \-h rate 44100 gain \-nh dither \-s
 .EE
+Optionally, the audio can be normalized to a given level (usually)
+below 0 dBFS:
+.EX
+   sox \-\-norm=\-3 infile outfile
+.EE
+.SP
 See also
 .BR \-V,
 .BR \-G,
@@ -1016,7 +1022,7 @@ current directory) is often a good solution.
 .TP
 \fB\-\-version\fR
 Show SoX's version number and exit.
-.IP \fB\-V\fB[\fIlevel\fB]\fP
+.IP \fB\-V\fR[\fIlevel\fR]
 Set verbosity. This is particularly useful for seeing how any automatic
 effects have been invoked by SoX.
 .SP
