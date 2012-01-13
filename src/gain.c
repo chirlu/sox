@@ -78,7 +78,7 @@ static int start(sox_effect_t * effp)
     }
     effp->out_signal.mult = p->make_headroom? &p->fixed_gain : NULL;
     if (!p->do_equalise && !p->do_balance && !p->do_balance_no_clip)
-      effp->flows = 1;
+      effp->flows = 1; /* essentially a conditional SOX_EFF_MCHAN */
   }
   p->mult = p->max = p->min = 0;
   if (p->do_scan) {
@@ -194,6 +194,8 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
   priv_t * p = (priv_t *)effp->priv;
   size_t len;
   int result = SOX_SUCCESS;
+
+  *osamp -= *osamp % effp->in_signal.channels;
 
   if (p->do_scan) {
     if (!p->mult)

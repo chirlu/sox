@@ -69,6 +69,8 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
   priv_t * p = (priv_t *)effp->priv;
   size_t odone = 0, n;
 
+  *osamp -= *osamp % effp->in_signal.channels;
+
   while ((p->remaining_samples || p->remaining_repeats) && odone < *osamp) {
     if (!p->remaining_samples) {
       p->remaining_samples = p->num_samples;

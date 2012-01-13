@@ -285,6 +285,7 @@ static int sox_fade_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp
     size_t t_chan = 0;
 
     len = *osamp;
+    len -= len % effp->in_signal.channels;
     *osamp = 0;
 
     if (fade->do_out && fade->samplesdone < fade->out_stop &&

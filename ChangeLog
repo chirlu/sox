@@ -80,6 +80,8 @@ Effects:
   o Stricter syntax checking for several effects (might reveal bugs hidden
     in existing scripts). (Ulrich Klauer)
   o Calculate output audio length for most effects. (Ulrich Klauer)
+  o Fix problems with several effects when the buffer size was not evenly
+    divisible by the number of channels. [3420899] (Ulrich Klauer)
 
 Misc:
 
