@@ -694,14 +694,14 @@ static int get_id3v2_tag_size(sox_format_t * ft)
   }
 
   /* read 10 bytes in case there's an ID3 version 2 header here */
-  bytes_read = fread(id3v2_header, 1, sizeof(id3v2_header), fp);
+  bytes_read = fread(id3v2_header, (size_t)1, sizeof(id3v2_header), fp);
   if (bytes_read != sizeof(id3v2_header)) {
     lsx_warn("cannot update id3 tag - failed to read id3 header");
     return SOX_EOF;      /* not readable, maybe opened Write-Only */
   }
 
   /* does the stream begin with the ID3 version 2 file identifier? */
-  if (!strncmp((char *) id3v2_header, "ID3", 3)) {
+  if (!strncmp((char *) id3v2_header, "ID3", (size_t)3)) {
     /* the tag size (minus the 10-byte header) is encoded into four
      * bytes where the most significant bit is clear in each byte */
     id3v2_size = (((id3v2_header[6] & 0x7f) << 21)
@@ -767,7 +767,7 @@ static void rewrite_id3v2_tag(sox_format_t * ft, size_t id3v2_size, uint64_t num
   } else {
     fseeko(fp, (off_t)0, SEEK_SET);
     /* Overwrite the Id3v2 tag (this time TLEN should be accurate) */
-    if (fwrite(buffer, id3v2_size, 1, fp) != 1) {
+    if (fwrite(buffer, id3v2_size, (size_t)1, fp) != 1) {
       lsx_debug("Rewrote Id3v2 tag (%" PRIuPTR " bytes)", id3v2_size);
     }
   }
@@ -802,7 +802,7 @@ static void rewrite_tags(sox_format_t * ft, uint64_t num_samples)
   }
 
   if (p->vbr_tag) {
-    unsigned int lametag_size;
+    size_t lametag_size;
     uint8_t buffer[MAXFRAMESIZE];
 
     if (fseeko(fp, (off_t)id3v2_size, SEEK_SET)) {
@@ -820,10 +820,10 @@ static void rewrite_tags(sox_format_t * ft, uint64_t num_samples)
       return;
     }
 
-    if (fwrite(buffer, lametag_size, 1, fp) != 1) {
+    if (fwrite(buffer, lametag_size, (size_t)1, fp) != 1) {
       lsx_warn("cannot write VBR tag - VBR tag write failed");
     } else {
-      lsx_debug("rewrote VBR tag (%u bytes)", lametag_size);
+      lsx_debug("rewrote VBR tag (%" PRIuPTR " bytes)", lametag_size);
     }
   }
 }

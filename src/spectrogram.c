@@ -519,7 +519,7 @@ static int stop(sox_effect_t * effp)
   memset(pixels, Background, cols * rows * sizeof(*pixels));
   png_init_io(png, file);
   png_set_PLTE(png, png_info, palette, fixed_palette + p->spectrum_points);
-  png_set_IHDR(png, png_info, (size_t)cols, (size_t)rows, 8,
+  png_set_IHDR(png, png_info, (png_uint_32)cols, (png_uint_32)rows, 8,
       PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
       PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
   for (j = 0; j < rows; ++j)               /* Put (0,0) at bottom-left of PNG */

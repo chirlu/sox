@@ -42,10 +42,11 @@ static void write_comments(sox_format_t * ft)
   const char* comment;
 
   p->id3tag_init(p->gfp);
-  p->id3tag_set_pad(p->gfp, ID3PADDING);
+  p->id3tag_set_pad(p->gfp, (size_t)ID3PADDING);
 
   /* Note: id3tag_set_fieldvalue is not present in LAME 3.97, so we're using
      the 3.97-compatible methods for all of the tags that 3.97 supported. */
+  /* FIXME: This is no more necessary, since support for LAME 3.97 has ended. */
   if ((comment = sox_find_comment(ft->oob.comments, "Title")))
     p->id3tag_set_title(p->gfp, comment);
   if ((comment = sox_find_comment(ft->oob.comments, "Artist")))
