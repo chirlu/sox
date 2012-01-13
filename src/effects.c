@@ -225,6 +225,10 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
     idone -= idone % effp->in_signal.channels;
     effstatus = effp->handler.flow(effp, &effp1->obuf[effp1->obeg],
                                    &effp->obuf[effp->oend], &idone, &obeg);
+    if (obeg % effp->out_signal.channels != 0) {
+      lsx_fail("multi-channel effect flowed asymmetrically!");
+      effstatus = SOX_EOF;
+    }
   } else {               /* Run effect on each channel individually */
     sox_sample_t *obuf = &effp->obuf[effp->oend];
     size_t idone_last = 0, odone_last = 0; /* Initialised to prevent warning */
@@ -307,9 +311,13 @@ static int drain_effect(sox_effects_chain_t * chain, size_t n)
   size_t pre_odone = obeg;
 #endif
 
-  if (effp->flows == 1)   /* Run effect on all channels at once */
+  if (effp->flows == 1) { /* Run effect on all channels at once */
     effstatus = effp->handler.drain(effp, &effp->obuf[effp->oend], &obeg);
-  else {                         /* Run effect on each channel individually */
+    if (obeg % effp->out_signal.channels != 0) {
+      lsx_fail("multi-channel effect drained asymmetrically!");
+      effstatus = SOX_EOF;
+    }
+  } else {                       /* Run effect on each channel individually */
     sox_sample_t *obuf = &effp->obuf[effp->oend];
     size_t odone_last = 0; /* Initialised to prevent warning */
 
