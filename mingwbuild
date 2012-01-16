@@ -79,6 +79,7 @@ case `uname` in
   DOC_TARGETS=""
   DOCS=""
   TMP_SNDFILE_LIBS=""
+  TMP_FLAC_LIBS=""
   STRIP=strip
   ;;
   *)
@@ -87,6 +88,10 @@ case `uname` in
   DOC_TARGETS="pdf"
   DOCS="sox.pdf soxformat.pdf soxi.pdf"
   TMP_SNDFILE_LIBS="-lsndfile -lFLAC -lwsock32 -lvorbisenc -lvorbisfile -lvorbis -logg"
+  # TODO: libFLAC is referencing ntohl() but not defining it in their
+  # flac.pc. Its not obvious how upstream is going to fix this issue
+  # so work around in script for now.
+  TMP_FLAC_LIBS="-lwsock32"
   STRIP=i686-pc-mingw32-strip
 esac
 
@@ -102,7 +107,7 @@ if [ $# -ne 0 -o ! -r Makefile ]; then
     --with-libltdl \
     --enable-dl-lame --enable-dl-mad --enable-dl-amrnb --enable-dl-amrwb \
     LDFLAGS="-static -L/usr/local/lib" CPPFLAGS=-I/usr/local/include \
-    SNDFILE_LIBS="${TMP_SNDFILE_LIBS}" \
+    SNDFILE_LIBS="${TMP_SNDFILE_LIBS}" FLAC_LIBS="${TMP_FLAC_LIBS}"\
     $*
 fi
 
