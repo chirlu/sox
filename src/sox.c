@@ -2833,8 +2833,16 @@ int main(int argc, char **argv)
 
   if (lsx_strends(myname, "play"))
     sox_mode = sox_play;
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+  else if (lsx_strends(myname, "play.exe"))
+    sox_mode = sox_play;
+#endif
   else if (lsx_strends(myname, "rec"))
     sox_mode = sox_rec;
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+  else if (lsx_strends(myname, "rec.exe"))
+    sox_mode = sox_play;
+#endif
   else if (lsx_strends(myname, "soxi"))
     sox_mode = sox_soxi;
 
