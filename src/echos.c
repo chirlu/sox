@@ -153,6 +153,9 @@ static int sox_echos_start(sox_effect_t * effp)
                 sum_in_volume += echos->decay[i];
         if ( sum_in_volume * echos->in_gain > 1.0 / echos->out_gain )
                 lsx_warn("echos: warning >>> gain-out can cause saturation of output <<<");
+
+  effp->out_signal.length = SOX_UNKNOWN_LEN; /* TODO: calculate actual length */
+
         return (SOX_SUCCESS);
 }
 

@@ -130,6 +130,8 @@ static int sox_noisered_start(sox_effect_t * effp)
     if (ifp != stdin)
       fclose(ifp);
 
+  effp->out_signal.length = SOX_UNKNOWN_LEN; /* TODO: calculate actual length */
+
     return (SOX_SUCCESS);
 }
 

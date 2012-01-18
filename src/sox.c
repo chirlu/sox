@@ -1114,7 +1114,7 @@ static void add_effects(sox_effects_chain_t *chain)
         effp->out_signal.channels,
         (effp->handler.flags & SOX_EFF_MCHAN)? "(multi)" : "",
         effp->out_signal.precision,
-        effp->out_signal.length ?
+        effp->out_signal.length != SOX_UNKNOWN_LEN ?
           str_time(effp->out_signal.length/effp->out_signal.channels/effp->out_signal.rate) :
           "unknown length"
         );
@@ -1661,7 +1661,7 @@ static void calculate_output_signal_parameters(void)
   /* Report all input files and gather info on differing rates & numbers of
    * channels, and on the resulting output audio length: */
   for (i = 0; i < input_count; i++) {
-    known_length = known_length && files[i]->ft->signal.length != 0;
+    known_length = known_length && files[i]->ft->signal.length != SOX_UNSPEC;
     if (combine_method == sox_concatenate)
       olen += files[i]->ft->signal.length / files[i]->ft->signal.channels;
     else

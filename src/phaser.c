@@ -104,6 +104,8 @@ static int start(sox_effect_t * effp)
       1., (double)p->delay_buf_len, M_PI_2);
 
   p->delay_pos = p->mod_pos = 0;
+
+  effp->out_signal.length = SOX_UNKNOWN_LEN; /* TODO: calculate actual length */
   return SOX_SUCCESS;
 }
 

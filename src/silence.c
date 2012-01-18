@@ -273,6 +273,8 @@ static int sox_silence_start(sox_effect_t * effp)
     silence->stop_holdoff_end = 0;
     silence->stop_found_periods = 0;
 
+    effp->out_signal.length = SOX_UNKNOWN_LEN; /* depends on input data */
+
     return(SOX_SUCCESS);
 }
 

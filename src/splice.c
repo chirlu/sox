@@ -185,6 +185,7 @@ static int start(sox_effect_t * effp)
         *effp->in_signal.mult *= pow(.5, .5);
       return SOX_SUCCESS;
     }
+  effp->out_signal.length = SOX_UNKNOWN_LEN; /* depends on input data */
   return SOX_EFF_NULL;
 }
 

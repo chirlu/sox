@@ -256,6 +256,7 @@ static int start(sox_effect_t * effp)
   p->tempo = tempo_create((size_t)effp->in_signal.channels);
   tempo_setup(p->tempo, effp->in_signal.rate, p->quick_search, p->factor,
       p->segment_ms, p->search_ms, p->overlap_ms);
+  effp->out_signal.length = SOX_UNKNOWN_LEN; /* TODO: calculate actual length */
   return SOX_SUCCESS;
 }
 

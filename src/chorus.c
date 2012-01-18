@@ -228,6 +228,9 @@ static int sox_chorus_start(sox_effect_t * effp)
 
         chorus->counter = 0;
         chorus->fade_out = chorus->maxsamples;
+
+  effp->out_signal.length = SOX_UNKNOWN_LEN; /* TODO: calculate actual length */
+
         return (SOX_SUCCESS);
 }
 

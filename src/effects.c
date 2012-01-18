@@ -171,12 +171,14 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
 
   if (!(effp->handler.flags & SOX_EFF_LENGTH)) {
     effp->out_signal.length = in->length;
-    if (effp->handler.flags & SOX_EFF_CHAN)
-      effp->out_signal.length =
-        effp->out_signal.length / in->channels * effp->out_signal.channels;
-    if (effp->handler.flags & SOX_EFF_RATE)
-      effp->out_signal.length =
-        effp->out_signal.length / in->rate * effp->out_signal.rate + .5;
+    if (effp->out_signal.length != SOX_UNKNOWN_LEN) {
+      if (effp->handler.flags & SOX_EFF_CHAN)
+        effp->out_signal.length =
+          effp->out_signal.length / in->channels * effp->out_signal.channels;
+      if (effp->handler.flags & SOX_EFF_RATE)
+        effp->out_signal.length =
+          effp->out_signal.length / in->rate * effp->out_signal.rate + .5;
+    }
   }
 
   *in = effp->out_signal;

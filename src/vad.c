@@ -142,7 +142,7 @@ static int start(sox_effect_t * effp)
   for (i = 0; i < p->spectrumEnd - p->spectrumStart; ++i)
     p->cepstrumWindow[i] = 2 / sqrt((double)p->spectrumEnd - p->spectrumStart);
   lsx_apply_hann(p->cepstrumWindow,(int)(p->spectrumEnd - p->spectrumStart));
-  
+
   p->cepstrumStart = ceil(effp->in_signal.rate * .5 / p->lpLifterFreq);
   p->cepstrumEnd  = floor(effp->in_signal.rate * .5 / p->hpLifterFreq);
   p->cepstrumEnd = min(p->cepstrumEnd, p->dftLen_ws / 4);
@@ -157,6 +157,8 @@ static int start(sox_effect_t * effp)
   p->bootCountMax = p->bootTime * p->measureFreq - .5;
   p->measureTimer_ns = p->measureLen_ns;
   p->bootCount = p->measuresIndex = p->flushedLen_ns = p->samplesIndex_ns = 0;
+
+  effp->out_signal.length = SOX_UNKNOWN_LEN; /* depends on input data */
   return SOX_SUCCESS;
 }
 

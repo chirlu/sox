@@ -1049,7 +1049,8 @@ if clipping occurs.
 #define SOX_SIZE_MAX ((size_t)(-1)) /**< Client API: Maximum value of size_t. */
 
 #define SOX_UNSPEC 0                         /**< Client API: Members of sox_signalinfo_t are set to SOX_UNSPEC (= 0) if the actual value is not yet known. */
-#define SOX_IGNORE_LENGTH (sox_uint64_t)(-1) /**< Client API: sox_signalinfo_t.length is set to SOX_IGNORE_LENGTH (= -1) if the actual length is not yet known. */
+#define SOX_UNKNOWN_LEN (sox_uint64_t)(-1) /**< Client API: sox_signalinfo_t.length is set to SOX_UNKNOWN_LEN (= -1) within the effects chain if the actual length is not known. Format handlers currently use SOX_UNSPEC instead. */
+#define SOX_IGNORE_LENGTH (sox_uint64_t)(-2) /**< Client API: sox_signalinfo_t.length is set to SOX_IGNORE_LENGTH (= -2) to indicate that a format handler should ignore length information in file headers. */
 
 #define SOX_DEFAULT_CHANNELS  2     /**< Client API: Default channel count is 2 (stereo). */
 #define SOX_DEFAULT_RATE      48000 /**< Client API: Default rate is 48000Hz. */

@@ -419,7 +419,8 @@ static int start(sox_effect_t * effp)
     if (lsx_parsesamples(effp->in_signal.rate, p->length_str, &p->samples_to_do, 't') == NULL)
       return lsx_usage(effp);
   } else
-    p->samples_to_do = effp->in_signal.length / effp->in_signal.channels;
+    p->samples_to_do = effp->in_signal.length != SOX_UNKNOWN_LEN ?
+        effp->in_signal.length / effp->in_signal.channels : 0;
 
   p->number_of_channels = effp->in_signal.channels;
   p->channels = lsx_calloc(p->number_of_channels, sizeof(*p->channels));
@@ -525,7 +526,8 @@ static int start(sox_effect_t * effp)
   }
   p->gain = 1;
   effp->out_signal.mult = p->no_headroom? NULL : &p->gain;
-  effp->out_signal.length = p->samples_to_do * effp->out_signal.channels;
+  effp->out_signal.length = p->samples_to_do ?
+    p->samples_to_do * effp->out_signal.channels : SOX_UNKNOWN_LEN;
   return SOX_SUCCESS;
 }
 

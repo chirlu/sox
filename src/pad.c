@@ -80,7 +80,7 @@ static int start(sox_effect_t * effp)
   if (parse(effp, 0, effp->in_signal.rate) != SOX_SUCCESS)
     return SOX_EOF;
 
-  if ((effp->out_signal.length = effp->in_signal.length) != 0) {
+  if ((effp->out_signal.length = effp->in_signal.length) != SOX_UNKNOWN_LEN) {
     for (i = 0; i < p->npads; ++i)
       effp->out_signal.length +=
         p->pads[i].pad * effp->in_signal.channels;

@@ -45,7 +45,8 @@ static int start(sox_effect_t * effp)
   }
   p->num_samples = p->remaining_samples = 0;
   p->remaining_repeats = p->num_repeats;
-  effp->out_signal.length = effp->in_signal.length * (p->num_repeats + 1);
+  effp->out_signal.length = effp->in_signal.length != SOX_UNKNOWN_LEN ?
+      effp->in_signal.length * (p->num_repeats + 1) : SOX_UNKNOWN_LEN;
   return SOX_SUCCESS;
 }
 

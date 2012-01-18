@@ -107,7 +107,7 @@ static int sox_trim_start(sox_effect_t * effp)
     trim->index = 0;
     trim->trimmed = 0;
 
-    if (effp->in_signal.length) {
+    if (effp->in_signal.length != SOX_UNKNOWN_LEN) {
       if (trim->start >= effp->in_signal.length) {
         lsx_fail("start position after end of file");
         return SOX_EOF;
@@ -117,9 +117,12 @@ static int sox_trim_start(sox_effect_t * effp)
       }
     }
 
-    effp->out_signal.length = trim->length;
-    if (!effp->out_signal.length && effp->in_signal.length > trim->start)
-        effp->out_signal.length = effp->in_signal.length - trim->start;
+    if (trim->end_str)
+      effp->out_signal.length = trim->length;
+    else if (effp->in_signal.length != SOX_UNKNOWN_LEN)
+      effp->out_signal.length = effp->in_signal.length - trim->start;
+    else
+      effp->out_signal.length = SOX_UNKNOWN_LEN;
 
     return (SOX_SUCCESS);
 }

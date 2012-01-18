@@ -180,6 +180,7 @@ static int start(sox_effect_t * effp)
       p->factor, p->window, p->shift, p->fading, p->state,
       p->segment, p->index, p->ishift, p->oindex, p->oshift, p->overlap);
 
+  effp->out_signal.length = SOX_UNKNOWN_LEN; /* TODO: calculate actual length */
   return SOX_SUCCESS;
 }
 

@@ -85,8 +85,9 @@ static int start(sox_effect_t * effp)
   }
   lsx_parsesamples(effp->in_signal.rate, p->max_arg, &max_delay, 't');
   if (effp->flow == 0) {
-    effp->out_signal.length = effp->in_signal.length ?
-       effp->in_signal.length + max_delay * effp->in_signal.channels : 0;
+    effp->out_signal.length = effp->in_signal.length != SOX_UNKNOWN_LEN ?
+       effp->in_signal.length + max_delay * effp->in_signal.channels :
+       SOX_UNKNOWN_LEN;
     lsx_debug("extending audio by %" PRIu64 " samples", max_delay);
   }
   p->buffer_index = p->delay = p->pre_pad = 0;

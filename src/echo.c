@@ -156,6 +156,9 @@ static int sox_echo_start(sox_effect_t * effp)
                 lsx_warn("echo: warning >>> gain-out can cause saturation of output <<<");
         echo->counter = 0;
         echo->fade_out = echo->maxsamples;
+
+  effp->out_signal.length = SOX_UNKNOWN_LEN; /* TODO: calculate actual length */
+
         return (SOX_SUCCESS);
 }
 
