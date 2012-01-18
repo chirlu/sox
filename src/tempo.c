@@ -346,5 +346,6 @@ sox_effect_handler_t const * lsx_pitch_effect_fn(void)
   handler.getopts = pitch_getopts;
   handler.start = pitch_start;
   handler.flags &= ~SOX_EFF_LENGTH;
+  handler.flags |= SOX_EFF_RATE;
   return &handler;
 }
