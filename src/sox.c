@@ -1620,6 +1620,7 @@ static void calculate_combiner_signal_parameters(void)
     size_t max_channels = 0;
     size_t min_rate = SOX_SIZE_MAX;
     size_t max_rate = 0;
+    uint64_t total_length = 0, max_length = 0;
 
     /* Report all input files and gather info on differing rates & numbers of
      * channels, and on the resulting output audio length: */
@@ -1630,6 +1631,11 @@ static void calculate_combiner_signal_parameters(void)
       max_channels = max(max_channels, files[i]->ft->signal.channels);
       min_rate     = min(min_rate    , files[i]->ft->signal.rate);
       max_rate     = max(max_rate    , files[i]->ft->signal.rate);
+      max_length   = max(max_length  , files[i]->ft->signal.length);
+      if (total_length != SOX_UNKNOWN_LEN && files[i]->ft->signal.length)
+        total_length += files[i]->ft->signal.length;
+      else
+        total_length = SOX_UNKNOWN_LEN;
     }
 
     /* Check for invalid/unusual rate or channel combinations: */
@@ -1645,6 +1651,11 @@ static void calculate_combiner_signal_parameters(void)
     }
     if (min_rate != max_rate)
       exit(1);
+
+    if (combine_method == sox_concatenate)
+      combiner_signal.length = total_length;
+    else if (is_parallel(combine_method))
+      combiner_signal.length = max_length;
 
     /* Store the calculated # of combined channels: */
     combiner_signal.channels =
