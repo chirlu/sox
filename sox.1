@@ -1633,6 +1633,8 @@ to remove it, use
 .B gain\ \-5
 in place of
 .BR gain\ 1 .
+.SP
+See also \fBpitch\fR.
 .TP
 \fBbiquad \fIb0 b1 b2 a0 a1 a2\fR
 Apply a biquad IIR filter with the given coefficients. Where b* and a* are
@@ -2562,8 +2564,7 @@ semitone).  See the
 .B tempo
 effect for a description of the other parameters.
 .SP
-See also the
-.B speed
+See also the \fBbend\fR, \fBspeed\fR,
 and
 .B tempo
 effects.
@@ -3312,8 +3313,7 @@ effect using its default quality/speed.  For higher quality or higher speed
 resampling, in addition to the \fBspeed\fR effect, specify
 the \fBrate\fR effect with the desired quality option.
 .SP
-See also the
-.B pitch
+See also the \fBbend\fR, \fBpitch\fR,
 and
 .B tempo
 effects.
@@ -3929,7 +3929,7 @@ See also
 .B speed
 for an effect that changes tempo and pitch together,
 .B pitch
-for an effect that changes tempo and pitch together, and
+and \fBbend\fR for effects that change pitch only, and
 .B stretch
 for an effect that changes tempo using a different algorithm.
 .TP
