@@ -123,7 +123,7 @@ static int start(sox_effect_t *effp)
     return SOX_EOF;
   }
 
-  if (!p->num_pos || (p->num_pos == 1 && !p->pos[0].sample))
+  if (p->num_pos == 1 && !p->pos[0].sample)
     return SOX_EFF_NULL;
 
   /* calculate output length */
@@ -160,9 +160,10 @@ static int flow(sox_effect_t *effp, const sox_sample_t *ibuf,
         p->samples_read == p->pos[p->current_pos].sample) {
       p->copying = !p->copying;
       p->current_pos++;
-      if (p->current_pos >= p->num_pos && !p->copying)
-        return SOX_EOF;
     }
+
+    if (p->current_pos >= p->num_pos && !p->copying)
+      return SOX_EOF;
 
     chunk = p->current_pos < p->num_pos ?
       min(len, p->pos[p->current_pos].sample - p->samples_read) : len;
