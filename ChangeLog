@@ -84,6 +84,8 @@ Effects:
   o Calculate output audio length for most effects. (Ulrich Klauer)
   o Fix problems with several effects when the buffer size was not evenly
     divisible by the number of channels. [3420899] (Ulrich Klauer)
+  o Complete rewrite of the trim effect with extended syntax (backwards
+    compatible) and capabilities. [FR 2941349] (Ulrich Klauer)
 
 Misc:
 

@@ -93,7 +93,7 @@ The audio effects/tools included in this release are as follows:
 ** pad: Pad (usually) the ends of the audio with silence
 ** silence: Remove portions of silence from the audio
 ** splice: Perform the equivalent of a cross-faded tape splice
-** trim: Trim the ends of the audio
+** trim: Cuts portions out of the audio
 ** vad: Voice activity detector
 
 * Mixing effects

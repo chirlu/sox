@@ -3945,24 +3945,39 @@ and the depth as a percentage by
 .I depth
 (default 40).
 .TP
-\fBtrim \fIstart\fR [\fIlength\fR\^|\^\fB=\fIend\fR]
-Trim can trim off unwanted audio from the beginning and end of the
-audio.  Audio is not sent to the output stream until
-the \fIstart\fR location is reached.
+\fBtrim\fR {[\fB=\fR\^|\^\fB\-\fR]\fIposition\fR}
+Cuts portions out of the audio.  Any number of \fIposition\fRs may be
+given; audio is not sent to the output until the first \fIposition\fR
+is reached.  The effect then alternates between copying and discarding
+audio at each \fIposition\fR.
 .SP
-The optional \fIlength\fR parameter gives the length of audio to output
-after the \fIstart\fR sample and is thus used to trim off the end of the
-audio.  Alternatively, an absolute end location can be given by
-preceding it with an equals sign.  Using a value of 0 for the \fIstart\fR
-parameter will allow trimming off the end only.
+If a \fIposition\fR is preceded by an equals or minus sign, it is
+interpreted relative to the beginning or the end of the audio,
+respectively.  (The audio length must be known for end-relative
+locations to work.)  Otherwise, it is considered an offset from the
+last \fIposition\fR, or from the start of audio for the first
+parameter.  Using a value of 0 for the first \fIposition\fR
+parameter allows copying from the beginning of the audio.
 .SP
-Both parameters can be specified using either an amount of time or an
+All parameters can be specified using either an amount of time or an
 exact count of samples.  The format for specifying lengths in time is
-hh:mm:ss.frac.  A start value of 1:30\*d5 will not start until 1 minute,
-thirty and \(12 seconds into the audio.  The format for specifying
-sample counts is the number of samples with the letter `s' appended to
-it.  A value of 8000s for the \fIstart\fR parameter will wait until
+hh:mm:ss.frac.  A value of 1:30\*d5 for the first parameter will not
+start until 1 minute, thirty and \(12 seconds into the audio.  The format
+for specifying sample counts is the number of samples with the letter `s'
+appended to it.  A value of 8000s for the first parameter will wait until
 8000 samples are read before starting to process audio.
+.SP
+For example,
+.EX
+   sox infile outfile trim 0 10
+.EE
+will copy the first ten seconds, while
+.EX
+   play infile trim 12:34 =15:00 -2:00
+.EE
+will play from 12 minutes 34 seconds into the audio up to 15 minutes into
+the audio (i.e. 2 minutes and 26 seconds long), then resume playing two
+minutes before the end of audio.
 .TP
 \fBupsample\fR [\fIfactor\fR]
 Upsample the signal by an integer factor: \fIfactor\fR\-1 zero-value
