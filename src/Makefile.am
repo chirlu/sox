@@ -66,7 +66,7 @@ libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
 
 # Effects source
 libsox_la_SOURCES += \
-	band.h bend.c biquad.c biquad.h biquads.c chorus.c compand.c crop.c \
+	band.h bend.c biquad.c biquad.h biquads.c chorus.c compand.c \
 	compandt.c compandt.h contrast.c dcshift.c delay.c dft_filter.c \
 	dft_filter.h dither.c dither.h divide.c downsample.c earwax.c \
 	echo.c echos.c effects.c effects.h effects_i.c effects_i_dsp.c \

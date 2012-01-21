@@ -1403,19 +1403,6 @@ static void optimize_trim(void)
       }
     }
   }
-  else if (input_count == 1 && effects_chain->length > 1 && strcmp(effects_chain->effects[1][0].handler.name, "crop") == 0) {
-    if (files[0]->ft->handler.seek && files[0]->ft->seekable){
-      uint64_t offset = sox_crop_get_start(&effects_chain->effects[1][0]);
-      if (offset && sox_seek(files[0]->ft, offset, SOX_SEEK_SET) == SOX_SUCCESS) {
-        read_wide_samples = offset / files[0]->ft->signal.channels;
-        /* Assuming a failed seek stayed where it was.  If the seek worked then
-         * reset the start location of crop so that it thinks user didn't
-         * request a skip.  */
-        sox_crop_clear_start(&effects_chain->effects[1][0]);
-        lsx_debug("optimize_crop successful");
-      }
-    }
-  }
 }
 
 static sox_bool overwrite_permitted(char const * filename)

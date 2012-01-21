@@ -2225,29 +2225,6 @@ sox_trim_clear_start(
 
 /**
 Client API:
-Gets the sample offset of the start of the crop, useful for efficiently
-skipping the part that will be trimmed anyway (get crop start, seek, then
-clear crop start).
-@returns the sample offset of the start of the crop.
-*/
-sox_uint64_t
-LSX_API
-sox_crop_get_start(
-    LSX_PARAM_IN sox_effect_t * effp /**< Crop effect. */
-    );
-
-/**
-Client API:
-Clears the start of the trim to 0.
-*/
-void
-LSX_API
-sox_crop_clear_start(
-    LSX_PARAM_INOUT sox_effect_t * effp /**< Crop effect. */
-    );
-
-/**
-Client API:
 Returns true if the specified file is a known playlist file type.
 @returns true if the specified file is a known playlist file type.
 */

@@ -26,7 +26,6 @@
   EFFECT(channels)
   EFFECT(compand)
   EFFECT(contrast)
-  EFFECT(crop)
   EFFECT(dcshift)
   EFFECT(deemph)
   EFFECT(delay)

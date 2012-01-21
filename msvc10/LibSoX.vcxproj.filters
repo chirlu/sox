@@ -201,9 +201,6 @@
     <ClCompile Include="..\src\contrast.c">
       <Filter>Effect Sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\crop.c">
-      <Filter>Effect Sources</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\dcshift.c">
       <Filter>Effect Sources</Filter>
     </ClCompile>

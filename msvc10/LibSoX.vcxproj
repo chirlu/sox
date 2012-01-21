@@ -200,7 +200,6 @@
     <ClCompile Include="..\src\compand.c" />
     <ClCompile Include="..\src\compandt.c" />
     <ClCompile Include="..\src\contrast.c" />
-    <ClCompile Include="..\src\crop.c" />
     <ClCompile Include="..\src\dcshift.c" />
     <ClCompile Include="..\src\delay.c" />
     <ClCompile Include="..\src\dft_filter.c" />

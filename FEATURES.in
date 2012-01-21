@@ -89,7 +89,6 @@ The audio effects/tools included in this release are as follows:
 ** vol: Adjust audio volume
 
 * Editing effects
-** crop+: Like `trim', but can crop end without specifying length (W.I.P.)
 ** pad: Pad (usually) the ends of the audio with silence
 ** silence: Remove portions of silence from the audio
 ** splice: Perform the equivalent of a cross-faded tape splice

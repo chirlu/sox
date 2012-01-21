@@ -29,7 +29,7 @@ set(effects_srcs
   compand         echo            mcompand        reverb          synth
   compandt        echos           mixer           reverse         tempo
   contrast        fade            noiseprof       silence         tremolo
-  crop            fft4g           noisered        sinc            trim
+                  fft4g           noisered        sinc            trim
   dcshift         fir             output          skeleff         upsample
   delay           firfit          overdrive       speed           vad
   dft_filter      flanger         pad             splice          vol

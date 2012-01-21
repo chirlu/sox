@@ -656,10 +656,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\crop.c"
-				>
-			</File>
-			<File
 				RelativePath="..\src\dcshift.c"
 				>
 			</File>
