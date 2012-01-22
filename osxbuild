@@ -15,10 +15,10 @@
 # The following command lines were used to generate the static external
 # libraries SoX ships with.
 #
-# cd libtool-2.2.6b
+# cd libtool-2.4.2
 #./configure CFLAGS="-m32 -arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" --disable-shared --enable-static;make;sudo make install
 #
-# cd libpng-1.2.41
+# cd libpng-1.5.7
 #./configure CFLAGS="-m32 -arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" --disable-shared --enable-static;make;sudo make install
 #
 # cd ../wavpack-4.60.1
@@ -29,13 +29,13 @@
 # cd ../flac-1.2.1
 #./configure CXXFLAGS="-m32 -arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" CFLAGS="-m32 -arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" --disable-shared --enable-static;make;sudo make install
 #
-# cd ../libogg-1.1.4
+# cd ../libogg-1.3.0
 #./configure CFLAGS="-m32 -arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" --disable-shared --enable-static;make;sudo make install
 #
-# cd ../libvorbis-1.2.3
+# cd ../libvorbis-1.3.2
 #./configure CPPFLAGS="-I/usr/local/include" CFLAGS="-m32 -arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" --disable-shared --enable-static;make;sudo make install
 #
-# cd ../libsndfile-1.0.21
+# cd ../libsndfile-1.0.25
 #./configure CXXFLAGS="-m32 -arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" CFLAGS="-m32 -arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" --disable-shared --enable-static;make;sudo make install
 #
 # cd ../libid3tag-0.15.1b
