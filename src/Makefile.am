@@ -140,7 +140,7 @@ example3_LDADD = ${sox_LDADD}
 example4_LDADD = ${sox_LDADD}
 example5_LDADD = ${sox_LDADD}
 
-EXTRA_DIST = monkey.au monkey.wav optional-fmts.am \
+EXTRA_DIST = monkey.wav optional-fmts.am \
 	     CMakeLists.txt soxconfig.h.cmake \
 	     tests.sh testall.sh tests.bat testall.bat test-comments
 
