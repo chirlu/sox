@@ -198,6 +198,9 @@ create_email()
 Subject: [ANNOUNCE] SoX ${release_num} Released
 To: ${email_list}
 
+The developers of SoX are happy to announce the release of SoX ${release_num}.
+Thanks to all who contributed to thise release.
+
 EMAIL_HEADER
 
     if [ $short_log = "yes" ]; then
