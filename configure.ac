@@ -638,7 +638,9 @@ echo "mp3........................$using_mp3"
 echo " id3tag....................$using_id3tag"
 echo " lame......................$using_lame"
 if test "x$using_lame" = "xyes"; then
+if test "x$enable_dl_lame" != "xyes"; then
 echo " lame id3tag...............$ac_cv_lib_mp3lame_id3tag_set_fieldvalue"
+fi
 echo " dlopen lame...............$enable_dl_lame"
 fi
 echo " mad.......................$using_mad"
