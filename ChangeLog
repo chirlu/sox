@@ -64,9 +64,6 @@ Effects:
 
   o Improvements to man pages for tempo effect.  Really made in 14.3.2.
     (Jim Harkins).
-  o Added use_threads variable to sox_globals. This should be used to enable
-    or disable use of parallel effects processing instead of directly calling
-    omp_set_num_threads. (Doug Cook)
   o New upsample effect. (robs)
   o Fix to effects pipeline to let fade effect specify time from end of
     file again. (cbagwell and Thor Andreassen)
@@ -104,6 +101,9 @@ Other bug fixes:
 
 Internal improvements:
 
+  o Added use_threads variable to sox_globals. This should be used to enable
+    or disable use of parallel effects processing instead of directly calling
+    omp_set_num_threads. (Doug Cook)
   o Fix compiler warnings. (Cristian Morales Vega [P. 3072301], Doug Cook)
   o Improve large file support by using 64-bit numbers to count
     samples. (Doug Cook, Thor Andreassen, Ulrich Klauer)
