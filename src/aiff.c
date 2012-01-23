@@ -948,7 +948,16 @@ static void write_ieee_extended(sox_format_t * ft, double x)
  */
 
 /* Copyright (C) 1988-1991 Apple Computer, Inc.
+ *
  * All rights reserved.
+ *
+ * Warranty Information
+ *  Even though Apple has reviewed this software, Apple makes no warranty
+ *  or representation, either express or implied, with respect to this
+ *  software, its quality, accuracy, merchantability, or fitness for a
+ *  particular purpose.  As a result, this software is provided "as is,"
+ *  and you, its user, are assuming the entire risk as to its quality
+ *  and accuracy.
  *
  * Machine-independent I/O routines for IEEE floating-point numbers.
  *
@@ -1037,7 +1046,19 @@ static void ConvertToIeeeExtended(double num, char *bytes)
 
 /*
  * Copyright (C) 1988-1991 Apple Computer, Inc.
+ *
  * All rights reserved.
+ *
+ * Warranty Information
+ *  Even though Apple has reviewed this software, Apple makes no warranty
+ *  or representation, either express or implied, with respect to this
+ *  software, its quality, accuracy, merchantability, or fitness for a
+ *  particular purpose.  As a result, this software is provided "as is,"
+ *  and you, its user, are assuming the entire risk as to its quality
+ *  and accuracy.
+ *
+ * This code may be used and freely distributed as long as it includes
+ * this copyright notice and the above warranty information.
  *
  * Machine-independent I/O routines for IEEE floating-point numbers.
  *
