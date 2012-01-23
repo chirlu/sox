@@ -58,6 +58,7 @@ static int default_getopts(sox_effect_t * effp, int argc, char **argv UNUSED)
 sox_effect_t * sox_create_effect(sox_effect_handler_t const * eh)
 {
   sox_effect_t * effp = lsx_calloc(1, sizeof(*effp));
+  effp->obuf = NULL;
 
   effp->global_info = sox_get_effects_globals();
   effp->handler = *eh;
@@ -362,8 +363,11 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
   sox_bool draining = sox_true;
 
   for (e = 0; e < chain->length; ++e) {
-    chain->effects[e][0].obuf = lsx_malloc(sox_globals.bufsiz * sizeof(chain->effects[e][0].obuf[0]));
-    chain->effects[e][0].obeg = chain->effects[e][0].oend = 0;
+    chain->effects[e][0].obuf = lsx_realloc(chain->effects[e][0].obuf,
+        sox_globals.bufsiz * sizeof(chain->effects[e][0].obuf[0]));
+      /* Possibly there is already a buffer, if this is a used effect;
+         it may still contain samples in that case. */
+      /* Memory will be freed by sox_delete_effect() later. */
     max_flows = max(max_flows, chain->effects[e][0].flows);
   }
 
@@ -409,9 +413,6 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
   }
   free(chain->obufc);
   free(chain->ibufc);
-
-  for (e = 0; e < chain->length; ++e)
-    free(chain->effects[e][0].obuf);
 
   return flow_status;
 }
@@ -476,9 +477,15 @@ void sox_delete_effect(sox_effect_t *effp)
   if ((clips = sox_stop_effect(effp)) != 0)
     lsx_warn("%s clipped %" PRIu64 " samples; decrease volume?",
         effp->handler.name, clips);
+  if (effp->obeg != effp->oend)
+    lsx_debug("output buffer still held %" PRIu64 " samples; dropped.",
+        (effp->oend - effp->obeg)/effp->out_signal.channels);
+      /* May or may not indicate a problem; it is normal if the user aborted
+         processing, or if an effect like "trim" stopped early. */
   effp->handler.kill(effp); /* N.B. only one kill; not one per flow */
   for (f = 0; f < effp->flows; ++f)
     free(effp[f].priv);
+  free(effp->obuf);
   free(effp);
 }
 

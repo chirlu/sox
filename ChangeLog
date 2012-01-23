@@ -88,6 +88,8 @@ Effects:
   o Complete rewrite of the trim effect with extended syntax (backwards
     compatible) and capabilities. [FR 2941349] (Ulrich Klauer)
   o Fix trim optimization unexpectedly seeking backwards. (Ulrich Klauer)
+  o Prevent samples from getting lost at effects chain transitions in
+    multiple effects chain/multiple output modes. (Ulrich Klauer)
 
 Misc:
 

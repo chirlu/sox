@@ -1169,13 +1169,8 @@ static int advance_eff_chain(void)
     if (reuse_output)
       save_output_eff = sox_pop_effect_last(effects_chain);
 
-    /* TODO: Warn user when an effect is deleted that still
-     * had unprocessed samples.
-     */
     while (effects_chain->length > 1)
-    {
       sox_delete_effect_last(effects_chain);
-    }
   }
   return SOX_SUCCESS;
 } /* advance_eff_chain */
