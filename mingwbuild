@@ -29,6 +29,9 @@
 # The following command lines were used to generate the static external
 # libraries SoX ships with.
 #
+# cd libtool-2.2.6b
+# mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
+#
 # libpng.la will have libtool issue because depends on libz
 # which has a libz.la file.  Must edit libpng.la to
 # prevent needing to distribute zlib1.dll.

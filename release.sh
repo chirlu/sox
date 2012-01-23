@@ -63,7 +63,7 @@ web_path="/home/project-web/sox/htdocs"
 while [ $# != 0 ]; do
     case "$1" in
     --force)
-        force="yes"
+        release_force="yes"
         shift
         ;;
     --help)
@@ -199,7 +199,7 @@ Subject: [ANNOUNCE] SoX ${release_num} Released
 To: ${email_list}
 
 The developers of SoX are happy to announce the release of SoX ${release_num}.
-Thanks to all who contributed to thise release.
+Thanks to all who contributed to this release.
 
 EMAIL_HEADER
 
@@ -315,5 +315,6 @@ if [ $release_files = "yes" ]; then
     fi
     ssh ${username}@${hostname} mkdir -p ${release_path}/${rcpath}${module}/${release_num}
     scp -p $release_list ${username}@${hostname}:${release_path}/${rcpath}${module}/${release_num}
-    scp -p NEWS ${username}@${hostname}:${release_path}/${rcpath}${module}/${release_num}/README
+    # FIXME: Stop pushing this and need to find a solution to help push it later.
+    #scp -p NEWS ${username}@${hostname}:${release_path}/${rcpath}${module}/${release_num}/README
 fi
