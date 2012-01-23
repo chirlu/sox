@@ -54,9 +54,7 @@ The audio effects/tools included in this release are as follows:
 ** bandreject: RBJ band-reject biquad IIR filter
 ** band: SPKit resonator band-pass IIR filter
 ** bass: Tone control: RBJ shelving biquad IIR filter
-** biquad: 2nd-order IIR filter using externally provided coefficients
 ** equalizer: RBJ peaking equalisation biquad IIR filter
-** fir: FFT convolution FIR filter using externally provided coefficients
 ** firfit+: FFT convolution FIR filter using given freq. response (W.I.P.)
 ** highpass: High-pass filter: Single pole or RBJ biquad IIR
 ** hilbert: Hilbert transform filter (90 degrees phase shift)
@@ -130,6 +128,12 @@ The audio effects/tools included in this release are as follows:
 ** synth: Synthesise/modulate audio tones or noise signals
 ** newfile: Create a new output file when an effects chain ends.
 ** restart: Restart 1st effects chain when multiple chains exist.
+
+* Low-level signal processing effects
+** biquad: 2nd-order IIR filter using externally provided coefficients
+** downsample: Reduce sample rate by discarding samples
+** fir: FFT convolution FIR filter using externally provided coefficients
+** upsample: Increase sample rate by zero stuffing
 
   + Experimental or incomplete effect; may change in future.
 
