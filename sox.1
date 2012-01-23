@@ -1116,11 +1116,6 @@ example
 converts raw CD digital audio (16-bit, signed-integer) to a
 24-bit (signed-integer) `WAV' file.
 .TP
-\fB\-1\fR\^/\fB\-2\fR\^/\fB\-3\fR\^/\fB\-4\fR\^/\fB\-8\fR
-The number of bytes in each encoded sample.  Deprecated aliases for
-\fB\-b 8\fR, \fB\-b 16\fR, \fB\-b 24\fR, \fB\-b 32\fR, \fB\-b 64\fR
-respectively.
-.TP
 \fB\-c\fR \fICHANNELS\fR, \fB\-\-channels\fR \fICHANNELS\fR
 The number of audio channels in the audio file. This can be any number
 greater than zero.
@@ -1234,13 +1229,6 @@ floating-point `WAV' files (single & double precision respectively).
 By default (i.e. if this option is not given), the output encoding
 type will (providing it is supported by the output file type) be set
 to the input encoding type.
-.TP
-\fB\-s\fR\^/\fB\-u\fR\^/\fB\-f\fR\^/\fB\-A\fR\^/\fB\-U\fR\^/\fB\-o\fR\^/\fB\-i\fR\^/\fB\-a\fR\^/\fB\-g\fR
-Deprecated aliases for specifying the encoding types
-\fBsigned-integer\fR, \fBunsigned-integer\fR, \fBfloating-point\fR, \fBa-law\fR, \fBmu-law\fR, \fBoki-adpcm\fR, \fBima-adpcm\fR, \fBms-adpcm\fR, \fBgsm-full-rate\fR
-respectively (see
-.B \-e
-above).
 .TP
 \fB\-\-no\-glob\fR
 Specifies that filename `globbing' (wild-card matching) should not be

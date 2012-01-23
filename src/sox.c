@@ -2152,7 +2152,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
 }
 
 static char const * const getoptstr =
-  "+ab:c:de:fghimnopqr:st:uv:xABC:DGLMNRSTUV::X12348";
+  "+b:c:de:hmnpqr:t:v:xBC:DGLMNRSTV::X";
 
 static struct lsx_option_t const long_options[] = {
   {"add-comment"     , lsx_option_arg_required, NULL, 0},
@@ -2458,34 +2458,6 @@ static char parse_gopts_and_fopts(file_t * f)
         break;
       }
       break;
-
-#define DEPRECATED lsx_warn("Option `-%c' is deprecated, use `-b %i' instead.", c, (c-'0')*8)
-    case '1': f->encoding.bits_per_sample = 8;  DEPRECATED; break;
-    case '2': f->encoding.bits_per_sample = 16; DEPRECATED; break;
-    case '3': f->encoding.bits_per_sample = 24; DEPRECATED; break;
-    case '4': f->encoding.bits_per_sample = 32; DEPRECATED; break;
-    case '8': f->encoding.bits_per_sample = 64; DEPRECATED; break;
-#undef DEPRECATED
-
-#define DEPRECATED(encname) lsx_warn("Option `-%c' is deprecated, use `-e %s' instead.", c, encname)
-    case 's': f->encoding.encoding = SOX_ENCODING_SIGN2;     DEPRECATED("signed-integer"); break;
-    case 'u': f->encoding.encoding = SOX_ENCODING_UNSIGNED;  DEPRECATED("unsigned-integer"); break;
-    case 'f': f->encoding.encoding = SOX_ENCODING_FLOAT;     DEPRECATED("floating-point"); break;
-    case 'a': f->encoding.encoding = SOX_ENCODING_MS_ADPCM;  DEPRECATED("ms-adpcm"); break;
-    case 'i': f->encoding.encoding = SOX_ENCODING_IMA_ADPCM; DEPRECATED("ima-adpcm"); break;
-    case 'o': f->encoding.encoding = SOX_ENCODING_OKI_ADPCM; DEPRECATED("oki-adpcm"); break;
-    case 'g': f->encoding.encoding = SOX_ENCODING_GSM;       DEPRECATED("gsm-full-rate"); break;
-
-    case 'U': f->encoding.encoding = SOX_ENCODING_ULAW; DEPRECATED("mu-law");
-      if (f->encoding.bits_per_sample == 0)
-        f->encoding.bits_per_sample = 8;
-      break;
-
-    case 'A': f->encoding.encoding = SOX_ENCODING_ALAW; DEPRECATED("a-law");
-      if (f->encoding.bits_per_sample == 0)
-        f->encoding.bits_per_sample = 8;
-      break;
-#undef DEPRECATED
 
     case 'L': case 'B': case 'x':
       if (f->encoding.reverse_bytes != sox_option_default || f->encoding.opposite_endian)
