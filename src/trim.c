@@ -182,7 +182,10 @@ static int drain(sox_effect_t *effp, sox_sample_t *obuf UNUSED, size_t *osamp)
 {
   priv_t *p = (priv_t*) effp->priv;
   *osamp = 0;
-  if (p->current_pos < p->num_pos)
+  if (! (p->current_pos + 1 == p->num_pos &&
+         p->pos[p->current_pos].sample == p->samples_read &&
+         p->copying) /* would stop here anyway */
+      && p->current_pos < p->num_pos)
     lsx_warn("Audio shorter than expected; last %u positions not reached.",
       p->num_pos - p->current_pos);
   return SOX_EOF;
