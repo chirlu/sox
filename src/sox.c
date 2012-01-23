@@ -181,6 +181,10 @@ static size_t *user_effargs_size = NULL;  /* array: size of user_effargs for eac
 static unsigned *nuser_effects = NULL;  /* array: number of effects in each chain */
 static int current_eff_chain = 0;
 static int eff_chain_count = 0;
+static sox_bool very_first_effchain = sox_true;
+  /* Indicates that not only the first effects chain is in effect (hrm), but
+     also that it has never been restarted. Only then we may use the
+     optimize_trim() hack. */
 static char *effects_filename = NULL;
 static char * play_rate_arg = NULL;
 static char *norm_level = NULL;
@@ -1125,6 +1129,8 @@ static int advance_eff_chain(void)
 {
   sox_bool reuse_output = sox_true;
 
+  very_first_effchain = sox_false;
+
   /* If input file reached EOF then delete all effects in current
    * chain and restart the current chain.
    *
@@ -1387,10 +1393,13 @@ static void optimize_trim(void)
    * "effect descriptor" and see what the start location is.  This has to be
    * done after its start() is called to have the correct location.  Also, only
    * do this when only working with one input file.  This is because the logic
-   * to do it for multiple files is complex and problably never used.  This
-   * hack is a huge time savings when trimming gigs of audio data into
-   * managable chunks.  */
-  if (input_count == 1 && effects_chain->length > 1 && strcmp(effects_chain->effects[1][0].handler.name, "trim") == 0) {
+   * to do it for multiple files is complex and probably never used.  The same
+   * is true for a restarted or additional effects chain (relative positioning
+   * within the file and possible samples still buffered in the input effect
+   * would have to be taken into account).  This hack is a huge time savings
+   * when trimming gigs of audio data into managable chunks.  */
+  if (input_count == 1 && very_first_effchain && effects_chain->length > 1 &&
+      strcmp(effects_chain->effects[1][0].handler.name, "trim") == 0) {
     if (files[0]->ft->handler.seek && files[0]->ft->seekable){
       uint64_t offset = sox_trim_get_start(&effects_chain->effects[1][0]);
       if (offset && sox_seek(files[0]->ft, offset, SOX_SEEK_SET) == SOX_SUCCESS) {
@@ -1737,7 +1746,8 @@ static int process(void)
                                              &ofile->ft->encoding);
   add_effects(effects_chain);
 
-  optimize_trim();
+  if (very_first_effchain)
+    optimize_trim();
 
 #if defined(HAVE_TERMIOS_H) || defined(HAVE_CONIO_H)
   if (stdin_is_a_tty) {

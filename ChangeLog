@@ -87,6 +87,7 @@ Effects:
     divisible by the number of channels. [3420899] (Ulrich Klauer)
   o Complete rewrite of the trim effect with extended syntax (backwards
     compatible) and capabilities. [FR 2941349] (Ulrich Klauer)
+  o Fix trim optimization unexpectedly seeking backwards. (Ulrich Klauer)
 
 Misc:
 
