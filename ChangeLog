@@ -54,7 +54,7 @@ Audio device drivers:
   o Give pulseaudio driver higher priority than alsa or oss now that
     its proven stable and gives user more features; such as per app
     volume control. (cbagwell)
-  o Fix but when specifying OSX coreaudio device name.  Would only
+  o Fix bug when specifying OSX coreaudio device name.  Would only
     search for first 3 devices. (cbagwell)
   o Support enabling play/rec mode when user invokes sox as either
     play or play.exe on windows. (cbagwell)

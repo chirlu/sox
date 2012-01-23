@@ -1,6 +1,20 @@
 Highlights for this release include:
 
- * TODO
+ o Add floating point encodings in AIFF-C files.
+ o Pad WAV data chunks to an even number of bytes.
+ o Made Pulse Audio driver the default driver.
+ o Fix crash when specifying OSX coreaudio device name.
+ o Lots of improvements to man pages.
+ o New upsample, hilbert, and downsample effects.
+ o Fix fading bugs.
+ o Enable --plot on biquad and fir effects.
+ o Now effects chain can be unlimitted length.
+ o Fix newfile/restart effects when merging or mixing files.
+ o Fix crash in compand and mcompand effect.
+ o Improved audio length calculations when using effects.
+ o New trim effect with enhanced capabilities.
+ o Fix -p option on Windows.
+ o Improved large file support.
 
 For the complete list of changes, see the ChangeLog at
   http://sox.git.sourceforge.net/git/gitweb.cgi?p=sox/sox;a=blob;f=ChangeLog
