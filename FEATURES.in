@@ -97,7 +97,7 @@ The audio effects/tools included in this release are as follows:
 ** channels: Auto mix or duplicate to change number of channels
 ** divide+: Divide sample values by those in the 1st channel (W.I.P.)
 ** remix: Produce arbitrarily mixed output channels
-** swap: Swap stereo channels
+** swap: Swap pairs of channels
 
 * Pitch/tempo effects
 ** bend: Bend pitch at given times without changing tempo

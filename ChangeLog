@@ -15,6 +15,7 @@ Previously deprecated features that have been removed in this release:
   14.3.0   O -1/-2/-3/-4/-8        -b
   14.3.0   O -s/-u/-f              -e
   14.3.0   O -A/-U/-o/-i/-a/-g     -e
+  14.4.0   E swap with parameters  remix
 
 Previously deprecated features (to be removed in future):
 
@@ -22,7 +23,6 @@ Previously deprecated features (to be removed in future):
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
   -------  ----------------------  ----------------------  -------
   14.4.0   E mixer                 remix                   2013-03-04
-  14.4.0   E swap with parameters  remix                   14.4.0
 
 
 sox-14.4.0	2012-03-04

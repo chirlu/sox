@@ -3657,7 +3657,10 @@ See also the
 effect.
 .TP
 \fBswap\fR
-Swap stereo channels.
+Swap stereo channels.  If the input is not stereo, pairs of channels are
+swapped, and a possible odd last channel passed through.  E.g., for seven
+channels, the output order will be 2, 1, 4, 3, 6, 5, 7.
+.SP
 See also
 .B remix
 for an effect that allows arbitrary channel selection and ordering
