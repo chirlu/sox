@@ -823,6 +823,7 @@ static void parse_effects(int argc, char ** argv)
         continue;
       }
       newline_mode = 1;
+      output_method = sox_multiple;
     }
     else if (strcmp(argv[optstate.ind], "restart") == 0)
     {
@@ -857,7 +858,6 @@ static void parse_effects(int argc, char ** argv)
     nuser_effects[eff_chain_count]++;
     if (newline_mode)
     {
-      output_method = sox_multiple;
       eff_chain_count++;
       add_eff_chain();
     }
