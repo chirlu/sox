@@ -1,31 +1,32 @@
 This directory includes hand-crafted project files for building SoX using the
-Microsoft Visual C++ 10.0 compilers (available through Visual Studio 2010 or
-by downloading the freely-available Microsoft Windows SDK 7.1). The hand-made
-project files may be obsoleted by additional CMAKE support in the future, but
-for now, this is the easiest way to build SoX with MS Visual C++.
+Microsoft Visual C++ 10.0 (or later) compilers, available through Visual Studio
+2010, Visual Studio 2012, or by downloading the freely-available Microsoft
+Windows SDK 7.1. This is the easiest way to build SoX with MS Visual C++.
 The resulting sox.exe has support for all SoX features except magic, ffmpeg,
-and pulseaudio. LAME (libmp3lame.dll or lame_enc.dll), MAD (libmad.dll or
-cygmad-0.dll), libsndfile (libsndfile-1.dll), and AMR support (libamrnb-3.dll,
-libamrwb-3.dll) are loaded at runtime if they are available. OpenMP support is
-available only via Visual Studio 2010 Professional (it is not availalble if you
-build SoX via Visual Studio 2010 Express or via the Microsoft Windows SDK).
+ladspa, and pulseaudio. LAME (libmp3lame.dll or lame_enc.dll), MAD (libmad.dll
+or cygmad-0.dll), libsndfile (libsndfile-1.dll), and AMR support
+(libamrnb-3.dll, libamrwb-3.dll) are loaded at runtime if they are available.
+OpenMP support is available only if using Visual Studio Professional or
+higher - it is not available if you build SoX via Visual Studio 2010 Express or
+via the Microsoft Windows SDK.
 
 How to build:
 
 1. If you don't already have it, install .NET 4.0 (required for msbuild).
 
-   If you don't already have Visual Studio 2010 or the Windows SDK 7.1
-   installed, download and install the Windows SDK 7.1 from Microsoft:
+   If you don't already have Visual Studio 2010 (or later) or the Windows SDK
+   7.1 (or later) installed, download and install the Windows SDK 7.1 from
+   Microsoft:
 
    http://www.microsoft.com/downloads/en/details.aspx?FamilyID=6b6c21d2-2006-4afa-9702-529fa782d63b&displaylang=en
 
-   Be sure to include at least the following features:
-   Windows Headers and Libraries - Windows Headers
-   Windows Headers and Libraries - x86 Libraries
-   Windows Native Code Development - Tools
-   Windows Native Code Development - Visual C++ Compilers
+   When installing the Windows SDK, include at least the following features:
+   * Windows Headers and Libraries - Windows Headers
+   * Windows Headers and Libraries - x86 Libraries
+   * Windows Native Code Development - Tools
+   * Windows Native Code Development - Visual C++ Compilers
 
-2. Check out the SoX git code into a directory named sox.
+2. Put the SoX code into a directory named sox.
 
    Extract the source code for the other libraries next to the sox
    directory. Remove the version numbers from the directory names.
@@ -42,7 +43,8 @@ How to build:
    -- wavpack-4.60.1.tar.bz2 extracted into directory wavpack
    -- zlib-1.2.5.tar.gz extracted into directory zlib
 
-3. If using Visual Studio, open the sox\msvc10\SoX.sln solution in VS2010.
+3. If using Visual Studio, open the sox\msvc10\SoX.sln solution in Visual
+   Studio.
 
    If using the Windows SDK, open a normal command prompt, then run:
 "c:\Program Files\Microsoft SDKs\Windows\v7.1\bin\SetEnv.cmd" /x86 /Release /xp
@@ -109,14 +111,14 @@ Points to note:
   in floating-point registers to store temporary values instead of rounding
   each intermediate result to a 32-bit or 64-bit value. In some cases, these
   optimizations can change the results of floating-point calculations. If you
-  need more precise results, you can change this optimization setting can be
-  changed to one of the other values. The "precise" setting avoids any
-  optimization that might change the result (preserves the order of all
-  operations) but keeps optimizations that might give more accurate results
-  (such as using more precision than necessary for intermediate values if doing
-  so results in faster code). The "strict" setting avoids any optimization that
-  might change the result in any way contrary to the C/C++ standard and rounds
-  every intermediate result to the requested precision according to standard
-  floating-point rounding rules. You can change this setting in the project
-  properties under Configuration Properties, C/C++, Code Generation, Floating
-  Point Model.
+  need more precise results, you can change this optimization setting to one of
+  the other values. The "precise" setting avoids any optimization that might
+  possibly produce less-accurate results (it preserves the order of all
+  operations) but keeps optimizations that might give unexpectedly-accurate
+  results (for example, it might keep a temporary result in a double-precision
+  register instead of rounding it to single-precision). The "strict" setting
+  avoids any optimization that might change the result in any way contrary to
+  the C/C++ standard and rounds every intermediate result to the requested
+  precision according to standard floating-point rounding rules. You can change
+  this setting in the project properties under Configuration Properties, C/C++,
+  Code Generation, Floating Point Model.
