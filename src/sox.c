@@ -2818,36 +2818,23 @@ static sox_bool cmp_comment_text(char const * c1, char const * c2)
   return c1 && c2 && !strcasecmp(c1, c2);
 }
 
-#if defined(__CYGWIN__) || defined(__MINGW32__)
-static char * check_dir(char * name)
-{
-  struct stat st;
-  return !name || stat(name, &st) || (st.st_mode & S_IFMT) != S_IFDIR?
-      NULL : name;
-}
-#endif
-
 int main(int argc, char **argv)
 {
   size_t i;
+  char mybase[6];
 
   myname = argv[0];
   sox_globals.output_message_handler = output_message;
 
-  if (lsx_strends(myname, "play"))
-    sox_mode = sox_play;
-#if defined(__CYGWIN__) || defined(__MINGW32__)
-  else if (lsx_strends(myname, "play.exe"))
-    sox_mode = sox_play;
-#endif
-  else if (lsx_strends(myname, "rec"))
-    sox_mode = sox_rec;
-#if defined(__CYGWIN__) || defined(__MINGW32__)
-  else if (lsx_strends(myname, "rec.exe"))
-    sox_mode = sox_rec;
-#endif
-  else if (lsx_strends(myname, "soxi"))
-    sox_mode = sox_soxi;
+  if (0 != sox_basename(mybase, sizeof(mybase), myname))
+  {
+    if (0 == lsx_strcasecmp(mybase, "play"))
+      sox_mode = sox_play;
+    else if (0 == lsx_strcasecmp(mybase, "rec"))
+      sox_mode = sox_rec;
+    else if (0 == lsx_strcasecmp(mybase, "soxi"))
+      sox_mode = sox_soxi;
+  }
 
   if (!sox_mode && argc > 1 &&
       (!strcmp(argv[1], "--i") || !strcmp(argv[1], "--info")))
@@ -2865,24 +2852,6 @@ int main(int argc, char **argv)
     exit(soxi(argc, argv));
 
   parse_options_and_filenames(argc, argv);
-
-#if defined(__CYGWIN__) || defined(__MINGW32__) 
-  /* Workarounds for a couple of cygwin/mingw problems: */
-  /* Allow command-line --temp "" to specify default behaviour: */
-  if (sox_globals.tmp_path && !*sox_globals.tmp_path) {
-    free(sox_globals.tmp_path);
-    sox_globals.tmp_path = NULL;
-  }
-  else if (!sox_globals.tmp_path) {
-    /* cygwin tmpfile does not use std. windows env. vars, so we do here: */
-    if (!(sox_globals.tmp_path = check_dir(getenv("TEMP"))))
-      if (!(sox_globals.tmp_path = check_dir(getenv("TMP"))))
-        /* Std. values for T(E)MP don't work in cygwin shell so try these: */
-        if (!(sox_globals.tmp_path = check_dir("/tmp")))
-          sox_globals.tmp_path = ".";
-    sox_globals.tmp_path = lsx_strdup(sox_globals.tmp_path);
-  }
-#endif
 
   if (sox_globals.verbosity > 2)
     display_SoX_version(stderr);

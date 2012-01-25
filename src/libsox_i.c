@@ -45,14 +45,59 @@
   #define FAKE_MKSTEMP
 #endif
 
+#ifdef WIN32
+static int check_dir(char * buf, size_t buflen, char const * name)
+{
+  struct stat st;
+  if (!name || stat(name, &st) || (st.st_mode & S_IFMT) != S_IFDIR)
+  {
+    return 0;
+  }
+  else
+  {
+    strncpy(buf, name, buflen);
+    buf[buflen - 1] = 0;
+    return strlen(name) == strlen(buf);
+  }
+}
+#endif
+
 FILE * lsx_tmpfile(void)
 {
-  if (sox_globals.tmp_path) {
+  char const * path = sox_globals.tmp_path;
+
+  /*
+  On Win32, tmpfile() is broken - it creates the file in the root directory of
+  the current drive (the user probably doesn't have permission to write there!)
+  instead of in a valid temporary directory (like TEMP or TMP). So if tmp_path
+  is null, figure out a reasonable default.
+  To force use of tmpfile(), set sox_globals.tmp_path = "".
+  */
+#ifdef WIN32
+  if (!path)
+  {
+    static char default_path[260] = "";
+    if (default_path[0] == 0
+        && !check_dir(default_path, sizeof(default_path), getenv("TEMP"))
+        && !check_dir(default_path, sizeof(default_path), getenv("TMP"))
+    #ifdef __CYGWIN__
+        && !check_dir(default_path, sizeof(default_path), "/tmp")
+    #endif
+        )
+    {
+      strcpy(default_path, ".");
+    }
+
+    path = default_path;
+  }
+#endif
+
+  if (path && path[0]) {
     /* Emulate tmpfile (delete on close); tmp dir is given tmp_path: */
     char const * const end = "/libSoX.tmp.XXXXXX";
-    char * name = lsx_malloc(strlen(sox_globals.tmp_path) + strlen(end) + 1);
+    char * name = lsx_malloc(strlen(path) + strlen(end) + 1);
     int fildes;
-    strcpy(name, sox_globals.tmp_path);
+    strcpy(name, path);
     strcat(name, end);
     fildes = mkstemp(name);
 #ifdef HAVE_UNISTD_H
