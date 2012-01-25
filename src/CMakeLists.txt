@@ -20,33 +20,121 @@ if (NOT EXTERNAL_GSM)
   set(optional_libs ${optional_libs} gsm)
 endif (NOT EXTERNAL_GSM)
 
-# Format with: !xargs echo|tr ' ' '\n'|sort|column|expand|sed 's/^/  /'
 set(effects_srcs
-  bend            dither          gain            phaser          stat
-  biquad          divide          hilbert         rate            stats
-  biquads         downsample      input           remix           stretch
-  chorus          earwax          loudness        repeat          swap
-  compand         echo            mcompand        reverb          synth
-  compandt        echos           mixer           reverse         tempo
-  contrast        fade            noiseprof       silence         tremolo
-                  fft4g           noisered        sinc            trim
-  dcshift         fir             output          skeleff         upsample
-  delay           firfit          overdrive       speed           vad
-  dft_filter      flanger         pad             splice          vol
+  bend
+  biquad
+  biquads
+  chorus
+  compand
+  compandt
+  contrast
+  dcshift
+  delay
+  dft_filter
+  dither
+  divide
+  downsample
+  earwax
+  echo
+  echos
+  fade
+  fft4g
+  fir
+  firfit
+  flanger
+  gain
+  hilbert
+  input
+  loudness
+  mcompand
+  mixer
+  noiseprof
+  noisered
+  output
+  overdrive
+  pad
+  phaser
+  rate
+  remix
+  repeat
+  reverb
+  reverse
+  silence
+  sinc
+  skeleff
+  speed
+  splice
+  stat
+  stats
+  stretch
+  swap
+  synth
+  tempo
+  tremolo
+  trim
+  upsample
+  vad
+  vol
 )
 set(formats_srcs
-  8svx            dat             htk             s2-fmt          u2-fmt
-  adpcm           dvms-fmt        ima-fmt         s3-fmt          u3-fmt
-  adpcms          f4-fmt          ima_rw          s4-fmt          u4-fmt
-  aifc-fmt        f8-fmt          la-fmt          sf              ul-fmt
-  aiff            g711            lpc10.c         skelform        voc
-  aiff-fmt        g721            lu-fmt          smp             vox
-  al-fmt          g723_24         maud            sounder         vox-fmt
-  au              g723_40         nulfile         soundtool       wav
-  avr             g72x            prc             sox-fmt         wve
-  cdr             gsm.c           raw             sphere          xa
-  cvsd            gsrt            raw-fmt         tx16w
-  cvsd-fmt        hcom            s1-fmt          u1-fmt
+  8svx
+  adpcm
+  adpcms
+  aifc-fmt
+  aiff
+  aiff-fmt
+  al-fmt
+  au
+  avr
+  cdr
+  cvsd
+  cvsd-fmt
+  dat
+  dvms-fmt
+  f4-fmt
+  f8-fmt
+  g711
+  g721
+  g723_24
+  g723_40
+  g72x
+  gsm
+  gsrt
+  hcom
+  htk
+  ima-fmt
+  ima_rw
+  la-fmt
+  lpc10
+  lu-fmt
+  maud
+  nulfile
+  prc
+  raw
+  raw-fmt
+  s1-fmt
+  s2-fmt
+  s3-fmt
+  s4-fmt
+  sf
+  skelform
+  smp
+  sounder
+  soundtool
+  sox-fmt
+  sphere
+  tx16w
+  u1-fmt
+  u2-fmt
+  u3-fmt
+  u4-fmt
+  ul-fmt
+  voc
+  vox
+  vox-fmt
+  wav
+  wve
+  xa
 )
 
 # Uncomment for bit-rot detection on linux
