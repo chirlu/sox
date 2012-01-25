@@ -2844,7 +2844,7 @@ int main(int argc, char **argv)
     sox_mode = sox_rec;
 #if defined(__CYGWIN__) || defined(__MINGW32__)
   else if (lsx_strends(myname, "rec.exe"))
-    sox_mode = sox_play;
+    sox_mode = sox_rec;
 #endif
   else if (lsx_strends(myname, "soxi"))
     sox_mode = sox_soxi;
