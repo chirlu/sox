@@ -478,7 +478,7 @@ void sox_delete_effect(sox_effect_t *effp)
     lsx_warn("%s clipped %" PRIu64 " samples; decrease volume?",
         effp->handler.name, clips);
   if (effp->obeg != effp->oend)
-    lsx_debug("output buffer still held %" PRIu64 " samples; dropped.",
+    lsx_debug("output buffer still held %" PRIuPTR " samples; dropped.",
         (effp->oend - effp->obeg)/effp->out_signal.channels);
       /* May or may not indicate a problem; it is normal if the user aborted
          processing, or if an effect like "trim" stopped early. */

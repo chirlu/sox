@@ -1540,7 +1540,7 @@ static int stopwrite(sox_format_t * ft)
         /* Add a pad byte if the number of data bytes is odd.
            See wavwritehdr() above for the calculation. */
         if (wav->formatTag != WAVE_FORMAT_GSM610)
-          lsx_padbytes(ft, ((wav->numSamples + wav->samplesPerBlock - 1)/wav->samplesPerBlock*wav->blockAlign) % 2);
+          lsx_padbytes(ft, (size_t)((wav->numSamples + wav->samplesPerBlock - 1)/wav->samplesPerBlock*wav->blockAlign) % 2);
 
         free(wav->packet);
         free(wav->samples);
