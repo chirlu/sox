@@ -703,27 +703,27 @@ static void msgf(const char* fmt, va_list va)
 /* These functions are considered optional. If they aren't present in the
    library, the stub versions defined here will be used instead. */
 
-static void id3tag_init_stub(lame_global_flags * gfp UNUSED)
+UNUSED static void id3tag_init_stub(lame_global_flags * gfp UNUSED)
   { return; }
-static void id3tag_set_title_stub(lame_global_flags * gfp UNUSED, const char* title UNUSED)
+UNUSED static void id3tag_set_title_stub(lame_global_flags * gfp UNUSED, const char* title UNUSED)
   { return; }
-static void id3tag_set_artist_stub(lame_global_flags * gfp UNUSED, const char* artist UNUSED)
+UNUSED static void id3tag_set_artist_stub(lame_global_flags * gfp UNUSED, const char* artist UNUSED)
   { return; }
-static void id3tag_set_album_stub(lame_global_flags * gfp UNUSED, const char* album UNUSED)
+UNUSED static void id3tag_set_album_stub(lame_global_flags * gfp UNUSED, const char* album UNUSED)
   { return; }
-static void id3tag_set_year_stub(lame_global_flags * gfp UNUSED, const char* year UNUSED)
+UNUSED static void id3tag_set_year_stub(lame_global_flags * gfp UNUSED, const char* year UNUSED)
   { return; }
-static void id3tag_set_comment_stub(lame_global_flags * gfp UNUSED, const char* comment UNUSED)
+UNUSED static void id3tag_set_comment_stub(lame_global_flags * gfp UNUSED, const char* comment UNUSED)
   { return; }
-static void id3tag_set_track_stub(lame_global_flags * gfp UNUSED, const char* track UNUSED)
+UNUSED static void id3tag_set_track_stub(lame_global_flags * gfp UNUSED, const char* track UNUSED)
   { return; }
-static int id3tag_set_genre_stub(lame_global_flags * gfp UNUSED, const char* genre UNUSED)
+UNUSED static int id3tag_set_genre_stub(lame_global_flags * gfp UNUSED, const char* genre UNUSED)
   { return 0; }
-static size_t id3tag_set_pad_stub(lame_global_flags * gfp UNUSED, size_t n UNUSED)
+UNUSED static size_t id3tag_set_pad_stub(lame_global_flags * gfp UNUSED, size_t n UNUSED)
   { return 0; }
-static size_t lame_get_id3v2_tag_stub(lame_global_flags * gfp UNUSED, unsigned char * buffer UNUSED, size_t size UNUSED)
+UNUSED static size_t lame_get_id3v2_tag_stub(lame_global_flags * gfp UNUSED, unsigned char * buffer UNUSED, size_t size UNUSED)
   { return 0; }
-static int id3tag_set_fieldvalue_stub(lame_global_flags * gfp UNUSED, const char *fieldvalue UNUSED)
+UNUSED static int id3tag_set_fieldvalue_stub(lame_global_flags * gfp UNUSED, const char *fieldvalue UNUSED)
   { return 0; }
 
 static int get_id3v2_tag_size(sox_format_t * ft)
