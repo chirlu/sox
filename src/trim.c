@@ -92,11 +92,12 @@ static int start(sox_effect_t *effp)
       case a_start: res = s; break;
       case a_latest: res = last_seen + s; break;
       case a_end:
-        if (s > in_length) {
+        if (s <= in_length)
+          res = in_length - s;
+        else {
           lsx_fail("Position %u is before start of audio.", i+1);
           return SOX_EOF;
         }
-        res = in_length - s;
         break;
     }
     last_seen = p->pos[i].sample = res;
@@ -112,16 +113,11 @@ static int start(sox_effect_t *effp)
     }
     last_seen = p->pos[i].sample;
   }
-  if (p->num_pos && in_length != SOX_UNKNOWN_LEN &&
-      p->pos[0].sample > in_length) {
-    lsx_fail("Start position after end of audio.");
-    return SOX_EOF;
-  }
-  if (p->num_pos && in_length != SOX_UNKNOWN_LEN &&
-      p->pos[p->num_pos-1].sample > in_length) {
-    lsx_fail("End position after end of audio.");
-    return SOX_EOF;
-  }
+  if (p->num_pos && in_length != SOX_UNKNOWN_LEN)
+    if (p->pos[0].sample > in_length ||
+        p->pos[p->num_pos-1].sample > in_length)
+      lsx_warn("%s position after expected end of audio.",
+          p->pos[0].sample > in_length? "Start" : "End");
 
   if (p->num_pos == 1 && !p->pos[0].sample)
     return SOX_EFF_NULL;
@@ -134,10 +130,10 @@ static int start(sox_effect_t *effp)
     effp->out_signal.length = 0;
     for (i = 0; i+1 < p->num_pos ; i += 2)
       effp->out_signal.length +=
-        p->pos[i+1].sample - p->pos[i].sample;
+        min(p->pos[i+1].sample, in_length) - min(p->pos[i].sample, in_length);
     if (open_end)
       effp->out_signal.length +=
-        in_length - p->pos[p->num_pos-1].sample;
+        in_length - min(p->pos[p->num_pos-1].sample, in_length);
     effp->out_signal.length *= effp->in_signal.channels;
   }
 
