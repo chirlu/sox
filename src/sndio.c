@@ -88,7 +88,7 @@ static void decode(struct sio_par *par,
   }
 }
 
-static int startany(struct sox_format *ft, unsigned mode)
+static int startany(sox_format_t *ft, unsigned mode)
 {
   struct sndio_priv *p = (struct sndio_priv *)ft->priv;
   struct sio_par reqpar;
@@ -127,7 +127,7 @@ static int startany(struct sox_format *ft, unsigned mode)
   }
   if (ft->encoding.bits_per_sample > 0)
     reqpar.bits = ft->encoding.bits_per_sample;
-  if (ft->encoding.reverse_bytes != SOX_OPTION_DEFAULT) {
+  if (ft->encoding.reverse_bytes != sox_option_default) {
     reqpar.le = SIO_LE_NATIVE;
     if (ft->encoding.reverse_bytes)
       reqpar.le = !reqpar.le;
@@ -141,8 +141,8 @@ static int startany(struct sox_format *ft, unsigned mode)
   ft->encoding.encoding = p->par.sig ? SOX_ENCODING_SIGN2 : SOX_ENCODING_UNSIGNED;
   ft->encoding.bits_per_sample = p->par.bps * 8;
   ft->encoding.reverse_bytes = SIO_LE_NATIVE ? !p->par.le : p->par.le;
-  ft->encoding.reverse_nibbles = SOX_OPTION_NO;
-  ft->encoding.reverse_bits = SOX_OPTION_NO;
+  ft->encoding.reverse_nibbles = sox_option_no;
+  ft->encoding.reverse_bits = sox_option_no;
 
   if (!sio_start(p->hdl))
     goto failed;
@@ -152,18 +152,18 @@ static int startany(struct sox_format *ft, unsigned mode)
   return SOX_EOF;
 }
 
-static int stopany(struct sox_format *ft)
+static int stopany(sox_format_t *ft)
 {
   sio_close(((struct sndio_priv *)ft->priv)->hdl);
   return SOX_SUCCESS;
 }
 
-static int startread(struct sox_format *ft)
+static int startread(sox_format_t *ft)
 {
   return startany(ft, SIO_REC);
 }
 
-static int startwrite(struct sox_format *ft)
+static int startwrite(sox_format_t *ft)
 {
   return startany(ft, SIO_PLAY);
 }
