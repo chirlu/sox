@@ -1604,13 +1604,13 @@ struct sox_effect_t {
   sox_encodinginfo_t       const * out_encoding; /**< Information about the outgoing data encoding */
   sox_effect_handler_t     handler;   /**< The handler for this effect */
   sox_sample_t             * obuf;    /**< output buffer */
-  size_t                   obeg;      /**< output buffer consumed */
-  size_t                   oend;      /**< output buffer total length */
-  size_t               imin;          /**< minimum input buffer size */
+  size_t                   obeg;      /**< output buffer: start of valid data section */
+  size_t                   oend;      /**< output buffer: one past valid data section (oend-obeg is length of current content) */
+  size_t               imin;          /**< minimum input buffer content required for calling this effect's flow function; set via lsx_effect_set_imin() */
   sox_uint64_t         clips;         /**< increment if clipping occurs */
   size_t               flows;         /**< 1 if MCHAN, number of chans otherwise */
   size_t               flow;          /**< flow number */
-  void                 * priv;        /**< Effect's private data area */
+  void                 * priv;        /**< Effect's private data area (each flow has a separate copy) */
 };
 
 /**
