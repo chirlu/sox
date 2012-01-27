@@ -242,20 +242,14 @@ static int sox_silence_start(sox_effect_t * effp)
         if (lsx_parsesamples(effp->in_signal.rate, silence->start_duration_str,
                              &temp, 's') == NULL)
             return lsx_usage(effp);
-        silence->start_duration = temp;
-        /* Align to multiple of channels */
-        silence->start_duration += (silence->start_duration % 
-                                    effp->in_signal.channels);
+        silence->start_duration = temp * effp->in_signal.channels;
     }
     if (silence->stop)
     {
         if (lsx_parsesamples(effp->in_signal.rate,silence->stop_duration_str,
                              &temp,'s') == NULL)
             return lsx_usage(effp);
-        silence->stop_duration = temp;
-        /* Align to multiple of channels */
-        silence->stop_duration += (silence->stop_duration % 
-                                   effp->in_signal.channels);
+        silence->stop_duration = temp * effp->in_signal.channels;
     }
 
     if (silence->start)
@@ -331,7 +325,8 @@ static int sox_silence_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_s
     priv_t * silence = (priv_t *) effp->priv;
     int threshold;
     size_t i, j;
-    size_t nrOfTicks, nrOfInSamplesRead, nrOfOutSamplesWritten;
+    size_t nrOfTicks, /* sometimes wide, sometimes non-wide samples */
+      nrOfInSamplesRead, nrOfOutSamplesWritten; /* non-wide samples */
 
     nrOfInSamplesRead = 0;
     nrOfOutSamplesWritten = 0;
@@ -344,6 +339,7 @@ static int sox_silence_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_s
              * copy mode when detected.
              * Need to make sure and copy input in groups of "channels" to
              * prevent getting buffers out of sync.
+             * nrOfTicks counts wide samples here.
              */
 silence_trim:
             nrOfTicks = min((*isamp-nrOfInSamplesRead),
@@ -401,10 +397,12 @@ silence_trim:
             break;
 
         case SILENCE_TRIM_FLUSH:
+             /* nrOfTicks counts non-wide samples here. */
 silence_trim_flush:
             nrOfTicks = min((silence->start_holdoff_end -
                              silence->start_holdoff_offset),
                              (*osamp-nrOfOutSamplesWritten));
+            nrOfTicks -= nrOfTicks % effp->in_signal.channels;
             for(i = 0; i < nrOfTicks; i++)
             {
                 *obuf++ = silence->start_holdoff[silence->start_holdoff_offset++];
@@ -459,6 +457,7 @@ silence_trim_flush:
              * holdoff[] amount of silence but deleting any
              * beyond that amount.
              *
+             * nrOfTicks counts wide samples here.
              */
 silence_copy:
             nrOfTicks = min((*isamp-nrOfInSamplesRead),
@@ -580,10 +579,12 @@ silence_copy:
             break;
 
         case SILENCE_COPY_FLUSH:
+             /* nrOfTicks counts non-wide samples here. */
 silence_copy_flush:
             nrOfTicks = min((silence->stop_holdoff_end -
                                 silence->stop_holdoff_offset),
                             (*osamp-nrOfOutSamplesWritten));
+            nrOfTicks -= nrOfTicks % effp->in_signal.channels;
 
             for(i = 0; i < nrOfTicks; i++)
             {
@@ -602,6 +603,7 @@ silence_copy_flush:
             break;
 
         case SILENCE_STOP:
+            /* This code can't be reached. */
             nrOfInSamplesRead = *isamp;
             break;
         }
@@ -616,7 +618,7 @@ static int sox_silence_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *os
 {
     priv_t * silence = (priv_t *) effp->priv;
     size_t i;
-    size_t nrOfTicks, nrOfOutSamplesWritten = 0;
+    size_t nrOfTicks, nrOfOutSamplesWritten = 0; /* non-wide samples */
 
     /* Only if in flush mode will there be possible samples to write
      * out during drain() call.
@@ -626,6 +628,7 @@ static int sox_silence_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *os
     {
         nrOfTicks = min((silence->stop_holdoff_end -
                             silence->stop_holdoff_offset), *osamp);
+        nrOfTicks -= nrOfTicks % effp->in_signal.channels;
         for(i = 0; i < nrOfTicks; i++)
         {
             *obuf++ = silence->stop_holdoff[silence->stop_holdoff_offset++];
