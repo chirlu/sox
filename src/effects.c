@@ -285,10 +285,6 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
     idone = effp->flows * idone_last;
     obeg = effp->flows * odone_last;
   }
-#if DEBUG_EFFECTS_CHAIN
-  lsx_report("flow:  %5" PRIuPTR " %5" PRIuPTR " %5" PRIuPTR " %5" PRIuPTR,
-      pre_idone, pre_odone, idone, obeg);
-#endif
   effp1->obeg += idone;
   if (effp1->obeg == effp1->oend)
     effp1->obeg = effp1->oend = 0;
@@ -299,6 +295,14 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
   }
 
   effp->oend += obeg;
+
+#if DEBUG_EFFECTS_CHAIN
+  lsx_report("\t" "flow:  %2" PRIuPTR " (%1" PRIuPTR ")  "
+      "%5" PRIuPTR " %5" PRIuPTR " %5" PRIuPTR " %5" PRIuPTR "  "
+      "%5" PRIuPTR " [%" PRIuPTR "-%" PRIuPTR "]",
+      n, effp->flows, pre_idone, pre_odone, idone, obeg,
+      effp1->oend - effp1->obeg, effp1->obeg, effp1->oend);
+#endif
 
   return effstatus == SOX_SUCCESS? SOX_SUCCESS : SOX_EOF;
 }
@@ -342,14 +346,16 @@ static int drain_effect(sox_effects_chain_t * chain, size_t n)
         *obuf++ = chain->obufc[f][i];
     obeg = f * odone_last;
   }
-#if DEBUG_EFFECTS_CHAIN
-  lsx_report("drain: %5" PRIuPTR " %5" PRIuPTR " %5" PRIuPTR " %5" PRIuPTR,
-      (size_t)0, pre_odone, (size_t)0, obeg);
-#endif
   if (!obeg)   /* This is the only thing that drain has and flow hasn't */
     effstatus = SOX_EOF;
 
   effp->oend += obeg;
+
+#if DEBUG_EFFECTS_CHAIN
+  lsx_report("\t" "drain: %2" PRIuPTR " (%1" PRIuPTR ")  "
+      "%5" PRIuPTR " %5" PRIuPTR " %5" PRIuPTR " %5" PRIuPTR,
+      n, effp->flows, (size_t)0, pre_odone, (size_t)0, obeg);
+#endif
 
   return effstatus == SOX_SUCCESS? SOX_SUCCESS : SOX_EOF;
 }
