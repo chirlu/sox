@@ -116,8 +116,8 @@ static int start(sox_effect_t *effp)
   if (p->num_pos && in_length != SOX_UNKNOWN_LEN)
     if (p->pos[0].sample > in_length ||
         p->pos[p->num_pos-1].sample > in_length)
-      lsx_warn("%s position after expected end of audio.",
-          p->pos[0].sample > in_length? "Start" : "End");
+      lsx_warn("%s position is after expected end of audio.",
+          p->pos[0].sample > in_length ? "Start" : "End");
 
   if (p->num_pos == 1 && !p->pos[0].sample)
     return SOX_EFF_NULL;
@@ -177,13 +177,20 @@ static int flow(sox_effect_t *effp, const sox_sample_t *ibuf,
 static int drain(sox_effect_t *effp, sox_sample_t *obuf UNUSED, size_t *osamp)
 {
   priv_t *p = (priv_t*) effp->priv;
-  *osamp = 0;
-  if (! (p->current_pos + 1 == p->num_pos &&
-         p->pos[p->current_pos].sample == p->samples_read &&
-         p->copying) /* would stop here anyway */
-      && p->current_pos < p->num_pos)
-    lsx_warn("Audio shorter than expected; last %u positions not reached.",
-      p->num_pos - p->current_pos);
+  *osamp = 0; /* only checking for errors */
+
+  if (p->current_pos + 1 == p->num_pos &&
+      p->pos[p->current_pos].sample == p->samples_read &&
+      p->copying) /* would stop here anyway */
+    p->current_pos++;
+  if (p->current_pos < p->num_pos)
+    lsx_warn("Last %u position(s) not reached%s.",
+      p->num_pos - p->current_pos,
+      (effp->in_signal.length == SOX_UNKNOWN_LEN ||
+       effp->in_signal.length/effp->in_signal.channels == p->samples_read) ?
+      "" /* unknown length, or did already warn during start() */ :
+      " (audio shorter than expected)"
+      );
   return SOX_EOF;
 }
 
