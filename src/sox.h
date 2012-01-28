@@ -1,6 +1,6 @@
 /* libSoX Library Public Interface
  *
- * Copyright 1999-2011 Chris Bagwell and SoX Contributors.
+ * Copyright 1999-2012 Chris Bagwell and SoX Contributors.
  *
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained.
@@ -1603,14 +1603,15 @@ struct sox_effect_t {
   sox_encodinginfo_t       const * in_encoding;  /**< Information about the incoming data encoding */
   sox_encodinginfo_t       const * out_encoding; /**< Information about the outgoing data encoding */
   sox_effect_handler_t     handler;   /**< The handler for this effect */
-  sox_sample_t             * obuf;    /**< output buffer */
-  size_t                   obeg;      /**< output buffer: start of valid data section */
-  size_t                   oend;      /**< output buffer: one past valid data section (oend-obeg is length of current content) */
-  size_t               imin;          /**< minimum input buffer content required for calling this effect's flow function; set via lsx_effect_set_imin() */
   sox_uint64_t         clips;         /**< increment if clipping occurs */
   size_t               flows;         /**< 1 if MCHAN, number of chans otherwise */
   size_t               flow;          /**< flow number */
   void                 * priv;        /**< Effect's private data area (each flow has a separate copy) */
+  /* The following items are private to the libSoX effects chain functions. */
+  sox_sample_t             * obuf;    /**< output buffer */
+  size_t                   obeg;      /**< output buffer: start of valid data section */
+  size_t                   oend;      /**< output buffer: one past valid data section (oend-obeg is length of current content) */
+  size_t               imin;          /**< minimum input buffer content required for calling this effect's flow function; set via lsx_effect_set_imin() */
 };
 
 /**
@@ -1619,13 +1620,14 @@ Chain of effects to be applied to a stream.
 */
 typedef struct sox_effects_chain_t {
   sox_effect_t **effects;                  /**< Table of effects to be applied to a stream */
-  unsigned table_size;                     /**< Number of entries in effects table */
   unsigned length;                         /**< Number of effects to be applied */
-  sox_sample_t **ibufc;                    /**< Channel interleave buffer */
-  sox_sample_t **obufc;                    /**< Channel interleave buffer */
   sox_effects_globals_t global_info;       /**< Copy of global effects settings */
   sox_encodinginfo_t const * in_enc;       /**< Input encoding */
   sox_encodinginfo_t const * out_enc;      /**< Output encoding */
+  /* The following items are private to the libSoX effects chain functions. */
+  unsigned table_size;                     /**< Size of effects table (including unused entries) */
+  sox_sample_t **ibufc;                    /**< Channel interleave buffer */
+  sox_sample_t **obufc;                    /**< Channel interleave buffer */
 } sox_effects_chain_t;
 
 /*****************************************************************************
