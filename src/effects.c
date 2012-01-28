@@ -370,7 +370,8 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
       /* Memory will be freed by sox_delete_effect() later. */
     max_flows = max(max_flows, chain->effects[e][0].flows);
   }
-
+  if (max_flows == 1) /* don't need interleave buffers */
+    max_flows = 0;
   chain->ibufc = lsx_calloc(max_flows, sizeof(*chain->ibufc));
   chain->obufc = lsx_calloc(max_flows, sizeof(*chain->obufc));
   for (f = 0; f < max_flows; ++f) {
