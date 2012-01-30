@@ -22,7 +22,7 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 
 dnl Increase version when binary compatibility with previous version is broken
-SHLIB_VERSION=2:0:0
+SHLIB_VERSION=3:0:0
 AC_SUBST(SHLIB_VERSION)
 
 AC_ARG_WITH(libltdl,
