@@ -46,6 +46,7 @@ AC_LIBTOOL_DLOPEN
 case $target in
   *cygwin* | *mingw*)
   AC_LIBTOOL_WIN32_DLL
+  APP_LDFLAGS="-no-undefined"
    ;;
 esac
 AC_PROG_LIBTOOL
