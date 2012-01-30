@@ -223,23 +223,28 @@ EMAIL_HEADER
 
     cat<<EMAIL_FOOTER
 
-http://$webpath/${rcpath}${module}/$osx_zip/download
+http://$webpath/${rcpath}${module}/$release_num/$osx_zip/download
+
 MD5:  `$MD5SUM $osx_zip`
 SHA1: `$SHA1SUM $osx_zip`
 
-http://$webpath/${rcpath}${module}/$win_exe/download
+http://$webpath/${rcpath}${module}/$release_num/$win_exe/download
+
 MD5:  `$MD5SUM $win_exe`
 SHA1: `$SHA1SUM $win_exe`
 
-http://$webpath/${rcpath}${module}/$win_zip/download
+http://$webpath/${rcpath}${module}/$release_num/$win_zip/download
+
 MD5:  `$MD5SUM $win_zip`
 SHA1: `$SHA1SUM $win_zip`
 
-http://$webpath/${rcpath}${module}/$src_bz2/download
+http://$webpath/${rcpath}${module}/$release_num/$src_bz2/download
+
 MD5:  `$MD5SUM $src_bz2`
 SHA1: `$SHA1SUM $src_bz2`
 
-http://$webpath/${rcpath}${module}/$src_gz/download
+http://$webpath/${rcpath}${module}/$release_num/$src_gz/download
+
 MD5:  `$MD5SUM $src_gz`
 SHA1: `$SHA1SUM $src_gz`
 
