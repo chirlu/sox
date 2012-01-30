@@ -1620,12 +1620,12 @@ Chain of effects to be applied to a stream.
 */
 typedef struct sox_effects_chain_t {
   sox_effect_t **effects;                  /**< Table of effects to be applied to a stream */
-  unsigned length;                         /**< Number of effects to be applied */
+  size_t length;                           /**< Number of effects to be applied */
   sox_effects_globals_t global_info;       /**< Copy of global effects settings */
   sox_encodinginfo_t const * in_enc;       /**< Input encoding */
   sox_encodinginfo_t const * out_enc;      /**< Output encoding */
   /* The following items are private to the libSoX effects chain functions. */
-  unsigned table_size;                     /**< Size of effects table (including unused entries) */
+  size_t table_size;                       /**< Size of effects table (including unused entries) */
   sox_sample_t **ibufc;                    /**< Channel interleave buffer */
   sox_sample_t **obufc;                    /**< Channel interleave buffer */
 } sox_effects_chain_t;

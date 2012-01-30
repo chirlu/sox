@@ -130,7 +130,7 @@ int lsx_effect_set_imin(sox_effect_t * effp, size_t imin)
 int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out)
 {
   int ret, (*start)(sox_effect_t * effp) = effp->handler.start;
-  unsigned f;
+  size_t f;
   sox_effect_t eff0;  /* Copy of effect for flow 0 before calling start */
 
   effp->global_info = &chain->global_info;
@@ -186,7 +186,7 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
   if (chain->length == chain->table_size) {
     chain->table_size += EFF_TABLE_STEP;
     lsx_debug_more("sox_add_effect: extending effects table, "
-      "new size = %lu", (unsigned long)chain->table_size);
+      "new size = %" PRIuPTR, chain->table_size);
     lsx_revalloc(chain->effects, chain->table_size);
   }
 
@@ -213,8 +213,8 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
 {
   sox_effect_t * effp1 = &chain->effects[n - 1][0];
   sox_effect_t * effp = &chain->effects[n][0];
-  int effstatus = SOX_SUCCESS, f = 0;
-  size_t i;
+  int effstatus = SOX_SUCCESS;
+  size_t i, f = 0;
   const sox_sample_t *ibuf;
   size_t idone = effp1->oend - effp1->obeg;
   size_t obeg = sox_globals.bufsiz - effp->oend;
@@ -237,14 +237,14 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
 
     ibuf = &effp1->obuf[effp1->obeg];
     for (i = 0; i < idone; i += effp->flows)
-      for (f = 0; f < (int)effp->flows; ++f)
+      for (f = 0; f < effp->flows; ++f)
         chain->ibufc[f][i / effp->flows] = *ibuf++;
 
 #ifdef HAVE_OPENMP
     if (sox_globals.use_threads && effp->flows > 1)
     {
       #pragma omp parallel for
-      for (f = 0; f < (int)effp->flows; ++f) {
+      for (f = 0; f < effp->flows; ++f) {
         size_t idonec = idone / effp->flows;
         size_t odonec = obeg / effp->flows;
         int eff_status_c = effp->handler.flow(&chain->effects[n][f],
@@ -261,7 +261,7 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
     else /* sox_globals.use_threads */
 #endif
     {
-      for (f = 0; f < (int)effp->flows; ++f) {
+      for (f = 0; f < effp->flows; ++f) {
         size_t idonec = idone / effp->flows;
         size_t odonec = obeg / effp->flows;
         int eff_status_c = effp->handler.flow(&chain->effects[n][f],
@@ -279,7 +279,7 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
     }
 
     for (i = 0; i < odone_last; ++i)
-      for (f = 0; f < (int)effp->flows; ++f)
+      for (f = 0; f < effp->flows; ++f)
         *obuf++ = chain->obufc[f][i];
 
     idone = effp->flows * idone_last;
@@ -399,8 +399,10 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
       ++e;
     else if (e == source_e)
       draining = sox_true;
-    else if ((int)--e < (int)source_e)
+    else if (e < source_e)
       e = source_e;
+    else
+      --e;
 
     if (callback && callback(source_e == chain->length, client_data) != SOX_SUCCESS) {
       flow_status = SOX_EOF; /* Client has requested to stop the flow. */
@@ -420,7 +422,7 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
 
 sox_uint64_t sox_effects_clips(sox_effects_chain_t * chain)
 {
-  unsigned i, f;
+  size_t i, f;
   uint64_t clips = 0;
   for (i = 1; i < chain->length - 1; ++i)
     for (f = 0; f < chain->effects[i][0].flows; ++f)
@@ -430,7 +432,7 @@ sox_uint64_t sox_effects_clips(sox_effects_chain_t * chain)
 
 sox_uint64_t sox_stop_effect(sox_effect_t *effp)
 {
-  unsigned f;
+  size_t f;
   uint64_t clips = 0;
 
   for (f = 0; f < effp->flows; ++f) {
@@ -445,7 +447,7 @@ void sox_push_effect_last(sox_effects_chain_t *chain, sox_effect_t *effp)
   if (chain->length == chain->table_size) {
     chain->table_size += EFF_TABLE_STEP;
     lsx_debug_more("sox_push_effect_last: extending effects table, "
-        "new size = %lu", (unsigned long)chain->table_size);
+        "new size = %" PRIuPTR, chain->table_size);
     lsx_revalloc(chain->effects, chain->table_size);
   }
 
@@ -473,7 +475,7 @@ sox_effect_t *sox_pop_effect_last(sox_effects_chain_t *chain)
 void sox_delete_effect(sox_effect_t *effp)
 {
   uint64_t clips;
-  unsigned f;
+  size_t f;
 
   if ((clips = sox_stop_effect(effp)) != 0)
     lsx_warn("%s clipped %" PRIu64 " samples; decrease volume?",

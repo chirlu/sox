@@ -178,9 +178,9 @@ static size_t *user_effargs_size = NULL;  /* array: size of user_effargs for eac
 /* Size of memory structures related to effects arguments (user_effargs[i],
  * user_effargs[i][j].argv) to be extended in steps of EFFARGS_STEP */
 #define EFFARGS_STEP 8
-static unsigned *nuser_effects = NULL;  /* array: number of effects in each chain */
-static int current_eff_chain = 0;
-static int eff_chain_count = 0;
+static size_t *nuser_effects = NULL;  /* array: number of effects in each chain */
+static size_t current_eff_chain = 0;
+static size_t eff_chain_count = 0;
 static sox_bool very_first_effchain = sox_true;
   /* Indicates that not only the first effects chain is in effect (hrm), but
      also that it has never been restarted. Only then we may use the
@@ -745,7 +745,7 @@ static void add_eff_chain(void)
  */
 static void free_eff_chain(void)
 {
-  unsigned j;
+  size_t j;
   int k;
   for (j = 0; j < nuser_effects[eff_chain_count]; j++)
   {
@@ -792,8 +792,7 @@ static sox_bool is_pseudo_effect(const char *s)
 static void parse_effects(int argc, char ** argv)
 {
   while (optstate.ind < argc) {
-    unsigned eff_offset;
-    size_t j;
+    size_t eff_offset, j;
     int newline_mode = 0;
 
     eff_offset = nuser_effects[eff_chain_count];
@@ -1012,7 +1011,7 @@ static void read_user_effects(char const *filename)
  */
 static void create_user_effects(void)
 {
-  unsigned i;
+  size_t i;
   sox_effect_t *effp;
   size_t num_effects = nuser_effects[current_eff_chain];
 
@@ -1056,7 +1055,7 @@ static void add_effects(sox_effects_chain_t *chain)
 {
   sox_signalinfo_t signal = combiner_signal;
   int guard = is_guarded - 1;
-  unsigned i;
+  size_t i;
   sox_effect_t * effp;
   char * rate_arg = is_player ? (play_rate_arg ? play_rate_arg : "-l") : NULL;
 
@@ -1189,7 +1188,7 @@ static int advance_eff_chain(void)
 
 static uint64_t total_clips(void)
 {
-  unsigned i;
+  size_t i;
   uint64_t clips = 0;
   for (i = 0; i < file_count; ++i)
     clips += files[i]->ft->clips + files[i]->volume_clips;
@@ -1596,7 +1595,7 @@ static void calculate_combiner_signal_parameters(void)
    * -n isn't as convenient.
    */
   for (i = 0; i < input_count; i++) {
-    unsigned j;
+    size_t j;
     for (j =0; j < nuser_effects[current_eff_chain] &&
                !files[i]->ft->signal.channels; ++j)
       files[i]->ft->signal.channels = user_efftab[j]->in_signal.channels;
@@ -2013,7 +2012,7 @@ static void usage(char const * message)
 
 static void usage_effect(char const * name)
 {
-  int i;
+  size_t i;
 
   display_SoX_version(stdout);
   putchar('\n');
@@ -2875,7 +2874,7 @@ int main(int argc, char **argv)
 
   signal(SIGINT, SIG_IGN); /* So child pipes aren't killed by track skip */
   for (i = 0; i < input_count; i++) {
-    int j = input_count - 1 - i; /* Open in reverse order 'cos of rec (below) */
+    size_t j = input_count - 1 - i; /* Open in reverse order 'cos of rec (below) */
     file_t * f = files[j];
 
     /* When mixing audio, default to input side volume adjustments that will
