@@ -418,7 +418,7 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
   return flow_status;
 }
 
-uint64_t sox_effects_clips(sox_effects_chain_t * chain)
+sox_uint64_t sox_effects_clips(sox_effects_chain_t * chain)
 {
   unsigned i, f;
   uint64_t clips = 0;
@@ -428,7 +428,7 @@ uint64_t sox_effects_clips(sox_effects_chain_t * chain)
   return clips;
 }
 
-uint64_t sox_stop_effect(sox_effect_t *effp)
+sox_uint64_t sox_stop_effect(sox_effect_t *effp)
 {
   unsigned f;
   uint64_t clips = 0;
