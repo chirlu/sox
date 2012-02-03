@@ -8,14 +8,18 @@
 #include <CoreAudio/CoreAudio.h>
 #include <pthread.h>
 
+#define Buffactor 4
+
 typedef struct {
   AudioDeviceID adid;
   pthread_mutex_t mutex;
   pthread_cond_t cond;
   int device_started;
-  size_t buf_size;
-  size_t buf_offset;
-  float *buffer;
+  size_t bufsize;
+  size_t bufrd;
+  size_t bufwr;
+  size_t bufrdavail;
+  float *buf;
 } priv_t;
 
 static OSStatus PlaybackIOProc(AudioDeviceID inDevice UNUSED,
@@ -26,40 +30,41 @@ static OSStatus PlaybackIOProc(AudioDeviceID inDevice UNUSED,
                                const AudioTimeStamp *inOutputTime UNUSED,
                                void *inClientData)
 {
-  sox_format_t *ft = (sox_format_t *)inClientData;
-  priv_t *ac = (priv_t *)ft->priv;
-  char *buf = outOutputData->mBuffers[0].mData;
-  unsigned int len, output_len;
+    priv_t *ac = (priv_t*)((sox_format_t*)inClientData)->priv;
+    AudioBuffer *buf;
+    size_t copylen, avail;
 
-  if (outOutputData->mNumberBuffers != 1)
-  {
-	  lsx_warn("coreaudio: unhandled extra buffer.  Data discarded.");
-	  return kAudioHardwareNoError;
-  }
+    pthread_mutex_lock(&ac->mutex);
 
-  buf = (char *)outOutputData->mBuffers[0].mData;
-  output_len = outOutputData->mBuffers[0].mDataByteSize;
+    for(buf = outOutputData->mBuffers;
+        buf != outOutputData->mBuffers + outOutputData->mNumberBuffers;
+        buf++){
 
-  pthread_mutex_lock(&ac->mutex);
+        copylen = buf->mDataByteSize / sizeof(float);
+        if(copylen > ac->bufrdavail)
+            copylen = ac->bufrdavail;
 
-  len = (ac->buf_offset < output_len) ? ac->buf_offset : output_len;
+        avail = ac->bufsize - ac->bufrd;
+        if(buf->mData == NULL){
+            /*do nothing-hardware can't play audio*/
+        }else if(copylen > avail){
+            memcpy(buf->mData, ac->buf + ac->bufrd, avail * sizeof(float));
+            memcpy((float*)buf->mData + avail, ac->buf, (copylen - avail) * sizeof(float));
+        }else{
+            memcpy(buf->mData, ac->buf + ac->bufrd, copylen * sizeof(float));
+        }
 
-  /* Make sure to write 2 (stereo) floats at a time */
-  if (len % 8)
-      len -= len % 8;
+        buf->mDataByteSize = copylen * sizeof(float);
+        ac->bufrd += copylen;
+        if(ac->bufrd >= ac->bufsize)
+            ac->bufrd -= ac->bufsize;
+        ac->bufrdavail -= copylen;
+    }
 
-  memcpy(buf, ac->buffer, len);
+    pthread_cond_signal(&ac->cond);
+    pthread_mutex_unlock(&ac->mutex);
 
-  /* Fill partial output buffers with silence */
-  if (len < output_len)
-      memset(buf+len, 0, output_len-len);
-
-  ac->buf_offset -= len;
-
-  pthread_mutex_unlock(&ac->mutex);
-  pthread_cond_signal(&ac->cond);
-
-  return kAudioHardwareNoError;
+    return kAudioHardwareNoError;
 }
 
 static OSStatus RecIOProc(AudioDeviceID inDevice UNUSED,
@@ -70,51 +75,45 @@ static OSStatus RecIOProc(AudioDeviceID inDevice UNUSED,
                           const AudioTimeStamp *inOutputTime UNUSED,
                           void *inClientData)
 {
-  sox_format_t *ft = (sox_format_t *)inClientData;
-  priv_t *ac = (priv_t *)ft->priv;
-  size_t len, output_len;
-  char *destbuf;
-  char *buf;
-  int i;
+    priv_t *ac = (priv_t *)((sox_format_t*)inClientData)->priv;
+    AudioBuffer *buf;
+    size_t nfree, copylen, avail;
 
-  pthread_mutex_lock(&ac->mutex);
+    pthread_mutex_lock(&ac->mutex);
 
-  if (inInputData->mNumberBuffers != 1)
-  {
-    lsx_warn("coreaudio: unhandled extra buffer.  Data discarded.");
+    for(buf = inInputData->mBuffers;
+        buf != inInputData->mBuffers + inInputData->mNumberBuffers;
+        buf++){
+
+        if(buf->mData == NULL)
+            continue;
+
+        copylen = buf->mDataByteSize / sizeof(float);
+        nfree = ac->bufsize - ac->bufrdavail - 1;
+        if(nfree == 0)
+            lsx_warn("coreaudio: unhandled buffer overrun.  Data discarded.");
+
+        if(copylen > nfree)
+            copylen = nfree;
+
+        avail = ac->bufsize - ac->bufwr;
+        if(copylen > avail){
+            memcpy(ac->buf + ac->bufwr, buf->mData, avail * sizeof(float));
+            memcpy(ac->buf, (float*)buf->mData + avail, (copylen - avail) * sizeof(float));
+        }else{
+            memcpy(ac->buf + ac->bufwr, buf->mData, copylen * sizeof(float));
+        }
+
+        ac->bufwr += copylen;
+        if(ac->bufwr >= ac->bufsize)
+            ac->bufwr -= ac->bufsize;
+        ac->bufrdavail += copylen;
+    }
+
+    pthread_cond_signal(&ac->cond);
+    pthread_mutex_unlock(&ac->mutex);
+
     return kAudioHardwareNoError;
-  }
-
-  destbuf = ((char *)ac->buffer + ac->buf_offset);
-  buf = inInputData->mBuffers[0].mData;
-  output_len = inInputData->mBuffers[0].mDataByteSize;
-
-  /* mDataByteSize may be non-zero even when mData is NULL, but that is
-   * not an error.
-   */
-  if (buf == NULL)
-    return kAudioHardwareNoError;
-
-  len = ac->buf_size - ac->buf_offset;
-
-  /* Make sure to read 2 (stereo) floats at a time */
-  if (len % 8)
-      len -= len % 8;
-
-  if (len > output_len)
-    len = output_len;
-
-  /* FIXME: Handle buffer overrun. */
-  if (len < output_len)
-      lsx_warn("coreaudio: unhandled buffer overrun.  Data discarded.");
-
-  memcpy(destbuf, buf, len);
-  ac->buf_offset += len;
-
-  pthread_mutex_unlock(&ac->mutex);
-  pthread_cond_signal(&ac->cond);
-
-  return kAudioHardwareNoError;
 }
 
 static int setup(sox_format_t *ft, int is_input)
@@ -130,9 +129,9 @@ static int setup(sox_format_t *ft, int is_input)
   {
       property_size = sizeof(ac->adid);
       if (is_input)
-	  status = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultInputDevice, &property_size, &ac->adid);
+          status = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultInputDevice, &property_size, &ac->adid);
       else
-	  status = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultOutputDevice, &property_size, &ac->adid);
+          status = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultOutputDevice, &property_size, &ac->adid);
   }
   else
   {
@@ -141,33 +140,33 @@ static int setup(sox_format_t *ft, int is_input)
 
       if (status == noErr)
       {
-	  int device_count = property_size/sizeof(AudioDeviceID);
-	  AudioDeviceID *devices;
+          int device_count = property_size/sizeof(AudioDeviceID);
+          AudioDeviceID *devices;
 
-	  devices = malloc(property_size);
-    	  status = AudioHardwareGetProperty(kAudioHardwarePropertyDevices, &property_size, devices);
+          devices = malloc(property_size);
+              status = AudioHardwareGetProperty(kAudioHardwarePropertyDevices, &property_size, devices);
 
-	  if (status == noErr)
-	  {
-	      int i;
-	      for (i = 0; i < device_count; i++)
-	      {
-		  char name[256];
-		  status = AudioDeviceGetProperty(devices[i],0,false,kAudioDevicePropertyDeviceName,&property_size,&name);
+          if (status == noErr)
+          {
+              int i;
+              for (i = 0; i < device_count; i++)
+              {
+                  char name[256];
+                  status = AudioDeviceGetProperty(devices[i],0,false,kAudioDevicePropertyDeviceName,&property_size,&name);
 
-		  lsx_report("Found Audio Device \"%s\"\n",name);
+                  lsx_report("Found Audio Device \"%s\"\n",name);
 
-		  /* String returned from OS is truncated so only compare
-		   * as much as returned.
-		   */
-		  if (strncmp(name,ft->filename,strlen(name)) == 0)
-		  {
-		      ac->adid = devices[i];
-		      break;
-		  }
-	      }
-	  }
-	  free(devices);
+                  /* String returned from OS is truncated so only compare
+                   * as much as returned.
+                   */
+                  if (strncmp(name,ft->filename,strlen(name)) == 0)
+                  {
+                      ac->adid = devices[i];
+                      break;
+                  }
+              }
+          }
+          free(devices);
       }
   }
 
@@ -247,11 +246,13 @@ static int setup(sox_format_t *ft, int is_input)
     ft->signal.rate = stream_desc.mSampleRate;
   }
 
-  ac->buf_size = sox_globals.bufsiz * sizeof(float);
-  ac->buf_offset = 0;
-  ac->buffer = lsx_malloc(ac->buf_size);
+  ac->bufsize = sox_globals.bufsiz / sizeof(sox_sample_t) * Buffactor;
+  ac->bufrd = 0;
+  ac->bufwr = 0;
+  ac->bufrdavail = 0;
+  ac->buf = lsx_malloc(ac->bufsize * sizeof(float));
 
-  buf_size = ac->buf_size;
+  buf_size = sox_globals.bufsiz / sizeof(sox_sample_t) * sizeof(float);
   property_size = sizeof(buf_size);
   status = AudioDeviceSetProperty(ac->adid, NULL, 0, is_input,
                                   kAudioDevicePropertyBufferSize,
@@ -289,33 +290,34 @@ static int startread(sox_format_t *ft)
 
 static size_t read_samples(sox_format_t *ft, sox_sample_t *buf, size_t nsamp)
 {
-  priv_t *ac = (priv_t *)ft->priv;
-  size_t len = nsamp;
-  size_t samp_left;
-  OSStatus status;
-  float *p;
-  SOX_SAMPLE_LOCALS;
+    priv_t *ac = (priv_t *)ft->priv;
+    size_t len;
+    SOX_SAMPLE_LOCALS;
 
-  if (!ac->device_started)
-  {
-    status = AudioDeviceStart(ac->adid, RecIOProc);
-    ac->device_started = 1;
-  }
+    if (!ac->device_started) {
+        AudioDeviceStart(ac->adid, RecIOProc);
+        ac->device_started = 1;
+    }
 
-  pthread_mutex_lock(&ac->mutex);
+    pthread_mutex_lock(&ac->mutex);
 
-  /* Wait until input buffer has been filled by device driver */
-  while (ac->buf_offset < ac->buf_size)
-    pthread_cond_wait(&ac->cond, &ac->mutex);
+    /* Wait until input buffer has been filled by device driver */
+    while (ac->bufrdavail == 0)
+        pthread_cond_wait(&ac->cond, &ac->mutex);
 
-  len = ac->buf_offset / sizeof(float);
-  for (p = ac->buffer, samp_left = len; samp_left > 0; samp_left--, buf++, p++)
-    *buf = SOX_FLOAT_32BIT_TO_SAMPLE(*p, ft->clips);
-  ac->buf_offset = 0;
+    len = 0;
+    while(len < nsamp && ac->bufrdavail > 0){
+        buf[len] = SOX_FLOAT_32BIT_TO_SAMPLE(ac->buf[ac->bufrd], ft->clips);
+        len++;
+        ac->bufrd++;
+        if(ac->bufrd == ac->bufsize)
+            ac->bufrd = 0;
+        ac->bufrdavail--;
+    }
 
-  pthread_mutex_unlock(&ac->mutex);
+    pthread_mutex_unlock(&ac->mutex);
 
-  return len;
+    return len;
 }
 
 static int stopread(sox_format_t * ft)
@@ -326,6 +328,7 @@ static int stopread(sox_format_t * ft)
   AudioDeviceRemoveIOProc(ac->adid, RecIOProc);
   pthread_cond_destroy(&ac->cond);
   pthread_mutex_destroy(&ac->mutex);
+  free(ac->buf);
 
   return SOX_SUCCESS;
 }
@@ -337,78 +340,65 @@ static int startwrite(sox_format_t * ft)
 
 static size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, size_t nsamp)
 {
-  priv_t *ac = (priv_t *)ft->priv;
-  size_t len, written = 0;
-  size_t samp_left;
-  OSStatus status;
-  float *p;
-  SOX_SAMPLE_LOCALS;
+    priv_t *ac = (priv_t *)ft->priv;
+    size_t i;
 
-  pthread_mutex_lock(&ac->mutex);
+    SOX_SAMPLE_LOCALS;
 
-  /* Wait to start until mutex is locked to help prevent callback
-   * getting zero samples.
-   */
-  if (!ac->device_started)
-  {
-      status = AudioDeviceStart(ac->adid, PlaybackIOProc);
-      if (status)
-      {
-	  pthread_mutex_unlock(&ac->mutex);
-	  return SOX_EOF;
-      }
-      ac->device_started = 1;
-  }
+    pthread_mutex_lock(&ac->mutex);
 
-  /* globals.bufsize is in samples
-   * buf_offset is in bytes
-   * buf_size is in bytes
-   */
-  do {
-    while (ac->buf_offset >= ac->buf_size)
-	pthread_cond_wait(&ac->cond, &ac->mutex);
+    /* Wait to start until mutex is locked to help prevent callback
+    * getting zero samples.
+    */
+    if(!ac->device_started){
+        if(AudioDeviceStart(ac->adid, PlaybackIOProc)){
+            pthread_mutex_unlock(&ac->mutex);
+            return SOX_EOF;
+        }
+        ac->device_started = 1;
+    }
 
-    len = nsamp - written;
-    if (len > (ac->buf_size - ac->buf_offset) / sizeof(float))
-      len = (ac->buf_size - ac->buf_offset) / sizeof(float);
-    samp_left = len;
+    /* globals.bufsize is in samples
+    * buf_offset is in bytes
+    * buf_size is in bytes
+    */
+    for(i = 0; i < nsamp; i++){
+        while(ac->bufrdavail == ac->bufsize - 1)
+            pthread_cond_wait(&ac->cond, &ac->mutex);
 
-    p = ((unsigned char *)ac->buffer) + ac->buf_offset;
+        ac->buf[ac->bufwr] = SOX_SAMPLE_TO_FLOAT_32BIT(buf[i], ft->clips);
+        ac->bufwr++;
+        if(ac->bufwr == ac->bufsize)
+            ac->bufwr = 0;
+        ac->bufrdavail++;
+    }
 
-    while (samp_left--)
-      *p++ = SOX_SAMPLE_TO_FLOAT_32BIT(*buf++, ft->clips);
-
-    ac->buf_offset += len * sizeof(float);
-    written += len;
-  } while (written < nsamp);
-
-  pthread_mutex_unlock(&ac->mutex);
-
-  return written;
+    pthread_mutex_unlock(&ac->mutex);
+    return nsamp;
 }
 
 
 static int stopwrite(sox_format_t * ft)
 {
-  priv_t *ac = (priv_t *)ft->priv;
+    priv_t *ac = (priv_t *)ft->priv;
 
-  if (!ac->device_started)
-  {
-    pthread_mutex_lock(&ac->mutex);
+    if(ac->device_started){
+        pthread_mutex_lock(&ac->mutex);
 
-    while (ac->buf_offset)
-	pthread_cond_wait(&ac->cond, &ac->mutex);
+        while (ac->bufrdavail > 0)
+            pthread_cond_wait(&ac->cond, &ac->mutex);
 
-    pthread_mutex_unlock(&ac->mutex);
+        pthread_mutex_unlock(&ac->mutex);
 
-    AudioDeviceStop(ac->adid, PlaybackIOProc);
-  }
+        AudioDeviceStop(ac->adid, PlaybackIOProc);
+    }
 
-  AudioDeviceRemoveIOProc(ac->adid, PlaybackIOProc);
-  pthread_cond_destroy(&ac->cond);
-  pthread_mutex_destroy(&ac->mutex);
+    AudioDeviceRemoveIOProc(ac->adid, PlaybackIOProc);
+    pthread_cond_destroy(&ac->cond);
+    pthread_mutex_destroy(&ac->mutex);
+    free(ac->buf);
 
-  return SOX_SUCCESS;
+    return SOX_SUCCESS;
 }
 
 LSX_FORMAT_HANDLER(coreaudio)
