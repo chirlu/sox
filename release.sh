@@ -5,6 +5,7 @@
 #   src/sox.h (SOX_LIB_VERSION_CODE) to match release #. If this is a
 #   release candidate, add "rcN" to end of version in configure.ac and
 #   src/soxconfig.h.cmake.
+# * Update date strings and possibly copyright years in man pages.
 # * Tag files to release using following form: git tag sox-14.4.0rc1
 #
 # Automatable release steps.   Most are optional but default to enabled.
