@@ -204,6 +204,7 @@ static sox_bool user_abort = sox_false;
 static sox_bool user_skip = sox_false;
 static sox_bool user_restart_eff = sox_false;
 static int success = 0;
+static int cleanup_called = 0;
 static sox_sample_t omax[2], omin[2];
 
 #ifdef HAVE_TERMIOS_H
@@ -214,7 +215,6 @@ static sox_bool original_termios_saved = sox_false;
 
 static sox_bool stdin_is_a_tty, is_player, is_guarded, do_guarded_norm, no_dither, reported_sox_opts;
 
-/* Cleanup atexit() function, hence always called. */
 static void cleanup(void)
 {
   size_t i;
@@ -264,6 +264,18 @@ static void cleanup(void)
   free(norm_level);
 
   sox_quit();
+
+  cleanup_called = 1;
+}
+
+/* Cleanup atexit() function, hence always called. */
+static void atexit_cleanup(void)
+{
+  /* Do not call cleanup using atexit() if possible.  pthread's can
+   * act unpredictable if called outside of main().
+   */
+  if (!cleanup_called)
+    cleanup();
 }
 
 static char const * str_time(double seconds)
@@ -2846,7 +2858,7 @@ int main(int argc, char **argv)
   stdin_is_a_tty = isatty(fileno(stdin));
   errno = 0; /* Both isatty & fileno may set errno. */
 
-  atexit(cleanup);
+  atexit(atexit_cleanup);
 
   if (sox_mode == sox_soxi)
     exit(soxi(argc, argv));
@@ -3015,5 +3027,8 @@ int main(int argc, char **argv)
   }
 
   success = 1; /* Signal success to cleanup so the output file isn't removed. */
+
+  cleanup();
+
   return 0;
 }
