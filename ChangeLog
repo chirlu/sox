@@ -57,6 +57,8 @@ Audio device drivers:
     volume control. (cbagwell)
   o Fix bug when specifying OSX coreaudio device name.  Would only
     search for first 3 devices. (cbagwell)
+  o Fix sox hangups are exit when using coreaudio. (cbagwell)
+  o Improve buffering in coreaudio driver (Michael Chen)
   o Support enabling play/rec mode when user invokes sox as either
     play or play.exe on windows. (cbagwell)
 
