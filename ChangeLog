@@ -61,6 +61,7 @@ Audio device drivers:
   o Improve buffering in coreaudio driver (Michael Chen)
   o Support enabling play/rec mode when user invokes sox as either
     play or play.exe on windows. (cbagwell)
+  o Fix compile of sunaudio driver on OpenBSD (cbagwell)
 
 Effects:
 

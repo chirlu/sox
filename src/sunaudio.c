@@ -62,7 +62,7 @@ static int sox_sunstartread(sox_format_t * ft)
 
 #ifdef __SVR4
     /* Read in old values, change to what we need and then send back */
-    if (ioctl(fileno(ft->fp), AUDIO_GETDEV, &audio_dev) < 0) {
+    if (ioctl(fileno((FILE*)ft->fp), AUDIO_GETDEV, &audio_dev) < 0) {
         lsx_fail_errno(ft,errno,"Unable to get device information.");
         return(SOX_EOF);
     }
@@ -132,7 +132,7 @@ static int sox_sunstartread(sox_format_t * ft)
     }
 
     /* Read in old values, change to what we need and then send back */
-    if (ioctl(fileno(ft->fp), AUDIO_GETINFO, &audio_if) < 0) {
+    if (ioctl(fileno((FILE*)ft->fp), AUDIO_GETINFO, &audio_if) < 0) {
         lsx_fail_errno(ft,errno,"Unable to initialize /dev/audio");
         return(SOX_EOF);
     }
@@ -147,7 +147,7 @@ static int sox_sunstartread(sox_format_t * ft)
         encoding = AUDIO_ENCODING_LINEAR;
     audio_if.record.encoding = encoding;
 
-    ioctl(fileno(ft->fp), AUDIO_SETINFO, &audio_if);
+    ioctl(fileno((FILE*)ft->fp), AUDIO_SETINFO, &audio_if);
     if (audio_if.record.precision != samplesize) {
         lsx_fail_errno(ft,errno,"Unable to initialize sample size for /dev/audio");
         return(SOX_EOF);
@@ -166,11 +166,11 @@ static int sox_sunstartread(sox_format_t * ft)
     }
     /* Flush any data in the buffers - its probably in the wrong format */
 #if defined(__NetBSD__) || defined(__OpenBSD__)
-    ioctl(fileno(ft->fp), AUDIO_FLUSH);
+    ioctl(fileno((FILE*)ft->fp), AUDIO_FLUSH);
 #elif defined __GLIBC__
-    ioctl(fileno(ft->fp), (unsigned long int)I_FLUSH, FLUSHR);
+    ioctl(fileno((FILE*)ft->fp), (unsigned long int)I_FLUSH, FLUSHR);
 #else
-    ioctl(fileno(ft->fp), I_FLUSH, FLUSHR);
+    ioctl(fileno((FILE*)ft->fp), I_FLUSH, FLUSHR);
 #endif
     /* Change to non-buffered I/O*/
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * file->size);
@@ -196,7 +196,7 @@ static int sox_sunstartwrite(sox_format_t * ft)
 
 #ifdef __SVR4
     /* Read in old values, change to what we need and then send back */
-    if (ioctl(fileno(ft->fp), AUDIO_GETDEV, &audio_dev) < 0) {
+    if (ioctl(fileno((FILE*)ft->fp), AUDIO_GETDEV, &audio_dev) < 0) {
         lsx_fail_errno(ft,errno,"Unable to get device information.");
         return(SOX_EOF);
     }
@@ -267,7 +267,7 @@ static int sox_sunstartwrite(sox_format_t * ft)
     if (ft->signal.channels > 1) ft->signal.channels = 2;
 
     /* Read in old values, change to what we need and then send back */
-    if (ioctl(fileno(ft->fp), AUDIO_GETINFO, &audio_if) < 0) {
+    if (ioctl(fileno((FILE*)ft->fp), AUDIO_GETINFO, &audio_if) < 0) {
         lsx_fail_errno(ft,errno,"Unable to initialize /dev/audio");
         return(SOX_EOF);
     }
@@ -282,7 +282,7 @@ static int sox_sunstartwrite(sox_format_t * ft)
         encoding = AUDIO_ENCODING_LINEAR;
     audio_if.play.encoding = encoding;
 
-    ioctl(fileno(ft->fp), AUDIO_SETINFO, &audio_if);
+    ioctl(fileno((FILE*)ft->fp), AUDIO_SETINFO, &audio_if);
     if (audio_if.play.precision != samplesize) {
         lsx_fail_errno(ft,errno,"Unable to initialize sample size for /dev/audio");
         return(SOX_EOF);
