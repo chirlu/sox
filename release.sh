@@ -18,6 +18,7 @@
 # 6. Create new release directory and upload packages to directory.
 #
 # After a release:
+# * Make sure local tags get pushed remotely: git push --tags
 # * Need to update sourceforge for recommended package to give to each
 #   OS.
 # * send announcement email using Mutt or similar (mutt -H sox-RELEASE.email).
