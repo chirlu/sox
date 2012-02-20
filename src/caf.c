@@ -17,7 +17,7 @@
 
 #include "sox_i.h"
 
-#if defined HAVE_SNDFILE_1_0_12
+#if defined HAVE_SNDFILE
 
 LSX_FORMAT_HANDLER(caf)
 {

@@ -109,9 +109,7 @@
 #endif
 #if defined HAVE_SNDFILE && (defined STATIC_SNDFILE || !defined HAVE_LIBLTDL)
   FORMAT(sndfile)
-  #if defined HAVE_SNDFILE_1_0_12
   FORMAT(caf)
-  #endif
   FORMAT(fap)
   FORMAT(mat4)
   FORMAT(mat5)
