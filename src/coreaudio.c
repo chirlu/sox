@@ -6,20 +6,24 @@
 #include "sox_i.h"
 
 #include <CoreAudio/CoreAudio.h>
+
+#include <assert.h>
+#include <limits.h>
 #include <pthread.h>
 
-#define Buffactor 4
+#define Buffactor 8
 
 typedef struct {
-  AudioDeviceID adid;
-  pthread_mutex_t mutex;
-  pthread_cond_t cond;
-  int device_started;
-  size_t bufsize;
-  size_t bufrd;
-  size_t bufwr;
-  size_t bufrdavail;
-  float *buf;
+    AudioDeviceID adid;
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+    int device_started;
+    size_t bufsize;
+    size_t bufrd;
+    size_t bufwr;
+    size_t bufrdavail;
+    float *buf;
+    UInt32 strmidx;
 } priv_t;
 
 static OSStatus PlaybackIOProc(AudioDeviceID inDevice UNUSED,
@@ -33,23 +37,33 @@ static OSStatus PlaybackIOProc(AudioDeviceID inDevice UNUSED,
     priv_t *ac = (priv_t*)((sox_format_t*)inClientData)->priv;
     AudioBuffer *buf;
     size_t copylen, avail;
+    UInt32 i;
 
     pthread_mutex_lock(&ac->mutex);
 
-    for(buf = outOutputData->mBuffers;
-        buf != outOutputData->mBuffers + outOutputData->mNumberBuffers;
-        buf++){
+    assert(ac->strmidx < outOutputData->mNumberBuffers);
 
-        copylen = buf->mDataByteSize / sizeof(float);
-        if(copylen > ac->bufrdavail)
-            copylen = ac->bufrdavail;
+    for(i = 0; i < outOutputData->mNumberBuffers; i++) {
+	buf = outOutputData->mBuffers + i;
+
+	if(i != ac->strmidx) {
+	    buf->mDataByteSize = 0;
+	    continue;
+	}
+
+	assert(buf->mData != NULL);
+
+	copylen = buf->mDataByteSize / sizeof(float);
+	if(copylen > ac->bufrdavail)
+	    copylen = ac->bufrdavail;
 
         avail = ac->bufsize - ac->bufrd;
         if(buf->mData == NULL){
             /*do nothing-hardware can't play audio*/
         }else if(copylen > avail){
             memcpy(buf->mData, ac->buf + ac->bufrd, avail * sizeof(float));
-            memcpy((float*)buf->mData + avail, ac->buf, (copylen - avail) * sizeof(float));
+            memcpy((float*)buf->mData + avail, ac->buf,
+		   (copylen - avail) * sizeof(float));
         }else{
             memcpy(buf->mData, ac->buf + ac->bufrd, copylen * sizeof(float));
         }
@@ -76,39 +90,35 @@ static OSStatus RecIOProc(AudioDeviceID inDevice UNUSED,
                           void *inClientData)
 {
     priv_t *ac = (priv_t *)((sox_format_t*)inClientData)->priv;
-    AudioBuffer *buf;
+    const AudioBuffer *buf;
     size_t nfree, copylen, avail;
 
     pthread_mutex_lock(&ac->mutex);
 
-    for(buf = inInputData->mBuffers;
-        buf != inInputData->mBuffers + inInputData->mNumberBuffers;
-        buf++){
+    assert(ac->strmidx < inInputData->mNumberBuffers);
+    buf = inInputData->mBuffers + ac->strmidx;
+    assert(buf->mData != NULL);
 
-        if(buf->mData == NULL)
-            continue;
+    copylen = buf->mDataByteSize / sizeof(float);
+    nfree = ac->bufsize - ac->bufrdavail - 1;
+    if(nfree == 0)
+	lsx_warn("coreaudio: unhandled buffer overrun.  Data discarded.");
 
-        copylen = buf->mDataByteSize / sizeof(float);
-        nfree = ac->bufsize - ac->bufrdavail - 1;
-        if(nfree == 0)
-            lsx_warn("coreaudio: unhandled buffer overrun.  Data discarded.");
+    if(copylen > nfree)
+	copylen = nfree;
 
-        if(copylen > nfree)
-            copylen = nfree;
-
-        avail = ac->bufsize - ac->bufwr;
-        if(copylen > avail){
-            memcpy(ac->buf + ac->bufwr, buf->mData, avail * sizeof(float));
-            memcpy(ac->buf, (float*)buf->mData + avail, (copylen - avail) * sizeof(float));
-        }else{
-            memcpy(ac->buf + ac->bufwr, buf->mData, copylen * sizeof(float));
-        }
-
-        ac->bufwr += copylen;
-        if(ac->bufwr >= ac->bufsize)
-            ac->bufwr -= ac->bufsize;
-        ac->bufrdavail += copylen;
+    avail = ac->bufsize - ac->bufwr;
+    if(copylen > avail){
+	memcpy(ac->buf + ac->bufwr, buf->mData, avail * sizeof(float));
+	memcpy(ac->buf, (float*)buf->mData + avail, (copylen - avail) * sizeof(float));
+    }else{
+	memcpy(ac->buf + ac->bufwr, buf->mData, copylen * sizeof(float));
     }
+
+    ac->bufwr += copylen;
+    if(ac->bufwr >= ac->bufsize)
+	ac->bufwr -= ac->bufsize;
+    ac->bufrdavail += copylen;
 
     pthread_cond_signal(&ac->cond);
     pthread_mutex_unlock(&ac->mutex);
@@ -116,171 +126,244 @@ static OSStatus RecIOProc(AudioDeviceID inDevice UNUSED,
     return kAudioHardwareNoError;
 }
 
+static int
+distance(const struct AudioStreamRangedDescription *desc,
+        const sox_format_t *ft)
+{
+    int distance = 0;
+
+    if ((desc->mFormat.mFormatFlags & kLinearPCMFormatFlagIsFloat) == 0)
+        return INT_MAX;
+    
+    if (desc->mSampleRateRange.mMinimum > ft->signal.rate)
+        distance += (desc->mSampleRateRange.mMinimum - ft->signal.rate) / 1000;
+
+    if (desc->mSampleRateRange.mMaximum < ft->signal.rate)
+        distance += (ft->signal.rate - desc->mSampleRateRange.mMaximum) / 1000;
+
+    distance += abs(ft->signal.channels - desc->mFormat.mChannelsPerFrame);
+
+    return distance;
+}
+
 static int setup(sox_format_t *ft, int is_input)
 {
-  priv_t *ac = (priv_t *)ft->priv;
-  OSStatus status;
-  UInt32 property_size;
-  struct AudioStreamBasicDescription stream_desc;
-  int32_t buf_size;
-  int rc;
+    priv_t *ac = (priv_t *)ft->priv;
+    OSStatus status;
+    UInt32 property_size;
+    struct AudioStreamBasicDescription stream_desc;
+    int32_t buf_size;
+    int rc, i , count, best;
+    AudioStreamID *strms, strm;
+    Boolean is_writable;
+    struct AudioStreamRangedDescription *strmdescs;
 
-  if (strncmp(ft->filename, "default", (size_t)7) == 0)
-  {
-      property_size = sizeof(ac->adid);
-      if (is_input)
-          status = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultInputDevice, &property_size, &ac->adid);
-      else
-          status = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultOutputDevice, &property_size, &ac->adid);
-  }
-  else
-  {
-      Boolean is_writable;
-      status = AudioHardwareGetPropertyInfo(kAudioHardwarePropertyDevices, &property_size, &is_writable);
+    if (strncmp(ft->filename, "default", (size_t)7) == 0) {
+        property_size = sizeof(ac->adid);
+        status = AudioHardwareGetProperty(
+                is_input? kAudioHardwarePropertyDefaultInputDevice :
+                    kAudioHardwarePropertyDefaultOutputDevice,
+                &property_size, &ac->adid);
+        if (status != noErr || ac->adid == kAudioDeviceUnknown) {
+            lsx_fail_errno(ft, SOX_EPERM, "can not open default audio device");
+            return SOX_EOF;
+        }
+	
+    } else {
+        AudioDeviceID *devices;
+        
+        status = AudioHardwareGetPropertyInfo(kAudioHardwarePropertyDevices,
+                &property_size, &is_writable);
+        if (status != noErr) {
+            lsx_fail_errno(ft, SOX_EPERM, "can not get hardware prop info");
+            return SOX_EOF;
+        }
+        
+        count = property_size / sizeof(AudioDeviceID);
+        devices = malloc((size_t)property_size);
+        status = AudioHardwareGetProperty(kAudioHardwarePropertyDevices,
+                &property_size, devices);
+        if (status != noErr) {
+            lsx_fail_errno(ft, SOX_EPERM, "can not enum devices");
+            free(devices);
+            return SOX_EOF;
+        }
 
-      if (status == noErr)
-      {
-          int device_count = property_size/sizeof(AudioDeviceID);
-          AudioDeviceID *devices;
+        for (i = 0; i < count; i++) {
+            char name[256];
+            
+            property_size = sizeof(name);
+            status = AudioDeviceGetProperty(devices[i], 0, false,
+                    kAudioDevicePropertyDeviceName, &property_size,
+                    &name);
+            if (status != noErr)
+                continue;
+            
+            lsx_report("Found Audio Device \"%s\"\n",name);
+            
+            /* String returned from OS is truncated so only compare
+             * as much as returned.
+             */
+            if (strncmp(name,ft->filename,strlen(name)) == 0) {
+                ac->adid = devices[i];
+                break;
+            }
+        }
+        free(devices);
+    }
 
-          devices = malloc(property_size);
-              status = AudioHardwareGetProperty(kAudioHardwarePropertyDevices, &property_size, devices);
+    /* Find the stream */
+    status = AudioDeviceGetPropertyInfo(ac->adid, 0, is_input,
+            kAudioDevicePropertyStreams, &property_size,
+            &is_writable);
+    if (status != noErr) {
+        lsx_fail_errno(ft, SOX_EPERM, "can not get audio device properties");
+        return SOX_EOF;
+    }
 
-          if (status == noErr)
-          {
-              int i;
-              for (i = 0; i < device_count; i++)
-              {
-                  char name[256];
-                  status = AudioDeviceGetProperty(devices[i],0,false,kAudioDevicePropertyDeviceName,&property_size,&name);
+    count = property_size / sizeof(AudioStreamID);
+    assert(count >= 1);
+    strms = (AudioStreamID *)malloc(property_size);
 
-                  lsx_report("Found Audio Device \"%s\"\n",name);
+    status = AudioDeviceGetProperty(ac->adid, 0, is_input,
+            kAudioDevicePropertyStreams, &property_size,
+            strms);
+    if (status != noErr) {
+        lsx_fail_errno(ft, SOX_EPERM, "can not enum streams");
+        free(strms);
+        return SOX_EOF;
+    }
 
-                  /* String returned from OS is truncated so only compare
-                   * as much as returned.
-                   */
-                  if (strncmp(name,ft->filename,strlen(name)) == 0)
-                  {
-                      ac->adid = devices[i];
-                      break;
-                  }
-              }
-          }
-          free(devices);
-      }
-  }
+    /* TODO: allow the user to select the stream */
+    lsx_report("Found %d Streams for selected audio device, defaulting to 0\n",
+	       count);
 
-  if (status || ac->adid == kAudioDeviceUnknown)
-  {
-    lsx_fail_errno(ft, SOX_EPERM, "can not open audio device");
-    return SOX_EOF;
-  }
+    ac->strmidx = 0;
+    strm = strms[0];
+    free(strms);
+    
+    status = AudioStreamGetPropertyInfo(strm, 0,
+            kAudioStreamPropertyAvailableVirtualFormats, &property_size,
+            &is_writable);
+    if (status != noErr) {
+        lsx_fail_errno(ft, SOX_EPERM, "failed to get format size");
+        return SOX_EOF;
+    }
 
-  /* Query device to get initial values */
-  property_size = sizeof(struct AudioStreamBasicDescription);
-  status = AudioDeviceGetProperty(ac->adid, 0, is_input,
-                                  kAudioDevicePropertyStreamFormat,
-                                  &property_size, &stream_desc);
-  if (status)
-  {
-    lsx_fail_errno(ft, SOX_EPERM, "can not get audio device properties");
-    return SOX_EOF;
-  }
+    count = property_size / sizeof(struct AudioStreamRangedDescription);
+    assert(count > 0);
 
-  if (!(stream_desc.mFormatFlags & kLinearPCMFormatFlagIsFloat))
-  {
-    lsx_fail_errno(ft, SOX_EPERM, "audio device does not accept floats");
-    return SOX_EOF;
-  }
+    strmdescs = (struct AudioStreamRangedDescription *) malloc(property_size);
+    
+    status = AudioStreamGetProperty(strm, 0,
+            kAudioStreamPropertyAvailableVirtualFormats, &property_size,
+            strmdescs);
+    if (status != noErr) {
+        lsx_fail_errno(ft, SOX_EPERM, "failed to get formats");
+        free(strmdescs);
+        return SOX_EOF;
+    }
 
-  /* OS X effectively only supports these values. */
-  ft->signal.channels = 2;
-  ft->signal.rate = 44100;
-  ft->encoding.bits_per_sample = 32;
+    best = 0;
+    for (i = 0; i < count; i++) {
+        lsx_report("Supported format: %lu bits, %lu nchan, %lf rate, %lf min"
+                ", %lf max\n",
+                strmdescs[i].mFormat.mBitsPerChannel,
+                strmdescs[i].mFormat.mChannelsPerFrame,
+                strmdescs[i].mFormat.mSampleRate,
+                strmdescs[i].mSampleRateRange.mMinimum,
+                strmdescs[i].mSampleRateRange.mMaximum);
 
-  /* TODO: My limited experience with hardware can only get floats working
-   * withh a fixed sample rate and stereo.  I know that is a limitiation of
-   * audio device I have so this may not be standard operating orders.
-   * If some hardware supports setting sample rates and channel counts
-   * then should do that over resampling and mixing.
-   */
-#if  0
-  stream_desc.mSampleRate = ft->signal.rate;
-  stream_desc.mChannelsPerFrame = ft->signal.channels;
+        if (distance(&strmdescs[i], ft) < distance(&strmdescs[best], ft))
+            best = i;
+    }
 
-  /* Write them back */
-  property_size = sizeof(struct AudioStreamBasicDescription);
-  status = AudioDeviceSetProperty(ac->adid, NULL, 0, is_input,
-                                  kAudioDevicePropertyStreamFormat,
-                                  property_size, &stream_desc);
-  if (status)
-  {
-    lsx_fail_errno(ft, SOX_EPERM, "can not set audio device properties");
-    return SOX_EOF;
-  }
+    stream_desc = strmdescs[best].mFormat;
+    if (ft->signal.rate < strmdescs[best].mSampleRateRange.mMinimum) {
+        ft->signal.rate = strmdescs[best].mSampleRateRange.mMinimum;
+        stream_desc.mSampleRate = strmdescs[best].mSampleRateRange.mMinimum;
 
-  /* Query device to see if it worked */
-  property_size = sizeof(struct AudioStreamBasicDescription);
-  status = AudioDeviceGetProperty(ac->adid, 0, is_input,
-                                  kAudioDevicePropertyStreamFormat,
-                                  &property_size, &stream_desc);
+    } else if (ft->signal.rate > strmdescs[best].mSampleRateRange.mMaximum) {
+        ft->signal.rate = strmdescs[best].mSampleRateRange.mMaximum;
+        stream_desc.mSampleRate = strmdescs[best].mSampleRateRange.mMaximum;
 
-  if (status)
-  {
-    lsx_fail_errno(ft, SOX_EPERM, "can not get audio device properties");
-    return SOX_EOF;
-  }
-#endif
+    } else {
+        stream_desc.mSampleRate = ft->signal.rate;
+    }
 
-  if (stream_desc.mChannelsPerFrame != ft->signal.channels)
-  {
-    lsx_debug("audio device did not accept %d channels. Use %d channels instead.", (int)ft->signal.channels,
-              (int)stream_desc.mChannelsPerFrame);
     ft->signal.channels = stream_desc.mChannelsPerFrame;
-  }
+    free(strmdescs);
 
-  if (stream_desc.mSampleRate != ft->signal.rate)
-  {
-    lsx_debug("audio device did not accept %d sample rate. Use %d instead.", (int)ft->signal.rate,
-              (int)stream_desc.mSampleRate);
-    ft->signal.rate = stream_desc.mSampleRate;
-  }
+    if (!(stream_desc.mFormatFlags & kLinearPCMFormatFlagIsFloat)) {
+        lsx_fail_errno(ft, SOX_EPERM, "audio device does not accept floats");
+        return SOX_EOF;
+    }
 
-  ac->bufsize = sox_globals.bufsiz / sizeof(sox_sample_t) * Buffactor;
-  ac->bufrd = 0;
-  ac->bufwr = 0;
-  ac->bufrdavail = 0;
-  ac->buf = lsx_malloc(ac->bufsize * sizeof(float));
-
-  buf_size = sox_globals.bufsiz / sizeof(sox_sample_t) * sizeof(float);
-  property_size = sizeof(buf_size);
-  status = AudioDeviceSetProperty(ac->adid, NULL, 0, is_input,
-                                  kAudioDevicePropertyBufferSize,
-                                  property_size, &buf_size);
-
-  rc = pthread_mutex_init(&ac->mutex, NULL);
-  if (rc)
-  {
-    lsx_fail_errno(ft, SOX_EPERM, "failed initializing mutex");
-    return SOX_EOF;
-  }
-
-  rc = pthread_cond_init(&ac->cond, NULL);
-  if (rc)
-  {
-    lsx_fail_errno(ft, SOX_EPERM, "failed initializing condition");
-    return SOX_EOF;
-  }
-
-  ac->device_started = 0;
-
-  /* Registers callback with the device without activating it. */
-  if (is_input)
-    status = AudioDeviceAddIOProc(ac->adid, RecIOProc, (void *)ft);
-  else
-    status = AudioDeviceAddIOProc(ac->adid, PlaybackIOProc, (void *)ft);
-
-  return SOX_SUCCESS;
+    /* Write them back */
+    property_size = sizeof(stream_desc);
+    status = AudioStreamSetProperty(strm, NULL, 0,
+            kAudioStreamPropertyVirtualFormat, property_size, &stream_desc);
+    if (status != noErr) {
+        lsx_fail_errno(ft, SOX_EPERM, "can not set audio device properties");
+        return SOX_EOF;
+    }
+    
+    /* Query device to see if it worked */
+    property_size = sizeof(struct AudioStreamBasicDescription);
+    status = AudioStreamGetProperty(strm, 0,kAudioStreamPropertyPhysicalFormat,
+            &property_size, &stream_desc);
+    
+    if (status) {
+        lsx_fail_errno(ft, SOX_EPERM, "can not get audio device properties");
+        return SOX_EOF;
+    }
+    
+    assert(stream_desc.mChannelsPerFrame == ft->signal.channels);
+    if (stream_desc.mChannelsPerFrame != ft->signal.channels) {
+        lsx_debug("audio device did not accept %d channels. Use %d channels instead.", (int)ft->signal.channels,
+            (int)stream_desc.mChannelsPerFrame);
+        ft->signal.channels = stream_desc.mChannelsPerFrame;
+    }
+    
+    assert(stream_desc.mSampleRate == ft->signal.rate);
+    if (stream_desc.mSampleRate != ft->signal.rate) {
+        lsx_debug("audio device did not accept %d sample rate. Use %d instead.", (int)ft->signal.rate,
+            (int)stream_desc.mSampleRate);
+        ft->signal.rate = stream_desc.mSampleRate;
+    }
+    
+    ac->bufsize = sox_globals.bufsiz / sizeof(sox_sample_t) * Buffactor;
+    ac->bufrd = 0;
+    ac->bufwr = 0;
+    ac->bufrdavail = 0;
+    ac->buf = lsx_malloc(ac->bufsize * sizeof(float));
+    
+    buf_size = sox_globals.bufsiz / sizeof(sox_sample_t) /
+        stream_desc.mChannelsPerFrame;
+    property_size = sizeof(buf_size);
+    status = AudioDeviceSetProperty(ac->adid, NULL, 0, is_input,
+        kAudioDevicePropertyBufferFrameSize,
+        property_size, &buf_size);
+    
+    rc = pthread_mutex_init(&ac->mutex, NULL);
+    if (rc) {
+        lsx_fail_errno(ft, SOX_EPERM, "failed initializing mutex");
+        return SOX_EOF;
+    }
+    
+    rc = pthread_cond_init(&ac->cond, NULL);
+    if (rc) {
+        lsx_fail_errno(ft, SOX_EPERM, "failed initializing condition");
+        return SOX_EOF;
+    }
+    
+    ac->device_started = 0;
+    
+    /* Registers callback with the device without activating it. */
+    status = AudioDeviceAddIOProc(ac->adid,
+            is_input? RecIOProc : PlaybackIOProc, ft);
+    
+    return SOX_SUCCESS;
 }
 
 static int startread(sox_format_t *ft)
