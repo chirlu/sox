@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(SoX, 14.4.0rc3, sox-devel@lists.sourceforge.net)
+AC_INIT(SoX, 14.4.0, sox-devel@lists.sourceforge.net)
 
 m4_ifdef([AC_CONFIG_MACRO_DIR], [AC_CONFIG_MACRO_DIR([m4])])
 
