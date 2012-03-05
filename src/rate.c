@@ -67,9 +67,9 @@ static sample_t * prepare_coefs(raw_coef_t const * coefs, int num_coefs,
   return result;
 }
 
-typedef struct {    /* Data that are shared between channels and filters */
+typedef struct {    /* Data that are shared between channels and stages */
   sample_t   * poly_fir_coefs;
-  dft_filter_t half_band[2];    /* [0]: halve; [1]: down/up: halve/double */
+  dft_filter_t half_band[2];   /* Div or mul by n */
 } rate_shared_t;
 
 struct stage;
@@ -80,7 +80,7 @@ typedef struct stage {
   int        pre;              /* Number of past samples to store */
   int        pre_post;         /* pre + number of future samples to store */
   int        preload;          /* Number of zero samples to pre-load the fifo */
-  int        which;            /* Which of the 2 half-band filters to use */
+  int        which;            /* Which, if any, of the 2 dft filters to use */
   stage_fn_t fn;
                                /* For poly_fir & spline: */
   union {                      /* 32bit.32bit fixed point arithmetic */
@@ -94,6 +94,7 @@ typedef struct stage {
   } at, step;
   int        divisor;          /* For step: > 1 for rational; 1 otherwise */
   double     out_in_ratio;
+  int        rem, tuple;
 } stage_t;
 
 #define stage_occupancy(s) max(0, fifo_occupancy(&(s)->fifo) - (s)->pre_post)
@@ -132,7 +133,6 @@ static void half_sample(stage_t * p, fifo_t * output_fifo)
     num_in -= f->dft_length - overlap;
 
     output = fifo_reserve(output_fifo, f->dft_length);
-    fifo_trim_by(output_fifo, (f->dft_length + overlap) >> 1);
     memcpy(output, input, f->dft_length * sizeof(*output));
 
     lsx_safe_rdft(f->dft_length, 1, output);
@@ -145,8 +145,10 @@ static void half_sample(stage_t * p, fifo_t * output_fifo)
     }
     lsx_safe_rdft(f->dft_length, -1, output);
 
-    for (j = 1, i = 2; i < f->dft_length - overlap; ++j, i += 2)
+    for (j = 0, i = p->rem; i < f->dft_length - overlap; ++j, i += p->tuple)
       output[j] = output[i];
+    p->rem = i - (f->dft_length - overlap);
+    fifo_trim_by(output_fifo, f->dft_length - j);
   }
 }
 
@@ -155,18 +157,21 @@ static void double_sample(stage_t * p, fifo_t * output_fifo)
   sample_t * output;
   int i, j, num_in = max(0, fifo_occupancy(&p->fifo));
   rate_shared_t const * s = p->shared;
-  dft_filter_t const * f = &s->half_band[1];
+  dft_filter_t const * f = &s->half_band[p->which];
   int const overlap = f->num_taps - 1;
 
-  while (num_in > f->dft_length >> 1) {
+  while (p->rem + p->tuple * num_in >= f->dft_length) {
+    div_t divd = div(f->dft_length - overlap - p->rem + p->tuple - 1, p->tuple);
     sample_t const * input = fifo_read_ptr(&p->fifo);
-    fifo_read(&p->fifo, (f->dft_length - overlap) >> 1, NULL);
-    num_in -= (f->dft_length - overlap) >> 1;
+    fifo_read(&p->fifo, divd.quot, NULL);
+    num_in -= divd.quot;
 
     output = fifo_reserve(output_fifo, f->dft_length);
     fifo_trim_by(output_fifo, overlap);
-    for (j = i = 0; i < f->dft_length; ++j, i += 2)
-      output[i] = input[j], output[i+1] = 0;
+    memset(output, 0, f->dft_length * sizeof(*output));
+    for (j = 0, i = p->rem; i < f->dft_length; ++j, i += p->tuple)
+      output[i] = input[j];
+    p->rem = p->tuple - 1 - divd.rem;
 
     lsx_safe_rdft(f->dft_length, 1, output);
     output[0] *= f->coefs[0];
@@ -180,9 +185,9 @@ static void double_sample(stage_t * p, fifo_t * output_fifo)
   }
 }
 
-static void half_band_filter_init(rate_shared_t * p, unsigned which,
-    int num_taps, sample_t const h[], double Fp, double att, int multiplier,
-    double phase, sox_bool allow_aliasing)
+static void init_dft_filter(rate_shared_t * p, unsigned which, int num_taps,
+    sample_t const h[], double Fp, double Fc, double Fn, double att,
+    int multiplier, double phase, sox_bool allow_aliasing)
 {
   dft_filter_t * f = &p->half_band[which];
   int dft_length, i;
@@ -198,7 +203,7 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
     f->post_peak = num_taps / 2;
   }
   else {
-    double * h2 = lsx_design_lpf(Fp, 1., 2., allow_aliasing, att, &num_taps, 0);
+    double * h2 = lsx_design_lpf(Fp, Fc, Fn, allow_aliasing, att, &num_taps, 0, -1.);
 
     if (phase != 50)
       lsx_fir_to_phase(&h2, &num_taps, &f->post_peak, phase);
@@ -214,8 +219,8 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
   assert(num_taps & 1);
   f->num_taps = num_taps;
   f->dft_length = dft_length;
-  lsx_debug("fir_len=%i dft_length=%i Fp=%g att=%g mult=%i",
-      num_taps, dft_length, Fp, att, multiplier);
+  lsx_debug("fir_len=%i dft_length=%i Fp=%g Fc=%g Fn=%g att=%g mult=%i",
+      num_taps, dft_length, Fp, Fc, Fn, att, multiplier);
   lsx_safe_rdft(dft_length, 1, f->coefs);
 }
 
@@ -223,7 +228,7 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
 
 typedef struct {
   double     factor;
-  size_t     samples_in, samples_out;
+  uint64_t   samples_in, samples_out;
   int        level, input_stage_num, output_stage_num;
   sox_bool   upsample;
   stage_t    * stages;
@@ -237,9 +242,10 @@ typedef enum {Default = -1, Quick, Low, Medium, High, Very} quality_t;
 
 static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     quality_t quality, int interp_order, double phase, double bandwidth,
-    sox_bool allow_aliasing)
+    sox_bool allow_aliasing, sox_bool old_behaviour)
 {
-  int i, mult, divisor = 1;
+  int i, tuple, mult, divisor = 1, two_or_three = 2;
+  sox_bool two_factors = sox_false;
 
   assert(factor > 0);
   p->factor = factor;
@@ -247,19 +253,26 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     quality = High;
   if (quality != Quick) {
     const int max_divisor = 2048;      /* Keep coef table size ~< 500kb */
-    const double epsilon = 4 / MULT32; /* Scaled to half this at max_divisor */
-    p->upsample = p->factor < 1;
+    double epsilon;
+    p->upsample = factor < 1;
     for (i = factor, p->level = 0; i >>= 1; ++p->level); /* log base 2 */
     factor /= 1 << (p->level + !p->upsample);
+    epsilon = fabs((uint32_t)(factor * MULT32 + .5) / (factor * MULT32) - 1);
     for (i = 2; i <= max_divisor && divisor == 1; ++i) {
       double try_d = factor * i;
       int try = try_d + .5;
-      if (fabs(try - try_d) < try * epsilon * (1 - (.5 / max_divisor) * i)) {
-        if (try == i)  /* Rounded to 1:1? */
-          factor = 1, divisor = 2, p->upsample = sox_false;
+      if (fabs(try / try_d - 1) <= epsilon) { /* N.B. beware of long doubles */
+        if (try == i) {
+          factor = 1, divisor = 2;
+          if (p->upsample)
+            p->upsample = sox_false;
+          else ++p->level;
+        }
         else factor = try, divisor = i;
       }
     }
+    if (!old_behaviour && quality != Low && factor == 3 && divisor == 4 && p->level == 1)
+      two_or_three = 3;
   }
   p->stages = (stage_t *)calloc((size_t)p->level + 4, sizeof(*p->stages)) + 1;
   for (i = -1; i <= p->level + 1; ++i) p->stages[i].shared = shared;
@@ -270,9 +283,23 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     assert(!last_stage.step.parts.fraction);
   else if (quality != Quick)
     assert(!last_stage.step.parts.integer);
-  lsx_debug("i/o=%g; %.9g:%i @ level %i", p->factor, factor, divisor, p->level);
 
-  mult = 1 + p->upsample; /* Compensate for zero-stuffing in double_sample */
+  tuple = 1 + p->upsample;
+  if (!old_behaviour && p->upsample) {
+    if (factor == 2 && divisor == 3)
+      two_factors = sox_true, tuple = divisor;
+    else if (factor == 1) {
+      if (divisor < 6)
+        two_factors = sox_true, tuple = divisor;
+      else for (i = 2; !two_factors && i < 20; ++i)
+        if (!(divisor % i))
+          two_factors = sox_true, tuple = i;
+    }
+  }
+  mult = tuple;
+  lsx_debug("i/o=%.16g; %.12g:%i @ level %i tuple=%i", p->factor, last_stage.step.all / MULT32, divisor, p->level, tuple);
+  lsx_debug("%x.%x", last_stage.step.parts.integer, last_stage.step.parts.fraction);
+
   p->input_stage_num = -p->upsample;
   p->output_stage_num = p->level;
   if (quality == Quick) {
@@ -281,7 +308,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     last_stage.pre_post = max(3, last_stage.step.parts.integer);
     last_stage.preload = last_stage.pre = 1;
   }
-  else if (last_stage.out_in_ratio != 2 || (p->upsample && quality == Low)) {
+  else if ((two_or_three != 3 && last_stage.out_in_ratio != 2 && !two_factors) || (p->upsample && quality == Low)) {
     poly_fir_t const * f;
     poly_fir1_t const * f1;
     int n = 4 * p->upsample + range_limit(quality, Medium, Very) - Medium;
@@ -297,7 +324,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     if (!last_stage.shared->poly_fir_coefs) {
       int num_taps = 0, phases = divisor == 1? (1 << f1->phase_bits) : divisor;
       raw_coef_t * coefs = lsx_design_lpf(
-          f->pass, f->stop, 1., sox_false, f->att, &num_taps, phases);
+          f->pass, f->stop, 1., sox_false, f->att, &num_taps, phases, -1.);
       assert(num_taps == f->num_coefs * phases - 1);
       last_stage.shared->poly_fir_coefs =
           prepare_coefs(coefs, f->num_coefs, phases, interp_order, mult);
@@ -322,22 +349,50 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     double bw = bandwidth? 1 - (1 - bandwidth / 100) / LSX_TO_3dB : f->bw;
     double min = 1 - (allow_aliasing? LSX_MAX_TBW0A : LSX_MAX_TBW0) / 100;
     assert((size_t)(quality - Low) < array_length(filters));
-    half_band_filter_init(shared, p->upsample, f->len, f->h, bw, att, mult, phase, allow_aliasing);
+    init_dft_filter(shared, p->upsample, f->len, f->h, bw, 1., (double)max(tuple, two_or_three), att, mult, phase, allow_aliasing);
     if (p->upsample) {
       pre_stage.fn = double_sample; /* Finish off setting up pre-stage */
-      pre_stage.preload = shared->half_band[1].post_peak >> 1;
-       /* Start setting up post-stage; TODO don't use dft for short filters */
-      if ((1 - p->factor) / (1 - bw) > 2)
-        half_band_filter_init(shared, 0, 0, NULL, max(p->factor, min), att, 1, phase, allow_aliasing);
-      else shared->half_band[0] = shared->half_band[1];
+      pre_stage.preload = shared->half_band[1].post_peak / tuple;
+      pre_stage.rem     = shared->half_band[1].post_peak % tuple;
+      pre_stage.tuple = tuple;
+      pre_stage.which = 1;
+      if (two_factors && divisor != tuple) {
+        int other = divisor / tuple;
+        ++p->output_stage_num;
+        init_dft_filter(shared, 0, 0, NULL, 1., (double)tuple, (double)divisor, att, other, phase, allow_aliasing);
+        last_stage.fn = double_sample;
+        last_stage.preload = shared->half_band[0].post_peak / other;
+        last_stage.rem     = shared->half_band[0].post_peak % other;
+        last_stage.tuple = other;
+        last_stage.which = 0;
+      }
+      else {
+        /* Start setting up post-stage; TODO don't use dft for short filters */
+        if ((1 - p->factor) / (1 - bw) > 2)
+          init_dft_filter(shared, 0, 0, NULL, max(p->factor, min), 1., 2., att, 1, phase, allow_aliasing);
+        else shared->half_band[0] = shared->half_band[1];
+        if (two_factors && factor == 2) {
+          ++p->output_stage_num;
+          last_stage.fn = half_sample;
+          last_stage.preload = shared->half_band[0].post_peak;
+          last_stage.tuple = 2;
+        } else {
+          post_stage.fn = half_sample;
+          post_stage.preload = shared->half_band[0].post_peak;
+          post_stage.tuple = 2;
+        }
+      }
     }
-    else if (p->level > 0 && p->output_stage_num > p->level) {
-      double pass = bw * divisor / factor / 2;
-      if ((1 - pass) / (1 - bw) > 2)
-        half_band_filter_init(shared, 1, 0, NULL, max(pass, min), att, 1, phase, allow_aliasing);
+    else {
+      if (p->level > 0 && p->output_stage_num > p->level) {
+        double pass = bw * divisor / factor / 2;
+        if ((1 - pass) / (1 - bw) > 2)
+          init_dft_filter(shared, 1, 0, NULL, max(pass, min), 1., 2., att, 1, phase, allow_aliasing);
+      }
+      post_stage.fn = half_sample;
+      post_stage.preload = shared->half_band[0].post_peak;
+      post_stage.tuple = two_or_three;
     }
-    post_stage.fn = half_sample;
-    post_stage.preload = shared->half_band[0].post_peak;
   }
   else if (quality == Low && !p->upsample) {    /* dft is slower here, so */
     post_stage.fn = half_sample_low;            /* use normal convolution */
@@ -349,6 +404,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     if (shared->half_band[1].num_taps) {
       s->fn = half_sample;
       s->preload = shared->half_band[1].post_peak;
+      s->tuple = 2;
       s->which = 1;
     }
     else *s = post_stage;
@@ -393,7 +449,7 @@ static sample_t const * rate_output(rate_t * p, sample_t * samples, size_t * n)
 static void rate_flush(rate_t * p)
 {
   fifo_t * fifo = &p->stages[p->output_stage_num].fifo;
-  size_t samples_out = p->samples_in / p->factor + .5;
+  uint64_t samples_out = p->samples_in / p->factor + .5;
   size_t remaining = samples_out - p->samples_out;
   sample_t * buff = calloc(1024, sizeof(*buff));
 
@@ -429,7 +485,7 @@ typedef struct {
   sox_rate_t      out_rate;
   int             quality;
   double          coef_interp, phase, bandwidth;
-  sox_bool        allow_aliasing;
+  sox_bool        allow_aliasing, old_behaviour;
   rate_t          rate;
   rate_shared_t   shared, * shared_ptr;
 } priv_t;
@@ -438,7 +494,7 @@ static int create(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *) effp->priv;
   int c;
-  char * dummy_p, * found_at, * opts = "+i:b:p:MILasqlmhv", * qopts = opts +12;
+  char * dummy_p, * found_at, * opts = "+i:b:p:MILaosqlmhv", * qopts = opts +13;
   lsx_getopt_t optstate;
   lsx_getopt_init(argc, argv, opts, NULL, lsx_getopt_flag_none, 1, &optstate);
 
@@ -453,8 +509,9 @@ static int create(sox_effect_t * effp, int argc, char **argv)
     case 'M': p->phase =  0; break;
     case 'I': p->phase = 25; break;
     case 'L': p->phase = 50; break;
-    case 's': p->bandwidth = 99; break;
     case 'a': p->allow_aliasing = sox_true; break;
+    case 'o': p->old_behaviour = sox_true; break;
+    case 's': p->bandwidth = 99; break;
     default: if ((found_at = strchr(qopts, c))) p->quality = found_at - qopts;
       else {lsx_fail("unknown option `-%c'", optstate.opt); return lsx_usage(effp);}
   }
@@ -493,7 +550,8 @@ static int start(sox_effect_t * effp)
   effp->out_signal.channels = effp->in_signal.channels;
   effp->out_signal.rate = out_rate;
   rate_init(&p->rate, p->shared_ptr, effp->in_signal.rate / out_rate,
-      p->quality, (int)p->coef_interp - 1, p->phase, p->bandwidth, p->allow_aliasing);
+      p->quality, (int)p->coef_interp - 1, p->phase, p->bandwidth,
+      p->allow_aliasing, p->old_behaviour);
   return SOX_SUCCESS;
 }
 
