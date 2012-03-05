@@ -290,9 +290,10 @@ double * lsx_design_lpf(
     sox_bool allow_aliasing,
     double att,     /* Stop-band attenuation in dB */
     int * num_taps, /* (Single phase.)  0: value will be estimated */
-    int k)          /* Number of phases; 0 for single-phase */
+    int k,          /* Number of phases; 0 for single-phase */
+    double beta)
 {
-  double tr_bw, beta;
+  double tr_bw;
 
   if (allow_aliasing)
     Fc += (Fc - Fp) * LSX_TO_3dB;
@@ -301,7 +302,8 @@ double * lsx_design_lpf(
 
   if (!*num_taps)
     *num_taps = lsx_lpf_num_taps(att, tr_bw, k);
-  beta = lsx_kaiser_beta(att);
+  if (beta < 0)
+    beta = lsx_kaiser_beta(att);
   if (k)
     *num_taps = *num_taps * k - 1;
   else k = 1;

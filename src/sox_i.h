@@ -109,7 +109,8 @@ double * lsx_design_lpf(
     sox_bool allow_aliasing,
     double att,     /* Stop-band attenuation in dB */
     int * num_taps, /* (Single phase.)  0: value will be estimated */
-    int k);         /* Number of phases; 0 for single-phase */
+    int k,          /* Number of phases; 0 for single-phase */
+    double beta);
 void lsx_fir_to_phase(double * * h, int * len,
     int * post_len, double phase0);
 #define LSX_TO_6dB .5869
