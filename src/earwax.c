@@ -10,7 +10,7 @@
  * listened to on headphones, and adds audio cues to move the soundstage from
  * inside your head (standard for headphones) to outside and in front of the
  * listener (standard for speakers). This makes the sound much easier to listen
- * to on headphones. See www.geocities.com/beinges for a full explanation.
+ * to on headphones.
  */
 
 #include "sox_i.h"
