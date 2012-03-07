@@ -7,7 +7,7 @@ Build-Depends: cdbs,
                debhelper (>= 7),
                ladspa-sdk,
                libao-dev,
-               libasound2-dev [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
+               libasound2-dev [linux-any],
                libavcodec-dev (>= 4:0.6.0),
                libavformat-dev,
                libavutil-dev,
@@ -19,17 +19,18 @@ Build-Depends: cdbs,
                libmp3lame-dev,
                libopencore-amrnb-dev,
                libopencore-amrwb-dev,
-               libpng12-dev,
+               libpng-dev,
                libpulse-dev,
                libsamplerate0-dev,
                libsndfile1-dev (>= 1.0.12),
+               libtwolame-dev,
                libvorbis-dev,
                libwavpack-dev
 Standards-Version: 3.9.1
 
 Package: sox
 Architecture: any
-Depends: libsox-fmt-alsa [!hurd-i386 !kfreebsd-i386 !kfreebsd-amd64] | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse,
+Depends: libsox-fmt-alsa [linux-any] | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse,
          libsox-fmt-base,
          ${misc:Depends},
          ${shlibs:Depends}
@@ -49,13 +50,13 @@ Description: Swiss army knife of sound processing
  (respectively provided by libsox-fmt-alsa, libsox-fmt-ao, libsox-fmt-oss and
  libsox-fmt-pulse). It also supports LADSPA plugins.
 
-Package: libsox1b
+Package: libsox2
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Recommends: libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse,
+Recommends: libsox-fmt-alsa [linux-any] | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse,
             libsox-fmt-base
-Conflicts: libsox0, libsox0a, libsox1
-Replaces: libsox1a
+Conflicts: libsox0, libsox0a, libsox1, libsox1a
+Replaces: libsox1b
 Suggests: libsox-fmt-all
 Description: SoX library of audio effects and processing
  SoX is the swiss army knife of sound processing.
@@ -84,7 +85,7 @@ Description: Minimal set of SoX format libraries
  MATLAB/GNU Octave, Portable Voice Format, AMR and Sound Forge Audio Format.
 
 Package: libsox-fmt-alsa
-Architecture: alpha amd64 arm armeb armel armhf hppa i386 ia64 lpia m32r m68k mips mipsel powerpc ppc64 s390 s390x sh3 sh3eb sh4 sh4eb sparc
+Architecture: linux-any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: SoX alsa format I/O library
  SoX is the swiss army knife of sound processing.
@@ -119,8 +120,9 @@ Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: SoX MP3 format library
  SoX is the swiss army knife of sound processing.
  .
- This package contains the SoX MP3 format library.
- Read support by libmad. Write support by libmp3lame.
+ This package contains the SoX MP2 and MP3 format library.
+ Read support by libmad. MP2 and MP3 write support by libtwolame and
+ libmp3lame respectively.
  .
  libmad: http://www.underbit.com/products/mad/
  lame: http://lame.sourceforge.net/
@@ -148,7 +150,7 @@ Description: SoX PulseAudio format I/O library
 
 Package: libsox-fmt-all
 Architecture: any
-Depends: libsox-fmt-alsa [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
+Depends: libsox-fmt-alsa [linux-any],
          libsox-fmt-ao,
          libsox-fmt-base,
          libsox-fmt-ffmpeg,
@@ -164,8 +166,8 @@ Description: All SoX format libraries
 Package: libsox-dev
 Architecture: any
 Section: libdevel
-Depends: libsox-fmt-all (=${binary:Version}),
-         libsox1b (=${binary:Version}),
+Depends: libsox-fmt-all (= ${binary:Version}),
+         libsox2 (= ${binary:Version}),
          ${misc:Depends}
 Description: Development files for the SoX library
  SoX is the swiss army knife of sound processing.
