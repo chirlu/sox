@@ -19,7 +19,7 @@ die "$rules exist.\n" unless( -e $rules );
 # Get current version
 open( FH, $file );
 while( <FH> ) {
-    if( $_ =~ m/AC_INIT\(SoX, (\d+\.\d+\.\d+),/ ) {
+    if( $_ =~ m/AC_INIT\(SoX, (\d+\.\d+\.\d+)(git)?,/ ) {
         $version = $1;
         last;
     }
@@ -29,11 +29,13 @@ close( FH );
 die "Can't determine version number.\n" unless( $version );
 
 # Update debian/changelog
+my $date = `date +%Y%m%d`;
+chop($date);
 open( FH, $changelog );
 @content = <FH>;
 close( FH );
 die "Can't modify $changelog!\n"
-  unless $content[0] =~ s/^(sox \()\d+\.\d+\.\d+(\+cvs-1\).*)$/$1$version$2/;
+  unless $content[0] =~ s/^(sox \()\d+\.\d+\.\d+(-\d+\+git)\d{8}(-1\).*)$/$1$version$2$date$3/;
 
 open( FH, "> $changelog" );
 print FH @content;

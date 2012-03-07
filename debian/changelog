@@ -1,10 +1,23 @@
-sox (14.3.2-4cvs1) UNRELEASED; urgency=low
+sox (14.4.1-0+git20120306-1) UNRELEASED; urgency=low
 
-  * CVS Version.
+  * Git Version.
+
+ -- Pascal Giard <evilynux@gmail.com>  Sat, 06 Mar 2012 23:00:01 -0500
+
+sox (14.4.0-1) unstable; urgency=low
+
+  * New upstream release.
+    - sox_format_quit() resets format counts (closes: #660552).
+    - Added support for MP2 via TwoLAME.
   * [debian/patches/01_transition_to_libav.patch]:
     - Removed, fixed upstream.
+  * [debian/control]:
+    - Use arch wildcards and added missing whitespaces (closes: #651754).
+    - Changed Build-Dep on libpng-dev instead of libpng12-dev (closes: #662509).
+    - Bumped libsox1b to libsox2, interface changes.
+    - Added Build-Dep on libtwolame-dev and updated libsox-fmt-mp3 description.
 
- -- Pascal Giard <evilynux@gmail.com>  Sat, 10 Dec 2011 23:53:51 -0500
+ -- Pascal Giard <pascal@debian.org>  Tue, 06 Mar 2012 22:49:42 -0500
 
 sox (14.3.2-3) unstable; urgency=low
 
@@ -92,7 +105,7 @@ sox (14.3.1-1) unstable; urgency=medium
     - Removed formats now in libsox.
   * [debian/rules]:
     - Enable amr-nb and amr-wb as there is now an implementation in main.
-	
+
  -- Pascal Giard <pascal@debian.org>  Wed, 05 May 2010 14:33:18 -0400
 
 sox (14.3.0-1.1) unstable; urgency=low
@@ -129,7 +142,7 @@ sox (14.3.0-1) unstable; urgency=low
       4.14 of the Debian Policy Manual (closes: #522548).
   * [debian/watch]:
     - Bump version to 3 as recommended by uscan manpage.
-  
+
  -- Pascal Giard <pascal@debian.org>  Sat, 04 Jul 2009 12:55:41 -0400
 
 sox (14.2.0-2) unstable; urgency=low
@@ -199,7 +212,7 @@ sox (14.1.0-1) unstable; urgency=medium
      debian/libsox-fmt-flac.install, debian/libsox-fmt-flac.dirs,
      debian/libsox-fmt-ogg.install, debian/libsox-fmt-ogg.dirs]:
     - Removed, merged gsm, libsndfile, flac and ogg in libsox-fmt-base.
-  
+
  -- Pascal Giard <pascal@debian.org>  Thu, 31 Jul 2008 08:12:08 -0400
 
 sox (14.0.1-2) unstable; urgency=low
@@ -228,7 +241,7 @@ sox (14.0.1-1) unstable; urgency=low
     - Bumped Standards-Version to 3.7.3.
   * [debian/rules]: Fix unoptimized build by using CFLAGS instead of
     DEB_CONFIGURE_SCRIPT_ENV (closes: #461001).
-    
+
  -- Pascal Giard <pascal@debian.org>  Sat, 09 Feb 2008 08:56:17 -0500
 
 sox (14.0.0-5) unstable; urgency=low
@@ -296,7 +309,7 @@ sox (14.0.0-1) unstable; urgency=low
     - Removed LDFLAGS -Wl,-z,defs as upstream is now doing it.
     - Added DEB_DH_MAKESHLIBS_ARGS -Xfmt to avoid useless calls to ldconfig.
     - Fixed lintian binary-or-shlib-defines-rpath warnings with configure flag.
-	
+
  -- Pascal Giard <pascal@debian.org>  Wed, 12 Sep 2007 12:10:38 -0400
 
 sox (13.0.0-1) unstable; urgency=low
@@ -314,7 +327,7 @@ sox (13.0.0-1) unstable; urgency=low
       libsndfile1-dev.
     - Added !kfreebsd-amd64 to libasound2-dev (closes: #361487).
   * [debian/patches]: No more patches, everything is fixed upstream.
-  * [debian/rules]: 
+  * [debian/rules]:
     - Added -D_REENTRANT as required by policy on libraries.
     - Added -Wl,-z,defs to enforce symbol resolution at build time.
     - Disabled shared library for now, see README.Debian.
@@ -331,11 +344,11 @@ sox (12.18.2-2) unstable; urgency=low
       draining. Thanks to Chris Bagwell <chris@cnpbagwell.com>.
   * [debian/copyright]: Removed reminiscence of the old version.
   * [debian/patches/03_fix_manpage_typos.patch]:
-    - Fixed typos in sox.1 and play.1 manpages. Thanks to 
+    - Fixed typos in sox.1 and play.1 manpages. Thanks to
       A. Costa <agcosta@gis.net> (closes: #404290, #404288).
 
  -- Pascal Giard <pascal@debian.org>  Sat, 23 Dec 2006 14:09:53 -0500
-	
+
 sox (12.18.2-1) unstable; urgency=low
 
   * Changes by Pascal Giard <pascal@debian.org>
@@ -353,7 +366,7 @@ sox (12.17.9-1) unstable; urgency=low
 
   * New upstream version
   * Added ALSA support
-  * Use play script from version 12.17.18 with multiple file support, I 
+  * Use play script from version 12.17.18 with multiple file support, I
     do not dare to switch to the new behaviour and ALSA by default yet.
 
  -- Guenter Geiger (Debian/GNU) <geiger@debian.org>  Thu, 15 Dec 2005 12:47:16 +0100
@@ -483,7 +496,7 @@ sox (12.17.4-4) unstable; urgency=low
   * added libmad0 and libasound2-dev  build depend
 
  -- Guenter Geiger (Debian/GNU) <geiger@debian.org>  Wed, 19 Mar 2003 13:53:36 +0100
- 
+
 sox (12.17.4-3) unstable; urgency=low
 
   * copied new config.guess, config.sub (closes: #185240)
@@ -498,27 +511,27 @@ sox (12.17.4-2) unstable; urgency=low
 
 sox (12.17.4-1) unstable; urgency=low
 
-  * new upstream version 
-  * Sox crashes on specific input problem fixed (closes: #166440) 
+  * new upstream version
+  * Sox crashes on specific input problem fixed (closes: #166440)
   * rec filename problem fixed (closes: #175072)
   * Dependency problem seems to be gone (closes: #154951)
 
  -- Guenter Geiger (Debian/GNU) <geiger@debian.org>  Thu, 27 Feb 2003 13:26:15 +0100
- 
+
 sox (12.17.3-6) unstable; urgency=low
-  
+
   * fixed audio rate bug (closes: #164033)
 
  -- Guenter Geiger (Debian/GNU) <geiger@debian.org>  Fri, 11 Oct 2002 13:11:24 +0200
- 
+
 sox (12.17.3-5) unstable; urgency=low
 
   * added Replaces to sox-dev, able to overwrite old sox files.
   * patched play (vadim_t _a_ teleline.es) (closes: 163726) (closes: 151344)
-  * patched rec (vadim_t _a_ teleline.es) (closes: 163728)  
+  * patched rec (vadim_t _a_ teleline.es) (closes: 163728)
   * removed the user path (@PREFIX@) from play.in (closes: 146650)
   * updated config.guess and config.sub (closes: 155228)
-  * manpage states now that "-e" is only useful with stat effect 
+  * manpage states now that "-e" is only useful with stat effect
     (closes: 121156)
   * Trying to convert raw files now prints more verbose error message
     (closes: 121798)
@@ -530,9 +543,9 @@ sox (12.17.3-5) unstable; urgency=low
 sox (12.17.3-4.1) unstable; urgency=low
 
   * NMU to fix breakage caused by libvorbis0 split.
-  
+
  -- Christopher L Cheney <ccheney@debian.org>  Mon, 29 Jul 2002 23:00:00 -0500
-   
+
 sox (12.17.3-4) unstable; urgency=low
 
   * fixed the rec script (closes: #143262)
@@ -610,13 +623,13 @@ sox (12.17.1-3) unstable; urgency=low
 
 sox (12.17.1-2) unstable; urgency=low
 
-  * fixed rec link (closes: #93264), fixed bug in .au files (closes: #93173) 
+  * fixed rec link (closes: #93264), fixed bug in .au files (closes: #93173)
 
  -- Guenter Geiger <geiger@debian.org>  Mon, 9 Apr 2001 15:26:33 +0200
 
 sox (12.17.1-1) unstable; urgency=low
 
-  * new upstream version (closes: #92969, #61788, #71629, #86162, 
+  * new upstream version (closes: #92969, #61788, #71629, #86162,
     #91332, #84265, #85181)
 
  -- Guenter Geiger <geiger@debian.org>  Fri, 6 Apr 2001 13:03:23 +0200
@@ -695,7 +708,7 @@ sox (12.15-1) unstable; urgency=low
 sox (12.14-2) unstable; urgency=low
 
   * Close Bug#23733: sox: play fails, bug in argument parsing (getopt)
-  
+
  -- Geiger Guenter <geiger@iem.mhsg.ac.at>  Thu, 25 Jun 1998 10:00:00 +0100
 
 sox (12.14-1) unstable; urgency=low
@@ -722,7 +735,7 @@ sox (11gamma-cb3-4) unstable; urgency=low
 sox (11gamma-cb3-3) unstable; urgency=low
 
   * Closes bugs #15923 sox: -v option is ignored and
-    #14103 (sox dumps core) 
+    #14103 (sox dumps core)
 
  -- Geiger Guenter <geiger@iem.mhsg.ac.at>  Sun, 14 Dec 1997 13:25:00 +0100
 
@@ -730,24 +743,24 @@ sox (11gamma-cb3-3) unstable; urgency=low
 sox (11gamma-cb3-2) unstable; urgency=low
 
   * Closes bugs #15138 (Uploaded sox 11gamma-cb3-1.1 (source i386) to master)
-    #8456 sox: problem with -e option 
+    #8456 sox: problem with -e option
 
  -- Geiger Guenter <geiger@iem.mhsg.ac.at>  Mon, 1 Dec 1997 13:00:00 +0100
 
 
 sox (11gamma-cb3-1) unstable; urgency=low
 
-  * New Maintainer release. 
+  * New Maintainer release.
 
   * Heavily patched to get rid of the use of long as 32 bit integer.
 
  -- Geiger Guenter <geiger@iem.mhsg.ac.at>  Tue, 14 Oct 1997 15:48:47 +0100
-  
+
 
 sox (11gamma-cb3-0.0) unstable; urgency=low
 
   * Non maintainer release. This package hasn't been updated since May '96.
-  * New upstream version. New source format. Pristine source. Libc6. A 
+  * New upstream version. New source format. Pristine source. Libc6. A
     complete repackaging, in fact.
   * Included 2 more doc files in the package.
   * Closes bugs #9451, #11724.
