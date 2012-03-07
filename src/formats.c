@@ -186,8 +186,8 @@ unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample)
     case SOX_ENCODING_LPC10:      return !bits_per_sample? 16: 0;
 
     case SOX_ENCODING_WAVPACKF:
-    case SOX_ENCODING_FLOAT:      return bits_per_sample == 32 ? 24: bits_per_sample == 64 ? 53: 0;
-    case SOX_ENCODING_FLOAT_TEXT: return !bits_per_sample? 53: 0;
+    case SOX_ENCODING_FLOAT:      return bits_per_sample == 32 ? 25: bits_per_sample == 64 ? 54: 0;
+    case SOX_ENCODING_FLOAT_TEXT: return !bits_per_sample? 54: 0;
 
     case SOX_ENCODINGS:
     case SOX_ENCODING_UNKNOWN:    break;
