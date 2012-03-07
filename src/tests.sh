@@ -68,7 +68,7 @@ getFormat () {
   case $1 in
     al )  formatText="alaw" ;;
     ul )  formatText="ulaw" ;;
-    wavu8)formatText="u8 in wav";  formatFlags="-u -1"; formatExt="wav" ;;
+    wavu8)formatText="u8 in wav";  formatFlags="-e unsigned -b 8"; formatExt="wav" ;;
     s1X ) formatText="s8 (swap bits)"; formatExt="s8"; formatFlags="-X" ;;
     s1N ) formatText="s8 (swap nibbles)"; formatExt="s8"; formatFlags="-N" ;;
     s1XN) formatText="s8 (swap nibbles & bits)"; formatExt="s8"; formatFlags="-X -N" ;;
