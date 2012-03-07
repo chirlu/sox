@@ -122,7 +122,7 @@ Misc:
 Other bug fixes:
 
   o Fix several memory leaks. [3309913] (Jin-Myung Won and Ulrich Klauer)
-  o Fixed crashes in apps that call sox_format_init/quit() mujltiple times.
+  o Fixed crashes in apps that call sox_format_init/quit() multiple times.
    (cbagwell)
 
 Internal improvements:
