@@ -209,15 +209,43 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
   return SOX_SUCCESS;
 }
 
+/* An effect's output buffer (effp->obuf) generally has this layout:
+ *   |. . . A1A2A3B1B2B3C1C2C3. . . . . . . . . . . . . . . . . . |
+ *    ^0    ^obeg             ^oend                               ^bufsiz
+ * (where A1 is the first sample of channel 1, A2 the first sample of
+ * channel 2, etc.), i.e. the channels are interleaved.
+ * However, while sox_flow_effects() is running, output buffers are
+ * adapted to how the following effect expects its input, to avoid
+ * back-and-forth conversions.  If the following effect operates on
+ * each of several channels separately (flows > 1), the layout is
+ * changed to this uninterleaved form:
+ *   |. A1B1C1. . . . . . . A2B2C2. . . . . . . A3B3C3. . . . . . |
+ *    ^0    ^obeg             ^oend                               ^bufsiz
+ *    <--- channel 1 ----><--- channel 2 ----><--- channel 3 ---->
+ * The buffer is logically subdivided into channel buffers of size
+ * bufsiz/flows each, starting at offsets 0, bufsiz/flows,
+ * 2*(bufsiz/flows) etc.  Within the channel buffers, the data starts
+ * at position obeg/flows and ends before oend/flows.  In case bufsiz
+ * is not evenly divisible by flows, there will be an unused area at
+ * the very end of the output buffer.
+ * The interleave() and deinterleave() functions convert between these
+ * two representations.
+ */
+static void interleave(size_t flows, size_t length, sox_sample_t *from,
+    size_t bufsiz, size_t offset, sox_sample_t *to);
+static void deinterleave(size_t flows, size_t length, sox_sample_t *from,
+    sox_sample_t *to, size_t bufsiz, size_t offset);
+
 static int flow_effect(sox_effects_chain_t * chain, size_t n)
 {
-  sox_effect_t * effp1 = &chain->effects[n - 1][0];
-  sox_effect_t * effp = &chain->effects[n][0];
+  sox_effect_t *effp1 = chain->effects[n - 1];
+  sox_effect_t *effp = chain->effects[n];
   int effstatus = SOX_SUCCESS;
-  size_t i, f = 0;
-  const sox_sample_t *ibuf;
+  size_t f = 0;
   size_t idone = effp1->oend - effp1->obeg;
   size_t obeg = sox_globals.bufsiz - effp->oend;
+  sox_bool il_change = (effp->flows == 1) !=
+      (chain->length == n + 1 || chain->effects[n+1]->flows == 1);
 #if DEBUG_EFFECTS_CHAIN
   size_t pre_idone = idone;
   size_t pre_odone = obeg;
@@ -225,20 +253,20 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
 
   if (effp->flows == 1) {     /* Run effect on all channels at once */
     idone -= idone % effp->in_signal.channels;
-    effstatus = effp->handler.flow(effp, &effp1->obuf[effp1->obeg],
-                                   &effp->obuf[effp->oend], &idone, &obeg);
+    effstatus = effp->handler.flow(effp, effp1->obuf + effp1->obeg,
+                    il_change ? chain->il_buf : effp->obuf + effp->oend,
+                    &idone, &obeg);
     if (obeg % effp->out_signal.channels != 0) {
       lsx_fail("multi-channel effect flowed asymmetrically!");
       effstatus = SOX_EOF;
     }
+    if (il_change)
+      deinterleave(chain->effects[n+1]->flows, obeg, chain->il_buf,
+          effp->obuf, sox_globals.bufsiz, effp->oend);
   } else {               /* Run effect on each channel individually */
-    sox_sample_t *obuf = &effp->obuf[effp->oend];
+    sox_sample_t *obuf = il_change ? chain->il_buf : effp->obuf;
+    size_t flow_offs = sox_globals.bufsiz/effp->flows;
     size_t idone_last = 0, odone_last = 0; /* Initialised to prevent warning */
-
-    ibuf = &effp1->obuf[effp1->obeg];
-    for (i = 0; i < idone; i += effp->flows)
-      for (f = 0; f < effp->flows; ++f)
-        chain->ibufc[f][i / effp->flows] = *ibuf++;
 
 #ifdef HAVE_OPENMP
     if (sox_globals.use_threads && effp->flows > 1)
@@ -248,7 +276,9 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
         size_t idonec = idone / effp->flows;
         size_t odonec = obeg / effp->flows;
         int eff_status_c = effp->handler.flow(&chain->effects[n][f],
-            chain->ibufc[f], chain->obufc[f], &idonec, &odonec);
+            effp1->obuf + f*flow_offs + effp1->obeg/effp->flows,
+            obuf + f*flow_offs + effp->oend/effp->flows,
+            &idonec, &odonec);
         if (!f) {
           idone_last = idonec;
           odone_last = odonec;
@@ -265,7 +295,9 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
         size_t idonec = idone / effp->flows;
         size_t odonec = obeg / effp->flows;
         int eff_status_c = effp->handler.flow(&chain->effects[n][f],
-            chain->ibufc[f], chain->obufc[f], &idonec, &odonec);
+            effp1->obuf + f*flow_offs + effp1->obeg/effp->flows,
+            obuf + f*flow_offs + effp->oend/effp->flows,
+            &idonec, &odonec);
         if (f && (idonec != idone_last || odonec != odone_last)) {
           lsx_fail("flowed asymmetrically!");
           effstatus = SOX_EOF;
@@ -278,18 +310,22 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
       }
     }
 
-    for (i = 0; i < odone_last; ++i)
-      for (f = 0; f < effp->flows; ++f)
-        *obuf++ = chain->obufc[f][i];
-
     idone = effp->flows * idone_last;
     obeg = effp->flows * odone_last;
+
+    if (il_change)
+      interleave(effp->flows, obeg, chain->il_buf, sox_globals.bufsiz,
+          effp->oend, effp->obuf + effp->oend);
   }
   effp1->obeg += idone;
   if (effp1->obeg == effp1->oend)
     effp1->obeg = effp1->oend = 0;
-  else if (effp1->oend - effp1->obeg < effp->imin ) { /* Need to refill? */
-    memmove(effp1->obuf, &effp1->obuf[effp1->obeg], (effp1->oend - effp1->obeg) * sizeof(*effp1->obuf));
+  else if (effp1->oend - effp1->obeg < effp->imin) { /* Need to refill? */
+    size_t flow_offs = sox_globals.bufsiz/effp->flows;
+    for (f = 0; f < effp->flows; ++f)
+      memcpy(effp1->obuf + f * flow_offs,
+          effp1->obuf + f * flow_offs + effp1->obeg/effp->flows,
+          (effp1->oend - effp1->obeg)/effp->flows * sizeof(*effp1->obuf));
     effp1->oend -= effp1->obeg;
     effp1->obeg = 0;
   }
@@ -310,27 +346,37 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
 /* The same as flow_effect but with no input */
 static int drain_effect(sox_effects_chain_t * chain, size_t n)
 {
-  sox_effect_t * effp = &chain->effects[n][0];
+  sox_effect_t *effp = chain->effects[n];
   int effstatus = SOX_SUCCESS;
-  size_t i, f;
+  size_t f = 0;
   size_t obeg = sox_globals.bufsiz - effp->oend;
+  sox_bool il_change = (effp->flows == 1) !=
+      (chain->length == n + 1 || chain->effects[n+1]->flows == 1);
 #if DEBUG_EFFECTS_CHAIN
   size_t pre_odone = obeg;
 #endif
 
   if (effp->flows == 1) { /* Run effect on all channels at once */
-    effstatus = effp->handler.drain(effp, &effp->obuf[effp->oend], &obeg);
+    effstatus = effp->handler.drain(effp,
+                    il_change ? chain->il_buf : effp->obuf + effp->oend,
+                    &obeg);
     if (obeg % effp->out_signal.channels != 0) {
       lsx_fail("multi-channel effect drained asymmetrically!");
       effstatus = SOX_EOF;
     }
+    if (il_change)
+      deinterleave(chain->effects[n+1]->flows, obeg, chain->il_buf,
+          effp->obuf, sox_globals.bufsiz, effp->oend);
   } else {                       /* Run effect on each channel individually */
-    sox_sample_t *obuf = &effp->obuf[effp->oend];
+    sox_sample_t *obuf = il_change ? chain->il_buf : effp->obuf;
+    size_t flow_offs = sox_globals.bufsiz/effp->flows;
     size_t odone_last = 0; /* Initialised to prevent warning */
 
     for (f = 0; f < effp->flows; ++f) {
       size_t odonec = obeg / effp->flows;
-      int eff_status_c = effp->handler.drain(&chain->effects[n][f], chain->obufc[f], &odonec);
+      int eff_status_c = effp->handler.drain(&chain->effects[n][f],
+          obuf + f*flow_offs + effp->oend/effp->flows,
+          &odonec);
       if (f && (odonec != odone_last)) {
         lsx_fail("drained asymmetrically!");
         effstatus = SOX_EOF;
@@ -341,10 +387,11 @@ static int drain_effect(sox_effects_chain_t * chain, size_t n)
         effstatus = SOX_EOF;
     }
 
-    for (i = 0; i < odone_last; ++i)
-      for (f = 0; f < effp->flows; ++f)
-        *obuf++ = chain->obufc[f][i];
-    obeg = f * odone_last;
+    obeg = effp->flows * odone_last;
+
+    if (il_change)
+      interleave(effp->flows, obeg, chain->il_buf, sox_globals.bufsiz,
+          effp->oend, effp->obuf + effp->oend);
   }
   if (!obeg)   /* This is the only thing that drain has and flow hasn't */
     effstatus = SOX_EOF;
@@ -365,30 +412,43 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
 {
   int flow_status = SOX_SUCCESS;
   size_t e, source_e = 0;               /* effect indices */
-  size_t f, max_flows = 0;
+  size_t max_flows = 0;
   sox_bool draining = sox_true;
 
   for (e = 0; e < chain->length; ++e) {
-    chain->effects[e][0].obuf = lsx_realloc(chain->effects[e][0].obuf,
-        sox_globals.bufsiz * sizeof(chain->effects[e][0].obuf[0]));
-      /* Possibly there is already a buffer, if this is a used effect;
-         it may still contain samples in that case. */
+    sox_effect_t *effp = chain->effects[e];
+    effp->obuf =
+        lsx_realloc(effp->obuf, sox_globals.bufsiz * sizeof(*effp->obuf));
       /* Memory will be freed by sox_delete_effect() later. */
-    max_flows = max(max_flows, chain->effects[e][0].flows);
+      /* Possibly there was already a buffer, if this is a used effect;
+         it may still contain samples in that case. */
+      if (effp->oend > sox_globals.bufsiz) {
+        lsx_warn("buffer size insufficient; buffered samples were dropped");
+        /* can only happen if bufsize has been reduced since the last run */
+        effp->obeg = effp->oend = 0;
+      }
+    max_flows = max(max_flows, effp->flows);
   }
-  if (max_flows == 1) /* don't need interleave buffers */
-    max_flows = 0;
-  chain->ibufc = lsx_calloc(max_flows, sizeof(*chain->ibufc));
-  chain->obufc = lsx_calloc(max_flows, sizeof(*chain->obufc));
-  for (f = 0; f < max_flows; ++f) {
-    chain->ibufc[f] = lsx_calloc(sox_globals.bufsiz / 2, sizeof(chain->ibufc[f][0]));
-    chain->obufc[f] = lsx_calloc(sox_globals.bufsiz / 2, sizeof(chain->obufc[f][0]));
+  if (max_flows > 1) /* might need interleave buffer */
+    chain->il_buf = lsx_malloc(sox_globals.bufsiz * sizeof(sox_sample_t));
+  else
+    chain->il_buf = NULL;
+
+  /* Go through the effects, and if there are samples in one of the
+     buffers, deinterleave it (if necessary).  */
+  for (e = 0; e + 1 < chain->length; e++) {
+    sox_effect_t *effp = chain->effects[e];
+    if (effp->oend > effp->obeg && chain->effects[e+1]->flows > 1) {
+      sox_sample_t *sw = chain->il_buf; chain->il_buf = effp->obuf; effp->obuf = sw;
+      deinterleave(chain->effects[e+1]->flows, effp->oend - effp->obeg,
+          chain->il_buf, effp->obuf, sox_globals.bufsiz, effp->obeg);
+    }
   }
 
   e = chain->length - 1;
   while (source_e < chain->length) {
-#define have_imin (e > 0 && e < chain->length && chain->effects[e - 1][0].oend - chain->effects[e - 1][0].obeg >= chain->effects[e][0].imin)
-    size_t osize = chain->effects[e][0].oend - chain->effects[e][0].obeg;
+#define have_imin (e > 0 && e < chain->length && chain->effects[e - 1]->oend - chain->effects[e - 1]->obeg >= chain->effects[e]->imin)
+    size_t osize = chain->effects[e]->oend - chain->effects[e]->obeg;
     if (e == source_e && (draining || !have_imin)) {
       if (drain_effect(chain, e) == SOX_EOF) {
         ++source_e;
@@ -401,7 +461,7 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
       source_e = e;
       draining = sox_true;
     }
-    if (e < chain->length && chain->effects[e][0].oend - chain->effects[e][0].obeg > osize) /* False for output */
+    if (e < chain->length && chain->effects[e]->oend - chain->effects[e]->obeg > osize) /* False for output */
       ++e;
     else if (e == source_e)
       draining = sox_true;
@@ -416,13 +476,19 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
     }
   }
 
-  for (f = 0; f < max_flows; ++f) {
-    free(chain->ibufc[f]);
-    free(chain->obufc[f]);
+  /* If an effect's output buffer still has samples, and if it is
+     uninterleaved, then re-interleave it. Necessary since it might
+     be reused, and at that time possibly followed by an MCHAN effect. */
+  for (e = 0; e + 1 < chain->length; e++) {
+    sox_effect_t *effp = chain->effects[e];
+    if (effp->oend > effp->obeg && chain->effects[e+1]->flows > 1) {
+      sox_sample_t *sw = chain->il_buf; chain->il_buf = effp->obuf; effp->obuf = sw;
+      interleave(chain->effects[e+1]->flows, effp->oend - effp->obeg,
+          chain->il_buf, sox_globals.bufsiz, effp->obeg, effp->obuf);
+    }
   }
-  free(chain->obufc);
-  free(chain->ibufc);
 
+  free(chain->il_buf);
   return flow_status;
 }
 
@@ -549,4 +615,51 @@ sox_effect_handler_t const * sox_find_effect(char const * name)
       return eh;                 /* Found it. */
   }
   return NULL;
+}
+
+
+/*----------------------------- Helper functions -----------------------------*/
+
+/* interleave() parameters:
+ *   flows: number of samples per wide sample
+ *   length: number of samples to copy
+ *     [pertaining to the (non-interleaved) source buffer:]
+ *   from: start address
+ *   bufsiz: total size
+ *   offset: position at which to start reading
+ *     [pertaining to the (interleaved) destination buffer:]
+ *   to: start address
+ */
+static void interleave(size_t flows, size_t length, sox_sample_t *from,
+    size_t bufsiz, size_t offset, sox_sample_t *to)
+{
+  size_t i, f;
+  size_t wide_samples = length/flows;
+  size_t flow_offs = bufsiz/flows;
+  from += offset/flows;
+  for (i = 0; i < wide_samples; i++)
+    for (f = 0; f < flows; f++)
+      *to++ = from[f*flow_offs + i];
+}
+
+/* deinterleave() parameters:
+ *   flows: number of samples per wide sample
+ *   length: number of samples to copy
+ *     [pertaining to the (interleaved) source buffer:]
+ *   from: start address
+ *     [pertaining to the (non-interleaved) destination buffer:]
+ *   to: start address
+ *   bufsiz: total size
+ *   offset: position at which to start writing
+ */
+static void deinterleave(size_t flows, size_t length, sox_sample_t *from,
+    sox_sample_t *to, size_t bufsiz, size_t offset)
+{
+  size_t i, f;
+  size_t wide_samples = length/flows;
+  size_t flow_offs = bufsiz/flows;
+  to += offset/flows;
+  for (i = 0; i < wide_samples; i++)
+    for (f = 0; f < flows; f++)
+      to[f*flow_offs + i] = *from++;
 }
