@@ -37,12 +37,13 @@
   #include <magic.h>
 #endif
 
-#define AUTO_DETECT_SIZE 4096
+#define PIPE_AUTO_DETECT_SIZE 256 /* Only as much as we can rewind a pipe */
+#define AUTO_DETECT_SIZE 4096     /* For seekable file, so no restriction */
 
 static char const * auto_detect_format(sox_format_t * ft, char const * ext)
 {
   char data[AUTO_DETECT_SIZE];
-  size_t len = lsx_readbuf(ft, data, sizeof(data));
+  size_t len = lsx_readbuf(ft, data, ft->seekable? sizeof(data) : PIPE_AUTO_DETECT_SIZE);
   #define CHECK(type, p2, l2, d2, p1, l1, d1) if (len >= p1 + l1 && \
       !memcmp(data + p1, d1, (size_t)l1) && !memcmp(data + p2, d2, (size_t)l2)) return #type;
   CHECK(voc   , 0, 0, ""     , 0, 20, "Creative Voice File\x1a")
@@ -100,7 +101,7 @@ static char const * auto_detect_format(sox_format_t * ft, char const * ext)
         magic_load(magic, NULL);
     }
     if (magic)
-      filetype = magic_buffer(magic, data, sizeof(data));
+      filetype = magic_buffer(magic, data, len);
     if (filetype && strncmp(filetype, "application/octet-stream", (size_t)24) &&
           !lsx_strends(filetype, "/unknown") &&
           strncmp(filetype, "text/plain", (size_t)10) )
@@ -406,8 +407,8 @@ static void UNUSED rewind_pipe(FILE * fp)
 /* _FSTDIO is for Torek stdio (i.e. most BSD-derived libc's)
  * In theory, we no longer need to check _NEWLIB_VERSION or __APPLE__ */
 #if defined _FSTDIO || defined _NEWLIB_VERSION || defined __APPLE__
-  fp->_p -= AUTO_DETECT_SIZE;
-  fp->_r += AUTO_DETECT_SIZE;
+  fp->_p -= PIPE_AUTO_DETECT_SIZE;
+  fp->_r += PIPE_AUTO_DETECT_SIZE;
 #elif defined __GLIBC__
   fp->_IO_read_ptr = fp->_IO_read_base;
 #elif defined _MSC_VER || defined __MINGW_H || defined _ISO_STDIO_ISO_H
@@ -481,7 +482,7 @@ static sox_format_t * open_read(
     }
 #ifndef NO_REWIND_PIPE
     else if (!(ft->handler.flags & SOX_FILE_NOSTDIO) &&
-        input_bufsiz >= AUTO_DETECT_SIZE) {
+        input_bufsiz >= PIPE_AUTO_DETECT_SIZE) {
       filetype = auto_detect_format(ft, lsx_find_file_extension(path));
       rewind_pipe(ft->fp);
       ft->tell_off = 0;
