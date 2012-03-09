@@ -7,6 +7,10 @@ sox-11gamma, followed by a list of prior authors and features.
 sox-14.4.1	20xx-xx-xx
 ----------
 
+File formats:
+
+  o Fix pipe file-type detection regression. (robs)
+
 
 sox-14.4.0	2012-03-04
 ----------
