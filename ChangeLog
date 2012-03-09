@@ -4,7 +4,7 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma, followed by a list of prior authors and features.
 
-sox-14.4.1	20xx-xx-xx
+sox-14.4.2	20xx-xx-xx
 ----------
 
 Previously deprecated features that have been removed in this release:
@@ -23,6 +23,10 @@ Previously deprecated features (to be removed in future):
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
   -------  ----------------------  ----------------------  -------
   14.4.0   E mixer                 remix                   2013-03-04
+
+
+sox-14.4.1	20xx-xx-xx
+----------
 
 
 sox-14.4.0	2012-03-04
