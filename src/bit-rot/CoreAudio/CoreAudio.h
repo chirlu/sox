@@ -158,7 +158,12 @@ enum {
 };
 
 enum {
-  kAudioHardwareNoError = 0
+  kAudioHardwareNoError = 0,
+  noErr = kAudioHardwareNoError
+};
+
+enum {
+  false
 };
 
 typedef double Float64;
@@ -239,6 +244,10 @@ typedef OSStatus(*AudioDeviceIOProc) (AudioDeviceID inDevice,
 
 
 OSStatus AudioHardwareGetProperty(AudioHardwarePropertyID inPropertyID,
+                                  UInt32 * ioPropertyDataSize,
+                                  void *outPropertyData);
+
+OSStatus AudioHardwareGetPropertyInfo(AudioHardwarePropertyID inPropertyID,
                                   UInt32 * ioPropertyDataSize,
                                   void *outPropertyData);
 

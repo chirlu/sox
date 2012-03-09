@@ -16,6 +16,7 @@
 #define WINAPI
 #define WIN_BOOL int
 #define WORD uint16_t
+typedef char GUID[16];
 
 enum {
   FALSE,

@@ -38,6 +38,7 @@
 #cmakedefine HAVE_SNDFILE             1
 #cmakedefine HAVE_SNDFILE_1_0_18      1
 #cmakedefine HAVE_SNDIO               1
+#cmakedefine HAVE_SPEEXDSP            1
 #cmakedefine HAVE_STDINT_H            1
 #cmakedefine HAVE_STRCASECMP          1
 #cmakedefine HAVE_STRING_H            1
