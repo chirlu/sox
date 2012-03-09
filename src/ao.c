@@ -74,7 +74,7 @@ static int startwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, size_t len, sox_bool swap, size_t * clips)
+static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, size_t len, sox_bool swap, sox_uint64_t * clips)
 {
     while (len--)
     {

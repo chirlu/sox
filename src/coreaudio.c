@@ -76,7 +76,7 @@ static OSStatus RecIOProc(AudioDeviceID inDevice UNUSED,
                           void *inClientData)
 {
     priv_t *ac = (priv_t *)((sox_format_t*)inClientData)->priv;
-    AudioBuffer *buf;
+    AudioBuffer const *buf;
     size_t nfree, copylen, avail;
 
     pthread_mutex_lock(&ac->mutex);
