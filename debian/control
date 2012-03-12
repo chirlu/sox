@@ -50,13 +50,13 @@ Description: Swiss army knife of sound processing
  (respectively provided by libsox-fmt-alsa, libsox-fmt-ao, libsox-fmt-oss and
  libsox-fmt-pulse). It also supports LADSPA plugins.
 
-Package: libsox2
+Package: libsox3
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Recommends: libsox-fmt-alsa [linux-any] | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse,
             libsox-fmt-base
-Conflicts: libsox0, libsox0a, libsox1, libsox1a
-Replaces: libsox1b
+Conflicts: libsox0, libsox0a, libsox1, libsox1a, libsox1b
+Replaces: libsox2
 Suggests: libsox-fmt-all
 Description: SoX library of audio effects and processing
  SoX is the swiss army knife of sound processing.
@@ -167,7 +167,7 @@ Package: libsox-dev
 Architecture: any
 Section: libdevel
 Depends: libsox-fmt-all (= ${binary:Version}),
-         libsox2 (= ${binary:Version}),
+         libsox3 (= ${binary:Version}),
          ${misc:Depends}
 Description: Development files for the SoX library
  SoX is the swiss army knife of sound processing.

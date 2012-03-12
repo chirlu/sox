@@ -8,6 +8,7 @@ sox (14.4.1-0+git20120311-1) UNRELEASED; urgency=low
     - Added versioned dependency to format libraries, fixes upgrades in some
       use cases.
     - Added MP2 to short description of libsox-fmt-mp3.
+    - Bumped libsox2 to libsox3, interface changes.
   * [debian/copyright]:
     - Long due update, thanks to Ulrich Klauer <ulrich@chirlu.de> for pointing
       this out.
