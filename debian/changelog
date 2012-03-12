@@ -1,6 +1,13 @@
 sox (14.4.1-0+git20120311-1) UNRELEASED; urgency=low
 
   * Git Version.
+  * [debian/control]:
+    - Bumped libsox2 to libsox3, interface changes.
+
+ -- Pascal Giard <evilynux@gmail.com>  Mon, 12 Mar 2012 00:22:05 -0500
+
+sox (14.4.0-2) unstable; urgency=low
+
   * [debian/sox.install, debian/libsox-dev.install]:
     - Removed brace expensions fixing lintian warning
       "brace-expansion-in-debhelper-config-file".
@@ -8,7 +15,6 @@ sox (14.4.1-0+git20120311-1) UNRELEASED; urgency=low
     - Added versioned dependency to format libraries, fixes upgrades in some
       use cases.
     - Added MP2 to short description of libsox-fmt-mp3.
-    - Bumped libsox2 to libsox3, interface changes.
   * [debian/copyright]:
     - Long due update, thanks to Ulrich Klauer <ulrich@chirlu.de> for pointing
       this out.
@@ -16,7 +22,7 @@ sox (14.4.1-0+git20120311-1) UNRELEASED; urgency=low
     - FFT code is no longer Audacity's GPL code.
     - Updated link to LGPL license to 2.1.
 
- -- Pascal Giard <evilynux@gmail.com>  Sun, 11 Mar 2012 23:36:11 -0500
+ -- Pascal Giard <pascal@debian.org>  Sun, 11 Mar 2012 23:59:36 -0400
 
 sox (14.4.0-1) unstable; urgency=low
 

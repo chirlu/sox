@@ -32,6 +32,7 @@ Package: sox
 Architecture: any
 Depends: libsox-fmt-alsa (= ${binary:Version}) [linux-any] | libsox-fmt-ao (= ${binary:Version}) | libsox-fmt-oss (= ${binary:Version}) | libsox-fmt-pulse (= ${binary:Version}),
          libsox-fmt-base (= ${binary:Version}),
+         libsox3 (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Suggests: libsox-fmt-all
