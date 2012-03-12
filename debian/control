@@ -30,8 +30,8 @@ Standards-Version: 3.9.1
 
 Package: sox
 Architecture: any
-Depends: libsox-fmt-alsa [linux-any] | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse,
-         libsox-fmt-base,
+Depends: libsox-fmt-alsa [linux-any] (= ${binary:Version}) | libsox-fmt-ao (= ${binary:Version}) | libsox-fmt-oss (= ${binary:Version}) | libsox-fmt-pulse (= ${binary:Version}),
+         libsox-fmt-base (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Suggests: libsox-fmt-all
@@ -117,7 +117,7 @@ Description: SoX ffmpeg format library
 Package: libsox-fmt-mp3
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: SoX MP3 format library
+Description: SoX MP2 and MP3 format library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX MP2 and MP3 format library.
@@ -150,13 +150,13 @@ Description: SoX PulseAudio format I/O library
 
 Package: libsox-fmt-all
 Architecture: any
-Depends: libsox-fmt-alsa [linux-any],
-         libsox-fmt-ao,
-         libsox-fmt-base,
-         libsox-fmt-ffmpeg,
-         libsox-fmt-mp3,
-         libsox-fmt-oss,
-         libsox-fmt-pulse,
+Depends: libsox-fmt-alsa [linux-any] (= ${binary:Version}),
+         libsox-fmt-ao (= ${binary:Version}),
+         libsox-fmt-base (= ${binary:Version}),
+         libsox-fmt-ffmpeg (= ${binary:Version}),
+         libsox-fmt-mp3 (= ${binary:Version}),
+         libsox-fmt-oss (= ${binary:Version}),
+         libsox-fmt-pulse (= ${binary:Version}),
          ${misc:Depends}
 Description: All SoX format libraries
  SoX is the swiss army knife of sound processing.
