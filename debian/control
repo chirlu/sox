@@ -30,7 +30,7 @@ Standards-Version: 3.9.1
 
 Package: sox
 Architecture: any
-Depends: libsox-fmt-alsa [linux-any] (= ${binary:Version}) | libsox-fmt-ao (= ${binary:Version}) | libsox-fmt-oss (= ${binary:Version}) | libsox-fmt-pulse (= ${binary:Version}),
+Depends: libsox-fmt-alsa (= ${binary:Version}) [linux-any] | libsox-fmt-ao (= ${binary:Version}) | libsox-fmt-oss (= ${binary:Version}) | libsox-fmt-pulse (= ${binary:Version}),
          libsox-fmt-base (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
@@ -150,7 +150,7 @@ Description: SoX PulseAudio format I/O library
 
 Package: libsox-fmt-all
 Architecture: any
-Depends: libsox-fmt-alsa [linux-any] (= ${binary:Version}),
+Depends: libsox-fmt-alsa (= ${binary:Version}) [linux-any],
          libsox-fmt-ao (= ${binary:Version}),
          libsox-fmt-base (= ${binary:Version}),
          libsox-fmt-ffmpeg (= ${binary:Version}),
