@@ -1627,8 +1627,7 @@ typedef struct sox_effects_chain_t {
   sox_encodinginfo_t const * out_enc;      /**< Output encoding */
   /* The following items are private to the libSoX effects chain functions. */
   size_t table_size;                       /**< Size of effects table (including unused entries) */
-  sox_sample_t **ibufc;                    /**< Channel interleave buffer */
-  sox_sample_t **obufc;                    /**< Channel interleave buffer */
+  sox_sample_t *il_buf;                    /**< Channel interleave buffer */
 } sox_effects_chain_t;
 
 /*****************************************************************************

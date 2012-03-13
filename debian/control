@@ -30,8 +30,9 @@ Standards-Version: 3.9.1
 
 Package: sox
 Architecture: any
-Depends: libsox-fmt-alsa [linux-any] | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse,
-         libsox-fmt-base,
+Depends: libsox-fmt-alsa (= ${binary:Version}) [linux-any] | libsox-fmt-ao (= ${binary:Version}) | libsox-fmt-oss (= ${binary:Version}) | libsox-fmt-pulse (= ${binary:Version}),
+         libsox-fmt-base (= ${binary:Version}),
+         libsox3 (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Suggests: libsox-fmt-all
@@ -50,13 +51,13 @@ Description: Swiss army knife of sound processing
  (respectively provided by libsox-fmt-alsa, libsox-fmt-ao, libsox-fmt-oss and
  libsox-fmt-pulse). It also supports LADSPA plugins.
 
-Package: libsox2
+Package: libsox3
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Recommends: libsox-fmt-alsa [linux-any] | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse,
             libsox-fmt-base
-Conflicts: libsox0, libsox0a, libsox1, libsox1a
-Replaces: libsox1b
+Conflicts: libsox0, libsox0a, libsox1, libsox1a, libsox1b
+Replaces: libsox2
 Suggests: libsox-fmt-all
 Description: SoX library of audio effects and processing
  SoX is the swiss army knife of sound processing.
@@ -117,7 +118,7 @@ Description: SoX ffmpeg format library
 Package: libsox-fmt-mp3
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: SoX MP3 format library
+Description: SoX MP2 and MP3 format library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX MP2 and MP3 format library.
@@ -150,13 +151,13 @@ Description: SoX PulseAudio format I/O library
 
 Package: libsox-fmt-all
 Architecture: any
-Depends: libsox-fmt-alsa [linux-any],
-         libsox-fmt-ao,
-         libsox-fmt-base,
-         libsox-fmt-ffmpeg,
-         libsox-fmt-mp3,
-         libsox-fmt-oss,
-         libsox-fmt-pulse,
+Depends: libsox-fmt-alsa (= ${binary:Version}) [linux-any],
+         libsox-fmt-ao (= ${binary:Version}),
+         libsox-fmt-base (= ${binary:Version}),
+         libsox-fmt-ffmpeg (= ${binary:Version}),
+         libsox-fmt-mp3 (= ${binary:Version}),
+         libsox-fmt-oss (= ${binary:Version}),
+         libsox-fmt-pulse (= ${binary:Version}),
          ${misc:Depends}
 Description: All SoX format libraries
  SoX is the swiss army knife of sound processing.
@@ -167,7 +168,7 @@ Package: libsox-dev
 Architecture: any
 Section: libdevel
 Depends: libsox-fmt-all (= ${binary:Version}),
-         libsox2 (= ${binary:Version}),
+         libsox3 (= ${binary:Version}),
          ${misc:Depends}
 Description: Development files for the SoX library
  SoX is the swiss army knife of sound processing.
