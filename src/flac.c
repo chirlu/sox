@@ -62,8 +62,57 @@ unsigned long __stdcall ntohl(unsigned long val)
 }
 #endif
 
+static FLAC__StreamDecoderReadStatus decoder_read_callback(FLAC__StreamDecoder const* decoder, FLAC__byte buffer[], size_t* bytes, void* ft_data)
+{
+  sox_format_t* ft = (sox_format_t*)ft_data;
+  if(*bytes > 0) {
+    *bytes = lsx_readbuf(ft, buffer, *bytes);
+    if(lsx_error(ft))
+      return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
+    else if(*bytes == 0)
+      return FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM;
+    else
+      return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
+  }
+  else
+    return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
+}
 
-static void FLAC__decoder_metadata_callback(FLAC__StreamDecoder const * const flac, FLAC__StreamMetadata const * const metadata, void * const client_data)
+static FLAC__StreamDecoderSeekStatus decoder_seek_callback(FLAC__StreamDecoder const* decoder, FLAC__uint64 absolute_byte_offset, void* ft_data)
+{
+  sox_format_t* ft = (sox_format_t*)ft_data;
+  if(lsx_seeki(ft, (off_t)absolute_byte_offset, SEEK_SET) < 0)
+    return FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
+  else
+    return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
+}
+
+static FLAC__StreamDecoderTellStatus decoder_tell_callback(FLAC__StreamDecoder const* decoder, FLAC__uint64* absolute_byte_offset, void* ft_data)
+{
+  sox_format_t* ft = (sox_format_t*)ft_data;
+  off_t pos;
+  if((pos = lsx_tell(ft)) < 0)
+    return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
+  else {
+    *absolute_byte_offset = (FLAC__uint64)pos;
+    return FLAC__STREAM_DECODER_TELL_STATUS_OK;
+  }
+}
+
+static FLAC__StreamDecoderLengthStatus decoder_length_callback(FLAC__StreamDecoder const* decoder, FLAC__uint64* stream_length, void* ft_data)
+{
+  sox_format_t* ft = (sox_format_t*)ft_data;
+  *stream_length = lsx_filelength(ft);
+  return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
+}
+
+static FLAC__bool decoder_eof_callback(FLAC__StreamDecoder const* decoder, void* ft_data)
+{
+  sox_format_t* ft = (sox_format_t*)ft_data;
+  return lsx_eof(ft) ? 1 : 0;
+}
+
+static void decoder_metadata_callback(FLAC__StreamDecoder const * const flac, FLAC__StreamMetadata const * const metadata, void * const client_data)
 {
   sox_format_t * ft = (sox_format_t *) client_data;
   priv_t * p = (priv_t *)ft->priv;
@@ -94,7 +143,7 @@ static void FLAC__decoder_metadata_callback(FLAC__StreamDecoder const * const fl
 
 
 
-static void FLAC__decoder_error_callback(FLAC__StreamDecoder const * const flac, FLAC__StreamDecoderErrorStatus const status, void * const client_data)
+static void decoder_error_callback(FLAC__StreamDecoder const * const flac, FLAC__StreamDecoderErrorStatus const status, void * const client_data)
 {
   sox_format_t * ft = (sox_format_t *) client_data;
 
@@ -105,7 +154,7 @@ static void FLAC__decoder_error_callback(FLAC__StreamDecoder const * const flac,
 
 
 
-static FLAC__StreamDecoderWriteStatus FLAC__frame_decode_callback(FLAC__StreamDecoder const * const flac, FLAC__Frame const * const frame, FLAC__int32 const * const buffer[], void * const client_data)
+static FLAC__StreamDecoderWriteStatus decoder_write_callback(FLAC__StreamDecoder const * const flac, FLAC__Frame const * const frame, FLAC__int32 const * const buffer[], void * const client_data)
 {
   sox_format_t * ft = (sox_format_t *) client_data;
   priv_t * p = (priv_t *)ft->priv;
@@ -138,13 +187,20 @@ static int start_read(sox_format_t * const ft)
 
   FLAC__stream_decoder_set_md5_checking(p->decoder, sox_true);
   FLAC__stream_decoder_set_metadata_respond_all(p->decoder);
-  if (FLAC__stream_decoder_init_FILE(p->decoder, ft->fp, /* Not using SoX IO */
-      FLAC__frame_decode_callback, FLAC__decoder_metadata_callback,
-      FLAC__decoder_error_callback, ft) != FLAC__STREAM_DECODER_INIT_STATUS_OK){
+  if (FLAC__stream_decoder_init_stream(
+      p->decoder,
+      decoder_read_callback,
+      ft->seekable ? decoder_seek_callback : NULL,
+      ft->seekable ? decoder_tell_callback : NULL,
+      ft->seekable ? decoder_length_callback : NULL,
+      ft->seekable ? decoder_eof_callback : NULL,
+      decoder_write_callback,
+      decoder_metadata_callback,
+      decoder_error_callback,
+      ft) != FLAC__STREAM_DECODER_INIT_STATUS_OK){
     lsx_fail_errno(ft, SOX_EHDR, "FLAC ERROR initialising decoder");
     return SOX_EOF;
   }
-  ft->fp = NULL; /* Transfer ownership of fp to FLAC */
 
   if (!FLAC__stream_decoder_process_until_end_of_metadata(p->decoder)) {
     lsx_fail_errno(ft, SOX_EHDR, "FLAC ERROR whilst decoding metadata");
@@ -250,7 +306,7 @@ static FLAC__StreamEncoderTellStatus flac_stream_encoder_tell_callback(FLAC__Str
   (void) encoder;
   if (!ft->seekable)
     return FLAC__STREAM_ENCODER_TELL_STATUS_UNSUPPORTED;
-  else if ((pos = ftello(ft->fp)) < 0)
+  else if ((pos = lsx_tell(ft)) < 0)
     return FLAC__STREAM_ENCODER_TELL_STATUS_ERROR;
   else {
     *absolute_byte_offset = (FLAC__uint64)pos;

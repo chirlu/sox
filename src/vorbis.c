@@ -61,19 +61,34 @@ typedef struct {
 } priv_t;
 
 /******** Callback functions used in ov_open_callbacks ************/
-static int myclose(void *datasource UNUSED)
+
+static size_t callback_read(void* ptr, size_t size, size_t nmemb, void* ft_data)
+{
+  sox_format_t* ft = (sox_format_t*)ft_data;
+  size_t ret = lsx_readbuf(ft, ptr, size * nmemb);
+  return ret / size;
+}
+
+static int callback_seek(void* ft_data, ogg_int64_t off, int whence)
+{
+  sox_format_t* ft = (sox_format_t*)ft_data;
+  int ret = ft->seekable ? lsx_seeki(ft, off, whence) : -1;
+
+  if (ret == EBADF)
+    ret = -1;
+  return ret;
+}
+
+static int callback_close(void* ft_data UNUSED)
 {
   /* Do nothing so sox can close the file for us */
   return 0;
 }
 
-static int _fseeko64_wrap(FILE * f, ogg_int64_t off, int whence)
+static long callback_tell(void* ft_data)
 {
-  int ret = fseeko(f, (off_t)off, whence);
-
-  if (ret == EBADF)
-    ret = -1;
-  return ret;
+  sox_format_t* ft = (sox_format_t*)ft_data;
+  return lsx_tell(ft);
 }
 
 /********************* End callbacks *****************************/
@@ -94,17 +109,17 @@ static int startread(sox_format_t * ft)
   int i;
 
   ov_callbacks callbacks = {
-    (size_t(*)(void *, size_t, size_t, void *)) fread,
-    (int (*)(void *, ogg_int64_t, int)) _fseeko64_wrap,
-    (int (*)(void *)) myclose,
-    (long (*)(void *)) ftell
+    callback_read,
+    callback_seek,
+    callback_close,
+    callback_tell
   };
 
   /* Allocate space for decoding structure */
   vb->vf = lsx_malloc(sizeof(OggVorbis_File));
 
   /* Init the decoder */
-  if (ov_open_callbacks(ft->fp, vb->vf, NULL, (size_t) 0, callbacks) < 0) {
+  if (ov_open_callbacks(ft, vb->vf, NULL, (size_t) 0, callbacks) < 0) {
     lsx_fail_errno(ft, SOX_EHDR, "Input not an Ogg Vorbis audio stream");
     return (SOX_EOF);
   }

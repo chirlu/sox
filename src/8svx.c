@@ -7,10 +7,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define BUFLEN 512
+
 /* Private data used by writer */
 typedef struct{
   uint32_t nsamples;
-  FILE * ch[4];
+  uint32_t left;
+  off_t ch0_pos;
+  sox_uint8_t buf[4][BUFLEN];
+  FILE* tmp[4];
 } priv_t;
 
 static void svxwriteheader(sox_format_t *, size_t);
@@ -29,10 +34,8 @@ static int startread(sox_format_t * ft)
         uint32_t totalsize;
         uint32_t chunksize;
 
-        uint32_t channels, i;
+        uint32_t channels;
         unsigned short rate;
-
-        off_t chan1_pos;
 
         if (! ft->seekable)
         {
@@ -149,6 +152,8 @@ static int startread(sox_format_t * ft)
                 return(SOX_EOF);
         }
         lsx_readdw(ft, &(p->nsamples));
+        p->left = p->nsamples;
+        p->ch0_pos = lsx_tell(ft);
 
         ft->signal.length = p->nsamples;
         ft->signal.channels = channels;
@@ -156,30 +161,6 @@ static int startread(sox_format_t * ft)
         ft->encoding.encoding = SOX_ENCODING_SIGN2;
         ft->encoding.bits_per_sample = 8;
 
-        /* open files to channels */
-        p->ch[0] = ft->fp;
-        chan1_pos = lsx_tell(ft);
-
-        for (i = 1; i < channels; i++) {
-                if ((p->ch[i] = fopen(ft->filename, "rb")) == NULL)
-                {
-                        lsx_fail_errno(ft,errno,"Can't open channel file '%s'",
-                                ft->filename);
-                        return(SOX_EOF);
-                }
-
-                /* position channel files */
-                if (fseeko(p->ch[i],chan1_pos,SEEK_SET))
-                {
-                    lsx_fail_errno (ft,errno,"Can't position channel %d",i);
-                    return(SOX_EOF);
-                }
-                if (fseeko(p->ch[i],(off_t)(p->nsamples/channels*i),SEEK_CUR))
-                {
-                    lsx_fail_errno (ft,errno,"Can't seek channel %d",i);
-                    return(SOX_EOF);
-                }
-        }
         return(SOX_SUCCESS);
 }
 
@@ -188,39 +169,41 @@ static int startread(sox_format_t * ft)
 /*======================================================================*/
 static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t nsamp)
 {
-        unsigned char datum;
-        size_t done = 0, i;
+    size_t done = 0;
 
-        priv_t * p = (priv_t * ) ft->priv;
+    priv_t * p = (priv_t * ) ft->priv;
+    size_t frames = nsamp / ft->signal.channels;
+    unsigned width = p->nsamples / ft->signal.channels;
 
-        while (done < nsamp) {
-                for (i = 0; i < ft->signal.channels; i++) {
-                        /* FIXME: don't pass FILE pointers! */
-                        datum = getc(p->ch[i]);
-                        if (feof(p->ch[i]))
-                                return done;
-                        /* scale signed up to long's range */
-                        *buf++ = SOX_SIGNED_8BIT_TO_SAMPLE(datum,);
-                }
-                done += ft->signal.channels;
-        }
-        return done;
-}
+    if (p->left < frames)
+        frames = p->left;
 
-/*======================================================================*/
-/*                         8SVXSTOPREAD                                 */
-/*======================================================================*/
-static int stopread(sox_format_t * ft)
-{
+    while (done != frames) {
+        size_t chunk = frames - done;
         size_t i;
+        unsigned ch;
 
-        priv_t * p = (priv_t * ) ft->priv;
+        if (chunk > BUFLEN)
+            chunk = BUFLEN;
 
-        /* close channel files */
-        for (i = 1; i < ft->signal.channels; i++) {
-                fclose (p->ch[i]);
+        for (ch = 0; ch != ft->signal.channels; ch++) {
+            if (lsx_seeki(ft, p->ch0_pos + ch * width, SEEK_SET) ||
+                chunk != lsx_readbuf(ft, p->buf[ch], chunk))
+                return done * ft->signal.channels;
         }
-        return(SOX_SUCCESS);
+
+        for (i = 0; i != chunk; i++) {
+            for (ch = 0; ch != ft->signal.channels; ch++) {
+                /* scale signed up to long's range */
+                *buf++ = SOX_SIGNED_8BIT_TO_SAMPLE(p->buf[ch][i], dummy);
+            }
+        }
+
+        done += chunk;
+        p->left -= chunk * ft->signal.channels;
+        p->ch0_pos += chunk;
+    }
+    return done * ft->signal.channels;
 }
 
 /*======================================================================*/
@@ -232,18 +215,15 @@ static int startwrite(sox_format_t * ft)
         size_t i;
 
         /* open channel output files */
-        p->ch[0] = ft->fp;
-        for (i = 1; i < ft->signal.channels; i++) {
-                if ((p->ch[i] = lsx_tmpfile()) == NULL)
+        for (i = 0; i < ft->signal.channels; i++) {
+                if ((p->tmp[i] = lsx_tmpfile()) == NULL)
                 {
                         lsx_fail_errno(ft,errno,"Can't open channel output file");
                         return(SOX_EOF);
                 }
         }
 
-        /* write header (channel 0) */
         p->nsamples = 0;
-        svxwriteheader(ft, (size_t) p->nsamples);
         return(SOX_SUCCESS);
 }
 
@@ -264,8 +244,7 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
         while(done < len) {
                 for (i = 0; i < ft->signal.channels; i++) {
                         datum = SOX_SAMPLE_TO_SIGNED_8BIT(*buf++, ft->clips);
-                        /* FIXME: Needs to pass ft struct and not FILE */
-                        putc(datum, p->ch[i]);
+                        putc(datum, p->tmp[i]);
                 }
                 done += ft->signal.channels;
         }
@@ -283,35 +262,30 @@ static int stopwrite(sox_format_t * ft)
         size_t i, len;
         char svxbuf[512];
 
+        svxwriteheader(ft, (size_t) p->nsamples);
+
         /* append all channel pieces to channel 0 */
         /* close temp files */
-        for (i = 1; i < ft->signal.channels; i++) {
-                if (fseeko(p->ch[i], (off_t)0, 0))
+        for (i = 0; i < ft->signal.channels; i++) {
+                if (fseeko(p->tmp[i], (off_t)0, 0))
                 {
                         lsx_fail_errno (ft,errno,"Can't rewind channel output file %lu",(unsigned long)i);
                         return(SOX_EOF);
                 }
-                while (!feof(p->ch[i])) {
-                        len = fread(svxbuf, (size_t) 1, (size_t) 512, p->ch[i]);
-                        if (fwrite (svxbuf, (size_t) 1, len, p->ch[0]) != len) {
+                while (!feof(p->tmp[i])) {
+                        len = fread(svxbuf, (size_t) 1, (size_t) 512, p->tmp[i]);
+                        if (lsx_writebuf(ft, svxbuf, len) != len) {
                           lsx_fail_errno (ft,errno,"Can't write channel output file %lu",(unsigned long)i);
                           return SOX_EOF;
                         }
                 }
-                fclose (p->ch[i]);
+                fclose (p->tmp[i]);
         }
 
         /* add a pad byte if BODY size is odd */
         if(p->nsamples % 2 != 0)
             lsx_writeb(ft, '\0');
 
-        /* fixup file sizes in header */
-        if (lsx_seeki(ft, (off_t)0, 0) != 0)
-        {
-                lsx_fail_errno(ft,errno,"can't rewind output file to rewrite 8SVX header");
-                return(SOX_EOF);
-        }
-        svxwriteheader(ft, (size_t) p->nsamples);
         return(SOX_SUCCESS);
 }
 
@@ -360,7 +334,7 @@ LSX_FORMAT_HANDLER(svx)
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "Amiga audio format (a subformat of the Interchange File Format)",
     names, SOX_FILE_BIG_END|SOX_FILE_MONO|SOX_FILE_STEREO|SOX_FILE_QUAD,
-    startread, read_samples, stopread,
+    startread, read_samples, NULL,
     startwrite, write_samples, stopwrite,
     NULL, write_encodings, NULL, sizeof(priv_t)
   };

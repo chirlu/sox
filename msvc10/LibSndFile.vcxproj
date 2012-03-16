@@ -138,6 +138,9 @@
     <ClCompile Include="..\..\libsndfile\src\ms_adpcm.c" />
     <ClCompile Include="..\..\libsndfile\src\nist.c" />
     <ClCompile Include="..\..\libsndfile\src\ogg.c" />
+    <ClCompile Include="..\..\libsndfile\src\ogg_pcm.c" />
+    <ClCompile Include="..\..\libsndfile\src\ogg_speex.c" />
+    <ClCompile Include="..\..\libsndfile\src\ogg_vorbis.c" />
     <ClCompile Include="..\..\libsndfile\src\paf.c" />
     <ClCompile Include="..\..\libsndfile\src\pcm.c" />
     <ClCompile Include="..\..\libsndfile\src\pvf.c" />

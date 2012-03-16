@@ -235,7 +235,7 @@ static void cleanup(void)
 
   if (file_count) {
     if (ofile->ft) {
-      if (!success && ofile->ft->fp) {   /* If we failed part way through */
+      if (!success && ofile->ft->io_type == lsx_io_file) {   /* If we failed part way through */
         struct stat st;                  /* writing a normal file, remove it. */
         if (!stat(ofile->ft->filename, &st) &&
             (st.st_mode & S_IFMT) == S_IFREG)

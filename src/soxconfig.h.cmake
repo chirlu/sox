@@ -16,7 +16,6 @@
 #cmakedefine HAVE_GLOB_H              1
 #define HAVE_GSM                      1
 #cmakedefine HAVE_ID3TAG              1
-#cmakedefine HAVE_ID3TAG_SET_FIELDVALUE 1
 #cmakedefine HAVE_INTTYPES_H          1
 #cmakedefine HAVE_IO_H                1
 #cmakedefine HAVE_LAME_LAME_H         1
@@ -28,7 +27,6 @@
 #cmakedefine HAVE_MAGIC               1
 #cmakedefine HAVE_MKSTEMP             1
 #cmakedefine HAVE_MP3                 1
-#cmakedefine HAVE_OGG_SPEEX           1
 #cmakedefine HAVE_OGG_VORBIS          1
 #cmakedefine HAVE_OPENMP              1
 #cmakedefine HAVE_OSS                 1

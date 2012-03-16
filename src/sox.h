@@ -1118,10 +1118,10 @@ Callback to write a message to an output device (console or log file),
 used by sox_globals_t.output_message_handler.
 */
 typedef void (LSX_API * sox_output_message_handler_t)(
-    unsigned level,                       /* 1 = FAIL, 2 = WARN, 3 = INFO, 4 = DEBUG, 5 = DEBUG_MORE, 6 = DEBUG_MOST. */
-    LSX_PARAM_IN_Z char const * filename, /* Source code __FILENAME__ from which message originates. */
-    LSX_PARAM_IN_PRINTF char const * fmt, /* Message format string. */
-    LSX_PARAM_IN va_list ap               /* Message format parameters. */
+    unsigned level,                       /**< 1 = FAIL, 2 = WARN, 3 = INFO, 4 = DEBUG, 5 = DEBUG_MORE, 6 = DEBUG_MOST. */
+    LSX_PARAM_IN_Z char const * filename, /**< Source code __FILENAME__ from which message originates. */
+    LSX_PARAM_IN_PRINTF char const * fmt, /**< Message format string. */
+    LSX_PARAM_IN va_list ap               /**< Message format parameters. */
     );
 
 /**

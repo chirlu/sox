@@ -222,7 +222,7 @@ static sf_count_t vio_get_filelen(void *user_data)
   sox_format_t *ft = (sox_format_t *)user_data;
 
   /* lsf excepts unbuffered I/O behavior for get_filelen() so force that */
-  fflush(ft->fp);
+  lsx_flush(ft);
 
   return (sf_count_t)lsx_filelength((sox_format_t *)user_data);
 }
