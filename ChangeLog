@@ -11,6 +11,11 @@ File formats:
 
   o Fix pipe file-type detection regression. (robs)
 
+Other bug fixes:
+
+  o Fix input length calculation for combine methods other than
+    concatenate. (Ulrich Klauer)
+
 
 sox-14.4.0	2012-03-04
 ----------
