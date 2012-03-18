@@ -82,7 +82,7 @@ static double * make_filter(sox_effect_t * effp)
 static sox_bool read_knots(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *) effp->priv;
-  FILE * file = lsx_open_input_file(effp, p->filename);
+  FILE * file = lsx_open_input_file(effp, p->filename, sox_true);
   sox_bool result = sox_false;
   int num_converted = 1;
   char c;

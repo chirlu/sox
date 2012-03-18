@@ -2601,6 +2601,17 @@ lsx_getopt(
     LSX_PARAM_INOUT lsx_getopt_t * state /**< The getopt state pointer. */
     );
 
+/**
+Plugins API:
+Gets the file length, or 0 if the file is not seekable/normal.
+@returns The file length, or 0 if the file is not seekable/normal.
+*/
+sox_uint64_t
+LSX_API
+lsx_filelength(
+    LSX_PARAM_IN sox_format_t * ft
+    );
+
 /* WARNING END */
 
 #if defined(__cplusplus)

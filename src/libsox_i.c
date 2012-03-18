@@ -107,7 +107,7 @@ FILE * lsx_tmpfile(void)
     lsx_debug(FAKE_MKSTEMP "mkstemp, name=%s (O_TEMPORARY)", name);
 #endif
     free(name);
-    return fildes == -1? NULL : fdopen(fildes, "w+");
+    return fildes == -1? NULL : fdopen(fildes, "w+b");
   }
 
   /* Use standard tmpfile (delete on close); tmp dir is undefined: */

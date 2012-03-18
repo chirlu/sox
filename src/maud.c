@@ -84,8 +84,6 @@ static int startread(sox_format_t * ft)
                             return(SOX_EOF);
                         }
 
-                        /* fseeko(ft->fp,12,SEEK_CUR); */
-
                         /* number of samples stored in MDAT */
                         lsx_readdw(ft, &(p->nsamples));
 

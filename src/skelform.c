@@ -82,9 +82,8 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
   unsigned char sample;
 
   for (done = 0; done < len; done++) {
-    if (feof((FILE*)ft->fp)) /* no more samples */
+    if (lsx_eof(ft) || lsx_readb(ft, &sample)) /* no more samples */
       break;
-    sample = fgetc((FILE*)ft->fp);
     switch (ft->encoding.bits_per_sample) {
     case 8:
       switch (ft->encoding.encoding) {

@@ -258,7 +258,6 @@ static void mad_timer_mult(mad_timer_t * t, double d)
 static size_t mp3_duration_ms(sox_format_t * ft)
 {
   priv_t              * p = (priv_t *) ft->priv;
-  FILE                * fp = ft->fp;
   struct mad_stream   mad_stream;
   struct mad_header   mad_header;
   struct mad_frame    mad_frame;
@@ -276,7 +275,7 @@ static size_t mp3_duration_ms(sox_format_t * ft)
     size_t leftover = mad_stream.bufend - mad_stream.next_frame;
 
     memcpy(p->mp3_buffer, mad_stream.this_frame, leftover);
-    read = fread(p->mp3_buffer + leftover, (size_t) 1, p->mp3_buffer_size - leftover, fp);
+    read = lsx_readbuf(ft, p->mp3_buffer + leftover, p->mp3_buffer_size - leftover);
     if (read <= 0) {
       lsx_debug("got exact duration by scan to EOF (frames=%" PRIuPTR " leftover=%" PRIuPTR ")", frames, leftover);
       break;
@@ -299,7 +298,7 @@ static size_t mp3_duration_ms(sox_format_t * ft)
           tagsize = tagtype(mad_stream.this_frame, (size_t) available);
           if (tagsize) {   /* It's some ID3 tags, so just skip */
             if (tagsize >= available) {
-              fseeko(fp, (off_t)(tagsize - available), SEEK_CUR);
+              lsx_seeki(ft, (off_t)(tagsize - available), SEEK_CUR);
               depadded = sox_false;
             }
             p->mad_stream_skip(&mad_stream, min(tagsize, available));
@@ -334,9 +333,7 @@ static size_t mp3_duration_ms(sox_format_t * ft)
 
       /* If not VBR, we can time just a few frames then extrapolate */
       if (++frames == 25 && !vbr) {
-        struct stat filestat;
-        fstat(fileno(fp), &filestat);
-        mad_timer_mult(&time, (double)(filestat.st_size - tagsize) / consumed);
+        mad_timer_mult(&time, (double)(lsx_filelength(ft) - tagsize) / consumed);
         lsx_debug("got approx. duration by CBR extrapolation");
         break;
       }
@@ -346,7 +343,7 @@ static size_t mp3_duration_ms(sox_format_t * ft)
   p->mad_frame_finish(&mad_frame);
   mad_header_finish(&mad_header);
   p->mad_stream_finish(&mad_stream);
-  rewind(fp);
+  lsx_rewind(ft);
   return p->mad_timer_count(time, MAD_UNITS_MILLISECONDS);
 }
 

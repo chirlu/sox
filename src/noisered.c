@@ -86,7 +86,7 @@ static int sox_noisered_start(sox_effect_t * effp)
     size_t fchannels = 0;
     size_t channels = effp->in_signal.channels;
     size_t i;
-    FILE * ifp = lsx_open_input_file(effp, data->profile_filename);
+    FILE * ifp = lsx_open_input_file(effp, data->profile_filename, sox_false);
 
     if (!ifp)
       return SOX_EOF;

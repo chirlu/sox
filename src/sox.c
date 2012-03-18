@@ -293,14 +293,12 @@ static char const * str_time(double seconds)
 
 static char const * size_and_bitrate(sox_format_t * ft, char const * * text)
 {
-  struct stat st;    /* ft->fp may validly be NULL, so stat not fstat */
-  if (stat(ft->filename, &st) || (st.st_mode & S_IFMT) != S_IFREG)
-    return NULL;
+  off_t size = lsx_filelength(ft);
   if (ft->signal.length && ft->signal.channels && ft->signal.rate && text) {
     double secs = ft->signal.length / ft->signal.channels / ft->signal.rate;
-    *text = lsx_sigfigs3(8. * st.st_size / secs);
+    *text = lsx_sigfigs3(8. * size / secs);
   }
-  return lsx_sigfigs3((double)st.st_size);
+  return lsx_sigfigs3((double)size);
 }
 
 static void play_file_info(sox_format_t * ft, file_t * f, sox_bool full)
@@ -905,7 +903,7 @@ static char * * strtoargv(char * s, int * argc)
 
 static void read_user_effects(char const *filename)
 {
-    FILE *file = fopen(filename, "rt");
+    FILE *file = fopen(filename, "r");
     const size_t buffer_size_step = 1024;
     size_t buffer_size = buffer_size_step;
     char *s = lsx_malloc(buffer_size); /* buffer for one input line */
@@ -2122,7 +2120,7 @@ static void read_comment_file(sox_comments_t * comments, char const * const file
   int c;
   size_t text_length = 100;
   char * text = lsx_malloc(text_length + 1);
-  FILE * file = fopen(filename, "rt");
+  FILE * file = fopen(filename, "r");
 
   if (file == NULL) {
     lsx_fail("Cannot open comment file `%s'", filename);

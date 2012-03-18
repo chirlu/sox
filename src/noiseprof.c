@@ -75,7 +75,7 @@ static int sox_noiseprof_start(sox_effect_t * effp)
     effp->global_info->global_info->stdout_in_use_by = effp->handler.name;
     data->output_file = stdout;
   }
-  else if ((data->output_file = fopen(data->output_filename, "w")) == NULL) {
+  else if ((data->output_file = fopen(data->output_filename, "wb")) == NULL) {
     lsx_fail("Couldn't open profile file %s: %s", data->output_filename, strerror(errno));
     return SOX_EOF;
   }

@@ -56,7 +56,7 @@ static int start(sox_effect_t * effp)
 
   if (!f->num_taps) {
     if (!p->n && p->filename) {
-      FILE * file = lsx_open_input_file(effp, p->filename);
+      FILE * file = lsx_open_input_file(effp, p->filename, sox_true);
       if (!file)
         return SOX_EOF;
       while ((i = fscanf(file, " #%*[^\n]%c", &c)) >= 0) {

@@ -77,7 +77,7 @@ char const * lsx_parsesamples(sox_rate_t rate, const char *str, uint64_t *sample
 int lsx_parse_note(char const * text, char * * end_ptr);
 double lsx_parse_frequency_k(char const * text, char * * end_ptr, int key);
 #define lsx_parse_frequency(a, b) lsx_parse_frequency_k(a, b, INT_MAX)
-FILE * lsx_open_input_file(sox_effect_t * effp, char const * filename);
+FILE * lsx_open_input_file(sox_effect_t * effp, char const * filename, sox_bool text_mode);
 
 void lsx_prepare_spline3(double const * x, double const * y, int n,
     double start_1d, double end_1d, double * y_2d);
@@ -198,7 +198,7 @@ int lsx_error(sox_format_t * ft);
 int lsx_flush(sox_format_t * ft);
 int lsx_seeki(sox_format_t * ft, off_t offset, int whence);
 int lsx_unreadb(sox_format_t * ft, unsigned ub);
-uint64_t lsx_filelength(sox_format_t * ft);
+/* uint64_t lsx_filelength(sox_format_t * ft); Temporarily Moved to sox.h. */
 off_t lsx_tell(sox_format_t * ft);
 void lsx_clearerr(sox_format_t * ft);
 void lsx_rewind(sox_format_t * ft);

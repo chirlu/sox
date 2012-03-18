@@ -343,7 +343,7 @@ double lsx_parse_frequency_k(char const * text, char * * end_ptr, int key)
   return result < 0 ? -1 : result;
 }
 
-FILE * lsx_open_input_file(sox_effect_t * effp, char const * filename)
+FILE * lsx_open_input_file(sox_effect_t * effp, char const * filename, sox_bool text_mode)
 {
   FILE * file;
 
@@ -355,7 +355,7 @@ FILE * lsx_open_input_file(sox_effect_t * effp, char const * filename)
     effp->global_info->global_info->stdin_in_use_by = effp->handler.name;
     file = stdin;
   }
-  else if (!(file = fopen(filename, "r"))) {
+  else if (!(file = fopen(filename, text_mode ? "r" : "rb"))) {
     lsx_fail("couldn't open file %s: %s", filename, strerror(errno));
     return NULL;
   }
