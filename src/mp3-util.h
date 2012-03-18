@@ -97,34 +97,143 @@ static id3_utf8_t * utf8_id3tag_findframe(
   return NULL;
 }
 
+struct tag_info_node
+{
+    struct tag_info_node * next;
+    off_t start;
+    off_t end;
+};
+
+struct tag_info {
+  sox_format_t * ft;
+  struct tag_info_node * head;
+  struct id3_tag * tag;
+};
+
+static int add_tag(struct tag_info * info)
+{
+  struct tag_info_node * current;
+  off_t start, end;
+  id3_byte_t query[ID3_TAG_QUERYSIZE];
+  id3_byte_t * buffer;
+  long size;
+  int result = 0;
+
+  /* Ensure we're at the start of a valid tag and get its size. */
+  if (ID3_TAG_QUERYSIZE != lsx_readbuf(info->ft, query, ID3_TAG_QUERYSIZE) ||
+      !(size = id3_tag_query(query, ID3_TAG_QUERYSIZE))) {
+    return 0;
+  }
+  if (size < 0) {
+    if (0 != lsx_seeki(info->ft, size, SEEK_CUR) ||
+        ID3_TAG_QUERYSIZE != lsx_readbuf(info->ft, query, ID3_TAG_QUERYSIZE) ||
+        (size = id3_tag_query(query, ID3_TAG_QUERYSIZE)) <= 0) {
+      return 0;
+    }
+  }
+
+  /* Don't read a tag more than once. */
+  start = lsx_tell(info->ft);
+  end = start + size;
+  for (current = info->head; current; current = current->next) {
+    if (start == current->start && end == current->end) {
+      return 1;
+    } else if (start < current->end && current->start < end) {
+      return 0;
+    }
+  }
+
+  buffer = lsx_malloc(size);
+  if (!buffer) {
+    return 0;
+  }
+  memcpy(buffer, query, ID3_TAG_QUERYSIZE);
+  if ((unsigned long)size - ID3_TAG_QUERYSIZE ==
+      lsx_readbuf(info->ft, buffer + ID3_TAG_QUERYSIZE, size - ID3_TAG_QUERYSIZE)) {
+    struct id3_tag * tag = id3_tag_parse(buffer, size);
+    if (tag) {
+      current = lsx_malloc(sizeof(struct tag_info_node));
+      if (current) {
+        current->next = info->head;
+        current->start = start;
+        current->end = end;
+        info->head = current;
+        if (info->tag && (info->tag->extendedflags & ID3_TAG_EXTENDEDFLAG_TAGISANUPDATE)) {
+          struct id3_frame * frame;
+          unsigned i;
+          for (i = 0; frame = id3_tag_findframe(tag, NULL, i); i++) {
+            id3_tag_attachframe(info->tag, frame);
+          }
+          id3_tag_delete(tag);
+        } else {
+          if (info->tag) {
+            id3_tag_delete(info->tag);
+          }
+          info->tag = tag;
+        }
+      }
+    }
+  }
+  free(buffer);
+  return result;
+}
+
 static void read_comments(sox_format_t * ft)
 {
-  struct id3_file   * id3struct;
-  struct id3_tag    * tag;
+  struct tag_info   info;
   id3_utf8_t        * utf8;
-  int               i, fd = dup(fileno((FILE*)ft->fp));
+  int               i;
+  int               has_id3v1 = 0;
 
-  if ((id3struct = id3_file_fdopen(fd, ID3_FILE_MODE_READONLY))) {
-    if ((tag = id3_file_tag(id3struct)) && tag->frames)
-      for (i = 0; id3tagmap[i][0]; ++i)
-        if ((utf8 = utf8_id3tag_findframe(tag, id3tagmap[i][0], 0))) {
-          char * comment = lsx_malloc(strlen(id3tagmap[i][1]) + 1 + strlen((char *)utf8) + 1);
-          sprintf(comment, "%s=%s", id3tagmap[i][1], utf8);
-          sox_append_comment(&ft->oob.comments, comment);
-          free(comment);
-          free(utf8);
-        }
-      if ((utf8 = utf8_id3tag_findframe(tag, "TLEN", 0))) {
-        unsigned long tlen = strtoul((char *)utf8, NULL, 10);
-        if (tlen > 0 && tlen < ULONG_MAX) {
-          ft->signal.length= tlen; /* In ms; convert to samples later */
-          lsx_debug("got exact duration from ID3 TLEN");
-        }
+  info.ft = ft;
+  info.head = NULL;
+  info.tag = NULL;
+
+  /*
+  We look for:
+  ID3v1 at end (EOF - 128).
+  ID3v2 at start.
+  ID3v2 at end (but before ID3v1 from end if there was one).
+  */
+
+  if (0 == lsx_seeki(ft, -128, SEEK_END)) {
+    has_id3v1 =
+      add_tag(&info) &&
+      1 == ID3_TAG_VERSION_MAJOR(id3_tag_version(info.tag));
+  }
+  if (0 == lsx_seeki(ft, 0, SEEK_SET)) {
+    add_tag(&info);
+  }
+  if (0 == lsx_seeki(ft, has_id3v1 ? -138 : -10, SEEK_END)) {
+    add_tag(&info);
+  }
+  if (info.tag && info.tag->frames) {
+    for (i = 0; id3tagmap[i][0]; ++i) {
+      if ((utf8 = utf8_id3tag_findframe(info.tag, id3tagmap[i][0], 0))) {
+        char * comment = lsx_malloc(strlen(id3tagmap[i][1]) + 1 + strlen((char *)utf8) + 1);
+        sprintf(comment, "%s=%s", id3tagmap[i][1], utf8);
+        sox_append_comment(&ft->oob.comments, comment);
+        free(comment);
         free(utf8);
       }
-    id3_file_close(id3struct);
+    }
+    if ((utf8 = utf8_id3tag_findframe(info.tag, "TLEN", 0))) {
+      unsigned long tlen = strtoul((char *)utf8, NULL, 10);
+      if (tlen > 0 && tlen < ULONG_MAX) {
+        ft->signal.length= tlen; /* In ms; convert to samples later */
+        lsx_debug("got exact duration from ID3 TLEN");
+      }
+      free(utf8);
+    }
   }
-  else close(fd);
+  while (info.head) {
+    struct tag_info_node * head = info.head;
+    info.head = head->next;
+    free(head);
+  }
+  if (info.tag) {
+    id3_tag_delete(info.tag);
+  }
 }
 
 #endif /* USING_ID3TAG */
