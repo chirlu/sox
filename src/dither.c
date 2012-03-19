@@ -257,7 +257,8 @@ typedef struct {
 
   double        previous_errors[MAX_N * 2];
   double        previous_outputs[MAX_N * 2];
-  size_t        pos, prec, num_output;
+  size_t        pos, prec;
+  uint64_t      num_output;
   int32_t       history, ranqd1, r;
   double const  * coefs;
   sox_bool      dither_off;
@@ -310,13 +311,13 @@ static int flow_no_shape(sox_effect_t * effp, const sox_sample_t * ibuf,
       else *obuf = i << (32 - p->prec);
       ++obuf;
       if (p->dither_off)
-        lsx_debug("flow %u: on  @ %u", (unsigned)effp->flow, (unsigned)p->num_output);
+        lsx_debug("flow %" PRIuPTR ": on  @ %" PRIu64, effp->flow, p->num_output);
       p->dither_off = sox_false;
     }
     else {
       *obuf++ = *ibuf++;
       if (!p->dither_off)
-        lsx_debug("flow %u: off @ %u", (unsigned)effp->flow, (unsigned)p->num_output);
+        lsx_debug("flow %" PRIuPTR ": off @ %" PRIu64, effp->flow, p->num_output);
       p->dither_off = sox_true;
     }
     ++p->num_output;
