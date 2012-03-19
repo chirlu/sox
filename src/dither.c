@@ -335,12 +335,11 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
   priv_t * p = (priv_t *)effp->priv;
   int c;
   lsx_getopt_t optstate;
-  lsx_getopt_init(argc, argv, "+aSsf:p:rt", NULL, lsx_getopt_flag_none, 1, &optstate);
+  lsx_getopt_init(argc, argv, "+aSsf:p:", NULL, lsx_getopt_flag_none, 1, &optstate);
 
   while ((c = lsx_getopt(&optstate)) != -1) switch (c) {
     case 'a': p->auto_detect = sox_true; break;
     case 'S': p->alt_tpdf = sox_true; break;
-    case 'r': case 't': break; /* No longer in use */
     case 's': p->filter_name = Shape_shibata; break;
     case 'f':
       p->filter_name = lsx_enum_option(c, optstate.arg, filter_names);
@@ -351,7 +350,6 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
     default: lsx_fail("invalid option `-%c'", optstate.opt); return lsx_usage(effp);
   }
   argc -= optstate.ind, argv += optstate.ind;
-  do {NUMERIC_PARAMETER(dummy, 0.5, 1)} while (0); /* No longer in use */
   return argc? lsx_usage(effp) : SOX_SUCCESS;
 }
 
