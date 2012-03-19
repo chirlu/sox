@@ -8,7 +8,7 @@ typedef struct {
 } dft_filter_t;
 
 typedef struct {
-  size_t     samples_in, samples_out;
+  uint64_t   samples_in, samples_out;
   fifo_t     input_fifo, output_fifo;
   dft_filter_t   filter, * filter_ptr;
 } dft_filter_priv_t;

@@ -89,7 +89,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 
   if (*isamp && odone < *osamp) {
     double * t = fifo_write(&p->input_fifo, (int)*isamp, NULL);
-    p->samples_in += (int)*isamp;
+    p->samples_in += *isamp;
 
     for (i = *isamp; i; --i)
       *t++ = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf++, effp->clips);
@@ -104,11 +104,11 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
   static size_t isamp = 0;
-  size_t samples_out = p->samples_in;
-  size_t remaining = samples_out - p->samples_out;
+  size_t remaining = p->samples_in > p->samples_out ?
+      (size_t)(p->samples_in - p->samples_out) : 0;
   double * buff = lsx_calloc(1024, sizeof(*buff));
 
-  if ((int)remaining > 0) {
+  if (remaining > 0) {
     while ((size_t)fifo_occupancy(&p->output_fifo) < remaining) {
       fifo_write(&p->input_fifo, 1024, buff);
       p->samples_in += 1024;
