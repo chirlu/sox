@@ -62,7 +62,7 @@ unsigned long __stdcall ntohl(unsigned long val)
 }
 #endif
 
-static FLAC__StreamDecoderReadStatus decoder_read_callback(FLAC__StreamDecoder const* decoder, FLAC__byte buffer[], size_t* bytes, void* ft_data)
+static FLAC__StreamDecoderReadStatus decoder_read_callback(FLAC__StreamDecoder const* decoder UNUSED, FLAC__byte buffer[], size_t* bytes, void* ft_data)
 {
   sox_format_t* ft = (sox_format_t*)ft_data;
   if(*bytes > 0) {
@@ -78,7 +78,7 @@ static FLAC__StreamDecoderReadStatus decoder_read_callback(FLAC__StreamDecoder c
     return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
 }
 
-static FLAC__StreamDecoderSeekStatus decoder_seek_callback(FLAC__StreamDecoder const* decoder, FLAC__uint64 absolute_byte_offset, void* ft_data)
+static FLAC__StreamDecoderSeekStatus decoder_seek_callback(FLAC__StreamDecoder const* decoder UNUSED, FLAC__uint64 absolute_byte_offset, void* ft_data)
 {
   sox_format_t* ft = (sox_format_t*)ft_data;
   if(lsx_seeki(ft, (off_t)absolute_byte_offset, SEEK_SET) < 0)
@@ -87,7 +87,7 @@ static FLAC__StreamDecoderSeekStatus decoder_seek_callback(FLAC__StreamDecoder c
     return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
 }
 
-static FLAC__StreamDecoderTellStatus decoder_tell_callback(FLAC__StreamDecoder const* decoder, FLAC__uint64* absolute_byte_offset, void* ft_data)
+static FLAC__StreamDecoderTellStatus decoder_tell_callback(FLAC__StreamDecoder const* decoder UNUSED, FLAC__uint64* absolute_byte_offset, void* ft_data)
 {
   sox_format_t* ft = (sox_format_t*)ft_data;
   off_t pos;
@@ -99,14 +99,14 @@ static FLAC__StreamDecoderTellStatus decoder_tell_callback(FLAC__StreamDecoder c
   }
 }
 
-static FLAC__StreamDecoderLengthStatus decoder_length_callback(FLAC__StreamDecoder const* decoder, FLAC__uint64* stream_length, void* ft_data)
+static FLAC__StreamDecoderLengthStatus decoder_length_callback(FLAC__StreamDecoder const* decoder UNUSED, FLAC__uint64* stream_length, void* ft_data)
 {
   sox_format_t* ft = (sox_format_t*)ft_data;
   *stream_length = lsx_filelength(ft);
   return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
 }
 
-static FLAC__bool decoder_eof_callback(FLAC__StreamDecoder const* decoder, void* ft_data)
+static FLAC__bool decoder_eof_callback(FLAC__StreamDecoder const* decoder UNUSED, void* ft_data)
 {
   sox_format_t* ft = (sox_format_t*)ft_data;
   return lsx_eof(ft) ? 1 : 0;
