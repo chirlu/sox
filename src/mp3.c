@@ -789,7 +789,7 @@ static void rewrite_id3v2_tag(sox_format_t * ft, size_t id3v2_size, uint64_t num
     num_samples = 0;
   }
   p->lame_set_num_samples(p->gfp, (unsigned long)num_samples);
-  lsx_debug("updated MP3 TLEN to %ul samples", (unsigned long)num_samples);
+  lsx_debug("updated MP3 TLEN to %lu samples", (unsigned long)num_samples);
 
   new_size = p->lame_get_id3v2_tag(p->gfp, buffer, id3v2_size);
 
@@ -809,7 +809,7 @@ static void rewrite_id3v2_tag(sox_format_t * ft, size_t id3v2_size, uint64_t num
     else
       lsx_warn("cannot update track length info - failed to adjust tag size");
   } else {
-    lsx_seeki(ft, 0, SEEK_SET);
+    lsx_seeki(ft, (off_t)0, SEEK_SET);
     /* Overwrite the Id3v2 tag (this time TLEN should be accurate) */
     if (lsx_writebuf(ft, buffer, id3v2_size) != 1) {
       lsx_debug("Rewrote Id3v2 tag (%" PRIuPTR " bytes)", id3v2_size);
@@ -826,7 +826,7 @@ static void rewrite_tags(sox_format_t * ft, uint64_t num_samples)
   off_t file_size;
   size_t id3v2_size;
 
-  if (lsx_seeki(ft, 0, SEEK_END)) {
+  if (lsx_seeki(ft, (off_t)0, SEEK_END)) {
     lsx_warn("cannot update tags - seek to end failed");
     return;
   }
