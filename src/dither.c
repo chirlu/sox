@@ -262,7 +262,7 @@ typedef struct {
   int32_t       history, ranqd1, r;
   double const  * coefs;
   sox_bool      dither_off;
-  int           (*flow)(sox_effect_t *, const sox_sample_t *, sox_sample_t *, size_t *, size_t *);
+  sox_effect_handler_flow flow;
 } priv_t;
 
 #define CONVOLVE _ _ _ _
@@ -299,7 +299,19 @@ static int flow_no_shape(sox_effect_t * effp, const sox_sample_t * ibuf,
   size_t len = *isamp = *osamp = min(*isamp, *osamp);
 
   while (len--) {
-    if (!p->auto_detect || (p->history = ((p->history << 1) + !!(*ibuf & (((unsigned)-1) >> p->prec))))) {
+    if (p->auto_detect) {
+      p->history = (p->history << 1) +
+          !!(*ibuf & (((unsigned)-1) >> p->prec));
+      if (p->history && p->dither_off) {
+        p->dither_off = sox_false;
+        lsx_debug("flow %" PRIuPTR ": on  @ %" PRIu64, effp->flow, p->num_output);
+      } else if (!p->history && !p->dither_off) {
+        p->dither_off = sox_true;
+        lsx_debug("flow %" PRIuPTR ": off @ %" PRIu64, effp->flow, p->num_output);
+      }
+    }
+
+    if (!p->dither_off) {
       int32_t r = RANQD1 >> p->prec;
       double d = ((double)*ibuf++ + r + (p->alt_tpdf? -p->r : (RANQD1 >> p->prec))) / (1 << (32 - p->prec));
       int i = d < 0? d - .5 : d + .5;
@@ -310,16 +322,9 @@ static int flow_no_shape(sox_effect_t * effp, const sox_sample_t * ibuf,
         ++effp->clips, *obuf = SOX_INT_MAX(p->prec) << (32 - p->prec);
       else *obuf = i << (32 - p->prec);
       ++obuf;
-      if (p->dither_off)
-        lsx_debug("flow %" PRIuPTR ": on  @ %" PRIu64, effp->flow, p->num_output);
-      p->dither_off = sox_false;
     }
-    else {
+    else
       *obuf++ = *ibuf++;
-      if (!p->dither_off)
-        lsx_debug("flow %" PRIuPTR ": off @ %" PRIu64, effp->flow, p->num_output);
-      p->dither_off = sox_true;
-    }
     ++p->num_output;
   }
   return SOX_SUCCESS;

@@ -11,7 +11,21 @@ static int NAME(sox_effect_t * effp, const sox_sample_t * ibuf,
   size_t len = *isamp = *osamp = min(*isamp, *osamp);
 
   while (len--) {
-    if (!p->auto_detect || (p->history = ((p->history << 1) + !!(*ibuf & (((unsigned)-1) >> p->prec))))) {
+    if (p->auto_detect) {
+      p->history = (p->history << 1) +
+          !!(*ibuf & (((unsigned)-1) >> p->prec));
+      if (p->history && p->dither_off) {
+        p->dither_off = sox_false;
+        lsx_debug("flow %" PRIuPTR ": on  @ %" PRIu64, effp->flow, p->num_output);
+      } else if (!p->history && !p->dither_off) {
+        p->dither_off = sox_true;
+        memset(p->previous_errors, 0, sizeof(p->previous_errors));
+        memset(p->previous_outputs, 0, sizeof(p->previous_outputs));
+        lsx_debug("flow %" PRIuPTR ": off @ %" PRIu64, effp->flow, p->num_output);
+      }
+    }
+
+    if (!p->dither_off) {
       int32_t r1 = RANQD1 >> p->prec, r2 = RANQD1 >> p->prec; /* Defer add! */
 #ifdef IIR
       double d1, d, output = 0;
@@ -36,20 +50,9 @@ static int NAME(sox_effect_t * effp, const sox_sample_t * ibuf,
         ++effp->clips, *obuf = SOX_INT_MAX(p->prec) << (32 - p->prec);
       else *obuf = i << (32 - p->prec);
       ++obuf;
-
-      if (p->dither_off)
-        lsx_debug("flow %" PRIuPTR ": on  @ %" PRIu64, effp->flow, p->num_output);
-      p->dither_off = sox_false;
     }
-    else {
+    else
       *obuf++ = *ibuf++;
-      if (!p->dither_off) {
-        lsx_debug("flow %" PRIuPTR ": off @ %" PRIu64, effp->flow, p->num_output);
-        memset(p->previous_errors, 0, sizeof(p->previous_errors));
-        memset(p->previous_outputs, 0, sizeof(p->previous_outputs));
-      }
-      p->dither_off = sox_true;
-    }
     ++p->num_output;
   }
   return SOX_SUCCESS;
