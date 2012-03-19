@@ -1,4 +1,4 @@
-sox (14.4.1-0+git20120311-1) UNRELEASED; urgency=low
+sox (14.4.2-0+git20120311-1) UNRELEASED; urgency=low
 
   * Git Version.
   * [debian/control]:
