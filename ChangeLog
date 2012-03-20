@@ -10,6 +10,7 @@ sox-14.4.1	20xx-xx-xx
 File formats:
 
   o Fix pipe file-type detection regression. (robs)
+  o MAUD write fixes. [3507927] (Carl Eric Codere and Ulrich Klauer)
 
 Other bug fixes:
 
