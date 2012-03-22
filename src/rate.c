@@ -1,4 +1,4 @@
-/* Effect: change sample rate     Copyright (c) 2008 robs@users.sourceforge.net
+/* Effect: change sample rate  Copyright (c) 2008,12 robs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -69,7 +69,7 @@ static sample_t * prepare_coefs(raw_coef_t const * coefs, int num_coefs,
 
 typedef struct {    /* Data that are shared between channels and stages */
   sample_t   * poly_fir_coefs;
-  dft_filter_t half_band[2];   /* Div or mul by n */
+  dft_filter_t dft_filter[2];   /* Div or mul by n */
 } rate_shared_t;
 
 struct stage;
@@ -119,12 +119,12 @@ static void cubic_spline(stage_t * p, fifo_t * output_fifo)
   p->at.parts.integer = 0;
 }
 
-static void half_sample(stage_t * p, fifo_t * output_fifo)
+static void decimate(stage_t * p, fifo_t * output_fifo)
 {
-  sample_t * output;
+  sample_t * output, tmp = 0;
   int i, j, num_in = max(0, fifo_occupancy(&p->fifo));
   rate_shared_t const * s = p->shared;
-  dft_filter_t const * f = &s->half_band[p->which];
+  dft_filter_t const * f = &s->dft_filter[p->which];
   int const overlap = f->num_taps - 1;
 
   while (num_in >= f->dft_length) {
@@ -137,27 +137,38 @@ static void half_sample(stage_t * p, fifo_t * output_fifo)
 
     lsx_safe_rdft(f->dft_length, 1, output);
     output[0] *= f->coefs[0];
-    output[1] *= f->coefs[1];
-    for (i = 2; i < f->dft_length; i += 2) {
-      sample_t tmp = output[i];
-      output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
-      output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
+    if (p->tuple) {
+      output[1] *= f->coefs[1];
+      for (i = 2; i < f->dft_length; i += 2) {
+        tmp = output[i];
+        output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
+        output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
+      }
+      lsx_safe_rdft(f->dft_length, -1, output);
+      for (j = 0, i = p->rem; i < f->dft_length - overlap; ++j, i += p->tuple)
+        output[j] = output[i];
+      p->rem = i - (f->dft_length - overlap);
+      fifo_trim_by(output_fifo, f->dft_length - j);
     }
-    lsx_safe_rdft(f->dft_length, -1, output);
-
-    for (j = 0, i = p->rem; i < f->dft_length - overlap; ++j, i += p->tuple)
-      output[j] = output[i];
-    p->rem = i - (f->dft_length - overlap);
-    fifo_trim_by(output_fifo, f->dft_length - j);
+    else { /* F-domain */
+      for (i = 2; i < (f->dft_length >> 1); i += 2) {
+        tmp = output[i];
+        output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
+        output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
+      }
+      output[1] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
+      lsx_safe_rdft(f->dft_length >> 1, -1, output);
+      fifo_trim_by(output_fifo, (f->dft_length + overlap) >> 1);
+    }
   }
 }
 
-static void double_sample(stage_t * p, fifo_t * output_fifo)
+static void interpolate(stage_t * p, fifo_t * output_fifo)
 {
   sample_t * output;
   int i, j, num_in = max(0, fifo_occupancy(&p->fifo));
   rate_shared_t const * s = p->shared;
-  dft_filter_t const * f = &s->half_band[p->which];
+  dft_filter_t const * f = &s->dft_filter[p->which];
   int const overlap = f->num_taps - 1;
 
   while (p->rem + p->tuple * num_in >= f->dft_length) {
@@ -168,12 +179,27 @@ static void double_sample(stage_t * p, fifo_t * output_fifo)
 
     output = fifo_reserve(output_fifo, f->dft_length);
     fifo_trim_by(output_fifo, overlap);
-    memset(output, 0, f->dft_length * sizeof(*output));
-    for (j = 0, i = p->rem; i < f->dft_length; ++j, i += p->tuple)
-      output[i] = input[j];
-    p->rem = p->tuple - 1 - divd.rem;
-
-    lsx_safe_rdft(f->dft_length, 1, output);
+    if (p->tuple == 2 || p->tuple == 4) { /* F-domain */
+      int portion = f->dft_length / p->tuple;
+      memcpy(output, input, (unsigned)portion * sizeof(*output));
+      lsx_safe_rdft(portion, 1, output);
+      for (i = portion + 2; i < (portion << 1); i += 2)
+        output[i] = output[(portion << 1) - i],
+        output[i+1] = -output[(portion << 1) - i + 1];
+      output[portion] = output[1];
+      output[portion + 1] = 0;
+      output[1] = output[0];
+      for (portion <<= 1; i < f->dft_length; i += portion, portion <<= 1) {
+        memcpy(output + i, output, portion * sizeof(*output));
+        output[i + 1] = 0;
+      }
+    } else {
+      memset(output, 0, f->dft_length * sizeof(*output));
+      for (j = 0, i = p->rem; i < f->dft_length; ++j, i += p->tuple)
+        output[i] = input[j];
+      p->rem = p->tuple - 1 - divd.rem;
+      lsx_safe_rdft(f->dft_length, 1, output);
+    }
     output[0] *= f->coefs[0];
     output[1] *= f->coefs[1];
     for (i = 2; i < f->dft_length; i += 2) {
@@ -189,7 +215,7 @@ static void init_dft_filter(rate_shared_t * p, unsigned which, int num_taps,
     sample_t const h[], double Fp, double Fc, double Fn, double att,
     int multiplier, double phase, sox_bool allow_aliasing)
 {
-  dft_filter_t * f = &p->half_band[which];
+  dft_filter_t * f = &p->dft_filter[which];
   int dft_length, i;
 
   if (f->num_taps)
@@ -207,7 +233,16 @@ static void init_dft_filter(rate_shared_t * p, unsigned which, int num_taps,
 
     if (phase != 50)
       lsx_fir_to_phase(&h2, &num_taps, &f->post_peak, phase);
-    else f->post_peak = num_taps / 2;
+    else {
+      if (Fn == 4 && ((num_taps - 1) & 4)) { /* preserve phase */
+        double * h3 = calloc(num_taps + 4, sizeof(*h3));
+        memcpy(h3 + 2, h2, num_taps * sizeof(*h3));
+        free(h2);
+        h2 = h3;
+        num_taps += 4;
+      }
+      f->post_peak = num_taps / 2;
+    }
 
     dft_length = lsx_set_dft_length(num_taps);
     f->coefs = calloc(dft_length, sizeof(*f->coefs));
@@ -297,8 +332,8 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     }
   }
   mult = tuple;
-  lsx_debug("i/o=%.16g; %.12g:%i @ level %i tuple=%i", p->factor, last_stage.step.all / MULT32, divisor, p->level, tuple);
-  lsx_debug("%x.%x", last_stage.step.parts.integer, last_stage.step.parts.fraction);
+  lsx_debug("i/o=%.16g; %.12g:%i @ level %i tuple=%i last-stage:%x.%x", p->factor, last_stage.step.all / MULT32,
+      divisor, p->level, tuple, last_stage.step.parts.integer, last_stage.step.parts.fraction);
 
   p->input_stage_num = -p->upsample;
   p->output_stage_num = p->level;
@@ -351,35 +386,35 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     assert((size_t)(quality - Low) < array_length(filters));
     init_dft_filter(shared, p->upsample, f->len, f->h, bw, 1., (double)max(tuple, two_or_three), att, mult, phase, allow_aliasing);
     if (p->upsample) {
-      pre_stage.fn = double_sample; /* Finish off setting up pre-stage */
-      pre_stage.preload = shared->half_band[1].post_peak / tuple;
-      pre_stage.rem     = shared->half_band[1].post_peak % tuple;
+      pre_stage.fn = interpolate; /* Finish off setting up pre-stage */
+      pre_stage.preload = shared->dft_filter[1].post_peak / tuple;
+      pre_stage.rem     = shared->dft_filter[1].post_peak % tuple;
       pre_stage.tuple = tuple;
       pre_stage.which = 1;
       if (two_factors && divisor != tuple) {
         int other = divisor / tuple;
         ++p->output_stage_num;
         init_dft_filter(shared, 0, 0, NULL, 1., (double)tuple, (double)divisor, att, other, phase, allow_aliasing);
-        last_stage.fn = double_sample;
-        last_stage.preload = shared->half_band[0].post_peak / other;
-        last_stage.rem     = shared->half_band[0].post_peak % other;
+        last_stage.fn = interpolate;
+        last_stage.preload = shared->dft_filter[0].post_peak / other;
+        last_stage.rem     = shared->dft_filter[0].post_peak % other;
         last_stage.tuple = other;
         last_stage.which = 0;
       }
       else {
         /* Start setting up post-stage; TODO don't use dft for short filters */
-        if ((1 - p->factor) / (1 - bw) > 2)
+        if ((1 - p->factor) / (1 - bw) > 2 || tuple != 2)
           init_dft_filter(shared, 0, 0, NULL, max(p->factor, min), 1., 2., att, 1, phase, allow_aliasing);
-        else shared->half_band[0] = shared->half_band[1];
+        else shared->dft_filter[0] = shared->dft_filter[1];
         if (two_factors && factor == 2) {
           ++p->output_stage_num;
-          last_stage.fn = half_sample;
-          last_stage.preload = shared->half_band[0].post_peak;
-          last_stage.tuple = 2;
+          last_stage.fn = decimate;
+          last_stage.preload = shared->dft_filter[0].post_peak;
+          last_stage.tuple = (old_behaviour | allow_aliasing) << 1;
         } else {
-          post_stage.fn = half_sample;
-          post_stage.preload = shared->half_band[0].post_peak;
-          post_stage.tuple = 2;
+          post_stage.fn = decimate;
+          post_stage.preload = shared->dft_filter[0].post_peak;
+          post_stage.tuple = (old_behaviour | allow_aliasing) << 1;
         }
       }
     }
@@ -389,9 +424,9 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
         if ((1 - pass) / (1 - bw) > 2)
           init_dft_filter(shared, 1, 0, NULL, max(pass, min), 1., 2., att, 1, phase, allow_aliasing);
       }
-      post_stage.fn = half_sample;
-      post_stage.preload = shared->half_band[0].post_peak;
-      post_stage.tuple = two_or_three;
+      post_stage.fn = decimate;
+      post_stage.preload = shared->dft_filter[0].post_peak;
+      post_stage.tuple = two_or_three == 2 && !(old_behaviour | allow_aliasing)? 0 : two_or_three;
     }
   }
   else if (quality == Low && !p->upsample) {    /* dft is slower here, so */
@@ -401,10 +436,10 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
   }
   if (p->level > 0) {
     stage_t * s = & p->stages[p->level - 1];
-    if (shared->half_band[1].num_taps) {
-      s->fn = half_sample;
-      s->preload = shared->half_band[1].post_peak;
-      s->tuple = 2;
+    if (shared->dft_filter[1].num_taps) {
+      s->fn = decimate;
+      s->preload = shared->dft_filter[1].post_peak;
+      s->tuple = (old_behaviour | allow_aliasing) << 1;
       s->which = 1;
     }
     else *s = post_stage;
@@ -471,9 +506,9 @@ static void rate_close(rate_t * p)
 
   for (i = p->input_stage_num; i <= p->output_stage_num; ++i)
     fifo_delete(&p->stages[i].fifo);
-  free(shared->half_band[0].coefs);
-  if (shared->half_band[1].coefs != shared->half_band[0].coefs)
-    free(shared->half_band[1].coefs);
+  free(shared->dft_filter[0].coefs);
+  if (shared->dft_filter[1].coefs != shared->dft_filter[0].coefs)
+    free(shared->dft_filter[1].coefs);
   free(shared->poly_fir_coefs);
   memset(shared, 0, sizeof(*shared));
   free(p->stages - 1);
