@@ -398,8 +398,8 @@ void lsx_fir_to_phase(double * * h, int * len, int * post_len, double phase)
   else {
     begin = (.997 - (2 - phase1) * .22) * *len + .5;
     end   = (.997 + (0 - phase1) * .22) * *len + .5;
-    begin = peak - begin - (begin & 1);
-    end   = peak + 1 + end + (end & 1);
+    begin = peak - (begin & ~3);
+    end   = peak + 1 + ((end + 3) & ~3);
     *len = end - begin;
     *h = lsx_realloc(*h, *len * sizeof(**h));
   }
