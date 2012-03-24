@@ -35,6 +35,9 @@
 #ifdef HAVE_MACHINE_SOUNDCARD_H
   #include <machine/soundcard.h>
 #endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 /* these appear in the sys/soundcard.h of OSS 4.x, and in Linux's
  * sound/core/oss/pcm_oss.c (2.6.24 and later), but are typically
@@ -49,17 +52,53 @@
 
 #include <sys/ioctl.h>
 
-typedef sox_fileinfo_t priv_t;
+typedef struct
+{
+    char* pOutput;
+    unsigned cOutput;
+    int device;
+    unsigned sample_shift;
+} priv_t;
+
 /* common r/w initialization code */
-static int ossinit(sox_format_t * ft)
+static int ossinit(sox_format_t* ft)
 {
     int sampletype, samplesize, dsp_stereo;
     int tmp, rc;
-    priv_t *file = (priv_t *)ft->priv;
+    char const* szDevname;
+    priv_t* pPriv = (priv_t*)ft->priv;
+ 
+    if (ft->filename == 0 || ft->filename[0] == 0 || !strcasecmp("default", ft->filename))
+    {
+        szDevname = getenv("OSS_AUDIODEV");
+        if (szDevname != NULL)
+        {
+            lsx_report("Using device name from OSS_AUDIODEV environment variable: %s", szDevname);
+        }
+        else
+        {
+            szDevname = "/dev/dsp";
+            lsx_report("Using default OSS device name: %s", szDevname);
+        }
+    }
+    else
+    {
+        szDevname = ft->filename;
+        lsx_report("Using user-specified device name: %s", szDevname);
+    }
+
+    pPriv->device = open(
+        szDevname,
+        ft->mode == 'r' ? O_RDONLY : O_WRONLY);
+    if (pPriv->device < 0) {
+        lsx_fail_errno(ft, errno, "open failed for device: %s", szDevname);
+        return SOX_EOF;
+    }
 
     if (ft->encoding.bits_per_sample == 8) {
         sampletype = AFMT_U8;
         samplesize = 8;
+        pPriv->sample_shift = 0;
         if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
             ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
         if (ft->encoding.encoding != SOX_ENCODING_UNSIGNED) {
@@ -75,6 +114,7 @@ static int ossinit(sox_format_t * ft)
         else
             sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
+        pPriv->sample_shift = 1;
         if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
             ft->encoding.encoding = SOX_ENCODING_SIGN2;
         if (ft->encoding.encoding != SOX_ENCODING_SIGN2) {
@@ -84,19 +124,20 @@ static int ossinit(sox_format_t * ft)
         }
     }
     else if (ft->encoding.bits_per_sample == 32) {
-	/* Attempt to use endian that user specified */
-	if (ft->encoding.reverse_bytes)
-	    sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S32_LE : AFMT_S32_BE;
-	else
-	    sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S32_BE : AFMT_S32_LE;
-	samplesize = 32;
-	if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
-	    ft->encoding.encoding = SOX_ENCODING_SIGN2;
-	if (ft->encoding.encoding != SOX_ENCODING_SIGN2) {
-	    lsx_report("OSS driver only supports signed with words");
-	    lsx_report("Forcing to signed linear");
-	    ft->encoding.encoding = SOX_ENCODING_SIGN2;
-	}
+        /* Attempt to use endian that user specified */
+        if (ft->encoding.reverse_bytes)
+            sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S32_LE : AFMT_S32_BE;
+        else
+            sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S32_BE : AFMT_S32_LE;
+        samplesize = 32;
+        pPriv->sample_shift = 2;
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
+            ft->encoding.encoding = SOX_ENCODING_SIGN2;
+        if (ft->encoding.encoding != SOX_ENCODING_SIGN2) {
+            lsx_report("OSS driver only supports signed with words");
+            lsx_report("Forcing to signed linear");
+            ft->encoding.encoding = SOX_ENCODING_SIGN2;
+        }
     }
     else {
         /* Attempt to use endian that user specified */
@@ -105,6 +146,7 @@ static int ossinit(sox_format_t * ft)
         else
             sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
+        pPriv->sample_shift = 1;
         ft->encoding.bits_per_sample = 16;
         ft->encoding.encoding = SOX_ENCODING_SIGN2;
         lsx_report("OSS driver only supports bytes and words");
@@ -113,15 +155,15 @@ static int ossinit(sox_format_t * ft)
 
     if (ft->signal.channels > 2) ft->signal.channels = 2;
 
-    if (ioctl(fileno(ft->fp), (size_t) SNDCTL_DSP_RESET, 0) < 0)
+    if (ioctl(pPriv->device, (size_t) SNDCTL_DSP_RESET, 0) < 0)
     {
-        lsx_fail_errno(ft,SOX_EOF,"Unable to reset OSS driver.  Possibly accessing an invalid file/device");
+        lsx_fail_errno(ft,SOX_EOF,"Unable to reset OSS device %s. Possibly accessing an invalid file/device", szDevname);
         return(SOX_EOF);
     }
 
     /* Query the supported formats and find the best match
      */
-    rc = ioctl(fileno(ft->fp), SNDCTL_DSP_GETFMTS, &tmp);
+    rc = ioctl(pPriv->device, SNDCTL_DSP_GETFMTS, &tmp);
     if (rc == 0) {
         if ((tmp & sampletype) == 0)
         {
@@ -135,6 +177,7 @@ static int ossinit(sox_format_t * ft)
                 lsx_report("Forcing to unsigned bytes");
                 tmp = sampletype = AFMT_U8;
                 samplesize = 8;
+                pPriv->sample_shift = 0;
             }
             /* is 8-bit supported */
             else if (samplesize == 8 && (tmp & AFMT_U8) == 0)
@@ -145,6 +188,7 @@ static int ossinit(sox_format_t * ft)
                 lsx_report("Forcing to signed words");
                 sampletype = (MACHINE_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
                 samplesize = 16;
+                pPriv->sample_shift = 1;
             }
             /* determine which 16-bit format to use */
             if (samplesize == 16 && (tmp & sampletype) == 0)
@@ -160,7 +204,7 @@ static int ossinit(sox_format_t * ft)
 
         }
         tmp = sampletype;
-        rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SETFMT, &tmp);
+        rc = ioctl(pPriv->device, SNDCTL_DSP_SETFMT, &tmp);
     }
     /* Give up and exit */
     if (rc < 0 || tmp != sampletype)
@@ -169,11 +213,13 @@ static int ossinit(sox_format_t * ft)
         return (SOX_EOF);
     }
 
-    if (ft->signal.channels == 2) dsp_stereo = 1;
-    else dsp_stereo = 0;
+    if (ft->signal.channels == 2)
+        dsp_stereo = 1;
+    else
+        dsp_stereo = 0;
 
     tmp = dsp_stereo;
-    if (ioctl(fileno(ft->fp), SNDCTL_DSP_STEREO, &tmp) < 0)
+    if (ioctl(pPriv->device, SNDCTL_DSP_STEREO, &tmp) < 0)
     {
         lsx_warn("Couldn't set to %s", dsp_stereo?  "stereo":"mono");
         dsp_stereo = 0;
@@ -183,7 +229,7 @@ static int ossinit(sox_format_t * ft)
         ft->signal.channels = tmp + 1;
 
     tmp = ft->signal.rate;
-    if (ioctl (fileno(ft->fp), SNDCTL_DSP_SPEED, &tmp) < 0 ||
+    if (ioctl(pPriv->device, SNDCTL_DSP_SPEED, &tmp) < 0 ||
         (int)ft->signal.rate != tmp) {
         /* If the rate the sound card is using is not within 1% of what
          * the user specified then override the user setting.
@@ -198,41 +244,213 @@ static int ossinit(sox_format_t * ft)
             ft->signal.rate = tmp;
     }
 
-    /* Find out block size to use last because the driver could compute
-     * its size based on specific rates/formats.
-     */
-    file->size = 0;
-    ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &file->size);
-    if (file->size < 4 || file->size > 65536) {
-            lsx_fail_errno(ft,SOX_EOF,"Invalid audio buffer size %" PRIuPTR, file->size);
-            return (SOX_EOF);
-    }
-    file->count = 0;
-    file->pos = 0;
-    file->buf = lsx_malloc(file->size);
-
-    if (ioctl(fileno(ft->fp), (size_t) SNDCTL_DSP_SYNC, NULL) < 0) {
+    if (ioctl(pPriv->device, (size_t) SNDCTL_DSP_SYNC, NULL) < 0) {
         lsx_fail_errno(ft,SOX_EOF,"Unable to sync dsp");
         return (SOX_EOF);
     }
 
-    /* Change to non-buffered I/O */
-    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * file->size);
+    if (ft->mode == 'r') {
+        pPriv->cOutput = 0;
+        pPriv->pOutput = NULL;
+    } else {
+        size_t cbOutput = sox_globals.bufsiz;
+        pPriv->cOutput = cbOutput >> pPriv->sample_shift;
+        pPriv->pOutput = lsx_malloc(cbOutput);
+    }
+
     return(SOX_SUCCESS);
+}
+
+static int ossstop(sox_format_t* ft)
+{
+    priv_t* pPriv = (priv_t*)ft->priv;
+    if (pPriv->device >= 0) {
+        close(pPriv->device);
+    }
+    if (pPriv->pOutput) {
+        free(pPriv->pOutput);
+    }
+    return SOX_SUCCESS;
+}
+
+static size_t ossread(sox_format_t* ft, sox_sample_t* pOutput, size_t cOutput)
+{
+    priv_t* pPriv = (priv_t*)ft->priv;
+    char* pbOutput = (char*)pOutput;
+    size_t cbOutputLeft = cOutput << pPriv->sample_shift;
+    size_t i, cRead;
+    int cbRead;
+    SOX_SAMPLE_LOCALS;
+    LSX_USE_VAR(sox_macro_temp_double);
+
+    while (cbOutputLeft) {
+        cbRead = read(pPriv->device, pbOutput, cbOutputLeft);
+        if (cbRead <= 0) {
+            if (cbRead < 0) {
+                lsx_fail_errno(ft, errno, "Error reading from device");
+                return 0;
+            }
+            break;
+        }
+        cbOutputLeft -= cbRead;
+        pbOutput += cbRead;
+    }
+
+    /* Convert in-place (backwards) */
+    cRead = cOutput - (cbOutputLeft >> pPriv->sample_shift);
+    if (ft->encoding.reverse_bytes) {
+        switch (pPriv->sample_shift)
+        {
+        case 0:
+            for (i = cRead; i != 0; i--) {
+                pOutput[i - 1] = SOX_UNSIGNED_8BIT_TO_SAMPLE(
+                ((sox_uint8_t*)pOutput)[i - 1],
+                dummy);
+            }
+            break;
+        case 1:
+            for (i = cRead; i != 0; i--) {
+                pOutput[i - 1] = SOX_SIGNED_16BIT_TO_SAMPLE(
+                lsx_swapw(((sox_int16_t*)pOutput)[i - 1]),
+                dummy);
+            }
+            break;
+        case 2:
+            for (i = cRead; i != 0; i--) {
+                pOutput[i - 1] = SOX_SIGNED_32BIT_TO_SAMPLE(
+                lsx_swapdw(((sox_int32_t*)pOutput)[i - 1]),
+                dummy);
+            }
+            break;
+        }
+    } else {
+        switch (pPriv->sample_shift)
+        {
+        case 0:
+            for (i = cRead; i != 0; i--) {
+                pOutput[i - 1] = SOX_UNSIGNED_8BIT_TO_SAMPLE(
+                ((sox_uint8_t*)pOutput)[i - 1],
+                dummy);
+            }
+            break;
+        case 1:
+            for (i = cRead; i != 0; i--) {
+                pOutput[i - 1] = SOX_SIGNED_16BIT_TO_SAMPLE(
+                ((sox_int16_t*)pOutput)[i - 1],
+                dummy);
+            }
+            break;
+        case 2:
+            for (i = cRead; i != 0; i--) {
+                pOutput[i - 1] = SOX_SIGNED_32BIT_TO_SAMPLE(
+                ((sox_int32_t*)pOutput)[i - 1],
+                dummy);
+            }
+            break;
+        }
+     }
+
+    return cRead;
+}
+
+static size_t osswrite(
+    sox_format_t* ft,
+    const sox_sample_t* pInput,
+    size_t cInput)
+{
+    priv_t* pPriv = (priv_t*)ft->priv;
+    size_t cInputRemaining = cInput;
+    unsigned cClips = 0;
+    SOX_SAMPLE_LOCALS;
+
+    while (cInputRemaining) {
+        size_t cStride;
+        size_t i;
+        size_t cbStride;
+        int cbWritten;
+
+        cStride = cInput;
+        if (cStride > pPriv->cOutput) {
+            cStride = pPriv->cOutput;
+        }
+
+        if (ft->encoding.reverse_bytes)
+        {
+            switch (pPriv->sample_shift)
+            {
+            case 0:
+                for (i = 0; i != cStride; i++) {
+                    ((sox_uint8_t*)pPriv->pOutput)[i] =
+                        SOX_SAMPLE_TO_UNSIGNED_8BIT(pInput[i], cClips);
+                }
+                break;
+            case 1:
+                for (i = 0; i != cStride; i++) {
+                    sox_int16_t s16 = SOX_SAMPLE_TO_SIGNED_16BIT(pInput[i], cClips);
+                    ((sox_int16_t*)pPriv->pOutput)[i] = lsx_swapw(s16);
+                }
+                break;
+            case 2:
+                for (i = 0; i != cStride; i++) {
+                    ((sox_int32_t*)pPriv->pOutput)[i] =
+                        lsx_swapdw(SOX_SAMPLE_TO_SIGNED_32BIT(pInput[i], cClips));
+                }
+                break;
+            }
+        } else {
+            switch (pPriv->sample_shift)
+            {
+            case 0:
+                for (i = 0; i != cStride; i++) {
+                    ((sox_uint8_t*)pPriv->pOutput)[i] =
+                        SOX_SAMPLE_TO_UNSIGNED_8BIT(pInput[i], cClips);
+                }
+                break;
+            case 1:
+                for (i = 0; i != cStride; i++) {
+                    ((sox_int16_t*)pPriv->pOutput)[i] =
+                        SOX_SAMPLE_TO_SIGNED_16BIT(pInput[i], cClips);
+                }
+                break;
+            case 2:
+                for (i = 0; i != cStride; i++) {
+                    ((sox_int32_t*)pPriv->pOutput)[i] =
+                        SOX_SAMPLE_TO_SIGNED_32BIT(pInput[i], cClips);
+                }
+                break;
+            }
+        }
+
+        cbStride = cStride << pPriv->sample_shift;
+        i = 0;
+        do {
+            cbWritten = write(pPriv->device, &pPriv->pOutput[i], cbStride - i);
+            i += cbWritten;
+            if (cbWritten <= 0) {
+                lsx_fail_errno(ft, errno, "Error writing to device");
+                return 0;
+            }
+        } while (i != cbStride);
+
+        cInputRemaining -= cStride;
+        pInput += cStride;
+    }
+
+    return cInput;
 }
 
 LSX_FORMAT_HANDLER(oss)
 {
-  static char const * const names[] = {"ossdsp", "oss", NULL};
+  static char const* const names[] = {"ossdsp", "oss", NULL};
   static unsigned const write_encodings[] = {
     SOX_ENCODING_SIGN2, 32, 16, 0,
     SOX_ENCODING_UNSIGNED, 8, 0,
     0};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "Open Sound Sytem device driver for unix-like systems",
-    names, SOX_FILE_DEVICE,
-    ossinit, lsx_rawread, lsx_rawstopread,
-    ossinit, lsx_rawwrite, lsx_rawstopwrite,
+    names, SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
+    ossinit, ossread, ossstop,
+    ossinit, osswrite, ossstop,
     NULL, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
