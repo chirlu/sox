@@ -45,7 +45,9 @@ typedef struct waveaudio_priv_t
    */
   WAVEHDR headers[num_buffers];
 
-  /* The combined data area shared by all transfer buffers. */
+  /* The combined data area shared by all transfer buffers.
+   * size = (bufsiz rounded up to a multiple of 32 samples) * num_buffers.
+   */
   char * data;
 
   /* The number of samples that can fit into one transfer buffer. */
@@ -61,10 +63,7 @@ typedef struct waveaudio_priv_t
   /* Shift sample count by this many to get byte count:
    * 0 for 8-bit samples, 1 for 16-bit samples, or 2 for 32-bit samples.
    */
-  unsigned sample_shift;
-
-  /* If there has been an error, this has the Win32 error code. Otherwise, this is 0. */
-  unsigned error;
+  unsigned char sample_shift;
 } priv_t;
 
 static void fail(sox_format_t* ft, unsigned code, const char* context)
@@ -91,14 +90,14 @@ static int stop(sox_format_t* ft)
 
   if (priv->hin)
   {
-    priv->error = waveInReset(priv->hin);
-    priv->error = waveInClose(priv->hin);
+    waveInReset(priv->hin);
+    waveInClose(priv->hin);
   }
   
   if (priv->hout)
   {
-    priv->error = waveOutReset(priv->hout);
-    priv->error = waveOutClose(priv->hout);
+    waveOutReset(priv->hout);
+    waveOutClose(priv->hout);
   }
 
   if (priv->block_finished_event)
@@ -182,6 +181,7 @@ static int start(sox_format_t* ft)
   unsigned dev;
   WAVEFORMATEXTENSIBLE fmt;
   int recording = ft->mode == 'r';
+  unsigned error;
   priv_t *priv = (priv_t*)ft->priv;
   if (priv == NULL) return SOX_EOF;
   memset(&fmt, 0, sizeof(fmt));
@@ -205,11 +205,11 @@ static int start(sox_format_t* ft)
     if (dev_num_end[0] == 0)
     {
       if (recording)
-        priv->error = waveInGetDevCapsA(dev, &incaps, sizeof(incaps));
+        error = waveInGetDevCapsA(dev, &incaps, sizeof(incaps));
       else
-        priv->error = waveOutGetDevCapsA(dev, &outcaps, sizeof(outcaps));
+        error = waveOutGetDevCapsA(dev, &outcaps, sizeof(outcaps));
 
-      if (priv->error)
+      if (error)
       {
         lsx_fail_errno(ft, ENODEV, "WaveAudio device not found.");
         return SOX_EOF;
@@ -225,20 +225,20 @@ static int start(sox_format_t* ft)
       {
         if (recording)
         {
-          priv->error = waveInGetDevCapsA(dev, &incaps, sizeof(incaps));
+          error = waveInGetDevCapsA(dev, &incaps, sizeof(incaps));
           dev_name = incaps.szPname;
           lsx_debug("Enumerating input device %2d: \"%s\"", dev, dev_name);
         }
         else
         {
-          priv->error = waveOutGetDevCapsA(dev, &outcaps, sizeof(outcaps));
+          error = waveOutGetDevCapsA(dev, &outcaps, sizeof(outcaps));
           dev_name = outcaps.szPname;
           lsx_debug("Enumerating output device %2d: \"%s\"", dev, dev_name);
         }
 
-        if (priv->error)
+        if (error)
         {
-          fail(ft, priv->error, recording ? "waveInGetDevCapsA" : "waveOutGetDevCapsA");
+          fail(ft, error, recording ? "waveInGetDevCapsA" : "waveOutGetDevCapsA");
           return SOX_EOF;
         }
 
@@ -257,10 +257,10 @@ static int start(sox_format_t* ft)
     }
   }
 
-  priv->error = negotiate_format(ft, &fmt, dev);
-  if (priv->error != MMSYSERR_NOERROR)
+  error = negotiate_format(ft, &fmt, dev);
+  if (error != MMSYSERR_NOERROR)
   {
-    fail(ft, priv->error, "sample format negotiation");
+    fail(ft, error, "sample format negotiation");
     return SOX_EOF;
   }
 
@@ -315,15 +315,15 @@ static int start(sox_format_t* ft)
   priv->block_finished_event = CreateEventA(NULL, FALSE, FALSE, NULL);
   if (!priv->block_finished_event)
   {
-    priv->error = GetLastError();
-    fail(ft, priv->error, "CreateEventA");
+    error = GetLastError();
+    fail(ft, error, "CreateEventA");
     stop(ft);
     return SOX_EOF;
   }
 
   if (recording)
   {
-    priv->error = waveInOpen(
+    error = waveInOpen(
         &priv->hin,
         dev,
         &fmt.Format,
@@ -333,7 +333,7 @@ static int start(sox_format_t* ft)
   }
   else
   {
-    priv->error = waveOutOpen(
+    error = waveOutOpen(
         &priv->hout,
         dev,
         &fmt.Format,
@@ -342,9 +342,9 @@ static int start(sox_format_t* ft)
         CALLBACK_EVENT);
   }
 
-  if (priv->error != MMSYSERR_NOERROR)
+  if (error != MMSYSERR_NOERROR)
   {
-    fail(ft, priv->error, recording ? "waveInOpen" : "waveOutOpen");
+    fail(ft, error, recording ? "waveInOpen" : "waveOutOpen");
     stop(ft);
     return SOX_EOF;
   }
@@ -355,23 +355,23 @@ static int start(sox_format_t* ft)
     priv->headers[i].dwBufferLength = priv->buf_len << priv->sample_shift;
 
     if (recording)
-      priv->error = waveInPrepareHeader(priv->hin, &priv->headers[i], sizeof(priv->headers[i]));
+      error = waveInPrepareHeader(priv->hin, &priv->headers[i], sizeof(priv->headers[i]));
     else
-      priv->error = waveOutPrepareHeader(priv->hout, &priv->headers[i], sizeof(priv->headers[i]));
+      error = waveOutPrepareHeader(priv->hout, &priv->headers[i], sizeof(priv->headers[i]));
 
-    if (priv->error != MMSYSERR_NOERROR)
+    if (error != MMSYSERR_NOERROR)
     {
-      fail(ft, priv->error, recording ? "waveInPrepareHeader" : "waveOutPrepareHeader");
+      fail(ft, error, recording ? "waveInPrepareHeader" : "waveOutPrepareHeader");
       stop(ft);
       return SOX_EOF;
     }
 
     if (recording)
     {
-      priv->error = waveInAddBuffer(priv->hin, &priv->headers[i], sizeof(priv->headers[i]));
-      if (priv->error != MMSYSERR_NOERROR)
+      error = waveInAddBuffer(priv->hin, &priv->headers[i], sizeof(priv->headers[i]));
+      if (error != MMSYSERR_NOERROR)
       {
-        fail(ft, priv->error, "waveInAddBuffer");
+        fail(ft, error, "waveInAddBuffer");
         stop(ft);
         return SOX_EOF;
       }
@@ -380,10 +380,10 @@ static int start(sox_format_t* ft)
 
   if (recording)
   {
-    priv->error = waveInStart(priv->hin);
-    if (priv->error != MMSYSERR_NOERROR)
+    error = waveInStart(priv->hin);
+    if (error != MMSYSERR_NOERROR)
     {
-      fail(ft, priv->error, "waveInStart");
+      fail(ft, error, "waveInStart");
       stop(ft);
       return SOX_EOF;
     }
@@ -396,9 +396,12 @@ static size_t read(sox_format_t * ft, sox_sample_t* buf, size_t len)
 {
   size_t copied = 0;
   priv_t *priv = (priv_t*)ft->priv;
-  if (priv == NULL) return (size_t)SOX_EOF;
+  unsigned error = 0;
 
-  while (!priv->error && copied < len)
+  if (priv == NULL)
+      return (size_t)SOX_EOF;
+
+  while (!error && copied < len)
   {
     LPWAVEHDR header = &priv->headers[priv->current];
     if (0 == (header->dwFlags & WHDR_INQUEUE) ||
@@ -432,12 +435,12 @@ static size_t read(sox_format_t * ft, sox_sample_t* buf, size_t len)
 
       if (header->dwUser == length)
       {
-        priv->error = waveInAddBuffer(priv->hin, header, sizeof(*header));
+        error = waveInAddBuffer(priv->hin, header, sizeof(*header));
         priv->current = (priv->current + 1) % num_buffers;
         priv->headers[priv->current].dwUser = 0;
-        if (priv->error)
+        if (error)
         {
-          fail(ft, priv->error, "waveInAddBuffer");
+          fail(ft, error, "waveInAddBuffer");
           copied = 0;
         }
       }
@@ -453,12 +456,15 @@ static size_t read(sox_format_t * ft, sox_sample_t* buf, size_t len)
 
 static size_t write(sox_format_t * ft, const sox_sample_t* buf, size_t len)
 {
-  unsigned clips = 0;
   size_t copied = 0;
   priv_t *priv = (priv_t*)ft->priv;
-  if (priv == NULL) return (size_t)SOX_EOF;
+  unsigned error = 0;
+  unsigned clips = 0;
 
-  while (!priv->error && copied < len)
+  if (priv == NULL)
+      return (size_t)SOX_EOF;
+
+  while (!error && copied < len)
   {
     LPWAVEHDR header = &priv->headers[priv->current];
     if (0 == (header->dwFlags & WHDR_INQUEUE) ||
@@ -492,13 +498,13 @@ static size_t write(sox_format_t * ft, const sox_sample_t* buf, size_t len)
       }
 
       header->dwBufferLength = header->dwUser << priv->sample_shift;
-      priv->error = waveOutWrite(priv->hout, header, sizeof(*header));
+      error = waveOutWrite(priv->hout, header, sizeof(*header));
       priv->current = (priv->current + 1) % num_buffers;
       priv->headers[priv->current].dwUser = 0;
 
-      if (priv->error)
+      if (error)
       {
-        fail(ft, priv->error, "waveOutWrite");
+        fail(ft, error, "waveOutWrite");
         copied = 0;
       }
     }
