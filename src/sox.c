@@ -2495,13 +2495,17 @@ static char const * device_name(char const * const type)
   if (!type)
     return NULL;
 
-  if (!strcmp(type, "sunau"))
-    name = "/dev/audio";
-  else if (!strcmp(type, "oss" ) || !strcmp(type, "ossdsp"))
-    name = "/dev/dsp";
-  else if (!strcmp(type, "alsa") || !strcmp(type, "ao") || !strcmp(type,"sndio")
-        || !strcmp(type, "coreaudio") || !strcmp(type, "pulseaudio")
-	|| !strcmp(type, "waveaudio"))
+  if (0
+      || !strcmp(type, "sunau")
+      || !strcmp(type, "oss" )
+      || !strcmp(type, "ossdsp")
+      || !strcmp(type, "alsa")
+      || !strcmp(type, "ao")
+      || !strcmp(type, "sndio")
+      || !strcmp(type, "coreaudio")
+      || !strcmp(type, "pulseaudio")
+      || !strcmp(type, "waveaudio")
+      )
     name = "default";
   
   return name? from_env? from_env : name : NULL;
