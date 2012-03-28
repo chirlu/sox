@@ -39,7 +39,7 @@ typedef struct waveaudio_priv_t
   HANDLE block_finished_event;
 
   /* Data transfer buffers. The lpData member of the first buffer points at
-   * data[buf_len*sample_size*0], the second buffer's lpData points
+   * data[buf_len*sample_size*0], the second buffer's lpData points at
    * data[buf_len*sample_size*1], etc. The dwUser field contains the number
    * of samples of this buffer that have already been processed.
    */
@@ -58,17 +58,19 @@ typedef struct waveaudio_priv_t
    */
   unsigned current;
 
-  /* Width of a sample in bytes: 1, 2, 3, or 4. */
-  unsigned sample_width;
+  /* Shift sample count by this many to get byte count:
+   * 0 for 8-bit samples, 1 for 16-bit samples, or 2 for 32-bit samples.
+   */
+  unsigned sample_shift;
 
   /* If there has been an error, this has the Win32 error code. Otherwise, this is 0. */
-  DWORD error;
+  unsigned error;
 } priv_t;
 
-static void fail(sox_format_t* ft, DWORD code, const char* context)
+static void fail(sox_format_t* ft, unsigned code, const char* context)
 {
   char message[256];
-  DWORD formatMessageOk = FormatMessageA(
+  unsigned formatMessageOk = FormatMessageA(
     FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
     NULL,
     code,
@@ -79,7 +81,7 @@ static void fail(sox_format_t* ft, DWORD code, const char* context)
   if (formatMessageOk)
     lsx_fail_errno(ft, SOX_EOF, "WaveAudio %s failed with code %d: %s", context, (int)code, message);
   else
-    lsx_fail_errno(ft, SOX_EOF, "WaveAudio %s failed with unrecognized MMSYSERR code %d.", context, (int)code);
+    lsx_fail_errno(ft, SOX_EOF, "WaveAudio %s failed with unrecognized MMSYSERR code: %d", context, (int)code);
 }
 
 static int stop(sox_format_t* ft)
@@ -93,14 +95,7 @@ static int stop(sox_format_t* ft)
     priv->error = waveInClose(priv->hin);
   }
   
-  if (priv->hout && !priv->error)
-  {
-    while ((priv->error = waveOutClose(priv->hout)) == WAVERR_STILLPLAYING)
-    {
-      WaitForSingleObject(priv->block_finished_event, INFINITE);
-    }
-  }
-  else if (priv->hout)
+  if (priv->hout)
   {
     priv->error = waveOutReset(priv->hout);
     priv->error = waveOutClose(priv->hout);
@@ -115,7 +110,7 @@ static int stop(sox_format_t* ft)
   return SOX_SUCCESS;
 }
 
-static int check_format(
+static unsigned check_format(
     WAVEFORMATEXTENSIBLE* pfmt,
     int recording,
     unsigned dev,
@@ -123,10 +118,14 @@ static int check_format(
     unsigned width,
     unsigned hertz)
 {
-  static unsigned char const SubformatPcm[] = "\x01\x00\x00\x00\x00\x00\x10\x00\x80\x00\x00\xAA\x00\x38\x9B\x71";
-  const unsigned bytewidth = width > 24 ? 4 : width > 16 ? 3 : width > 8 ? 2 : 1;
-  const int extend = channels > 2 || bytewidth > 2;
-  DWORD error;
+  /* GUID: KSDATAFORMAT_SUBTYPE_PCM */
+  static unsigned char const SubformatPcm[] =
+      "\x01\x00\x00\x00\x00\x00\x10\x00\x80\x00\x00\xAA\x00\x38\x9B\x71";
+
+  const unsigned bytewidth = width > 16 ? 4 : width > 8 ? 2 : 1;
+  const int extend = channels > 2 || width > 16;
+  unsigned error;
+
   pfmt->Format.wFormatTag = extend ? WAVE_FORMAT_EXTENSIBLE : WAVE_FORMAT_PCM;
   pfmt->Format.nChannels = channels;
   pfmt->Format.nSamplesPerSec = hertz;
@@ -137,16 +136,28 @@ static int check_format(
   pfmt->Samples.wValidBitsPerSample = width;
   pfmt->dwChannelMask = 0;
   memcpy(&pfmt->SubFormat, SubformatPcm, 16);
+
   if (recording)
     error = waveInOpen(0, dev, &pfmt->Format, 0, 0, WAVE_FORMAT_QUERY);
   else
     error = waveOutOpen(0, dev, &pfmt->Format, 0, 0, WAVE_FORMAT_QUERY);
-  return error == MMSYSERR_NOERROR;
+
+  lsx_debug(
+      "%s(QUERY: Dev %d %uHz %uCh %uPrec %uWide) returned %u",
+      recording ? "waveInOpen" : "waveOutOpen",
+      dev,
+      hertz,
+      channels,
+      bytewidth * 8,
+      width,
+      error);
+  return error;
 }
 
-static int negotiate_format(sox_format_t* ft, WAVEFORMATEXTENSIBLE* pfmt, unsigned dev)
+static unsigned negotiate_format(sox_format_t* ft, WAVEFORMATEXTENSIBLE* pfmt, unsigned dev)
 {
   int recording = ft->mode == 'r';
+  unsigned error = 0;
 
   unsigned precision = ft->encoding.bits_per_sample;
   if (precision > 32)
@@ -156,18 +167,19 @@ static int negotiate_format(sox_format_t* ft, WAVEFORMATEXTENSIBLE* pfmt, unsign
 
   while (precision > 0)
   {
-    if (check_format(pfmt, recording, dev, ft->signal.channels, precision, (unsigned)ft->signal.rate))
-      return 1;
-    precision = (precision - 1) & ~0x7;
+    error = check_format(pfmt, recording, dev, ft->signal.channels, precision, (unsigned)ft->signal.rate);
+    if (error == MMSYSERR_NOERROR)
+      return MMSYSERR_NOERROR;
+    precision = (precision - 1) & ~(7u);
   }
 
-  return 0;
+  return error;
 }
 
 static int start(sox_format_t* ft)
 {
   size_t i;
-  UINT dev;
+  unsigned dev;
   WAVEFORMATEXTENSIBLE fmt;
   int recording = ft->mode == 'r';
   priv_t *priv = (priv_t*)ft->priv;
@@ -199,24 +211,29 @@ static int start(sox_format_t* ft)
 
       if (priv->error)
       {
-        lsx_fail_errno(ft, ENODEV, "WaveAudio was unable to find the AUDIODEV %s device \"%s\".", recording ? "input" : "output", ft->filename);
+        lsx_fail_errno(ft, ENODEV, "WaveAudio device not found.");
         return SOX_EOF;
       }
     }
     else
     {
-      UINT dev_count = recording ? waveInGetNumDevs() : waveOutGetNumDevs();
-      for (dev = (UINT)-1; dev == WAVE_MAPPER || dev < dev_count; dev++)
+      unsigned dev_count = recording ? waveInGetNumDevs() : waveOutGetNumDevs();
+      size_t name_len = strlen(ft->filename);
+      if (name_len > 31)
+          name_len = 31;
+      for (dev = WAVE_MAPPER; dev != dev_count; dev++)
       {
         if (recording)
         {
           priv->error = waveInGetDevCapsA(dev, &incaps, sizeof(incaps));
           dev_name = incaps.szPname;
+          lsx_debug("Enumerating input device %2d: \"%s\"", dev, dev_name);
         }
         else
         {
           priv->error = waveOutGetDevCapsA(dev, &outcaps, sizeof(outcaps));
           dev_name = outcaps.szPname;
+          lsx_debug("Enumerating output device %2d: \"%s\"", dev, dev_name);
         }
 
         if (priv->error)
@@ -225,38 +242,70 @@ static int start(sox_format_t* ft)
           return SOX_EOF;
         }
 
-        if (!strncasecmp(ft->filename, dev_name, 31))
+        if (!strncasecmp(ft->filename, dev_name, name_len))
+        {
+          lsx_report("Requested name \"%s\" matched device %d: \"%s\"", ft->filename, dev, dev_name);
           break;
+        }
       }
 
       if (dev == dev_count)
       {
-        lsx_fail_errno(ft, ENODEV, "WaveAudio was unable to find the AUDIODEV %s device \"%s\".", recording ? "input" : "output", ft->filename);
+        lsx_fail_errno(ft, ENODEV, "The requested WaveAudio device was not found.");
         return SOX_EOF;
       }
     }
   }
 
-  if (!negotiate_format(ft, &fmt, dev))
+  priv->error = negotiate_format(ft, &fmt, dev);
+  if (priv->error != MMSYSERR_NOERROR)
   {
-    lsx_fail_errno(ft, ENODEV, "WaveAudio was unable to negotiate a sample format.");
+    fail(ft, priv->error, "sample format negotiation");
     return SOX_EOF;
   }
 
-  priv->sample_width = fmt.Format.wBitsPerSample / 8;
+  switch (fmt.Format.wBitsPerSample)
+  {
+  case 8:
+      priv->sample_shift = 0;
+      break;
+  case 16:
+      priv->sample_shift = 1;
+      break;
+  case 32:
+      priv->sample_shift = 2;
+      break;
+  default:
+      lsx_fail_errno(ft, E2BIG, "Unexpected value for WaveAudio wBitsPerSample: %u", fmt.Format.wBitsPerSample);
+      return SOX_EOF;
+  }
+
   ft->signal.precision = fmt.Samples.wValidBitsPerSample;
   ft->signal.channels = fmt.Format.nChannels;
-  lsx_report(
-      "WaveAudio negotiated %s device %d with %uHz %uCh %uprec %uwidth.",
-      recording ? "input" : "output",
-      (int)dev,
-      (unsigned)fmt.Format.nSamplesPerSec,
-      (unsigned)fmt.Format.nChannels,
-      (unsigned)fmt.Samples.wValidBitsPerSample,
-      (unsigned)fmt.Format.wBitsPerSample);
+  if (dev == WAVE_MAPPER)
+  {
+      lsx_report(
+          "Using default %s device at %uHz %uCh %uPrec %uWide.",
+          recording ? "input" : "output",
+          (unsigned)fmt.Format.nSamplesPerSec,
+          (unsigned)fmt.Format.nChannels,
+          (unsigned)fmt.Samples.wValidBitsPerSample,
+          (unsigned)fmt.Format.wBitsPerSample);
+  }
+  else
+  {
+      lsx_report(
+          "Using %s device #%d at %uHz %uCh %uPrec %uWide.",
+          recording ? "input" : "output",
+          (int)dev,
+          (unsigned)fmt.Format.nSamplesPerSec,
+          (unsigned)fmt.Format.nChannels,
+          (unsigned)fmt.Samples.wValidBitsPerSample,
+          (unsigned)fmt.Format.wBitsPerSample);
+  }
 
-  priv->buf_len = sox_globals.bufsiz;
-  priv->data = lsx_malloc(priv->buf_len * priv->sample_width * num_buffers);
+  priv->buf_len = ((sox_globals.bufsiz >> priv->sample_shift) + 31) & ~31u;
+  priv->data = lsx_malloc((priv->buf_len * num_buffers) << priv->sample_shift);
   if (!priv->data)
   {
     lsx_fail_errno(ft, SOX_ENOMEM, "Out of memory.");
@@ -273,9 +322,25 @@ static int start(sox_format_t* ft)
   }
 
   if (recording)
-    priv->error = waveInOpen(&priv->hin, dev, &fmt.Format, (DWORD_PTR)priv->block_finished_event, 0, CALLBACK_EVENT);
+  {
+    priv->error = waveInOpen(
+        &priv->hin,
+        dev,
+        &fmt.Format,
+        (DWORD_PTR)priv->block_finished_event,
+        0,
+        CALLBACK_EVENT);
+  }
   else
-    priv->error = waveOutOpen(&priv->hout, dev, &fmt.Format, (DWORD_PTR)priv->block_finished_event, 0, CALLBACK_EVENT);
+  {
+    priv->error = waveOutOpen(
+        &priv->hout,
+        dev,
+        &fmt.Format,
+        (DWORD_PTR)priv->block_finished_event,
+        0,
+        CALLBACK_EVENT);
+  }
 
   if (priv->error != MMSYSERR_NOERROR)
   {
@@ -284,10 +349,10 @@ static int start(sox_format_t* ft)
     return SOX_EOF;
   }
 
-  for (i = 0; i < num_buffers; i++)
+  for (i = 0; i != num_buffers; i++)
   {
-    priv->headers[i].lpData = priv->data + priv->buf_len * priv->sample_width * i;
-    priv->headers[i].dwBufferLength = priv->buf_len * priv->sample_width;
+    priv->headers[i].lpData = priv->data + ((priv->buf_len * i) << priv->sample_shift);
+    priv->headers[i].dwBufferLength = priv->buf_len << priv->sample_shift;
 
     if (recording)
       priv->error = waveInPrepareHeader(priv->hin, &priv->headers[i], sizeof(priv->headers[i]));
@@ -339,33 +404,25 @@ static size_t read(sox_format_t * ft, sox_sample_t* buf, size_t len)
     if (0 == (header->dwFlags & WHDR_INQUEUE) ||
       0 != (header->dwFlags & WHDR_DONE))
     {
-      size_t length = header->dwBytesRecorded / priv->sample_width;
+      size_t length = header->dwBytesRecorded >> priv->sample_shift;
       size_t ready = min(len - copied, length - header->dwUser);
       size_t i;
 
-      switch (priv->sample_width)
+      switch (priv->sample_shift)
       {
-      case 1:
+      case 0:
           for (i = 0; i < ready; ++i)
           {
             buf[copied++] = SOX_UNSIGNED_8BIT_TO_SAMPLE(((uint8_t *)header->lpData)[header->dwUser++], dummy);
           }
           break;
-      case 2:
+      case 1:
           for (i = 0; i < ready; ++i)
           {
             buf[copied++] = SOX_SIGNED_16BIT_TO_SAMPLE(((int16_t *)header->lpData)[header->dwUser++], dummy);
           }
           break;
-      case 3:
-          for (i = 0; i < ready; ++i)
-          {
-            sox_int24_t x = *(UNALIGNED sox_int24_t*)(header->lpData + header->dwUser * 3);
-            buf[copied++] = SOX_SIGNED_24BIT_TO_SAMPLE(x, dummy);
-            header->dwUser++;
-          }
-          break;
-      case 4:
+      case 2:
           for (i = 0; i < ready; ++i)
           {
             buf[copied++] = SOX_SIGNED_32BIT_TO_SAMPLE(((int32_t *)header->lpData)[header->dwUser++], dummy);
@@ -410,35 +467,23 @@ static size_t write(sox_format_t * ft, const sox_sample_t* buf, size_t len)
       size_t ready = min(len - copied, priv->buf_len - header->dwUser);
       size_t i;
 
-      switch (priv->sample_width)
+      switch (priv->sample_shift)
       {
-      case 1:
+      case 0:
           for (i = 0; i < ready; ++i)
           {
             SOX_SAMPLE_LOCALS;
             ((uint8_t *)header->lpData)[header->dwUser++] = SOX_SAMPLE_TO_UNSIGNED_8BIT(buf[copied++], clips);
           }
           break;
-      case 2:
+      case 1:
           for (i = 0; i < ready; ++i)
           {
             SOX_SAMPLE_LOCALS;
             ((int16_t *)header->lpData)[header->dwUser++] = SOX_SAMPLE_TO_SIGNED_16BIT(buf[copied++], clips);
           }
           break;
-      case 3:
-          for (i = 0; i < ready; ++i)
-          {
-            SOX_SAMPLE_LOCALS;
-            unsigned char* pdata = (unsigned char*)header->lpData + header->dwUser * 3;
-            sox_int24_t x = SOX_SAMPLE_TO_SIGNED_24BIT(buf[copied++], clips);
-            *pdata++ = x;
-            *pdata++ = x >> 8;
-            *pdata++ = x >> 16;
-            header->dwUser++;
-          }
-          break;
-      case 4:
+      case 2:
           for (i = 0; i < ready; ++i)
           {
             ((int32_t *)header->lpData)[header->dwUser++] = SOX_SAMPLE_TO_SIGNED_32BIT(buf[copied++], clips);
@@ -446,7 +491,7 @@ static size_t write(sox_format_t * ft, const sox_sample_t* buf, size_t len)
           break;
       }
 
-      header->dwBufferLength = header->dwUser * priv->sample_width;
+      header->dwBufferLength = header->dwUser << priv->sample_shift;
       priv->error = waveOutWrite(priv->hout, header, sizeof(*header));
       priv->current = (priv->current + 1) % num_buffers;
       priv->headers[priv->current].dwUser = 0;
@@ -470,10 +515,10 @@ LSX_FORMAT_HANDLER(waveaudio)
 {
   static const char * const names[] = {"waveaudio", NULL};
   static unsigned const write_encodings[] = {
-    SOX_ENCODING_SIGN2, 16, 24, 32, 8, 0,
+    SOX_ENCODING_SIGN2, 32, 24, 16, 8, 0,
     0};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
-  "Windows Multimedia Audio", names, 
+  "Windows Multimedia Audio", names,
   SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
   start, read, stop,
   start, write, stop,
