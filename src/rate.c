@@ -69,7 +69,7 @@ static sample_t * prepare_coefs(raw_coef_t const * coefs, int num_coefs,
 
 typedef struct {    /* Data that are shared between channels and stages */
   sample_t   * poly_fir_coefs;
-  dft_filter_t dft_filter[2];   /* Div or mul by n */
+  dft_filter_t dft_filter[2];
 } rate_shared_t;
 
 struct stage;
@@ -92,15 +92,15 @@ typedef struct stage {
     int64_t all;
     #define MULT32 (65536. * 65536.)
   } at, step;
-  int        divisor;          /* For step: > 1 for rational; 1 otherwise */
+  int        L, remL, remM;
+
   double     out_in_ratio;
-  int        rem, tuple;
 } stage_t;
 
 #define stage_occupancy(s) max(0, fifo_occupancy(&(s)->fifo) - (s)->pre_post)
 #define stage_read_p(s) ((sample_t *)fifo_read_ptr(&(s)->fifo) + (s)->pre)
 
-static void cubic_spline(stage_t * p, fifo_t * output_fifo)
+static void cubic_spline_fn(stage_t * p, fifo_t * output_fifo)
 {
   int i, num_in = stage_occupancy(p), max_num_out = 1 + num_in*p->out_in_ratio;
   sample_t const * input = stage_read_p(p);
@@ -119,68 +119,23 @@ static void cubic_spline(stage_t * p, fifo_t * output_fifo)
   p->at.parts.integer = 0;
 }
 
-static void decimate(stage_t * p, fifo_t * output_fifo)
+static void dft_stage_fn(stage_t * p, fifo_t * output_fifo)
 {
-  sample_t * output, tmp = 0;
+  sample_t * output, tmp;
   int i, j, num_in = max(0, fifo_occupancy(&p->fifo));
   rate_shared_t const * s = p->shared;
   dft_filter_t const * f = &s->dft_filter[p->which];
   int const overlap = f->num_taps - 1;
 
-  while (num_in >= f->dft_length) {
-    sample_t const * input = fifo_read_ptr(&p->fifo);
-    fifo_read(&p->fifo, f->dft_length - overlap, NULL);
-    num_in -= f->dft_length - overlap;
-
-    output = fifo_reserve(output_fifo, f->dft_length);
-    memcpy(output, input, f->dft_length * sizeof(*output));
-
-    lsx_safe_rdft(f->dft_length, 1, output);
-    output[0] *= f->coefs[0];
-    if (p->tuple) {
-      output[1] *= f->coefs[1];
-      for (i = 2; i < f->dft_length; i += 2) {
-        tmp = output[i];
-        output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
-        output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
-      }
-      lsx_safe_rdft(f->dft_length, -1, output);
-      for (j = 0, i = p->rem; i < f->dft_length - overlap; ++j, i += p->tuple)
-        output[j] = output[i];
-      p->rem = i - (f->dft_length - overlap);
-      fifo_trim_by(output_fifo, f->dft_length - j);
-    }
-    else { /* F-domain */
-      for (i = 2; i < (f->dft_length >> 1); i += 2) {
-        tmp = output[i];
-        output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
-        output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
-      }
-      output[1] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
-      lsx_safe_rdft(f->dft_length >> 1, -1, output);
-      fifo_trim_by(output_fifo, (f->dft_length + overlap) >> 1);
-    }
-  }
-}
-
-static void interpolate(stage_t * p, fifo_t * output_fifo)
-{
-  sample_t * output;
-  int i, j, num_in = max(0, fifo_occupancy(&p->fifo));
-  rate_shared_t const * s = p->shared;
-  dft_filter_t const * f = &s->dft_filter[p->which];
-  int const overlap = f->num_taps - 1;
-
-  while (p->rem + p->tuple * num_in >= f->dft_length) {
-    div_t divd = div(f->dft_length - overlap - p->rem + p->tuple - 1, p->tuple);
+  while (p->remL + p->L * num_in >= f->dft_length) {
+    div_t divd = div(f->dft_length - overlap - p->remL + p->L - 1, p->L);
     sample_t const * input = fifo_read_ptr(&p->fifo);
     fifo_read(&p->fifo, divd.quot, NULL);
     num_in -= divd.quot;
 
     output = fifo_reserve(output_fifo, f->dft_length);
-    fifo_trim_by(output_fifo, overlap);
-    if (p->tuple == 2 || p->tuple == 4) { /* F-domain */
-      int portion = f->dft_length / p->tuple;
+    if (p->L == 2 || p->L == 4) { /* F-domain */
+      int portion = f->dft_length / p->L;
       memcpy(output, input, (unsigned)portion * sizeof(*output));
       lsx_safe_rdft(portion, 1, output);
       for (i = portion + 2; i < (portion << 1); i += 2)
@@ -194,21 +149,54 @@ static void interpolate(stage_t * p, fifo_t * output_fifo)
         output[i + 1] = 0;
       }
     } else {
-      memset(output, 0, f->dft_length * sizeof(*output));
-      for (j = 0, i = p->rem; i < f->dft_length; ++j, i += p->tuple)
-        output[i] = input[j];
-      p->rem = p->tuple - 1 - divd.rem;
+      if (p->L == 1)
+        memcpy(output, input, f->dft_length * sizeof(*output));
+      else {
+        memset(output, 0, f->dft_length * sizeof(*output));
+        for (j = 0, i = p->remL; i < f->dft_length; ++j, i += p->L)
+          output[i] = input[j];
+        p->remL = p->L - 1 - divd.rem;
+      }
       lsx_safe_rdft(f->dft_length, 1, output);
     }
     output[0] *= f->coefs[0];
-    output[1] *= f->coefs[1];
-    for (i = 2; i < f->dft_length; i += 2) {
-      sample_t tmp = output[i];
-      output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
-      output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
+    if (p->step.parts.integer) {
+      output[1] *= f->coefs[1];
+      for (i = 2; i < f->dft_length; i += 2) {
+        tmp = output[i];
+        output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
+        output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
+      }
+      lsx_safe_rdft(f->dft_length, -1, output);
+      if (p->step.parts.integer != 1) {
+        for (j = 0, i = p->remM; i < f->dft_length - overlap; ++j, i += p->step.parts.integer)
+          output[j] = output[i];
+        p->remM = i - (f->dft_length - overlap);
+        fifo_trim_by(output_fifo, f->dft_length - j);
+      }
+      else fifo_trim_by(output_fifo, overlap);
     }
-    lsx_safe_rdft(f->dft_length, -1, output);
+    else { /* F-domain */
+      for (i = 2; i < (f->dft_length >> 1); i += 2) {
+        tmp = output[i];
+        output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
+        output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
+      }
+      output[1] = f->coefs[i] * output[i] - f->coefs[i+1] * output[i+1];
+      lsx_safe_rdft(f->dft_length >> 1, -1, output);
+      fifo_trim_by(output_fifo, (f->dft_length + overlap) >> 1);
+    }
   }
+}
+
+static void setup_dft_stage(rate_shared_t * shared, int which, stage_t * stage, int L, int M)
+{
+  stage->fn = dft_stage_fn;
+  stage->preload = shared->dft_filter[which].post_peak / L;
+  stage->remL    = shared->dft_filter[which].post_peak % L;
+  stage->L = L;
+  stage->step.parts.integer = M;
+  stage->which = which;
 }
 
 static void init_dft_filter(rate_shared_t * p, unsigned which, int num_taps,
@@ -264,192 +252,174 @@ static void init_dft_filter(rate_shared_t * p, unsigned which, int num_taps,
 typedef struct {
   double     factor;
   uint64_t   samples_in, samples_out;
-  int        level, input_stage_num, output_stage_num;
-  sox_bool   upsample;
+  int        input_stage_num, output_stage_num;
   stage_t    * stages;
 } rate_t;
 
 #define pre_stage p->stages[-1]
-#define last_stage p->stages[p->level]
-#define post_stage p->stages[p->level + 1]
+#define frac_stage p->stages[level]
+#define post_stage p->stages[level + have_frac_stage]
+#define have_frac_stage (realM * fracL != 1)
 
 typedef enum {Default = -1, Quick, Low, Medium, High, Very} quality_t;
 
 static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     quality_t quality, int interp_order, double phase, double bandwidth,
-    sox_bool allow_aliasing, sox_bool old_behaviour)
+    sox_bool allow_aliasing)
 {
-  int i, tuple, mult, divisor = 1, two_or_three = 2;
-  sox_bool two_factors = sox_false;
+  int i, preL = 1, preM = 1, level = 0, fracL = 1, postL = 1, postM = 1;
+  sox_bool upsample = sox_false;
+  double realM = factor;
 
   assert(factor > 0);
   p->factor = factor;
+
   if (quality < Quick || quality > Very)
     quality = High;
-  if (quality != Quick) {
+
+  if (quality != Quick) while (sox_true) {
     const int max_divisor = 2048;      /* Keep coef table size ~< 500kb */
     double epsilon;
-    p->upsample = factor < 1;
-    for (i = factor, p->level = 0; i >>= 1; ++p->level); /* log base 2 */
-    factor /= 1 << (p->level + !p->upsample);
-    epsilon = fabs((uint32_t)(factor * MULT32 + .5) / (factor * MULT32) - 1);
-    for (i = 2; i <= max_divisor && divisor == 1; ++i) {
-      double try_d = factor * i;
+    upsample = realM < 1;
+    for (i = realM, level = 0; i >>= 1; ++level); /* log base 2 */
+    realM /= 1 << (level + !upsample);
+    epsilon = fabs((uint32_t)(realM * MULT32 + .5) / (realM * MULT32) - 1);
+    for (i = 2; i <= max_divisor && fracL == 1; ++i) {
+      double try_d = realM * i;
       int try = try_d + .5;
       if (fabs(try / try_d - 1) <= epsilon) { /* N.B. beware of long doubles */
-        if (try == i) {
-          factor = 1, divisor = 2;
-          if (p->upsample)
-            p->upsample = sox_false;
-          else ++p->level;
-        }
-        else factor = try, divisor = i;
+        if (try == i)
+          realM = 1, fracL = 2, level += !upsample, upsample = sox_false;
+        else realM = try, fracL = i;
       }
     }
-    if (!old_behaviour && quality != Low && factor == 3 && divisor == 4 && p->level == 1)
-      two_or_three = 3;
-  }
-  p->stages = (stage_t *)calloc((size_t)p->level + 4, sizeof(*p->stages)) + 1;
-  for (i = -1; i <= p->level + 1; ++i) p->stages[i].shared = shared;
-  last_stage.step.all = factor * MULT32 + .5;
-  last_stage.out_in_ratio = MULT32 * divisor / last_stage.step.all;
-
-  if (divisor != 1)
-    assert(!last_stage.step.parts.fraction);
-  else if (quality != Quick)
-    assert(!last_stage.step.parts.integer);
-
-  tuple = 1 + p->upsample;
-  if (!old_behaviour && p->upsample) {
-    if (factor == 2 && divisor == 3)
-      two_factors = sox_true, tuple = divisor;
-    else if (factor == 1) {
-      if (divisor < 6)
-        two_factors = sox_true, tuple = divisor;
-      else for (i = 2; !two_factors && i < 20; ++i)
-        if (!(divisor % i))
-          two_factors = sox_true, tuple = i;
+    if (upsample) {
+      if (postL == 1 && (realM != 1 || fracL > 5) && fracL / realM > 4) {
+        realM = realM * (postL = min((fracL / realM), 4)) / fracL, fracL = 1;
+        continue;
+      }
+      else if ((realM == 2 && fracL == 3) || (realM == 3 && fracL == 4))
+        preL = fracL, preM = realM, fracL = realM = 1;
+      else if (fracL < 6 && realM == 1)
+        preL = fracL, fracL = 1;
+      else if (quality > Low) {
+        preL = 2;
+        if (fracL % preL)
+          realM *= preL;
+        else fracL /= preL;
+      }
     }
+    else {
+      if (fracL > 2) {
+        int L = fracL, M = realM;
+        for (i = level + 1; i && !(L & 1); L >>= 1, --i);
+        if (L < 3 && (M <<= i) < 7) {
+          preL = L, preM = M, realM = fracL = 1, level = 0, upsample = sox_true;
+          break;
+        }
+      }
+      postM = 2;
+      if (fracL == 2)
+        --fracL, postM -= !level, level -= !!level;
+    }
+    break;
   }
-  mult = tuple;
-  lsx_debug("i/o=%.16g; %.12g:%i @ level %i tuple=%i last-stage:%x.%x", p->factor, last_stage.step.all / MULT32,
-      divisor, p->level, tuple, last_stage.step.parts.integer, last_stage.step.parts.fraction);
 
-  p->input_stage_num = -p->upsample;
-  p->output_stage_num = p->level;
+  p->stages = (stage_t *)calloc((size_t)level + 4, sizeof(*p->stages)) + 1;
+  for (i = -1; i <= level + 1; ++i)
+    p->stages[i].shared = shared;
+
+  p->output_stage_num = level;
+
+  frac_stage.step.all = realM * MULT32 + .5;
+  frac_stage.out_in_ratio = MULT32 * fracL / frac_stage.step.all;
+
   if (quality == Quick) {
+    frac_stage.fn = cubic_spline_fn;
+    frac_stage.pre_post = max(3, frac_stage.step.parts.integer);
+    frac_stage.preload = frac_stage.pre = 1;
     ++p->output_stage_num;
-    last_stage.fn = cubic_spline;
-    last_stage.pre_post = max(3, last_stage.step.parts.integer);
-    last_stage.preload = last_stage.pre = 1;
   }
-  else if ((two_or_three != 3 && last_stage.out_in_ratio != 2 && !two_factors) || (p->upsample && quality == Low)) {
-    poly_fir_t const * f;
+  else if (have_frac_stage) {
+    int n = (4 - (quality == Low)) * upsample + range_limit(quality, Medium, Very) - Medium;
+    poly_fir_t const * f = &poly_firs[n];
     poly_fir1_t const * f1;
-    int n = 4 * p->upsample + range_limit(quality, Medium, Very) - Medium;
+
+    if (f->num_coefs & 1) {
+      if (fracL != 1 && (fracL & 1))
+        fracL <<= 1, realM *= 2, frac_stage.step.all <<= 1;
+      frac_stage.at.all = fracL * .5 * MULT32 + .5;
+    }
+    frac_stage.L = fracL;
+
     if (interp_order < 0)
       interp_order = quality > High;
-    interp_order = divisor == 1? 1 + interp_order : 0;
-    last_stage.divisor = divisor;
-    p->output_stage_num += 2;
-    if (p->upsample && quality == Low)
-      mult = 1, ++p->input_stage_num, --p->output_stage_num, --n;
-    f = &poly_firs[n];
+    interp_order = fracL == 1? 1 + interp_order : 0;
     f1 = &f->interp[interp_order];
-    if (!last_stage.shared->poly_fir_coefs) {
-      int num_taps = 0, phases = divisor == 1? (1 << f1->phase_bits) : divisor;
+
+    if (!frac_stage.shared->poly_fir_coefs) {
+      int phases = fracL == 1? (1 << f1->phase_bits) : fracL;
+      int num_taps = f->num_coefs * phases - 1;
       raw_coef_t * coefs = lsx_design_lpf(
           f->pass, f->stop, 1., sox_false, f->att, &num_taps, phases, -1.);
       assert(num_taps == f->num_coefs * phases - 1);
-      last_stage.shared->poly_fir_coefs =
-          prepare_coefs(coefs, f->num_coefs, phases, interp_order, mult);
-      lsx_debug("fir_len=%i phases=%i coef_interp=%i mult=%i size=%s",
-          f->num_coefs, phases, interp_order, mult,
+      frac_stage.shared->poly_fir_coefs =
+          prepare_coefs(coefs, f->num_coefs, phases, interp_order, 1);
+      lsx_debug("fir_len=%i phases=%i coef_interp=%i size=%s",
+          f->num_coefs, phases, interp_order,
           lsx_sigfigs3((num_taps +1.) * (interp_order + 1) * sizeof(sample_t)));
       free(coefs);
     }
-    last_stage.fn = f1->fn;
-    last_stage.pre_post = f->num_coefs - 1;
-    last_stage.pre = 0;
-    last_stage.preload = last_stage.pre_post >> 1;
-    mult = 1;
+    frac_stage.fn = f1->fn;
+    frac_stage.pre_post = f->num_coefs - 1;
+    frac_stage.pre = 0;
+    frac_stage.preload = frac_stage.pre_post >> 1;
+    ++p->output_stage_num;
   }
-  if (quality > Low) {
-    typedef struct {int len; sample_t const * h; double bw, a;} filter_t;
+  if (quality == Low && !upsample) {  /* dft is slower here, so */
+    post_stage.fn = half_sample_low;       /* use normal convolution */
+    post_stage.pre_post = 2 * (array_length(half_fir_coefs_low) - 1);
+    post_stage.preload = post_stage.pre = post_stage.pre_post >> 1;
+    ++p->output_stage_num;
+  }
+  else if (quality != Quick) {
+    typedef struct {double bw, a;} filter_t;
     static filter_t const filters[] = {
-      {2 * array_length(half_fir_coefs_low) - 1, half_fir_coefs_low, 0,0},
-      {0, NULL, .931, 110}, {0, NULL, .931, 125}, {0, NULL, .931, 170}};
+      {.724, 100}, {.931, 110}, {.931, 125}, {.931, 170}};
     filter_t const * f = &filters[quality - Low];
     double att = allow_aliasing? (34./33)* f->a : f->a; /* negate att degrade */
     double bw = bandwidth? 1 - (1 - bandwidth / 100) / LSX_TO_3dB : f->bw;
     double min = 1 - (allow_aliasing? LSX_MAX_TBW0A : LSX_MAX_TBW0) / 100;
+    double pass = bw * fracL / realM / 2;
     assert((size_t)(quality - Low) < array_length(filters));
-    init_dft_filter(shared, p->upsample, f->len, f->h, bw, 1., (double)max(tuple, two_or_three), att, mult, phase, allow_aliasing);
-    if (p->upsample) {
-      pre_stage.fn = interpolate; /* Finish off setting up pre-stage */
-      pre_stage.preload = shared->dft_filter[1].post_peak / tuple;
-      pre_stage.rem     = shared->dft_filter[1].post_peak % tuple;
-      pre_stage.tuple = tuple;
-      pre_stage.which = 1;
-      if (two_factors && divisor != tuple) {
-        int other = divisor / tuple;
-        ++p->output_stage_num;
-        init_dft_filter(shared, 0, 0, NULL, 1., (double)tuple, (double)divisor, att, other, phase, allow_aliasing);
-        last_stage.fn = interpolate;
-        last_stage.preload = shared->dft_filter[0].post_peak / other;
-        last_stage.rem     = shared->dft_filter[0].post_peak % other;
-        last_stage.tuple = other;
-        last_stage.which = 0;
-      }
-      else {
-        /* Start setting up post-stage; TODO don't use dft for short filters */
-        if ((1 - p->factor) / (1 - bw) > 2 || tuple != 2)
-          init_dft_filter(shared, 0, 0, NULL, max(p->factor, min), 1., 2., att, 1, phase, allow_aliasing);
-        else shared->dft_filter[0] = shared->dft_filter[1];
-        if (two_factors && factor == 2) {
-          ++p->output_stage_num;
-          last_stage.fn = decimate;
-          last_stage.preload = shared->dft_filter[0].post_peak;
-          last_stage.tuple = (old_behaviour | allow_aliasing) << 1;
-        } else {
-          post_stage.fn = decimate;
-          post_stage.preload = shared->dft_filter[0].post_peak;
-          post_stage.tuple = (old_behaviour | allow_aliasing) << 1;
-        }
-      }
+
+    if (preL * preM != 1) {
+      init_dft_filter(shared, 0, 0, 0, bw, 1., (double)max(preL, preM), att, preL, phase, allow_aliasing);
+      setup_dft_stage(shared, 0, &pre_stage, preL, preM == 2 && !allow_aliasing? 0 : preM);
+      --p->input_stage_num;
     }
-    else {
-      if (p->level > 0 && p->output_stage_num > p->level) {
-        double pass = bw * divisor / factor / 2;
-        if ((1 - pass) / (1 - bw) > 2)
-          init_dft_filter(shared, 1, 0, NULL, max(pass, min), 1., 2., att, 1, phase, allow_aliasing);
-      }
-      post_stage.fn = decimate;
-      post_stage.preload = shared->dft_filter[0].post_peak;
-      post_stage.tuple = two_or_three == 2 && !(old_behaviour | allow_aliasing)? 0 : two_or_three;
+    else if (level && have_frac_stage && (1 - pass) / (1 - bw) > 2)
+      init_dft_filter(shared, 0, 0, NULL, max(pass, min), 1., 2., att, 1, phase, allow_aliasing);
+
+    if (postL * postM != 1) {
+      init_dft_filter(shared, 1, 0, 0,
+          bw * (upsample? factor * postL / postM : 1),
+          1., (double)(upsample? postL : postM), att, postL, phase, allow_aliasing);
+      setup_dft_stage(shared, 1, &post_stage, postL, postM == 2 && !allow_aliasing? 0 : postM);
+      ++p->output_stage_num;
     }
-  }
-  else if (quality == Low && !p->upsample) {    /* dft is slower here, so */
-    post_stage.fn = half_sample_low;            /* use normal convolution */
-    post_stage.pre_post = 2 * (array_length(half_fir_coefs_low) - 1);
-    post_stage.preload = post_stage.pre = post_stage.pre_post >> 1;
-  }
-  if (p->level > 0) {
-    stage_t * s = & p->stages[p->level - 1];
-    if (shared->dft_filter[1].num_taps) {
-      s->fn = decimate;
-      s->preload = shared->dft_filter[1].post_peak;
-      s->tuple = (old_behaviour | allow_aliasing) << 1;
-      s->which = 1;
-    }
-    else *s = post_stage;
   }
   for (i = p->input_stage_num; i <= p->output_stage_num; ++i) {
     stage_t * s = &p->stages[i];
-    if (i >= 0 && i < p->level - 1) {
+    if (i >= 0 && i < level - have_frac_stage) {
       s->fn = half_sample_25;
       s->pre_post = 2 * (array_length(half_fir_coefs_25) - 1);
       s->preload = s->pre = s->pre_post >> 1;
+    }
+    else if (level && i == level - 1) {
+      if (shared->dft_filter[0].num_taps)
+        setup_dft_stage(shared, 0, s, 1, (int)allow_aliasing << 1);
+      else *s = post_stage;
     }
     fifo_create(&s->fifo, (int)sizeof(sample_t));
     memset(fifo_reserve(&s->fifo, s->preload), 0, sizeof(sample_t)*s->preload);
@@ -520,7 +490,7 @@ typedef struct {
   sox_rate_t      out_rate;
   int             quality;
   double          coef_interp, phase, bandwidth;
-  sox_bool        allow_aliasing, old_behaviour;
+  sox_bool        allow_aliasing;
   rate_t          rate;
   rate_shared_t   shared, * shared_ptr;
 } priv_t;
@@ -545,7 +515,6 @@ static int create(sox_effect_t * effp, int argc, char **argv)
     case 'I': p->phase = 25; break;
     case 'L': p->phase = 50; break;
     case 'a': p->allow_aliasing = sox_true; break;
-    case 'o': p->old_behaviour = sox_true; break;
     case 's': p->bandwidth = 99; break;
     default: if ((found_at = strchr(qopts, c))) p->quality = found_at - qopts;
       else {lsx_fail("unknown option `-%c'", optstate.opt); return lsx_usage(effp);}
@@ -586,7 +555,7 @@ static int start(sox_effect_t * effp)
   effp->out_signal.rate = out_rate;
   rate_init(&p->rate, p->shared_ptr, effp->in_signal.rate / out_rate,
       p->quality, (int)p->coef_interp - 1, p->phase, p->bandwidth,
-      p->allow_aliasing, p->old_behaviour);
+      p->allow_aliasing);
   return SOX_SUCCESS;
 }
 

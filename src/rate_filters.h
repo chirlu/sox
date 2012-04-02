@@ -162,8 +162,8 @@ assert_static(!((array_length(COEFS)- 1) & 1), HALF_FIR_LENGTH_low);
 #define CONVOLVE poly_fir_convolve_U100
 #include "rate_poly_fir.h"
 #define U100_3_b 6
-#define u100_l 10
-#define poly_fir_convolve_u100 _ _ _ _ _ _ _ _ _ _
+#define u100_l 11
+#define poly_fir_convolve_u100 _ _ _ _ _ _ _ _ _ _ _
 #define FUNCTION u100_0
 #define FIR_LENGTH u100_l
 #define CONVOLVE poly_fir_convolve_u100
@@ -189,8 +189,8 @@ assert_static(!((array_length(COEFS)- 1) & 1), HALF_FIR_LENGTH_low);
 #define CONVOLVE poly_fir_convolve_u100
 #include "rate_poly_fir.h"
 #define u100_3_b 6
-#define u120_l 14
-#define poly_fir_convolve_u120 _ _ _ _ _ _ _ _ _ _ _ _ _ _
+#define u120_l 15
+#define poly_fir_convolve_u120 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 #define FUNCTION u120_0
 #define FIR_LENGTH u120_l
 #define CONVOLVE poly_fir_convolve_u120
@@ -216,8 +216,8 @@ assert_static(!((array_length(COEFS)- 1) & 1), HALF_FIR_LENGTH_low);
 #define CONVOLVE poly_fir_convolve_u120
 #include "rate_poly_fir.h"
 #define u120_3_b 6
-#define u150_l 20
-#define poly_fir_convolve_u150 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+#define u150_l 21
+#define poly_fir_convolve_u150 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 #define FUNCTION u150_0
 #define FIR_LENGTH u150_l
 #define CONVOLVE poly_fir_convolve_u150

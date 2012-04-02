@@ -280,7 +280,7 @@ int lsx_lpf_num_taps(double att, double tr_bw, int k)
     double n160 = (.0425* att - 1.4) / tr_bw;   /* Half order for att = 160 */
     n = n160 * (16.556 / (att - 39.6) + .8625) + .5;  /* For att [80,160) */
   }
-  return k? 2 * n : 2 * (n + (n & 1)) + 1; /* =1 %4 (0 phase 1/2 band) */
+  return k? 2 * n * k - 1 : 2 * (n + (n & 1)) + 1; /* =1 %4 (0 phase 1/2 band) */
 }
 
 double * lsx_design_lpf(
@@ -300,14 +300,12 @@ double * lsx_design_lpf(
   Fp /= Fn, Fc /= Fn;        /* Normalise to Fn = 1 */
   tr_bw = LSX_TO_6dB * (Fc-Fp); /* Transition band-width: 6dB to stop points */
 
-  if (!*num_taps)
-    *num_taps = lsx_lpf_num_taps(att, tr_bw, k);
   if (beta < 0)
     beta = lsx_kaiser_beta(att);
-  if (k)
-    *num_taps = *num_taps * k - 1;
-  else k = 1;
-  lsx_debug("%g %g %g", Fp, tr_bw, Fc);
+  if (!*num_taps)
+    *num_taps = lsx_lpf_num_taps(att, tr_bw, k);
+  k = max(k, 1);
+  lsx_debug("design_lpf Fp=%g tr_bw=%g Fc=%g", Fp, tr_bw, Fc);
   return lsx_make_lpf(*num_taps, (Fc - tr_bw) / k, beta, (double)k, sox_true);
 }
 
