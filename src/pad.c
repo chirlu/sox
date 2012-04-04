@@ -42,7 +42,7 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
     next = lsx_parsesamples(rate, p->pads[i].str, &p->pads[i].pad, 't');
     if (next == NULL) break;
     if (*next == '\0')
-      p->pads[i].start = i? UINT64_MAX : 0;
+      p->pads[i].start = i? ~(sox_uint64_t)0 : 0;
     else {
       if (*next != '@') break;
       next = lsx_parsesamples(rate, next+1, &p->pads[i].start, 't');
@@ -88,7 +88,7 @@ static int start(sox_effect_t * effp)
     /* Check that the last pad position (except for "at the end")
        is within bounds. */
     i = p->npads;
-    if (i > 0 && p->pads[i-1].start == UINT64_MAX)
+    if (i > 0 && p->pads[i-1].start == ~(sox_uint64_t)0)
       i--;
     if (i > 0 &&
         p->pads[i-1].start * effp->in_signal.channels
@@ -140,7 +140,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
   priv_t * p = (priv_t *)effp->priv;
   static size_t isamp = 0;
   if (p->pads_pos != p->npads && p->in_pos != p->pads[p->pads_pos].start)
-    p->in_pos = UINT64_MAX;  /* Invoke the final pad (with no given start) */
+    p->in_pos = ~(sox_uint64_t)0;  /* Invoke the final pad (with no given start) */
   return flow(effp, 0, obuf, &isamp, osamp);
 }
 
