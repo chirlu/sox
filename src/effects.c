@@ -266,52 +266,43 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
   } else {               /* Run effect on each channel individually */
     sox_sample_t *obuf = il_change ? chain->il_buf : effp->obuf;
     size_t flow_offs = sox_globals.bufsiz/effp->flows;
-    size_t idone_last = 0, odone_last = 0; /* Initialised to prevent warning */
+    size_t idone_min = SOX_SIZE_MAX, idone_max = 0;
+    size_t odone_min = SOX_SIZE_MAX, odone_max = 0;
 
-#ifdef HAVE_OPENMP
-    if (sox_globals.use_threads && effp->flows > 1)
-    {
-      #pragma omp parallel for
-      for (f = 0; f < effp->flows; ++f) {
-        size_t idonec = idone / effp->flows;
-        size_t odonec = obeg / effp->flows;
-        int eff_status_c = effp->handler.flow(&chain->effects[n][f],
-            effp1->obuf + f*flow_offs + effp1->obeg/effp->flows,
-            obuf + f*flow_offs + effp->oend/effp->flows,
-            &idonec, &odonec);
-        if (!f) {
-          idone_last = idonec;
-          odone_last = odonec;
-        }
-
-        if (eff_status_c != SOX_SUCCESS)
-          effstatus = SOX_EOF;
-      }
-    }
-    else /* sox_globals.use_threads */
+#ifdef HAVE_OPENMP_3_1
+    #pragma omp parallel for \
+        if(sox_globals.use_threads) \
+        schedule(static) default(none) \
+        shared(effp,effp1,idone,obeg,obuf,flow_offs,chain,n,effstatus) \
+        reduction(min:idone_min,odone_min) reduction(max:idone_max,odone_max)
+#elif defined HAVE_OPENMP
+    #pragma omp parallel for \
+        if(sox_globals.use_threads) \
+        schedule(static) default(none) \
+        shared(effp,effp1,idone,obeg,obuf,flow_offs,chain,n,effstatus) \
+        firstprivate(idone_min,odone_min,idone_max,odone_max) \
+        lastprivate(idone_min,odone_min,idone_max,odone_max)
 #endif
-    {
-      for (f = 0; f < effp->flows; ++f) {
-        size_t idonec = idone / effp->flows;
-        size_t odonec = obeg / effp->flows;
-        int eff_status_c = effp->handler.flow(&chain->effects[n][f],
-            effp1->obuf + f*flow_offs + effp1->obeg/effp->flows,
-            obuf + f*flow_offs + effp->oend/effp->flows,
-            &idonec, &odonec);
-        if (f && (idonec != idone_last || odonec != odone_last)) {
-          lsx_fail("flowed asymmetrically!");
-          effstatus = SOX_EOF;
-        }
-        idone_last = idonec;
-        odone_last = odonec;
+    for (f = 0; f < effp->flows; ++f) {
+      size_t idonec = idone / effp->flows;
+      size_t odonec = obeg / effp->flows;
+      int eff_status_c = effp->handler.flow(&chain->effects[n][f],
+          effp1->obuf + f*flow_offs + effp1->obeg/effp->flows,
+          obuf + f*flow_offs + effp->oend/effp->flows,
+          &idonec, &odonec);
+      idone_min = min(idonec, idone_min); idone_max = max(idonec, idone_max);
+      odone_min = min(odonec, odone_min); odone_max = max(odonec, odone_max);
 
-        if (eff_status_c != SOX_SUCCESS)
-          effstatus = SOX_EOF;
-      }
+      if (eff_status_c != SOX_SUCCESS)
+        effstatus = SOX_EOF;
     }
 
-    idone = effp->flows * idone_last;
-    obeg = effp->flows * odone_last;
+    if (idone_min != idone_max || odone_min != odone_max) {
+      lsx_fail("flowed asymmetrically!");
+      effstatus = SOX_EOF;
+    }
+    idone = effp->flows * idone_max;
+    obeg = effp->flows * odone_max;
 
     if (il_change)
       interleave(effp->flows, obeg, chain->il_buf, sox_globals.bufsiz,
