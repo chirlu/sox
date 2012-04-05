@@ -241,7 +241,7 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
   sox_effect_t *effp1 = chain->effects[n - 1];
   sox_effect_t *effp = chain->effects[n];
   int effstatus = SOX_SUCCESS;
-  int f = 0;
+  size_t f = 0;
   size_t idone = effp1->oend - effp1->obeg;
   size_t obeg = sox_globals.bufsiz - effp->oend;
   sox_bool il_change = (effp->flows == 1) !=
@@ -272,7 +272,7 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
     if (sox_globals.use_threads && effp->flows > 1)
     {
       #pragma omp parallel for
-      for (f = 0; f < (int)effp->flows; ++f) {
+      for (f = 0; f < effp->flows; ++f) {
         size_t idonec = idone / effp->flows;
         size_t odonec = obeg / effp->flows;
         int eff_status_c = effp->handler.flow(&chain->effects[n][f],
@@ -291,7 +291,7 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
     else /* sox_globals.use_threads */
 #endif
     {
-      for (f = 0; f < (int)effp->flows; ++f) {
+      for (f = 0; f < effp->flows; ++f) {
         size_t idonec = idone / effp->flows;
         size_t odonec = obeg / effp->flows;
         int eff_status_c = effp->handler.flow(&chain->effects[n][f],
@@ -322,7 +322,7 @@ static int flow_effect(sox_effects_chain_t * chain, size_t n)
     effp1->obeg = effp1->oend = 0;
   else if (effp1->oend - effp1->obeg < effp->imin) { /* Need to refill? */
     size_t flow_offs = sox_globals.bufsiz/effp->flows;
-    for (f = 0; f < (int)effp->flows; ++f)
+    for (f = 0; f < effp->flows; ++f)
       memcpy(effp1->obuf + f * flow_offs,
           effp1->obuf + f * flow_offs + effp1->obeg/effp->flows,
           (effp1->oend - effp1->obeg)/effp->flows * sizeof(*effp1->obuf));
