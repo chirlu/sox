@@ -57,18 +57,6 @@ Points to note:
   are part of the speex codec package. Support for the speex codec may be added
   later.
 
-- The included libsox project enables OpenMP support. You can disable this
-  in the libsox project properties under Configuration Properties, C/C++,
-  Language, OpenMP support. If you don't disable it, you will need
-  vcomp90.dll and Microsoft.VC90.OpenMP.manifest either installed on your
-  machine or copied into the directory next to sox.exe. If you have OpenMP
-  support in your copy of Visual Studio, these files can be found here:
-
-  c:\Program Files\Microsoft Visual Studio 9.0\
-     vc\redist\x86\Microsoft.VC90.OPENMP
-
-  Note that some editions of Visual Studio might not include OpenMP support.
-
 - The included projects do not enable SSE2. You can enable this in the project
   properties under Configuration Properties, C/C++, Code Generation, Enable
   Enhanced Instruction Set. Note that some editions of Visual Studio might

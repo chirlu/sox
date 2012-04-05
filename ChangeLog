@@ -16,6 +16,7 @@ Previously deprecated features that have been removed in this release:
   14.3.0   O -s/-u/-f              -e
   14.3.0   O -A/-U/-o/-i/-a/-g     -e
   14.4.0   E swap with parameters  remix
+  14.4.1   OpenMP < 3.0            OpenMP >= 3.0
 
 Previously deprecated features (to be removed in future):
 

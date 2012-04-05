@@ -1,5 +1,14 @@
 #include "soxconfig.h"
 
+#ifdef _OPENMP
+  #if _OPENMP >= 200805 /* OpenMP 3.0 */
+    #define HAVE_OPENMP 1
+  #endif
+  #if _OPENMP >= 201107 /* OpenMP 3.1 */
+    #define HAVE_OPENMP_3_1 1
+  #endif
+#endif
+
 #ifdef HAVE_OPENMP
   #include <omp.h>
 #else

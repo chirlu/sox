@@ -113,10 +113,6 @@
 #define HAVE_WIN32_GLOB_H 1
 #define HAVE_WIN32_LTDL_H 1
 
-#ifdef _OPENMP
-#define HAVE_OPENMP 1
-#endif
-
 #ifndef __cplusplus
 #define inline __inline
 #endif

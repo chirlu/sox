@@ -6,9 +6,6 @@ The resulting sox.exe has support for all SoX features except magic, ffmpeg,
 ladspa, and pulseaudio. LAME (libmp3lame.dll or lame_enc.dll), MAD (libmad.dll
 or cygmad-0.dll), libsndfile (libsndfile-1.dll), and AMR support
 (libamrnb-3.dll, libamrwb-3.dll) are loaded at runtime if they are available.
-OpenMP support is available only if using Visual Studio Professional or
-higher - it is not available if you build SoX via Visual Studio 2010 Express or
-via the Microsoft Windows SDK.
 
 How to build:
 
@@ -61,15 +58,11 @@ How to build:
    edit the soxconfig.h file (sox\msvc10\sox\soxconfig.h), and you'll have to
    manually remove the entries for the unwanted projects.
 
-5. If using Visual Studio Professional or above and you want OpenMP support,
-   enable it in the project settings for the LibSox and SoX projects
-   (Configuration Properties, C/C++, Language, Open MP Support, set to Yes).
-
-6. If using Visual Studio, build the solution using the GUI.
+5. If using Visual Studio, build the solution using the GUI.
 
    If using the Windows SDK, run: msbuild SoX.sln
 
-7. The resulting executable files will be in sox\msvc10\Debug or
+6. The resulting executable files will be in sox\msvc10\Debug or
    sox\msvc10\Release. The resulting sox.exe will dynamically link to
    libmp3lame.dll, libmad.dll, libsndfile-1.dll, libamrnb-3.dll, and
    libamrwb-3.dll if they are available, but will run without them (though the
@@ -91,13 +84,6 @@ Points to note:
   to make use of the automatic gain control and noise filtering components that
   are part of the speex codec package. Support for the speex codec may be added
   later.
-
-- If you enable Open MP support, you will need vcomp100.dll either installed on
-  your machine or copied into the directory next to sox.exe. If you have Open
-  MP support in your copy of Visual Studio, this file can be found here:
-
-  c:\Program Files\Microsoft Visual Studio 10.0\
-     vc\redist\x86\Microsoft.VC100.OPENMP
 
 - The included projects do not enable SSE2. You can enable this in the project
   properties under Configuration Properties, C/C++, Code Generation, Enable

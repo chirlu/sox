@@ -1,5 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
+AC_PREREQ(2.62)
+
 AC_INIT(SoX, 14.4.1git, sox-devel@lists.sourceforge.net)
 
 m4_ifdef([AC_CONFIG_MACRO_DIR], [AC_CONFIG_MACRO_DIR([m4])])
@@ -204,28 +206,9 @@ AM_CONDITIONAL(HAVE_WIN32_LTDL, test x$using_win32_ltdl = xyes)
 AC_SUBST(LIBLTDL)
 
 
-dnl Check for GOMP library
-AC_MSG_CHECKING([whether to use GOMP])
-AC_ARG_ENABLE(gomp,
-    AC_HELP_STRING([--disable-gomp], [Don't use GOMP.]),,enable_gomp=yes)
-AC_MSG_RESULT($enable_gomp)
-if test "$enable_gomp" = "yes"; then
-    EXTRA_GOMP_LIBS=""  
-    case $target in
-      *mingw32*)
-      EXTRA_GOMP_LIBS="-lpthread"
-      ;;
-    esac
-    AC_CHECK_HEADERS(omp.h,
-		     AC_CHECK_LIB(gomp, omp_get_thread_num, GOMP_LIBS="$GOMP_LIBS -lgomp $EXTRA_GOMP_LIBS", enable_gomp=no, $EXTRA_GOMP_LIBS), enable_gomp=no)
-fi
-if test "$enable_gomp" = yes; then
-   AC_DEFINE(HAVE_OPENMP, 1, [Define to 1 if you have GOMP.])
-   CFLAGS="$CFLAGS -fopenmp"
-fi
-AM_CONDITIONAL(HAVE_OPENMP, test x$enable_gomp = xyes)
-AC_SUBST(GOMP_LIBS)
-
+dnl Check for OpenMP
+AC_OPENMP
+CFLAGS="$CFLAGS $OPENMP_CFLAGS"
 
 
 dnl Check for magic library
@@ -689,7 +672,6 @@ echo "OTHER OPTIONS"
 echo "ladspa effects.............$using_ladspa"
 echo "magic support..............$using_magic"
 echo "png support................$using_png"
-echo "GOMP support...............$enable_gomp"
 echo
 echo "Configure finished.  Do 'make -s && make install' to compile and install SoX."
 echo
