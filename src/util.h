@@ -46,6 +46,7 @@
   typedef sox_uint32_t uint32_t;
   typedef sox_int64_t  int64_t;
   typedef sox_uint64_t uint64_t;
+  #define UINT64_MAX ((uint64_t)-1)
 #endif
 
 /* Define the format specifier to use for int64_t values.
