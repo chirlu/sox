@@ -7,6 +7,13 @@ sox-11gamma, followed by a list of prior authors and features.
 sox-14.4.1	20xx-xx-xx
 ----------
 
+Newly deprecated features (to be removed in future):
+
+  Deprec-  Feature    [O(ption)]                           Removal
+  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
+  -------  ----------------------  ----------------------  -------
+  14.4.1   OpenMP < 3.0            OpenMP >= 3.0           14.4.1
+
 File formats:
 
   o Fix pipe file-type detection regression. (robs)
