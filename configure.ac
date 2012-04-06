@@ -44,14 +44,7 @@ else
     using_libltdl=$with_libltdl
 fi
 
-AC_LIBTOOL_DLOPEN
-case $target in
-  *cygwin* | *mingw*)
-  AC_LIBTOOL_WIN32_DLL
-  APP_LDFLAGS="-no-undefined"
-   ;;
-esac
-AC_PROG_LIBTOOL
+LT_INIT([dlopen win32-dll])
 AC_SUBST(LIBTOOL_DEPS)
 
 AC_ARG_WITH(dyn-default,AC_HELP_STRING([--with-dyn-default],[Default to loading optional formats dynamically]),opt_default=dyn,opt_default=yes)
@@ -120,7 +113,7 @@ if test "$GCC" = yes; then
       *linux* | *solaris*)
         LDFLAGS="$LDFLAGS -Wl,-z,defs"
         ;;
-      *os2*)
+      *os2* | *cygwin* | *mingw*)
         APP_LDFLAGS="-no-undefined"
         ;;
     esac
