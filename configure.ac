@@ -687,6 +687,11 @@ echo "OTHER OPTIONS"
 echo "ladspa effects.............$using_ladspa"
 echo "magic support..............$using_magic"
 echo "png support................$using_png"
+if test "x$OPENMP_CFLAGS" = "x"; then
+echo "OpenMP support.............no"
+else
+echo "OpenMP support.............yes, $OPENMP_CFLAGS"
+fi
 echo
 echo "Configure finished.  Do 'make -s && make install' to compile and install SoX."
 echo
