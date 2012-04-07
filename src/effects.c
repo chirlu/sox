@@ -624,13 +624,19 @@ sox_effect_handler_t const * sox_find_effect(char const * name)
 static void interleave(size_t flows, size_t length, sox_sample_t *from,
     size_t bufsiz, size_t offset, sox_sample_t *to)
 {
-  size_t i, f;
-  size_t wide_samples = length/flows;
-  size_t flow_offs = bufsiz/flows;
+  size_t i;
+  const size_t wide_samples = length/flows;
+  const size_t flow_offs = bufsiz/flows;
   from += offset/flows;
-  for (i = 0; i < wide_samples; i++)
-    for (f = 0; f < flows; f++)
-      *to++ = from[f*flow_offs + i];
+  for (i = 0; i < wide_samples; i++) {
+    sox_sample_t *inner_from = from + i;
+    sox_sample_t *inner_to = to + i * flows;
+    size_t f;
+    for (f = 0; f < flows; f++) {
+      *inner_to++ = *inner_from;
+      inner_from += flow_offs;
+    }
+  }
 }
 
 /* deinterleave() parameters:
@@ -646,11 +652,17 @@ static void interleave(size_t flows, size_t length, sox_sample_t *from,
 static void deinterleave(size_t flows, size_t length, sox_sample_t *from,
     sox_sample_t *to, size_t bufsiz, size_t offset)
 {
-  size_t i, f;
-  size_t wide_samples = length/flows;
-  size_t flow_offs = bufsiz/flows;
+  const size_t wide_samples = length/flows;
+  const size_t flow_offs = bufsiz/flows;
+  size_t f;
   to += offset/flows;
-  for (i = 0; i < wide_samples; i++)
-    for (f = 0; f < flows; f++)
-      to[f*flow_offs + i] = *from++;
+  for (f = 0; f < flows; f++) {
+    sox_sample_t *inner_to = to + f*flow_offs;
+    sox_sample_t *inner_from = from + f;
+    size_t i = wide_samples;
+    while (i--) {
+      *inner_to++ = *inner_from;
+      inner_from += flows;
+    }
+  }
 }
