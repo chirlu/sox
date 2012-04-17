@@ -80,14 +80,15 @@ static void invert(double * h, int n)
 
 static double * lpf(double Fn, double Fc, double tbw, int * num_taps, double att, double * beta, sox_bool round)
 {
+  int n = *num_taps;
   if ((Fc /= Fn) <= 0 || Fc >= 1) {
     *num_taps = 0;
     return NULL;
   }
   att = att? att : 120;
-  *beta = *beta < 0? lsx_kaiser_beta(att) : *beta;
-  if (!*num_taps) {
-    int n = lsx_lpf_num_taps(att, (tbw? tbw / Fn : .05) * .5, 0);
+  lsx_kaiser_params(att, (tbw? tbw / Fn : .05) * .5, beta, num_taps);
+  if (!n) {
+    n = *num_taps;
     *num_taps = range_limit(n, 11, 32767);
     if (round)
       *num_taps = 1 + 2 * (int)((int)((*num_taps / 2) * Fc + .5) / Fc + .5);

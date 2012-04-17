@@ -101,16 +101,16 @@ void lsx_apply_blackman_nutall(double h[], const int num_points);
 double lsx_kaiser_beta(double att);
 void lsx_apply_kaiser(double h[], const int num_points, double beta);
 double * lsx_make_lpf(int num_taps, double Fc, double beta, double scale, sox_bool dc_norm);
-int lsx_lpf_num_taps(double att, double tr_bw, int k);
+void lsx_kaiser_params(double att, double tr_bw, double * beta, int * num_taps);
 double * lsx_design_lpf(
     double Fp,      /* End of pass-band; ~= 0.01dB point */
-    double Fc,      /* Start of stop-band */
+    double Fs,      /* Start of stop-band */
     double Fn,      /* Nyquist freq; e.g. 0.5, 1, PI */
     sox_bool allow_aliasing,
     double att,     /* Stop-band attenuation in dB */
-    int * num_taps, /* (Single phase.)  0: value will be estimated */
-    int k,          /* Number of phases; 0 for single-phase */
-    double beta);
+    int * num_taps, /* 0: value will be estimated */
+    int k,          /* >0: number of phases; <0: num_taps ≡ 1 (mod -k) */
+    double beta);   /* <0: value will be estimated */
 void lsx_fir_to_phase(double * * h, int * len,
     int * post_len, double phase0);
 #define LSX_TO_6dB .5869

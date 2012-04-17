@@ -160,7 +160,7 @@ static void dft_stage_fn(stage_t * p, fifo_t * output_fifo)
       lsx_safe_rdft(f->dft_length, 1, output);
     }
     output[0] *= f->coefs[0];
-    if (p->step.parts.integer) {
+    if (p->step.parts.integer > 0) {
       output[1] *= f->coefs[1];
       for (i = 2; i < f->dft_length; i += 2) {
         tmp = output[i];
@@ -177,25 +177,26 @@ static void dft_stage_fn(stage_t * p, fifo_t * output_fifo)
       else fifo_trim_by(output_fifo, overlap);
     }
     else { /* F-domain */
-      for (i = 2; i < (f->dft_length >> 1); i += 2) {
+      int m = -p->step.parts.integer;
+      for (i = 2; i < (f->dft_length >> m); i += 2) {
         tmp = output[i];
         output[i  ] = f->coefs[i  ] * tmp - f->coefs[i+1] * output[i+1];
         output[i+1] = f->coefs[i+1] * tmp + f->coefs[i  ] * output[i+1];
       }
       output[1] = f->coefs[i] * output[i] - f->coefs[i+1] * output[i+1];
-      lsx_safe_rdft(f->dft_length >> 1, -1, output);
-      fifo_trim_by(output_fifo, (f->dft_length + overlap) >> 1);
+      lsx_safe_rdft(f->dft_length >> m, -1, output);
+      fifo_trim_by(output_fifo, (((1 << m) - 1) * f->dft_length + overlap) >> m);
     }
   }
 }
 
-static void setup_dft_stage(rate_shared_t * shared, int which, stage_t * stage, int L, int M)
+static void setup_dft_stage(rate_shared_t * shared, int which, stage_t * stage, int L, int M, sox_bool allow_aliasing)
 {
   stage->fn = dft_stage_fn;
   stage->preload = shared->dft_filter[which].post_peak / L;
   stage->remL    = shared->dft_filter[which].post_peak % L;
   stage->L = L;
-  stage->step.parts.integer = M;
+  stage->step.parts.integer = abs(3-M) == 1 && !allow_aliasing? -M/2 : M;
   stage->which = which;
 }
 
@@ -217,20 +218,12 @@ static void init_dft_filter(rate_shared_t * p, unsigned which, int num_taps,
     f->post_peak = num_taps / 2;
   }
   else {
-    double * h2 = lsx_design_lpf(Fp, Fc, Fn, allow_aliasing, att, &num_taps, 0, -1.);
+    int k = 4 << (phase == 50 && multiplier == 4 && Fn == 4);
+    double * h2 = lsx_design_lpf(Fp, Fc, Fn, allow_aliasing, att, &num_taps, -k, -1.);
 
     if (phase != 50)
       lsx_fir_to_phase(&h2, &num_taps, &f->post_peak, phase);
-    else {
-      if (Fn == 4 && ((num_taps - 1) & 4)) { /* preserve phase */
-        double * h3 = calloc(num_taps + 4, sizeof(*h3));
-        memcpy(h3 + 2, h2, num_taps * sizeof(*h3));
-        free(h2);
-        h2 = h3;
-        num_taps += 4;
-      }
-      f->post_peak = num_taps / 2;
-    }
+    else f->post_peak = num_taps / 2;
 
     dft_length = lsx_set_dft_length(num_taps);
     f->coefs = calloc(dft_length, sizeof(*f->coefs));
@@ -313,7 +306,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
       if (fracL > 2) {
         int L = fracL, M = realM;
         for (i = level + 1; i && !(L & 1); L >>= 1, --i);
-        if (L < 3 && (M <<= i) < 7) {
+        if (((M <<= i) < 7 && L < 3) || M == 4) {
           preL = L, preM = M, realM = fracL = 1, level = 0, upsample = sox_true;
           break;
         }
@@ -395,7 +388,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
 
     if (preL * preM != 1) {
       init_dft_filter(shared, 0, 0, 0, bw, 1., (double)max(preL, preM), att, preL, phase, allow_aliasing);
-      setup_dft_stage(shared, 0, &pre_stage, preL, preM == 2 && !allow_aliasing? 0 : preM);
+      setup_dft_stage(shared, 0, &pre_stage, preL, preM, allow_aliasing);
       --p->input_stage_num;
     }
     else if (level && have_frac_stage && (1 - pass) / (1 - bw) > 2)
@@ -405,7 +398,7 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
       init_dft_filter(shared, 1, 0, 0,
           bw * (upsample? factor * postL / postM : 1),
           1., (double)(upsample? postL : postM), att, postL, phase, allow_aliasing);
-      setup_dft_stage(shared, 1, &post_stage, postL, postM == 2 && !allow_aliasing? 0 : postM);
+      setup_dft_stage(shared, 1, &post_stage, postL, postM, allow_aliasing);
       ++p->output_stage_num;
     }
   }
@@ -413,12 +406,12 @@ static void rate_init(rate_t * p, rate_shared_t * shared, double factor,
     stage_t * s = &p->stages[i];
     if (i >= 0 && i < level - have_frac_stage) {
       s->fn = half_sample_25;
-      s->pre_post = 2 * (array_length(half_fir_coefs_25) - 1);
+      s->pre_post = 4 * array_length(half_fir_coefs_25);
       s->preload = s->pre = s->pre_post >> 1;
     }
     else if (level && i == level - 1) {
       if (shared->dft_filter[0].num_taps)
-        setup_dft_stage(shared, 0, s, 1, (int)allow_aliasing << 1);
+        setup_dft_stage(shared, 0, s, 1, 2, allow_aliasing);
       else *s = post_stage;
     }
     fifo_create(&s->fifo, (int)sizeof(sample_t));

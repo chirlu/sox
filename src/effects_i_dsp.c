@@ -271,42 +271,40 @@ double * lsx_make_lpf(int num_taps, double Fc, double beta, double scale, sox_bo
   return h;
 }
 
-int lsx_lpf_num_taps(double att, double tr_bw, int k)
+void lsx_kaiser_params(double att, double tr_bw, double * beta, int * num_taps)
 {                    /* TODO this could be cleaner, esp. for k != 0 */
   int n;
+  *beta = *beta < 0? lsx_kaiser_beta(att) : *beta;
   if (att <= 80)
     n = .25 / M_PI * (att - 7.95) / (2.285 * tr_bw) + .5;
   else {
     double n160 = (.0425* att - 1.4) / tr_bw;   /* Half order for att = 160 */
     n = n160 * (16.556 / (att - 39.6) + .8625) + .5;  /* For att [80,160) */
   }
-  return k? 2 * n * k - 1 : 2 * (n + (n & 1)) + 1; /* =1 %4 (0 phase 1/2 band) */
+  *num_taps = *num_taps? *num_taps : 2 * n;
 }
 
 double * lsx_design_lpf(
     double Fp,      /* End of pass-band; ~= 0.01dB point */
-    double Fc,      /* Start of stop-band */
+    double Fs,      /* Start of stop-band */
     double Fn,      /* Nyquist freq; e.g. 0.5, 1, PI */
     sox_bool allow_aliasing,
     double att,     /* Stop-band attenuation in dB */
-    int * num_taps, /* (Single phase.)  0: value will be estimated */
-    int k,          /* Number of phases; 0 for single-phase */
-    double beta)
+    int * num_taps, /* 0: value will be estimated */
+    int k,          /* >0: number of phases; <0: num_taps ≡ 1 (mod -k) */
+    double beta)    /* <0: value will be estimated */
 {
   double tr_bw;
-
+  int n = *num_taps, phases = max(k, 1), modulo = max(-k, 1);
   if (allow_aliasing)
-    Fc += (Fc - Fp) * LSX_TO_3dB;
-  Fp /= Fn, Fc /= Fn;        /* Normalise to Fn = 1 */
-  tr_bw = LSX_TO_6dB * (Fc-Fp); /* Transition band-width: 6dB to stop points */
-
-  if (beta < 0)
-    beta = lsx_kaiser_beta(att);
-  if (!*num_taps)
-    *num_taps = lsx_lpf_num_taps(att, tr_bw, k);
-  k = max(k, 1);
-  lsx_debug("design_lpf Fp=%g tr_bw=%g Fc=%g", Fp, tr_bw, Fc);
-  return lsx_make_lpf(*num_taps, (Fc - tr_bw) / k, beta, (double)k, sox_true);
+    Fs += (Fs - Fp) * LSX_TO_3dB;
+  Fp /= Fn, Fs /= Fn;        /* Normalise to Fn = 1 */
+  tr_bw = LSX_TO_6dB * (Fs - Fp); /* Transition band-width: 6dB to stop points */
+  tr_bw /= phases, Fs /= phases;
+  lsx_kaiser_params(att, tr_bw, &beta, num_taps);
+  if (!n)
+    *num_taps = phases > 1? *num_taps / phases * phases + phases - 1 : (*num_taps + modulo - 2) / modulo * modulo + 1;
+  return lsx_make_lpf(*num_taps, Fs - tr_bw, beta, (double)phases, sox_true);
 }
 
 static double safe_log(double x)
