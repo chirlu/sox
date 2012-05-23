@@ -35,9 +35,10 @@ typedef struct {
   uint64_t total_samples;
 
   /* Decode buffer: */
-  FLAC__int32 const * const * decoded_wide_samples;
-  unsigned number_of_wide_samples;
-  unsigned wide_sample_number;
+  sox_sample_t *req_buffer; /* this may be on the stack */
+  size_t number_of_requested_samples;
+  sox_sample_t *leftover_buf; /* heap */
+  unsigned number_of_leftover_samples;
 
   FLAC__StreamDecoder * decoder;
   FLAC__bool eof;
@@ -109,6 +110,11 @@ static FLAC__StreamDecoderWriteStatus FLAC__frame_decode_callback(FLAC__StreamDe
 {
   sox_format_t * ft = (sox_format_t *) client_data;
   priv_t * p = (priv_t *)ft->priv;
+  sox_sample_t * dst = p->req_buffer;
+  unsigned channel;
+  unsigned nsamples = frame->header.blocksize;
+  unsigned sample = 0;
+  size_t actual = nsamples * p->channels;
 
   (void) flac;
 
@@ -116,11 +122,47 @@ static FLAC__StreamDecoderWriteStatus FLAC__frame_decode_callback(FLAC__StreamDe
     lsx_fail_errno(ft, SOX_EINVAL, "FLAC ERROR: parameters differ between frame and header");
     return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
   }
+  if (dst == NULL) {
+    lsx_warn("FLAC ERROR: entered write callback without a buffer (SoX bug)");
+    return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+  }
 
-  /* FIXME: We're skating on thin ice here: buffer may be on the stack! */
-  p->decoded_wide_samples = buffer;
-  p->number_of_wide_samples = frame->header.blocksize;
-  p->wide_sample_number = 0;
+  /* FLAC may give us too much data, prepare the leftover buffer */
+  if (actual > p->number_of_requested_samples) {
+    size_t to_stash = actual - p->number_of_requested_samples;
+
+    p->leftover_buf = lsx_malloc(to_stash * sizeof(sox_sample_t));
+    p->number_of_leftover_samples = to_stash;
+    nsamples = p->number_of_requested_samples / p->channels;
+
+    p->req_buffer += p->number_of_requested_samples;
+    p->number_of_requested_samples = 0;
+  } else {
+    p->req_buffer += actual;
+    p->number_of_requested_samples -= actual;
+  }
+
+leftover_copy:
+
+  for (; sample < nsamples; sample++) {
+    for (channel = 0; channel < p->channels; channel++) {
+      FLAC__int32 d = buffer[channel][sample];
+      switch (p->bits_per_sample) {
+      case  8: *dst++ = SOX_SIGNED_8BIT_TO_SAMPLE(d,); break;
+      case 16: *dst++ = SOX_SIGNED_16BIT_TO_SAMPLE(d,); break;
+      case 24: *dst++ = SOX_SIGNED_24BIT_TO_SAMPLE(d,); break;
+      case 32: *dst++ = SOX_SIGNED_32BIT_TO_SAMPLE(d,); break;
+      }
+    }
+  }
+
+  /* copy into the leftover buffer if we've prepared it */
+  if (sample < frame->header.blocksize) {
+    nsamples = frame->header.blocksize;
+    dst = p->leftover_buf;
+    goto leftover_copy;
+  }
+
   return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
 
@@ -168,35 +210,66 @@ static int start_read(sox_format_t * const ft)
 static size_t read_samples(sox_format_t * const ft, sox_sample_t * sampleBuffer, size_t const requested)
 {
   priv_t * p = (priv_t *)ft->priv;
-  size_t actual = 0;
+  size_t prev_requested;
 
   if (p->seek_pending) {
     p->seek_pending = sox_false; 
-    p->wide_sample_number = p->number_of_wide_samples = 0;
-    if (!FLAC__stream_decoder_seek_absolute(p->decoder, (FLAC__uint64)(p->seek_offset / ft->signal.channels)))
-      return 0;
-  }
-  while (!p->eof && actual < requested) {
-    if (p->wide_sample_number >= p->number_of_wide_samples)
-      FLAC__stream_decoder_process_single(p->decoder);
-    if (p->wide_sample_number >= p->number_of_wide_samples)
-      p->eof = sox_true;
-    else { /* FIXME: this block should really be inside the decode callback */
-      unsigned channel;
 
-      for (channel = 0; channel < p->channels; channel++, actual++) {
-        FLAC__int32 d = p->decoded_wide_samples[channel][p->wide_sample_number];
-        switch (p->bits_per_sample) {
-        case  8: *sampleBuffer++ = SOX_SIGNED_8BIT_TO_SAMPLE(d,); break;
-        case 16: *sampleBuffer++ = SOX_SIGNED_16BIT_TO_SAMPLE(d,); break;
-        case 24: *sampleBuffer++ = SOX_SIGNED_24BIT_TO_SAMPLE(d,); break;
-        case 32: *sampleBuffer++ = SOX_SIGNED_32BIT_TO_SAMPLE(d,); break;
-        }
-      }
-      ++p->wide_sample_number;
+    /* discard leftover decoded data */
+    free(p->leftover_buf);
+    p->leftover_buf = NULL;
+    p->number_of_leftover_samples = 0;
+
+    p->req_buffer = sampleBuffer;
+    p->number_of_requested_samples = requested;
+
+    /* calls decoder_write_callback */
+    if (!FLAC__stream_decoder_seek_absolute(p->decoder, (FLAC__uint64)(p->seek_offset / ft->signal.channels))) {
+      p->req_buffer = NULL;
+      return 0;
     }
+  } else if (p->number_of_leftover_samples > 0) {
+
+    /* small request, no need to decode more samples since we have leftovers */
+    if (requested < p->number_of_leftover_samples) {
+      size_t req_bytes = requested * sizeof(sox_sample_t);
+
+      memcpy(sampleBuffer, p->leftover_buf, req_bytes);
+      p->number_of_leftover_samples -= requested;
+      memmove(p->leftover_buf, (char *)p->leftover_buf + req_bytes,
+              (size_t)p->number_of_leftover_samples * sizeof(sox_sample_t));
+      return requested;
+    }
+
+    /* first, give them all of our leftover data: */
+    memcpy(sampleBuffer, p->leftover_buf,
+           p->number_of_leftover_samples * sizeof(sox_sample_t));
+
+    p->req_buffer = sampleBuffer + p->number_of_leftover_samples;
+    p->number_of_requested_samples = requested - p->number_of_leftover_samples;
+
+    free(p->leftover_buf);
+    p->leftover_buf = NULL;
+    p->number_of_leftover_samples = 0;
+
+    /* continue invoking decoder below */
+  } else {
+    p->req_buffer = sampleBuffer;
+    p->number_of_requested_samples = requested;
   }
-  return actual;
+
+  /* invoke the decoder, calls decoder_write_callback */
+  while ((prev_requested = p->number_of_requested_samples) && !p->eof) {
+    if (!FLAC__stream_decoder_process_single(p->decoder))
+      break; /* error, but maybe got earlier in the loop, though */
+
+    /* number_of_requested_samples decrements as the decoder progresses */
+    if (p->number_of_requested_samples == prev_requested)
+      p->eof = sox_true;
+  }
+  p->req_buffer = NULL;
+
+  return requested - p->number_of_requested_samples;
 }
 
 
@@ -207,6 +280,10 @@ static int stop_read(sox_format_t * const ft)
   if (!FLAC__stream_decoder_finish(p->decoder) && p->eof)
     lsx_warn("decoder MD5 checksum mismatch.");
   FLAC__stream_decoder_delete(p->decoder);
+
+  free(p->leftover_buf);
+  p->leftover_buf = NULL;
+  p->number_of_leftover_samples = 0;
   return SOX_SUCCESS;
 }
 

@@ -18,6 +18,7 @@ File formats:
 
   o Fix pipe file-type detection regression. (robs)
   o MAUD write fixes. [3507927] (Carl Eric Codere and Ulrich Klauer)
+  o Fix crash when seeking within a FLAC file. [3476843] (Eric Wong)
 
 Other bug fixes:
 
