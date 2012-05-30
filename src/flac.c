@@ -359,7 +359,6 @@ static int start_write(sox_format_t * const ft)
     lsx_fail_errno(ft, SOX_ENOMEM, "FLAC ERROR creating the encoder instance");
     return SOX_EOF;
   }
-  p->decoded_samples = lsx_malloc(sox_globals.bufsiz * sizeof(FLAC__int32));
 
   p->bits_per_sample = ft->encoding.bits_per_sample;
   ft->signal.precision = ft->encoding.bits_per_sample;
@@ -479,6 +478,13 @@ static size_t write_samples(sox_format_t * const ft, sox_sample_t const * const 
 {
   priv_t * p = (priv_t *)ft->priv;
   unsigned i;
+
+  /* allocate or grow buffer */
+  if (p->number_of_samples < len) {
+    p->number_of_samples = len;
+    free(p->decoded_samples);
+    p->decoded_samples = lsx_malloc(p->number_of_samples * sizeof(FLAC__int32));
+  }
 
   for (i = 0; i < len; ++i) {
     SOX_SAMPLE_LOCALS;

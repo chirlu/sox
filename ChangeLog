@@ -23,6 +23,8 @@ File formats:
   o Fix Ogg Vorbis files with certain numbers of channels being
     truncated. (Ulrich Klauer)
   o Fix reading 64-bit float WAVs. [3481510] (nu774 and Ulrich Klauer)
+  o Fix potential buffer overrun when writing FLAC files directly via
+    sox_write(). [3474924] (Eric Wong)
 
 Audio device drivers:
 
