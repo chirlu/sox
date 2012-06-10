@@ -284,6 +284,9 @@ static int sox_ladspa_stop(sox_effect_t * effp)
   /* If needed, deactivate the plugin */
   if (l_st->desc->deactivate)
     l_st->desc->deactivate(l_st->handle);
+  /* If needed, cleanup memory used by the plugin */
+  if (l_st->desc->cleanup)
+    l_st->desc->cleanup(l_st->handle);
 
   return SOX_SUCCESS;
 }
