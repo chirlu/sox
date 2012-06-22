@@ -18,6 +18,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#define _GNU_SOURCE
 #include "sox_i.h"
 
 #include <assert.h>
@@ -35,6 +36,10 @@
 
 #if HAVE_MAGIC
   #include <magic.h>
+#endif
+
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
 #endif
 
 #define PIPE_AUTO_DETECT_SIZE 256 /* Only as much as we can rewind a pipe */
@@ -370,6 +375,50 @@ static int xfclose(FILE * file, lsx_io_type io_type)
     fclose(file);
 }
 
+static void incr_pipe_size(FILE *f)
+{
+/*
+ * Linux 2.6.35 and later has the ability to expand the pipe buffer
+ * Try to get it as big as possible to avoid stalls when SoX itself
+ * is using big buffers
+ */
+#if defined(F_GETPIPE_SZ) && defined(F_SETPIPE_SZ)
+  static long max_pipe_size;
+
+  /* read the maximum size of the pipe the first time this is called */
+  if (max_pipe_size == 0) {
+    const char path[] = "/proc/sys/fs/pipe-max-size";
+    int fd = open(path, O_RDONLY);
+
+    max_pipe_size = -1;
+    if (fd >= 0) {
+      char buf[80];
+      ssize_t r = read(fd, buf, sizeof(buf) - 1);
+
+      if (r > 0) {
+        buf[r] = 0;
+        max_pipe_size = strtol(buf, NULL, 10);
+
+        /* guard against obviously wrong values on messed up systems */
+        if (max_pipe_size <= PIPE_BUF || max_pipe_size > INT_MAX)
+          max_pipe_size = -1;
+      }
+      close(fd);
+    }
+  }
+
+  if (max_pipe_size > PIPE_BUF) {
+    int fd = fileno(f);
+
+    if (fcntl(fd, F_SETPIPE_SZ, max_pipe_size) >= 0)
+      lsx_debug("got pipe %ld bytes\n", max_pipe_size);
+    else
+      lsx_warn("couldn't set pipe size to %ld bytes: %s\n",
+               max_pipe_size, strerror(errno));
+  }
+#endif /* do nothing for platforms without F_{GET,SET}PIPE_SZ */
+}
+
 static FILE * xfopen(char const * identifier, char const * mode, lsx_io_type * io_type)
 {
   *io_type = lsx_io_file;
@@ -382,6 +431,7 @@ static FILE * xfopen(char const * identifier, char const * mode, lsx_io_type * i
 #endif
     f = popen(identifier + 1, POPEN_MODE);
     *io_type = lsx_io_pipe;
+    incr_pipe_size(f);
 #else
     lsx_fail("this build of SoX cannot open pipes");
 #endif
@@ -394,6 +444,7 @@ static FILE * xfopen(char const * identifier, char const * mode, lsx_io_type * i
     char * command = lsx_malloc(strlen(command_format) + strlen(identifier));
     sprintf(command, command_format, identifier);
     f = popen(command, POPEN_MODE);
+    incr_pipe_size(f);
     free(command);
     *io_type = lsx_io_url;
 #else
