@@ -65,7 +65,7 @@ macro(optional4 variable header library1 function1 library2 function2 library3 f
   endif (${variable}1)
 endmacro(optional4)
 
-project(sox)
+project(sox C)
 
 if(CMAKE_COMPILER_IS_GNUCC)
 	add_definitions(-D_FORTIFY_SOURCE=2 -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic -Wno-format -Wno-long-long)
