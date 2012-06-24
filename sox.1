@@ -1891,7 +1891,8 @@ or simply
 .EX
    play track1.wav deemph
 .EE
-The de-emphasis filter is implemented as a biquad; its maximum deviation
+The de-emphasis filter is implemented as a biquad and requires the input
+audio sample rate to be either 44.1kHz or 48kHz.  Maximum deviation
 from the ideal response is only 0\*d06dB (up to 20kHz).
 .SP
 This effect supports the \fB\-\-plot\fR global option.
@@ -1947,8 +1948,8 @@ The
 .B \-S
 option selects a slightly `sloped' TPDF, biased towards higher
 frequencies.  It can be used at any sampling rate but below \(~~22k,
-plain TPDF is probably better, and above \(~~ 37k, noise-shaped
-is probably better.
+plain TPDF is probably better, and above \(~~ 37k, noise-shaping
+(if available) is probably better.
 .SP
 The
 .B \-a
@@ -3971,12 +3972,12 @@ minutes before the end of audio.
 \fBupsample\fR [\fIfactor\fR]
 Upsample the signal by an integer factor: \fIfactor\fR\-1 zero-value
 samples are inserted between each pair of input samples.  As a result, the
-original spectrum is replicated into the new frequency space (aliasing) and
+original spectrum is replicated into the new frequency space (imaging) and
 attenuated.  This attenuation can be compensated for by adding
 \fBvol \fIfactor\fR after any further processing.  The upsample effect is
 typically used in combination with filtering effects.
 .SP
-For a general resampling effect with anti-aliasing, see \fBrate\fR.  See
+For a general resampling effect with anti-imaging, see \fBrate\fR.  See
 also \fBdownsample\fR.
 .TP
 \fBvad \fR[\fIoptions\fR]

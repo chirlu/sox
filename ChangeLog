@@ -25,6 +25,11 @@ Previously deprecated features (to be removed in future):
   -------  ----------------------  ----------------------  -------
   14.4.0   E mixer                 remix                   2013-03-04
 
+Effects:
+
+  o 'Deemph' can now also be used at 48kHz sample rate.  (robs)
+  o 'Rate' now much faster in many cases.  (robs)
+
 Internal improvements:
 
   o Speed optimization for effects that operate on channels
