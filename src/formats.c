@@ -804,7 +804,7 @@ sox_format_handler_t const * sox_write_handler(
   else return NULL;
   if (!handler->startwrite && !handler->write) {
     if (filetype1)
-      lsx_fail("file type `%s' isn't writeable", filetype);
+      lsx_fail("file type `%s' isn't writable", filetype);
     return NULL;
   }
   if (filetype1)
