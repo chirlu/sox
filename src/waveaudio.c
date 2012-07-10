@@ -327,7 +327,7 @@ static int start(sox_format_t* ft)
   return SOX_SUCCESS;
 }
 
-static size_t read(sox_format_t * ft, sox_sample_t* buf, size_t len)
+static size_t waveread(sox_format_t * ft, sox_sample_t* buf, size_t len)
 {
   size_t copied = 0;
   priv_t *priv = (priv_t*)ft->priv;
@@ -394,7 +394,7 @@ static size_t read(sox_format_t * ft, sox_sample_t* buf, size_t len)
   return copied;
 }
 
-static size_t write(sox_format_t * ft, const sox_sample_t* buf, size_t len)
+static size_t wavewrite(sox_format_t * ft, const sox_sample_t* buf, size_t len)
 {
   unsigned clips = 0;
   size_t copied = 0;
@@ -475,8 +475,8 @@ LSX_FORMAT_HANDLER(waveaudio)
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
   "Windows Multimedia Audio", names, 
   SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
-  start, read, stop,
-  start, write, stop,
+  start, waveread, stop,
+  start, wavewrite, stop,
   NULL, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
