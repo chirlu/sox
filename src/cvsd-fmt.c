@@ -68,7 +68,7 @@ static void decode(priv_t * p, int bit)
     p->sample = max(p->step_mult * p->sample - p->step, SOX_SAMPLE_MIN);
 }
 
-static size_t read(sox_format_t * ft, sox_sample_t * buf, size_t len)
+static size_t cvsdread(sox_format_t * ft, sox_sample_t * buf, size_t len)
 {
   priv_t *p = (priv_t *) ft->priv;
   size_t i;
@@ -85,7 +85,7 @@ static size_t read(sox_format_t * ft, sox_sample_t * buf, size_t len)
   return i;
 }
 
-static size_t write(sox_format_t * ft, sox_sample_t const * buf, size_t len)
+static size_t cvsdwrite(sox_format_t * ft, sox_sample_t const * buf, size_t len)
 {
   priv_t *p = (priv_t *) ft->priv;
   size_t i;
@@ -107,7 +107,7 @@ LSX_FORMAT_HANDLER(cvu)
   static unsigned const write_encodings[] = {SOX_ENCODING_CVSD, 1, 0, 0};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "Headerless Continuously Variable Slope Delta modulation (unfiltered)",
-    names, SOX_FILE_MONO, start, read, NULL, start, write, NULL,
+    names, SOX_FILE_MONO, start, cvsdread, NULL, start, cvsdwrite, NULL,
     lsx_rawseek, write_encodings, NULL, sizeof(priv_t)
   };
   return &handler;
