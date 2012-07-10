@@ -142,36 +142,31 @@ EXTRA_DIST = monkey.wav optional-fmts.am \
 	     CMakeLists.txt soxconfig.h.cmake \
 	     tests.sh testall.sh tests.bat testall.bat test-comments
 
-all: sox$(EXEEXT) play rec soxi sox_sample_test$(EXEEXT) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT) example5$(EXEEXT)
+all: sox$(EXEEXT) play$(EXEEXT) rec$(EXEEXT) soxi$(EXEEXT) sox_sample_test$(EXEEXT) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT) example5$(EXEEXT)
 
-play rec: sox$(EXEEXT)
+play$(EXEEXT) rec$(EXEEXT) soxi$(EXEEXT): sox$(EXEEXT)
 	if test "$(PLAYRECLINKS)" = "yes"; then	\
-		test -f sox$(EXEEXT) && ( $(RM) $@ && $(LN_S) sox$(EXEEXT) $@ ) || $(LN_S) sox $@; \
-	fi
-
-soxi: sox$(EXEEXT)
-	if test "$(SYMLINKS)" = "yes"; then	\
 		test -f sox$(EXEEXT) && ( $(RM) $@ && $(LN_S) sox$(EXEEXT) $@ ) || $(LN_S) sox $@; \
 	fi
 
 install-exec-hook:
 	if test "$(PLAYRECLINKS)" = "yes"; then	\
-		cd $(DESTDIR)$(bindir); $(RM) play rec; $(LN_S) sox play; $(LN_S) sox rec; \
+		cd $(DESTDIR)$(bindir); $(RM) play$(EXEEXT) rec$(EXEEXT); $(LN_S) sox$(EXEEXT) play$(EXEEXT); $(LN_S) sox$(EXEEXT) rec$(EXEEXT); \
 	fi
 	if test "$(SYMLINKS)" = "yes"; then	\
-		cd $(DESTDIR)$(bindir); $(RM) soxi; $(LN_S) sox soxi; \
+		cd $(DESTDIR)$(bindir); $(RM) soxi$(EXEEXT); $(LN_S) sox$(EXEEXT) soxi$(EXEEXT); \
 	fi
 
 uninstall-hook:
 	if test "$(PLAYRECLINKS)" = "yes"; then	\
-		cd $(DESTDIR)$(bindir); $(RM) play rec; \
+		cd $(DESTDIR)$(bindir); $(RM) play$(EXTEXT) rec$(EXEEXT); \
 	fi
 	if test "$(SYMLINKS)" = "yes"; then	\
-		cd $(DESTDIR)$(bindir); $(RM) soxi; \
+		cd $(DESTDIR)$(bindir); $(RM) soxi$(EXEEXT); \
 	fi
 
 clean-local:
-	$(RM) play rec soxi
+	$(RM) play$(EXEEXT) rec$(EXEEXT) soxi$(EXEEXT)
 	$(RM) sox_sample_test$(EXEEXT)
 	$(RM) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT) example5$(EXEEXT)
 
