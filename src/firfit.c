@@ -92,15 +92,19 @@ static sox_bool read_knots(sox_effect_t * effp)
     while (fscanf(file, " #%*[^\n]%c", &c) >= 0) {
       num_converted = fscanf(file, "%lf %lf",
           &p->knots[p->num_knots].f, &p->knots[p->num_knots].gain);
-      if (num_converted == 2)
+      if (num_converted == 2) {
+        if (p->num_knots && p->knots[p->num_knots].f <= p->knots[p->num_knots - 1].f) {
+          lsx_fail("knot frequencies must be strictly increasing");
+          break;
+        }
         lsx_revalloc(p->knots, ++p->num_knots + 1);
-      else if (num_converted != 0)
+      } else if (num_converted != 0)
         break;
     }
     lsx_report("%i knots", p->num_knots);
     if (feof(file) && num_converted != 1)
       result = sox_true;
-    else lsx_fail("error reading knot file");
+    else lsx_fail("error reading knot file `%s', line number %u", p->filename, 1 + p->num_knots);
     if (file != stdin)
       fclose(file);
   }
@@ -113,9 +117,16 @@ static int start(sox_effect_t * effp)
   dft_filter_t * f = p->base.filter_ptr;
 
   if (!f->num_taps) {
+    double * h;
     if (!p->num_knots && !read_knots(effp))
       return SOX_EOF;
-    lsx_set_dft_filter(f, make_filter(effp), p->n, p->n >> 1);
+    h = make_filter(effp);
+    if (effp->global_info->plot != sox_plot_off) {
+      lsx_plot_fir(h, p->n, effp->in_signal.rate,
+          effp->global_info->plot, "SoX effect: firfit", -30., +30.);
+      return SOX_EOF;
+    }
+    lsx_set_dft_filter(f, h, p->n, p->n >> 1);
   }
   return lsx_dft_filter_effect_fn()->start(effp);
 }
