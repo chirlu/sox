@@ -1953,7 +1953,7 @@ static void usage(char const * message)
 "FORMAT OPTIONS (fopts):",
 "Input file format options need only be supplied for files that are headerless.",
 "Output files will have the same format as the input file where possible and not",
-"overriden by any of various means including providing output format options.",
+"overridden by any of various means including providing output format options.",
 "",
 "-v|--volume FACTOR       Input file volume adjustment factor (real number)",
 "--ignore-length          Ignore input file length given in header; read to EOF",
