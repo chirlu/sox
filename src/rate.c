@@ -590,11 +590,11 @@ static int create(sox_effect_t * effp, int argc, char **argv)
   if (!bw_3dB_pc && !p->bw_0dB_pc)
     p->bw_0dB_pc = quality == 1? LOW_Q_BW0_PC : 100 - 5 / TO_3dB(rej);
   else if (bw_3dB_pc && bw_3dB_pc < 85 && allow_aliasing) {
-    lsx_fail("minimum allowed 3dB bandwidth with aliasing is %g%%", 85);
+    lsx_fail("minimum allowed 3dB bandwidth with aliasing is %g%%", 85.);
     return SOX_EOF;
   }
   else if (p->bw_0dB_pc && p->bw_0dB_pc < 74 && allow_aliasing) {
-    lsx_fail("minimum allowed bandwidth with aliasing is %g%%", 74);
+    lsx_fail("minimum allowed bandwidth with aliasing is %g%%", 74.);
     return SOX_EOF;
   }
   if (bw_3dB_pc)
