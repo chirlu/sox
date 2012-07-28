@@ -215,6 +215,8 @@ static sox_bool original_termios_saved = sox_false;
 
 static sox_bool stdin_is_a_tty, is_player, is_guarded, do_guarded_norm, no_dither, reported_sox_opts;
 
+struct timeval load_timeofday;
+
 static void cleanup(void)
 {
   size_t i;
@@ -1784,6 +1786,13 @@ static int process(void)
 
   signal(SIGTERM, sigint); /* Stop gracefully, as soon as we possibly can. */
   signal(SIGINT , sigint); /* Either skip current input or behave as SIGTERM. */
+  if (very_first_effchain) {
+    struct timeval now;
+    double d;
+    gettimeofday(&now, NULL);
+    d = now.tv_sec - load_timeofday.tv_sec + (now.tv_usec - load_timeofday.tv_usec) / TIME_FRAC;
+    lsx_debug("start-up time = %g", d);
+  }
   flow_status = sox_flow_effects(effects_chain, update_status, NULL);
 
   /* Don't return SOX_EOF if
@@ -1914,6 +1923,7 @@ static void usage(char const * message)
 "--combine concatenate    Concatenate all input files (default for sox, rec)",
 "--combine sequence       Sequence all input files (default for play)",
 "-D, --no-dither          Don't dither automatically",
+"--dft-min NUM            Minimum size (log2) for DFT processing (default 10)",
 "--effects-file FILENAME  File containing effects and options",
 "-G, --guard              Use temporary files to guard against clipping",
 "-h, --help               Display version number and usage information",
@@ -2177,6 +2187,7 @@ static struct lsx_option_t const long_options[] = {
   {"clobber"         , lsx_option_arg_none    , NULL, 0},
   {"no-clobber"      , lsx_option_arg_none    , NULL, 0},
   {"multi-threaded"  , lsx_option_arg_none    , NULL, 0},
+  {"dft-min"         , lsx_option_arg_required, NULL, 0},
 
   {"bits"            , lsx_option_arg_required, NULL, 'b'},
   {"channels"        , lsx_option_arg_required, NULL, 'c'},
@@ -2362,6 +2373,13 @@ static char parse_gopts_and_fopts(file_t * f)
       case 22: no_clobber = sox_false; break;
       case 23: no_clobber = sox_true; break;
       case 24: sox_globals.use_threads = sox_true; break;
+      case 25:
+        if (sscanf(optstate.arg, "%i %c", &i, &dummy) != 1 || i < 8 || i > 16) {
+          lsx_fail("Min DFT size must be in range 8 to 16");
+          exit(1);
+        }
+        sox_globals.log2_dft_min_size = i;
+        break;
       }
       break;
 
@@ -2826,6 +2844,7 @@ int main(int argc, char **argv)
   size_t i;
   char mybase[6];
 
+  gettimeofday(&load_timeofday, NULL);
   myname = argv[0];
   sox_globals.output_message_handler = output_message;
 

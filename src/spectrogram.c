@@ -161,7 +161,7 @@ static double make_window(priv_t * p, int end)
     case Window_Bartlett: lsx_apply_bartlett(w, n); break;
     case Window_Rectangular: break;
     default: lsx_apply_kaiser(w, n, lsx_kaiser_beta(
-        (p->dB_range + p->gain) * (1.1 + p->window_adjust / 50)));
+        (p->dB_range + p->gain) * (1.1 + p->window_adjust / 50), .1));
   }
   for (i = 0; i < p->dft_size; ++i) sum += p->window[i];
   for (i = 0; i < p->dft_size; ++i) p->window[i] *= 2 / sum

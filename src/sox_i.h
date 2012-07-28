@@ -88,6 +88,7 @@ double lsx_bessel_I_0(double x);
 int lsx_set_dft_length(int num_taps);
 void init_fft_cache(void);
 void clear_fft_cache(void);
+#define lsx_is_power_of_2(x) !(x < 2 || (x & (x - 1)))
 void lsx_safe_rdft(int len, int type, double * d);
 void lsx_safe_cdft(int len, int type, double * d);
 void lsx_power_spectrum(int n, double const * in, double * out);
@@ -98,27 +99,21 @@ void lsx_apply_hamming(double h[], const int num_points);
 void lsx_apply_bartlett(double h[], const int num_points);
 void lsx_apply_blackman(double h[], const int num_points, double alpha);
 void lsx_apply_blackman_nutall(double h[], const int num_points);
-double lsx_kaiser_beta(double att);
+double lsx_kaiser_beta(double att, double tr_bw);
 void lsx_apply_kaiser(double h[], const int num_points, double beta);
-double * lsx_make_lpf(int num_taps, double Fc, double beta, double scale, sox_bool dc_norm);
-void lsx_kaiser_params(double att, double tr_bw, double * beta, int * num_taps);
+double * lsx_make_lpf(int num_taps, double Fc, double beta, double rho,
+    double scale, sox_bool dc_norm);
+void lsx_kaiser_params(double att, double Fc, double tr_bw, double * beta, int * num_taps);
 double * lsx_design_lpf(
-    double Fp,      /* End of pass-band; ~= 0.01dB point */
+    double Fp,      /* End of pass-band */
     double Fs,      /* Start of stop-band */
-    double Fn,      /* Nyquist freq; e.g. 0.5, 1, PI */
-    sox_bool allow_aliasing,
+    double Fn,      /* Nyquist freq; e.g. 0.5, 1, PI; < 0: dummy run */
     double att,     /* Stop-band attenuation in dB */
     int * num_taps, /* 0: value will be estimated */
     int k,          /* >0: number of phases; <0: num_taps ≡ 1 (mod -k) */
     double beta);   /* <0: value will be estimated */
 void lsx_fir_to_phase(double * * h, int * len,
     int * post_len, double phase0);
-#define LSX_TO_6dB .5869
-#define LSX_TO_3dB ((2/3.) * (.5 + LSX_TO_6dB))
-#define LSX_MAX_TBW0 36.
-#define LSX_MAX_TBW0A (LSX_MAX_TBW0 / (1 + LSX_TO_3dB))
-#define LSX_MAX_TBW3 floor(LSX_MAX_TBW0 * LSX_TO_3dB)
-#define LSX_MAX_TBW3A floor(LSX_MAX_TBW0A * LSX_TO_3dB)
 void lsx_plot_fir(double * h, int num_points, sox_rate_t rate, sox_plot_t type, char const * title, double y1, double y2);
 
 #ifdef HAVE_BYTESWAP_H
@@ -280,16 +275,17 @@ char * lsx_usage_lines(char * * usage, char const * const * lines, size_t n);
   } \
 }
 
-#define GETOPT_NUMERIC(state, ch, name, min, max) case ch:{ \
+#define GETOPT_LOCAL_NUMERIC(state, ch, name, min, max) case ch:{ \
   char * end_ptr; \
   double d = strtod(state.arg, &end_ptr); \
   if (end_ptr == state.arg || d < min || d > max || *end_ptr != '\0') {\
     lsx_fail("parameter `%s' must be between %g and %g", #name, (double)min, (double)max); \
     return lsx_usage(effp); \
   } \
-  p->name = d; \
+  name = d; \
   break; \
 }
+#define GETOPT_NUMERIC(state, ch, name, min, max) GETOPT_LOCAL_NUMERIC(state, ch, p->name, min, max)
 
 int lsx_effect_set_imin(sox_effect_t * effp, size_t imin);
 

@@ -1,4 +1,4 @@
-/* Effect: change sample rate     Copyright (c) 2008 robs@users.sourceforge.net
+/* Effect: change sample rate  Copyright (c) 2008,12 robs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -15,9 +15,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* Up-sample by rational step in (0,1) using a poly-phase FIR, length LEN.*/
-/* Input must be preceded by LEN >> 1 samples. */
-/* Input must be followed by (LEN-1) >> 1 samples. */
+/* Resample using a non-interpolated poly-phase FIR with length LEN.*/
+/* Input must be followed by LEN-1 samples. */
 
 #define _ sum += (coef(p->shared->poly_fir_coefs, 0, FIR_LENGTH, divided.rem, 0, j)) *at[j], ++j;
 
@@ -34,14 +33,13 @@ static void FUNCTION(stage_t * p, fifo_t * output_fifo)
     sample_t sum = 0;
     int j = 0;
     CONVOLVE
-    assert(j == FIR_LENGTH);
     output[i] = sum;
   }
   assert(max_num_out - i >= 0);
   fifo_trim_by(output_fifo, max_num_out - i);
   divided2 = div(p->at.parts.integer, p->L);
   fifo_read(&p->fifo, divided2.quot, NULL);
-  p->at.parts.integer -= divided2.quot * p->L;
+  p->at.parts.integer = divided2.rem;
 }
 
 #undef _

@@ -86,7 +86,7 @@ static double * make_filter(int n, double start, double delta, double rate)
   lsx_safe_rdft(work_len, -1, work);
   for (i = 0; i < n; ++i)
     h[i] = work[(work_len - n / 2 + i) % work_len] * 2. / work_len;
-  lsx_apply_kaiser(h, n, lsx_kaiser_beta(40 + 2./3 * fabs(delta)));
+  lsx_apply_kaiser(h, n, lsx_kaiser_beta(40 + 2./3 * fabs(delta), .1));
 
   free(work);
   return h;

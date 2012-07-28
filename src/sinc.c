@@ -86,7 +86,7 @@ static double * lpf(double Fn, double Fc, double tbw, int * num_taps, double att
     return NULL;
   }
   att = att? att : 120;
-  lsx_kaiser_params(att, (tbw? tbw / Fn : .05) * .5, beta, num_taps);
+  lsx_kaiser_params(att, Fc, (tbw? tbw / Fn : .05) * .5, beta, num_taps);
   if (!n) {
     n = *num_taps;
     *num_taps = range_limit(n, 11, 32767);
@@ -94,7 +94,7 @@ static double * lpf(double Fn, double Fc, double tbw, int * num_taps, double att
       *num_taps = 1 + 2 * (int)((int)((*num_taps / 2) * Fc + .5) / Fc + .5);
     lsx_report("num taps = %i (from %i)", *num_taps, n);
   }
-  return lsx_make_lpf(*num_taps |= 1, Fc, *beta, 1., sox_false);
+  return lsx_make_lpf(*num_taps |= 1, Fc, *beta, 0., 1., sox_false);
 }
 
 static int start(sox_effect_t * effp)

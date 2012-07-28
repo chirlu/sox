@@ -1,4 +1,4 @@
-/* Effect: change sample rate     Copyright (c) 2008 robs@users.sourceforge.net
+/* Effect: change sample rate  Copyright (c) 2008,12 robs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -18,7 +18,7 @@
 /* Down-sample by a factor of 2 using a FIR with odd length (LEN).*/
 /* Input must be preceded and followed by LEN >> 1 samples. */
 
-#define _ sum += (input[-j] + input[j]) * COEFS[j], ++j;
+#define _ sum += (input[-(2*j +1)] + input[(2*j +1)]) * COEFS[j], ++j;
 static void FUNCTION(stage_t * p, fifo_t * output_fifo)
 {
   sample_t const * input = stage_read_p(p);
@@ -26,10 +26,9 @@ static void FUNCTION(stage_t * p, fifo_t * output_fifo)
   sample_t * output = fifo_reserve(output_fifo, num_out);
 
   for (i = 0; i < num_out; ++i, input += 2) {
-    int j = 1;
-    sample_t sum = input[0] * COEFS[0];
+    int j = 0;
+    sample_t sum = input[0] * .5;
     CONVOLVE
-    assert(j == array_length(COEFS));
     output[i] = sum;
   }
   fifo_read(&p->fifo, 2 * num_out, NULL);

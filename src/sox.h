@@ -516,6 +516,7 @@ Client API:
 Boolean type, assignment (but not necessarily binary) compatible with C++ bool.
 */
 typedef enum sox_bool {
+    sox_bool_dummy = -1, /* Ensure a signed type */
     sox_false, /**< False = 0. */
     sox_true   /**< True = 1. */
 } sox_bool;
@@ -977,7 +978,6 @@ Converts SoX native sample to a 32-bit float.
 @param clips Variable to increment if input sample is too large.
 */
 #define SOX_SAMPLE_TO_FLOAT_32BIT(d,clips) (LSX_USE_VAR(sox_macro_temp_double),sox_macro_temp_sample=(d),sox_macro_temp_sample>SOX_SAMPLE_MAX-64?++(clips),1:(((sox_macro_temp_sample+64)&~127)*(1./(SOX_SAMPLE_MAX+1.))))
-#define SOX_SAMPLE_TO_FLOAT_64BIT(d,clips) ((d)*(1./(SOX_SAMPLE_MAX+1.)))
 
 /**
 Client API:
@@ -1358,6 +1358,12 @@ typedef struct sox_globals_t {
   char       * tmp_path;         /**< Private: client-configured path to use for temporary files */
   sox_bool     use_magic;        /**< Private: true if client has requested use of 'magic' file-type detection */
   sox_bool     use_threads;      /**< Private: true if client has requested parallel effects processing */
+
+  /**
+  Log to base 2 of minimum size (in bytes) used by libSoX for DFT (filtering).
+  Plugins should use similarly-sized DFTs to get best performance.
+  */
+  size_t       log2_dft_min_size;
 } sox_globals_t;
 
 /**
