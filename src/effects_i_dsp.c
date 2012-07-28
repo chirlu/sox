@@ -1,7 +1,7 @@
 /* libSoX internal DSP functions.
  * All public functions & data are prefixed with lsx_ .
  *
- * Copyright (c) 2008 robs@users.sourceforge.net
+ * Copyright (c) 2008,2012 robs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -88,12 +88,10 @@ double lsx_bessel_I_0(double x)
 }
 
 int lsx_set_dft_length(int num_taps) /* Set to 4 x nearest power of 2 */
-{
-  int result, n = num_taps;
-  for (result = 8; n > 2; result <<= 1, n >>= 1);
-  result = range_limit(result, 4096, 131072);
-  assert(num_taps * 2 < result);
-  return result;
+{      /* or half of that if danger of causing too many cache misses. */
+  int min = sox_globals.log2_dft_min_size;
+  double d = log((double)num_taps) / log(2.);
+  return 1 << range_limit((int)(d + 2.77), min, max((int)(d + 1.77), 17));
 }
 
 #include "fft4g.h"
@@ -124,14 +122,9 @@ void clear_fft_cache(void)
   fft_len = -1;
 }
 
-static sox_bool is_power_of_2(int x)
-{
-  return !(x < 2 || (x & (x - 1)));
-}
-
 static void update_fft_cache(int len)
 {
-  assert(is_power_of_2(len));
+  assert(lsx_is_power_of_2(len));
   assert(fft_len >= 0);
   omp_set_lock(&fft_cache_lock);
   if (len > fft_len) {
@@ -236,9 +229,28 @@ void lsx_apply_blackman_nutall(double h[], const int num_points)
   }
 }
 
-double lsx_kaiser_beta(double att)
+double lsx_kaiser_beta(double att, double tr_bw)
 {
-  if (att > 100  ) return .1117 * att - 1.11;
+  if (att >= 60) {
+    static const double coefs[][4] = {
+      {-6.784957e-10,1.02856e-05,0.1087556,-0.8988365+.001},
+      {-6.897885e-10,1.027433e-05,0.10876,-0.8994658+.002},
+      {-1.000683e-09,1.030092e-05,0.1087677,-0.9007898+.003},
+      {-3.654474e-10,1.040631e-05,0.1087085,-0.8977766+.006},
+      {8.106988e-09,6.983091e-06,0.1091387,-0.9172048+.015},
+      {9.519571e-09,7.272678e-06,0.1090068,-0.9140768+.025},
+      {-5.626821e-09,1.342186e-05,0.1083999,-0.9065452+.05},
+      {-9.965946e-08,5.073548e-05,0.1040967,-0.7672778+.085},
+      {1.604808e-07,-5.856462e-05,0.1185998,-1.34824+.1},
+      {-1.511964e-07,6.363034e-05,0.1064627,-0.9876665+.18},
+    };
+    double realm = log(tr_bw/.0005)/log(2.);
+    double const * c0 = coefs[range_limit(  (int)realm, 0, (int)array_length(coefs)-1)];
+    double const * c1 = coefs[range_limit(1+(int)realm, 0, (int)array_length(coefs)-1)];
+    double b0 = ((c0[0]*att + c0[1])*att + c0[2])*att + c0[3];
+    double b1 = ((c1[0]*att + c1[1])*att + c1[2])*att + c1[3];
+    return b0 + (b1 - b0) * (realm - (int)realm);
+  }
   if (att > 50   ) return .1102 * (att - 8.7);
   if (att > 20.96) return .58417 * pow(att -20.96, .4) + .07886 * (att - 20.96);
   return 0;
@@ -253,15 +265,17 @@ void lsx_apply_kaiser(double h[], const int num_points, double beta)
   }
 }
 
-double * lsx_make_lpf(int num_taps, double Fc, double beta, double scale, sox_bool dc_norm)
+double * lsx_make_lpf(int num_taps, double Fc, double beta, double rho,
+    double scale, sox_bool dc_norm)
 {
   int i, m = num_taps - 1;
   double * h = malloc(num_taps * sizeof(*h)), sum = 0;
-  double mult = scale / lsx_bessel_I_0(beta);
+  double mult = scale / lsx_bessel_I_0(beta), mult1 = 1 / (.5 * m + rho);
   assert(Fc >= 0 && Fc <= 1);
-  lsx_debug("make_lpf(n=%i, Fc=%g beta=%g dc-norm=%i scale=%g)", num_taps, Fc, beta, dc_norm, scale);
+  lsx_debug("make_lpf(n=%i Fc=%.7g β=%g ρ=%g dc-norm=%i scale=%g)", num_taps, Fc, beta, rho, dc_norm, scale);
+
   for (i = 0; i <= m / 2; ++i) {
-    double x = M_PI * (i - .5 * m), y = 2. * i / m - 1;
+    double z = i - .5 * m, x = z * M_PI, y = z * mult1;
     h[i] = x? sin(Fc * x) / x : Fc;
     sum += h[i] *= lsx_bessel_I_0(beta * sqrt(1 - y * y)) * mult;
     if (m - i != i)
@@ -271,40 +285,37 @@ double * lsx_make_lpf(int num_taps, double Fc, double beta, double scale, sox_bo
   return h;
 }
 
-void lsx_kaiser_params(double att, double tr_bw, double * beta, int * num_taps)
-{                    /* TODO this could be cleaner, esp. for k != 0 */
-  int n;
-  *beta = *beta < 0? lsx_kaiser_beta(att) : *beta;
-  if (att <= 80)
-    n = .25 / M_PI * (att - 7.95) / (2.285 * tr_bw) + .5;
-  else {
-    double n160 = (.0425* att - 1.4) / tr_bw;   /* Half order for att = 160 */
-    n = n160 * (16.556 / (att - 39.6) + .8625) + .5;  /* For att [80,160) */
-  }
-  *num_taps = *num_taps? *num_taps : 2 * n;
+void lsx_kaiser_params(double att, double Fc, double tr_bw, double * beta, int * num_taps)
+{
+  *beta = *beta < 0? lsx_kaiser_beta(att, tr_bw * .5 / Fc): *beta;
+  att = att < 60? (att - 7.95) / (2.285 * M_PI * 2) :
+    ((.0007528358-1.577737e-05**beta)**beta+.6248022)**beta+.06186902;
+  *num_taps = !*num_taps? ceil(att/tr_bw + 1) : *num_taps;
 }
 
 double * lsx_design_lpf(
-    double Fp,      /* End of pass-band; ~= 0.01dB point */
+    double Fp,      /* End of pass-band */
     double Fs,      /* Start of stop-band */
     double Fn,      /* Nyquist freq; e.g. 0.5, 1, PI */
-    sox_bool allow_aliasing,
     double att,     /* Stop-band attenuation in dB */
     int * num_taps, /* 0: value will be estimated */
     int k,          /* >0: number of phases; <0: num_taps ≡ 1 (mod -k) */
     double beta)    /* <0: value will be estimated */
 {
-  double tr_bw;
   int n = *num_taps, phases = max(k, 1), modulo = max(-k, 1);
-  if (allow_aliasing)
-    Fs += (Fs - Fp) * LSX_TO_3dB;
-  Fp /= Fn, Fs /= Fn;        /* Normalise to Fn = 1 */
-  tr_bw = LSX_TO_6dB * (Fs - Fp); /* Transition band-width: 6dB to stop points */
+  double tr_bw, Fc, rho = phases == 1? .5 : att < 120? .63 : .75;
+
+  Fp /= fabs(Fn), Fs /= fabs(Fn);        /* Normalise to Fn = 1 */
+  tr_bw = .5 * (Fs - Fp); /* Transition band-width: 6dB to stop points */
   tr_bw /= phases, Fs /= phases;
-  lsx_kaiser_params(att, tr_bw, &beta, num_taps);
+  tr_bw = min(tr_bw, .5 * Fs);
+  Fc = Fs - tr_bw;
+  assert(Fc - tr_bw >= 0);
+  lsx_kaiser_params(att, Fc, tr_bw, &beta, num_taps);
   if (!n)
     *num_taps = phases > 1? *num_taps / phases * phases + phases - 1 : (*num_taps + modulo - 2) / modulo * modulo + 1;
-  return lsx_make_lpf(*num_taps, Fs - tr_bw, beta, (double)phases, sox_true);
+  return Fn < 0? 0 : lsx_make_lpf(
+      *num_taps, Fc, beta, rho, (double)phases, sox_false);
 }
 
 static double safe_log(double x)
@@ -363,7 +374,7 @@ void lsx_fir_to_phase(double * * h, int * len, int * post_len, double phase)
   for (i = 2; i < work_len; i += 2) /* Interpolate between linear & min phase */
     work[i + 1] = phase1 * i / work_len * pi_wraps[work_len >> 1] +
         (1 - phase1) * (work[i + 1] + pi_wraps[i >> 1]) - pi_wraps[i >> 1];
-        
+
   work[0] = exp(work[0]), work[1] = exp(work[1]);
   for (i = 2; i < work_len; i += 2) {
     double x = exp(work[i]);
@@ -376,7 +387,7 @@ void lsx_fir_to_phase(double * * h, int * len, int * post_len, double phase)
 
   /* Find peak pos. */
   for (i = 0; i <= (int)(pi_wraps[work_len >> 1] / M_PI + .5); ++i) {
-    imp_sum += work[i];          
+    imp_sum += work[i];
     if (fabs(imp_sum) > fabs(peak_imp_sum)) {
       peak_imp_sum = imp_sum;
       peak = i;
