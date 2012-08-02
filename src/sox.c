@@ -1242,11 +1242,13 @@ static char const * vu(unsigned channel)
 
 static char * headroom(void)
 {
-  static char buff[10];
-  unsigned h = (unsigned)(min_headroom * 10);
-  if (min_headroom >= MIN_HEADROOM) return "      ";
-  sprintf(buff, "Hd:%u.%u", h /10, h % 10);
-  return buff;
+  if (min_headroom < MIN_HEADROOM) {
+    static char buff[10];
+    unsigned h = (unsigned)(min_headroom * 10);
+    sprintf(buff, "Hd:%u.%u", h /10, h % 10);
+    return buff;
+  }
+  return "      ";
 }
 
 static void display_status(sox_bool all_done)
