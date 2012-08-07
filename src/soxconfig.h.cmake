@@ -8,6 +8,7 @@
 #cmakedefine HAVE_AO                  1
 #cmakedefine HAVE_BYTESWAP_H          1
 #cmakedefine HAVE_COREAUDIO           1
+#cmakedefine HAVE_FENV_H              1
 #cmakedefine HAVE_FFMPEG              1
 #cmakedefine HAVE_FLAC                1
 #cmakedefine HAVE_FMEMOPEN            1
@@ -21,6 +22,7 @@
 #cmakedefine HAVE_LAME_LAME_H         1
 #cmakedefine HAVE_LAME_SET_VBR_QUALITY 1
 #define HAVE_LPC10                    1
+#cmakedefine HAVE_LRINT               1
 #cmakedefine HAVE_LTDL_H              1
 #cmakedefine HAVE_MACHINE_SOUNDCARD_H 1
 #cmakedefine HAVE_MAD_H               1

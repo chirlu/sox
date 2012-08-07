@@ -638,16 +638,14 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
                 sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  size_t i, odone = *osamp;
-  SOX_SAMPLE_LOCALS;
+  size_t odone = *osamp;
 
   sample_t const * s = rate_output(&p->rate, NULL, &odone);
-  for (i = 0; i < odone; ++i)
-    *obuf++ = SOX_FLOAT_64BIT_TO_SAMPLE(*s++, effp->clips);
+  lsx_save_samples(obuf, s, odone, &effp->clips);
 
   if (*isamp && odone < *osamp) {
     sample_t * t = rate_input(&p->rate, NULL, *isamp);
-    for (i = *isamp; i; --i) *t++ = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf++,);
+    lsx_load_samples(t, ibuf, *isamp);
     rate_process(&p->rate);
   }
   else *isamp = 0;

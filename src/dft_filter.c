@@ -79,20 +79,16 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
                 sox_sample_t * obuf, size_t * isamp, size_t * osamp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  size_t i, odone = min(*osamp, (size_t)fifo_occupancy(&p->output_fifo));
-  double const * s = fifo_read(&p->output_fifo, (int)odone, NULL);
-  SOX_SAMPLE_LOCALS;
+  size_t odone = min(*osamp, (size_t)fifo_occupancy(&p->output_fifo));
 
-  for (i = 0; i < odone; ++i)
-    *obuf++ = SOX_FLOAT_64BIT_TO_SAMPLE(*s++, effp->clips);
+  double const * s = fifo_read(&p->output_fifo, (int)odone, NULL);
+  lsx_save_samples(obuf, s, odone, &effp->clips);
   p->samples_out += odone;
 
   if (*isamp && odone < *osamp) {
     double * t = fifo_write(&p->input_fifo, (int)*isamp, NULL);
     p->samples_in += *isamp;
-
-    for (i = *isamp; i; --i)
-      *t++ = SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf++, effp->clips);
+    lsx_load_samples(t, ibuf, *isamp);
     filter(p);
   }
   else *isamp = 0;

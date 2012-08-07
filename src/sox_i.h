@@ -115,6 +115,10 @@ double * lsx_design_lpf(
 void lsx_fir_to_phase(double * * h, int * len,
     int * post_len, double phase0);
 void lsx_plot_fir(double * h, int num_points, sox_rate_t rate, sox_plot_t type, char const * title, double y1, double y2);
+void lsx_save_samples(sox_sample_t * const dest, double const * const src,
+    size_t const n, sox_uint64_t * const clips);
+void lsx_load_samples(double * const dest, sox_sample_t const * const src,
+    size_t const n);
 
 #ifdef HAVE_BYTESWAP_H
 #include <byteswap.h>

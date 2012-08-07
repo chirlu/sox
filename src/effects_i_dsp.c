@@ -26,7 +26,68 @@
 #include <assert.h>
 #include <string.h>
 
-/* Numerical Recipes cubic spline */
+/* Concurrent Control with "Readers" and "Writers", P.J. Courtois et al, 1971:*/
+
+#if defined HAVE_OPENMP
+
+typedef struct {
+  int readcount, writecount; /* initial value = 0 */
+  omp_lock_t mutex_1, mutex_2, mutex_3, w, r; /* initial value = 1 */
+} ccrw2_t; /* Problem #2: `writers-preference' */
+
+#define ccrw2_become_reader(p) do {\
+  omp_set_lock(&p.mutex_3);\
+    omp_set_lock(&p.r);\
+      omp_set_lock(&p.mutex_1);\
+        if (++p.readcount == 1) omp_set_lock(&p.w);\
+      omp_unset_lock(&p.mutex_1);\
+    omp_unset_lock(&p.r);\
+  omp_unset_lock(&p.mutex_3);\
+} while (0)
+#define ccrw2_cease_reading(p) do {\
+  omp_set_lock(&p.mutex_1);\
+    if (!--p.readcount) omp_unset_lock(&p.w);\
+  omp_unset_lock(&p.mutex_1);\
+} while (0)
+#define ccrw2_become_writer(p) do {\
+  omp_set_lock(&p.mutex_2);\
+    if (++p.writecount == 1) omp_set_lock(&p.r);\
+  omp_unset_lock(&p.mutex_2);\
+  omp_set_lock(&p.w);\
+} while (0)
+#define ccrw2_cease_writing(p) do {\
+  omp_unset_lock(&p.w);\
+  omp_set_lock(&p.mutex_2);\
+    if (!--p.writecount) omp_unset_lock(&p.r);\
+  omp_unset_lock(&p.mutex_2);\
+} while (0)
+#define ccrw2_init(p) do {\
+  omp_init_lock(&p.mutex_1);\
+  omp_init_lock(&p.mutex_2);\
+  omp_init_lock(&p.mutex_3);\
+  omp_init_lock(&p.w);\
+  omp_init_lock(&p.r);\
+} while (0)
+#define ccrw2_clear(p) do {\
+  omp_destroy_lock(&p.r);\
+  omp_destroy_lock(&p.w);\
+  omp_destroy_lock(&p.mutex_3);\
+  omp_destroy_lock(&p.mutex_2);\
+  omp_destroy_lock(&p.mutex_1);\
+} while (0)
+
+#else
+
+#define ccrw2_become_reader(x) (void)0
+#define ccrw2_cease_reading(x) (void)0
+#define ccrw2_become_writer(x) (void)0
+#define ccrw2_cease_writing(x) (void)0
+#define ccrw2_init(x) (void)0
+#define ccrw2_clear(x) (void)0
+
+#endif /* HAVE_OPENMP */
+
+/* Numerical Recipes cubic spline: */
 
 void lsx_prepare_spline3(double const * x, double const * y, int n,
     double start_1d, double end_1d, double * y_2d)
@@ -98,8 +159,8 @@ int lsx_set_dft_length(int num_taps) /* Set to 4 x nearest power of 2 */
 static int * lsx_fft_br;
 static double * lsx_fft_sc;
 static int fft_len = -1;
-#ifdef HAVE_OPENMP
-static omp_lock_t fft_cache_lock;
+#if defined HAVE_OPENMP
+static ccrw2_t fft_cache_ccrw;
 #endif
 
 void init_fft_cache(void)
@@ -107,14 +168,14 @@ void init_fft_cache(void)
   assert(lsx_fft_br == NULL);
   assert(lsx_fft_sc == NULL);
   assert(fft_len == -1);
-  omp_init_lock(&fft_cache_lock);
+  ccrw2_init(fft_cache_ccrw);
   fft_len = 0;
 }
 
 void clear_fft_cache(void)
 {
   assert(fft_len >= 0);
-  omp_destroy_lock(&fft_cache_lock);
+  ccrw2_clear(fft_cache_ccrw);
   free(lsx_fft_br);
   free(lsx_fft_sc);
   lsx_fft_sc = NULL;
@@ -122,33 +183,48 @@ void clear_fft_cache(void)
   fft_len = -1;
 }
 
-static void update_fft_cache(int len)
+static sox_bool update_fft_cache(int len)
 {
   assert(lsx_is_power_of_2(len));
   assert(fft_len >= 0);
-  omp_set_lock(&fft_cache_lock);
+  ccrw2_become_reader(fft_cache_ccrw);
   if (len > fft_len) {
-    int old_n = fft_len;
-    fft_len = len;
-    lsx_fft_br = lsx_realloc(lsx_fft_br, dft_br_len(fft_len) * sizeof(*lsx_fft_br));
-    lsx_fft_sc = lsx_realloc(lsx_fft_sc, dft_sc_len(fft_len) * sizeof(*lsx_fft_sc));
-    if (!old_n)
-      lsx_fft_br[0] = 0;
+    ccrw2_cease_reading(fft_cache_ccrw);
+    ccrw2_become_writer(fft_cache_ccrw);
+    if (len > fft_len) {
+      int old_n = fft_len;
+      fft_len = len;
+      lsx_fft_br = lsx_realloc(lsx_fft_br, dft_br_len(fft_len) * sizeof(*lsx_fft_br));
+      lsx_fft_sc = lsx_realloc(lsx_fft_sc, dft_sc_len(fft_len) * sizeof(*lsx_fft_sc));
+      if (!old_n)
+        lsx_fft_br[0] = 0;
+      return sox_true;
+    }
+    ccrw2_cease_writing(fft_cache_ccrw);
+    ccrw2_become_reader(fft_cache_ccrw);
   }
+  return sox_false;
+}
+
+static void done_with_fft_cache(sox_bool is_writer)
+{
+  if (is_writer)
+    ccrw2_cease_writing(fft_cache_ccrw);
+  else ccrw2_cease_reading(fft_cache_ccrw);
 }
 
 void lsx_safe_rdft(int len, int type, double * d)
 {
-  update_fft_cache(len);
+  sox_bool is_writer = update_fft_cache(len);
   lsx_rdft(len, type, d, lsx_fft_br, lsx_fft_sc);
-  omp_unset_lock(&fft_cache_lock);
+  done_with_fft_cache(is_writer);
 }
 
 void lsx_safe_cdft(int len, int type, double * d)
 {
-  update_fft_cache(len);
+  sox_bool is_writer = update_fft_cache(len);
   lsx_cdft(len, type, d, lsx_fft_br, lsx_fft_sc);
-  omp_unset_lock(&fft_cache_lock);
+  done_with_fft_cache(is_writer);
 }
 
 void lsx_power_spectrum(int n, double const * in, double * out)
@@ -473,3 +549,82 @@ void lsx_plot_fir(double * h, int num_points, sox_rate_t rate, sox_plot_t type, 
       printf("%24.16e\n", h[i]);
   }
 }
+
+#if HAVE_FENV_H
+  #include <fenv.h>
+  #if defined FE_INVALID
+    #if HAVE_LRINT && LONG_MAX == 2147483647
+      #define lrint32 lrint
+    #elif defined __GNUC__ && defined __x86_64__
+      #define lrint32 lrint32
+      static __inline sox_int32_t lrint32(double input) {
+        sox_int32_t result;
+        __asm__ __volatile__("fistpl %0": "=m"(result): "t"(input): "st");
+        return result;
+      }
+    #endif
+  #endif
+#endif
+
+#if defined lrint32
+#define _ dest[i] = lrint32(src[i]), ++i,
+#pragma STDC FENV_ACCESS ON
+
+static void rint_clip(sox_sample_t * const dest, double const * const src,
+    size_t i, size_t const n, sox_uint64_t * const clips)
+{
+  for (; i < n; ++i) {
+    dest[i] = lrint32(src[i]);
+    if (fetestexcept(FE_INVALID)) {
+      feclearexcept(FE_INVALID);
+      dest[i] = src[i] > 0? SOX_SAMPLE_MAX : SOX_SAMPLE_MIN;
+      ++*clips;
+    }
+  }
+}
+
+void lsx_save_samples(sox_sample_t * const dest, double const * const src,
+    size_t const n, sox_uint64_t * const clips)
+{
+  size_t i;
+  feclearexcept(FE_INVALID);
+  for (i = 0; i < (n & ~7);) {
+    _ _ _ _ _ _ _ _ 0;
+    if (fetestexcept(FE_INVALID)) {
+      feclearexcept(FE_INVALID);
+      rint_clip(dest, src, i - 8, i, clips);
+    }
+  }
+  rint_clip(dest, src, i, n, clips);
+}
+
+void lsx_load_samples(double * const dest, sox_sample_t const * const src,
+    size_t const n)
+{
+  size_t i;
+  for (i = 0; i < n; ++i)
+    dest[i] = src[i];
+}
+
+#pragma STDC FENV_ACCESS OFF
+#undef _
+#else
+
+void lsx_save_samples(sox_sample_t * const dest, double const * const src,
+    size_t const n, sox_uint64_t * const clips)
+{
+  SOX_SAMPLE_LOCALS;
+  size_t i;
+  for (i = 0; i < n; ++i)
+    dest[i] = SOX_FLOAT_64BIT_TO_SAMPLE(src[i], *clips);
+}
+
+void lsx_load_samples(double * const dest, sox_sample_t const * const src,
+    size_t const n)
+{
+  size_t i;
+  for (i = 0; i < n; ++i)
+    dest[i] = SOX_SAMPLE_TO_FLOAT_64BIT(src[i],);
+}
+
+#endif
