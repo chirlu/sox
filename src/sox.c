@@ -2542,12 +2542,31 @@ static char const * device_name(char const * const type)
   return name? from_env? from_env : name : NULL;
 }
 
+static char const * try_device(char const * name)
+{
+  sox_format_handler_t const * handler = sox_find_format(name, sox_false);
+  if (handler) {
+    sox_format_t format, * ft = &format;
+    lsx_debug("Looking for a default device: trying format `%s'", name);
+    memset(ft, 0, sizeof(*ft));
+    ft->filename = (char *)device_name(name);
+    ft->priv = lsx_calloc(1, handler->priv_size);
+    if (handler->startwrite(ft) == SOX_SUCCESS) {
+      handler->stopwrite(ft);
+      free(ft->priv);
+      return name;
+    }
+    free(ft->priv);
+  }
+  return NULL;
+}
+
 static char const * set_default_device(file_t * f)
 {
   /* Default audio driver type in order of preference: */
   if (!f->filetype) f->filetype = getenv("AUDIODRIVER");
   if (!f->filetype && sox_find_format("coreaudio", sox_false)) f->filetype = "coreaudio";
-  if (!f->filetype && sox_find_format("pulseaudio" , sox_false)) f->filetype = "pulseaudio";
+  if (!f->filetype) f->filetype = try_device("pulseaudio");
   if (!f->filetype && sox_find_format("alsa", sox_false)) f->filetype = "alsa";
   if (!f->filetype && sox_find_format("waveaudio" , sox_false)) f->filetype = "waveaudio";
   if (!f->filetype && sox_find_format("sndio", sox_false)) f->filetype = "sndio";
