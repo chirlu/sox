@@ -20,6 +20,11 @@ File formats:
   o MAUD write fixes. [3507927] (Carl Eric Codere and Ulrich Klauer)
   o Fix crash when seeking within a FLAC file. [3476843] (Eric Wong)
 
+Audio device drivers:
+
+  o Check whether pulseaudio is available before choosing it as
+    default. (robs)
+
 Other bug fixes:
 
   o Fix input length calculation for combine methods other than
