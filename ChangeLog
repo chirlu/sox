@@ -19,6 +19,8 @@ File formats:
   o Fix pipe file-type detection regression. (robs)
   o MAUD write fixes. [3507927] (Carl Eric Codere and Ulrich Klauer)
   o Fix crash when seeking within a FLAC file. [3476843] (Eric Wong)
+  o Fix Ogg Vorbis files with certain numbers of channels being
+    truncated. (Ulrich Klauer)
 
 Audio device drivers:
 
