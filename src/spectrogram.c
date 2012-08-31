@@ -204,7 +204,7 @@ static int start(sox_effect_t * effp)
       pixels_per_sec = min(5000, p->x_size / duration);
     else if (!p->x_size && pixels_per_sec && duration)
       p->x_size = min(5000, (int)(pixels_per_sec * duration + .5));
-    if (!duration && effp->in_signal.length) {
+    if (!duration && effp->in_signal.length != SOX_UNKNOWN_LEN) {
       duration = effp->in_signal.length / (effp->in_signal.rate * effp->in_signal.channels);
       duration -= p->start_time;
       if (duration <= 0)

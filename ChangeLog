@@ -27,6 +27,11 @@ Audio device drivers:
   o Check whether pulseaudio is available before choosing it as
     default. (robs)
 
+Effects:
+
+  o Restore 8 seconds default for spectrogram, if the input length is
+    not known. (Ulrich Klauer)
+
 Other bug fixes:
 
   o Fix input length calculation for combine methods other than
