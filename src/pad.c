@@ -52,7 +52,7 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
       /* Do this check only during the second pass when the actual
          sample rate is known, otherwise it might fail on legal
          commands like
-           pad 1@5 1@30000s
+           pad 1@0.5 1@30000s
          if the rate is, e.g., 48k. */
       if (i > 0 && p->pads[i].start <= p->pads[i-1].start) break;
     }
