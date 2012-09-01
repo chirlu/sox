@@ -29,6 +29,7 @@ Effects:
 
   o 'Deemph' can now also be used at 48kHz sample rate.  (robs)
   o 'Rate' now much faster in many cases.  (robs)
+  o Allow sending spectrograms to stdout. (Ulrich Klauer)
 
 Internal improvements:
 

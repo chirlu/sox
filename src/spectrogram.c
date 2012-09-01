@@ -50,6 +50,7 @@ typedef struct {
   sox_bool   raw, alt_palette, truncate;
   win_type_t win_type;
   char const * out_name, * title, * comment;
+  sox_bool   using_stdout; /* output image to stdout */
 
   /* Shared work area */
   double     * shared, * * shared_ptr;
@@ -145,6 +146,14 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   if (p->alt_palette)
     p->spectrum_points = min(p->spectrum_points, (int)alt_palette_len);
   p->shared_ptr = &p->shared;
+  if (!strcmp(p->out_name, "-")) {
+    if (effp->global_info->global_info->stdout_in_use_by) {
+      lsx_fail("stdout already in use by `%s'", effp->global_info->global_info->stdout_in_use_by);
+      return SOX_EOF;
+    }
+    effp->global_info->global_info->stdout_in_use_by = effp->handler.name;
+    p->using_stdout = sox_true;
+  }
   return optstate.ind !=argc || p->win_type == INT_MAX? lsx_usage(effp) : SOX_SUCCESS;
 }
 
@@ -492,7 +501,7 @@ static int axis(double to, int max_steps, double * limit, char * * prefix)
 static int stop(sox_effect_t * effp)
 {
   priv_t *    p        = (priv_t *) effp->priv;
-  FILE *      file     = fopen(p->out_name, "wb");
+  FILE *      file;
   uLong       font_len = 96 * font_y;
   int         chans    = effp->in_signal.channels;
   int         c_rows   = p->rows * chans + chans - 1;
@@ -508,9 +517,14 @@ static int stop(sox_effect_t * effp)
   double      limit;
 
   free(p->shared);
-  if (!file) {
-    lsx_fail("failed to create `%s': %s", p->out_name, strerror(errno));
-    goto error;
+  if (p->using_stdout)
+    file = stdout;
+  else {
+    file = fopen(p->out_name, "wb");
+    if (!file) {
+      lsx_fail("failed to create `%s': %s", p->out_name, strerror(errno));
+      goto error;
+    }
   }
   lsx_debug("signal-max=%g", p->max);
   font = lsx_malloc(font_len);
@@ -601,7 +615,8 @@ static int stop(sox_effect_t * effp)
   free(font);
   png_set_rows(png, png_info, png_rows);
   png_write_png(png, png_info, PNG_TRANSFORM_IDENTITY, NULL);
-  fclose(file);
+  if (!p->using_stdout)
+    fclose(file);
 error: png_destroy_write_struct(&png, &png_info);
   free(png_rows);
   free(pixels);
