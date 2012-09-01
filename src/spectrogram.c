@@ -272,6 +272,7 @@ static int do_column(sox_effect_t * effp)
   }
   ++p->cols;
   p->dBfs = lsx_realloc(p->dBfs, p->cols * p->rows * sizeof(*p->dBfs));
+    /* FIXME: allocate in larger steps (for several columns) */
   for (i = 0; i < p->rows; ++i) {
     double dBfs = 10 * log10(p->magnitudes[i] * p->block_norm);
     p->dBfs[(p->cols - 1) * p->rows + i] = dBfs + p->gain;
@@ -498,7 +499,7 @@ static int axis(double to, int max_steps, double * limit, char * * prefix)
 #define spectrum_width 14
 #define right 35
 
-static int stop(sox_effect_t * effp)
+static int stop(sox_effect_t * effp) /* only called, by end(), on flow 0 */
 {
   priv_t *    p        = (priv_t *) effp->priv;
   FILE *      file;
@@ -624,7 +625,14 @@ error: png_destroy_write_struct(&png, &png_info);
   return SOX_SUCCESS;
 }
 
-static int end(sox_effect_t * effp) {return effp->flow? SOX_SUCCESS:stop(effp);}
+static int end(sox_effect_t * effp)
+{
+  priv_t *p = (priv_t *)effp->priv;
+  if (effp->flow == 0)
+    return stop(effp);
+  free(p->dBfs);
+  return SOX_SUCCESS;
+}
 
 sox_effect_handler_t const * lsx_spectrogram_effect_fn(void)
 {

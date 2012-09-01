@@ -35,6 +35,7 @@ Internal improvements:
 
   o Speed optimization for effects that operate on channels
     independently. (Ulrich Klauer)
+  o Fix memory leaks. (Ulrich Klauer)
 
 
 sox-14.4.1	20xx-xx-xx
