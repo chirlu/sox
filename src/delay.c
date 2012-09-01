@@ -20,7 +20,8 @@
 
 typedef struct {
   size_t argc;
-  char * * argv, * max_arg;
+  struct { char *str; uint64_t delay; } *args;
+  uint64_t *max_delay;
   uint64_t delay, pre_pad, pad;
   size_t buffer_size, buffer_index;
   sox_sample_t * buffer;
@@ -33,29 +34,27 @@ static int lsx_kill(sox_effect_t * effp)
   unsigned i;
 
   for (i = 0; i < p->argc; ++i)
-    free(p->argv[i]);
-  free(p->argv);
+    free(p->args[i].str);
+  free(p->args);
+  free(p->max_delay);
   return SOX_SUCCESS;
 }
 
 static int create(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
-  uint64_t delay, max_samples = 0;
+  uint64_t dummy;
   unsigned i;
 
   --argc, ++argv;
   p->argc = argc;
-  p->argv = lsx_calloc(p->argc, sizeof(*p->argv));
+  p->args = lsx_calloc(p->argc, sizeof(*p->args));
+  p->max_delay = lsx_malloc(sizeof(*p->max_delay));
   for (i = 0; i < p->argc; ++i) {
-    char const * next = lsx_parsesamples(1e5, p->argv[i] = lsx_strdup(argv[i]), &delay, 't');
+    char const * next = lsx_parsesamples(1e5, p->args[i].str = lsx_strdup(argv[i]), &dummy, 't');
     if (!next || *next) {
       lsx_kill(effp);
       return lsx_usage(effp);
-    }
-    if (delay > max_samples) {
-      max_samples = delay;
-      p->max_arg = p->argv[i];
     }
   }
   return SOX_SUCCESS;
@@ -71,25 +70,33 @@ static int stop(sox_effect_t * effp)
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  uint64_t max_delay, temp;
+  uint64_t max_delay = 0, delay;
 
-  if (!p->max_arg)
-    return SOX_EFF_NULL;
-  if (p->argc > effp->in_signal.channels) {
-    lsx_fail("too few input channels");
-    return SOX_EOF;
-  }
-  if (effp->flow < p->argc) {
-    lsx_parsesamples(effp->in_signal.rate, p->argv[effp->flow], &temp, 't');
-    p->buffer_size = temp;
-  }
-  lsx_parsesamples(effp->in_signal.rate, p->max_arg, &max_delay, 't');
   if (effp->flow == 0) {
+    unsigned i;
+    if (p->argc > effp->in_signal.channels) {
+      lsx_fail("too few input channels");
+      return SOX_EOF;
+    }
+    for (i = 0; i < p->argc; ++i) {
+      lsx_parsesamples(effp->in_signal.rate, p->args[i].str, &delay, 't');
+      p->args[i].delay = delay;
+      if (delay > max_delay) {
+        max_delay = delay;
+      }
+    }
+    *p->max_delay = max_delay;
+    if (max_delay == 0)
+      return SOX_EFF_NULL;
     effp->out_signal.length = effp->in_signal.length != SOX_UNKNOWN_LEN ?
        effp->in_signal.length + max_delay * effp->in_signal.channels :
        SOX_UNKNOWN_LEN;
     lsx_debug("extending audio by %" PRIu64 " samples", max_delay);
   }
+
+  max_delay = *p->max_delay;
+  if (effp->flow < p->argc)
+    p->buffer_size = p->args[effp->flow].delay;
   p->buffer_index = p->delay = p->pre_pad = 0;
   p->pad = max_delay - p->buffer_size;
   p->buffer = lsx_malloc(p->buffer_size * sizeof(*p->buffer));
