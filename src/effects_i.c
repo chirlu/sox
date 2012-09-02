@@ -137,26 +137,29 @@ void lsx_generate_wave_table(
 /*
  * lsx_parsesamples
  *
- * Parse a string for # of samples.  If string ends with a 's'
- * then the string is interpreted as a user calculated # of samples.
- * If string contains ':' or '.' or if it ends with a 't' then its
- * treated as an amount of time.  This is converted into seconds and
- * fraction of seconds and then use the sample rate to calculate
- * # of samples.
+ * Parse a string for # of samples.  If string ends with a 's' then
+ * the string is interpreted as a user-calculated # of samples.
+ * If string contains ':' or '.' but no 'e' or if it ends with a 't'
+ * then it is treated as an amount of time.  This is converted into
+ * seconds and fraction of seconds, then the sample rate is used to
+ * calculate # of samples.
+ * Parameter def specifies which interpretation should be the default
+ * for a bare number like "123".  It can either be 't' or 's'.
  * Returns NULL on error, pointer to next char to parse otherwise.
  */
 char const * lsx_parsesamples(sox_rate_t rate, const char *str0, uint64_t *samples, int def)
 {
-  int i, found_samples = 0, found_time = 0;
+  int i;
+  sox_bool found_samples = sox_false, found_time = sox_false;
   char const * end;
   char const * pos;
-  sox_bool found_colon, found_dot;
+  sox_bool found_colon, found_dot, found_e;
   char * str = (char *)str0;
 
   for (;*str == ' '; ++str);
   for (end = str; *end && strchr("0123456789:.ets", *end); ++end);
   if (end == str)
-    return NULL;
+    return NULL; /* error: empty input */
 
   pos = strchr(str, ':');
   found_colon = pos && pos < end;
@@ -164,17 +167,23 @@ char const * lsx_parsesamples(sox_rate_t rate, const char *str0, uint64_t *sampl
   pos = strchr(str, '.');
   found_dot = pos && pos < end;
 
-  if (found_colon || found_dot || *(end-1) == 't')
-    found_time = 1;
+  pos = strchr(str, 'e');
+  found_e = pos && pos < end;
+
+  if (found_colon || (found_dot && !found_e) || *(end-1) == 't')
+    found_time = sox_true;
   else if (*(end-1) == 's')
-    found_samples = 1;
+    found_samples = sox_true;
 
   if (found_time || (def == 't' && !found_samples)) {
+    if (found_e)
+      return NULL; /* error: e notation in time */
+
     for (*samples = 0, i = 0; *str != '.' && i < 3; ++i) {
       char * last_str = str;
       long part = strtol(str, &str, 10);
       if (!i && str == last_str)
-        return NULL;
+        return NULL; /* error: empty first component */
       *samples += rate * part;
       if (i < 2) {
         if (*str != ':')
@@ -187,19 +196,23 @@ char const * lsx_parsesamples(sox_rate_t rate, const char *str0, uint64_t *sampl
       char * last_str = str;
       double part = strtod(str, &str);
       if (str == last_str)
-        return NULL;
+        return NULL; /* error: empty fractional part */
       *samples += rate * part + .5;
     }
-    return *str == 't'? str + 1 : str;
-  }
-  {
+    if (*str == 't')
+      str++;
+  } else {
     char * last_str = str;
     double part = strtod(str, &str);
     if (str == last_str)
-      return NULL;
+      return NULL; /* error: no sample count */
     *samples = part + .5;
-    return *str == 's'? str + 1 : str;
+    if (*str == 's')
+      str++;
   }
+  if (str != end)
+    return NULL; /* error: trailing characters */
+  return str;
 }
 
 #if 0
@@ -244,7 +257,7 @@ int main(int argc, char * * argv)
   TEST("1.1t,", 11000, 4)
   TEST("1.1t/", 11000, 4)
   TEST("1.1t@", 11000, 4)
-  TEST("1e6t" , 10000, 1)
+  assert(!lsx_parsesamples(10000, "1e6t", &samples, 't'));
 
   TEST(".0", 0, 2)
   TEST("0.0", 0, 3)
