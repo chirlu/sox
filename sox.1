@@ -1481,6 +1481,21 @@ For each effect that uses this parameter, the default method (i.e. if no
 character is appended) is the one that it listed first in the first line of
 the effect's description.
 .PP
+Most effects that expect an audio position or duration in a parameter,
+i.e. a \fBtime specification\fR, accept either of the following two forms:
+.TP
+[[\fIhours\fB:\fR]\fIminutes\fB:\fR]\fIseconds\fR[\fB.\fIfrac\fR][\fBt\fR]
+A specification of `1:30\*d5' corresponds to one minute, thirty and
+\(12 seconds.  The \fBt\fR suffix is entirely optional (however, see the
+\fBsilence\fR effect for an exception).
+Note that the component values do not have to be normalized; e.g.,
+`1:23:45', `83:45', `79:0285', `1:0:1425', `1::1425' and `5025' all are
+legal and equivalent to each other.
+.TP
+\fIsamples\fBs\fR
+Specifies the number of samples directly, as in `8000s'.  For large sample
+counts, \fIe notation\fR is supported: `1.7e6s' is the same as `1700000s'.
+.PP
 To see if SoX has support for an optional effect, enter
 .B sox \-h
 and look for its name under the list: `EFFECTS'.
@@ -1598,7 +1613,8 @@ is the amount of time after the start of the audio stream, or the end of the pre
 .I cents
 is the number of cents (100 cents = 1 semitone) by which to bend the pitch, and
 .I duration
-the length of time over which the pitch will be bent.
+the length of time over which the pitch will be bent.  For \fIdelay\fR and
+\fIduration\fR, any time specification may be used.
 .SP
 The pitch-bending algorithm utilises the Discrete Fourier Transform (DFT)
 at a particular frame rate and over-sampling rate.
@@ -1899,14 +1915,13 @@ This effect supports the \fB\-\-plot\fR global option.
 .SP
 See also the \fBbass\fR and \fBtreble\fR shelving equalisation effects.
 .TP
-\fBdelay\fR {\fIlength\fR}
-Delay one or more audio channels.
-.I length
-can specify a time or, if appended with an `s', a number of samples.
+\fBdelay\fR {\fItime\fR}
+Delay one or more audio channels by the given \fItime\fR (a time
+specification).
 For example,
-.B delay 1\*d5 0 0\*d5
-delays the first channel by 1\*d5 seconds, the third channel by 0\*d5
-seconds, and leaves the second channel (and any other channels that may be
+.B delay 1\*d5 0 3000s
+delays the first channel by 1\*d5 seconds, the third channel by 3000
+samples, and leaves the second channel (and any other channels that may be
 present) un-delayed.
 The following (one long) command plays a chime sound:
 .EX
@@ -2091,28 +2106,25 @@ curve:
 wave, \fBt\fR for linear (`triangular') slope, \fBl\fR for logarithmic,
 and \fBp\fR for inverted parabola.  The default is logarithmic.
 .SP
-A fade-in starts from the first sample and ramps the signal level from 0 to full volume over \fIfade-in-length\fR seconds.  Specify 0 seconds if no fade-in is wanted.
+A fade-in starts from the first sample and ramps the signal level from 0
+to full volume over the time given as \fIfade-in-length\fR.  Specify 0 if
+no fade-in is wanted.
 .SP
 For fade-outs, the audio will be truncated at
 .I stop-time
-and
-the signal level will be ramped from full volume down to 0 starting at
-\fIfade-out-length\fR seconds before the \fIstop-time\fR.  If
+and the signal level will be ramped from full volume down to 0 over an
+interval of \fIfade-out-length\fR before the \fIstop-time\fR.  If
 .I fade-out-length
 is not specified, it defaults to the same value as
 \fIfade-in-length\fR.
 No fade-out is performed if
 .I stop-time
 is not specified.
-If the file length can be determined from the input file header and length-changing effects are not in effect, then \fB0\fR may be specified for
+If the audio length can be determined from the input file header and any
+previous effects, then \fB0\fR may be specified for
 .I stop-time
 to indicate the usual case of a fade-out that ends at the end of the input
-audio stream.
-.SP
-All times can be specified in either periods of time or sample counts.
-To specify time periods use the format hh:mm:ss.frac format.  To specify
-using sample counts, specify the number of samples and append the letter `s'
-to the sample count (for example `8000s').
+audio stream.  Any time specification may be used for these parameters.
 .SP
 See also the
 .B splice
@@ -2484,17 +2496,13 @@ in the over-driven output.
 \fBpad\fR { \fIlength\fR[\fB@\fIposition\fR] }
 Pad the audio with silence, at the beginning, the end, or any
 specified points through the audio.
-Both
-.I length
-and
-.I position
-can specify a time or, if appended with an `s', a number of samples.
 .I length
 is the amount of silence to insert and
 .I position
 the position in the input audio stream at which to insert it.
 Any number of lengths and positions may be specified, provided that
-a specified position is not less that the previous one.
+a specified position is not less that the previous one, and any time
+specification may be used for them.
 .I position
 is optional for the first and last lengths specified and
 if omitted correspond to the beginning and the end of the audio respectively.
@@ -2948,7 +2956,7 @@ Removes silence from the beginning, middle, or end of the audio.
 .SP
 The \fIabove-periods\fR value is used to indicate if audio should be
 trimmed at the beginning of the audio. A value of zero indicates no
-silence should be trimmed from the beginning. When specifying an
+silence should be trimmed from the beginning. When specifying a
 non-zero \fIabove-periods\fR, it trims audio up until it finds
 non-silence. Normally, when trimming silence from beginning of audio
 the \fIabove-periods\fR will be 1 but it can be increased to higher
@@ -2959,12 +2967,12 @@ an \fIabove-period\fR of 2 to strip out both silence periods and the
 first song.
 .SP
 When \fIabove-periods\fR is non-zero, you must also specify a
-\fIduration\fR and \fIthreshold\fR. \fIDuration\fR indications the
+\fIduration\fR and \fIthreshold\fR. \fIduration\fR indicates the
 amount of time that non-silence must be detected before it stops
 trimming audio. By increasing the duration, burst of noise can be
 treated as silence and trimmed off.
 .SP
-\fIThreshold\fR is used to indicate what sample value you should treat as
+\fIthreshold\fR is used to indicate what sample value you should treat as
 silence.  For digital audio, a value of 0 may be fine but for audio
 recorded from analog, you may wish to increase the value to account
 for background noise.
@@ -2986,7 +2994,7 @@ in the middle and 2 seconds of silence at the end, a duration of 2
 seconds could be used to skip over the middle silence.
 .SP
 Unfortunately, you must know the length of the silence at the
-end of your audio file to trim off silence reliably.  A work around is
+end of your audio file to trim off silence reliably.  A workaround is
 to use the \fBsilence\fR effect in combination with the \fBreverse\fR effect.
 By first reversing the audio, you can use the \fIabove-periods\fR
 to reliably trim all audio from what looks like the front of the file.
@@ -2994,7 +3002,7 @@ Then reverse the file again to get back to normal.
 .SP
 To remove silence from the middle of a file, specify a
 \fIbelow-periods\fR that is negative.  This value is then
-treated as a positive value and is also used to indicate the
+treated as a positive value and is also used to indicate that the
 effect should restart processing as specified by the
 \fIabove-periods\fR, making it suitable for removing periods of
 silence in the middle of the audio.
@@ -3006,9 +3014,12 @@ should be left intact at the beginning of each period of silence.
 For example, if you want to remove long pauses between words
 but do not want to remove the pauses completely.
 .SP
-The \fIperiod\fR counts are in units of samples. \fIDuration\fR counts
-may be in the format of hh:mm:ss.frac, or the exact count of samples.
-\fIThreshold\fR numbers may be suffixed with
+\fIduration\fR is a time specification with the peculiarity that a bare
+number is interpreted as a sample count, not as a number of seconds.
+For specifying seconds, either use the \fBt\fR suffix (as in `2t') or
+specify minutes, too (as in `0:02').
+.SP
+\fIthreshold\fR numbers may be suffixed with
 .B d
 to indicate the value is in decibels, or
 .B %
@@ -3258,7 +3269,7 @@ effect is used), the following options may be used.
 .IP \fB\-d\ \fIduration\fR
 This option sets the X-axis resolution such that audio with the given
 .I duration
-([[HH:]MM:]SS) fits the selected (or default) X-axis width.  For
+(a time specification) fits the selected (or default) X-axis width.  For
 example,
 .EX
    sox input.mp3 output.wav \-n spectrogram \-d 1:00 stats
@@ -3279,7 +3290,8 @@ example
    sox input.aiff output.wav spectrogram \-S 1:00
 .EE
 creates a spectrogram showing all but the first minute of the audio
-(the output file however, receives the entire audio stream).
+(the output file, however, receives the entire audio stream).
+Any time specification may be used.
 .RE
 .TP
 \ 
@@ -3347,6 +3359,7 @@ audio sections as input files and the
 .B splice
 effect given with the position at which to perform the splice\*mthis is
 length of the first audio section (including the excess).
+Any time specification may be used for these parameters.
 .SP
 The following diagram uses the tape analogy to illustrate the splice
 operation.  The effect simulates the diagonal cuts and joins the two pieces:
@@ -3717,7 +3730,7 @@ synthesised audio length, the number of channels, and the sampling rate;
 however, since the input file's audio is not normally needed, a `null
 file' (with the special name \fB\-n\fR) is often given instead (and the
 length specified as a parameter to \fBsynth\fR or by another given
-effect that can has an associated length).
+effect that has an associated length).
 .SP
 For example, the following produces a 3 second, 48kHz,
 audio file containing a sine-wave swept from 300 to 3300\ Hz:
@@ -3781,13 +3794,8 @@ A detailed description of each
 .B synth
 parameter follows:
 .SP
-\fIlen\fR is the length of audio to synthesise expressed as a time
-or as a number of samples;
-0=inputlength, default=0.
-.SP
-The format for specifying lengths in time is hh:mm:ss.frac.  The format
-for specifying sample counts is the number of samples with the letter
-`s' appended to it.
+\fIlen\fR is the length of audio to synthesise (any time specification);
+a value of 0 indicated to use the input length, which is also the default.
 .SP
 \fItype\fR is one of sine, square, triangle, sawtooth, trapezium, exp,
 [white]noise, tpdfnoise pinknoise, brownnoise, pluck; default=sine.
@@ -3949,14 +3957,7 @@ locations to work.)  Otherwise, it is considered an offset from the
 last \fIposition\fR, or from the start of audio for the first
 parameter.  Using a value of 0 for the first \fIposition\fR
 parameter allows copying from the beginning of the audio.
-.SP
-All parameters can be specified using either an amount of time or an
-exact count of samples.  The format for specifying lengths in time is
-hh:mm:ss.frac.  A value of 1:30\*d5 for the first parameter will not
-start until 1 minute, thirty and \(12 seconds into the audio.  The format
-for specifying sample counts is the number of samples with the letter `s'
-appended to it.  A value of 8000s for the first parameter will wait until
-8000 samples are read before starting to process audio.
+Any time specification may be used for \fIposition\fR.
 .SP
 For example,
 .EX
