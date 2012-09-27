@@ -31,7 +31,7 @@ Effects:
   o 'Rate' now much faster in many cases.  (robs)
   o Allow sending spectrograms to stdout. (Ulrich Klauer)
   o Allow mixing time and sample-count arguments for the delay
-    effect. (Ulrich Klauer)
+    effect, and for spectrogram -S and -d. (Ulrich Klauer)
 
 Internal improvements:
 

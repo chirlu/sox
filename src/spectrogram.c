@@ -44,12 +44,13 @@ static lsx_enum_item const window_options[] = {
 
 typedef struct {
   /* Parameters */
-  double     pixels_per_sec, duration, start_time,  window_adjust;
+  double     pixels_per_sec, window_adjust;
   int        x_size0, y_size, Y_size, dB_range, gain, spectrum_points, perm;
   sox_bool   monochrome, light_background, high_colour, slack_overlap, no_axes;
   sox_bool   raw, alt_palette, truncate;
   win_type_t win_type;
   char const * out_name, * title, * comment;
+  char const *duration_str, *start_time_str;
   sox_bool   using_stdout; /* output image to stdout */
 
   /* Shared work area */
@@ -93,7 +94,7 @@ static unsigned char const alt_palette[] =
 static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *)effp->priv;
-  uint64_t duration;
+  uint64_t dummy;
   char const * next;
   int c;
   lsx_getopt_t optstate;
@@ -124,15 +125,15 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     case 't': p->title            = optstate.arg; break;
     case 'c': p->comment          = optstate.arg; break;
     case 'o': p->out_name         = optstate.arg; break;
-    case 'S': next = lsx_parsesamples(1e5, optstate.arg, &duration, 't');
-      if (next && !*next) {p->start_time = duration * 1e-5; break;}
+    case 'S': next = lsx_parsesamples(1e5, optstate.arg, &dummy, 't');
+      if (next && !*next) {p->start_time_str = lsx_strdup(optstate.arg); break;}
       return lsx_usage(effp);
-    case 'd': next = lsx_parsesamples(1e5, optstate.arg, &duration, 't');
-      if (next && !*next) {p->duration = duration * 1e-5; break;}
+    case 'd': next = lsx_parsesamples(1e5, optstate.arg, &dummy, 't');
+      if (next && !*next) {p->duration_str = lsx_strdup(optstate.arg); break;}
       return lsx_usage(effp);
     default: lsx_fail("invalid option `-%c'", optstate.opt); return lsx_usage(effp);
   }
-  if (!!p->x_size0 + !!p->pixels_per_sec + !!p->duration > 2) {
+  if (!!p->x_size0 + !!p->pixels_per_sec + !!p->duration_str > 2) {
     lsx_fail("only two of -x, -X, -d may be given");
     return SOX_EOF;
   }
@@ -202,11 +203,22 @@ static void rdft_p(double const * q, double const * in, double * out, int n)
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  double actual, duration = p->duration, pixels_per_sec = p->pixels_per_sec;
+  double actual, duration = 0.0, start_time = 0.0,
+         pixels_per_sec = p->pixels_per_sec;
+  uint64_t d;
 
   memset(&p->WORK, 0, sizeof(*p) - field_offset(priv_t, WORK));
-  
-  p->skip = p->start_time * effp->in_signal.rate + .5;
+
+  if (p->duration_str) {
+    lsx_parsesamples(effp->in_signal.rate, p->duration_str, &d, 't');
+    duration = d / effp->in_signal.rate;
+  }
+  if (p->start_time_str) {
+    lsx_parsesamples(effp->in_signal.rate, p->start_time_str, &d, 't');
+    start_time = d / effp->in_signal.rate;
+    p->skip = d;
+  }
+
   p->x_size = p->x_size0;
   while (sox_true) {
     if (!pixels_per_sec && p->x_size && duration)
@@ -215,7 +227,7 @@ static int start(sox_effect_t * effp)
       p->x_size = min(5000, (int)(pixels_per_sec * duration + .5));
     if (!duration && effp->in_signal.length) {
       duration = effp->in_signal.length / (effp->in_signal.rate * effp->in_signal.channels);
-      duration -= p->start_time;
+      duration -= start_time;
       if (duration <= 0)
         duration = 1;
       continue;
