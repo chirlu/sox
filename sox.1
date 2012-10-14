@@ -1496,6 +1496,11 @@ legal and equivalent to each other.
 Specifies the number of samples directly, as in `8000s'.  For large sample
 counts, \fIe notation\fR is supported: `1.7e6s' is the same as `1700000s'.
 .PP
+Time specifications can also be chained with \fB+\fR or \fB\-\fR into a new
+time specification where the right part is added to or subtracted from the
+left, respectively: `3:00\-200s' means two hundred samples before the three
+minute mark.
+.SP
 To see if SoX has support for an optional effect, enter
 .B sox \-h
 and look for its name under the list: `EFFECTS'.

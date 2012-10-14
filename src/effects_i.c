@@ -137,9 +137,12 @@ void lsx_generate_wave_table(
 /*
  * lsx_parsesamples
  *
- * Parse a string for # of samples.  If string ends with a 's' then
- * the string is interpreted as a user-calculated # of samples.
- * If string contains ':' or '.' but no 'e' or if it ends with a 't'
+ * Parse a string for # of samples.  The input consists of one or more
+ * parts, with '+' or '-' between them indicating if the sample count
+ * should be added to or subtracted from the previous value.
+ * If a part ends with a 's' then it is interpreted as a
+ * user-calculated # of samples.
+ * If a part contains ':' or '.' but no 'e' or if it ends with a 't'
  * then it is treated as an amount of time.  This is converted into
  * seconds and fraction of seconds, then the sample rate is used to
  * calculate # of samples.
@@ -149,69 +152,85 @@ void lsx_generate_wave_table(
  */
 char const * lsx_parsesamples(sox_rate_t rate, const char *str0, uint64_t *samples, int def)
 {
-  int i;
-  sox_bool found_samples = sox_false, found_time = sox_false;
-  char const * end;
-  char const * pos;
-  sox_bool found_colon, found_dot, found_e;
   char * str = (char *)str0;
+  char combine = '+';
+  *samples = 0;
 
-  for (;*str == ' '; ++str);
-  for (end = str; *end && strchr("0123456789:.ets", *end); ++end);
-  if (end == str)
-    return NULL; /* error: empty input */
+  do {
+    uint64_t samples_part;
+    sox_bool found_samples = sox_false, found_time = sox_false;
+    char const * end;
+    char const * pos;
+    sox_bool found_colon, found_dot, found_e;
 
-  pos = strchr(str, ':');
-  found_colon = pos && pos < end;
+    for (;*str == ' '; ++str);
+    for (end = str; *end && strchr("0123456789:.ets", *end); ++end);
+    if (end == str)
+      return NULL; /* error: empty input */
 
-  pos = strchr(str, '.');
-  found_dot = pos && pos < end;
+    pos = strchr(str, ':');
+    found_colon = pos && pos < end;
 
-  pos = strchr(str, 'e');
-  found_e = pos && pos < end;
+    pos = strchr(str, '.');
+    found_dot = pos && pos < end;
 
-  if (found_colon || (found_dot && !found_e) || *(end-1) == 't')
-    found_time = sox_true;
-  else if (*(end-1) == 's')
-    found_samples = sox_true;
+    pos = strchr(str, 'e');
+    found_e = pos && pos < end;
 
-  if (found_time || (def == 't' && !found_samples)) {
-    if (found_e)
-      return NULL; /* error: e notation in time */
+    if (found_colon || (found_dot && !found_e) || *(end-1) == 't')
+      found_time = sox_true;
+    else if (*(end-1) == 's')
+      found_samples = sox_true;
 
-    for (*samples = 0, i = 0; *str != '.' && i < 3; ++i) {
-      char * last_str = str;
-      long part = strtol(str, &str, 10);
-      if (!i && str == last_str)
-        return NULL; /* error: empty first component */
-      *samples += rate * part;
-      if (i < 2) {
-        if (*str != ':')
-          break;
-        ++str;
-        *samples *= 60;
+    if (found_time || (def == 't' && !found_samples)) {
+      int i;
+      if (found_e)
+        return NULL; /* error: e notation in time */
+
+      for (samples_part = 0, i = 0; *str != '.' && i < 3; ++i) {
+        char * last_str = str;
+        long part = strtol(str, &str, 10);
+        if (!i && str == last_str)
+          return NULL; /* error: empty first component */
+        samples_part += rate * part;
+        if (i < 2) {
+          if (*str != ':')
+            break;
+          ++str;
+          samples_part *= 60;
+        }
       }
-    }
-    if (*str == '.') {
+      if (*str == '.') {
+        char * last_str = str;
+        double part = strtod(str, &str);
+        if (str == last_str)
+          return NULL; /* error: empty fractional part */
+        samples_part += rate * part + .5;
+      }
+      if (*str == 't')
+        str++;
+    } else {
       char * last_str = str;
       double part = strtod(str, &str);
       if (str == last_str)
-        return NULL; /* error: empty fractional part */
-      *samples += rate * part + .5;
+        return NULL; /* error: no sample count */
+      samples_part = part + .5;
+      if (*str == 's')
+        str++;
     }
-    if (*str == 't')
-      str++;
-  } else {
-    char * last_str = str;
-    double part = strtod(str, &str);
-    if (str == last_str)
-      return NULL; /* error: no sample count */
-    *samples = part + .5;
-    if (*str == 's')
-      str++;
-  }
-  if (str != end)
-    return NULL; /* error: trailing characters */
+    if (str != end)
+      return NULL; /* error: trailing characters */
+
+    switch (combine) {
+      case '+': *samples += samples_part; break;
+      case '-': *samples = samples_part <= *samples ?
+                           *samples - samples_part : 0;
+        break;
+    }
+    if (strchr("+-", *str))
+      combine = *str++;
+    else combine = '\0';
+  } while (combine);
   return str;
 }
 
@@ -280,9 +299,16 @@ int main(int argc, char * * argv)
   TEST("0.555555", 5556, 8)
 
   assert(!lsx_parsesamples(10000, "x", &samples, 't'));
+
+  TEST("1:23+37", 1200000, 7)
+  TEST("12t+12s",  120012, 7)
+  TEST("1e6s-10",  900000, 7)
+  TEST("10-2:00",       0, 7)
+  TEST("123-45+12s+2:00-3e3s@foo", 1977012, 20)
+
   return 0;
 }
-#endif 
+#endif
 
 /* a note is given as an int,
  * 0   => 440 Hz = A
