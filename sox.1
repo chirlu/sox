@@ -3306,8 +3306,10 @@ letter
 which the pitch (and tempo) should be adjusted: greater than 0
 increases, less than 0 decreases.
 .SP
-By default, the speed change is performed by resampling with the \fBrate\fR
-effect using its default quality/speed.  For higher quality or higher speed
+Technically, the speed effect only changes the sample rate information,
+leaving the samples themselves untouched.  The \fBrate\fR effect is invoked
+automatically to resample to the output sample rate, using its default
+quality/speed.  For higher quality or higher speed
 resampling, in addition to the \fBspeed\fR effect, specify
 the \fBrate\fR effect with the desired quality option.
 .SP
