@@ -623,7 +623,7 @@ static int startread(sox_format_t * ft)
     wav->packet = NULL;
     wav->samples = NULL;
 
-    /* non-PCM formats expect alaw and mulaw formats have extended fmt chunk.
+    /* non-PCM formats except alaw and mulaw formats have extended fmt chunk.
      * Check for those cases.
      */
     if (wav->formatTag != WAVE_FORMAT_PCM &&
@@ -633,7 +633,7 @@ static int startread(sox_format_t * ft)
             lsx_readw(ft, &wExtSize);
             len -= 2;
         } else {
-            lsx_warn("wave header missing FmtExt chunk");
+            lsx_warn("wave header missing extended part of fmt chunk");
         }
     }
 
