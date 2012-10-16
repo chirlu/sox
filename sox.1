@@ -1937,14 +1937,15 @@ This effect supports the \fB\-\-plot\fR global option.
 .SP
 See also the \fBbass\fR and \fBtreble\fR shelving equalisation effects.
 .TP
-\fBdelay\fR {\fItime\fR}
-Delay one or more audio channels by the given \fItime\fR (a time
-specification).
+\fBdelay\fR {\fIposition(=)\fR}
+Delay one or more audio channels such that they start at the given
+\fIposition\fR.
 For example,
-.B delay 1\*d5 0 3000s
-delays the first channel by 1\*d5 seconds, the third channel by 3000
-samples, and leaves the second channel (and any other channels that may be
-present) un-delayed.
+.B delay 1\*d5 +1 3000s
+delays the first channel by 1\*d5 seconds, the second channel by 2\*d5
+seconds (one second more than the previous channel), the third channel
+by 3000 samples, and leaves any other channels that may be
+present un-delayed.
 The following (one long) command plays a chime sound:
 .EX
 .ne 3
