@@ -782,6 +782,11 @@ static int startread(sox_format_t * ft)
         ft->encoding.encoding = SOX_ENCODING_SIGN2;
       break;
 
+    case 8:
+      if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
+        ft->encoding.encoding = SOX_ENCODING_FLOAT;
+      break;
+
     default:
       lsx_fail_errno(ft,SOX_EFMT,"Sorry, don't understand .wav size");
       return SOX_EOF;

@@ -21,6 +21,7 @@ File formats:
   o Fix crash when seeking within a FLAC file. [3476843] (Eric Wong)
   o Fix Ogg Vorbis files with certain numbers of channels being
     truncated. (Ulrich Klauer)
+  o Fix reading 64-bit float WAVs. [3481510] (nu774 and Ulrich Klauer)
 
 Audio device drivers:
 
