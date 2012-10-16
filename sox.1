@@ -1459,6 +1459,23 @@ A frequency in Hz, or, if appended with `k', kHz.
 A power gain in dB.
 Zero gives no gain; less than zero gives an attenuation.
 .TP
+\fIposition\fR
+A position within the audio stream; the syntax is
+[\fB=\fR\^|\^\fB+\fR\^|\^\fB\-\fR]\fItimespec\fR, where \fItimespec\fR is a
+time specification (see below).  The optional first character indicates
+whether the \fItimespec\fR is to be interpreted relative to the start
+(\fB=\fR) or end (\fB\-\fR) of audio, or to the previous \fIposition\fR if
+the effect accepts multiple position arguments (\fB+\fR).  The audio length
+must be known for end-relative locations to work; some effects do accept
+\fB\-0\fR for end-of-audio, though, even if the length is unknown.  Which of
+\fB=\fR, \fB+\fR, \fB\-\fR is the default depends on the effect and is shown
+in its syntax as, e.g., \fIposition(+)\fR.
+.SP
+Examples: \fB=2:00\fR (two minutes into the audio stream), \fB\-100s\fR (one
+hundred samples before the end of audio), \fB+0:12+10s\fR (twelve seconds
+and ten samples after the previous position), \fB\-0.5+1s\fR (one sample less
+than half a second before the end of audio).
+.TP
 \fIwidth\fR[\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]
 Used to specify the band-width of a filter.  A number of different
 methods to specify the width are available (though not all for every effect).
@@ -1498,8 +1515,8 @@ counts, \fIe notation\fR is supported: `1.7e6s' is the same as `1700000s'.
 .PP
 Time specifications can also be chained with \fB+\fR or \fB\-\fR into a new
 time specification where the right part is added to or subtracted from the
-left, respectively: `3:00\-200s' means two hundred samples before the three
-minute mark.
+left, respectively: `3:00\-200s' means two hundred samples less than three
+minutes.
 .SP
 To see if SoX has support for an optional effect, enter
 .B sox \-h

@@ -1,7 +1,7 @@
 /* Implements a libSoX internal interface for implementing effects.
  * All public functions & data are prefixed with lsx_ .
  *
- * Copyright (c) 2005-8 Chris Bagwell and SoX contributors
+ * Copyright (c) 2005-2012 Chris Bagwell and SoX contributors
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -150,11 +150,17 @@ void lsx_generate_wave_table(
  * for a bare number like "123".  It can either be 't' or 's'.
  * Returns NULL on error, pointer to next char to parse otherwise.
  */
+static char const * parsesamples(sox_rate_t rate, const char *str0, uint64_t *samples, int def, int combine);
+
 char const * lsx_parsesamples(sox_rate_t rate, const char *str0, uint64_t *samples, int def)
 {
-  char * str = (char *)str0;
-  char combine = '+';
   *samples = 0;
+  return parsesamples(rate, str0, samples, def, '+');
+}
+
+static char const * parsesamples(sox_rate_t rate, const char *str0, uint64_t *samples, int def, int combine)
+{
+  char * str = (char *)str0;
 
   do {
     uint64_t samples_part;
@@ -227,7 +233,7 @@ char const * lsx_parsesamples(sox_rate_t rate, const char *str0, uint64_t *sampl
                            *samples - samples_part : 0;
         break;
     }
-    if (strchr("+-", *str))
+    if (*str && strchr("+-", *str))
       combine = *str++;
     else combine = '\0';
   } while (combine);
@@ -309,6 +315,67 @@ int main(int argc, char * * argv)
   return 0;
 }
 #endif
+
+/*
+ * lsx_parseposition
+ *
+ * Parse a string for an audio position.  Similar to lsx_parsesamples
+ * above, but an initial '=', '+' or '-' indicates that the specified time
+ * is relative to the start of audio, last used position or end of audio,
+ * respectively.  Parameter def states which of these is the default.
+ * Parameters latest and end are the positions to which '+' and '-' relate;
+ * end may be SOX_UNKNOWN_LEN, in which case "-0" is the only valid
+ * end-relative input and will result in a position of SOX_UNKNOWN_LEN.
+ * Other parameters and return value are the same as for lsx_parsesamples.
+ *
+ * A test parse that only checks for valid syntax can be done by
+ * specifying samples = NULL.  If this passes, a later reparse of the same
+ * input will only fail if it is relative to the end ("-"), not "-0", and
+ * the end position is unknown.
+ */
+char const * lsx_parseposition(sox_rate_t rate, const char *str0, uint64_t *samples, uint64_t latest, uint64_t end, int def)
+{
+  char *str = (char *)str0;
+  char anchor, combine;
+
+  if (!strchr("+-=", def))
+    return NULL; /* error: invalid default anchor */
+  anchor = def;
+  if (*str && strchr("+-=", *str))
+    anchor = *str++;
+
+  combine = '+';
+  if (strchr("+-", anchor)) {
+    combine = anchor;
+    if (*str && strchr("+-", *str))
+      combine = *str++;
+  }
+
+  if (!samples) {
+    /* dummy parse, syntax checking only */
+    uint64_t dummy = 0;
+    return parsesamples(0., str, &dummy, 't', '+');
+  }
+
+  switch (anchor) {
+    case '=': *samples = 0; break;
+    case '+': *samples = latest; break;
+    case '-': *samples = end; break;
+  }
+
+  if (anchor == '-' && end == SOX_UNKNOWN_LEN) {
+    /* "-0" only valid input here */
+    char const *l;
+    for (l = str; *l && strchr("0123456789:.ets+-", *l); ++l);
+    if (l == str+1 && *str == '0') {
+      /* *samples already set to SOX_UNKNOWN_LEN */
+      return l;
+    }
+    return NULL; /* error: end-relative position, but end unknown */
+  }
+
+  return parsesamples(rate, str, samples, 't', combine);
+}
 
 /* a note is given as an int,
  * 0   => 440 Hz = A
