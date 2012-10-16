@@ -3969,20 +3969,12 @@ and the depth as a percentage by
 .I depth
 (default 40).
 .TP
-\fBtrim\fR {[\fB=\fR\^|\^\fB\-\fR]\fIposition\fR}
+\fBtrim\fR {\fIposition(+)\fR}
 Cuts portions out of the audio.  Any number of \fIposition\fRs may be
 given; audio is not sent to the output until the first \fIposition\fR
 is reached.  The effect then alternates between copying and discarding
-audio at each \fIposition\fR.
-.SP
-If a \fIposition\fR is preceded by an equals or minus sign, it is
-interpreted relative to the beginning or the end of the audio,
-respectively.  (The audio length must be known for end-relative
-locations to work.)  Otherwise, it is considered an offset from the
-last \fIposition\fR, or from the start of audio for the first
-parameter.  Using a value of 0 for the first \fIposition\fR
+audio at each \fIposition\fR.  Using a value of 0 for the first \fIposition\fR
 parameter allows copying from the beginning of the audio.
-Any time specification may be used for \fIposition\fR.
 .SP
 For example,
 .EX
@@ -3992,7 +3984,11 @@ will copy the first ten seconds, while
 .EX
    play infile trim 12:34 =15:00 -2:00
 .EE
-will play from 12 minutes 34 seconds into the audio up to 15 minutes into
+and
+.EX
+   play infile trim 12:34 2:26 -2:00
+.EE
+will both play from 12 minutes 34 seconds into the audio up to 15 minutes into
 the audio (i.e. 2 minutes and 26 seconds long), then resume playing two
 minutes before the end of audio.
 .TP

@@ -28,15 +28,11 @@ typedef struct {
   struct {
     uint64_t sample; /* NB: wide samples */
     char *argstr;
-    enum {
-      a_start, a_latest, a_end
-    } anchor;
   } *pos;
   /* state */
   unsigned int current_pos;
   uint64_t samples_read; /* NB: wide samples */
   sox_bool copying;
-  sox_bool uses_end;
 } priv_t;
 
 static int parse(sox_effect_t *effp, int argc, char **argv)
@@ -46,24 +42,15 @@ static int parse(sox_effect_t *effp, int argc, char **argv)
   --argc, ++argv;
   p->num_pos = argc;
   lsx_Calloc(p->pos, p->num_pos);
-  p->uses_end = sox_false;
   for (i = 0; i < p->num_pos; i++) {
-    uint64_t dummy;
     const char *arg = argv[i];
-    if (arg[0] == '=') {
-      p->pos[i].anchor = a_start;
-      arg++;
-    } else if (arg[0] == '-') {
-      p->pos[i].anchor = a_end;
-      p->uses_end = sox_true;
-      arg++;
-    } else
-      p->pos[i].anchor = a_latest;
     p->pos[i].argstr = lsx_strdup(arg);
     /* dummy parse to check for syntax errors */
-    arg = lsx_parsesamples(0., arg, &dummy, 't');
-    if (!arg || *arg)
+    arg = lsx_parseposition(0., arg, NULL, (uint64_t)0, (uint64_t)0, '+');
+    if (!arg || *arg) {
+      lsx_fail("Error parsing position %u", i+1);
       return lsx_usage(effp);
+    }
   }
   return SOX_SUCCESS;
 }
@@ -80,28 +67,13 @@ static int start(sox_effect_t *effp)
   p->copying = sox_false;
 
   /* calculate absolute positions */
-  if (in_length == SOX_UNKNOWN_LEN && p->uses_end) {
-    lsx_fail("Can't use positions relative to end: audio length is unknown.");
-    return SOX_EOF;
-  }
   for (i = 0; i < p->num_pos; i++) {
-    uint64_t s, res = 0;
-    if (!lsx_parsesamples(effp->in_signal.rate, p->pos[i].argstr, &s, 't'))
-      return lsx_usage(effp);
-    switch (p->pos[i].anchor) {
-      case a_start: res = s; break;
-      case a_latest: res = last_seen + s; break;
-      case a_end:
-        if (s <= in_length)
-          res = in_length - s;
-        else {
-          lsx_fail("Position %u is before start of audio.", i+1);
-          return SOX_EOF;
-        }
-        break;
+    if (!lsx_parseposition(effp->in_signal.rate, p->pos[i].argstr, &p->pos[i].sample, last_seen, in_length, '+')) {
+      lsx_fail("Position %u is relative to end of audio, but audio length is unknown", i+1);
+      return SOX_EOF;
     }
-    last_seen = p->pos[i].sample = res;
-    lsx_debug_more("position %u at %" PRIu64, i+1, res);
+    last_seen = p->pos[i].sample;
+    lsx_debug_more("position %u at %" PRIu64, i+1, last_seen);
   }
 
   /* sanity checks */
@@ -119,6 +91,13 @@ static int start(sox_effect_t *effp)
       lsx_warn("%s position is after expected end of audio.",
           p->pos[0].sample > in_length ? "Start" : "End");
 
+  /* avoid unnecessary work */
+  if (in_length == SOX_UNKNOWN_LEN)
+    while (p->num_pos && p->pos[p->num_pos-1].sample == SOX_UNKNOWN_LEN) {
+      lsx_debug_more("removing `-0' position");
+      p->num_pos--;
+      free(p->pos[p->num_pos].argstr);
+    }
   if (p->num_pos == 1 && !p->pos[0].sample)
     return SOX_EFF_NULL;
 
@@ -207,7 +186,7 @@ static int lsx_kill(sox_effect_t *effp)
 sox_effect_handler_t const *lsx_trim_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "trim", "{[=|-]position}",
+    "trim", "{position}",
     SOX_EFF_MCHAN | SOX_EFF_LENGTH | SOX_EFF_MODIFY,
     parse, start, flow, drain, NULL, lsx_kill,
     sizeof(priv_t)
