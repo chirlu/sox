@@ -43,6 +43,36 @@ Internal improvements:
 sox-14.4.1	20xx-xx-xx
 ----------
 
+Newly deprecated features (to be removed in future):
+
+  Deprec-  Feature    [O(ption)]                           Removal
+  ated in  [F(ormat)] [E(ffect)]   Replacement             due after
+  -------  ----------------------  ----------------------  -------
+  14.4.1   OpenMP < 3.0            OpenMP >= 3.0           14.4.1
+
+File formats:
+
+  o Fix pipe file-type detection regression. (robs)
+  o MAUD write fixes. [3507927] (Carl Eric Codere and Ulrich Klauer)
+  o Fix crash when seeking within a FLAC file. [3476843] (Eric Wong)
+  o Fix Ogg Vorbis files with certain numbers of channels being
+    truncated. (Ulrich Klauer)
+
+Audio device drivers:
+
+  o Check whether pulseaudio is available before choosing it as
+    default. (robs)
+
+Effects:
+
+  o Restore 8 seconds default for spectrogram, if the input length is
+    not known. (Ulrich Klauer)
+
+Other bug fixes:
+
+  o Fix input length calculation for combine methods other than
+    concatenate. (Ulrich Klauer)
+
 
 sox-14.4.0	2012-03-04
 ----------

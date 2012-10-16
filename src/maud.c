@@ -2,6 +2,8 @@
  *
  * supports: mono and stereo, linear, a-law and u-law reading and writing
  *
+ * an IFF format; description at http://lclevy.free.fr/amiga/MAUDINFO.TXT
+ *
  * Copyright 1998-2006 Chris Bagwell and SoX Contributors
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained.
@@ -225,6 +227,11 @@ static int stopwrite(sox_format_t * ft)
 {
         /* All samples are already written out. */
 
+        priv_t *p = (priv_t*)ft->priv;
+        uint32_t mdat_size; /* MDAT chunk size */
+        mdat_size = p->nsamples * (ft->encoding.bits_per_sample >> 3);
+        lsx_padbytes(ft, (size_t) (mdat_size%2));
+
         if (lsx_seeki(ft, (off_t)0, 0) != 0)
         {
             lsx_fail_errno(ft,errno,"can't rewind output file to rewrite MAUD header");
@@ -235,13 +242,16 @@ static int stopwrite(sox_format_t * ft)
         return(SOX_SUCCESS);
 }
 
-#define MAUDHEADERSIZE (4+(4+4+32)+(4+4+32)+(4+4))
+#define MAUDHEADERSIZE (4+(4+4+32)+(4+4+19+1)+(4+4))
 static void maudwriteheader(sox_format_t * ft)
 {
         priv_t * p = (priv_t *) ft->priv;
+        uint32_t mdat_size; /* MDAT chunk size */
+
+        mdat_size = p->nsamples * (ft->encoding.bits_per_sample >> 3);
 
         lsx_writes(ft, "FORM");
-        lsx_writedw(ft, (p->nsamples* (ft->encoding.bits_per_sample >> 3)) + MAUDHEADERSIZE);  /* size of file */
+        lsx_writedw(ft, MAUDHEADERSIZE + mdat_size + mdat_size%2);  /* size of file */
         lsx_writes(ft, "MAUD"); /* File type */
 
         lsx_writes(ft, "MHDR");
@@ -306,8 +316,9 @@ static void maudwriteheader(sox_format_t * ft)
         lsx_writedw(ft, 0); /* reserved */
 
         lsx_writes(ft, "ANNO");
-        lsx_writedw(ft, 30); /* length of block */
-        lsx_writes(ft, "file create by Sound eXchange ");
+        lsx_writedw(ft, 19); /* length of block */
+        lsx_writes(ft, "file created by SoX");
+        lsx_padbytes(ft, (size_t)1);
 
         lsx_writes(ft, "MDAT");
         lsx_writedw(ft, p->nsamples * (ft->encoding.bits_per_sample >> 3)); /* samples in file */

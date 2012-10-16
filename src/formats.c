@@ -343,7 +343,7 @@ static int sox_checkformat(sox_format_t * ft)
     return SOX_EOF;
   }
   if (!ft->signal.precision) {
-    lsx_fail_errno(ft,SOX_EFMT,"data encoding was not specified");
+    lsx_fail_errno(ft,SOX_EFMT,"data encoding or sample size was not specified");
     return SOX_EOF;
   }
   return SOX_SUCCESS;
