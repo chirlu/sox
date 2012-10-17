@@ -2120,7 +2120,7 @@ This effect supports the \fB\-\-plot\fR global option.
 .SP
 See also \fBbass\fR and \fBtreble\fR for shelving equalisation effects.
 .TP
-\fBfade\fR [\fItype\fR] \fIfade-in-length\fR [\fIstop-time\fR [\fIfade-out-length\fR]]
+\fBfade\fR [\fItype\fR] \fIfade-in-length\fR [\fIstop-position(=)\fR [\fIfade-out-length\fR]]
 Apply a fade effect to the beginning, end, or both of the audio.
 .SP
 An optional \fItype\fR can be specified to select the shape of the fade
@@ -2134,20 +2134,24 @@ to full volume over the time given as \fIfade-in-length\fR.  Specify 0 if
 no fade-in is wanted.
 .SP
 For fade-outs, the audio will be truncated at
-.I stop-time
+.I stop-position
 and the signal level will be ramped from full volume down to 0 over an
-interval of \fIfade-out-length\fR before the \fIstop-time\fR.  If
+interval of \fIfade-out-length\fR before the \fIstop-position\fR.  If
 .I fade-out-length
 is not specified, it defaults to the same value as
 \fIfade-in-length\fR.
 No fade-out is performed if
-.I stop-time
+.I stop-position
 is not specified.
 If the audio length can be determined from the input file header and any
-previous effects, then \fB0\fR may be specified for
-.I stop-time
+previous effects, then \fB\-0\fR (or, for historical reasons, \fB0\fR) may
+be specified for
+.I stop-position
 to indicate the usual case of a fade-out that ends at the end of the input
-audio stream.  Any time specification may be used for these parameters.
+audio stream.
+.SP
+Any time specification may be used for \fIfade-in-length\fR and
+\fIfade-out-length\fR.
 .SP
 See also the
 .B splice
