@@ -179,13 +179,13 @@ static int start(sox_effect_t * effp)
   p->buffer = lsx_calloc(p->max_buffer_size * effp->in_signal.channels, sizeof(*p->buffer));
   p->in_pos = p->buffer_pos = p->splices_pos = 0;
   p->state = p->splices_pos != p->nsplices && p->in_pos == p->splices[p->splices_pos].start;
+  effp->out_signal.length = SOX_UNKNOWN_LEN; /* depends on input data */
   for (i = 0; i < p->nsplices; ++i)
     if (p->splices[i].overlap) {
       if (p->fade_type == Cosine_4 && effp->in_signal.mult)
         *effp->in_signal.mult *= pow(.5, .5);
       return SOX_SUCCESS;
     }
-  effp->out_signal.length = SOX_UNKNOWN_LEN; /* depends on input data */
   return SOX_EFF_NULL;
 }
 
