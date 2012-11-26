@@ -395,7 +395,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
     (void)sox_mcompand_flow_1(effp, c,l,bbuf,abuf,len, (size_t)effp->out_signal.channels);
     for (i=0;i<len;++i)
     {
-      out = obuf[i] + abuf[i];
+      out = (double)obuf[i] + (double)abuf[i];
       SOX_SAMPLE_CLIP_COUNT(out, effp->clips);
       obuf[i] = out;
     }

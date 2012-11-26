@@ -38,6 +38,7 @@ Effects:
   o Improved pink noise frequency response in synth. (robs)
   o Extended syntax for specifying audio positions to several
     effects. (Ulrich Klauer)
+  o Fix integer overflow in mcompand. [3590093] (Guido Aulisi)
 
 Other new features:
 
