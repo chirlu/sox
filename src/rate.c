@@ -313,9 +313,9 @@ static void rate_init(
     double d, epsilon = 0, frac;
     upsample = arbM < 1;
     for (i = arbM * .5, shift = 0; i >>= 1; arbM *= .5, ++shift);
-    preM = 1 - (arbM > 2);
-    postM = 1 + (arbM > 1 && arbM < 2), arbM /= postM;
-    preL = 1 + (upsample && mode), arbM *= preL;
+    preM = upsample || (arbM > 1.5 && arbM < 2);
+    postM = 1 + (arbM > 1 && preM), arbM /= postM;
+    preL = 1 + (!preM && arbM < 2) + (upsample && mode), arbM *= preL;
     if ((frac = arbM - (int)arbM))
       epsilon = fabs((uint32_t)(frac * MULT32 + .5) / (frac * MULT32) - 1);
     for (i = 1, rational = !frac; i <= maxL && !rational; ++i) {
