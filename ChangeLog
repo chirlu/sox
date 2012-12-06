@@ -39,6 +39,12 @@ Internal improvements:
     independently. (Ulrich Klauer)
   o Fix memory leaks. (Ulrich Klauer)
 
+Other bug fixes:
+
+  o [3592482] Fix hang with rate effect & signal-length more than
+  2^31 samples.  (MrMod).
+
+
 
 sox-14.4.1	20xx-xx-xx
 ----------

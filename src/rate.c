@@ -482,7 +482,7 @@ static void rate_flush(rate_t * p)
   size_t remaining = samples_out - p->samples_out;
   sample_t * buff = calloc(1024, sizeof(*buff));
 
-  if ((int)remaining > 0) {
+  if (samples_out > p->samples_out) {
     while ((size_t)fifo_occupancy(fifo) < remaining) {
       rate_input(p, buff, (size_t) 1024);
       rate_process(p);
