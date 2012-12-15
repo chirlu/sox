@@ -227,9 +227,9 @@ char const * lsx_parsesamples(sox_rate_t rate, const char *str0, uint64_t *sampl
                            *samples - samples_part : 0;
         break;
     }
-    if (strchr("+-", *str))
+    combine = '\0';
+    if (*str && strchr("+-", *str))
       combine = *str++;
-    else combine = '\0';
   } while (combine);
   return str;
 }
@@ -305,6 +305,8 @@ int main(int argc, char * * argv)
   TEST("1e6s-10",  900000, 7)
   TEST("10-2:00",       0, 7)
   TEST("123-45+12s+2:00-3e3s@foo", 1977012, 20)
+
+  TEST("1\0" "2", 10000, 1)
 
   return 0;
 }
