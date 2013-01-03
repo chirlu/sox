@@ -33,6 +33,7 @@ Effects:
   o Restore 8 seconds default for spectrogram, if the input length is
     not known. (Ulrich Klauer)
   o Set output length for splice to unknown instead of 0. (Ulrich Klauer)
+  o Increase maximum width for spectrograms. (Ulrich Klauer)
 
 Other bug fixes:
 
