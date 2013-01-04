@@ -13,6 +13,7 @@ Newly deprecated features (to be removed in future):
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
   -------  ----------------------  ----------------------  -------
   14.4.1   OpenMP < 3.0            OpenMP >= 3.0           14.4.1
+  14.4.1   F ffmpeg                ffmpeg/avconf via pipe  14.4.1
 
 File formats:
 
