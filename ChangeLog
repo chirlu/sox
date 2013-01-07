@@ -37,6 +37,7 @@ Effects:
     not known. (Ulrich Klauer)
   o Set output length for splice to unknown instead of 0. (Ulrich Klauer)
   o Increase maximum width for spectrograms. (Ulrich Klauer)
+  o Fix memory leaks in LADSPA effect. (Eric Wong)
 
 Other bug fixes:
 
