@@ -34,6 +34,10 @@ Effects:
     effect, and for spectrogram -S and -d. (Ulrich Klauer)
   o Support multi-channel LADSPA plugins. (Eric Wong)
 
+Other new features:
+
+  o New -p option for soxi to display sample precision. (Ulrich Klauer)
+
 Internal improvements:
 
   o Speed optimization for effects that operate on channels

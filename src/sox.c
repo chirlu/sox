@@ -2687,7 +2687,7 @@ static double soxi_total;
 static size_t soxi_file_count;
 
 typedef enum {Full, Type, Rate, Channels, Samples, Duration, Duration_secs,
-    Bits, Bitrate, Encoding, Annotation} soxi_t;
+    Bits, Bitrate, Precision, Encoding, Annotation} soxi_t;
 
 static int soxi1(soxi_t const * type, char const * filename)
 {
@@ -2714,6 +2714,7 @@ static int soxi1(soxi_t const * type, char const * filename)
     case Duration_secs: if (soxi_total ==-1) printf("%f\n", secs); break;
     case Bits: printf("%u\n", ft->encoding.bits_per_sample); break;
     case Bitrate: size_and_bitrate(ft, &text); puts(text? text : "0"); break;
+    case Precision: printf("%u\n", ft->signal.precision); break;
     case Encoding: printf("%s\n", sox_encodings_info[ft->encoding.encoding].desc); break;
     case Annotation: if (ft->oob.comments) {
       sox_comments_t p = ft->oob.comments;
@@ -2730,7 +2731,7 @@ static void soxi_usage(int return_code)
   display_SoX_version(stdout);
   printf(
     "\n"
-    "Usage: soxi [-V[level]] [-T] [-t|-r|-c|-s|-d|-D|-b|-B|-e|-a] infile1 ...\n"
+    "Usage: soxi [-V[level]] [-T] [-t|-r|-c|-s|-d|-D|-b|-B|-p|-e|-a] infile1 ...\n"
     "\n"
     "-V[n]\tIncrement or set verbosity level (default is 2)\n"
     "-T\tWith -s, -d or -D, display the total across all given files\n"
@@ -2744,6 +2745,7 @@ static void soxi_usage(int return_code)
     "-D\tShow duration in seconds (0 if unavailable)\n"
     "-b\tShow number of bits per sample\n"
     "-B\tShow the bitrate averaged over the whole file (0 if unavailable)\n"
+    "-p\tShow estimated sample precision in bits\n"
     "-e\tShow the name of the audio encoding\n"
     "-a\tShow file comments (annotations) if available\n"
     "\n"
@@ -2755,7 +2757,7 @@ static void soxi_usage(int return_code)
 
 static int soxi(int argc, char * const * argv)
 {
-  static char const opts[] = "trcsdDbBea?TV::";
+  static char const opts[] = "trcsdDbBpea?TV::";
   soxi_t type = Full;
   int opt, num_errors = 0;
   sox_bool do_total = sox_false;
