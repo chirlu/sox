@@ -2364,17 +2364,25 @@ frequency of about 75 Hz.
 .SP
 This effect supports the \fB\-\-plot\fR global option.
 .TP
-\fBladspa\fR \fBmodule\fR [\fBplugin\fR] [\fBargument\fR...]
+\fBladspa\fR [\fB-r\fR] \fImodule\fR [\fIplugin\fR] [\fIargument\fR ...]
 Apply a LADSPA [5] (Linux Audio Developer's Simple Plugin API) plugin.
 Despite the name, LADSPA is not Linux-specific, and a wide range of
 effects is available as LADSPA plugins, such as cmt [6] (the Computer
 Music Toolkit) and Steve Harris's plugin collection [7]. The first
 argument is the plugin module, the second the name of the plugin (a
-module can contain more than one plugin) and any other arguments are
+module can contain more than one plugin), and any other arguments are
 for the control ports of the plugin. Missing arguments are supplied by
-default values if possible. Only plugins with at most one audio input
-and one audio output port can be used.  If found, the environment variable
-LADSPA_PATH will be used as search path for plugins.
+default values if possible.
+.SP
+Normally, the number of input ports of the plugin must match the number
+of input channels, and the number of output ports determines the output
+channel count.  However, the
+.B \-r
+(replicate) option allows cloning a mono plugin to handle multi-channel
+input.
+.SP
+If found, the environment variable LADSPA_PATH will be used as search
+path for plugins.
 .TP
 \fBloudness\fR [\fIgain\fR [\fIreference\fR]]
 Loudness control\*msimilar to the

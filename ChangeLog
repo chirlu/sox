@@ -32,6 +32,7 @@ Effects:
   o Allow sending spectrograms to stdout. (Ulrich Klauer)
   o Allow mixing time and sample-count arguments for the delay
     effect, and for spectrogram -S and -d. (Ulrich Klauer)
+  o Support multi-channel LADSPA plugins. (Eric Wong)
 
 Internal improvements:
 
