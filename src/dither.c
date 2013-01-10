@@ -401,7 +401,7 @@ static int start(sox_effect_t * effp)
         default: assert(sox_false);
       }
       p->coefs = f->coefs;
-      mult = dB_to_linear(f->gain_cB / 10);
+      mult = dB_to_linear(f->gain_cB * 0.1);
     }
   }
   p->ranqd1 = ranqd1(sox_globals.ranqd1) + effp->flow;
