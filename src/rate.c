@@ -223,7 +223,7 @@ static void half_band_filter_init(rate_shared_t * p, unsigned which,
 
 typedef struct {
   double     factor;
-  size_t     samples_in, samples_out;
+  uint64_t   samples_in, samples_out;
   int        level, input_stage_num, output_stage_num;
   sox_bool   upsample;
   stage_t    * stages;
@@ -393,11 +393,12 @@ static sample_t const * rate_output(rate_t * p, sample_t * samples, size_t * n)
 static void rate_flush(rate_t * p)
 {
   fifo_t * fifo = &p->stages[p->output_stage_num].fifo;
-  size_t samples_out = p->samples_in / p->factor + .5;
-  size_t remaining = samples_out - p->samples_out;
+  uint64_t samples_out = p->samples_in / p->factor + .5;
+  size_t remaining = samples_out > p->samples_out ?
+      (size_t)(samples_out - p->samples_out) : 0;
   sample_t * buff = calloc(1024, sizeof(*buff));
 
-  if ((int)remaining > 0) {
+  if (remaining > 0) {
     while ((size_t)fifo_occupancy(fifo) < remaining) {
       rate_input(p, buff, (size_t) 1024);
       rate_process(p);
