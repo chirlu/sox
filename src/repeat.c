@@ -29,6 +29,10 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   priv_t * p = (priv_t *)effp->priv;
   p->num_repeats = 1;
   --argc, ++argv;
+  if (argc == 1 && !strcmp(*argv, "-")) {
+    p->num_repeats = UINT_MAX;
+    return SOX_SUCCESS;
+  }
   do {NUMERIC_PARAMETER(num_repeats, 0, UINT_MAX - 1)} while (0);
   return argc? lsx_usage(effp) : SOX_SUCCESS;
 }
@@ -75,7 +79,8 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
   while ((p->remaining_samples || p->remaining_repeats) && odone < *osamp) {
     if (!p->remaining_samples) {
       p->remaining_samples = p->num_samples;
-      --p->remaining_repeats;
+      if (p->remaining_repeats != UINT_MAX)
+        --p->remaining_repeats;
       rewind(p->tmp_file);
     }
     n = min(p->remaining_samples, *osamp - odone);
