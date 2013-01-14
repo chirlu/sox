@@ -33,6 +33,8 @@
 #define MAX_FFT_SIZE 4096
 #define is_p2(x) !(x & (x - 1))
 
+#define MAX_X_SIZE 200000
+
 typedef enum {Window_Hann, Window_Hamming, Window_Bartlett, Window_Rectangular, Window_Kaiser} win_type_t;
 static lsx_enum_item const window_options[] = {
   LSX_ENUM_ITEM(Window_,Hann)
@@ -104,7 +106,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   p->out_name = "spectrogram.png", p->comment = "Created by SoX";
 
   while ((c = lsx_getopt(&optstate)) != -1) switch (c) {
-    GETOPT_NUMERIC(optstate, 'x', x_size0       , 100, 5000)
+    GETOPT_NUMERIC(optstate, 'x', x_size0       , 100, MAX_X_SIZE)
     GETOPT_NUMERIC(optstate, 'X', pixels_per_sec,  1 , 5000)
     GETOPT_NUMERIC(optstate, 'y', y_size        , 64 , 1200)
     GETOPT_NUMERIC(optstate, 'Y', Y_size        , 130, MAX_FFT_SIZE / 2 + 2)
@@ -224,7 +226,7 @@ static int start(sox_effect_t * effp)
     if (!pixels_per_sec && p->x_size && duration)
       pixels_per_sec = min(5000, p->x_size / duration);
     else if (!p->x_size && pixels_per_sec && duration)
-      p->x_size = min(5000, (int)(pixels_per_sec * duration + .5));
+      p->x_size = min(MAX_X_SIZE, (int)(pixels_per_sec * duration + .5));
     if (!duration && effp->in_signal.length != SOX_UNKNOWN_LEN) {
       duration = effp->in_signal.length / (effp->in_signal.rate * effp->in_signal.channels);
       duration -= start_time;

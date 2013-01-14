@@ -12,7 +12,7 @@ AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE
 
 dnl create a config.h file (Automake will add -DHAVE_CONFIG_H)
-AM_CONFIG_HEADER(src/soxconfig.h)
+AC_CONFIG_HEADERS([src/soxconfig.h])
 
 dnl Check we have the right srcdir
 AC_CONFIG_SRCDIR(sox.1)

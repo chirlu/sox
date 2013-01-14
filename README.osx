@@ -73,15 +73,16 @@ Lame MP3 encoder  http://lame.sourceforge.net
 MAD MP3 decoder   http://www.underbit.com/products/mad
 
 If your system is setup to compile software, then the following commands
-can be used:
+can be used.  Note: since SoX is distributed as a 32-bit i386 binary,
+the library must match that format as well:
 
 cd lame-398-2
-./configure
+./configure CFLAGS="-arch i386 -m32" LDFALGS="-arch i386"
 make
 sudo make install
 
 cd libmad-0.15.1b
-./configure
+./configure CFLAGS="-arch i386 -m32" LDFALGS="-arch i386"
 make
 sudo make install
 
@@ -105,7 +106,7 @@ Obtain the latest amrnb and amrwb source code from
 http://sourceforge.net/projects/opencore-amr
 
 cd opencore-amr-0.1.2
-./configure
+./configure CFLAGS="-arch i386 -m32" LDFALGS="-arch i386"
 make
 sudo make install
 

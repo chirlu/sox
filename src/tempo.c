@@ -38,10 +38,10 @@ typedef struct {
   fifo_t output_fifo;
 
   /* Counters: */
-  size_t samples_in;
-  size_t samples_out;
-  size_t segments_total;
-  size_t skip_total;
+  uint64_t samples_in;
+  uint64_t samples_out;
+  uint64_t segments_total;
+  uint64_t skip_total;
 } tempo_t;
 
 /* Waveform Similarity by least squares; works across multi-channels */
@@ -147,11 +147,12 @@ static float const * tempo_output(tempo_t * t, float * samples, size_t * n)
 /* Flush samples remaining in overlap_buf & input_fifo to the output. */
 static void tempo_flush(tempo_t * t)
 {
-  size_t samples_out = t->samples_in / t->factor + .5;
-  size_t remaining = samples_out - t->samples_out;
+  uint64_t samples_out = t->samples_in / t->factor + .5;
+  size_t remaining = samples_out > t->samples_out ?
+      (size_t)(samples_out - t->samples_out) : 0;
   float * buff = lsx_calloc(128 * t->channels, sizeof(*buff));
 
-  if ((int)remaining > 0) {
+  if (remaining > 0) {
     while (fifo_occupancy(&t->output_fifo) < remaining) {
       tempo_input(t, buff, (size_t) 128);
       tempo_process(t);

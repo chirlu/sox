@@ -55,6 +55,7 @@ Newly deprecated features (to be removed in future):
   ated in  [F(ormat)] [E(ffect)]   Replacement             due after
   -------  ----------------------  ----------------------  -------
   14.4.1   OpenMP < 3.0            OpenMP >= 3.0           14.4.1
+  14.4.1   F ffmpeg                ffmpeg/avconf via pipe  14.4.1
 
 File formats:
 
@@ -63,6 +64,9 @@ File formats:
   o Fix crash when seeking within a FLAC file. [3476843] (Eric Wong)
   o Fix Ogg Vorbis files with certain numbers of channels being
     truncated. (Ulrich Klauer)
+  o Fix reading 64-bit float WAVs. [3481510] (nu774 and Ulrich Klauer)
+  o Fix potential buffer overrun when writing FLAC files directly via
+    sox_write(). [3474924] (Eric Wong)
 
 Audio device drivers:
 
@@ -73,11 +77,17 @@ Effects:
 
   o Restore 8 seconds default for spectrogram, if the input length is
     not known. (Ulrich Klauer)
+  o Set output length for splice to unknown instead of 0. (Ulrich Klauer)
+  o Increase maximum width for spectrograms. (Ulrich Klauer)
+  o Fix memory leaks in LADSPA effect. (Eric Wong)
+  o Fix hang in several effects (rate, tempo, and those based on
+    dft_filter) when processing long files. [3592482, 3594822] (MrMod)
 
 Other bug fixes:
 
   o Fix input length calculation for combine methods other than
     concatenate. (Ulrich Klauer)
+  o Fix to configure.ac to work with Autoconf 2.69. [3600293] (cbagwell)
 
 
 sox-14.4.0	2012-03-04

@@ -874,9 +874,9 @@ Equivalent to \fB\-\-combine mix\fR and \fB\-\-combine merge\fR, respectively.
 If SoX has been built with the optional `libmagic' library then this
 option can be given to enable its use in helping to detect audio file types.
 .TP
-\fB\-\-multi-threaded\fR | \fB\-\-single-threaded\fR
+\fB\-\-multi\-threaded\fR | \fB\-\-single\-threaded\fR
 By default, SoX is `single threaded'.
-If the \fB\-\-multi-threaded\fR option is given however then SoX
+If the \fB\-\-multi\-threaded\fR option is given however then SoX
 will process audio channels for most multi-channel
 effects in parallel on hyper-threading/multi-core architectures. This
 may reduce processing time, though sometimes it may be necessary to use
@@ -1064,7 +1064,7 @@ sets it to 0.
 These options apply only to input files and may precede only input
 filenames on the command line.
 .TP
-\fB\-\-ignore-length\fR
+\fB\-\-ignore\-length\fR
 Override an (incorrect) audio length given in an audio file's header. If
 this option is given then SoX will keep reading audio until it reaches
 the end of the input file.
@@ -1235,7 +1235,7 @@ Specifies that filename `globbing' (wild-card matching) should not be
 performed by SoX on the following filename.  For example, if the current
 directory contains the two files `five-seconds.wav' and `five*.wav', then
 .EX
-   play \-\-no-glob "five*.wav"
+   play \-\-no\-glob "five*.wav"
 .EE
 can be used to play just the single file `five*.wav'.
 .TP
@@ -3158,7 +3158,7 @@ printer.
 .RS
 .IP \fB\-x\ \fInum\fR
 Change the (maximum) width (X-axis) of the spectrogram from its default
-value of 800 pixels to a given number between 100 and 5000.
+value of 800 pixels to a given number between 100 and 200000.
 See also \fB\-X\fR and \fB\-d\fR.
 .IP \fB\-X\ \fInum\fR
 X-axis pixels/second; the default is auto-calculated to fit the given

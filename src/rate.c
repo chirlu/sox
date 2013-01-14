@@ -479,10 +479,11 @@ static void rate_flush(rate_t * p)
 {
   fifo_t * fifo = &p->stages[p->num_stages].fifo;
   uint64_t samples_out = p->samples_in / p->factor + .5;
-  size_t remaining = samples_out - p->samples_out;
+  size_t remaining = samples_out > p->samples_out ?
+      (size_t)(samples_out - p->samples_out) : 0;
   sample_t * buff = calloc(1024, sizeof(*buff));
 
-  if (samples_out > p->samples_out) {
+  if (remaining > 0) {
     while ((size_t)fifo_occupancy(fifo) < remaining) {
       rate_input(p, buff, (size_t) 1024);
       rate_process(p);

@@ -2743,7 +2743,7 @@ static void soxi_usage(int return_code)
     "-s\tShow number of samples (0 if unavailable)\n"
     "-d\tShow duration in hours, minutes and seconds (0 if unavailable)\n"
     "-D\tShow duration in seconds (0 if unavailable)\n"
-    "-b\tShow number of bits per sample\n"
+    "-b\tShow number of bits per sample (0 if not applicable)\n"
     "-B\tShow the bitrate averaged over the whole file (0 if unavailable)\n"
     "-p\tShow estimated sample precision in bits\n"
     "-e\tShow the name of the audio encoding\n"

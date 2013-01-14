@@ -47,6 +47,7 @@
 #cmakedefine HAVE_SUN_AUDIOIO_H       1
 #cmakedefine HAVE_SYS_AUDIOIO_H       1
 #cmakedefine HAVE_SYS_SOUNDCARD_H     1
+#cmakedefine HAVE_SYS_STAT_H          1
 #cmakedefine HAVE_SYS_TIMEB_H         1
 #cmakedefine HAVE_SYS_TIME_H          1
 #cmakedefine HAVE_SYS_TYPES_H         1
