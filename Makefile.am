@@ -112,7 +112,8 @@ uninstall-html:
 	done; \
 	$(RM) -fr "$(DESTDIR)$(htmldir)/soxpng";
 
-DISTCLEANFILES = $(DOCHTML) $(DOCPDF) $(DOCTXT)
+DISTCLEANFILES = $(DOCHTML) $(DOCPDF)
+MAINTAINERCLEANFILES = $(DOCTXT)
 
 install-data-hook:
 	cd $(DESTDIR)$(mandir)/man1 && $(RM) play.1 && $(LN_S) sox.1 play.1
