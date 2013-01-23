@@ -7,10 +7,10 @@
  * This copyright notice must be maintained.  The authors are not responsible
  * for the consequences of using this software.
  *
- * Except for synth types: pluck, tpdf, & brownnoise, and sweep types: linear
- *   square & exp, which are:
+ * Except for synth types: pluck, tpdf, pinknoise, & brownnoise, and
+ *            sweep types: linear, square & exp, which are:
  *
- * Copyright (c) 2006-2009 robs@users.sourceforge.net
+ * Copyright (c) 2006-2013 robs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -78,87 +78,6 @@ static lsx_enum_item const combine_type[] = {
 
 
 
-/******************************************************************************
- * start of pink noise generator stuff
- * algorithm stolen from:
- * Author: Phil Burk, http://www.softsynth.com
- */
-
-#define PINK_MAX_RANDOM_ROWS   (30)
-#define PINK_RANDOM_BITS       (24)
-#define PINK_RANDOM_SHIFT      ((sizeof(int32_t)*8)-PINK_RANDOM_BITS)
-
-typedef struct {
-  long pink_Rows[PINK_MAX_RANDOM_ROWS];
-  long pink_RunningSum;         /* Used to optimize summing of generators. */
-  int pink_Index;               /* Incremented each sample. */
-  int pink_IndexMask;           /* Index wrapped by ANDing with this mask. */
-  float pink_Scalar;            /* Used to scale within range of -1 to +1 */
-} PinkNoise;
-
-/* Setup PinkNoise structure for N rows of generators. */
-static void InitializePinkNoise(PinkNoise * pink, size_t numRows)
-{
-  size_t i;
-  long pmax;
-
-  pink->pink_Index = 0;
-  pink->pink_IndexMask = (1 << numRows) - 1;
-  /* Calculate maximum possible signed random value. Extra 1 for white noise always added. */
-  pmax = (numRows + 1) * (1 << (PINK_RANDOM_BITS - 1));
-  pink->pink_Scalar = 1.0f / pmax;
-  /* Initialize rows. */
-  for (i = 0; i < numRows; i++)
-    pink->pink_Rows[i] = 0;
-  pink->pink_RunningSum = 0;
-}
-
-/* Generate Pink noise values between -1 and +1 */
-static float GeneratePinkNoise(PinkNoise * pink)
-{
-  long newRandom;
-  long sum;
-  float output;
-
-  /* Increment and mask index. */
-  pink->pink_Index = (pink->pink_Index + 1) & pink->pink_IndexMask;
-
-  /* If index is zero, don't update any random values. */
-  if (pink->pink_Index != 0) {
-    /* Determine how many trailing zeros in PinkIndex. */
-    /* This algorithm will hang if n==0 so test first. */
-    int numZeros = 0;
-    int n = pink->pink_Index;
-
-    while ((n & 1) == 0) {
-      n = n >> 1;
-      numZeros++;
-    }
-
-    /* Replace the indexed ROWS random value.
-     * Subtract and add back to RunningSum instead of adding all the random
-     * values together. Only one changes each time.
-     */
-    pink->pink_RunningSum -= pink->pink_Rows[numZeros];
-    newRandom = RANQD1 >> PINK_RANDOM_SHIFT;
-    pink->pink_RunningSum += newRandom;
-    pink->pink_Rows[numZeros] = newRandom;
-  }
-
-  /* Add extra white noise value. */
-  newRandom = RANQD1 >> PINK_RANDOM_SHIFT;
-  sum = pink->pink_RunningSum + newRandom;
-
-  /* Scale to range of -1 to 0.9999. */
-  output = pink->pink_Scalar * sum;
-
-  return output;
-}
-
-/**************** end of pink noise stuff */
-
-
-
 typedef enum {Linear, Square, Exp, Exp_cycle} sweep_t;
 
 typedef struct {
@@ -172,8 +91,7 @@ typedef struct {
 
   /* internal stuff */
   double lp_last_out, hp_last_out, hp_last_in, ap_last_out, ap_last_in;
-  double cycle_start_time_s, c0, c1, c2, c3, c4;
-  PinkNoise pink_noise;
+  double cycle_start_time_s, c0, c1, c2, c3, c4, c5, c6;
 
   double * buffer;
   size_t buffer_len, pos;
@@ -205,7 +123,7 @@ static void create_channel(channel_t *  chan)
 
 
 
-static void set_default_parameters(channel_t *  chan, size_t c)
+static void set_default_parameters(channel_t *  chan)
 {
   switch (chan->type) {
     case synth_square:    /* p1 is pulse width */
@@ -238,11 +156,6 @@ static void set_default_parameters(channel_t *  chan, size_t c)
         }
       } else if (chan->p3 < 0)
         chan->p3 = 1;     /* simple falling slope to the end */
-      break;
-
-    case synth_pinknoise:
-      /* Initialize pink noise signals with different numbers of rows. */
-      InitializePinkNoise(&(chan->pink_noise), 10 + 2 * c);
       break;
 
     case synth_exp:
@@ -427,7 +340,7 @@ static int start(sox_effect_t * effp)
   for (i = 0; i < p->number_of_channels; ++i) {
     channel_t *  chan = &p->channels[i];
     *chan = p->getopts_channels[i % p->getopts_nchannels];
-    set_default_parameters(chan, i);
+    set_default_parameters(chan);
     if (chan->type == synth_pluck) {
       double min, max, frac, p2;
 
@@ -666,9 +579,21 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
           synth_out = .5 * (DRANQD1 + DRANQD1);
           break;
 
-        case synth_pinknoise:
-          synth_out = GeneratePinkNoise(&(chan->pink_noise));
+        case synth_pinknoise: { /* "Paul Kellet's refined method" */
+#define _ .125 / (65536. * 32768.)
+          double d = RANQD1;
+          chan->c0 = .99886 * chan->c0 + d * (.0555179*_); 
+          chan->c1 = .99332 * chan->c1 + d * (.0750759*_); 
+          chan->c2 = .96900 * chan->c2 + d * (.1538520*_); 
+          chan->c3 = .86650 * chan->c3 + d * (.3104856*_); 
+          chan->c4 = .55000 * chan->c4 + d * (.5329522*_); 
+          chan->c5 = -.7616 * chan->c5 - d * (.0168980*_); 
+          synth_out = chan->c0 + chan->c1 + chan->c2 + chan->c3
+                    + chan->c4 + chan->c5 + chan->c6 + d * (.5362*_); 
+          chan->c6 = d * (.115926*_); 
           break;
+#undef _
+        }
 
         case synth_brownnoise:
           do synth_out = chan->lp_last_out + DRANQD1 * (1. / 16);
