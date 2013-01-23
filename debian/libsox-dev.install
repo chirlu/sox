@@ -1,6 +1,0 @@
-debian/tmp/usr/include/* usr/include/
-debian/tmp/usr/lib/lib*.a usr/lib/
-debian/tmp/usr/lib/lib*.so usr/lib/
-debian/tmp/usr/lib/pkgconfig/sox.pc usr/lib/pkgconfig/
-debian/tmp/usr/lib/sox/lib*.a usr/lib/sox/
-debian/tmp/usr/share/man/man3 usr/share/man/

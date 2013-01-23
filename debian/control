@@ -3,8 +3,7 @@ Homepage: http://sox.sourceforge.net
 Section: sound
 Priority: optional
 Maintainer: Pascal Giard <pascal@debian.org>
-Build-Depends: cdbs,
-               debhelper (>= 7),
+Build-Depends: debhelper (>= 9),
                ladspa-sdk,
                libao-dev,
                libasound2-dev [linux-any],
@@ -26,7 +25,7 @@ Build-Depends: cdbs,
                libtwolame-dev,
                libvorbis-dev,
                libwavpack-dev
-Standards-Version: 3.9.1
+Standards-Version: 3.9.3
 Vcs-Git: git://sox.git.sourceforge.net/gitroot/sox/sox
 Vcs-Browser: http://sox.git.sourceforge.net/git/gitweb.cgi?p=sox/sox
 
@@ -56,7 +55,9 @@ Description: Swiss army knife of sound processing
 
 Package: libsox2
 Architecture: any
+Multi-Arch: same
 Section: libs
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Recommends: libsox-fmt-alsa [linux-any] | libsox-fmt-ao | libsox-fmt-oss | libsox-fmt-pulse,
             libsox-fmt-base
@@ -76,6 +77,7 @@ Description: SoX library of audio effects and processing
 
 Package: libsox-fmt-base
 Architecture: any
+Multi-Arch: same
 Section: libs
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Replaces: libsox-fmt-flac,
@@ -92,6 +94,7 @@ Description: Minimal set of SoX format libraries
 
 Package: libsox-fmt-alsa
 Architecture: linux-any
+Multi-Arch: same
 Section: libs
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: SoX alsa format I/O library
@@ -103,6 +106,7 @@ Description: SoX alsa format I/O library
 
 Package: libsox-fmt-ao
 Architecture: any
+Multi-Arch: same
 Section: libs
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: SoX Libao format I/O library
@@ -114,6 +118,7 @@ Description: SoX Libao format I/O library
 
 Package: libsox-fmt-mp3
 Architecture: any
+Multi-Arch: same
 Section: libs
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: SoX MP2 and MP3 format library
@@ -128,6 +133,7 @@ Description: SoX MP2 and MP3 format library
 
 Package: libsox-fmt-oss
 Architecture: any
+Multi-Arch: same
 Section: libs
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: SoX OSS format I/O library
@@ -140,6 +146,7 @@ Description: SoX OSS format I/O library
 
 Package: libsox-fmt-pulse
 Architecture: any
+Multi-Arch: same
 Section: libs
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: SoX PulseAudio format I/O library
@@ -151,6 +158,7 @@ Description: SoX PulseAudio format I/O library
 
 Package: libsox-fmt-all
 Architecture: any
+Multi-Arch: same
 Section: libs
 Depends: libsox-fmt-alsa (= ${binary:Version}) [linux-any],
          libsox-fmt-ao (= ${binary:Version}),
@@ -166,6 +174,7 @@ Description: All SoX format libraries
 
 Package: libsox-dev
 Architecture: any
+Multi-Arch: same
 Section: libdevel
 Depends: libsox-fmt-all (= ${binary:Version}),
          libsox2 (= ${binary:Version}),
