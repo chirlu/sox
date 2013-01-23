@@ -1,8 +1,42 @@
-sox (14.4.1-0+git20120311-1) UNRELEASED; urgency=low
+sox (14.4.1rc2-0+git20130122-1) UNRELEASED; urgency=low
 
-  * Git Version.
+  * Git Version (closes: #676143).
+  * [debian/control]:
+    - Bumped libsox2 to libsox3, interface changes.
+    - Added Vcs-Git and Vcs-Browser pointing to upstream VCS.
+    - Set Section to libs for all libsox* but libsox-dev.
+  * [debian/patches/01_default_audio_driver_fallback.patch]:
+    - Removed, fixed upstream.
+  * [debian/watch]:
+    - Updated watch file, thanks to Bart Martens <bartm@debian.org>.
 
- -- Pascal Giard <evilynux@gmail.com>  Mon, 12 Mar 2012 00:22:05 -0500
+ -- Pascal Giard <evilynux@gmail.com>  Tue, 22 Jan 2013 22:15:59 -0500
+
+sox (14.4.0-5) unstable; urgency=low
+
+  * [debian/patches/01_default_audio_driver_fallback.patch]:
+    - Updated to only use try_device() on pulseaudio. Thanks to
+      Ulrich Klauer <ulrich@chirlu.de> for the patch (closes: #676167).
+
+ -- Pascal Giard <pascal@debian.org>  Fri, 18 Jan 2013 22:29:15 -0500
+
+sox (14.4.0-4) experimental; urgency=low
+
+  * [debian/rules, debian/control, debian/libsox-fmt-ffmpeg.dirs,
+     debian/libsox-fmt-ffmpeg.install]:
+    - Explicitly disabled and removed ffmpeg support as it's broken.
+      It is being depricated in the next upstream version anyway
+      (closes: #693642).
+
+ -- Pascal Giard <pascal@debian.org>  Thu, 17 Jan 2013 21:18:45 -0500
+
+sox (14.4.0-3) unstable; urgency=low
+
+  * [debian/patches/01_default_audio_driver_fallback.patch]:
+    - Added default audio driver fallback. Thanks to Rob Sykes for the patch
+      (closes: #664301).
+
+ -- Pascal Giard <pascal@debian.org>  Sun, 06 May 2012 22:55:25 -0400
 
 sox (14.4.0-2) unstable; urgency=low
 
