@@ -1,16 +1,33 @@
 sox (14.4.2git-0+git20130122-1) UNRELEASED; urgency=low
 
   * Git Version (closes: #676143).
+  * [debian/source/format]:
+    - Finally switched to dpkg-source 3.0 (quilt) format!
+  * [debian/rules]:
+    - No longer using CDBS and depricated makefiles, fixes lintian warnings
+      "debian-rules-uses-deprecated-makefile". 
+    - Added multiarch support.
   * [debian/control]:
     - Bumped libsox2 to libsox3, interface changes.
     - Added Vcs-Git and Vcs-Browser pointing to upstream VCS.
+    - Added Pre-Depends on multiarch-support for libsox3, does not seem to
+      required for the other packages (contradiction in the documentation?),
+      fixes lintian warning "missing-pre-dependency-on-multiarch-support".
+    - Bumped Standards-Version to 3.9.3, no changes needed.
+    - Set Multi-Arch on the shared libraries where appropriate.
     - Set Section to libs for all libsox* but libsox-dev.
   * [debian/patches/01_default_audio_driver_fallback.patch]:
     - Removed, fixed upstream.
+  * [debian/compat]:
+    - Bumped to 9 to automatically use dpkg-buildflags, fixes lintian warnings
+      "hardening-no-relro" and some "hardening-no-fortify-functions" (there
+      are still 5 false positives on the latter though).
   * [debian/watch]:
     - Updated watch file, thanks to Bart Martens <bartm@debian.org>.
+  * [debian/README.source]:
+    - Updated to reflect the much simplified packaging and usage of quilt.
 
- -- Pascal Giard <evilynux@gmail.com>  Tue, 22 Jan 2013 22:15:59 -0500
+ -- Pascal Giard <evilynux@gmail.com>  Tue, 22 Jan 2013 22:56:30 -0500
 
 sox (14.4.0-5) unstable; urgency=low
 

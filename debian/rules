@@ -1,13 +1,30 @@
 #!/usr/bin/make -f
 # -*- mode: makefile; coding: utf-8 -*-
 
-DEB_TAR_SRCDIR := sox-14.4.2git
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
 
-include /usr/share/cdbs/1/rules/tarball.mk
-include /usr/share/cdbs/1/rules/debhelper.mk
-include /usr/share/cdbs/1/class/autotools.mk
-include /usr/share/cdbs/1/rules/simple-patchsys.mk
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 
-DEB_CONFIGURE_EXTRA_FLAGS := --with-distro="$(shell dpkg-vendor --query vendor)" --with-dyn-default --without-ffmpeg
+PREPROCESS_FILES := $(wildcard debian/*.in)
+
+$(PREPROCESS_FILES:.in=): %: %.in
+	sed 's,/@DEB_HOST_MULTIARCH@,$(DEB_HOST_MULTIARCH:%=/%),g' $< > $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- --with-distro="$(shell dpkg-vendor --query vendor)" --with-dyn-default --without-ffmpeg
+
 # Takes care of postinst-has-useless-call-to-ldconfig for libsox-fmt-*
-DEB_DH_MAKESHLIBS_ARGS := -Xfmt
+override_dh_makeshlibs:
+	dh_makeshlibs -Xfmt
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf $(PREPROCESS_FILES:.in=)
+
+override_dh_auto_install: $(PREPROCESS_FILES:.in=)
+	dh_auto_install
+
+%:
+	dh $@
+

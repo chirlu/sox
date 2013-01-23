@@ -1,8 +1,0 @@
-debian/tmp/usr/lib/sox/libsox_fmt_amr_nb.so* usr/lib/sox/
-debian/tmp/usr/lib/sox/libsox_fmt_amr_wb.so* usr/lib/sox/
-debian/tmp/usr/lib/sox/libsox_fmt_flac.so* usr/lib/sox/
-debian/tmp/usr/lib/sox/libsox_fmt_gsm.so* usr/lib/sox/
-debian/tmp/usr/lib/sox/libsox_fmt_lpc10.so* usr/lib/sox/
-debian/tmp/usr/lib/sox/libsox_fmt_sndfile.so* usr/lib/sox/
-debian/tmp/usr/lib/sox/libsox_fmt_vorbis.so* usr/lib/sox/
-debian/tmp/usr/lib/sox/libsox_fmt_wavpack.so* usr/lib/sox/
