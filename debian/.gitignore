@@ -11,8 +11,6 @@ libsox-fmt-ao
 libsox-fmt-ao.debhelper.log
 libsox-fmt-base
 libsox-fmt-base.debhelper.log
-libsox-fmt-ffmpeg
-libsox-fmt-ffmpeg.debhelper.log
 libsox-fmt-mp3
 libsox-fmt-mp3.debhelper.log
 libsox-fmt-oss
