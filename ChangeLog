@@ -46,6 +46,8 @@ Other bug fixes:
   o Fix input length calculation for combine methods other than
     concatenate. (Ulrich Klauer)
   o Fix to configure.ac to work with Autoconf 2.69. [3600293] (cbagwell)
+  o Use binary mode for pipes on all Windows compilers, rather than
+    MSVC only. [3602130] (Ulrich Klauer)
 
 
 sox-14.4.0	2012-03-04
