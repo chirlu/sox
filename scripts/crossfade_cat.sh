@@ -73,7 +73,7 @@ trim_length=`echo "$first_length - $fade_length" | bc`
 
 # Get crossfade section from first file and optionally do the fade out
 echo "Obtaining $fade_length seconds of fade out portion from $first_file..."
-$SOX "$first_file" -s -b 16 fadeout1.wav trim $trim_length
+$SOX "$first_file" -e signed-integer -b 16 fadeout1.wav trim $trim_length
 
 # When user specifies "auto" try to guess if a fadeout is needed.
 # "RMS amplitude" from the stat effect is effectively an average
@@ -95,7 +95,7 @@ $SOX fadeout1.wav fadeout2.wav $fade_first_opts
 
 # Get the crossfade section from the second file and optionally do the fade in
 echo "Obtaining $fade_length seconds of fade in portion from $second_file..."
-$SOX "$second_file" -s -b 16 fadein1.wav trim 0 $fade_length
+$SOX "$second_file" -e signed-integer -b 16 fadein1.wav trim 0 $fade_length
 
 # For auto, do similar thing as for fadeout.
 if [ "$fade_second" == "auto" ]; then
@@ -117,8 +117,8 @@ $SOX -m -v 1.0 fadeout2.wav -v 1.0 fadein2.wav crossfade.wav
 
 echo "Trimming off crossfade sections from original files..."
 
-$SOX "$first_file" -s -b 16 song1.wav trim 0 $trim_length
-$SOX "$second_file" -s -b 16 song2.wav trim $fade_length
+$SOX "$first_file" -e signed-integer -b 16 song1.wav trim 0 $trim_length
+$SOX "$second_file" -e signed-integer -b 16 song2.wav trim $fade_length
 $SOX song1.wav crossfade.wav song2.wav mix.wav
 
 echo -e "Removing temporary files...\n" 

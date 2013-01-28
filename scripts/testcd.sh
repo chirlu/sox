@@ -42,7 +42,7 @@ else
     PRE=$1;
 fi
 # 2 channel 16 bit signed linear int with CD sampling rate
-SOXOPT="-c 2 -r 44100 -s -b 16 -n"
+SOXOPT="-c 2 -r 44100 -e signed-integer -b 16 -n"
 
 # file with list of filenames
 LST="${PRE}.lst"

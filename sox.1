@@ -137,7 +137,8 @@ records half an hour of stereo audio, and
 records a new track in a multi-track recording.  Finally,
 .EX
 .ne 3
-   rec \-r 44100 \-b 16 \-s \-p silence 1 0.50 0.1% 1 10:00 0.1% | \\
+   rec \-r 44100 \-b 16 \-e signed-integer \-p \\
+	silence 1 0.50 0.1% 1 10:00 0.1% | \\
 	sox \-p song.ogg silence 1 0.50 0.1% 1 2.0 0.1% : \\
 	newfile : restart
 .EE

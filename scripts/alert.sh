@@ -13,7 +13,7 @@
 # If you run this script, you may want to hit Ctrl-C fairly soon after the
 # alert tone starts playing---it's not a pleasant sound!
 
-# The synth effect is used to generate each of the tones; "-U -r 8000"
+# The synth effect is used to generate each of the tones; "-e mu-law -r 8000"
 # selects u-law 8kHz sampling-rate audio (i.e. relatively low fidelity,
 # suitable for the marine radio transmission channel); each tone is
 # generated at a length of 0.25 seconds to give the required 4Hz
@@ -30,7 +30,7 @@ SOX=../src/sox
 rm -f 2tones.ul    # Make sure we append to a file that's initially empty
 
 for freq in 1300 2100; do
-  $SOX -U -r 8000 -n -t raw - synth 0.25 sine $freq gain -3 >> 2tones.ul
+  $SOX -e mu-law -r 8000 -n -t raw - synth 0.25 sine $freq gain -3 >> 2tones.ul
 done
 
 rm -f alert.ul     # Make sure we append to a file that's initially empty

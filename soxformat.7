@@ -148,7 +148,7 @@ these often support OSS (see below) as well.  Examples:
 	sox infile \-t alsa
 	sox infile \-t alsa default
 	sox infile \-t alsa plughw:0,0
-	sox \-2 \-t alsa hw:1 outfile
+	sox \-b 16 \-t alsa hw:1 outfile
 .EE
 See also
 .BR play (1),
@@ -501,7 +501,7 @@ sometimes together with alternative sound systems (such as ALSA).  Examples:
 .EX
 	sox infile \-t oss
 	sox infile \-t oss /dev/dsp
-	sox \-2 \-t oss /dev/dsp outfile
+	sox \-b 16 \-t oss /dev/dsp outfile
 .EE
 See also
 .BR play (1),
@@ -534,7 +534,7 @@ quick succession to quit.
 Psion Record. Used in Psion EPOC PDAs (Series 5, Revo and similar) for
 System alarms and recordings made by the built-in Record application.
 When writing, SoX defaults to A-law, which is recommended; if you must
-use ADPCM, then use the \fB\-i\fR switch. The sound quality is poor
+use ADPCM, then use the \fB\-e ima-adpcm\fR switch. The sound quality is poor
 because Psion Record seems to insist on frames of 800 samples or
 fewer, so that the ADPCM CODEC has to be reset at every 800 frames,
 which causes the sound to glitch every tenth of a second.
@@ -651,7 +651,7 @@ recording audio.  For example:
 .EE
 or
 .EX
-	sox infile \-t sunau \-U \-c 1 /dev/audio
+	sox infile \-t sunau \-e mu-law \-c 1 /dev/audio
 .EE
 for older sun equipment.
 .SP
@@ -774,7 +774,7 @@ detect and read WAV files with the non-standard header.)
 The most common use of this file-type is likely to be along the following
 lines:
 .EX
-	sox infile.any \-t wavpcm \-s outfile.wav
+	sox infile.any \-t wavpcm \-e signed-integer outfile.wav
 .EE
 .TP
 \&\fB.wv\fR (optional)

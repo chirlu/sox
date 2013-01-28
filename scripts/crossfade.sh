@@ -80,7 +80,7 @@ crossfade_split_length=`echo "scale=2; $fade_length / 2.0" | bc`
 
 # Get crossfade section from first file and optionally do the fade out
 echo "Obtaining $fade_length seconds of fade out portion from $first_file..."
-$SOX "$first_file" -s -b 16 fadeout1.wav trim $trim_length $fade_first_opts
+$SOX "$first_file" -e signed-integer -b 16 fadeout1.wav trim $trim_length $fade_first_opts
 
 # When user specifies "auto" try to guess if a fadeout is needed.
 # "RMS amplitude" from the stat effect is effectively an average
@@ -102,7 +102,7 @@ $SOX fadeout1.wav fadeout2.wav $fade_first_opts
 
 # Get the crossfade section from the second file and optionally do the fade in
 echo "Obtaining $fade_length seconds of fade in portion from $second_file..."
-$SOX "$second_file" -s -b 16 fadein1.wav trim 0 $fade_length
+$SOX "$second_file" -e signed-integer -b 16 fadein1.wav trim 0 $fade_length
 
 # For auto, do similar thing as for fadeout.
 if [ "$fade_second" == "auto" ]; then
@@ -128,8 +128,8 @@ $SOX crossfade.wav crossfade2.wav trim $crossfade_split_length
 
 echo "Trimming off crossfade sections from original files..."
 
-$SOX "$first_file" -s -b 16 song1.wav trim 0 $trim_length
-$SOX "$second_file" -s -b 16 song2.wav trim $fade_length
+$SOX "$first_file" -e signed-integer -b 16 song1.wav trim 0 $trim_length
+$SOX "$second_file" -e signed-integer -b 16 song2.wav trim $fade_length
 
 echo "Creating crossfade files"
 $SOX song1.wav crossfade1.wav "cfo_${first_file}.wav"
