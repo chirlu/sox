@@ -66,7 +66,7 @@ fi
 echo "crossfade and concatenate files"
 echo
 echo  "Finding length of $first_file..."
-first_length=`$SOX "$first_file" 2>&1 -n stat | grep Length | cut -d : -f 2 | cut -f 1`
+first_length=`$SOX --info -D "$first_file"`
 echo "Length is $first_length seconds"
 
 trim_length=`echo "$first_length - $fade_length" | bc`
@@ -78,8 +78,8 @@ $SOX "$first_file" -e signed-integer -b 16 fadeout1.wav trim $trim_length
 # When user specifies "auto" try to guess if a fadeout is needed.
 # "RMS amplitude" from the stat effect is effectively an average
 # value of samples for the whole fade length file.  If it seems
-# quite then assume a fadeout has already been done.  An RMS value
-# of 0.1 was just obtained from trail and error.
+# quiet then assume a fadeout has already been done.  An RMS value
+# of 0.1 was just obtained from trial and error.
 if [ "$fade_first" == "auto" ]; then
     RMS=`$SOX fadeout1.wav 2>&1 -n stat | grep RMS | grep amplitude | cut -d : -f 2 | cut -f 1`
     should_fade=`echo "$RMS > 0.1" | bc`

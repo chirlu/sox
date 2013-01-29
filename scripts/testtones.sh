@@ -162,8 +162,8 @@ for freq in %-60/%67 %67/%-60; do
   next_file ${freq}_sweep 127
   $input $output synth sine %30 \
              synth sine amod 8.333333333333333333 0 $phase1 \
-	     synth squa amod 0.08333333333333333333 0 $phase2 1 gain -9 \
-	     synth $length sine mix $freq gain -h 3 $gain
+             synth squa amod 0.08333333333333333333 0 $phase2 1 gain -9 \
+             synth $length sine mix $freq gain -h 3 $gain
   phase1=41.66666666666666667
   phase2=42.66666666666666667
 done
@@ -208,7 +208,7 @@ for freq in $freqs; do
   $input $output synth $length sin $freq sin %30 \
              synth squ amod 0 100 sine amod 8.333333333333333333 0 75 \
              synth exp amod 0.00462962962962962963 0 0 50 54 \
-      	     squ amod 0.08333333333333333333 0 1 1 \
+             squ amod 0.08333333333333333333 0 1 1 \
              remix 1v.99,2v.01 dither $vol_dither
 done
 
@@ -253,13 +253,13 @@ for f in pluck pluck_dist; do
   next_file $f 42
   note=-29
   :>tmp.s32
-  
+
   while [ $note -lt 17 ]; do
     $input -t s32 - synth .4 pluck %$note $options >> tmp.s32
     note=$(($note + 1))
   done
   $input -t s32 - synth 1.2 pluck %$note $options >> tmp.s32
-  
+
   while [ $note -gt -29 ]; do
     $input -t s32 - synth .4 pluck %$note $options >> tmp.s32
     note=$(($note - 1))

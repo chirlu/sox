@@ -35,15 +35,15 @@ e="delay 0 .02 .04 .06 .08 .1 remix - overdrive 33 gain -8 fade 0"
 s="$sox -q -n -p synth 0 0 1 60 90"
 l="$sox -q -n -p synth 0 0 0 50 20"
 
-b="$sox -np synth 0 0 0 30 20 pl"
+b="$sox -n -p synth 0 0 0 30 20 pl"
 c3="fade h 0 .75"
 c="fade h 0 .25"
 cs="fade h 0 .25 .05"
 m="fade h 0 .5"
 sb="fade h 0 1"
-r="$sox -np trim 0 .25"
-r2="$sox -np trim 0 .5"
-r3="$sox -np trim 0 .75"
+r="$sox -n -p trim 0 .25"
+r2="$sox -n -p trim 0 .5"
+r3="$sox -n -p trim 0 .75"
 
 $sox -m -v .8 \
 "|$sox \
