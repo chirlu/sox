@@ -33,15 +33,8 @@ for freq in 1300 2100; do
   $SOX -e mu-law -r 8000 -n -t raw - synth 0.25 sine $freq gain -3 >> 2tones.ul
 done
 
-rm -f alert.ul     # Make sure we append to a file that's initially empty
-iterations=60      # 60 copies of 2tones.ul (0.5 sec) gives 30 secs of audio
-
-while [ $iterations -ge 1 ]; do
-  cat 2tones.ul >> alert.ul
-  iterations=`expr $iterations - 1`
-done
-
-$SOX -c 1 -r 8000 alert.ul alert.au    # Add a file header
-rm 2tones.ul alert.ul                  # Tidy up intermediate files
+$SOX -c 1 -r 8000 2tones.ul alert.au repeat - trim 0 30
+                   # Repeat to fill 30 seconds and add a file header
+rm 2tones.ul       # Tidy up intermediate file
 
 $SOX alert.au -d
