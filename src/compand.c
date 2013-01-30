@@ -58,6 +58,10 @@ typedef struct {
   ptrdiff_t delay_buf_index; /* Index into delay_buf */
   ptrdiff_t delay_buf_cnt; /* No. of active entries in delay_buf */
   int delay_buf_full;       /* Shows buffer situation (important for drain) */
+
+  char *arg0;  /* copies of arguments, so that they may be modified */
+  char *arg1;
+  char *arg2;
 } priv_t;
 
 static int getopts(sox_effect_t * effp, int argc, char * * argv)
@@ -71,8 +75,12 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
   if (argc < 2 || argc > 5)
     return lsx_usage(effp);
 
+  l->arg0 = lsx_strdup(argv[0]);
+  l->arg1 = lsx_strdup(argv[1]);
+  l->arg2 = argc > 2 ? lsx_strdup(argv[2]) : NULL;
+
   /* Start by checking the attack and decay rates */
-  for (s = argv[0], commas = 0; *s; ++s) if (*s == ',') ++commas;
+  for (s = l->arg0, commas = 0; *s; ++s) if (*s == ',') ++commas;
   if ((commas % 2) == 0) {
     lsx_fail("there must be an even number of attack/decay parameters");
     return SOX_EOF;
@@ -83,7 +91,7 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
 
   /* Now tokenise the rates string and set up these arrays.  Keep
      them in seconds at the moment: we don't know the sample rate yet. */
-  for (i = 0, s = strtok(argv[0], ","); s != NULL; ++i) {
+  for (i = 0, s = strtok(l->arg0, ","); s != NULL; ++i) {
     for (j = 0; j < 2; ++j) {
       if (sscanf(s, "%lf %c", &l->channels[i].attack_times[j], &dummy) != 1) {
         lsx_fail("syntax error trying to read attack/decay time");
@@ -96,7 +104,7 @@ static int getopts(sox_effect_t * effp, int argc, char * * argv)
     }
   }
 
-  if (!lsx_compandt_parse(&l->transfer_fn, argv[1], argc>2 ? argv[2] : 0))
+  if (!lsx_compandt_parse(&l->transfer_fn, l->arg1, l->arg2))
     return SOX_EOF;
 
   /* Set the initial "volume" to be attibuted to the input channels.
@@ -269,6 +277,9 @@ static int lsx_kill(sox_effect_t * effp)
 
   lsx_compandt_kill(&l->transfer_fn);
   free(l->channels);
+  free(l->arg0);
+  free(l->arg1);
+  free(l->arg2);
   return SOX_SUCCESS;
 }
 

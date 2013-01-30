@@ -40,6 +40,7 @@ Effects:
   o Fix memory leaks in LADSPA effect. (Eric Wong)
   o Fix hang in several effects (rate, tempo, and those based on
     dft_filter) when processing long files. [3592482, 3594822] (MrMod)
+  o Prevent (m)compand from tampering with their arguments. (Ulrich Klauer)
 
 Other bug fixes:
 

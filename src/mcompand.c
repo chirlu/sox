@@ -72,6 +72,8 @@ typedef struct {
   size_t band_buf_len;
   size_t delay_buf_size;/* Size of delay_buf in samples */
   comp_band_t *bands;
+
+  char *arg; /* copy of current argument */
 } priv_t;
 
 /*
@@ -174,7 +176,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   /* how many bands? */
   if (! (argc&1)) {
     lsx_fail("mcompand accepts only an odd number of arguments:\argc"
-            "  mcompand quoted_compand_args [crossover_freq quoted_compand_args [...]");
+            "  mcompand quoted_compand_args [crossover_freq quoted_compand_args [...]]");
     return SOX_EOF;
   }
   c->nBands = (argc+1)>>1;
@@ -182,10 +184,13 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   c->bands = lsx_calloc(c->nBands, sizeof(comp_band_t));
 
   for (i=0;i<c->nBands;++i) {
-    if (parse_subarg(argv[i<<1],subargv,&subargc) != SOX_SUCCESS)
+    c->arg = lsx_strdup(argv[i<<1]);
+    if (parse_subarg(c->arg,subargv,&subargc) != SOX_SUCCESS)
       return SOX_EOF;
     if (sox_mcompand_getopts_1(&c->bands[i], subargc, &subargv[0]) != SOX_SUCCESS)
       return SOX_EOF;
+    free(c->arg);
+    c->arg = NULL;
     if (i == (c->nBands-1))
       c->bands[i].topfreq = 0;
     else {
@@ -493,6 +498,7 @@ static int lsx_kill(sox_effect_t * effp)
     free(l->attackRate);
     free(l->volume);
   }
+  free(c->arg);
   free(c->bands);
   c->bands = NULL;
 
