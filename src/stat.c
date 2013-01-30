@@ -296,16 +296,16 @@ static int sox_stat_stop(sox_effect_t * effp)
 
     if (x >= 3.0) {             /* use opposite encoding */
       if (effp->in_encoding->encoding == SOX_ENCODING_UNSIGNED)
-        fprintf(stderr,"\nTry: -t raw -s -1 \n");
+        fprintf(stderr,"\nTry: -t raw -e signed-integer -b 8 \n");
       else
-        fprintf(stderr,"\nTry: -t raw -u -1 \n");
+        fprintf(stderr,"\nTry: -t raw -e unsigned-integer -b 8 \n");
     } else if (x <= 1.0 / 3.0)
       ;                         /* correctly decoded */
     else if (x >= 0.5 && x <= 2.0) { /* use ULAW */
       if (effp->in_encoding->encoding == SOX_ENCODING_ULAW)
-        fprintf(stderr,"\nTry: -t raw -u -1 \n");
+        fprintf(stderr,"\nTry: -t raw -e unsigned-integer -b 8 \n");
       else
-        fprintf(stderr,"\nTry: -t raw -U -1 \n");
+        fprintf(stderr,"\nTry: -t raw -e mu-law -b 8 \n");
     } else
       fprintf(stderr, "\nCan't guess the type\n");
   }
