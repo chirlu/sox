@@ -70,23 +70,43 @@ static int parse(sox_effect_t * effp, char **argv, sox_rate_t rate)
 {
   priv_t *p = (priv_t *) effp->priv;
   size_t i;
-  uint64_t time = 0, delay;
   char const *next;
+  uint64_t last_seen = 0;
+  const uint64_t in_length = argv ? 0 :
+    (effp->in_signal.length != SOX_UNKNOWN_LEN ?
+     effp->in_signal.length / effp->in_signal.channels : SOX_UNKNOWN_LEN);
 
   for (i = 0; i < p->nbends; ++i) {
     if (argv)   /* 1st parse only */
       p->bends[i].str = lsx_strdup(argv[i]);
-    next = lsx_parsesamples(rate, p->bends[i].str, &delay, 't');
+
+    next = lsx_parseposition(rate, p->bends[i].str,
+             argv ? NULL : &p->bends[i].start, last_seen, in_length, '+');
+    last_seen = p->bends[i].start;
     if (next == NULL || *next != ',')
       break;
-    p->bends[i].start = time += delay;
+
     p->bends[i].cents = strtod(next + 1, (char **)&next);
     if (p->bends[i].cents == 0 || *next != ',')
       break;
-    next = lsx_parsesamples(rate, next + 1, &p->bends[i].duration, 't');
+
+    next = lsx_parseposition(rate, next + 1,
+             argv ? NULL : &p->bends[i].duration, last_seen, in_length, '+');
+    last_seen = p->bends[i].duration;
     if (next == NULL || *next != '\0')
       break;
-    time += p->bends[i].duration;
+
+    /* sanity checks */
+    if (!argv && p->bends[i].duration < p->bends[i].start) {
+      lsx_fail("Bend %" PRIuPTR " has negative width", i+1);
+      break;
+    }
+    if (!argv && i && p->bends[i].start < p->bends[i-1].start) {
+      lsx_fail("Bend %" PRIuPTR " overlaps with previous one", i+1);
+      break;
+    }
+
+    p->bends[i].duration -= p->bends[i].start;
   }
   if (i < p->nbends)
     return lsx_usage(effp);
@@ -298,7 +318,7 @@ static int lsx_kill(sox_effect_t * effp)
 sox_effect_handler_t const *lsx_bend_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "bend", "[-f frame-rate(25)] [-o over-sample(16)] {delay,cents,duration}",
+    "bend", "[-f frame-rate(25)] [-o over-sample(16)] {start,cents,end}",
     0, create, start, flow, 0, stop, lsx_kill, sizeof(priv_t)
   };
   return &handler;

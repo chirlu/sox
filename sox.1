@@ -1627,16 +1627,13 @@ These effects support the \fB\-\-plot\fR global option.
 .SP
 See also \fBequalizer\fR for a peaking equalisation effect.
 .TP
-\fBbend\fR [\fB\-f \fIframe-rate\fR(25)] [\fB\-o \fIover-sample\fR(16)] { \fIdelay\fB,\fIcents\fB,\fIduration\fR }
+\fBbend\fR [\fB\-f \fIframe-rate\fR(25)] [\fB\-o \fIover-sample\fR(16)] { \fIstart-position(+)\fB,\fIcents\fB,\fIend-position(+)\fR }
 Changes pitch by specified amounts at specified times.
-Each given triple: \fIdelay\fB,\fIcents\fB,\fIduration\fR specifies one bend.
-.I delay
-is the amount of time after the start of the audio stream, or the end of the previous bend, at which to start bending the pitch;
-.I cents
-is the number of cents (100 cents = 1 semitone) by which to bend the pitch, and
-.I duration
-the length of time over which the pitch will be bent.  For \fIdelay\fR and
-\fIduration\fR, any time specification may be used.
+Each given triple: \fIstart-position\fB,\fIcents\fB,\fIend-position\fR
+specifies one bend.
+\fIcents\fR is the number of cents (100 cents = 1 semitone) by which to
+bend the pitch. The other values specify the points in time at which to start
+and end bending the pitch, respectively.
 .SP
 The pitch-bending algorithm utilises the Discrete Fourier Transform (DFT)
 at a particular frame rate and over-sampling rate.
@@ -1654,6 +1651,8 @@ four different notes in total:
    play \-n synth 2.5 sin 667 gain 1 \\
 	bend .35,180,.25  .15,740,.53  0,\-520,.3
 .EE
+Here, the first bend runs from 0.35 to 0.6, and the second one from 0.75
+to 1.28 seconds.
 Note that the clipping that is produced in this example is deliberate;
 to remove it, use
 .B gain\ \-5
