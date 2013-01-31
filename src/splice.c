@@ -119,6 +119,10 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
   priv_t * p = (priv_t *)effp->priv;
   char const * next;
   size_t i, buffer_size;
+  uint64_t last_seen = 0;
+  const uint64_t in_length = argv ? 0 :
+    (effp->in_signal.length != SOX_UNKNOWN_LEN ?
+     effp->in_signal.length / effp->in_signal.channels : SOX_UNKNOWN_LEN);
 
   p->max_buffer_size = 0;
   for (i = 0; i < p->nsplices; ++i) {
@@ -128,8 +132,10 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
     p->splices[i].overlap = rate * 0.01 + .5;
     p->splices[i].search = p->fade_type == Cosine_4? 0 : p->splices[i].overlap;
 
-    next = lsx_parsesamples(rate, p->splices[i].str, &p->splices[i].start, 't');
+    next = lsx_parseposition(rate, p->splices[i].str,
+             argv ? NULL : &p->splices[i].start, last_seen, in_length, '=');
     if (next == NULL) break;
+    last_seen = p->splices[i].start;
 
     if (*next == ',') {
       next = lsx_parsesamples(rate, next + 1, &p->splices[i].overlap, 't');
@@ -145,11 +151,13 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
     p->splices[i].overlap = max(p->splices[i].overlap + 4, 16);
     p->splices[i].overlap &= ~7; /* Make divisible by 8 for loop optimisation */
 
-    if (i > 0 && p->splices[i].start <= p->splices[i-1].start) break;
-    if (p->splices[i].start < p->splices[i].overlap) break;
-    p->splices[i].start -= p->splices[i].overlap;
-    buffer_size = 2 * p->splices[i].overlap + p->splices[i].search;
-    p->max_buffer_size = max(p->max_buffer_size, buffer_size);
+    if (!argv) {
+      if (i > 0 && p->splices[i].start <= p->splices[i-1].start) break;
+      if (p->splices[i].start < p->splices[i].overlap) break;
+      p->splices[i].start -= p->splices[i].overlap;
+      buffer_size = 2 * p->splices[i].overlap + p->splices[i].search;
+      p->max_buffer_size = max(p->max_buffer_size, buffer_size);
+    }
   }
   if (i < p->nsplices)
     return lsx_usage(effp);
