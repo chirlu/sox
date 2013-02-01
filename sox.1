@@ -3445,17 +3445,15 @@ invocation.  For example:
 #!/bin/sh
 # Audio Copy and Paste Over
 # acpo infile copy-start copy-stop paste-over-start outfile
-# All times measured in samples.
-rate=\`soxi \-r "$1"\`
-e=\`expr $rate '*' 5 / 1000\`  # Using default excess
+# No chained time specifications allowed for the parameters
+# (i.e. such that contain +/\-).
+e=0.005                      # Using default excess
 l=$e                         # and leeway.
-sox "$1" piece.wav trim \`expr $2 \- $e \- $l\`s \\
-   \`expr $3 \- $2 + $e + $l + $e\`s
-sox "$1" part1.wav trim 0 \`expr $4 + $e\`s
-sox "$1" part2.wav trim \`expr $4 + $3 \- $2 \- $e \- $l\`s
-sox part1.wav piece.wav part2.wav "$5" splice \\
-   \`expr $4 + $e\`s \\
-   \`expr $4 + $e + $3 \- $2 + $e + $l + $e\`s
+sox "$1" piece.wav trim $2\-$e\-$l =$3+$e
+sox "$1" part1.wav trim 0 $4+$e
+sox "$1" part2.wav trim $4+$3\-$2\-$e\-$l
+sox part1.wav piece.wav part2.wav "$5" \\
+   splice $4+$e +$3\-$2+$e+$l+$e
 .EE
 In the above Bourne shell script,
 two splices are used to `copy and paste' audio.
