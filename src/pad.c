@@ -35,6 +35,10 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
   priv_t * p = (priv_t *)effp->priv;
   char const * next;
   unsigned i;
+  uint64_t last_seen = 0;
+  const uint64_t in_length = argv ? 0 :
+    (effp->in_signal.length != SOX_UNKNOWN_LEN ?
+     effp->in_signal.length / effp->in_signal.channels : SOX_UNKNOWN_LEN);
 
   for (i = 0; i < p->npads; ++i) {
     if (argv) /* 1st parse only */
@@ -45,8 +49,12 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
       p->pads[i].start = i? UINT64_MAX : 0;
     else {
       if (*next != '@') break;
-      next = lsx_parsesamples(rate, next+1, &p->pads[i].start, 't');
+      next = lsx_parseposition(rate, next+1, argv ? NULL : &p->pads[i].start,
+               last_seen, in_length, '=');
       if (next == NULL || *next != '\0') break;
+      last_seen = p->pads[i].start;
+      if (p->pads[i].start == SOX_UNKNOWN_LEN)
+        p->pads[i].start = UINT64_MAX; /* currently the same value, but ... */
     }
     if (!argv) {
       /* Do this check only during the second pass when the actual

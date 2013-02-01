@@ -35,6 +35,8 @@ Effects:
   o Support multi-channel LADSPA plugins. (Eric Wong)
   o Support infinite repetition with repeat. (Ulrich Klauer)
   o Improved pink noise frequency response in synth. (robs)
+  o Extended syntax for specifying audio positions to several
+    effects. (Ulrich Klauer)
 
 Other new features:
 

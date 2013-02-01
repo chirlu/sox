@@ -90,7 +90,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int argc, char **argv)
             fade->out_stop_str = lsx_strdup(argv[t_argno]);
 
             /* Do a dummy parse to see if it will fail */
-            n = lsx_parsesamples(0., fade->out_stop_str, &samples, 't');
+            n = lsx_parseposition(0., fade->out_stop_str, NULL, (uint64_t)0, (uint64_t)0, '=');
             if (!n || *n)
               return lsx_usage(effp);
             fade->out_stop = samples;
@@ -119,6 +119,8 @@ static int sox_fade_start(sox_effect_t * effp)
     priv_t * fade = (priv_t *) effp->priv;
     sox_bool truncate = sox_false;
     uint64_t samples;
+    uint64_t in_length = effp->in_signal.length != SOX_UNKNOWN_LEN ?
+      effp->in_signal.length / effp->in_signal.channels : SOX_UNKNOWN_LEN;
 
     /* converting time values to samples */
     fade->in_start = 0;
@@ -132,9 +134,12 @@ static int sox_fade_start(sox_effect_t * effp)
     if (fade->out_stop_str)
     {
         fade->do_out = 1;
-        if (lsx_parsesamples(effp->in_signal.rate, fade->out_stop_str,
-                            &samples, 't') == NULL)
-          return lsx_usage(effp);
+        if (!lsx_parseposition(effp->in_signal.rate, fade->out_stop_str,
+                            &samples, (uint64_t)0, in_length, '=') ||
+            samples == SOX_UNKNOWN_LEN) {
+          lsx_fail("audio length is unknown");
+          return SOX_EOF;
+        }
         fade->out_stop = samples;
 
         if (!(truncate = !!fade->out_stop)) {
@@ -376,7 +381,7 @@ static double fade_gain(uint64_t index, uint64_t range, int type)
 
 static sox_effect_handler_t sox_fade_effect = {
   "fade",
-  "[ type ] fade-in-length [ stop-time [ fade-out-length ] ]\n"
+  "[ type ] fade-in-length [ stop-position [ fade-out-length ] ]\n"
   "       Time is in hh:mm:ss.frac format.\n"
   "       Fade type one of q, h, t, l or p.",
   SOX_EFF_MCHAN | SOX_EFF_LENGTH,

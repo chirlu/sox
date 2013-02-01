@@ -127,7 +127,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     case 't': p->title            = optstate.arg; break;
     case 'c': p->comment          = optstate.arg; break;
     case 'o': p->out_name         = optstate.arg; break;
-    case 'S': next = lsx_parsesamples(1e5, optstate.arg, &dummy, 't');
+    case 'S': next = lsx_parseposition(0., optstate.arg, NULL, (uint64_t)0, (uint64_t)0, '=');
       if (next && !*next) {p->start_time_str = lsx_strdup(optstate.arg); break;}
       return lsx_usage(effp);
     case 'd': next = lsx_parsesamples(1e5, optstate.arg, &dummy, 't');
@@ -216,7 +216,12 @@ static int start(sox_effect_t * effp)
     duration = d / effp->in_signal.rate;
   }
   if (p->start_time_str) {
-    lsx_parsesamples(effp->in_signal.rate, p->start_time_str, &d, 't');
+    uint64_t in_length = effp->in_signal.length != SOX_UNKNOWN_LEN ?
+      effp->in_signal.length / effp->in_signal.channels : SOX_UNKNOWN_LEN;
+    if (!lsx_parseposition(effp->in_signal.rate, p->start_time_str, &d, (uint64_t)0, in_length, '=') || d == SOX_UNKNOWN_LEN) {
+      lsx_fail("-S option: audio length is unknown");
+      return SOX_EOF;
+    }
     start_time = d / effp->in_signal.rate;
     p->skip = d;
   }
@@ -675,7 +680,7 @@ sox_effect_handler_t const * lsx_spectrogram_effect_fn(void)
     "\t-c text\tComment text",
     "\t-o text\tOutput file name; default `spectrogram.png'",
     "\t-d time\tAudio duration to fit to X-axis; e.g. 1:00, 48",
-    "\t-S time\tStart the spectrogram at the given time through the input",
+    "\t-S position\tStart the spectrogram at the given input position",
   };
   static char * usage;
   handler.usage = lsx_usage_lines(&usage, lines, array_length(lines));

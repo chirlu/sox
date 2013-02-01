@@ -43,7 +43,6 @@ static int lsx_kill(sox_effect_t * effp)
 static int create(sox_effect_t * effp, int argc, char * * argv)
 {
   priv_t * p = (priv_t *)effp->priv;
-  uint64_t dummy;
   unsigned i;
 
   --argc, ++argv;
@@ -51,7 +50,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   p->args = lsx_calloc(p->argc, sizeof(*p->args));
   p->max_delay = lsx_malloc(sizeof(*p->max_delay));
   for (i = 0; i < p->argc; ++i) {
-    char const * next = lsx_parsesamples(1e5, p->args[i].str = lsx_strdup(argv[i]), &dummy, 't');
+    char const * next = lsx_parseposition(0., p->args[i].str = lsx_strdup(argv[i]), NULL, (uint64_t)0, (uint64_t)0, '=');
     if (!next || *next) {
       lsx_kill(effp);
       return lsx_usage(effp);
@@ -70,7 +69,9 @@ static int stop(sox_effect_t * effp)
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
-  uint64_t max_delay = 0, delay;
+  uint64_t max_delay = 0, last_seen = 0, delay;
+  uint64_t in_length = effp->in_signal.length != SOX_UNKNOWN_LEN ?
+    effp->in_signal.length / effp->in_signal.channels : SOX_UNKNOWN_LEN;
 
   if (effp->flow == 0) {
     unsigned i;
@@ -79,8 +80,11 @@ static int start(sox_effect_t * effp)
       return SOX_EOF;
     }
     for (i = 0; i < p->argc; ++i) {
-      lsx_parsesamples(effp->in_signal.rate, p->args[i].str, &delay, 't');
-      p->args[i].delay = delay;
+      if (!lsx_parseposition(effp->in_signal.rate, p->args[i].str, &delay, last_seen, in_length, '=') || delay == SOX_UNKNOWN_LEN) {
+        lsx_fail("Position relative to end of audio specified, but audio length is unknown");
+        return SOX_EOF;
+      }
+      p->args[i].delay = last_seen = delay;
       if (delay > max_delay) {
         max_delay = delay;
       }
@@ -152,7 +156,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, size_t * osamp)
 sox_effect_handler_t const * lsx_delay_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "delay", "{length}", SOX_EFF_LENGTH | SOX_EFF_MODIFY,
+    "delay", "{position}", SOX_EFF_LENGTH | SOX_EFF_MODIFY,
     create, start, flow, drain, stop, lsx_kill, sizeof(priv_t)
   };
   return &handler;

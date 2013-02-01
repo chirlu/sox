@@ -1460,6 +1460,23 @@ A frequency in Hz, or, if appended with `k', kHz.
 A power gain in dB.
 Zero gives no gain; less than zero gives an attenuation.
 .TP
+\fIposition\fR
+A position within the audio stream; the syntax is
+[\fB=\fR\^|\^\fB+\fR\^|\^\fB\-\fR]\fItimespec\fR, where \fItimespec\fR is a
+time specification (see below).  The optional first character indicates
+whether the \fItimespec\fR is to be interpreted relative to the start
+(\fB=\fR) or end (\fB\-\fR) of audio, or to the previous \fIposition\fR if
+the effect accepts multiple position arguments (\fB+\fR).  The audio length
+must be known for end-relative locations to work; some effects do accept
+\fB\-0\fR for end-of-audio, though, even if the length is unknown.  Which of
+\fB=\fR, \fB+\fR, \fB\-\fR is the default depends on the effect and is shown
+in its syntax as, e.g., \fIposition(+)\fR.
+.SP
+Examples: \fB=2:00\fR (two minutes into the audio stream), \fB\-100s\fR (one
+hundred samples before the end of audio), \fB+0:12+10s\fR (twelve seconds
+and ten samples after the previous position), \fB\-0.5+1s\fR (one sample less
+than half a second before the end of audio).
+.TP
 \fIwidth\fR[\fBh\fR\^|\^\fBk\fR\^|\^\fBo\fR\^|\^\fBq\fR]
 Used to specify the band-width of a filter.  A number of different
 methods to specify the width are available (though not all for every effect).
@@ -1499,8 +1516,8 @@ counts, \fIe notation\fR is supported: `1.7e6s' is the same as `1700000s'.
 .PP
 Time specifications can also be chained with \fB+\fR or \fB\-\fR into a new
 time specification where the right part is added to or subtracted from the
-left, respectively: `3:00\-200s' means two hundred samples before the three
-minute mark.
+left, respectively: `3:00\-200s' means two hundred samples less than three
+minutes.
 .SP
 To see if SoX has support for an optional effect, enter
 .B sox \-h
@@ -1611,16 +1628,13 @@ These effects support the \fB\-\-plot\fR global option.
 .SP
 See also \fBequalizer\fR for a peaking equalisation effect.
 .TP
-\fBbend\fR [\fB\-f \fIframe-rate\fR(25)] [\fB\-o \fIover-sample\fR(16)] { \fIdelay\fB,\fIcents\fB,\fIduration\fR }
+\fBbend\fR [\fB\-f \fIframe-rate\fR(25)] [\fB\-o \fIover-sample\fR(16)] { \fIstart-position(+)\fB,\fIcents\fB,\fIend-position(+)\fR }
 Changes pitch by specified amounts at specified times.
-Each given triple: \fIdelay\fB,\fIcents\fB,\fIduration\fR specifies one bend.
-.I delay
-is the amount of time after the start of the audio stream, or the end of the previous bend, at which to start bending the pitch;
-.I cents
-is the number of cents (100 cents = 1 semitone) by which to bend the pitch, and
-.I duration
-the length of time over which the pitch will be bent.  For \fIdelay\fR and
-\fIduration\fR, any time specification may be used.
+Each given triple: \fIstart-position\fB,\fIcents\fB,\fIend-position\fR
+specifies one bend.
+\fIcents\fR is the number of cents (100 cents = 1 semitone) by which to
+bend the pitch. The other values specify the points in time at which to start
+and end bending the pitch, respectively.
 .SP
 The pitch-bending algorithm utilises the Discrete Fourier Transform (DFT)
 at a particular frame rate and over-sampling rate.
@@ -1638,6 +1652,8 @@ four different notes in total:
    play \-n synth 2.5 sin 667 gain 1 \\
 	bend .35,180,.25  .15,740,.53  0,\-520,.3
 .EE
+Here, the first bend runs from 0.35 to 0.6, and the second one from 0.75
+to 1.28 seconds.
 Note that the clipping that is produced in this example is deliberate;
 to remove it, use
 .B gain\ \-5
@@ -1921,14 +1937,15 @@ This effect supports the \fB\-\-plot\fR global option.
 .SP
 See also the \fBbass\fR and \fBtreble\fR shelving equalisation effects.
 .TP
-\fBdelay\fR {\fItime\fR}
-Delay one or more audio channels by the given \fItime\fR (a time
-specification).
+\fBdelay\fR {\fIposition(=)\fR}
+Delay one or more audio channels such that they start at the given
+\fIposition\fR.
 For example,
-.B delay 1\*d5 0 3000s
-delays the first channel by 1\*d5 seconds, the third channel by 3000
-samples, and leaves the second channel (and any other channels that may be
-present) un-delayed.
+.B delay 1\*d5 +1 3000s
+delays the first channel by 1\*d5 seconds, the second channel by 2\*d5
+seconds (one second more than the previous channel), the third channel
+by 3000 samples, and leaves any other channels that may be
+present un-delayed.
 The following (one long) command plays a chime sound:
 .EX
 .ne 3
@@ -2103,7 +2120,7 @@ This effect supports the \fB\-\-plot\fR global option.
 .SP
 See also \fBbass\fR and \fBtreble\fR for shelving equalisation effects.
 .TP
-\fBfade\fR [\fItype\fR] \fIfade-in-length\fR [\fIstop-time\fR [\fIfade-out-length\fR]]
+\fBfade\fR [\fItype\fR] \fIfade-in-length\fR [\fIstop-position(=)\fR [\fIfade-out-length\fR]]
 Apply a fade effect to the beginning, end, or both of the audio.
 .SP
 An optional \fItype\fR can be specified to select the shape of the fade
@@ -2117,20 +2134,24 @@ to full volume over the time given as \fIfade-in-length\fR.  Specify 0 if
 no fade-in is wanted.
 .SP
 For fade-outs, the audio will be truncated at
-.I stop-time
+.I stop-position
 and the signal level will be ramped from full volume down to 0 over an
-interval of \fIfade-out-length\fR before the \fIstop-time\fR.  If
+interval of \fIfade-out-length\fR before the \fIstop-position\fR.  If
 .I fade-out-length
 is not specified, it defaults to the same value as
 \fIfade-in-length\fR.
 No fade-out is performed if
-.I stop-time
+.I stop-position
 is not specified.
 If the audio length can be determined from the input file header and any
-previous effects, then \fB0\fR may be specified for
-.I stop-time
+previous effects, then \fB\-0\fR (or, for historical reasons, \fB0\fR) may
+be specified for
+.I stop-position
 to indicate the usual case of a fade-out that ends at the end of the input
-audio stream.  Any time specification may be used for these parameters.
+audio stream.
+.SP
+Any time specification may be used for \fIfade-in-length\fR and
+\fIfade-out-length\fR.
 .SP
 See also the
 .B splice
@@ -2507,7 +2528,7 @@ Non linear distortion.
 The \fIcolour\fR parameter controls the amount of even harmonic content
 in the over-driven output.
 .TP
-\fBpad\fR { \fIlength\fR[\fB@\fIposition\fR] }
+\fBpad\fR { \fIlength\fR[\fB@\fIposition(=)\fR] }
 Pad the audio with silence, at the beginning, the end, or any
 specified points through the audio.
 .I length
@@ -3298,7 +3319,7 @@ effect is applied to the entire audio signal.
 See also
 .B \-X
 for an alternative way of setting the X-axis resolution.
-.IP \fB\-S\ \fItime\fR
+.IP \fB\-S\ \fIposition(=)\fR
 Start the spectrogram at the given point in the audio stream.  For
 example
 .EX
@@ -3306,7 +3327,6 @@ example
 .EE
 creates a spectrogram showing all but the first minute of the audio
 (the output file, however, receives the entire audio stream).
-Any time specification may be used.
 .RE
 .TP
 \ 
@@ -3335,7 +3355,7 @@ and
 .B tempo
 effects.
 .TP
-\fBsplice \fR [\fB\-h\fR\^|\^\fB\-t\fR\^|\^\fB\-q\fR] { \fIposition\fR[\fB,\fIexcess\fR[\fB,\fIleeway\fR]] }
+\fBsplice \fR [\fB\-h\fR\^|\^\fB\-t\fR\^|\^\fB\-q\fR] { \fIposition(=)\fR[\fB,\fIexcess\fR[\fB,\fIleeway\fR]] }
 Splice together audio sections.  This effect provides two things over
 simple audio concatenation: a (usually short) cross-fade is applied at
 the join, and a wave similarity comparison is made to help determine the
@@ -3371,12 +3391,12 @@ same
 .IR excess
 (before the ideal joining point), plus an additional
 .I leeway
-(default 0\*d005 seconds).  SoX should then be invoked with the two
+(default 0\*d005 seconds).  Any time specification may be used for these
+parameters.  SoX should then be invoked with the two
 audio sections as input files and the
 .B splice
 effect given with the position at which to perform the splice\*mthis is
 length of the first audio section (including the excess).
-Any time specification may be used for these parameters.
 .SP
 The following diagram uses the tape analogy to illustrate the splice
 operation.  The effect simulates the diagonal cuts and joins the two pieces:
@@ -3435,17 +3455,15 @@ invocation.  For example:
 #!/bin/sh
 # Audio Copy and Paste Over
 # acpo infile copy-start copy-stop paste-over-start outfile
-# All times measured in samples.
-rate=\`soxi \-r "$1"\`
-e=\`expr $rate '*' 5 / 1000\`  # Using default excess
+# No chained time specifications allowed for the parameters
+# (i.e. such that contain +/\-).
+e=0.005                      # Using default excess
 l=$e                         # and leeway.
-sox "$1" piece.wav trim \`expr $2 \- $e \- $l\`s \\
-   \`expr $3 \- $2 + $e + $l + $e\`s
-sox "$1" part1.wav trim 0 \`expr $4 + $e\`s
-sox "$1" part2.wav trim \`expr $4 + $3 \- $2 \- $e \- $l\`s
-sox part1.wav piece.wav part2.wav "$5" splice \\
-   \`expr $4 + $e\`s \\
-   \`expr $4 + $e + $3 \- $2 + $e + $l + $e\`s
+sox "$1" piece.wav trim $2\-$e\-$l =$3+$e
+sox "$1" part1.wav trim 0 $4+$e
+sox "$1" part2.wav trim $4+$3\-$2\-$e\-$l
+sox part1.wav piece.wav part2.wav "$5" \\
+   splice $4+$e +$3\-$2+$e+$l+$e
 .EE
 In the above Bourne shell script,
 two splices are used to `copy and paste' audio.
@@ -3961,20 +3979,12 @@ and the depth as a percentage by
 .I depth
 (default 40).
 .TP
-\fBtrim\fR {[\fB=\fR\^|\^\fB\-\fR]\fIposition\fR}
+\fBtrim\fR {\fIposition(+)\fR}
 Cuts portions out of the audio.  Any number of \fIposition\fRs may be
 given; audio is not sent to the output until the first \fIposition\fR
 is reached.  The effect then alternates between copying and discarding
-audio at each \fIposition\fR.
-.SP
-If a \fIposition\fR is preceded by an equals or minus sign, it is
-interpreted relative to the beginning or the end of the audio,
-respectively.  (The audio length must be known for end-relative
-locations to work.)  Otherwise, it is considered an offset from the
-last \fIposition\fR, or from the start of audio for the first
-parameter.  Using a value of 0 for the first \fIposition\fR
+audio at each \fIposition\fR.  Using a value of 0 for the first \fIposition\fR
 parameter allows copying from the beginning of the audio.
-Any time specification may be used for \fIposition\fR.
 .SP
 For example,
 .EX
@@ -3984,7 +3994,11 @@ will copy the first ten seconds, while
 .EX
    play infile trim 12:34 =15:00 -2:00
 .EE
-will play from 12 minutes 34 seconds into the audio up to 15 minutes into
+and
+.EX
+   play infile trim 12:34 2:26 -2:00
+.EE
+will both play from 12 minutes 34 seconds into the audio up to 15 minutes into
 the audio (i.e. 2 minutes and 26 seconds long), then resume playing two
 minutes before the end of audio.
 .TP
