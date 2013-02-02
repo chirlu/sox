@@ -121,7 +121,6 @@
 #define open _open
 #define pclose _pclose
 #define popen _popen
-#define POPEN_MODE "rb"
 #define setmode _setmode
 #define snprintf _snprintf
 
@@ -161,6 +160,7 @@
   #define LAST_SLASH(path) max(strrchr(path, '/'), strrchr(path, '\\'))
   #define IS_ABSOLUTE(path) ((path)[0] == '/' || (path)[0] == '\\' || (path)[1] == ':')
   #define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
+  #define POPEN_MODE "rb"
 #else
   #define LAST_SLASH(path) strrchr(path, '/')
   #define IS_ABSOLUTE(path) ((path)[0] == '/')

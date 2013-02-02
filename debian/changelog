@@ -1,5 +1,12 @@
 sox (14.4.2git-0+git20130122-1) UNRELEASED; urgency=low
 
+  * [debian/control]:
+    - Bumped libsox2 to libsox3, interface changes.
+
+ -- Pascal Giard <evilynux@gmail.com>  Tue, 22 Jan 2013 22:56:30 -0500
+
+sox (14.4.1rc2-0+git20130122-1) UNRELEASED; urgency=low
+
   * Git Version (closes: #676143).
   * [debian/source/format]:
     - Finally switched to dpkg-source 3.0 (quilt) format!
@@ -8,7 +15,6 @@ sox (14.4.2git-0+git20130122-1) UNRELEASED; urgency=low
       "debian-rules-uses-deprecated-makefile". 
     - Added multiarch support.
   * [debian/control]:
-    - Bumped libsox2 to libsox3, interface changes.
     - Added Vcs-Git and Vcs-Browser pointing to upstream VCS.
     - Added Pre-Depends on multiarch-support for libsox3, does not seem to
       required for the other packages (contradiction in the documentation?),
