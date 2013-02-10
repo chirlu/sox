@@ -441,6 +441,11 @@ fi
 #  support for OGG and if OGG libraries are found on this
 #  system then its highly likely to be compiled into FLAC
 #  and will require these at link time.
+case $target in
+  *mingw*)
+  FLAC_LIBS="-lwsock32"
+  ;;
+esac
 AC_OPTIONAL_FORMAT(flac, FLAC, [AC_CHECK_HEADER(FLAC/all.h, [AC_CHECK_DECL(FLAC_API_VERSION_CURRENT, [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new, FLAC_LIBS="-lFLAC $FLAC_LIBS $OGG_VORBIS_LIBS",using_flac=no, $FLAC_LIBS $OGG_VORBIS_LIBS)], using_flac=no, [#include <FLAC/all.h>])], using_flac=no)], using_flac=no)
 
 
