@@ -12,7 +12,7 @@ sox (14.4.1-1) unstable; urgency=low
     - Added multiarch support.
   * [debian/control]:
     - Added Vcs-Git and Vcs-Browser pointing to upstream VCS.
-    - Added Pre-Depends on multiarch-support for libsox3, does not seem to
+    - Added Pre-Depends on multiarch-support for libsox2, does not seem to be
       required for the other packages (contradiction in the documentation?),
       fixes lintian warning "missing-pre-dependency-on-multiarch-support".
     - Bumped Standards-Version to 3.9.3, no changes needed.
