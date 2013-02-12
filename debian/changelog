@@ -2,6 +2,8 @@ sox (14.4.1-1) unstable; urgency=low
 
   * New upstream release.
     - Fixed misleading error message (closes: #676143).
+    - Fixed early termination on Ogg Vorbis files with a non-power of two
+      number of channels (closes: #672567).
   * [debian/source/format]:
     - Finally switched to dpkg-source 3.0 (quilt) format!
   * [debian/rules]:
