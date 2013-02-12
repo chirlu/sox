@@ -33,7 +33,7 @@
 .SH NAME
 SoXI \- Sound eXchange Information, display sound file metadata
 .SH SYNOPSIS
-\fBsoxi\fR [\fB\-V\fR[\fIlevel\fR]] [\fB\-T\fR] [\fB\-t\fR\^|\^\fB\-r\fR\^|\^\fB\-c\fR\^|\^\fB\-s\fR\^|\^\fB\-d\fR\^|\^\fB\-D\fR\^|\^\fB\-b\fR\^|\^\fB\-B\fR\^|\^\fB\-e\fR\^|\^\fB\-a\fR] \fIinfile1\fR ...
+\fBsoxi\fR [\fB\-V\fR[\fIlevel\fR]] [\fB\-T\fR] [\fB\-t\fR\^|\^\fB\-r\fR\^|\^\fB\-c\fR\^|\^\fB\-s\fR\^|\^\fB\-d\fR\^|\^\fB\-D\fR\^|\^\fB\-b\fR\^|\^\fB\-B\fR\^|\^\fB\-p\fR\^|\^\fB\-e\fR\^|\^\fB\-a\fR] \fIinfile1\fR ...
 .SH DESCRIPTION
 Displays information from the header of a given audio file or files.
 Supported audio file types are listed and described in
@@ -83,10 +83,13 @@ Equivalent to number of samples divided by the sample-rate.
 Show duration in seconds (0 if unavailable).
 .TP
 \fB\-b\fR
-Show number of bits per sample.
+Show number of bits per sample (0 if not applicable).
 .TP
 \fB\-B\fR
 Show the bitrate averaged over the whole file (0 if unavailable).
+.TP
+\fB\-p\fR
+Show estimated sample precision in bits.
 .TP
 \fB\-e\fR
 Show the name of the audio encoding.
