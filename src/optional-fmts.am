@@ -75,21 +75,6 @@ else
 endif
 endif
 
-if HAVE_FFMPEG
-if STATIC_FFMPEG
-  libsox_la_SOURCES += ffmpeg.c ffmpeg.h
-if STATIC_LIBSOX_ONLY
-  sox_LDADD += @FFMPEG_LIBS@
-else
-  libsox_la_LIBADD += @FFMPEG_LIBS@
-endif
-else
-  libsox_fmt_ffmpeg_la_SOURCES = ffmpeg.c ffmpeg.h
-  libsox_fmt_ffmpeg_la_LIBADD = libsox.la @FFMPEG_LIBS@
-  pkglib_LTLIBRARIES += libsox_fmt_ffmpeg.la
-endif
-endif
-
 if HAVE_FLAC
 if STATIC_FLAC
   libsox_la_SOURCES += flac.c

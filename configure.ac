@@ -541,8 +541,6 @@ if test "x$using_sndfile" = "xyes"; then
 fi
 AC_OPTIONAL_FORMAT(sndfile, SNDFILE, [using_sndfile=$tmp_using_sndfile])
 
-AC_OPTIONAL_FORMAT(ffmpeg, FFMPEG, [SOX_PATH_FFMPEG(, using_ffmpeg=no)])
-
 
 
 AC_OPTIONAL_FORMAT(oss, OSS, [AC_CHECK_HEADERS(sys/soundcard.h,,
@@ -658,7 +656,6 @@ echo "amrwb......................$using_amrwb"
 if test "x$using_amrwb" = "xyes"; then
 echo " dlopen amrwb..............$enable_dl_amrwb"
 fi
-echo "ffmpeg.....................$using_ffmpeg"
 echo "flac.......................$using_flac"
 echo "gsm........................$using_gsm $gsm_option"
 echo "lpc10......................$using_lpc10 $lpc10_option"

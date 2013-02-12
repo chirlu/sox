@@ -9,7 +9,6 @@
 #cmakedefine HAVE_BYTESWAP_H          1
 #cmakedefine HAVE_COREAUDIO           1
 #cmakedefine HAVE_FENV_H              1
-#cmakedefine HAVE_FFMPEG              1
 #cmakedefine HAVE_FLAC                1
 #cmakedefine HAVE_FMEMOPEN            1
 #cmakedefine HAVE_FSEEKO              1

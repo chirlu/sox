@@ -159,7 +159,6 @@ if (NOT HAVE_SYS_SOUNDCARD_H)
 endif (NOT HAVE_SYS_SOUNDCARD_H)
 optional(HAVE_WAVEAUDIO mmsystem.h winmm waveInGetDevCapsA waveaudio)
 optional4(HAVE_OGG_VORBIS vorbis/codec.h ogg ogg_stream_flush vorbis vorbis_analysis_headerout vorbisfile ov_clear vorbisenc vorbis_encode_init_vbr vorbis)
-optional3(HAVE_FFMPEG ffmpeg/avformat.h avformat av_open_input_file avutil av_rescale_q avcodec avcodec_decode_audio2 ffmpeg)
 optional(HAVE_WAVPACK wavpack/wavpack.h wavpack WavpackGetSampleRate wavpack)
 
 if (HAVE_LAME_LAME_H OR HAVE_MAD_H)

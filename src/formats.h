@@ -80,9 +80,6 @@
 #if defined HAVE_COREAUDIO && (defined STATIC_COREAUDIO || !defined HAVE_LIBLTDL)
   FORMAT(coreaudio)
 #endif
-#if defined HAVE_FFMPEG && (defined STATIC_FFMPEG || !defined HAVE_LIBLTDL)
-  FORMAT(ffmpeg)
-#endif
 #if defined HAVE_FLAC && (defined STATIC_FLAC || !defined HAVE_LIBLTDL)
   FORMAT(flac)
 #endif

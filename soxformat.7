@@ -44,9 +44,7 @@ are marked `(optional)'.
 .SP
 Format types that can be handled by an
 external library via an optional pseudo file type (currently
-.B sndfile
-or
-.BR ffmpeg )
+.BR sndfile )
 are marked e.g. `(also with \fB\-t sndfile\fR)'.  This might be
 useful if you have a file that doesn't work with SoX's default format
 readers and writers, and there's an external reader or writer for that
@@ -315,14 +313,6 @@ A self-describing variant of
 See
 .BR .paf .
 .TP
-\fBffmpeg\fR (optional)
-This is a pseudo-type that forces ffmpeg to be used. The actual file
-type is deduced from the file name (it cannot be used on stdio).
-It can read a wide range of audio files, not all of which are
-documented here, and also the audio track of many video files
-(including AVI, WMV and MPEG). At present only the first audio track
-of a file can be read.
-.TP
 \&\fB.flac\fR (optional; also with \fB\-t sndfile\fR)
 Xiph.org's Free Lossless Audio CODEC compressed audio.
 FLAC is an open, patent-free CODEC designed for compressing
@@ -464,12 +454,6 @@ high quality (speed).
 See also
 .B Ogg Vorbis
 for a similar format.
-.TP
-\&\fB.mp4\fR, \fB.m4a\fR (optional)
-MP4 compressed audio.  MP3 (MPEG 4) is part of the
-MPEG standards for audio and video compression.  See
-.B mp3
-for more information.
 .TP
 \&\fB.nist\fR (also with \fB\-t sndfile\fR)
 See \fB.sph\fR.
