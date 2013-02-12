@@ -1,6 +1,7 @@
-sox (14.4.1rc2-0+git20130122-1) UNRELEASED; urgency=low
+sox (14.4.1-1) unstable; urgency=low
 
-  * Git Version (closes: #676143).
+  * New upstream release.
+    - Fixed misleading error message (closes: #676143).
   * [debian/source/format]:
     - Finally switched to dpkg-source 3.0 (quilt) format!
   * [debian/rules]:
@@ -26,7 +27,7 @@ sox (14.4.1rc2-0+git20130122-1) UNRELEASED; urgency=low
   * [debian/README.source]:
     - Updated to reflect the much simplified packaging and usage of quilt.
 
- -- Pascal Giard <evilynux@gmail.com>  Tue, 22 Jan 2013 22:56:30 -0500
+ -- Pascal Giard <pascal@debian.org>  Mon, 11 Feb 2013 22:25:36 -0500
 
 sox (14.4.0-5) unstable; urgency=low
 
