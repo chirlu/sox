@@ -251,13 +251,21 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 static int start(sox_effect_t * effp)
 {
   priv_t * p = (priv_t *)effp->priv;
+
   if (p->factor == 1)
     return SOX_EFF_NULL;
 
   p->tempo = tempo_create((size_t)effp->in_signal.channels);
   tempo_setup(p->tempo, effp->in_signal.rate, p->quick_search, p->factor,
       p->segment_ms, p->search_ms, p->overlap_ms);
-  effp->out_signal.length = SOX_UNKNOWN_LEN; /* TODO: calculate actual length */
+
+  effp->out_signal.length = SOX_UNKNOWN_LEN;
+  if (effp->in_signal.length != SOX_UNKNOWN_LEN) {
+    uint64_t in_length = effp->in_signal.length / effp->in_signal.channels;
+    uint64_t out_length = in_length / p->factor + .5;
+    effp->out_signal.length = out_length * effp->in_signal.channels;
+  }
+
   return SOX_SUCCESS;
 }
 
