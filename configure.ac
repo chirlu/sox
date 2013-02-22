@@ -28,7 +28,7 @@ SHLIB_VERSION=3:0:0
 AC_SUBST(SHLIB_VERSION)
 
 AC_ARG_WITH(libltdl,
-    AC_HELP_STRING([--without-libltdl],
+    AS_HELP_STRING([--without-libltdl],
         [Don't try to use libltdl for external dynamic library support]),
     with_libltdl=$withval, with_libltdl=default)
 
@@ -47,10 +47,10 @@ fi
 LT_INIT([dlopen win32-dll])
 AC_SUBST(LIBTOOL_DEPS)
 
-AC_ARG_WITH(dyn-default,AC_HELP_STRING([--with-dyn-default],[Default to loading optional formats dynamically]),opt_default=dyn,opt_default=yes)
+AC_ARG_WITH(dyn-default,AS_HELP_STRING([--with-dyn-default],[Default to loading optional formats dynamically]),opt_default=dyn,opt_default=yes)
 
 AC_ARG_WITH(pkgconfigdir,
-    AC_HELP_STRING([--with-pkgconfigdir],
+    AS_HELP_STRING([--with-pkgconfigdir],
                    [location to install .pc files or "no" to disable (default=$(libdir)/pkgconfig)]))
 
 m4_ifndef([PKG_PROG_PKG_CONFIG], with_pkgconfigdir="no")
@@ -79,7 +79,7 @@ AM_CONDITIONAL(HAVE_WIN32_GLOB, test x$using_win32_glob = xyes)
 
 dnl Debugging
 AC_MSG_CHECKING([whether to make a debug build])
-AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug], [make a debug build]))
+AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [make a debug build]))
 AC_MSG_RESULT($enable_debug)
 if test "$enable_debug" = "yes"; then
     CFLAGS="-g"
@@ -121,7 +121,7 @@ fi
 AC_SUBST(APP_LDFLAGS)
 AC_SUBST(WARN_CFLAGS)
 
-AC_ARG_WITH(distro, AC_HELP_STRING([--with-distro=distro], [Provide distribution name]))
+AC_ARG_WITH(distro, AS_HELP_STRING([--with-distro=distro], [Provide distribution name]))
 if test "x$with_distro" != "x"; then
   DISTRO="$with_distro"
   AC_SUBST(DISTRO)
@@ -171,7 +171,7 @@ fi
 dnl Allow libtool to be silenced
 AC_MSG_CHECKING([whether libtool should be silenced])
 AC_ARG_ENABLE(silent-libtool,
-    AC_HELP_STRING([--disable-silent-libtool], [Verbose libtool]),,enable_silent_libtool=yes)
+    AS_HELP_STRING([--disable-silent-libtool], [Verbose libtool]),,enable_silent_libtool=yes)
 AC_MSG_RESULT($enable_silent_libtool)
 if test "$enable_silent_libtool" = "yes"; then
     LIBTOOLFLAGS=--silent
@@ -231,7 +231,7 @@ CFLAGS="$CFLAGS $OPENMP_CFLAGS"
 
 dnl Check for magic library
 AC_ARG_WITH(magic,
-    AC_HELP_STRING([--without-magic],
+    AS_HELP_STRING([--without-magic],
         [Don't try to use magic]))
 using_magic=no
 if test "$with_magic" != "no"; then
@@ -253,7 +253,7 @@ AC_SUBST(MAGIC_LIBS)
 
 dnl Check for png libraries
 AC_ARG_WITH(png,
-    AC_HELP_STRING([--without-png],
+    AS_HELP_STRING([--without-png],
         [Don't try to use png]))
 using_png=no
 if test "$with_png" != "no"; then
@@ -278,7 +278,7 @@ AC_SUBST(PNG_LIBS)
 
 dnl Test for LADSPA
 AC_ARG_WITH(ladspa,
-    AC_HELP_STRING([--without-ladspa], [Don't try to use LADSPA]))
+    AS_HELP_STRING([--without-ladspa], [Don't try to use LADSPA]))
 using_ladspa=no
 if test "$with_ladspa" != "no" -a "$using_libltdl" = "yes"; then
     using_ladspa=yes
@@ -286,14 +286,14 @@ if test "$with_ladspa" != "no" -a "$using_libltdl" = "yes"; then
 fi
 LADSPA_PATH=${libdir}/ladspa
 AC_ARG_WITH(ladspa-path,
-    AC_HELP_STRING([--with-ladspa-path], [Default search path for LADSPA plugins]))
+    AS_HELP_STRING([--with-ladspa-path], [Default search path for LADSPA plugins]))
 AC_SUBST(LADSPA_PATH)
 
 
 
 dnl Check for MAD libraries
 AC_ARG_WITH(mad,
-    AC_HELP_STRING([--without-mad],
+    AS_HELP_STRING([--without-mad],
         [Don't try to use MAD (MP3 Audio Decoder)]))
 using_mad=no
 if test "$with_mad" != "no"; then
@@ -301,7 +301,7 @@ if test "$with_mad" != "no"; then
     AC_CHECK_HEADERS(mad.h,, using_mad=no)
     AC_MSG_CHECKING([whether to dlopen mad])
     AC_ARG_ENABLE(dl_mad,
-      AC_HELP_STRING([--enable-dl-mad], [Dlopen mad instead of linking in.]),
+      AS_HELP_STRING([--enable-dl-mad], [Dlopen mad instead of linking in.]),
       enable_dl_mad=$enableval, enable_dl_mad=no)
     AC_MSG_RESULT($enable_dl_mad)
     if test "x$using_libltdl" = "xyes" -a "x$enable_dl_mad" = "xyes"; then
@@ -319,7 +319,7 @@ fi
 
 dnl Check for id3tag libraries
 AC_ARG_WITH(id3tag,
-    AC_HELP_STRING([--without-id3tag],
+    AS_HELP_STRING([--without-id3tag],
         [Don't try to use id3tag]))
 using_id3tag=no
 if test "$with_id3tag" != "no"; then
@@ -340,14 +340,14 @@ AM_CONDITIONAL(HAVE_ID3TAG, test x$using_id3tag = xyes)
 
 dnl Check for LAME library.
 AC_ARG_WITH(lame,
-    AC_HELP_STRING([--without-lame],
+    AS_HELP_STRING([--without-lame],
         [Don't try to use LAME (LAME Ain't an MP3 Encoder)]))
 using_lame=no
 if test "$with_lame" != "no"; then
     using_lame=yes
     AC_MSG_CHECKING([whether to dlopen lame])
     AC_ARG_ENABLE(dl_lame,
-      AC_HELP_STRING([--enable-dl-lame], [Dlopen lame instead of linking in.]),
+      AS_HELP_STRING([--enable-dl-lame], [Dlopen lame instead of linking in.]),
       enable_dl_lame=$enableval, enable_dl_lame=no)
     AC_MSG_RESULT($enable_dl_lame)
     if test "x$using_libltdl" = "xyes" -a "x$enable_dl_lame" = "xyes"; then
@@ -371,7 +371,7 @@ fi
 
 dnl Check for Twolame library
 AC_ARG_WITH(twolame,
-    AC_HELP_STRING([--without-twolame],
+    AS_HELP_STRING([--without-twolame],
         [Don't try to use Twolame (MP2 Audio Encoder)]))
 using_twolame=no
 if test "$with_twolame" != "no"; then
@@ -379,7 +379,7 @@ if test "$with_twolame" != "no"; then
     AC_CHECK_HEADERS(twolame.h,, using_twolame=no)
     AC_MSG_CHECKING([whether to dlopen twolame])
     AC_ARG_ENABLE(dl_twolame,
-      AC_HELP_STRING([--enable-dl-twolame], [Dlopen twolame instead of linking in.]),
+      AS_HELP_STRING([--enable-dl-twolame], [Dlopen twolame instead of linking in.]),
       enable_dl_twolame=$enableval, enable_dl_twolame=no)
     AC_MSG_RESULT($enable_dl_twolame)
     if test "x$using_libltdl" = "xyes" -a "x$enable_dl_twolame" = "xyes"; then
@@ -453,7 +453,7 @@ AC_CHECK_HEADERS(opencore-amrwb/dec_if.h,
 		    AMRWB_LIBS="$AMRWB_LIBS -lamrwb",tmp_using_amrwb=no)], 
 		    tmp_using_amrwb=no)])
 AC_ARG_ENABLE(dl_amrwb,
-	      AC_HELP_STRING([--enable-dl-amrwb], 
+	      AS_HELP_STRING([--enable-dl-amrwb], 
 			     [Dlopen amrbw instead of linking in.]),
 			     enable_dl_amrwb=$enableval, enable_dl_amrwb=no)
 if test "x$using_libltdl" = "xyes" -a "x$enable_dl_amrwb" = "xyes"; then
@@ -480,7 +480,7 @@ AC_CHECK_HEADERS(opencore-amrnb/interf_dec.h,
 		    AMRNB_LIBS="$AMRNB_LIBS -lamrnb", tmp_using_amrnb=no)], 
 		    tmp_using_amrnb=no)])
 AC_ARG_ENABLE(dl_amrnb,
-	      AC_HELP_STRING([--enable-dl-amrnb], 
+	      AS_HELP_STRING([--enable-dl-amrnb], 
 			     [Dlopen amrnb instead of linking in.]),
 			     enable_dl_amrnb=$enableval, enable_dl_amrnb=no)
 if test "x$using_libltdl" = "xyes" -a "x$enable_dl_amrnb" = "xyes"; then
@@ -526,7 +526,7 @@ dnl to be linked in (since they will be dlopen()'ed instead).
 ac_sox_save_SNDFILE_LIBS="$SNDFILE_LIBS"
 SOX_PATH_SNDFILE(tmp_using_sndfile=$opt_default, tmp_using_sndfile=no)
 AC_ARG_ENABLE(dl_sndfile,
-	      AC_HELP_STRING([--enable-dl-sndfile], 
+	      AS_HELP_STRING([--enable-dl-sndfile], 
 			     [Dlopen sndfile instead of linking in.]),
 			     enable_dl_sndfile=$enableval, enable_dl_sndfile=no)
 if test "x$using_sndfile" = "xyes"; then
@@ -578,7 +578,7 @@ AC_OPTIONAL_FORMAT(lpc10, LPC10)
 dnl Check if we want to disable all symlinks
 AC_MSG_CHECKING([whether to enable symlinks])
 AC_ARG_ENABLE(symlinks,
-    AC_HELP_STRING([--disable-symlinks], [Don't make any symlinks to sox.]),,enable_symlinks=yes)
+    AS_HELP_STRING([--disable-symlinks], [Don't make any symlinks to sox.]),,enable_symlinks=yes)
 AC_MSG_RESULT($enable_symlinks)
 
 enable_playrec_symlinks=no
