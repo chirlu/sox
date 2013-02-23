@@ -1,3 +1,17 @@
+sox (14.4.1-2) unstable; urgency=low
+
+  * [debian/libsox-fmt-base.install.in]:
+    - Added all missing sndfile-derived formats. Thanks to Ulrich Klauer
+      <ulrich@chirlu.de> for the patch (LP: #1086889).
+  * [debian/control]:
+    - Removed duplicate section field for sox. Fixes lintian warning.
+    - Added Build-Dep on autotools-dev for dh_autotools_dev.
+  * [debian/rules]:
+    - Use dh_autotools_dev to update the outdated autotools helper files.
+      Fixes lintian warning.
+
+ -- Pascal Giard <pascal@debian.org>  Fri, 22 Feb 2013 22:38:19 -0500
+
 sox (14.4.1-1) unstable; urgency=low
 
   * New upstream release.
@@ -8,7 +22,7 @@ sox (14.4.1-1) unstable; urgency=low
     - Finally switched to dpkg-source 3.0 (quilt) format!
   * [debian/rules]:
     - No longer using CDBS and depricated makefiles, fixes lintian warnings
-      "debian-rules-uses-deprecated-makefile". 
+      "debian-rules-uses-deprecated-makefile".
     - Added multiarch support.
   * [debian/control]:
     - Added Vcs-Git and Vcs-Browser pointing to upstream VCS.

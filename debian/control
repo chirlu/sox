@@ -3,7 +3,8 @@ Homepage: http://sox.sourceforge.net
 Section: sound
 Priority: optional
 Maintainer: Pascal Giard <pascal@debian.org>
-Build-Depends: debhelper (>= 9),
+Build-Depends: autotools-dev,
+               debhelper (>= 9),
                ladspa-sdk,
                libao-dev,
                libasound2-dev [linux-any],
@@ -31,7 +32,6 @@ Vcs-Browser: http://sox.git.sourceforge.net/git/gitweb.cgi?p=sox/sox
 
 Package: sox
 Architecture: any
-Section: sound
 Depends: libsox-fmt-alsa (= ${binary:Version}) [linux-any] | libsox-fmt-ao (= ${binary:Version}) | libsox-fmt-oss (= ${binary:Version}) | libsox-fmt-pulse (= ${binary:Version}),
          libsox-fmt-base (= ${binary:Version}),
          libsox2 (= ${binary:Version}),
