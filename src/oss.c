@@ -447,7 +447,7 @@ LSX_FORMAT_HANDLER(oss)
     SOX_ENCODING_UNSIGNED, 8, 0,
     0};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
-    "Open Sound Sytem device driver for unix-like systems",
+    "Open Sound System device driver for unix-like systems",
     names, SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
     ossinit, ossread, ossstop,
     ossinit, osswrite, ossstop,
