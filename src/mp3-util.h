@@ -143,14 +143,14 @@ static int add_tag(struct tag_info * info)
     }
   }
 
-  buffer = lsx_malloc(size);
+  buffer = lsx_malloc((size_t)size);
   if (!buffer) {
     return 0;
   }
   memcpy(buffer, query, ID3_TAG_QUERYSIZE);
   if ((unsigned long)size - ID3_TAG_QUERYSIZE ==
-      lsx_readbuf(info->ft, buffer + ID3_TAG_QUERYSIZE, size - ID3_TAG_QUERYSIZE)) {
-    struct id3_tag * tag = id3_tag_parse(buffer, size);
+      lsx_readbuf(info->ft, buffer + ID3_TAG_QUERYSIZE, (size_t)size - ID3_TAG_QUERYSIZE)) {
+    struct id3_tag * tag = id3_tag_parse(buffer, (size_t)size);
     if (tag) {
       current = lsx_malloc(sizeof(struct tag_info_node));
       if (current) {
@@ -161,7 +161,7 @@ static int add_tag(struct tag_info * info)
         if (info->tag && (info->tag->extendedflags & ID3_TAG_EXTENDEDFLAG_TAGISANUPDATE)) {
           struct id3_frame * frame;
           unsigned i;
-          for (i = 0; frame = id3_tag_findframe(tag, NULL, i); i++) {
+          for (i = 0; (frame = id3_tag_findframe(tag, NULL, i)); i++) {
             id3_tag_attachframe(info->tag, frame);
           }
           id3_tag_delete(tag);
