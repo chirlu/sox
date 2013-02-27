@@ -72,7 +72,7 @@ static size_t callback_read(void* ptr, size_t size, size_t nmemb, void* ft_data)
 static int callback_seek(void* ft_data, ogg_int64_t off, int whence)
 {
   sox_format_t* ft = (sox_format_t*)ft_data;
-  int ret = ft->seekable ? lsx_seeki(ft, off, whence) : -1;
+  int ret = ft->seekable ? lsx_seeki(ft, (off_t)off, whence) : -1;
 
   if (ret == EBADF)
     ret = -1;
