@@ -41,9 +41,9 @@ typedef struct {
   unsigned nbends;       /* Number of bends requested */
   struct {
     char *str;           /* Command-line argument to parse for this bend */
-    size_t start;        /* Start bending when in_pos equals this */
+    uint64_t start;      /* Start bending when in_pos equals this */
     double cents;
-    uint64_t duration;     /* Number of samples to bend */
+    uint64_t duration;   /* Number of samples to bend */
   } *bends;
 
   unsigned frame_rate;
