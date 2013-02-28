@@ -21,7 +21,6 @@ their licence types, is as follows:
 OpencoreAMR-NB/WB http://sourceforge.net/projects/opencore-amr  Apache
 AMR-NB/WB         http://www.penguin.cz/~utx/amr        See library web page
 AO                http://xiph.org/ao                    GPL
-ffmpeg            http://ffmpeg.mplayerhq.hu            LGPL
 FLAC              http://flac.sourceforge.net           BSD
 LADSPA            http://www.ladspa.org                 LGPL + plugins' licence
 Lame MP3 encoder  http://lame.sourceforge.net           LGPL
@@ -29,7 +28,7 @@ Twolame MP2 enc.  http://www.twolame.org                LGPL
 libltdl           http://www.gnu.org/software/libtool   LGPL
 MAD MP3 decoder   http://www.underbit.com/products/mad  GPL
 MP3 ID3 tags      http://www.underbit.com/products/mad  GPL
-Magic             http://www.darwinsys.com/file         GPL
+Magic             http://www.darwinsys.com/file         BSD
 Ogg Vorbis        http://www.vorbis.com                 BSD
 PNG               http://www.libpng.org/pub/png         zlib (BSD-like)
 Sndfile           http://www.mega-nerd.com/libsndfile   LGPL
@@ -45,7 +44,7 @@ libraries may require pkg-config to be installed to be properly
 detected by SoX.
 
 [Only if you're compiling the git sources, first make sure you have
-the GNU autotools installed (automake >= 1.9, autoconf >= 2.59) and
+the GNU autotools installed (automake >= 1.9, autoconf >= 2.62) and
 run
 
 	autoreconf -i
