@@ -1,7 +1,9 @@
 Makefile
 Makefile.in
 sox_sample_test
+sox_sample_test.exe
 example?
+example?.exe
 soxconfig.h.in
 soxconfig.h
 .deps
@@ -11,6 +13,10 @@ stamp-h1
 *.lo
 *.la
 sox
+sox.exe
 play
+play.exe
 rec
+rec.exe
 soxi
+soxi.exe
