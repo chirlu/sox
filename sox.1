@@ -204,7 +204,8 @@ embedded in the file that can be used to describe the audio in some way,
 e.g. for music, the title, the author, etc.
 .SP
 One important use of audio file comments is to convey `Replay Gain'
-information.  SoX supports applying Replay Gain information, but not
+information.  SoX supports applying Replay Gain information (for certain
+input file formats only; currently, at least FLAC and Ogg Vorbis), but not
 generating it.  Note that by default, SoX copies input file comments
 to output files that support comments, so output files may contain
 Replay Gain information if some was present in the input file.  In this
