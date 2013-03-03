@@ -1669,7 +1669,7 @@ LSX_FORMAT_HANDLER(wav)
     SOX_ENCODING_GSM, 0,
     SOX_ENCODING_MS_ADPCM, 4, 0,
     SOX_ENCODING_IMA_ADPCM, 4, 0,
-    SOX_ENCODING_FLOAT, 32, 0,
+    SOX_ENCODING_FLOAT, 32, 64, 0,
     0};
   static sox_format_handler_t const handler = {SOX_LIB_VERSION_CODE,
     "Microsoft audio format", names, SOX_FILE_LIT_END,
