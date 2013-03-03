@@ -30,6 +30,12 @@
 #endif
 #include <zlib.h>
 
+/* For SET_BINARY_MODE: */
+#include <fcntl.h>
+#ifdef HAVE_IO_H
+  #include <io.h>
+#endif
+
 #define MAX_FFT_SIZE 4096
 #define is_p2(x) !(x & (x - 1))
 
