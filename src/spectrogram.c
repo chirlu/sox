@@ -537,9 +537,10 @@ static int stop(sox_effect_t * effp) /* only called, by end(), on flow 0 */
   double      limit;
 
   free(p->shared);
-  if (p->using_stdout)
+  if (p->using_stdout) {
+    SET_BINARY_MODE(stdout);
     file = stdout;
-  else {
+  } else {
     file = fopen(p->out_name, "wb");
     if (!file) {
       lsx_fail("failed to create `%s': %s", p->out_name, strerror(errno));
