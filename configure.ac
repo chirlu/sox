@@ -141,16 +141,12 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h unistd.h byteswap.h sys/stat.h sys/time.h sys/timeb.h sys/types.h sys/utsname.h termios.h glob.h fenv.h)
 
 dnl Checks for library functions.
-AC_CHECK_FUNCS(strcasecmp strdup popen vsnprintf gettimeofday mkstemp fmemopen lrint)
-if test "$ac_cv_func_lrint" = no; then
-  AC_CHECK_LIB(m, lrint, AC_DEFINE(HAVE_LRINT, 1))
-fi
+AC_CHECK_FUNCS(strcasecmp strdup popen vsnprintf gettimeofday mkstemp fmemopen)
 
 dnl Check if math library is needed.
-AC_CHECK_FUNC(pow)
-if test "$ac_cv_func_pow" = no; then
-  AC_CHECK_LIB(m, pow)
-fi
+AC_SEARCH_LIBS([pow], [m])
+AC_SEARCH_LIBS([lrint], [m])
+AC_CHECK_FUNCS([lrint])
 
 dnl Large File Support
 AC_SYS_LARGEFILE
