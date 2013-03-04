@@ -4,7 +4,7 @@ AC_PREREQ(2.62)
 
 AC_INIT(SoX, 14.4.2git, sox-devel@lists.sourceforge.net)
 
-m4_ifdef([AC_CONFIG_MACRO_DIR], [AC_CONFIG_MACRO_DIR([m4])])
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl Find target architecture
 AC_CANONICAL_TARGET
