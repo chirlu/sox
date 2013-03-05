@@ -51,7 +51,6 @@
   EFFECT(loudness)
   EFFECT(lowpass)
   EFFECT(mcompand)
-  EFFECT(mixer)
   EFFECT(noiseprof)
   EFFECT(noisered)
   EFFECT(norm)

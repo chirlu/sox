@@ -219,7 +219,6 @@
     <ClCompile Include="..\src\ladspa.c" />
     <ClCompile Include="..\src\loudness.c" />
     <ClCompile Include="..\src\mcompand.c" />
-    <ClCompile Include="..\src\mixer.c" />
     <ClCompile Include="..\src\noiseprof.c" />
     <ClCompile Include="..\src\noisered.c" />
     <ClCompile Include="..\src\output.c" />

@@ -47,7 +47,6 @@ set(effects_srcs
   input
   loudness
   mcompand
-  mixer
   noiseprof
   noisered
   output

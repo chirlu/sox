@@ -1377,7 +1377,7 @@ static int update_status(sox_bool all_done, void * client_data)
     {
       /* Not very useful, eh!  Sample though of the place you
        * could change the value to effects options
-       * like vol or speed or mixer.
+       * like vol or speed or remix.
        * Modify values in user_effargs[current_eff_chain][xxx]
        * and then chain will be drain()ed and restarted whence
        * this function is existed.
