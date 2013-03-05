@@ -71,7 +71,6 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="$(OutDir)libzlib.lib winmm.lib"
 				OutputFile="$(SolutionDir)$(ConfigurationName)\$(ProjectName).exe"
-				AdditionalLibraryDirectories="../../ffmpeg"
 				DelayLoadDLLs="winmm.dll"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -96,12 +95,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying FFmpeg DLLs..."
-				CommandLine="xcopy /d /y ..\..\ffmpeg\avformat-52.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;xcopy /d /y ..\..\ffmpeg\avcodec-52.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;xcopy /d /y ..\..\ffmpeg\avutil-49.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;"
-				ExcludedFromBuild="true"
 			/>
 		</Configuration>
 		<Configuration
@@ -160,7 +153,6 @@
 				AdditionalDependencies="$(OutDir)libzlib.lib winmm.lib"
 				OutputFile="$(SolutionDir)$(ConfigurationName)\$(ProjectName).exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../ffmpeg"
 				DelayLoadDLLs="winmm.dll"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -186,12 +178,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying FFmpeg DLLs..."
-				CommandLine="xcopy /d /y ..\..\ffmpeg\avformat-52.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;xcopy /d /y ..\..\ffmpeg\avcodec-52.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;xcopy /d /y ..\..\ffmpeg\avutil-49.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;"
-				ExcludedFromBuild="true"
 			/>
 		</Configuration>
 	</Configurations>

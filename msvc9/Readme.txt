@@ -1,8 +1,8 @@
 This directory includes hand-crafted project files for building SoX under
 MSVC9. The project files may be replaced by expanding CMAKE support in the
 future, but for now, this is the easiest way to build SoX with MS Visual C++.
-The resulting sox.exe has support for all SoX features except magic, ffmpeg,
-and pulseaudio. LAME (libmp3lame.dll or lame_enc.dll), MAD (libmad.dll or
+The resulting sox.exe has support for all SoX features except magic, and
+pulseaudio. LAME (libmp3lame.dll or lame_enc.dll), MAD (libmad.dll or
 cygmad-0.dll), libsndfile (libsndfile-1.dll) and AMR support (libamrnb-3.dll,
 libamrwb-3.dll) are loaded at runtime if they are available.
 

@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="SoX;Png;../../ffmpeg;../../flac/include;../../lame/include;../../lame;../../libid3tag;../../libmad;../../libpng;../../libogg/include;sndfile;../../speex/include;../../libvorbis/include;../../wavpack/include;../../wavpack;../../zlib"
+				AdditionalIncludeDirectories="SoX;Png;../../flac/include;../../lame/include;../../lame;../../libid3tag;../../libmad;../../libpng;../../libogg/include;sndfile;../../speex/include;../../libvorbis/include;../../wavpack/include;../../wavpack;../../zlib"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				MinimalRebuild="true"
@@ -113,7 +113,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="SoX;Png;../../ffmpeg;../../flac/include;../../lame/include;../../lame;../../libid3tag;../../libmad;../../libpng;../../libogg/include;sndfile;../../speex/include;../../libvorbis/include;../../wavpack/include;../../wavpack;../../zlib"
+				AdditionalIncludeDirectories="SoX;Png;../../flac/include;../../lame/include;../../lame;../../libid3tag;../../libmad;../../libpng;../../libogg/include;sndfile;../../speex/include;../../libvorbis/include;../../wavpack/include;../../wavpack;../../zlib"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -211,10 +211,6 @@
 			</File>
 			<File
 				RelativePath="..\src\effects.h"
-				>
-			</File>
-			<File
-				RelativePath="..\src\ffmpeg.h"
 				>
 			</File>
 			<File
@@ -907,10 +903,6 @@
 			</File>
 			<File
 				RelativePath="..\src\fap.c"
-				>
-			</File>
-			<File
-				RelativePath="..\src\ffmpeg.c"
 				>
 			</File>
 			<File

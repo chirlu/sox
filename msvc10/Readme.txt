@@ -2,10 +2,10 @@ This directory includes hand-crafted project files for building SoX using the
 Microsoft Visual C++ 10.0 (or later) compilers, available through Visual Studio
 2010, Visual Studio 2012, or by downloading the freely-available Microsoft
 Windows SDK 7.1. This is the easiest way to build SoX with MS Visual C++.
-The resulting sox.exe has support for all SoX features except magic, ffmpeg,
-ladspa, and pulseaudio. LAME (libmp3lame.dll or lame_enc.dll), MAD (libmad.dll
-or cygmad-0.dll), libsndfile (libsndfile-1.dll), and AMR support
-(libamrnb-3.dll, libamrwb-3.dll) are loaded at runtime if they are available.
+The resulting sox.exe has support for all SoX features except magic, ladspa,
+and pulseaudio. LAME (libmp3lame.dll or lame_enc.dll), MAD (libmad.dll or
+cygmad-0.dll), libsndfile (libsndfile-1.dll), and AMR support (libamrnb-3.dll,
+libamrwb-3.dll) are loaded at runtime if they are available.
 
 How to build:
 

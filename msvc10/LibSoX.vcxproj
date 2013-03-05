@@ -51,7 +51,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>SoX;Png;../../ffmpeg;../../flac/include;../../lame/include;../../lame;../../libid3tag;../../libmad;../../libpng;../../libogg/include;sndfile;../../speex/include;../../libvorbis/include;../../wavpack/include;../../wavpack;../../zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>SoX;Png;../../flac/include;../../lame/include;../../lame;../../libid3tag;../../libmad;../../libpng;../../libogg/include;sndfile;../../speex/include;../../libvorbis/include;../../wavpack/include;../../wavpack;../../zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>true</MinimalRebuild>
@@ -75,7 +75,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>SoX;Png;../../ffmpeg;../../flac/include;../../lame/include;../../lame;../../libid3tag;../../libmad;../../libpng;../../libogg/include;sndfile;../../speex/include;../../libvorbis/include;../../wavpack/include;../../wavpack;../../zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>SoX;Png;../../flac/include;../../lame/include;../../lame;../../libid3tag;../../libmad;../../libpng;../../libogg/include;sndfile;../../speex/include;../../libvorbis/include;../../wavpack/include;../../wavpack;../../zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>
@@ -106,7 +106,6 @@
     <ClInclude Include="..\src\dft_filter.h" />
     <ClInclude Include="..\src\dither.h" />
     <ClInclude Include="..\src\effects.h" />
-    <ClInclude Include="..\src\ffmpeg.h" />
     <ClInclude Include="..\src\fft4g.h" />
     <ClInclude Include="..\src\fifo.h" />
     <ClInclude Include="..\src\formats.h" />
@@ -263,7 +262,6 @@
     <ClCompile Include="..\src\f4-fmt.c" />
     <ClCompile Include="..\src\f8-fmt.c" />
     <ClCompile Include="..\src\fap.c" />
-    <ClCompile Include="..\src\ffmpeg.c" />
     <ClCompile Include="..\src\flac.c" />
     <ClCompile Include="..\src\gsm.c" />
     <ClCompile Include="..\src\gsrt.c" />

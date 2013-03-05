@@ -76,7 +76,6 @@
     <Link>
       <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(SolutionDir)$(Configuration)\$(ProjectName).exe</OutputFile>
-      <AdditionalLibraryDirectories>../../ffmpeg;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <DelayLoadDLLs>winmm.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -85,13 +84,6 @@
       <SetChecksum>true</SetChecksum>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
-    <PostBuildEvent>
-      <Message>Copying FFmpeg DLLs...</Message>
-      <Command>xcopy /d /y ..\..\ffmpeg\avformat-52.dll "$(SolutionDir)$(Configuration)"
-xcopy /d /y ..\..\ffmpeg\avcodec-52.dll "$(SolutionDir)$(Configuration)"
-xcopy /d /y ..\..\ffmpeg\avutil-49.dll "$(SolutionDir)$(Configuration)"
-</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -117,7 +109,6 @@ xcopy /d /y ..\..\ffmpeg\avutil-49.dll "$(SolutionDir)$(Configuration)"
     <Link>
       <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(SolutionDir)$(Configuration)\$(ProjectName).exe</OutputFile>
-      <AdditionalLibraryDirectories>../../ffmpeg;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <DelayLoadDLLs>winmm.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -126,13 +117,6 @@ xcopy /d /y ..\..\ffmpeg\avutil-49.dll "$(SolutionDir)$(Configuration)"
       <SetChecksum>true</SetChecksum>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
-    <PostBuildEvent>
-      <Message>Copying FFmpeg DLLs...</Message>
-      <Command>xcopy /d /y ..\..\ffmpeg\avformat-52.dll "$(SolutionDir)$(Configuration)"
-xcopy /d /y ..\..\ffmpeg\avcodec-52.dll "$(SolutionDir)$(Configuration)"
-xcopy /d /y ..\..\ffmpeg\avutil-49.dll "$(SolutionDir)$(Configuration)"
-</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\sox.c" />

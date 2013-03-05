@@ -32,11 +32,6 @@
 #define STATIC_AMRWB 1
 #define DL_AMRWB 1
 
-// SoX FFMPEG support is currently unreliable, and especially so under MSVC.
-//#define HAVE_FFMPEG 1
-#define STATIC_FFMPEG 1
-#define HAVE_LIBAVFORMAT_AVFORMAT_H 1
-
 #define HAVE_FLAC 1
 #define STATIC_FLAC 1
 #define FLAC__NO_DLL

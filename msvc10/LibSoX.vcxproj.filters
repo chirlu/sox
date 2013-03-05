@@ -58,9 +58,6 @@
     <ClInclude Include="..\src\effects.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ffmpeg.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\fft4g.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -379,9 +376,6 @@
       <Filter>Format Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\src\fap.c">
-      <Filter>Format Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ffmpeg.c">
       <Filter>Format Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\src\flac.c">
