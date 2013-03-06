@@ -57,6 +57,7 @@ static char const * auto_detect_format(sox_format_t * ft, char const * ext)
   CHECK(txw   , 0, 0, ""     , 0,  6, "LM8953")
   CHECK(sndt  , 0, 0, ""     , 0,  6, "SOUND\x1a")
   CHECK(vorbis, 0, 4, "OggS" , 29, 6, "vorbis")
+  CHECK(opus  , 0, 4, "OggS" , 28, 8, "OpusHead")
   CHECK(speex , 0, 4, "OggS" , 28, 6, "Speex")
   CHECK(hcom  ,65, 4, "FSSD" , 128,4, "HCOM")
   CHECK(wav   , 0, 4, "RIFF" , 8,  4, "WAVE")
@@ -142,6 +143,7 @@ static sox_encodings_info_t const s_sox_encodings_info[] = {
   {sox_encodings_lossy2, "AMR-NB"       , "AMR-NB"},
   {sox_encodings_lossy2, "CVSD"         , "CVSD"},
   {sox_encodings_lossy2, "LPC10"        , "LPC10"},
+  {sox_encodings_lossy2, "Opus"         , "Opus"},
 };
 
 assert_static(array_length(s_sox_encodings_info) == SOX_ENCODINGS,
@@ -182,6 +184,7 @@ unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample)
 
     case SOX_ENCODING_GSM:
     case SOX_ENCODING_VORBIS:
+    case SOX_ENCODING_OPUS:
     case SOX_ENCODING_AMR_WB:
     case SOX_ENCODING_AMR_NB:
     case SOX_ENCODING_LPC10:      return !bits_per_sample? 16: 0;
