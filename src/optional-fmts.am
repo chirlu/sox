@@ -138,7 +138,7 @@ endif
 if HAVE_OPUS
 if STATIC_OPUS
   libsox_la_SOURCES += opus.c
-  libsox_la_CFLAGS += @OPUS_CFLAGS@ -Wno-long-long
+  libsox_la_CFLAGS += @OPUS_CFLAGS@
 if STATIC_LIBSOX_ONLY
   sox_LDADD += @OPUS_LIBS@
 else
@@ -146,7 +146,7 @@ else
 endif
 else
   libsox_fmt_opus_la_SOURCES = opus.c
-  libsox_fmt_opus_la_CFLAGS = @OPUS_CFLAGS@ -Wno-long-long
+  libsox_fmt_opus_la_CFLAGS = @OPUS_CFLAGS@
   libsox_fmt_opus_la_LIBADD = libsox.la @OPUS_LIBS@
   pkglib_LTLIBRARIES += libsox_fmt_opus.la
 endif

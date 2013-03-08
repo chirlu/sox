@@ -431,7 +431,9 @@ AC_OPTIONAL_FORMAT(oggvorbis, OGG_VORBIS, [AC_CHECK_HEADER(vorbis/codec.h,
 AC_OPTIONAL_FORMAT(opus, OPUS,
   [PKG_CHECK_MODULES(OPUS, [opusfile], [], using_opus=no)],
   using_opus=no)
-
+if test "$GCC" = "yes"; then
+  OPUS_CFLAGS="$OPUS_CFLAGS -Wno-long-long"
+fi
 
 
 # Check for FLAC libraries
