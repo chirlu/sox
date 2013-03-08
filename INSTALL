@@ -30,6 +30,7 @@ MAD MP3 decoder   http://www.underbit.com/products/mad  GPL
 MP3 ID3 tags      http://www.underbit.com/products/mad  GPL
 Magic             http://www.darwinsys.com/file         BSD
 Ogg Vorbis        http://www.vorbis.com                 BSD
+Opus              http://www.opus-codec.org/            BSD
 PNG               http://www.libpng.org/pub/png         zlib (BSD-like)
 Sndfile           http://www.mega-nerd.com/libsndfile   LGPL
 WavPack           http://www.wavpack.com                BSD
