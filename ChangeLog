@@ -20,6 +20,10 @@ Previously deprecated features that have been removed in this release:
   14.4.1   OpenMP < 3.0            OpenMP >= 3.0
   14.4.1   F ffmpeg                ffmpeg/avconv via pipe
 
+File formats:
+
+  o Add optional support for reading Ogg Opus files. (John Stumpo)
+
 Effects:
 
   o 'Deemph' can now also be used at 48kHz sample rate.  (robs)

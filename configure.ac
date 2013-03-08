@@ -427,6 +427,13 @@ AC_OPTIONAL_FORMAT(oggvorbis, OGG_VORBIS, [AC_CHECK_HEADER(vorbis/codec.h,
   AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr, OGG_VORBIS_LIBS="-lvorbisenc $OGG_VORBIS_LIBS", using_oggvorbis=no, $OGG_VORBIS_LIBS)],
   using_oggvorbis=no)])
 
+# Check for Opus
+AC_OPTIONAL_FORMAT(opus, OPUS,
+  [PKG_CHECK_MODULES(OPUS, [opusfile], [], using_opus=no)],
+  using_opus=no)
+if test "$GCC" = "yes"; then
+  OPUS_CFLAGS="$OPUS_CFLAGS -Wno-long-long"
+fi
 
 
 # Check for FLAC libraries
@@ -673,6 +680,7 @@ if test "x$using_twolame" = "xyes"; then
 echo " dlopen twolame............$enable_dl_twolame"
 fi
 echo "oggvorbis..................$using_oggvorbis"
+echo "opus.......................$using_opus"
 echo "sndfile....................$using_sndfile"
 if test "x$using_sndfile" = "xyes"; then
 echo " dlopen sndfile............$enable_dl_sndfile"

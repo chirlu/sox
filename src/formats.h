@@ -92,6 +92,9 @@
 #if defined HAVE_MP3 && (defined STATIC_MP3 || !defined HAVE_LIBLTDL)
   FORMAT(mp3)
 #endif
+#if defined HAVE_OPUS && (defined STATIC_OPUS || !defined HAVE_LIBLTDL)
+  FORMAT(opus)
+#endif
 #if defined HAVE_OSS && (defined STATIC_OSS || !defined HAVE_LIBLTDL)
   FORMAT(oss)
 #endif
