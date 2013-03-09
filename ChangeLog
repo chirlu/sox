@@ -47,6 +47,7 @@ Internal improvements:
   o Speed optimization for effects that operate on channels
     independently. (Ulrich Klauer)
   o Fix memory leaks. (Ulrich Klauer)
+  o Most internal symbols (lsx_*) are no longer exported. (Ulrich Klauer)
 
 
 sox-14.4.1	2013-02-01
