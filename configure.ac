@@ -91,23 +91,17 @@ else
 fi
 
 dnl Extra CFLAGS if we have gcc
-if test "$GCC" = yes; then
+if test "$GCC" = "yes"; then
 
-    dnl Detect gcc version.  Convert GCC version number to
-    dnl something easier to compare.
     AC_MSG_CHECKING([gcc version])
     gccver=`$CC -dumpversion`
-    gccnum1=`echo $gccver | cut -d . -f1`
-    gccnum2=`echo $gccver | cut -d . -f2`
-    gccver=`(expr $gccnum1 "*" 100 + $gccnum2) 2>/dev/null`
     AC_MSG_RESULT($gccver)
 
     CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2 -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic"
-    if test "$gccver" -lt 403; then
-        WARN_CFLAGS="-Wconversion"
-    else
-        WARN_CFLAGS="-Wtraditional-conversion"
-    fi
+    AS_VERSION_COMPARE([$gccver], [4.3],
+       [WARN_CFLAGS="-Wconversion"],
+       [WARN_CFLAGS="-Wtraditional-conversion"],
+       [WARN_CFLAGS="-Wtraditional-conversion"])
     dnl Define stricter policy on GNU/Linux, all symbols must be resolved
     case $target in
       *linux* | *solaris*)
@@ -202,21 +196,15 @@ dnl Check for OpenMP
 AC_OPENMP
 if test "x$OPENMP_CFLAGS" != "x"; then  dnl Old libtool workaround start
   AC_MSG_CHECKING([for libtool version])
-  lt_version="`grep '^VERSION' $srcdir/ltmain.sh | sed -e 's/VERSION\=//g;s/ .*//g;s/[[-.a-zA-Z\"]]//g'`"
-  if test $lt_version -lt 100; then
-    lt_version=`expr $lt_version \* 10`
-  fi
-  if test $lt_version -lt 240; then
-    if test "$GCC" = "yes"; then
-      AC_MSG_RESULT([$lt_version, needs OpenMP linker workaround])
-      GOMP_LIBS="-lgomp"
-    else
-      AC_MSG_RESULT([$lt_version and not GCC, deactivating OpenMP])
-      OPENMP_CFLAGS=""
-    fi
-  else
-    AC_MSG_RESULT([$lt_version, OK])
-  fi
+  lt_version="`grep '^VERSION' $srcdir/ltmain.sh | sed -e 's/VERSION\=//g;s/ .*//g;s/"//g'`"
+  AS_VERSION_COMPARE([$lt_version], [2.4],
+    [AS_IF([test "$GCC" = "yes"],
+       [AC_MSG_RESULT([$lt_version, needs OpenMP linker workaround])
+        GOMP_LIBS="-lgomp"],
+       [AC_MSG_RESULT([$lt_version and not GCC, deactivating OpenMP])
+        OPENMP_CFLAGS=""])],
+    [AC_MSG_RESULT([$lt_version, OK])],
+    [AC_MSG_RESULT([$lt_version, OK])])
 fi
 AC_SUBST(GOMP_LIBS)  dnl Old libtool workaround end.
                      dnl Only necessary if libtool version < 2.4, as older
