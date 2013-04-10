@@ -44,8 +44,8 @@ static void output_message(unsigned level, const char *filename, const char *fmt
 /*
  * On an alsa capable system, plays an audio file starting 10 seconds in.
  * Copes with sample-rate and channel change if necessary since its
- * common for audio drivers to to support subset of rates and channel
- * counts..
+ * common for audio drivers to support a subset of rates and channel
+ * counts.
  * E.g. example3 song2.ogg
  *
  * Can easily be changed to work with other audio device drivers supported
@@ -57,6 +57,7 @@ int main(int argc, char * argv[])
   static sox_format_t * in, * out; /* input and output files */
   sox_effects_chain_t * chain;
   sox_effect_t * e;
+  sox_signalinfo_t interm_signal;
   char * args[10];
 
   assert(argc == 2);
@@ -70,33 +71,35 @@ int main(int argc, char * argv[])
 
   chain = sox_create_effects_chain(&in->encoding, &out->encoding);
 
+  interm_signal = in->signal; /* NB: deep copy */
+
   e = sox_create_effect(sox_find_effect("input"));
   args[0] = (char *)in, assert(sox_effect_options(e, 1, args) == SOX_SUCCESS);
-  assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
+  assert(sox_add_effect(chain, e, &interm_signal, &in->signal) == SOX_SUCCESS);
   free(e);
 
   e = sox_create_effect(sox_find_effect("trim"));
   args[0] = "10", assert(sox_effect_options(e, 1, args) == SOX_SUCCESS);
-  assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
+  assert(sox_add_effect(chain, e, &interm_signal, &in->signal) == SOX_SUCCESS);
   free(e);
 
   if (in->signal.rate != out->signal.rate) {
     e = sox_create_effect(sox_find_effect("rate"));
     assert(sox_effect_options(e, 0, NULL) == SOX_SUCCESS);
-    assert(sox_add_effect(chain, e, &in->signal, &out->signal) == SOX_SUCCESS);
+    assert(sox_add_effect(chain, e, &interm_signal, &out->signal) == SOX_SUCCESS);
     free(e);
   }
 
   if (in->signal.channels != out->signal.channels) {
     e = sox_create_effect(sox_find_effect("channels"));
     assert(sox_effect_options(e, 0, NULL) == SOX_SUCCESS);
-    assert(sox_add_effect(chain, e, &in->signal, &out->signal) == SOX_SUCCESS);
+    assert(sox_add_effect(chain, e, &interm_signal, &out->signal) == SOX_SUCCESS);
     free(e);
   }
 
   e = sox_create_effect(sox_find_effect("output"));
   args[0] = (char *)out, assert(sox_effect_options(e, 1, args) == SOX_SUCCESS);
-  assert(sox_add_effect(chain, e, &in->signal, &out->signal) == SOX_SUCCESS);
+  assert(sox_add_effect(chain, e, &interm_signal, &out->signal) == SOX_SUCCESS);
   free(e);
 
   sox_flow_effects(chain, NULL, NULL);
