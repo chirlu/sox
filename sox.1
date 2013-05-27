@@ -3239,17 +3239,17 @@ result in small PNG files.  The number given specifies the number of
 colours to use inside the Z-axis range; two colours are reserved to
 represent out-of-range values.
 .IP \fB\-w\ \fIname\fR
-Window: Hann (default), Hamming, Bartlett, Rectangular or Kaiser.  The
+Window: Hann (default), Hamming, Bartlett, Rectangular, Kaiser or Dolph.  The
 spectrogram is produced using the Discrete Fourier Transform (DFT)
 algorithm.  A significant parameter to this algorithm is the choice of
 `window function'.  By default, SoX uses the Hann window which has good
 all-round frequency-resolution and dynamic-range properties.  For better
 frequency resolution (but lower dynamic-range), select a Hamming window;
 for higher dynamic-range (but poorer frequency-resolution), select a
-Kaiser window.  Bartlett and Rectangular windows are also available.
+Dolph window.  Kaiser, Bartlett and Rectangular windows are also available.
 .IP \fB\-W\ \fInum\fR
 Window adjustment parameter.  This can be used to make small
-adjustments to the Kaiser window shape.  A positive number (up to
+adjustments to the Kaiser or Dolph window shape.  A positive number (up to
 ten) increases its dynamic range, a negative number decreases it.
 .IP \fB\-s\fR
 Allow slack overlapping of DFT windows.

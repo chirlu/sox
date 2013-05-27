@@ -41,13 +41,14 @@
 
 #define MAX_X_SIZE 200000
 
-typedef enum {Window_Hann, Window_Hamming, Window_Bartlett, Window_Rectangular, Window_Kaiser} win_type_t;
+typedef enum {Window_Hann, Window_Hamming, Window_Bartlett, Window_Rectangular, Window_Kaiser, Window_Dolph} win_type_t;
 static lsx_enum_item const window_options[] = {
   LSX_ENUM_ITEM(Window_,Hann)
   LSX_ENUM_ITEM(Window_,Hamming)
   LSX_ENUM_ITEM(Window_,Bartlett)
   LSX_ENUM_ITEM(Window_,Rectangular)
   LSX_ENUM_ITEM(Window_,Kaiser)
+  LSX_ENUM_ITEM(Window_,Dolph)
   {0, 0}};
 
 typedef struct {
@@ -178,8 +179,10 @@ static double make_window(priv_t * p, int end)
     case Window_Hamming: lsx_apply_hamming(w, n); break;
     case Window_Bartlett: lsx_apply_bartlett(w, n); break;
     case Window_Rectangular: break;
-    default: lsx_apply_kaiser(w, n, lsx_kaiser_beta(
-        (p->dB_range + p->gain) * (1.1 + p->window_adjust / 50), .1));
+    case Window_Kaiser: lsx_apply_kaiser(w, n, lsx_kaiser_beta(
+        (p->dB_range + p->gain) * (1.1 + p->window_adjust / 50), .1)); break;
+    default: lsx_apply_dolph(w, n,
+        (p->dB_range + p->gain) * (1.005 + p->window_adjust / 50) + 6);
   }
   for (i = 0; i < p->dft_size; ++i) sum += p->window[i];
   for (i = 0; i < p->dft_size; ++i) p->window[i] *= 2 / sum
@@ -673,8 +676,8 @@ sox_effect_handler_t const * lsx_spectrogram_effect_fn(void)
     "\t-z num\tZ-axis range in dB; default 120",
     "\t-Z num\tZ-axis maximum in dBFS; default 0",
     "\t-q num\tZ-axis quantisation (0 - 249); default 249",
-    "\t-w name\tWindow: Hann (default), Hamming, Bartlett, Rectangular, Kaiser",
-    "\t-W num\tWindow adjust parameter (-10 - 10); applies only to Kaiser",
+    "\t-w name\tWindow: Hann(default)/Hamming/Bartlett/Rectangular/Kaiser/Dolph",
+    "\t-W num\tWindow adjust parameter (-10 - 10); applies only to Kaiser/Dolph",
     "\t-s\tSlack overlap of windows",
     "\t-a\tSuppress axis lines",
     "\t-r\tRaw spectrogram; no axes or legends",

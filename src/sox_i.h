@@ -102,6 +102,7 @@ void lsx_apply_blackman(double h[], const int num_points, double alpha);
 void lsx_apply_blackman_nutall(double h[], const int num_points);
 double lsx_kaiser_beta(double att, double tr_bw);
 void lsx_apply_kaiser(double h[], const int num_points, double beta);
+void lsx_apply_dolph(double h[], const int num_points, double att);
 double * lsx_make_lpf(int num_taps, double Fc, double beta, double rho,
     double scale, sox_bool dc_norm);
 void lsx_kaiser_params(double att, double Fc, double tr_bw, double * beta, int * num_taps);
