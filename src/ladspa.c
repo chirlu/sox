@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <limits.h>
 #include <string.h>
+#include <math.h>
 #include "ladspa.h"
 
 /*
@@ -49,6 +50,10 @@ typedef struct {
   size_t input_count;
   unsigned long *outputs;
   size_t output_count;
+  sox_bool latency_compensation;
+  LADSPA_Data *latency_control_port;
+  unsigned long in_latency;
+  unsigned long out_latency;
 } priv_t;
 
 static LADSPA_Data ladspa_default(const LADSPA_PortRangeHint *p)
@@ -98,15 +103,21 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int argc, char **argv)
 {
   priv_t * l_st = (priv_t *)effp->priv;
   char *path;
+  int c;
   union {LADSPA_Descriptor_Function fn; lt_ptr ptr;} ltptr;
   unsigned long index = 0, i;
   double arg;
-  --argc, ++argv;
+  lsx_getopt_t optstate;
+  lsx_getopt_init(argc, argv, "+rl", NULL, lsx_getopt_flag_none, 1, &optstate);
 
-  if (argc >= 1 && strcmp(argv[0], "-r") == 0) {
-    l_st->clone = sox_true;
-    argc--; argv++;
+  while ((c = lsx_getopt(&optstate)) != -1) switch (c) {
+    case 'r': l_st->clone = sox_true; break;
+    case 'l': l_st->latency_compensation = sox_true; break;
+    default:
+      lsx_fail("unknown option `-%c'", optstate.opt);
+      return lsx_usage(effp);
   }
+  argc -= optstate.ind, argv += optstate.ind;
 
   /* Get module name */
   if (argc >= 1) {
@@ -178,7 +189,15 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int argc, char **argv)
         l_st->outputs[l_st->output_count++] = i;
       }
     } else {                    /* Control port */
-      if (argc == 0) {
+      if (l_st->latency_compensation &&
+          LADSPA_IS_PORT_CONTROL(port) &&
+          LADSPA_IS_PORT_OUTPUT(port) &&
+          strcmp(l_st->desc->PortNames[i], "latency") == 0) {
+        /* automatic latency compensation, Ardour does this, too */
+        l_st->latency_control_port = &l_st->control[i];
+        assert(*l_st->latency_control_port == 0);
+        lsx_debug("latency control port is %lu", i);
+      } else if (argc == 0) {
         if (!LADSPA_IS_HINT_HAS_DEFAULT(l_st->desc->PortRangeHints[i].HintDescriptor)) {
           lsx_fail("not enough arguments for control ports");
           return SOX_EOF;
@@ -324,7 +343,7 @@ static int sox_ladspa_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
     LADSPA_Data *buf = lsx_calloc(len, sizeof(LADSPA_Data));
     LADSPA_Data *outbuf = lsx_calloc(len, sizeof(LADSPA_Data));
     LADSPA_Handle handle;
-    unsigned long port;
+    unsigned long port, l;
     SOX_SAMPLE_LOCALS;
 
     /*
@@ -357,14 +376,28 @@ static int sox_ladspa_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
     for (h = 0; h < l_st->handle_count; h++)
       l_st->desc->run(l_st->handles[h], input_len);
 
+    /* check the latency control port if we have one */
+    if (l_st->latency_control_port) {
+      lsx_debug("latency detected is %g", *l_st->latency_control_port);
+      l_st->in_latency = (unsigned long)floor(*l_st->latency_control_port);
+
+      /* we will need this later in sox_ladspa_drain */
+      l_st->out_latency = l_st->in_latency;
+
+      /* latency for plugins is constant, only compensate once */
+      l_st->latency_control_port = NULL;
+    }
+
     /* Grab output if effect produces it, re-interleaving it */
-    for (i = 0; i < output_len; i++) {
+    l = min(output_len, l_st->in_latency);
+    for (i = l; i < output_len; i++) {
       for (j = 0; j < total_output_count; j++) {
         LADSPA_Data d = outbuf[j * output_len + i];
         *obuf++ = LADSPA_DATA_TO_SOX_SAMPLE(d, effp->clips);
         (*osamp)++;
       }
     }
+    l_st->in_latency -= l;
 
     free(outbuf);
     free(buf);
@@ -374,13 +407,35 @@ static int sox_ladspa_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
 }
 
 /*
- * Nothing to do.
+ * Nothing to do if the plugin has no latency or latency compensation is
+ * disabled.
  */
-static int sox_ladspa_drain(sox_effect_t * effp UNUSED, sox_sample_t *obuf UNUSED, size_t *osamp)
+static int sox_ladspa_drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 {
-  *osamp = 0;
+  priv_t * l_st = (priv_t *)effp->priv;
+  sox_sample_t *ibuf, *dbuf;
+  size_t isamp, dsamp;
+  int r;
 
-  return SOX_SUCCESS;
+  if (l_st->out_latency == 0) {
+    *osamp = 0;
+    return SOX_SUCCESS;
+  }
+
+  /* feed some silence at the end to push the rest of the data out */
+  isamp = l_st->out_latency * effp->in_signal.channels;
+  dsamp = l_st->out_latency * effp->out_signal.channels;
+  ibuf = lsx_calloc(isamp, sizeof(sox_sample_t));
+  dbuf = lsx_calloc(dsamp, sizeof(sox_sample_t));
+
+  r = sox_ladspa_flow(effp, ibuf, dbuf, &isamp, &dsamp);
+  *osamp = min(dsamp, *osamp);
+  memcpy(obuf, dbuf, *osamp * sizeof(sox_sample_t));
+
+  free(ibuf);
+  free(dbuf);
+
+  return r == SOX_SUCCESS ? SOX_EOF : 0;
 }
 
 /*

@@ -2387,7 +2387,7 @@ frequency of about 75 Hz.
 .SP
 This effect supports the \fB\-\-plot\fR global option.
 .TP
-\fBladspa\fR [\fB-r\fR] \fImodule\fR [\fIplugin\fR] [\fIargument\fR ...]
+\fBladspa\fR [\fB-l\fR\^|\^\fB-r\fR] \fImodule\fR [\fIplugin\fR] [\fIargument\fR ...]
 Apply a LADSPA [5] (Linux Audio Developer's Simple Plugin API) plugin.
 Despite the name, LADSPA is not Linux-specific, and a wide range of
 effects is available as LADSPA plugins, such as cmt [6] (the Computer
@@ -2403,6 +2403,12 @@ channel count.  However, the
 .B \-r
 (replicate) option allows cloning a mono plugin to handle multi-channel
 input.
+.SP
+Some plugins introduce latency which SoX may optionally compensate for.
+The
+.B \-l
+(latency compensation) option automatically compensates for latency
+as reported by the plugin via an output control port named "latency".
 .SP
 If found, the environment variable LADSPA_PATH will be used as search
 path for plugins.
