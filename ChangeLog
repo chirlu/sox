@@ -23,6 +23,7 @@ Previously deprecated features that have been removed in this release:
 File formats:
 
   o Add optional support for reading Ogg Opus files. (John Stumpo)
+  o Fix for max size text chunks in aiff files. (cbagwell)
 
 Effects:
 

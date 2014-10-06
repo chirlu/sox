@@ -459,24 +459,32 @@ static int textChunk(char **text, char *chunkDescription, sox_format_t * ft)
 {
   uint32_t chunksize;
   lsx_readdw(ft, &chunksize);
+
   /* allocate enough memory to hold the text including a terminating \0 */
-  *text = lsx_malloc((size_t) chunksize + 1);
+  if (chunksize != SOX_SIZE_MAX)
+    *text = lsx_malloc((size_t)chunksize+1);
+  else
+    *text = lsx_malloc((size_t)chunksize);
+
   if (lsx_readbuf(ft, *text, (size_t) chunksize) != chunksize)
   {
     lsx_fail_errno(ft,SOX_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
     return(SOX_EOF);
   }
-  *(*text + chunksize) = '\0';
-        if (chunksize % 2)
-        {
-                /* Read past pad byte */
-                char c;
-                if (lsx_readbuf(ft, &c, (size_t)1) != 1)
-                {
-                lsx_fail_errno(ft,SOX_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
-                        return(SOX_EOF);
-                }
-        }
+  if (chunksize != SOX_SIZE_MAX)
+    *(*text + chunksize) = '\0';
+  else
+    *(*text + chunksize-1) = '\0';
+  if (chunksize % 2)
+  {
+    /* Read past pad byte */
+    char c;
+    if (lsx_readbuf(ft, &c, (size_t)1) != 1)
+    {
+      lsx_fail_errno(ft,SOX_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
+      return(SOX_EOF);
+    }
+  }
   lsx_debug("%-10s   \"%s\"", chunkDescription, *text);
   return(SOX_SUCCESS);
 }
