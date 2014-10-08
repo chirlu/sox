@@ -28,7 +28,7 @@ call t.bat 8svx
 call t.bat aiff
 call t.bat aifc
 call t.bat au
-call t.bat avr -u
+call t.bat avr -e unsigned-integer
 call t.bat cdr
 call t.bat cvs
 call t.bat dat

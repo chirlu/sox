@@ -49,14 +49,14 @@ t 8svx
 t aiff
 t aifc
 t au 
-t avr -u
+t avr -e unsigned-integer
 t cdr
 t cvs
 t dat
 t hcom -r 22050
 t maud
 t prc
-t prc -i
+t prc -e signed-integer
 t sf 
 t smp
 t sndt 
