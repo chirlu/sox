@@ -25,6 +25,8 @@ File formats:
   o Add optional support for reading Ogg Opus files. (John Stumpo)
   o Fix for max size text chunks in aiff files. (cbagwell)
   o Add reading support for RF64 WAV files. (Dave Lambley)
+  o Work around for libsndfile created RF64 files with invalid
+    sizes. (Dave Lambley)
 
 Effects:
 

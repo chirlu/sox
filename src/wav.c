@@ -372,6 +372,44 @@ static void wavgsmstopwrite(sox_format_t * ft)
 /****************************************************************************/
 /* General Sox WAV file code                                                */
 /****************************************************************************/
+
+static int sndfile_workaround(uint64_t *len, sox_format_t *ft) {
+    char magic[5];
+    off_t here;
+
+    here = lsx_tell(ft);
+
+    lsx_debug("Attempting work around for bad ds64 length bug");
+
+    /* Seek to last four bytes of chunk, assuming size is correct. */
+    if (lsx_seeki(ft, (off_t)(*len)-4, SEEK_CUR) != SOX_SUCCESS)
+    {
+        lsx_fail_errno(ft, SOX_EHDR, "WAV chunk appears to have invalid size %ld.", *len);
+        return SOX_EOF;
+    }
+
+    /* Get the last four bytes to see if it is an "fmt " chunk */
+    if (lsx_reads(ft, magic, (size_t)4) == SOX_EOF)
+    {
+        lsx_fail_errno(ft,SOX_EHDR, "WAV chunk appears to have invalid size %ld.", *len);
+        return SOX_EOF;
+    }
+
+    /* Seek back to where we were, which won't work if you're piping */
+    if (lsx_seeki(ft, here, SEEK_SET)!=SOX_SUCCESS)
+    {
+        lsx_fail_errno(ft,SOX_EHDR, "Cannot seek backwards to work around possible broken header.");
+        return SOX_EOF;
+    }
+    if (memcmp(magic, "fmt ", (size_t)4)==0)
+    {
+        /* If the last four bytes were "fmt ", len is almost certainly four bytes too big. */
+        lsx_debug("File had libsndfile bug, working around tell=%ld", lsx_tell(ft));
+        *len -= 4;
+    }
+    return SOX_SUCCESS;
+}
+
 static int findChunk(sox_format_t * ft, const char *Label, uint64_t *len)
 {
     char magic[5];
@@ -410,6 +448,18 @@ static int findChunk(sox_format_t * ft, const char *Label, uint64_t *len)
         }
         else {
             *len = len_tmp;
+        }
+
+        /* Work around for a bug in libsndfile
+         * https://github.com/erikd/libsndfile/commit/7fa1c57c37844a9d44642ea35e6638238b8af19e#src/rf64.c
+           The ds64 chunk should be 0x1c bytes, not 0x20.
+         */
+        if ((*len) == 0x20 && memcmp(Label, "ds64", (size_t)4)==0)
+        {
+            int fail;
+            if ((fail = sndfile_workaround(len, ft)) != SOX_SUCCESS) {
+                return fail;
+            }
         }
 
         if (memcmp(Label, magic, (size_t)4) == 0)
