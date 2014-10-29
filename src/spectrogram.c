@@ -71,7 +71,7 @@ typedef struct {
   int        dft_size, step_size, block_steps, block_num, rows, cols, read;
   int        x_size, end, end_min, last_end;
   sox_bool   truncated;
-  double     buf[MAX_FFT_SIZE], dft_buf[MAX_FFT_SIZE], window[MAX_FFT_SIZE];
+  double     buf[MAX_FFT_SIZE], dft_buf[MAX_FFT_SIZE], window[MAX_FFT_SIZE+1];
   double     block_norm, max, magnitudes[(MAX_FFT_SIZE>>1) + 1];
   float      * dBfs;
 } priv_t;
@@ -170,7 +170,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 static double make_window(priv_t * p, int end)
 {
   double sum = 0, * w = end < 0? p->window : p->window + end;
-  int i, n = p->dft_size - abs(end);
+  int i, n = 1 + p->dft_size - abs(end);
 
   if (end) memset(p->window, 0, sizeof(p->window));
   for (i = 0; i < n; ++i) w[i] = 1;
@@ -185,7 +185,7 @@ static double make_window(priv_t * p, int end)
         (p->dB_range + p->gain) * (1.005 + p->window_adjust / 50) + 6);
   }
   for (i = 0; i < p->dft_size; ++i) sum += p->window[i];
-  for (i = 0; i < p->dft_size; ++i) p->window[i] *= 2 / sum
+  for (--n, i = 0; i < p->dft_size; ++i) p->window[i] *= 2 / sum
     * sqr((double)n / p->dft_size);    /* empirical small window adjustment */
   return sum;
 }
