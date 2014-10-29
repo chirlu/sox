@@ -343,11 +343,11 @@ void lsx_apply_kaiser(double h[], const int num_points, double beta)
 
 void lsx_apply_dolph(double h[], const int N, double att)
 {
-  double b = cosh(acosh(pow(10., att / 20)) / (N - 1)), sum, t, v, c, norm = 0;
+  double b = cosh(acosh(pow(10., att/20)) / (N-1)), sum, t, c, norm = 0;
   int i, j;
-  for (c = 1 - 1 / (b * b), i = (N - 1) / 2; i >= 0; --i) {
-    for (sum = !i, b=v=t=j=1; j <= i && sum != t; b = b * (i - j) * (1./j), ++j)
-      t = sum, sum += b * (v *= c * (N - i - j) * (1./j));
+  for (c = 1 - 1 / (b*b), i = (N-1) / 2; i >= 0; --i) {
+    for (sum = !i, b = t = j = 1; j <= i && sum != t; b *= (i-j) * (1./j), ++j)
+      t = sum, sum += (b *= c * (N - i - j) * (1./j));
     sum /= (N - 1 - i), sum /= (norm = norm? norm : sum);
     h[i] *= sum, h[N - 1 - i] *= sum;
   }
