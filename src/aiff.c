@@ -457,8 +457,10 @@ static void reportInstrument(sox_format_t * ft)
 /* Process a text chunk, allocate memory, display it if verbose and return */
 static int textChunk(char **text, char *chunkDescription, sox_format_t * ft)
 {
-  uint32_t chunksize;
-  lsx_readdw(ft, &chunksize);
+  uint32_t chunksize0;
+  size_t chunksize;
+  lsx_readdw(ft, &chunksize0);
+  chunksize = chunksize0;
 
   /* allocate enough memory to hold the text including a terminating \0 */
   if (chunksize != SOX_SIZE_MAX)
