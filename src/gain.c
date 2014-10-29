@@ -80,7 +80,9 @@ static int start(sox_effect_t * effp)
     if (!p->do_equalise && !p->do_balance && !p->do_balance_no_clip)
       effp->flows = 1; /* essentially a conditional SOX_EFF_MCHAN */
   }
-  p->mult = p->max = p->min = 0;
+  p->mult = 0;
+  p->max = 1;
+  p->min = -1;
   if (p->do_scan) {
     p->tmp_file = lsx_tmpfile();
     if (p->tmp_file == NULL) {
