@@ -47,6 +47,7 @@ Effects:
 Other new features:
 
   o New -p option for soxi to display sample precision. (Ulrich Klauer)
+  o New libsox example6: give explicit output attributes. (robs)
 
 Internal improvements:
 
