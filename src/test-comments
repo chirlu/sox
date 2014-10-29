@@ -69,8 +69,9 @@ check_file $tmp.au $tmp.j
 echo "$com2" >> $tmp.j
 check_file $tmp.au $tmp.j
 
-# FIXME: smp aiff mp3
-./sox $tmp.comments.au $tmp.flac
+# FIXME: smp mp3
+./sox $tmp.comments.au $tmp.aiff
+./sox $tmp.aiff $tmp.flac
 ./sox $tmp.flac $tmp.sf
 ./sox $tmp.sf $tmp.ogg
 ./sox $tmp.ogg $tmp.sndt
