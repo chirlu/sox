@@ -97,7 +97,13 @@ if test "$GCC" = "yes"; then
     gccver=`$CC -dumpversion`
     AC_MSG_RESULT($gccver)
 
-    CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2 -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic"
+    CFLAGS="$CFLAGS -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic"
+    AS_VERSION_COMPARE([$gccver], [4.1],,
+		       [CFLAGS="$CFLAGS -fstack-protector"],
+		       [AS_VERSION_COMPARE([$gccver], [4.9],,
+					  [CFLAGS="$CFLAGS -fstack-protector-strong"],
+					  [CFLAGS="$CFLAGS -fstack-protector-strong"])])
+
     AS_VERSION_COMPARE([$gccver], [4.3],
        [WARN_CFLAGS="-Wconversion"],
        [WARN_CFLAGS="-Wtraditional-conversion"],
