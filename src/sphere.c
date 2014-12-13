@@ -47,6 +47,11 @@ static int start_read(sox_format_t * ft)
 
   /* Determine header size, and allocate a buffer large enough to hold it. */
   sscanf(fldsval, "%lu", &header_size_ul);
+  if (header_size_ul < 16) {
+    lsx_fail_errno(ft, SOX_EHDR, "Error reading Sphere header");
+    return (SOX_EOF);
+  }
+
   buf = lsx_malloc(header_size = header_size_ul);
 
   /* Skip what we have read so far */
