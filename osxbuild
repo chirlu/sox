@@ -4,45 +4,42 @@
 # package of SoX.
 #
 # It requires to already have several external libraries already installed
-# under /usr/local/10.5.  The external libraries must be static only or else
+# under /usr/local/10.9.  The external libraries must be static only or else
 # it will expect dylib versions to already exist on external boxes.
 #
-# This goes out of its way to only compile a 32 bit i386 binary and to use the
-# oldest available SDK for greater compatibility.
+# This goes out of its way to use the oldest available SDK for greater
+# compatibility.
 #
 # Various notes:
 #
 # The following command lines were used to generate the static external
 # libraries SoX ships with.
 #
-# cd libtool-2.4.2
-# ./configure --prefix=/usr/local/10.5 CFLAGS="-m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" --disable-shared --enable-static;make;sudo make install
+# brew install libtool
 #
-# cd libpng-1.5.7
-# ./configure --prefix=/usr/local/10.5 CFLAGS="-m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" --disable-shared --enable-static;make;sudo make install
+# cd libpng-1.6.15
+# ./configure --prefix=/usr/local/10.9 CFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" LDFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" --disable-shared --enable-static;make;sudo make install
 #
-# cd ../wavpack-4.60.1
-# ./configure --prefix=/usr/local/10.5 CFLAGS="-m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" --disable-shared --enable-static;make;sudo make install
+# cd ../wavpack-4.70.0
+# ./configure --prefix=/usr/local/10.9 CFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" LDFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" --disable-shared --enable-static;make;sudo make install
 #
-# flac won't compile without following fix.  Edit src/libFLAC/ia32/nasm.h and
-# add following to top of that file: %define FLAC__PUBLIC_NEEDS_UNDERSCORE
-# cd ../flac-1.2.1
-# ./configure --prefix=/usr/local/10.5 CFLAGS="-m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" CXXFLAGS="-m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" --disable-shared --enable-static;make;sudo make install
+# cd ../flac-1.3.1
+# ./configure --prefix=/usr/local/10.9 CFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" CXXFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" LDFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -mmacosx-version-min=10.9" --disable-shared --enable-static;make;sudo make install
 #
-# cd ../libogg-1.3.0
-# ./configure --prefix=/usr/local/10.5 CFLAGS="-m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" --disable-shared --enable-static;make;sudo make install
+# cd ../libogg-1.3.2
+# ./configure --prefix=/usr/local/10.9 CFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" LDFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" --disable-shared --enable-static;make;sudo make install
 #
-# cd ../libvorbis-1.3.2
-# ./configure --prefix=/usr/local/10.5 CFLAGS="-m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" --disable-shared --enable-static;make;sudo make install
+# cd ../libvorbis-1.3.4
+# ./configure --prefix=/usr/local/10.9 CFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" LDFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" --disable-shared --enable-static;make;sudo make install
 #
 # When compiling with newer versions of OS X, Carbon.h does not exist and
 # doesn't need to be included by app.  Edit programs/sndfile-play.c and
 # delete/comment out line 61.
 # cd ../libsndfile-1.0.25
-# ./configure --disable-sqlite --prefix=/usr/local/10.5 CFLAGS="-m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" CXXFLAGS="-m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" --disable-shared --enable-static;make;sudo make install
+# ./configure --disable-sqlite --prefix=/usr/local/10.9 CFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" CXXFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" LDFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -mmacosx-version-min=10.9" --disable-shared --enable-static;make;sudo make install
 #
 # cd ../libid3tag-0.15.1b
-# ./configure --prefix=/usr/local/10.5 CFLAGS="-m32 -arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5" --disable-shared --enable-static;make;sudo make install
+# ./configure --prefix=/usr/local/10.9 CFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" LDFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" --disable-shared --enable-static;make;sudo make install
 #
 # To get MP3 header files used to enable MP3 support (no libraries used):
 #
@@ -51,14 +48,10 @@
 # or compile and install:
 #
 # cd ../libmad-0.15.1b
-#./configure CFLAGS="-m32 -arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5" --enable-shared --disable-static;make;sudo make install
+# ./configure CFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" LDFLAGS="-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk" --enable-shared --disable-static;make;sudo make install
 #
 
-if [ -d /Developer/SDKs/MacOSX10.5.sdk ]; then
-  MacOSXSDK=/Developer/SDKs/MacOSX10.5.sdk
-else
-  MacOSXSDK=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
-fi
+MacOSXSDK=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk
 
 [ ! -x configure ] && autoreconf -i
 
@@ -73,9 +66,9 @@ if [ $# -ne 0 -o ! -r Makefile ]; then
     --enable-dl-lame --enable-dl-mad \
     --enable-dl-amrnb --enable-dl-amrwb \
     CPP=cpp\
-    CPPFLAGS="-I/usr/local/10.5/include -I/usr/local/include" \
-    CFLAGS="-m32 -arch i386 -isysroot ${MacOSXSDK} -mmacosx-version-min=10.5" \
-    LDFLAGS="-L/usr/local/10.5/lib -m32 -arch i386 -isysroot ${MacOSXSDK} -mmacosx-version-min=10.5" \
+    CPPFLAGS="-I/usr/local/10.9/include -I/usr/local/include" \
+    CFLAGS="-isysroot ${MacOSXSDK}" \
+    LDFLAGS="-L/usr/local/10.9/lib -isysroot ${MacOSXSDK}" \
     $*
 fi
 
@@ -111,7 +104,7 @@ binaries=src/sox
 
 # TODO: Distribute wget binary
 #[ -r "../wget-1.11.4/wget" ] && binaries+=" ../wget-1.11.4/wget"
- 
+
 cp -p \
   $binaries \
   sox.txt \
