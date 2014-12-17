@@ -1,58 +1,53 @@
 #!/bin/sh
 #
-# This script will automates the steps used to producing a static win32
-# package of SoX.
+# This script will automates the steps used to producing a win32 package
+# of SoX.
 #
-# It is used on a Fedora box with mingw cross compiler and wine to
-# test.  It can also be used under MSYS but will not generate PDF docs.
+# It is used on a Fedora box with mingw32 cross compiler and wine to
+# test.
 #
 # It will optionally package up VC++ version of wget if found in
 # ../wget-1.11.4.
 #
 # Various notes:
 #
-# Script makes use of "-static" option to tell compiler to prefer static
-# external libraries so that we do not need to distribute DLL's.
+# The following command lines were used to generate the external libraries
+# SoX ships with.
 #
-# Libtool will get confused with this flag for external libraries
-# that have a libtool lib*.la file and support shared libraries as
-# well as static libraries (but usually only if that library
-# further depends on other external libraries with lib*.la files).
-# Libtool may ignore -static option or it may link first external
-# library as static but other dependent libraries as shared (usually
-# because it follows $dependency_libs and that ignores -static option).
-#
-# Work arounds include to only install static libraries, delete the lib*.la
-# file, or edit the lib*.la file and set dlnames and library_names variables
-# to empty string ("").
-#
-# The following command lines were used to generate the static external
-# libraries SoX ships with.
-#
+# Needed for libltdl support.
+# FIXME: Install
 # cd libtool-2.4.2
 # mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
-# libpng.la will have libtool issue because depends on libz
-# which has a libz.la file.  Must edit libpng.la to
-# prevent needing to distribute zlib1.dll.
-# cd libpng-1.5.7
+# yum install ming32-libpng mingw32-libpng-static
+#  or
+# cd libpng-1.6.15
 # mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
-# cd ../wavpack-4.60.1
+# yum install mingw32-wavpack
+#  or
+# cd ../wavpack-4.70.0
 # mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
+# yum install mingw32-flac
+#  or
 # Need to disable optional ogg support to prevent duplicate symbols during
 # link.
 # Edited Makefile and removed "examples" from SUBDIRS.
-# cd ../flac-1.2.1
+# cd ../flac-1.3.1
 # mingw32-configure --disable-ogg --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
-# cd ../libogg-1.3.0
+# yum install mingw32-libogg
+#  or
+# cd ../libogg-1.3.2
 # mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
-# cd ../libvorbis-1.3.2
+# yum install mingw32-libvorbis
+#  or
+# cd ../libvorbis-1.3.4
 # mingw32-configure --disable-shared --enable-static;mingw-32-make;sudo mingw32-make install
 #
+# FIXME: Install libsndfile
 # Compile libsndfile after FLAC and ogg vorbis so that it will include
 # support for that.
 # MINGW work around: Can either add -lwsock32 to end of *_LDADD for any
@@ -61,41 +56,28 @@
 # cd ../libsndfile-1.0.25
 # mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
+# yum install mingw32-libid3tag
+#  or
 # libid3tag does not like to be compiled shared on mingw32 cross compiler.
 # cd ../libid3tag-0.15.1b
 # mingw32-configure --disable-shared --enable-static;mingw32-make;sudo mingw32-make install
 #
 # To get MP3 header files used to enable MP3 support (no libraries used):
 #
+# yum install mingw32-libmad
+#  or
 # MINGW work around: Edit Makefile and remove -fforce-mem from CFLAGS
 # cd ../libmad-0.15.1b
 # mingw32-configure --enable-shared --disable-static;mingw32-make;sudo mingw32-make install
 
 [ ! -x configure ] && autoreconf -i
 
-case `uname` in
-  MINGW32*)
-  CONFIGURE=configure
-  SYS_ROOT=""
-  # Can't build PDF's on MSYS unless ghostscript is installed.
-  DOC_TARGETS=""
-  DOCS=""
-  TMP_SNDFILE_LIBS=""
-  TMP_FLAC_LIBS=""
-  STRIP=strip
-  ;;
-  *)
-  SYS_ROOT="/usr/i686-w64-mingw32/sys-root"
-  CONFIGURE=mingw32-configure
-  DOC_TARGETS="pdf"
-  DOCS="sox.pdf soxformat.pdf soxi.pdf"
-  TMP_SNDFILE_LIBS="-lsndfile -lFLAC -lvorbisenc -lvorbisfile -lvorbis -logg"
-  # TODO: libFLAC is referencing ntohl() but not defining it in their
-  # flac.pc. Its not obvious how upstream is going to fix this issue
-  # so work around in script for now.
-  #TMP_FLAC_LIBS="-lwsock32"
-  STRIP=i686-pc-mingw32-strip
-esac
+SYS_ROOT="/usr/i686-w64-mingw32/sys-root"
+CONFIGURE=mingw32-configure
+DOC_TARGETS="pdf"
+DOCS="sox.pdf soxformat.pdf soxi.pdf"
+TMP_SNDFILE_LIBS="-lsndfile -lFLAC -lvorbisenc -lvorbisfile -lvorbis -logg"
+STRIP=i686-pc-mingw32-strip
 
 # Some versions of autoconf (2.63?) seem to get easily confused about
 # CPP variable. If you see warning messages about header files
@@ -105,11 +87,10 @@ esac
 # FLAC or ogg vorbis support.  Need to force the link ourselves.
 if [ $# -ne 0 -o ! -r Makefile ]; then
   $CONFIGURE \
-    --disable-shared \
     --with-libltdl \
     --enable-dl-lame --enable-dl-mad --enable-dl-amrnb --enable-dl-amrwb \
-    LDFLAGS="-static -L/usr/local/lib" CPPFLAGS=-I/usr/local/include \
-    SNDFILE_LIBS="${TMP_SNDFILE_LIBS}" FLAC_LIBS="${TMP_FLAC_LIBS}"\
+    LDFLAGS="-L/usr/local/lib" CPPFLAGS=-I/usr/local/include \
+    SNDFILE_LIBS="${TMP_SNDFILE_LIBS}" \
     $*
 fi
 
@@ -129,11 +110,9 @@ done
 
 binaries=src/sox.exe
 
-# If you do not edit libpng.la to comment out shared libraries
-# then you'll need to distribute zlib1.dll.
-dlls=""
-dlls="$dlls ${SYS_ROOT}/mingw/bin/zlib1.dll"
-dlls="$dlls ${SYS_ROOT}/mingw/bin/libgomp-1.dll"
+dlls=`/usr/i686-w64-mingw32/bin/objdump -p src/.libs/libsox-3.dll | grep "DLL Name:" | sed "s|DLL Name: |${SYS_ROOT}/mingw/bin/|" | grep -v KERNEL32.dll | grep -v msvcrt.dll | grep -v USER32.dll | grep -v WINMM.DLL`
+dlls="$dlls src/.libs/libsox-3.dll"
+dlls="$dlls ${SYS_ROOT}/mingw/bin/libwinpthread-1.dll"
 
 cp -p \
   $binaries \
@@ -142,9 +121,8 @@ cp -p \
   scripts/batch-example.bat \
   $dir
 
-# Special case copy to work around some case sensitivity bugs with
-# nsiswrapper under linux.
-cp -p ${SYS_ROOT}/mingw/bin/pthreadGC2.dll ${dir}/pthreadgc2.dll
+# Special case fixup for nsiswrapper. Rename libFLAC-8.dll to libflac-8.dll.
+mv $dir/libFLAC-8.dll $dir/libflac-8.dll
 
 unix2dos $dir/batch-example.bat
 
@@ -159,7 +137,7 @@ zip -r $dir-win32.zip $dir
 if test -r "/usr/bin/nsiswrapper"; then
   cd ${dir}
   export PATH=$PATH:.
-  nsiswrapper --run --name $dir --outfile ../${dir}-win32.exe *.exe *.ini *.txt *.pdf *.bat
+  nsiswrapper --run --name $dir --outfile ../${dir}-win32.exe *.exe *.dll *.ini *.txt *.pdf *.bat
   cd ..
 fi
 

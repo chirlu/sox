@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.62)
 
-AC_INIT(SoX, 14.4.2git, sox-devel@lists.sourceforge.net)
+AC_INIT(SoX, 14.4.2rc1, sox-devel@lists.sourceforge.net)
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -91,6 +91,76 @@ else
     enable_debug=no
 fi
 
+# -fstack-protector
+AC_ARG_ENABLE([stack-protector],
+    [AS_HELP_STRING([--disable-stack-protector],
+        [Disable GCC's/libc's stack-smashing protection])],
+    [case "${enableval}" in
+         yes) enable_ssp=yes ;;
+          no) enable_ssp=no ;;
+           *) AC_MSG_ERROR([invalid value ${enableval} for --disable-stack-protector]) ;;
+     esac],
+    [enable_ssp=yes])
+
+if test x"$enable_ssp" = x"yes" && test x"$GCC" != x"yes"; then
+    AC_MSG_NOTICE([Disabling stack-smashing protection because compiler is not GCC])
+    enable_ssp=no
+fi
+
+if test x"$enable_ssp" = x"yes"; then
+    # Check for broken ssp in libc: http://www.avahi.org/ticket/105
+    # libc's brokenness will get in the way regardless of whether -lssp is
+    # provided, but provide it anyway (otherwise non-libc ssp would wrongly
+    # break here)
+
+    # Get -lssp if it exists
+    GCC_STACK_PROTECT_LIB
+
+    AC_MSG_CHECKING([whether stack-smashing protection is available])
+    ssp_old_cflags="$CFLAGS"
+    ssp_old_ldflags="$LDFLAGS"
+    CFLAGS="$CFLAGS -Werror -fstack-protector-all -fPIC"
+    LDFLAGS="$LDFLAGS -Wl,-z,defs"
+    cat confdefs.h > conftest.c
+    cat >>conftest.c <<_ACEOF
+void test_broken_ssp(c)
+    const char *c;
+{
+    char arr[[123]], *p; /* beware of possible double-braces if copying this */
+    for (p = arr; *c; ++p) {
+        *p = *c;
+        ++c;
+    }
+}
+_ACEOF
+    rm -f conftest.o
+
+    if $CC -c $CFLAGS $CPPFLAGS -o conftest.o conftest.c >/dev/null 2>&1; then
+        AC_MSG_RESULT([yes])
+        AC_MSG_CHECKING([whether stack-smashing protection is buggy])
+        if $CC -o conftest.so $LDFLAGS -shared conftest.o $LIBS >/dev/null 2>&1; then
+            AC_MSG_RESULT([no])
+        else
+            AC_MSG_RESULT([yes])
+            enable_ssp=no
+        fi
+    else
+        AC_MSG_RESULT([no])
+    fi
+
+    rm -f conftest.c conftest.o conftest.so
+
+    CFLAGS="$ssp_old_cflags"
+    LDFLAGS="$ssp_old_ldflags"
+fi
+
+if test x"$enable_ssp" = x"yes"; then
+    # Do this the long way so we don't call GCC_STACK_PROTECT_LIB twice
+    GCC_STACK_PROTECT_CC
+
+    # XXX: Update the enable_ssp value now for output later?
+fi
+
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = "yes"; then
 
@@ -99,11 +169,6 @@ if test "$GCC" = "yes"; then
     AC_MSG_RESULT($gccver)
 
     CFLAGS="$CFLAGS -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic"
-    AS_VERSION_COMPARE([$gccver], [4.1],,
-		       [CFLAGS="$CFLAGS -fstack-protector"],
-		       [AS_VERSION_COMPARE([$gccver], [4.9],,
-					  [CFLAGS="$CFLAGS -fstack-protector-strong"],
-					  [CFLAGS="$CFLAGS -fstack-protector-strong"])])
 
     AS_VERSION_COMPARE([$gccver], [4.3],
        [WARN_CFLAGS="-Wconversion"],
