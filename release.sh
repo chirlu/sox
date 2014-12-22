@@ -315,15 +315,8 @@ if [ $update_web = "yes" ]; then
 fi
 
 if [ $release_files = "yes" ]; then
-    echo "Checking for an existing release..."
-    if ssh ${username}@${hostname} ls ${release_path}/${rcpath}${module}/${release_num}/$src_gz >/dev/null 2>&1; then
-	if [ "$release_force" != "yes" ]; then
-	    echo "error: file already exists!"
-	    exit 1
-	fi
-    fi
     ssh ${username}@${hostname} mkdir -p ${release_path}/${rcpath}${module}/${release_num}
-    scp -p $release_list ${username}@${hostname}:${release_path}/${rcpath}${module}/${release_num}
+    rsync -avz --delete --progress $release_list ${username}@${hostname}:${release_path}/${rcpath}${module}/${release_num}
     # FIXME: Stop pushing this and need to find a solution to help push it later.
     #scp -p NEWS ${username}@${hostname}:${release_path}/${rcpath}${module}/${release_num}/README
 fi
