@@ -27,6 +27,8 @@ File formats:
   o Add reading support for RF64 WAV files. (Dave Lambley)
   o Work around for libsndfile created RF64 files with invalid
     sizes. (Dave Lambley)
+  o Detect MS ADPCM WAV files with invalid blocks. (cbagwell)
+  o Detect Sphere files with invalid header sizes. (cbagwell)
 
 Effects:
 
