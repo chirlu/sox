@@ -1,4 +1,4 @@
-#define PACKAGE_VERSION "14.4.2rc1"
+#define PACKAGE_VERSION "14.4.2rc2"
 
 #cmakedefine EXTERNAL_GSM             1
 #cmakedefine EXTERNAL_LPC10           1
