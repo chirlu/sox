@@ -1,14 +1,11 @@
 Highlights for this maintenance release include:
 
- o Check that PulseAudio is present before trying to use it.
- o Use binary mode for pipe inputs ("|sox ...") on Windows.
- o Re-enable file-type detection when reading from a pipe.
- o Fix crash when seeking within a FLAC file.
- o Fix hang in rate and other effects when processing long files.
- o Audio length calculation fixes.
+ o Read support for Ogg Opus files.
+ o Read support for RF64 WAV files.
+ o Deemph can now be used at 48kHz sample rates.
+ o Rate is now much faster in many cases.
+ o Support multi-channel LADSPA plugins and optional latency compensation.
  o Many other bug fixes.
 
 For an extensive list of changes, see the ChangeLog at
-  http://sox.git.sourceforge.net/git/gitweb.cgi?p=sox/sox;hb=sox-14.4.1;f=ChangeLog
-or consult the complete development history at
-  http://sox.git.sourceforge.net/git/gitweb.cgi?p=sox/sox;a=history;hpb=sox-14.4.0;hb=sox-14.4.1
+  http://sourceforge.net/p/sox/code/ci/sox-14.4.2/tree/ChangeLog
