@@ -97,7 +97,7 @@ fi
 # Reduce total size of sox.exe by over half.
 make -s all txt $DOC_TARGETS || exit 1
 
-${STRIP} src/sox.exe
+${STRIP} src/.libs/sox.exe
 
 dir=sox-`grep Version: sox.pc | cut -d ' ' -f 2`
 rm -rf $dir $dir-win32.zip
@@ -108,7 +108,7 @@ for f in ChangeLog LICENSE.GPL README README.win32; do
   unix2dos $dir/$f.txt
 done
 
-binaries=src/sox.exe
+binaries=src/.libs/sox.exe
 
 dlls=`/usr/i686-w64-mingw32/bin/objdump -p src/.libs/libsox-3.dll | grep "DLL Name:" | sed "s|DLL Name: |${SYS_ROOT}/mingw/bin/|" | grep -v KERNEL32.dll | grep -v msvcrt.dll | grep -v USER32.dll | grep -v WINMM.DLL`
 dlls="$dlls src/.libs/libsox-3.dll"
