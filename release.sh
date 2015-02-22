@@ -59,7 +59,7 @@ webpath="sourceforge.net/projects/sox/files"
 rcpath=""
 email_list="sox-users@lists.sourceforge.net,sox-devel@lists.sourceforge.net"
 hostname="shell.sourceforge.net"
-release_path="/home/frs/project/s/so/sox"
+release_path="/home/frs/project/sox"
 release_force="no"
 web_path="/home/project-web/sox/htdocs"
 
@@ -178,12 +178,6 @@ build()
     ! make -s distcheck && echo "distcheck failed" && exit 1
     ! make -s dist-bzip2 && echo "dist-bzip2 failed" && exit 1
 
-    echo "Creating Windows packages..."
-    make -s distclean
-    rm -f $win_zip
-    rm -f $win_exe
-    ./mingwbuild
-
     if [ $update_web = "yes" ]; then
 	echo "Creating HTML documentation for web site..."
 	! make -s html && echo "html failed" && exit 1
@@ -191,6 +185,12 @@ build()
 	echo "Creating PDF documentation for web site..."
 	! make -s pdf && echo "pdf failed" && exit 1
     fi
+
+    echo "Creating Windows packages..."
+    make -s distclean
+    rm -f $win_zip
+    rm -f $win_exe
+    ./mingwbuild
 }
 
 MD5SUM=`which md5sum || which gmd5sum`
