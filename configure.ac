@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.62)
 
-AC_INIT(SoX, 14.4.2rc2, sox-devel@lists.sourceforge.net)
+AC_INIT(SoX, 14.4.2, sox-devel@lists.sourceforge.net)
 
 AC_CONFIG_MACRO_DIR([m4])
 
