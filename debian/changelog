@@ -1,3 +1,12 @@
+sox (14.4.1-5) unstable; urgency=medium
+
+  * Patches to fix memory corruptions on the heap, CVE-2014-8145
+    (closes: #773720):
+    + 0001-Check-for-minimum-size-sphere-headers.patch
+    + 0002-More-checks-for-invalid-MS-ADPCM-blocks.patch
+
+ -- Pascal Giard <pascal@debian.org>  Wed, 24 Dec 2014 14:33:55 -0500
+
 sox (14.4.1-4) unstable; urgency=low
 
   * [debian/rules,debian/control]:
