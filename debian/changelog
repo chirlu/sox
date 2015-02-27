@@ -1,9 +1,20 @@
+sox (14.4.1-4) unstable; urgency=low
+
+  * [debian/rules,debian/control]:
+    - Build with dh-autoreconf instead of autotools-dev to fix FTBFS on new
+      architectures. Thanks to William Grant <wgrant@ubuntu.com> and Breno
+      Leitao <brenohl@br.ibm.com> (Closes: #746517).
+  * [debian/control]:
+    - Remove useless build-dep on libav* (Closes: #748049).
+
+ -- Pascal Giard <pascal@debian.org>  Wed, 21 May 2014 21:58:57 -0400
+
 sox (14.4.1-3) unstable; urgency=low
 
   * [debian/rules]:
     - Added an explicit call to dh_installchangelogs as Ubuntu no longer does
       does it by default. It's important for us as it contains the list of
-      past contributors. 
+      past contributors.
   * [debian/docs]:
     - Fixed paths to files.
 

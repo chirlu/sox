@@ -3,14 +3,11 @@ Homepage: http://sox.sourceforge.net
 Section: sound
 Priority: optional
 Maintainer: Pascal Giard <pascal@debian.org>
-Build-Depends: autotools-dev,
+Build-Depends: dh-autoreconf,
                debhelper (>= 9),
                ladspa-sdk,
                libao-dev,
                libasound2-dev [linux-any],
-               libavcodec-dev (>= 4:0.6.0),
-               libavformat-dev,
-               libavutil-dev,
                libgsm1-dev,
                libid3tag0-dev,
                libltdl3-dev,

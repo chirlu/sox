@@ -29,5 +29,5 @@ override_dh_auto_install: $(PREPROCESS_FILES:.in=)
 	dh_installchangelogs ChangeLog
 
 %:
-	dh $@ --with autotools_dev
+	dh $@ --with autoreconf
 
