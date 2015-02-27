@@ -24,7 +24,10 @@ override_dh_auto_clean:
 
 override_dh_auto_install: $(PREPROCESS_FILES:.in=)
 	dh_auto_install
+	# Force Ubuntu into installing upstream ChangeLog, it contains the
+	# list of past contributors
+	dh_installchangelogs ChangeLog
 
 %:
-	dh $@
+	dh $@ --with autoreconf
 
