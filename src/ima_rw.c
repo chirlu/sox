@@ -260,7 +260,7 @@ inline static void ImaMashChannel(
                 int low,hi,w;
                 int low0,hi0;
                 snext = s0;
-                d0 = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL);
+                d0 = ImaMashS(ch, chans, ip[ch], ip,n,&snext, NULL);
 
                 w = 0;
                 low=hi=s0;
@@ -270,7 +270,7 @@ inline static void ImaMashChannel(
                         if (!w && low>low0) {
                                 int d2;
                                 snext = --low;
-                                d2 = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL);
+                                d2 = ImaMashS(ch, chans, ip[ch], ip,n,&snext, NULL);
                                 if (d2<d0) {
                                         d0=d2; s0=low;
                                         low0 = low-opt; if (low0<0) low0=0;
@@ -280,7 +280,7 @@ inline static void ImaMashChannel(
                         if (w && hi<hi0) {
                                 int d2;
                                 snext = ++hi;
-                                d2 = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL);
+                                d2 = ImaMashS(ch, chans, ip[ch], ip,n,&snext, NULL);
                                 if (d2<d0) {
                                         d0=d2; s0=hi;
                                         low0 = hi-opt; if (low0<0) low0=0;
@@ -291,7 +291,7 @@ inline static void ImaMashChannel(
                 }
                 *st = s0;
         }
-        ImaMashS(ch, chans, ip[0], ip,n,st, obuff);
+        ImaMashS(ch, chans, ip[ch], ip,n,st, obuff);
 }
 
 /* mash one block.  if you want to use opt>0, 9 is a reasonable value */
