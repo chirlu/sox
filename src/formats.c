@@ -415,6 +415,8 @@ static void UNUSED rewind_pipe(FILE * fp)
   fp->_r += PIPE_AUTO_DETECT_SIZE;
 #elif defined __GLIBC__
   fp->_IO_read_ptr = fp->_IO_read_base;
+#elif defined _MSC_VER && _MSC_VER >= 1900
+  #define NO_REWIND_PIPE
 #elif defined _MSC_VER || defined _WIN32 || defined _WIN64 || \
       defined _ISO_STDIO_ISO_H || defined __sgi
   fp->_ptr = fp->_base;
