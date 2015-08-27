@@ -445,9 +445,10 @@ static int stopwrite(sox_format_t * ft)
   int rc = SOX_SUCCESS;
 
   /* Compress it all at once */
-  if (compressed_len)
+  if (compressed_len) {
     compress(ft, &compressed_data, (int32_t *)&compressed_len);
-  free(p->data);
+    free(p->data);
+  }
 
   /* Write the header */
   lsx_writebuf(ft, "\000\001A", (size_t) 3); /* Dummy file name "A" */
