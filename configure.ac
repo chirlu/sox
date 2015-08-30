@@ -113,7 +113,6 @@ SOX_DL_LIB([mad], [mad.h], [mad], [mad_stream_buffer])
 SOX_DL_LIB([lame], [lame/lame.h lame.h], [mp3lame], [lame_init])
 SOX_DL_LIB([twolame], [twolame.h], [twolame], [twolame_init])
 SOX_FMT_REQ([mp3], [MAD LAME TWOLAME])
-MP3_LIBS="$MP3_LIBS $ID3TAG_LIBS"
 
 SOX_FMT_PKG([oggvorbis], [ogg vorbis vorbisenc vorbisfile])
 SOX_FMT_PKG([opus], [opusfile])

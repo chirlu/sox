@@ -15,6 +15,7 @@ lsx_find_file_extension
 lsx_flush
 lsx_getopt
 lsx_getopt_init
+lsx_id3_read_tag
 lsx_lpc10_create_decoder_state
 lsx_lpc10_create_encoder_state
 lsx_lpc10_decode
