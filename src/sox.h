@@ -2450,7 +2450,7 @@ Finds the file extension for a filename.
 @returns the file extension, not including the '.', or null if filename does
 not have an extension.
 */
-LSX_RETURN_VALID_Z LSX_RETURN_PURE
+LSX_RETURN_OPT LSX_RETURN_PURE
 char const *
 LSX_API
 lsx_find_file_extension(
