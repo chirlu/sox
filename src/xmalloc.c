@@ -20,6 +20,16 @@
 #include "sox_i.h"
 #include <stdlib.h>
 
+static void *lsx_checkptr(void *ptr)
+{
+  if (!ptr) {
+    lsx_fail("out of memory");
+    exit(2);
+  }
+
+  return ptr;
+}
+
 /* Resize an allocated memory area; abort if not possible.
  *
  * For malloc, `If the size of the space requested is zero, the behavior is
@@ -34,10 +44,20 @@ void *lsx_realloc(void *ptr, size_t newsize)
     return NULL;
   }
 
-  if ((ptr = realloc(ptr, newsize)) == NULL) {
-    lsx_fail("out of memory");
-    exit(2);
-  }
+  return lsx_checkptr(realloc(ptr, newsize));
+}
 
-  return ptr;
+void *lsx_malloc(size_t size)
+{
+  return lsx_checkptr(malloc(size + !size));
+}
+
+void *lsx_calloc(size_t n, size_t size)
+{
+  return lsx_checkptr(calloc(n + !n, size + !size));
+}
+
+char *lsx_strdup(const char *s)
+{
+  return lsx_checkptr(strdup(s));
 }
