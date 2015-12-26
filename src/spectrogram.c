@@ -61,7 +61,7 @@ typedef struct {
   double     pixels_per_sec, window_adjust;
   int        x_size0, y_size, Y_size, dB_range, gain, spectrum_points, perm;
   sox_bool   monochrome, light_background, high_colour, slack_overlap, no_axes;
-  sox_bool   raw, alt_palette, truncate;
+  sox_bool   normalize, raw, alt_palette, truncate;
   win_type_t win_type;
   char const * out_name, * title, * comment;
   char const *duration_str, *start_time_str;
@@ -115,7 +115,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   char const * next;
   int c;
   lsx_getopt_t optstate;
-  lsx_getopt_init(argc, argv, "+S:d:x:X:y:Y:z:Z:q:p:W:w:st:c:AarmlhTo:", NULL, lsx_getopt_flag_none, 1, &optstate);
+  lsx_getopt_init(argc, argv, "+S:d:x:X:y:Y:z:Z:q:p:W:w:st:c:AarmnlhTo:", NULL, lsx_getopt_flag_none, 1, &optstate);
 
   p->dB_range = 120, p->spectrum_points = 249, p->perm = 1; /* Non-0 defaults */
   p->out_name = "spectrogram.png", p->comment = "Created by SoX";
@@ -136,6 +136,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     case 'a': p->no_axes          = sox_true;   break;
     case 'r': p->raw              = sox_true;   break;
     case 'm': p->monochrome       = sox_true;   break;
+    case 'n': p->normalize        = sox_true;   break;
     case 'l': p->light_background = sox_true;   break;
     case 'h': p->high_colour      = sox_true;   break;
     case 'T': p->truncate         = sox_true;   break;
@@ -559,6 +560,7 @@ static int stop(sox_effect_t * effp) /* only called, by end(), on flow 0 */
   int         i, j, k, base, step, tick_len = 3 - p->no_axes;
   char        text[200], * prefix;
   double      limit;
+  float       autogain = 0.0;	/* Is changed if the -n flag was supplied */
 
   free(p->shared);
   if (p->using_stdout) {
@@ -585,8 +587,22 @@ static int stop(sox_effect_t * effp) /* only called, by end(), on flow 0 */
     png_rows[rows - 1 - j] = (png_bytep)(pixels + j * cols);
 
   /* Spectrogram */
+
+  if (p->normalize)
+    /* values are already in dB, so we subtract the maximum value
+     * (which will normally be negative) to raise the maximum to 0.0.
+     */
+    autogain = -p->max;
+
   for (k = 0; k < chans; ++k) {
     priv_t * q = (priv_t *)(effp - effp->flow + k)->priv;
+
+    if (p->normalize) {
+      float *fp = q->dBfs;
+      for (i = p->rows * p->cols; i > 0; i--)
+	*fp++ += autogain;
+    }
+
     base = !p->raw * below + (chans - 1 - k) * (p->rows + 1);
     for (j = 0; j < p->rows; ++j) {
       for (i = 0; i < p->cols; ++i)
@@ -653,7 +669,7 @@ static int stop(sox_effect_t * effp) /* only called, by end(), on flow 0 */
     step = 10 * ceil(p->dB_range / 10. * (font_y + 2) / (k - 1));
     for (i = 0; i <= p->dB_range; i += step) {           /* (Tick) labels */
       int y = (double)i / p->dB_range * (k - 1) + .5;
-      sprintf(text, "%+i", i - p->gain - p->dB_range);
+      sprintf(text, "%+i", i - p->gain - p->dB_range - (int)(autogain+0.5));
       print_at(cols - right + 1, base + y + 5, Labels, text);
     }
   }
@@ -694,6 +710,7 @@ sox_effect_handler_t const * lsx_spectrogram_effect_fn(void)
     "\t-Y num\tY-height total (i.e. not per channel); default 550",
     "\t-z num\tZ-axis range in dB; default 120",
     "\t-Z num\tZ-axis maximum in dBFS; default 0",
+    "\t-n\tSet Z-axis maximum to the brightest pixel",
     "\t-q num\tZ-axis quantisation (0 - 249); default 249",
     "\t-w name\tWindow: Hann(default)/Hamming/Bartlett/Rectangular/Kaiser/Dolph",
     "\t-W num\tWindow adjust parameter (-10 - 10); applies only to Kaiser/Dolph",
