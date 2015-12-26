@@ -36,10 +36,15 @@
   #include <io.h>
 #endif
 
-#define MAX_FFT_SIZE 4096
 #define is_p2(x) !(x & (x - 1))
 
 #define MAX_X_SIZE 200000
+
+#if SSIZE_MAX < UINT32_MAX
+#define MAX_Y_SIZE 16384 /* avoid multiplication overflow on 32-bit systems */
+#else
+#define MAX_Y_SIZE 200000
+#endif
 
 typedef enum {Window_Hann, Window_Hamming, Window_Bartlett, Window_Rectangular, Window_Kaiser, Window_Dolph} win_type_t;
 static lsx_enum_item const window_options[] = {
@@ -71,8 +76,11 @@ typedef struct {
   int        dft_size, step_size, block_steps, block_num, rows, cols, read;
   int        x_size, end, end_min, last_end;
   sox_bool   truncated;
-  double     buf[MAX_FFT_SIZE], dft_buf[MAX_FFT_SIZE], window[MAX_FFT_SIZE+1];
-  double     block_norm, max, magnitudes[(MAX_FFT_SIZE>>1) + 1];
+  double     * buf;             /* [dft_size] */
+  double     * dft_buf;         /* [dft_size] */
+  double     * window;          /* [dft_size + 1] */
+  double     block_norm, max;
+  double     * magnitudes;      /* [dft_size / 2 + 1] */
   float      * dBfs;
 } priv_t;
 
@@ -115,8 +123,8 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   while ((c = lsx_getopt(&optstate)) != -1) switch (c) {
     GETOPT_NUMERIC(optstate, 'x', x_size0       , 100, MAX_X_SIZE)
     GETOPT_NUMERIC(optstate, 'X', pixels_per_sec,  1 , 5000)
-    GETOPT_NUMERIC(optstate, 'y', y_size        , 64 , 1200)
-    GETOPT_NUMERIC(optstate, 'Y', Y_size        , 130, MAX_FFT_SIZE / 2 + 2)
+    GETOPT_NUMERIC(optstate, 'y', y_size        , 64 , MAX_Y_SIZE)
+    GETOPT_NUMERIC(optstate, 'Y', Y_size        , 130, MAX_Y_SIZE)
     GETOPT_NUMERIC(optstate, 'z', dB_range      , 20 , 180)
     GETOPT_NUMERIC(optstate, 'Z', gain          ,-100, 100)
     GETOPT_NUMERIC(optstate, 'q', spectrum_points, 0 , p->spectrum_points)
@@ -172,7 +180,7 @@ static double make_window(priv_t * p, int end)
   double sum = 0, * w = end < 0? p->window : p->window + end;
   int i, n = 1 + p->dft_size - abs(end);
 
-  if (end) memset(p->window, 0, sizeof(p->window));
+  if (end) memset(p->window, 0, sizeof(*p->window) * (p->dft_size + 1));
   for (i = 0; i < n; ++i) w[i] = 1;
   switch (p->win_type) {
     case Window_Hann: lsx_apply_hann(w, n); break;
@@ -190,7 +198,7 @@ static double make_window(priv_t * p, int end)
   return sum;
 }
 
-static double * rdft_init(int n)
+static double * rdft_init(size_t n)
 {
   double * q = lsx_malloc(2 * (n / 2 + 1) * n * sizeof(*q)), * p = q;
   int i, j;
@@ -265,6 +273,13 @@ static int start(sox_effect_t * effp)
    int y = max(32, (p->Y_size? p->Y_size : 550) / effp->in_signal.channels - 2);
    for (p->dft_size = 128; p->dft_size <= y; p->dft_size <<= 1);
   }
+
+  /* Now that dft_size is set, allocate variable-sized elements of priv_t */
+  p->buf        = lsx_calloc(p->dft_size, sizeof(*p->buf));
+  p->dft_buf    = lsx_calloc(p->dft_size, sizeof(*p->dft_buf));
+  p->window     = lsx_calloc(p->dft_size + 1, sizeof(*p->window));
+  p->magnitudes = lsx_calloc(p->dft_size / 2 + 1, sizeof(*p->magnitudes));
+
   if (is_p2(p->dft_size) && !effp->flow)
     lsx_safe_rdft(p->dft_size, 1, p->dft_buf);
   lsx_debug("duration=%g x_size=%i pixels_per_sec=%g dft_size=%i", duration, p->x_size, pixels_per_sec, p->dft_size);
@@ -651,6 +666,10 @@ error: png_destroy_write_struct(&png, &png_info);
   free(png_rows);
   free(pixels);
   free(p->dBfs);
+  free(p->buf);
+  free(p->dft_buf);
+  free(p->window);
+  free(p->magnitudes);
   return SOX_SUCCESS;
 }
 
