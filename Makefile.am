@@ -39,11 +39,11 @@ txt: $(DOCTXT)
 
 # Rule for making PDF man pages
 .1.pdf:
-	pdfroff -t -man -Tps $< > $@
+	pdfroff -t -man --no-toc-relocation -Tps $< > $@
 .3.pdf:
-	pdfroff -t -man -Tps $< > $@
+	pdfroff -t -man --no-toc-relocation -Tps $< > $@
 .7.pdf:
-	pdfroff -t -man -Tps $< > $@
+	pdfroff -t -man --no-toc-relocation -Tps $< > $@
 
 DOCPDF = sox.pdf soxi.pdf soxformat.pdf libsox.pdf
 pdf: $(DOCPDF)
