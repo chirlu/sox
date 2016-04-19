@@ -1057,8 +1057,15 @@ int sox_close(sox_format_t * ft)
     else result = ft->handler.stopwrite? (*ft->handler.stopwrite)(ft) : SOX_SUCCESS;
   }
 
-  if (ft->fp && ft->fp != stdin && ft->fp != stdout)
+  if (ft->fp == stdin) {
+    sox_globals.stdin_in_use_by = NULL;
+  } else if (ft->fp == stdout) {
+    fflush(stdout);
+    sox_globals.stdout_in_use_by = NULL;
+  } else if (ft->fp) {
     xfclose(ft->fp, ft->io_type);
+  }
+
   free(ft->priv);
   free(ft->filename);
   free(ft->filetype);
