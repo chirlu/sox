@@ -113,8 +113,6 @@ static int startany(sox_format_t *ft, unsigned mode)
     else
       reqpar.rchan = ft->signal.channels;
   }
-  if (ft->signal.precision > 0)
-    reqpar.bits = ft->signal.precision;
   switch (ft->encoding.encoding) {
   case SOX_ENCODING_SIGN2:
     reqpar.sig = 1;
@@ -127,6 +125,12 @@ static int startany(sox_format_t *ft, unsigned mode)
   }
   if (ft->encoding.bits_per_sample > 0)
     reqpar.bits = ft->encoding.bits_per_sample;
+  else if (ft->signal.precision > 0)
+    reqpar.bits = ft->signal.precision;
+  else
+    reqpar.bits = SOX_DEFAULT_PRECISION;
+  reqpar.bps = (reqpar.bits + 7) / 8;
+  reqpar.msb = 1;
   if (ft->encoding.reverse_bytes != sox_option_default) {
     reqpar.le = SIO_LE_NATIVE;
     if (ft->encoding.reverse_bytes)
