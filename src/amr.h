@@ -258,9 +258,7 @@ static int startwrite(sox_format_t * ft)
   if (open_library_result != SOX_SUCCESS)
     return open_library_result;
 
-#define IGNORE_WARNING \
   p->state = AMR_CALL_ENCODER(p, AmrOpencoreEncoderInit, AmrGp3EncoderInit, ());
-#include "ignore-warning.h"
   if (!p->state)
   {
       closelibrary(p);
@@ -280,9 +278,7 @@ static sox_bool encode_1_frame(sox_format_t * ft)
 {
   priv_t * p = (priv_t *)ft->priv;
   uint8_t coded[AMR_CODED_MAX];
-#define IGNORE_WARNING \
   int n = AMR_CALL_ENCODER(p, AmrOpencoreEncoderEncode, AmrGp3EncoderEncode, (p->state, p->mode, p->pcm, coded, 1));
-#include "ignore-warning.h"
   sox_bool result = lsx_writebuf(ft, coded, (size_t) (size_t) (unsigned)n) == (unsigned)n;
   if (!result)
     lsx_fail_errno(ft, errno, "write error");

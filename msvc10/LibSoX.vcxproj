@@ -111,7 +111,6 @@
     <ClInclude Include="..\src\formats.h" />
     <ClInclude Include="..\src\g711.h" />
     <ClInclude Include="..\src\g72x.h" />
-    <ClInclude Include="..\src\ignore-warning.h" />
     <ClInclude Include="..\src\ima_rw.h" />
     <ClInclude Include="..\src\mcompand_xover.h" />
     <ClInclude Include="..\src\mp3-util.h" />

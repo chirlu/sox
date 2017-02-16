@@ -73,9 +73,6 @@
     <ClInclude Include="..\src\g72x.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ignore-warning.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ima_rw.h">
       <Filter>Headers</Filter>
     </ClInclude>

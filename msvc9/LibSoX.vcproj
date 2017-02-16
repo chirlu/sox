@@ -234,10 +234,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\ignore-warning.h"
-				>
-			</File>
-			<File
 				RelativePath="..\src\ima_rw.h"
 				>
 			</File>
