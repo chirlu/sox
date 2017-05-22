@@ -41,10 +41,33 @@ static id3_utf8_t * utf8_id3tag_findframe(
 {
   struct id3_frame const * frame = id3_tag_findframe(tag, frameid, index);
   if (frame) {
-    union id3_field  const * field = id3_frame_field(frame, 1);
-    unsigned nstrings = id3_field_getnstrings(field);
-    while (nstrings--){
-      id3_ucs4_t const * ucs4 = id3_field_getstrings(field, nstrings);
+    unsigned nfields = frame->nfields;
+
+    while (nfields--) {
+      union id3_field const *field = id3_frame_field(frame, nfields);
+      int ftype = id3_field_type(field);
+      const id3_ucs4_t *ucs4 = NULL;
+      unsigned nstrings;
+
+      switch (ftype) {
+      case ID3_FIELD_TYPE_STRING:
+        ucs4 = id3_field_getstring(field);
+        break;
+
+      case ID3_FIELD_TYPE_STRINGFULL:
+        ucs4 = id3_field_getfullstring(field);
+        break;
+
+      case ID3_FIELD_TYPE_STRINGLIST:
+        nstrings = id3_field_getnstrings(field);
+        while (nstrings--) {
+          ucs4 = id3_field_getstrings(field, nstrings);
+          if (ucs4)
+            break;
+        }
+        break;
+      }
+
       if (ucs4)
         return id3_ucs4_utf8duplicate(ucs4); /* Must call free() on this */
     }
