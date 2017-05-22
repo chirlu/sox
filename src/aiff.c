@@ -16,6 +16,7 @@
 
 #include "sox_i.h"
 #include "aiff.h"
+#include "id3.h"
 
 #include <time.h>      /* for time stamping comments */
 #include <stdlib.h>
@@ -305,6 +306,13 @@ int lsx_aiffstartread(sox_format_t * ft)
         return(SOX_EOF);
       }
       free(copyright);
+    }
+    else if (strncmp(buf, "ID3 ", 4) == 0) {
+      off_t offs;
+      lsx_readdw(ft, &chunksize);
+      offs = lsx_tell(ft);
+      lsx_id3_read_tag(ft, 0);
+      lsx_seeki(ft, offs + chunksize, SEEK_SET);
     }
     else {
       if (lsx_eof(ft))
