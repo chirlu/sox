@@ -972,7 +972,7 @@ sox-12.18.1	2006-05-07
 
   o The "filter" effect could go into infinite drain mode.  Now
     only drain 1 buffer.  noisered as well.
-  o SoX was ignoring user aborts (ctrl-c) if it occured during
+  o SoX was ignoring user aborts (ctrl-c) if it occurred during
     effect drain operations.  This was bad if effects had
     bugs and stuck in infinite loop.
   o Stop SoX from crashing when file type could not be auto

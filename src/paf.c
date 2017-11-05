@@ -26,7 +26,7 @@ LSX_FORMAT_HANDLER(paf)
   static sox_format_handler_t handler;
   handler = *lsx_sndfile_format_fn();
   handler.description =
-    "Ensoniq PARIS digitial audio editing system (big endian)";
+    "Ensoniq PARIS digital audio editing system (big endian)";
   handler.names = names;
   handler.write_formats = write_encodings;
   return &handler;

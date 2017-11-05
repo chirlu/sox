@@ -175,7 +175,7 @@ failures. Currently, relies on \fBsox_warn\fR to print information.
 successfully read or written. If an error occurs, or the end-of-file
 is reached, the return value is a short item count or SOX_EOF. TODO:
 \fBsox_read\fR does not distiguish between end-of-file and error. Need
-an feof() and ferror() concept to determine which occured.
+an feof() and ferror() concept to determine which occurred.
 .P
 Upon successful completion \fBsox_close\fR returns 0. Otherwise, SOX_EOF
 is returned. In either case, any further access (including another
