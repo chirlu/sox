@@ -73,6 +73,14 @@ typedef struct {
   size_t pos;                /* Where next byte goes */
 } priv_t;
 
+static int dictvalid(int n, int size, int left, int right)
+{
+        if (n > 0 && left < 0)
+                return 1;
+
+        return (unsigned)left < size && (unsigned)right < size;
+}
+
 static int startread(sox_format_t * ft)
 {
         priv_t *p = (priv_t *) ft->priv;
@@ -150,6 +158,11 @@ static int startread(sox_format_t * ft)
                 lsx_debug("%d %d",
                        p->dictionary[i].dict_leftson,
                        p->dictionary[i].dict_rightson);
+                if (!dictvalid(i, dictsize, p->dictionary[i].dict_leftson,
+                               p->dictionary[i].dict_rightson)) {
+                        lsx_fail_errno(ft, SOX_EHDR, "Invalid dictionary");
+                        return SOX_EOF;
+                }
         }
         rc = lsx_skipbytes(ft, (size_t) 1); /* skip pad byte */
         if (rc)
