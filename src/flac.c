@@ -119,9 +119,10 @@ static void decoder_metadata_callback(FLAC__StreamDecoder const * const flac, FL
     p->total_samples = metadata->data.stream_info.total_samples;
   }
   else if (metadata->type == FLAC__METADATA_TYPE_VORBIS_COMMENT) {
+    const FLAC__StreamMetadata_VorbisComment *vc = &metadata->data.vorbis_comment;
     size_t i;
 
-    if (metadata->data.vorbis_comment.num_comments == 0)
+    if (vc->num_comments == 0)
       return;
 
     if (ft->oob.comments != NULL) {
@@ -129,8 +130,9 @@ static void decoder_metadata_callback(FLAC__StreamDecoder const * const flac, FL
       return;
     }
 
-    for (i = 0; i < metadata->data.vorbis_comment.num_comments; ++i)
-      sox_append_comment(&ft->oob.comments, (char const *) metadata->data.vorbis_comment.comments[i].entry);
+    for (i = 0; i < vc->num_comments; ++i)
+      if (vc->comments[i].entry)
+        sox_append_comment(&ft->oob.comments, (char const *) vc->comments[i].entry);
   }
 }
 
