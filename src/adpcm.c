@@ -71,6 +71,11 @@ const short lsx_ms_adpcm_i_coef[7][2] = {
                         { 392,-232}
 };
 
+extern void *lsx_ms_adpcm_alloc(unsigned chans)
+{
+        return lsx_malloc(chans * sizeof(MsState_t));
+}
+
 static inline sox_sample_t AdpcmDecode(sox_sample_t c, MsState_t *state,
                                sox_sample_t sample1, sox_sample_t sample2)
 {
@@ -102,6 +107,7 @@ static inline sox_sample_t AdpcmDecode(sox_sample_t c, MsState_t *state,
 
 /* lsx_ms_adpcm_block_expand_i() outputs interleaved samples into one output buffer */
 const char *lsx_ms_adpcm_block_expand_i(
+        void *priv,
         unsigned chans,          /* total channels             */
         int nCoef,
         const short *coef,
@@ -113,7 +119,7 @@ const char *lsx_ms_adpcm_block_expand_i(
   const unsigned char *ip;
   unsigned ch;
   const char *errmsg = NULL;
-  MsState_t state[4];  /* One decompressor state for each channel */
+  MsState_t *state = priv;  /* One decompressor state for each channel */
 
   /* Read the four-byte header for each channel */
   ip = ibuff;

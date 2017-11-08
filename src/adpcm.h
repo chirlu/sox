@@ -29,8 +29,11 @@
 /* default coef sets */
 extern const short lsx_ms_adpcm_i_coef[7][2];
 
+extern void *lsx_ms_adpcm_alloc(unsigned chans);
+
 /* lsx_ms_adpcm_block_expand_i() outputs interleaved samples into one output buffer */
 extern const char *lsx_ms_adpcm_block_expand_i(
+	void *priv,
 	unsigned chans,          /* total channels             */
 	int nCoef,
 	const short *coef,

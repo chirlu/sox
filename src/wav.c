@@ -82,6 +82,7 @@ typedef struct {
     /* following used by *ADPCM wav files */
     unsigned short nCoefs;          /* ADPCM: number of coef sets */
     short         *lsx_ms_adpcm_i_coefs;          /* ADPCM: coef sets           */
+    void          *ms_adpcm_data;   /* Private data of adpcm decoder */
     unsigned char *packet;          /* Temporary buffer for packets */
     short         *samples;         /* interleaved samples buffer */
     short         *samplePtr;       /* Pointer to current sample  */
@@ -175,7 +176,7 @@ static unsigned short  AdpcmReadBlock(sox_format_t * ft)
         }
     }
 
-    errmsg = lsx_ms_adpcm_block_expand_i(ft->signal.channels, wav->nCoefs, wav->lsx_ms_adpcm_i_coefs, wav->packet, wav->samples, samplesThisBlock);
+    errmsg = lsx_ms_adpcm_block_expand_i(wav->ms_adpcm_data, ft->signal.channels, wav->nCoefs, wav->lsx_ms_adpcm_i_coefs, wav->packet, wav->samples, samplesThisBlock);
 
     if (errmsg)
         lsx_warn("%s", errmsg);
@@ -791,6 +792,7 @@ static int startread(sox_format_t * ft)
 
         /* nCoefs, lsx_ms_adpcm_i_coefs used by adpcm.c */
         wav->lsx_ms_adpcm_i_coefs = lsx_malloc(wav->nCoefs * 2 * sizeof(short));
+        wav->ms_adpcm_data = lsx_ms_adpcm_alloc(wChannels);
         {
             int i, errct=0;
             for (i=0; len>=2 && i < 2*wav->nCoefs; i++) {
@@ -1216,6 +1218,7 @@ static int stopread(sox_format_t * ft)
     free(wav->packet);
     free(wav->samples);
     free(wav->lsx_ms_adpcm_i_coefs);
+    free(wav->ms_adpcm_data);
     free(wav->comment);
     wav->comment = NULL;
 
