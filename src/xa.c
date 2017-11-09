@@ -143,6 +143,12 @@ static int startread(sox_format_t * ft)
         lsx_report("User options overriding rate read in .xa header");
     }
 
+    if (ft->signal.channels == 0 || ft->signal.channels > UINT16_MAX) {
+        lsx_fail_errno(ft, SOX_EFMT, "invalid channel count %d",
+                       ft->signal.channels);
+        return SOX_EOF;
+    }
+
     /* Check for supported formats */
     if (ft->encoding.bits_per_sample != 16) {
         lsx_fail_errno(ft, SOX_EFMT, "%d-bit sample resolution not supported.",
