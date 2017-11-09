@@ -65,6 +65,10 @@ static int start_read(sox_format_t * ft)
   char msg[80];
 
   p->codec = WavpackOpenFileInputEx(&io_fns, ft, NULL, msg, OPEN_NORMALIZE, 0);
+  if (!p->codec) {
+    lsx_fail_errno(ft, SOX_EHDR, "%s", msg);
+    return SOX_EOF;
+  }
   ft->encoding.bits_per_sample = WavpackGetBytesPerSample(p->codec) << 3;
   ft->signal.channels   = WavpackGetNumChannels(p->codec);
   if (WavpackGetSampleRate(p->codec) && ft->signal.rate && ft->signal.rate != WavpackGetSampleRate(p->codec))
@@ -108,6 +112,10 @@ static int start_write(sox_format_t * ft)
   uint64_t size64;
 
   p->codec = WavpackOpenFileOutput(ft_write_b_buf, ft, NULL);
+  if (!p->codec) {
+    lsx_fail_errno(ft, SOX_ENOMEM, "WavPack error creating output instance");
+    return SOX_EOF;
+  }
   memset(&config, 0, sizeof(config));
   config.bytes_per_sample  = ft->encoding.bits_per_sample >> 3;
   config.bits_per_sample   = ft->encoding.bits_per_sample;
