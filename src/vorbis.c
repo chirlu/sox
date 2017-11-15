@@ -270,8 +270,11 @@ static int write_vorbis_header(sox_format_t * ft, vorbis_enc_t * ve)
       vc.comment_lengths[i] = strlen(text);
     }
   }
-  vorbis_analysis_headerout(    /* Build the packets */
-      &ve->vd, &vc, &header_main, &header_comments, &header_codebooks);
+  if (vorbis_analysis_headerout(    /* Build the packets */
+      &ve->vd, &vc, &header_main, &header_comments, &header_codebooks) < 0) {
+      ret = HEADER_ERROR;
+      goto cleanup;
+  }
 
   ogg_stream_packetin(&ve->os, &header_main);   /* And stream them out */
   ogg_stream_packetin(&ve->os, &header_comments);
@@ -280,6 +283,7 @@ static int write_vorbis_header(sox_format_t * ft, vorbis_enc_t * ve)
   while (ogg_stream_flush(&ve->os, &ve->og) && ret == HEADER_OK)
     if (!oe_write_page(&ve->og, ft))
       ret = HEADER_ERROR;
+cleanup:
   for (i = 0; i < vc.comments; ++i)
     free(vc.user_comments[i]);
   free(vc.user_comments);
