@@ -194,6 +194,6 @@ loc:
 # would run the test suite, but an uninstalled libltdl build cannot
 # currently load its formats and effects, so the checks would fail.
 installcheck:
-	$(srcdir)/tests.sh --bindir=${bindir} --builddir=${builddir} --srcdir=${srcdir}
-	$(srcdir)/testall.sh --bindir=${bindir} --srcdir=${srcdir}
+	$(srcdir)/tests.sh --bindir=$(DESTDIR)${bindir} --builddir=${builddir} --srcdir=${srcdir}
+	$(srcdir)/testall.sh --bindir=$(DESTDIR)${bindir} --srcdir=${srcdir}
 
