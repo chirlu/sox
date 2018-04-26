@@ -74,13 +74,18 @@ typedef struct amr_priv_t {
 static size_t decode_1_frame(sox_format_t * ft)
 {
   priv_t * p = (priv_t *)ft->priv;
-  size_t n_1;
+  size_t n;
   uint8_t coded[AMR_CODED_MAX];
 
   if (lsx_readbuf(ft, &coded[0], (size_t)1) != 1)
     return AMR_FRAME;
-  n_1 = amr_block_size[(coded[0] >> 3) & 0x0F] - 1;
-  if (lsx_readbuf(ft, &coded[1], n_1) != n_1)
+  n = amr_block_size[(coded[0] >> 3) & 0x0F];
+  if (!n) {
+    lsx_fail("invalid block type");
+    return AMR_FRAME;
+  }
+  n--;
+  if (lsx_readbuf(ft, &coded[1], n) != n)
     return AMR_FRAME;
   AMR_CALL(p, AmrOpencoreDecoderDecode, AmrGp3DecoderDecode, (p->state, coded, p->pcm, 0));
   return 0;
@@ -160,6 +165,10 @@ static size_t amr_duration_frames(sox_format_t * ft)
 
   for (frames = 0; lsx_readbuf(ft, &coded, (size_t)1) == 1; ++frames) {
     frame_size = amr_block_size[coded >> 3 & 15];
+    if (!frame_size) {
+      lsx_fail("invalid block type");
+      break;
+    }
     if (lsx_seeki(ft, frame_size - 1, SEEK_CUR)) {
       lsx_fail("seek");
       break;
