@@ -63,7 +63,7 @@ typedef struct
 /* common r/w initialization code */
 static int ossinit(sox_format_t* ft)
 {
-    int sampletype, samplesize, dsp_stereo;
+    int sampletype, samplesize;
     int tmp, rc;
     char const* szDevname;
     priv_t* pPriv = (priv_t*)ft->priv;
@@ -153,7 +153,7 @@ static int ossinit(sox_format_t* ft)
         lsx_report("Forcing to signed linear word");
     }
 
-    if (ft->signal.channels > 2) ft->signal.channels = 2;
+    ft->signal.channels = 2;
 
     if (ioctl(pPriv->device, (size_t) SNDCTL_DSP_RESET, 0) < 0)
     {
@@ -213,20 +213,12 @@ static int ossinit(sox_format_t* ft)
         return (SOX_EOF);
     }
 
-    if (ft->signal.channels == 2)
-        dsp_stereo = 1;
-    else
-        dsp_stereo = 0;
-
-    tmp = dsp_stereo;
-    if (ioctl(pPriv->device, SNDCTL_DSP_STEREO, &tmp) < 0)
+    tmp = 1;
+    if (ioctl(pPriv->device, SNDCTL_DSP_STEREO, &tmp) < 0 || tmp != 1)
     {
-        lsx_warn("Couldn't set to %s", dsp_stereo?  "stereo":"mono");
-        dsp_stereo = 0;
+        lsx_warn("Couldn't set to stereo");
+        ft->signal.channels = 1;
     }
-
-    if (tmp != dsp_stereo)
-        ft->signal.channels = tmp + 1;
 
     tmp = ft->signal.rate;
     if (ioctl(pPriv->device, SNDCTL_DSP_SPEED, &tmp) < 0 ||
