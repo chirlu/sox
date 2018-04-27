@@ -766,7 +766,7 @@ static int startread(sox_format_t * ft)
 
         lsx_readw(ft, &(wav->samplesPerBlock));
         bytesPerBlock = lsx_ms_adpcm_bytes_per_block((size_t) ft->signal.channels, (size_t) wav->samplesPerBlock);
-        if (bytesPerBlock > wav->blockAlign)
+        if (bytesPerBlock != wav->blockAlign)
         {
             lsx_fail_errno(ft,SOX_EOF,"format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
                 wav_format_str(wav->formatTag), wav->samplesPerBlock, wav->blockAlign);
@@ -823,7 +823,7 @@ static int startread(sox_format_t * ft)
 
         lsx_readw(ft, &(wav->samplesPerBlock));
         bytesPerBlock = lsx_ima_bytes_per_block((size_t) ft->signal.channels, (size_t) wav->samplesPerBlock);
-        if (bytesPerBlock > wav->blockAlign || wav->samplesPerBlock%8 != 1)
+        if (bytesPerBlock != wav->blockAlign || wav->samplesPerBlock%8 != 1)
         {
             lsx_fail_errno(ft,SOX_EOF,"format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
                 wav_format_str(wav->formatTag), wav->samplesPerBlock, wav->blockAlign);
