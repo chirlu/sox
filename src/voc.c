@@ -168,9 +168,9 @@ typedef struct {
   long srate;                   /* rate code (byte) of silence */
   size_t blockseek;         /* start of current output block */
   long samples;                 /* number of samples output */
-  uint16_t format;              /* VOC audio format */
+  int format;                   /* VOC audio format */
   int size;                     /* word length of data */
-  unsigned char channels;       /* number of sound channels */
+  int channels;                 /* number of sound channels */
   long total_size;              /* total size of all audio in file */
   int extended;                 /* Has an extended block been read? */
   adpcm_t adpcm;
@@ -238,6 +238,8 @@ static int startread(sox_format_t * ft)
     lsx_readb(ft, &uc);
 
   v->rate = -1;
+  v->format = -1;
+  v->channels = -1;
   v->block_remaining = 0;
   v->total_size = 0;    /* ANN added */
   v->extended = 0;
@@ -552,6 +554,7 @@ static int getblock(sox_format_t * ft)
 {
   priv_t * v = (priv_t *) ft->priv;
   unsigned char uc, block;
+  uint16_t u16;
   sox_uint24_t sblen;
   uint16_t new_rate_16;
   uint32_t new_rate_32;
@@ -593,9 +596,17 @@ static int getblock(sox_format_t * ft)
           }
           v->rate = uc;
           ft->signal.rate = 1000000.0 / (256 - v->rate);
+          if (v->channels != -1 && v->channels != 1) {
+            lsx_fail_errno(ft, SOX_EFMT, "channel count changed");
+            return SOX_EOF;
+          }
           v->channels = 1;
         }
         lsx_readb(ft, &uc);
+        if (v->format != -1 && uc != v->format) {
+          lsx_fail_errno(ft, SOX_EFMT, "format changed");
+          return SOX_EOF;
+        }
         v->format = uc;
         v->extended = 0;
         v->block_remaining = sblen - 2;
@@ -615,8 +626,18 @@ static int getblock(sox_format_t * ft)
         ft->signal.rate = new_rate_32;
         lsx_readb(ft, &uc);
         v->size = uc;
-        lsx_readb(ft, &(v->channels));
-        lsx_readw(ft, &(v->format));    /* ANN: added format */
+        lsx_readb(ft, &uc);
+        if (v->channels != -1 && uc != v->channels) {
+          lsx_fail_errno(ft, SOX_EFMT, "channel count changed");
+          return SOX_EOF;
+        }
+        v->channels = uc;
+        lsx_readw(ft, &u16);    /* ANN: added format */
+        if (v->format != -1 && u16 != v->format) {
+          lsx_fail_errno(ft, SOX_EFMT, "format changed");
+          return SOX_EOF;
+        }
+        v->format = u16;
         lsx_skipbytes(ft, (size_t) 4);
         v->block_remaining = sblen - 12;
         return (SOX_SUCCESS);
@@ -698,6 +719,11 @@ static int getblock(sox_format_t * ft)
         v->rate = new_rate_16;
         lsx_readb(ft, &uc); /* bits_per_sample */
         lsx_readb(ft, &uc);
+        if (v->channels != -1 && uc != v->channels) {
+          lsx_fail_errno(ft, SOX_EFMT, "channel count changed");
+          return SOX_EOF;
+        }
+        v->channels = uc;
         ft->signal.channels = uc? 2 : 1;      /* Stereo */
         /* Needed number of channels before finishing
          * compute for rate */
