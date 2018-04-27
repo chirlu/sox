@@ -470,7 +470,7 @@ static int findChunk(sox_format_t * ft, const char *Label, uint64_t *len)
         if ((*len) % 2) (*len)++;
 
         /* skip to next chunk */
-        if (*len > 0 && lsx_seeki(ft, (off_t)(*len), SEEK_CUR) != SOX_SUCCESS)
+        if (!*len || lsx_seeki(ft, (off_t)(*len), SEEK_CUR) != SOX_SUCCESS)
         {
             lsx_fail_errno(ft,SOX_EHDR,
                           "WAV chunk appears to have invalid size %ld.", *len);
