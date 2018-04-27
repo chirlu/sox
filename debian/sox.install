@@ -1,6 +1,0 @@
-debian/tmp/usr/bin/play usr/bin/
-debian/tmp/usr/bin/rec usr/bin/
-debian/tmp/usr/bin/sox usr/bin/
-debian/tmp/usr/bin/soxi usr/bin/
-debian/tmp/usr/share/man/man1 usr/share/man/
-debian/tmp/usr/share/man/man7 usr/share/man/

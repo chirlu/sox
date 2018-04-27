@@ -1,6 +1,0 @@
-debian/tmp/usr/include/* usr/include/
-debian/tmp/usr/lib/@DEB_HOST_MULTIARCH@/lib*.a usr/lib/@DEB_HOST_MULTIARCH@/
-debian/tmp/usr/lib/@DEB_HOST_MULTIARCH@/lib*.so usr/lib/@DEB_HOST_MULTIARCH@/
-debian/tmp/usr/lib/@DEB_HOST_MULTIARCH@/pkgconfig/sox.pc usr/lib/@DEB_HOST_MULTIARCH@/pkgconfig/
-debian/tmp/usr/lib/@DEB_HOST_MULTIARCH@/sox/lib*.a usr/lib/@DEB_HOST_MULTIARCH@/sox/
-debian/tmp/usr/share/man/man3 usr/share/man/

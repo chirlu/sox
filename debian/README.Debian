@@ -1,9 +1,0 @@
-SoX from git
-------------
-If you downloaded SoX from git, you may build the package by:
-
-1) Generating the autotools files: autoreconf -i
-2) Configuring and making the release tarball: ./configure && make dist
-3) Building the package: debuild -B
-
- -- Pascal Giard <evilynux@gmail.com>  Tue, 08 May 2007 21:13:56 -0400

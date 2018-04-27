@@ -1,5 +1,0 @@
-audio/basic; /usr/bin/play -t au %s
-audio/x-aiff; /usr/bin/play -t aiff %s
-audio/x-gsm; /usr/bin/play -t gsm %s
-audio/x-wav; /usr/bin/play -t wav %s
-
