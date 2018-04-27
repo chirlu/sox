@@ -184,11 +184,11 @@ your preferred format.
         cd src
 	./sox monkey.wav monkey.xxx
 
-You may have to give the word size and rate for the file. For example,
+You may have to give the sample format and rate for the file. For example,
 this command will make a sound file with a data rate of 12,500 samples
-per second and the data formatted as 2-byte (16-bit) signed integers:
+per second and the data formatted as 16-bit signed integers:
 
-	./sox monkey.wav -r 12500 -2 -s monkey.xxx
+	./sox monkey.wav -r 12500 -b 16 -e signed-integer monkey.xxx
 
 If playback support was compiled in then it can be played like this:
 
