@@ -1362,7 +1362,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
     uint16_t wChannels;           /* number of channels */
     uint32_t dwSamplesPerSecond;  /* samples per second per channel*/
     uint32_t dwAvgBytesPerSec=0;  /* estimate of bytes per second needed */
-    uint16_t wBlockAlign=0;       /* byte alignment of a basic sample block */
+    uint32_t wBlockAlign=0;       /* byte alignment of a basic sample block */
     uint16_t wBitsPerSample=0;    /* bits per sample */
     /* fmt chunk extension (not PCM) */
     uint16_t wExtSize=0;          /* extra bytes in the format extension */
@@ -1457,6 +1457,13 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
         default:
                 break;
     }
+
+    if (wBlockAlign > UINT16_MAX) {
+        lsx_fail_errno(ft, SOX_EOF, "Too many channels (%u)",
+                       ft->signal.channels);
+        return SOX_EOF;
+    }
+
     wav->formatTag = wFormatTag;
     wav->blockAlign = wBlockAlign;
     wav->samplesPerBlock = wSamplesPerBlock;
