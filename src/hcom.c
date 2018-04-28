@@ -441,12 +441,12 @@ static int stopwrite(sox_format_t * ft)
 {
   priv_t *p = (priv_t *) ft->priv;
   unsigned char *compressed_data = p->data;
-  size_t compressed_len = p->pos;
+  int32_t compressed_len = p->pos;
   int rc = SOX_SUCCESS;
 
   /* Compress it all at once */
   if (compressed_len) {
-    compress(ft, &compressed_data, (int32_t *)&compressed_len);
+    compress(ft, &compressed_data, &compressed_len);
     free(p->data);
   }
 
