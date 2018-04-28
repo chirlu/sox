@@ -147,6 +147,7 @@ static int startread(sox_format_t * ft)
         ft->encoding.bits_per_sample = 8;
         ft->signal.rate = 22050 / divisor;
         ft->signal.channels = 1;
+        ft->signal.length = huffcount;
 
         /* Allocate memory for the dictionary */
         p->dictionary = lsx_malloc(511 * sizeof(dictent));
