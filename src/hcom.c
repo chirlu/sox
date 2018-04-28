@@ -352,6 +352,7 @@ static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl)
   long codes[256], codesize[256];
   dictent newdict[511];
   int i, sample, j, k, d, l, frequcount;
+  int64_t csize;
 
   sample = *datafork;
   memset(frequtable, 0, sizeof(frequtable));
@@ -407,10 +408,10 @@ static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl)
   }
   dictsize = p->de - newdict;
   makecodes(0, 0, 0, 1, newdict, codes, codesize);
-  l = 0;
+  csize = 0;
   for (i = 0; i < 256; i++)
-    l += frequtable[i] * codesize[i];
-  l = (((l + 31) >> 5) << 2) + 24 + dictsize * 4;
+    csize += frequtable[i] * codesize[i];
+  l = (((csize + 31) >> 5) << 2) + 24 + dictsize * 4;
   lsx_debug("  Original size: %6d bytes", *dl);
   lsx_debug("Compressed size: %6d bytes", l);
   datafork = lsx_malloc((size_t)l);
