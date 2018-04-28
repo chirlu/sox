@@ -284,6 +284,14 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
   if (len == 0)
     return 0;
 
+  if (p->pos == INT32_MAX)
+    return SOX_EOF;
+
+  if (p->pos + len > INT32_MAX) {
+    lsx_warn("maximum file size exceeded");
+    len = INT32_MAX - p->pos;
+  }
+
   if (p->pos + len > p->size) {
     p->size = ((p->pos + len) / BUFINCR + 1) * BUFINCR;
     p->data = lsx_realloc(p->data, p->size);
