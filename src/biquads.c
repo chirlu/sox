@@ -365,8 +365,14 @@ static int start(sox_effect_t * effp)
         make_poly_from_roots(zeros, (size_t)2, &p->b0);
         make_poly_from_roots(poles, (size_t)2, &p->a0);
       }
+      else if (effp->in_signal.rate == 192000) {
+        static const double zeros[] = {-0.1040610965, 0.9837523263};
+        static const double poles[] = {0.9328992971, 0.9983633125};
+        make_poly_from_roots(zeros, (size_t)2, &p->b0);
+        make_poly_from_roots(poles, (size_t)2, &p->a0);
+      }
       else {
-        lsx_fail("Sample rate must be 44.1k, 48k, 88.2k, or 96k");
+        lsx_fail("Sample rate must be 44.1k, 48k, 88.2k, 96k, or 192k");
         return SOX_EOF;
       }
       { /* Normalise to 0dB at 1kHz (Thanks to Glenn Davis) */
