@@ -917,18 +917,7 @@ Converts 32-bit float to sox_sample_t.
 @param clips Variable to increment if the input sample is too large or too small.
 @returns SoX native sample value.
 */
-#define SOX_FLOAT_32BIT_TO_SAMPLE(d,clips)                      \
-  (sox_sample_t)(                                               \
-    LSX_USE_VAR(sox_macro_temp_sample),                         \
-    sox_macro_temp_double = (d) * (SOX_SAMPLE_MAX + 1.0),       \
-    sox_macro_temp_double < SOX_SAMPLE_MIN ?                    \
-      ++(clips), SOX_SAMPLE_MIN :                               \
-      sox_macro_temp_double >= SOX_SAMPLE_MAX + 1.0 ?           \
-        sox_macro_temp_double > SOX_SAMPLE_MAX + 1.0 ?          \
-          ++(clips), SOX_SAMPLE_MAX :                           \
-          SOX_SAMPLE_MAX :                                      \
-        sox_macro_temp_double                                   \
-  )
+#define SOX_FLOAT_32BIT_TO_SAMPLE(d,clips) SOX_FLOAT_64BIT_TO_SAMPLE(d, clips)
 
 /**
 Client API:
