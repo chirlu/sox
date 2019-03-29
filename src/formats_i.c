@@ -138,7 +138,7 @@ size_t lsx_writebuf(sox_format_t * ft, void const * buf, size_t len)
   return ret;
 }
 
-uint64_t lsx_filelength(sox_format_t * ft)
+sox_uint64_t lsx_filelength(sox_format_t * ft)
 {
   struct stat st;
   int ret = ft->fp ? fstat(fileno((FILE*)ft->fp), &st) : 0;
