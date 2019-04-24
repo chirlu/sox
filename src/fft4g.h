@@ -13,6 +13,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#define FFT4G_MAX_SIZE 262144
+
 void lsx_cdft(int, int, double *, int *, double *);
 void lsx_rdft(int, int, double *, int *, double *);
 void lsx_ddct(int, int, double *, int *, double *);
