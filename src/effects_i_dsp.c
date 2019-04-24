@@ -362,6 +362,9 @@ double * lsx_make_lpf(int num_taps, double Fc, double beta, double rho,
   assert(Fc >= 0 && Fc <= 1);
   lsx_debug("make_lpf(n=%i Fc=%.7g β=%g ρ=%g dc-norm=%i scale=%g)", num_taps, Fc, beta, rho, dc_norm, scale);
 
+  if (!h)
+    return NULL;
+
   for (i = 0; i <= m / 2; ++i) {
     double z = i - .5 * m, x = z * M_PI, y = z * mult1;
     h[i] = x? sin(Fc * x) / x : Fc;
