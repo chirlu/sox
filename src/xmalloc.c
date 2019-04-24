@@ -57,6 +57,16 @@ void *lsx_calloc(size_t n, size_t size)
   return lsx_checkptr(calloc(n + !n, size + !size));
 }
 
+void *lsx_realloc_array(void *p, size_t n, size_t size)
+{
+  if (n > (size_t)-1 / size) {
+    lsx_fail("malloc size overflow");
+    exit(2);
+  }
+
+  return lsx_realloc(p, n * size);
+}
+
 char *lsx_strdup(const char *s)
 {
   return lsx_checkptr(strdup(s));

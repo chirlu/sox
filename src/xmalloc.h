@@ -25,11 +25,12 @@
 
 LSX_RETURN_VALID void *lsx_malloc(size_t size);
 LSX_RETURN_VALID void *lsx_calloc(size_t n, size_t size);
+LSX_RETURN_VALID void *lsx_realloc_array(void *p, size_t n, size_t size);
 LSX_RETURN_VALID char *lsx_strdup(const char *s);
 
 #define lsx_Calloc(v,n)  v = lsx_calloc(n,sizeof(*(v)))
 #define lsx_memdup(p,s) ((p)? memcpy(lsx_malloc(s), p, s) : NULL)
-#define lsx_valloc(v,n)  v = lsx_malloc((n)*sizeof(*(v)))
-#define lsx_revalloc(v,n)  v = lsx_realloc(v, (n)*sizeof(*(v)))
+#define lsx_valloc(v,n)  v = lsx_realloc_array(NULL, n, sizeof(*(v)))
+#define lsx_revalloc(v,n)  v = lsx_realloc_array(v, n, sizeof(*(v)))
 
 #endif
