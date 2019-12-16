@@ -391,7 +391,7 @@ static int startread(sox_format_t * ft)
     if (!ft->signal.length)
 #endif
       if (!ignore_length)
-        ft->signal.length = mp3_duration_ms(ft);
+        ft->signal.length = mp3_duration(ft);
   }
 
   p->mad_stream_init(&p->Stream);
@@ -466,7 +466,6 @@ static int startread(sox_format_t * ft)
   if (ignore_length)
     ft->signal.length = SOX_UNSPEC;
   else {
-    ft->signal.length = (uint64_t)(ft->signal.length * .001 * ft->signal.rate + .5);
     ft->signal.length *= ft->signal.channels;  /* Keep separate from line above! */
   }
 
