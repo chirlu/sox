@@ -1243,9 +1243,9 @@ static char const * vu(unsigned channel)
 static char * headroom(void)
 {
   if (min_headroom < MIN_HEADROOM) {
-    static char buff[10];
+    static char buff[16];
     unsigned h = (unsigned)(min_headroom * 10);
-    sprintf(buff, "Hd:%u.%u", h /10, h % 10);
+    snprintf(buff, sizeof(buff), "Hd:%u.%u", h /10, h % 10);
     return buff;
   }
   return "      ";
