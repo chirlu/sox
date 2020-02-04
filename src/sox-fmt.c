@@ -46,7 +46,9 @@ static int startread(sox_format_t * ft)
       lsx_readdw(ft, &comments_bytes))
     return SOX_EOF;
 
-  if (((headers_bytes + 4) & 7) || headers_bytes < FIXED_HDR + comments_bytes ||
+  if (((headers_bytes + 4) & 7) ||
+      comments_bytes > 0x40000000 || /* max 1 GB */
+      headers_bytes < FIXED_HDR + comments_bytes ||
       (num_channels > 65535)) /* Reserve top 16 bits */ {
     lsx_fail_errno(ft, SOX_EHDR, "invalid sox file format header");
     return SOX_EOF;
