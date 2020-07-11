@@ -2931,8 +2931,8 @@ int main(int argc, char **argv)
     combine_method = sox_concatenate;
 
   /* Make sure we got at least the required # of input filenames */
-  if (input_count < (size_t)(is_serial(combine_method) ? 1 : 2))
-    usage("Not enough input filenames specified");
+  if (input_count < 1)
+    usage("No input filenames specified");
 
   /* Check for misplaced input/output-specific options */
   for (i = 0; i < input_count; ++i) {
