@@ -30,11 +30,8 @@
 #include "../libgsm/gsm.h"
 #endif
 
-/* Magic length writen when its not possible to write valid lengths.
- * This can be either because of non-seekable output or because
- * the length can not be represented by the 32-bits used in WAV files.
- * When magic length is detected on inputs, disable any length
- * logic.
+/* Magic length sometimes used to indicate unknown or too large size.
+ * When detected on inputs, disable any length logic.
  */
 #define MS_UNSPEC 0x7ffff000
 
@@ -913,10 +910,10 @@ static int startread(sox_format_t * ft)
 
     /* ds64 size will have been applied in findChunk */
     qwDataLength = len;
-    /* XXX - does MS_UNSPEC apply to RF64 files? */
-    if (qwDataLength == MS_UNSPEC) {
+
+    if (qwDataLength == MS_UNSPEC || qwDataLength == UINT32_MAX) {
       wav->ignoreSize = 1;
-      lsx_debug("WAV Chunk data's length is value often used in pipes or 4G files.  Ignoring length.");
+      lsx_debug("WAV data length is magic value or UINT32_MAX, ignoring.");
     }
 
 
@@ -1355,7 +1352,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
 
     /* variables written to wav file header */
     /* RIFF header */
-    uint32_t wRiffLength ;  /* length of file after 8 byte riff header */
+    uint64_t wRiffLength ;  /* length of file after 8 byte riff header */
     /* fmt chunk */
     uint16_t wFmtSize = 16;       /* size field of the fmt chunk */
     uint16_t wFormatTag = 0;      /* data format */
@@ -1371,15 +1368,15 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
 
     /* fact chunk (not PCM) */
     uint32_t dwFactSize=4;        /* length of the fact chunk */
-    uint32_t dwSamplesWritten=0;  /* windows doesnt seem to use this*/
+    uint64_t dwSamplesWritten=0;  /* windows doesnt seem to use this*/
 
     /* data chunk */
-    uint32_t  dwDataLength; /* length of sound data in bytes */
+    uint64_t dwDataLength;        /* length of sound data in bytes */
     /* end of variables written to header */
 
     /* internal variables, intermediate values etc */
     int bytespersample; /* (uncompressed) bytes per sample (per channel) */
-    long blocksWritten = 0;
+    uint64_t blocksWritten = 0;
     sox_bool isExtensible = sox_false;    /* WAVE_FORMAT_EXTENSIBLE? */
 
     if (ft->signal.channels > UINT16_MAX) {
@@ -1472,18 +1469,12 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
      * hint then write default value.  Also, use default value even
      * on header update if more then 32-bit length needs to be written.
      */
-    if ((!second_header && !ft->signal.length) || 
-        wav->numSamples > 0xffffffff) { 
-        /* adjust for blockAlign */
-        blocksWritten = MS_UNSPEC/wBlockAlign;
-        dwDataLength = blocksWritten * wBlockAlign;
-        dwSamplesWritten = blocksWritten * wSamplesPerBlock;
-    } else {    /* fixup with real length */
-        dwSamplesWritten = 
-            second_header? wav->numSamples : ft->signal.length / wChannels;
-        blocksWritten = (dwSamplesWritten+wSamplesPerBlock-1)/wSamplesPerBlock;
-        dwDataLength = blocksWritten * wBlockAlign;
-    }
+
+    dwSamplesWritten =
+        second_header ? wav->numSamples : ft->signal.length / wChannels;
+    blocksWritten =
+        (dwSamplesWritten + wSamplesPerBlock - 1) / wSamplesPerBlock;
+    dwDataLength = blocksWritten * wBlockAlign;
 
     if (wFormatTag == WAVE_FORMAT_GSM610)
         dwDataLength = (dwDataLength+1) & ~1u; /* round up to even */
@@ -1499,6 +1490,18 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
     wRiffLength = 4 + (8+wFmtSize) + (8+dwDataLength+dwDataLength%2);
     if (isExtensible || wFormatTag != WAVE_FORMAT_PCM) /* PCM omits the "fact" chunk */
         wRiffLength += (8+dwFactSize);
+
+    if (dwSamplesWritten > UINT32_MAX)
+        dwSamplesWritten = UINT32_MAX;
+
+    if (dwDataLength > UINT32_MAX)
+        dwDataLength = UINT32_MAX;
+
+    if (!second_header && !ft->signal.length)
+        dwDataLength = UINT32_MAX;
+
+    if (wRiffLength > UINT32_MAX)
+        wRiffLength = UINT32_MAX;
 
     /* dwAvgBytesPerSec <-- this is BEFORE compression, isn't it? guess not. */
     dwAvgBytesPerSec = (double)wBlockAlign*ft->signal.rate / (double)wSamplesPerBlock + 0.5;
@@ -1593,14 +1596,14 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
         lsx_debug("        %d byte/sec, %d block align, %d bits/samp",
                 dwAvgBytesPerSec, wBlockAlign, wBitsPerSample);
     } else {
-        lsx_debug("Finished writing Wave file, %u data bytes %lu samples",
-                dwDataLength, (unsigned long)wav->numSamples);
+        lsx_debug("Finished writing Wave file, %"PRIu64" data bytes %"PRIu64" samples",
+                  dwDataLength, wav->numSamples);
         if (wFormatTag == WAVE_FORMAT_GSM610){
-            lsx_debug("GSM6.10 format: %li blocks %u padded samples %u padded data bytes",
+            lsx_debug("GSM6.10 format: %"PRIu64" blocks %"PRIu64" padded samples %"PRIu64" padded data bytes",
                     blocksWritten, dwSamplesWritten, dwDataLength);
             if (wav->gsmbytecount != dwDataLength)
-                lsx_warn("help ! internal inconsistency - data_written %u gsmbytecount %lu",
-                        dwDataLength, (unsigned long)wav->gsmbytecount);
+                lsx_warn("help ! internal inconsistency - data_written %"PRIu64" gsmbytecount %"PRIu64,
+                         dwDataLength, wav->gsmbytecount);
 
         }
     }
