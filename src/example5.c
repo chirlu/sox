@@ -57,19 +57,19 @@ int main(int argc, char * argv[])
   assert(sox_init() == SOX_SUCCESS);
 
   /* Open the input file (with default parameters) */
-  assert(in = sox_open_read(argv[1], NULL, NULL, NULL));
+  assert((in = sox_open_read(argv[1], NULL, NULL, NULL)));
 #if defined FIXED_BUFFER
-  assert(out = sox_open_mem_write(buffer, buffer_size, &in->signal, NULL, "sox", NULL));
+  assert((out = sox_open_mem_write(buffer, buffer_size, &in->signal, NULL, "sox", NULL)));
 #else
-  assert(out = sox_open_memstream_write(&buffer, &buffer_size, &in->signal, NULL, "sox", NULL));
+  assert((out = sox_open_memstream_write(&buffer, &buffer_size, &in->signal, NULL, "sox", NULL)));
 #endif
   while ((number_read = sox_read(in, samples, MAX_SAMPLES)))
     assert(sox_write(out, samples, number_read) == number_read);
   sox_close(out);
   sox_close(in);
 
-  assert(in = sox_open_mem_read(buffer, buffer_size, NULL, NULL, NULL));
-  assert(out = sox_open_write(argv[2], &in->signal, NULL, NULL, NULL, NULL));
+  assert((in = sox_open_mem_read(buffer, buffer_size, NULL, NULL, NULL)));
+  assert((out = sox_open_write(argv[2], &in->signal, NULL, NULL, NULL, NULL)));
   while ((number_read = sox_read(in, samples, MAX_SAMPLES)))
     assert(sox_write(out, samples, number_read) == number_read);
   sox_close(out);

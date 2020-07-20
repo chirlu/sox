@@ -43,12 +43,12 @@ int main(int argc, char * argv[])
   assert(sox_init() == SOX_SUCCESS);
 
   /* Open the input file (with default parameters) */
-  assert(in = sox_open_read(argv[1], NULL, NULL, NULL));
+  assert((in = sox_open_read(argv[1], NULL, NULL, NULL)));
 
   /* Open the output file; we must specify the output signal characteristics.
    * Since we are using only simple effects, they are the same as the input
    * file characteristics */
-  assert(out = sox_open_write(argv[2], &in->signal, NULL, NULL, NULL, NULL));
+  assert((out = sox_open_write(argv[2], &in->signal, NULL, NULL, NULL, NULL)));
 
   /* Create an effects chain; some effects need to know about the input
    * or output file encoding so we provide that information here */

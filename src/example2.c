@@ -50,7 +50,7 @@ int main(int argc, char * argv[])
   ++argv, --argc; /* Move to 1st parameter */
 
   /* Open the input file (with default parameters) */
-  assert(in = sox_open_read(*argv, NULL, NULL, NULL));
+  assert((in = sox_open_read(*argv, NULL, NULL, NULL)));
   ++argv, --argc; /* Move past this parameter */
 
   if (argc) { /* If given, read the start time: */
@@ -75,7 +75,7 @@ int main(int argc, char * argv[])
   /* Make sure that this is at a `wide sample' boundary: */
   block_size -= block_size % in->signal.channels;
   /* Allocate a block of memory to store the block of audio samples: */
-  assert(buf = malloc(sizeof(sox_sample_t) * block_size));
+  assert((buf = malloc(sizeof(sox_sample_t) * block_size)));
 
   /* This example program requires that the audio has precisely 2 channels: */
   assert(in->signal.channels == 2);

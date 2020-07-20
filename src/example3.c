@@ -65,9 +65,9 @@ int main(int argc, char * argv[])
   sox_globals.verbosity = 1;
 
   assert(sox_init() == SOX_SUCCESS);
-  assert(in = sox_open_read(argv[1], NULL, NULL, NULL));
+  assert((in = sox_open_read(argv[1], NULL, NULL, NULL)));
   /* Change "alsa" in this line to use an alternative audio device driver: */
-  assert(out= sox_open_write("default", &in->signal, NULL, "alsa", NULL, NULL));
+  assert((out= sox_open_write("default", &in->signal, NULL, "alsa", NULL, NULL)));
 
   chain = sox_create_effects_chain(&in->encoding, &out->encoding);
 
