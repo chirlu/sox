@@ -214,8 +214,8 @@ static void rdft_p(double const * q, double const * in, double * out, int n)
   int i, j;
   for (j = 0; j <= n / 2; ++j) {
     double re = 0, im = 0;
-    for (i = 0; i < (n & ~7);) _ _ _ _ _ _ _ _ 0;
-    while (i < n) _ 0;
+    for (i = 0; i < (n & ~7);) _ _ _ _ _ _ _ _ (void)0;
+    while (i < n) _ (void)0;
     *out++ += re * re + im * im;
   }
 }
