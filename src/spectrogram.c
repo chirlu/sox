@@ -46,42 +46,79 @@
 #define MAX_Y_SIZE 200000
 #endif
 
-typedef enum {Window_Hann, Window_Hamming, Window_Bartlett, Window_Rectangular, Window_Kaiser, Window_Dolph} win_type_t;
-static lsx_enum_item const window_options[] = {
+typedef enum {
+  Window_Hann,
+  Window_Hamming,
+  Window_Bartlett,
+  Window_Rectangular,
+  Window_Kaiser,
+  Window_Dolph
+} win_type_t;
+
+static const lsx_enum_item window_options[] = {
   LSX_ENUM_ITEM(Window_,Hann)
   LSX_ENUM_ITEM(Window_,Hamming)
   LSX_ENUM_ITEM(Window_,Bartlett)
   LSX_ENUM_ITEM(Window_,Rectangular)
   LSX_ENUM_ITEM(Window_,Kaiser)
   LSX_ENUM_ITEM(Window_,Dolph)
-  {0, 0}};
+  {0, 0}
+};
 
 typedef struct {
   /* Parameters */
-  double     pixels_per_sec, window_adjust;
-  int        x_size0, y_size, Y_size, dB_range, gain, spectrum_points, perm;
-  sox_bool   monochrome, light_background, high_colour, slack_overlap, no_axes;
-  sox_bool   normalize, raw, alt_palette, truncate;
+  double     pixels_per_sec;
+  double     window_adjust;
+  int        x_size0;
+  int        y_size;
+  int        Y_size;
+  int        dB_range;
+  int        gain;
+  int        spectrum_points;
+  int        perm;
+  sox_bool   monochrome;
+  sox_bool   light_background;
+  sox_bool   high_colour;
+  sox_bool   slack_overlap;
+  sox_bool   no_axes;
+  sox_bool   normalize;
+  sox_bool   raw;
+  sox_bool   alt_palette;
+  sox_bool   truncate;
   win_type_t win_type;
-  char const * out_name, * title, * comment;
-  char const *duration_str, *start_time_str;
+  const char *out_name;
+  const char *title;
+  const char *comment;
+  const char *duration_str;
+  const char *start_time_str;
   sox_bool   using_stdout; /* output image to stdout */
 
   /* Shared work area */
-  double     * shared, * * shared_ptr;
+  double     *shared;
+  double     **shared_ptr;
 
   /* Per-channel work area */
   int        WORK;  /* Start of work area is marked by this dummy variable. */
   uint64_t   skip;
-  int        dft_size, step_size, block_steps, block_num, rows, cols, read;
-  int        x_size, end, end_min, last_end;
+  int        dft_size;
+  int        step_size;
+  int        block_steps;
+  int        block_num;
+  int        rows;
+  int        cols;
+  int        read;
+  int        x_size;
+  int        end;
+  int        end_min;
+  int        last_end;
   sox_bool   truncated;
-  double     * buf;             /* [dft_size] */
-  double     * dft_buf;         /* [dft_size] */
-  double     * window;          /* [dft_size + 1] */
-  double     block_norm, max;
-  double     * magnitudes;      /* [dft_size / 2 + 1] */
-  float      * dBfs;
+  double     *buf;              /* [dft_size] */
+  double     *dft_buf;          /* [dft_size] */
+  double     *window;           /* [dft_size + 1] */
+  double     block_norm;
+  double     max;
+  double     *magnitudes;       /* [dft_size / 2 + 1] */
+  float      *dBfs;
 } priv_t;
 
 #define secs(cols) \
@@ -147,123 +184,179 @@ static const unsigned char alt_palette[] = {
 };
 #define alt_palette_len (array_length(alt_palette) / 3)
 
-static int getopts(sox_effect_t * effp, int argc, char **argv)
+static int getopts(sox_effect_t *effp, int argc, char **argv)
 {
-  priv_t * p = (priv_t *)effp->priv;
+  priv_t *p = effp->priv;
   uint64_t dummy;
-  char const * next;
+  const char *next;
   int c;
   lsx_getopt_t optstate;
-  lsx_getopt_init(argc, argv, "+S:d:x:X:y:Y:z:Z:q:p:W:w:st:c:AarmnlhTo:", NULL, lsx_getopt_flag_none, 1, &optstate);
 
-  p->dB_range = 120, p->spectrum_points = 249, p->perm = 1; /* Non-0 defaults */
-  p->out_name = "spectrogram.png", p->comment = "Created by SoX";
+  lsx_getopt_init(argc, argv, "+S:d:x:X:y:Y:z:Z:q:p:W:w:st:c:AarmnlhTo:",
+                  NULL, lsx_getopt_flag_none, 1, &optstate);
 
-  while ((c = lsx_getopt(&optstate)) != -1) switch (c) {
-    GETOPT_NUMERIC(optstate, 'x', x_size0       , 100, MAX_X_SIZE)
-    GETOPT_NUMERIC(optstate, 'X', pixels_per_sec,  1 , 5000)
-    GETOPT_NUMERIC(optstate, 'y', y_size        , 64 , MAX_Y_SIZE)
-    GETOPT_NUMERIC(optstate, 'Y', Y_size        , 130, MAX_Y_SIZE)
-    GETOPT_NUMERIC(optstate, 'z', dB_range      , 20 , 180)
-    GETOPT_NUMERIC(optstate, 'Z', gain          ,-100, 100)
-    GETOPT_NUMERIC(optstate, 'q', spectrum_points, 0 , p->spectrum_points)
-    GETOPT_NUMERIC(optstate, 'p', perm          ,  1 , 6)
-    GETOPT_NUMERIC(optstate, 'W', window_adjust , -10, 10)
-    case 'w': p->win_type = lsx_enum_option(c, optstate.arg, window_options);   break;
-    case 's': p->slack_overlap    = sox_true;   break;
-    case 'A': p->alt_palette      = sox_true;   break;
-    case 'a': p->no_axes          = sox_true;   break;
-    case 'r': p->raw              = sox_true;   break;
-    case 'm': p->monochrome       = sox_true;   break;
-    case 'n': p->normalize        = sox_true;   break;
-    case 'l': p->light_background = sox_true;   break;
-    case 'h': p->high_colour      = sox_true;   break;
-    case 'T': p->truncate         = sox_true;   break;
-    case 't': p->title            = optstate.arg; break;
-    case 'c': p->comment          = optstate.arg; break;
-    case 'o': p->out_name         = optstate.arg; break;
-    case 'S': next = lsx_parseposition(0., optstate.arg, NULL, (uint64_t)0, (uint64_t)0, '=');
-      if (next && !*next) {p->start_time_str = lsx_strdup(optstate.arg); break;}
-      return lsx_usage(effp);
-    case 'd': next = lsx_parsesamples(1e5, optstate.arg, &dummy, 't');
-      if (next && !*next) {p->duration_str = lsx_strdup(optstate.arg); break;}
-      return lsx_usage(effp);
-    default: lsx_fail("invalid option `-%c'", optstate.opt); return lsx_usage(effp);
+  p->dB_range = 120;
+  p->spectrum_points = 249;
+  p->perm = 1;
+  p->out_name = "spectrogram.png";
+  p->comment = "Created by SoX";
+
+  while ((c = lsx_getopt(&optstate)) != -1) {
+    switch (c) {
+      GETOPT_NUMERIC(optstate, 'x', x_size0,        100, MAX_X_SIZE)
+      GETOPT_NUMERIC(optstate, 'X', pixels_per_sec,   1, 5000)
+      GETOPT_NUMERIC(optstate, 'y', y_size,          64, MAX_Y_SIZE)
+      GETOPT_NUMERIC(optstate, 'Y', Y_size,         130, MAX_Y_SIZE)
+      GETOPT_NUMERIC(optstate, 'z', dB_range,        20, 180)
+      GETOPT_NUMERIC(optstate, 'Z', gain,          -100, 100)
+      GETOPT_NUMERIC(optstate, 'q', spectrum_points,  0, p->spectrum_points)
+      GETOPT_NUMERIC(optstate, 'p', perm,             1, 6)
+      GETOPT_NUMERIC(optstate, 'W', window_adjust,  -10, 10)
+      case 'w': p->win_type = lsx_enum_option(c, optstate.arg, window_options);
+                break;
+      case 's': p->slack_overlap    = sox_true;   break;
+      case 'A': p->alt_palette      = sox_true;   break;
+      case 'a': p->no_axes          = sox_true;   break;
+      case 'r': p->raw              = sox_true;   break;
+      case 'm': p->monochrome       = sox_true;   break;
+      case 'n': p->normalize        = sox_true;   break;
+      case 'l': p->light_background = sox_true;   break;
+      case 'h': p->high_colour      = sox_true;   break;
+      case 'T': p->truncate         = sox_true;   break;
+      case 't': p->title            = optstate.arg; break;
+      case 'c': p->comment          = optstate.arg; break;
+      case 'o': p->out_name         = optstate.arg; break;
+      case 'S':
+        next = lsx_parseposition(0, optstate.arg, NULL, 0, 0, '=');
+        if (next && !*next) {
+          p->start_time_str = lsx_strdup(optstate.arg);
+          break;
+        }
+        return lsx_usage(effp);
+      case 'd':
+        next = lsx_parsesamples(1e5, optstate.arg, &dummy, 't');
+        if (next && !*next) {
+          p->duration_str = lsx_strdup(optstate.arg);
+          break;
+        }
+        return lsx_usage(effp);
+      default:
+        lsx_fail("invalid option `-%c'", optstate.opt);
+        return lsx_usage(effp);
+    }
   }
+
   if (!!p->x_size0 + !!p->pixels_per_sec + !!p->duration_str > 2) {
     lsx_fail("only two of -x, -X, -d may be given");
     return SOX_EOF;
   }
+
   if (p->y_size && p->Y_size) {
     lsx_fail("only one of -y, -Y may be given");
     return SOX_EOF;
   }
+
   p->gain = -p->gain;
   --p->perm;
   p->spectrum_points += 2;
   if (p->alt_palette)
-    p->spectrum_points = min(p->spectrum_points, (int)alt_palette_len);
+    p->spectrum_points = min(p->spectrum_points, alt_palette_len);
   p->shared_ptr = &p->shared;
+
   if (!strcmp(p->out_name, "-")) {
     if (effp->global_info->global_info->stdout_in_use_by) {
-      lsx_fail("stdout already in use by `%s'", effp->global_info->global_info->stdout_in_use_by);
+      lsx_fail("stdout already in use by `%s'",
+               effp->global_info->global_info->stdout_in_use_by);
       return SOX_EOF;
     }
     effp->global_info->global_info->stdout_in_use_by = effp->handler.name;
     p->using_stdout = sox_true;
   }
-  return optstate.ind !=argc || p->win_type == INT_MAX? lsx_usage(effp) : SOX_SUCCESS;
+
+  return optstate.ind != argc || p->win_type == INT_MAX ?
+    lsx_usage(effp) : SOX_SUCCESS;
 }
 
-static double make_window(priv_t * p, int end)
+static double make_window(priv_t *p, int end)
 {
-  double sum = 0, * w = end < 0? p->window : p->window + end;
-  int i, n = 1 + p->dft_size - abs(end);
+  double sum = 0;
+  double *w = end < 0 ? p->window : p->window + end;
+  double beta;
+  int n = 1 + p->dft_size - abs(end);
+  int i;
 
-  if (end) memset(p->window, 0, sizeof(*p->window) * (p->dft_size + 1));
-  for (i = 0; i < n; ++i) w[i] = 1;
+  if (end)
+    memset(p->window, 0, sizeof(*p->window) * (p->dft_size + 1));
+
+  for (i = 0; i < n; ++i)
+    w[i] = 1;
+
   switch (p->win_type) {
-    case Window_Hann: lsx_apply_hann(w, n); break;
-    case Window_Hamming: lsx_apply_hamming(w, n); break;
-    case Window_Bartlett: lsx_apply_bartlett(w, n); break;
+    case Window_Hann:        lsx_apply_hann(w, n); break;
+    case Window_Hamming:     lsx_apply_hamming(w, n); break;
+    case Window_Bartlett:    lsx_apply_bartlett(w, n); break;
     case Window_Rectangular: break;
-    case Window_Kaiser: lsx_apply_kaiser(w, n, lsx_kaiser_beta(
-        (p->dB_range + p->gain) * (1.1 + p->window_adjust / 50), .1)); break;
-    default: lsx_apply_dolph(w, n,
-        (p->dB_range + p->gain) * (1.005 + p->window_adjust / 50) + 6);
+    case Window_Kaiser:
+      beta = lsx_kaiser_beta((p->dB_range + p->gain) *
+                             (1.1 + p->window_adjust / 50), .1);
+      lsx_apply_kaiser(w, n, beta);
+      break;
+    default:
+      lsx_apply_dolph(w, n, (p->dB_range + p->gain) *
+                      (1.005 + p->window_adjust / 50) + 6);
   }
-  for (i = 0; i < p->dft_size; ++i) sum += p->window[i];
-  for (--n, i = 0; i < p->dft_size; ++i) p->window[i] *= 2 / sum
-    * sqr((double)n / p->dft_size);    /* empirical small window adjustment */
+
+  for (i = 0; i < p->dft_size; ++i)
+    sum += p->window[i];
+
+  /* empirical small window adjustment */
+  for (--n, i = 0; i < p->dft_size; ++i)
+    p->window[i] *= 2 / sum * sqr((double)n / p->dft_size);
+
   return sum;
 }
 
-static double * rdft_init(size_t n)
+static double *rdft_init(size_t n)
 {
-  double * q = lsx_malloc(2 * (n / 2 + 1) * n * sizeof(*q)), * p = q;
+  double *q = lsx_malloc(2 * (n / 2 + 1) * n * sizeof(*q));
+  double *p = q;
   int i, j;
-  for (j = 0; j <= n / 2; ++j) for (i = 0; i < n; ++i)
-    *p++ = cos(2 * M_PI * j * i / n), *p++ = sin(2 * M_PI * j * i / n);
+
+  for (j = 0; j <= n / 2; ++j) {
+    for (i = 0; i < n; ++i) {
+      *p++ = cos(2 * M_PI * j * i / n);
+      *p++ = sin(2 * M_PI * j * i / n);
+    }
+  }
+
   return q;
 }
 
 #define _ re += in[i] * *q++, im += in[i++] * *q++,
-static void rdft_p(double const * q, double const * in, double * out, int n)
+static void rdft_p(const double *q, const double *in, double *out, int n)
 {
   int i, j;
+
   for (j = 0; j <= n / 2; ++j) {
     double re = 0, im = 0;
-    for (i = 0; i < (n & ~7);) _ _ _ _ _ _ _ _ (void)0;
-    while (i < n) _ (void)0;
+
+    for (i = 0; i < (n & ~7);)
+      _ _ _ _ _ _ _ _ (void)0;
+
+    while (i < n)
+      _ (void)0;
+
     *out++ += re * re + im * im;
   }
 }
 
-static int start(sox_effect_t * effp)
+static int start(sox_effect_t *effp)
 {
-  priv_t * p = (priv_t *)effp->priv;
-  double actual, duration = 0.0, start_time = 0.0,
-         pixels_per_sec = p->pixels_per_sec;
+  priv_t *p = effp->priv;
+  double actual;
+  double duration = 0.0;
+  double start_time = 0.0;
+  double pixels_per_sec = p->pixels_per_sec;
   uint64_t d;
 
   memset(&p->WORK, 0, sizeof(*p) - field_offset(priv_t, WORK));
@@ -272,25 +365,32 @@ static int start(sox_effect_t * effp)
     lsx_parsesamples(effp->in_signal.rate, p->duration_str, &d, 't');
     duration = d / effp->in_signal.rate;
   }
+
   if (p->start_time_str) {
     uint64_t in_length = effp->in_signal.length != SOX_UNKNOWN_LEN ?
       effp->in_signal.length / effp->in_signal.channels : SOX_UNKNOWN_LEN;
-    if (!lsx_parseposition(effp->in_signal.rate, p->start_time_str, &d, (uint64_t)0, in_length, '=') || d == SOX_UNKNOWN_LEN) {
+
+    if (!lsx_parseposition(effp->in_signal.rate, p->start_time_str, &d,
+                           0, in_length, '=') || d == SOX_UNKNOWN_LEN) {
       lsx_fail("-S option: audio length is unknown");
       return SOX_EOF;
     }
+
     start_time = d / effp->in_signal.rate;
     p->skip = d;
   }
 
   p->x_size = p->x_size0;
+
   while (sox_true) {
     if (!pixels_per_sec && p->x_size && duration)
       pixels_per_sec = min(5000, p->x_size / duration);
     else if (!p->x_size && pixels_per_sec && duration)
       p->x_size = min(MAX_X_SIZE, (int)(pixels_per_sec * duration + .5));
+
     if (!duration && effp->in_signal.length != SOX_UNKNOWN_LEN) {
-      duration = effp->in_signal.length / (effp->in_signal.rate * effp->in_signal.channels);
+      duration = effp->in_signal.length /
+        (effp->in_signal.rate * effp->in_signal.channels);
       duration -= start_time;
       if (duration <= 0)
         duration = 1;
@@ -322,55 +422,63 @@ static int start(sox_effect_t * effp)
 
   if (is_p2(p->dft_size) && !effp->flow)
     lsx_safe_rdft(p->dft_size, 1, p->dft_buf);
-  lsx_debug("duration=%g x_size=%i pixels_per_sec=%g dft_size=%i", duration, p->x_size, pixels_per_sec, p->dft_size);
+
+  lsx_debug("duration=%g x_size=%i pixels_per_sec=%g dft_size=%i",
+            duration, p->x_size, pixels_per_sec, p->dft_size);
 
   p->end = p->dft_size;
   p->rows = (p->dft_size >> 1) + 1;
   actual = make_window(p, p->last_end = 0);
   lsx_debug("window_density=%g", actual / p->dft_size);
-  p->step_size = (p->slack_overlap? sqrt(actual * p->dft_size) : actual) + .5;
+  p->step_size = (p->slack_overlap ? sqrt(actual * p->dft_size) : actual) + 0.5;
   p->block_steps = effp->in_signal.rate / pixels_per_sec;
-  p->step_size = p->block_steps / ceil((double)p->block_steps / p->step_size) +.5;
-  p->block_steps = floor((double)p->block_steps / p->step_size +.5);
-  p->block_norm = 1. / p->block_steps;
+  p->step_size =
+    p->block_steps / ceil((double)p->block_steps / p->step_size) + 0.5;
+  p->block_steps = floor((double)p->block_steps / p->step_size + 0.5);
+  p->block_norm = 1.0 / p->block_steps;
   actual = effp->in_signal.rate / p->step_size / p->block_steps;
   if (!effp->flow && actual != pixels_per_sec)
     lsx_report("actual pixels/s = %g", actual);
   lsx_debug("step_size=%i block_steps=%i", p->step_size, p->block_steps);
   p->max = -p->dB_range;
   p->read = (p->step_size - p->dft_size) / 2;
+
   return SOX_SUCCESS;
 }
 
-static int do_column(sox_effect_t * effp)
+static int do_column(sox_effect_t *effp)
 {
-  priv_t * p = (priv_t *)effp->priv;
+  priv_t *p = effp->priv;
   int i;
 
   if (p->cols == p->x_size) {
     p->truncated = sox_true;
     if (!effp->flow)
       lsx_report("PNG truncated at %g seconds", secs(p->cols));
-    return p->truncate? SOX_EOF : SOX_SUCCESS;
+    return p->truncate ? SOX_EOF : SOX_SUCCESS;
   }
+
   ++p->cols;
   p->dBfs = lsx_realloc(p->dBfs, p->cols * p->rows * sizeof(*p->dBfs));
-    /* FIXME: allocate in larger steps (for several columns) */
+
+  /* FIXME: allocate in larger steps (for several columns) */
   for (i = 0; i < p->rows; ++i) {
     double dBfs = 10 * log10(p->magnitudes[i] * p->block_norm);
     p->dBfs[(p->cols - 1) * p->rows + i] = dBfs + p->gain;
     p->max = max(dBfs, p->max);
   }
+
   memset(p->magnitudes, 0, p->rows * sizeof(*p->magnitudes));
   p->block_num = 0;
+
   return SOX_SUCCESS;
 }
 
-static int flow(sox_effect_t * effp,
-    const sox_sample_t * ibuf, sox_sample_t * obuf,
-    size_t * isamp, size_t * osamp)
+static int flow(sox_effect_t *effp,
+    const sox_sample_t *ibuf, sox_sample_t *obuf,
+    size_t *isamp, size_t *osamp)
 {
-  priv_t * p = (priv_t *)effp->priv;
+  priv_t *p = effp->priv;
   size_t len = *isamp = *osamp = min(*isamp, *osamp);
   int i;
 
@@ -385,38 +493,49 @@ static int flow(sox_effect_t * effp,
     len -= p->skip;
     p->skip = 0;
   }
+
   while (!p->truncated) {
     if (p->read == p->step_size) {
       memmove(p->buf, p->buf + p->step_size,
           (p->dft_size - p->step_size) * sizeof(*p->buf));
       p->read = 0;
     }
+
     for (; len && p->read < p->step_size; --len, ++p->read, --p->end)
       p->buf[p->dft_size - p->step_size + p->read] =
         SOX_SAMPLE_TO_FLOAT_64BIT(*ibuf++,);
+
     if (p->read != p->step_size)
       break;
 
     if ((p->end = max(p->end, p->end_min)) != p->last_end)
       make_window(p, p->last_end = p->end);
-    for (i = 0; i < p->dft_size; ++i) p->dft_buf[i] = p->buf[i] * p->window[i];
+
+    for (i = 0; i < p->dft_size; ++i)
+      p->dft_buf[i] = p->buf[i] * p->window[i];
+
     if (is_p2(p->dft_size)) {
       lsx_safe_rdft(p->dft_size, 1, p->dft_buf);
       p->magnitudes[0] += sqr(p->dft_buf[0]);
+
       for (i = 1; i < p->dft_size >> 1; ++i)
         p->magnitudes[i] += sqr(p->dft_buf[2*i]) + sqr(p->dft_buf[2*i+1]);
+
       p->magnitudes[p->dft_size >> 1] += sqr(p->dft_buf[1]);
     }
-    else rdft_p(*p->shared_ptr, p->dft_buf, p->magnitudes, p->dft_size);
+    else
+      rdft_p(*p->shared_ptr, p->dft_buf, p->magnitudes, p->dft_size);
+
     if (++p->block_num == p->block_steps && do_column(effp) == SOX_EOF)
       return SOX_EOF;
   }
+
   return SOX_SUCCESS;
 }
 
-static int drain(sox_effect_t * effp, sox_sample_t * obuf_, size_t * osamp)
+static int drain(sox_effect_t *effp, sox_sample_t *obuf_, size_t *osamp)
 {
-  priv_t * p = (priv_t *)effp->priv;
+  priv_t *p = effp->priv;
 
   if (!p->truncated) {
     sox_sample_t * ibuf = lsx_calloc(p->dft_size, sizeof(*ibuf));
@@ -426,30 +545,42 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf_, size_t * osamp)
 
     if (left_over >= p->step_size >> 1)
       isamp += p->step_size - left_over;
+
     lsx_debug("cols=%i left=%i end=%i", p->cols, p->read, p->end);
+
     p->end = 0, p->end_min = -p->dft_size;
+
     if (flow(effp, ibuf, obuf, &isamp, &isamp) == SOX_SUCCESS && p->block_num) {
       p->block_norm *= (double)p->block_steps / p->block_num;
       do_column(effp);
     }
+
     lsx_debug("flushed cols=%i left=%i end=%i", p->cols, p->read, p->end);
     free(obuf);
     free(ibuf);
   }
-  (void)obuf_, *osamp = 0;
+
+  *osamp = 0;
+
   return SOX_SUCCESS;
 }
 
-enum {Background, Text, Labels, Grid, fixed_palette};
+enum {
+  Background,
+  Text,
+  Labels,
+  Grid,
+  fixed_palette
+};
 
-static unsigned colour(priv_t const * p, double x)
+static unsigned colour(const priv_t *p, double x)
 {
-  unsigned c = x < -p->dB_range? 0 : x >= 0? p->spectrum_points - 1 :
+  unsigned c = x < -p->dB_range ? 0 : x >= 0 ? p->spectrum_points - 1 :
       1 + (1 + x / p->dB_range) * (p->spectrum_points - 2);
   return fixed_palette + c;
 }
 
-static void make_palette(priv_t const * p, png_color * palette)
+static void make_palette(const priv_t *p, png_color *palette)
 {
   static const unsigned char black[] = { 0x00, 0x00, 0x00 };
   static const unsigned char dgrey[] = { 0x3f, 0x3f, 0x3f };
@@ -471,9 +602,12 @@ static void make_palette(priv_t const * p, png_color * palette)
     memcpy(palette++, lgrey, 3);
     memcpy(palette++, mgrey, 3);
   }
+
   for (i = 0; i < p->spectrum_points; ++i) {
-    double c[3], x = (double)i / (p->spectrum_points - 1);
-    int at = p->light_background? p->spectrum_points - 1 - i : i;
+    double c[3];
+    double x = (double)i / (p->spectrum_points - 1);
+    int at = p->light_background ? p->spectrum_points - 1 - i : i;
+
     if (p->monochrome) {
       c[2] = c[1] = c[0] = x;
       if (p->high_colour) {
@@ -486,17 +620,24 @@ static void make_palette(priv_t const * p, png_color * palette)
       palette[at].blue = .5 + 255 * c[2];
       continue;
     }
+
     if (p->high_colour) {
       static const int states[3][7] = {
-        {4,5,0,0,2,1,1}, {0,0,2,1,1,3,2}, {4,1,1,3,0,0,2}};
+        { 4, 5, 0, 0, 2, 1, 1 },
+        { 0, 0, 2, 1, 1, 3, 2 },
+        { 4, 1, 1, 3, 0, 0, 2 },
+      };
       int j, phase_num = min(7 * x, 6);
-      for (j = 0; j < 3; ++j) switch (states[j][phase_num]) {
-        case 0: c[j] = 0; break;
-        case 1: c[j] = 1; break;
-        case 2: c[j] = sin((7 * x - phase_num) * M_PI / 2); break;
-        case 3: c[j] = cos((7 * x - phase_num) * M_PI / 2); break;
-        case 4: c[j] =      7 * x - phase_num;  break;
-        case 5: c[j] = 1 - (7 * x - phase_num); break;
+
+      for (j = 0; j < 3; ++j) {
+        switch (states[j][phase_num]) {
+          case 0: c[j] = 0; break;
+          case 1: c[j] = 1; break;
+          case 2: c[j] = sin((7 * x - phase_num) * M_PI / 2); break;
+          case 3: c[j] = cos((7 * x - phase_num) * M_PI / 2); break;
+          case 4: c[j] =      7 * x - phase_num;  break;
+          case 5: c[j] = 1 - (7 * x - phase_num); break;
+        }
       }
     } else if (p->alt_palette) {
       int n = (double)i / (p->spectrum_points - 1) * (alt_palette_len - 1) + .5;
@@ -514,6 +655,7 @@ static void make_palette(priv_t const * p, png_color * palette)
       else if (x < .78) c[2] = 0;
       else              c[2] =          (x - .78) / .22;
     }
+
     palette[at].red  = .5 + 255 * c[p->perm % 3];
     palette[at].green= .5 + 255 * c[(1 + p->perm + (p->perm % 2)) % 3];
     palette[at].blue = .5 + 255 * c[(2 + p->perm - (p->perm % 2)) % 3];
@@ -560,7 +702,9 @@ static const Bytef fixed[] = {
   0x7d, 0xdc, 0xdf, 0x10, 0xf4, 0xc8, 0x28, 0x5d, 0xc4, 0xb7, 0x62, 0x7f,
   0xd6, 0x59, 0x72, 0x6a, 0xca, 0xbf, 0xfb, 0x9b, 0x1f, 0xe0,
 };
-static unsigned char * font;
+
+static unsigned char *font;
+
 #define font_x 5
 #define font_y 12
 #define font_X (font_x + 1)
@@ -569,19 +713,25 @@ static unsigned char * font;
 #define print_at(x,y,c,t) print_at_(pixels,cols,x,y,c,t,0)
 #define print_up(x,y,c,t) print_at_(pixels,cols,x,y,c,t,1)
 
-static void print_at_(png_byte * pixels, int cols, int x, int y, int c, char const * text, int orientation)
+static void print_at_(png_byte *pixels, int cols, int x, int y, int c,
+                      const char *text, int orientation)
 {
-  for (;*text; ++text) {
+  for (; *text; ++text) {
     int pos = ((*text < ' ' || *text > '~'? '~' + 1 : *text) - ' ') * font_y;
     int i, j;
+
     for (i = 0; i < font_y; ++i) {
       unsigned line = font[pos++];
-      for (j = 0; j < font_x; ++j, line <<= 1)
-        if (line & 0x80) switch (orientation) {
-          case 0: pixel(x + j, y - i) = c; break;
-          case 1: pixel(x + i, y + j) = c; break;
+      for (j = 0; j < font_x; ++j, line <<= 1) {
+        if (line & 0x80) {
+          switch (orientation) {
+            case 0: pixel(x + j, y - i) = c; break;
+            case 1: pixel(x + i, y + j) = c; break;
+          }
         }
+      }
     }
+
     switch (orientation) {
       case 0: x += font_X; break;
       case 1: y += font_X; break;
@@ -589,19 +739,30 @@ static void print_at_(png_byte * pixels, int cols, int x, int y, int c, char con
   }
 }
 
-static int axis(double to, int max_steps, double * limit, char * * prefix)
+static int axis(double to, int max_steps, double *limit, char **prefix)
 {
   double scale = 1, step = max(1, 10 * to);
   int i, prefix_num = 0;
+
   if (max_steps) {
-    double try, log_10 = HUGE_VAL, min_step = (to *= 10) / max_steps;
-    for (i = 5; i; i >>= 1) if ((try = ceil(log10(min_step * i))) <= log_10)
-      step = pow(10., log_10 = try) / i, log_10 -= i > 1;
+    double try;
+    double log_10 = HUGE_VAL;
+    double min_step = (to *= 10) / max_steps;
+
+    for (i = 5; i; i >>= 1) {
+      if ((try = ceil(log10(min_step * i))) <= log_10) {
+        step = pow(10., log_10 = try) / i;
+        log_10 -= i > 1;
+      }
+    }
+
     prefix_num = floor(log_10 / 3);
     scale = pow(10., -3. * prefix_num);
   }
+
   *prefix = "pnum-kMGTPE" + prefix_num + (prefix_num? 4 : 11);
   *limit = to * scale;
+
   return step * scale + .5;
 }
 
@@ -611,26 +772,31 @@ static int axis(double to, int max_steps, double * limit, char * * prefix)
 #define spectrum_width 14
 #define right 35
 
-static int stop(sox_effect_t * effp) /* only called, by end(), on flow 0 */
+static int stop(sox_effect_t *effp) /* only called, by end(), on flow 0 */
 {
-  priv_t *    p        = (priv_t *) effp->priv;
-  FILE *      file;
+  priv_t     *p        = effp->priv;
+  FILE       *file;
   uLong       font_len = 96 * font_y;
   int         chans    = effp->in_signal.channels;
   int         c_rows   = p->rows * chans + chans - 1;
   int         rows     = p->raw? c_rows : below + c_rows + 30 + 20 * !!p->title;
   int         cols     = p->raw? p->cols : left + p->cols + between + spectrum_width + right;
-  png_byte *  pixels   = lsx_malloc(cols * rows * sizeof(*pixels));
+  png_byte   *pixels   = lsx_malloc(cols * rows * sizeof(*pixels));
   png_bytepp  png_rows = lsx_malloc(rows * sizeof(*png_rows));
   png_structp png      = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0,0);
   png_infop   png_info = png_create_info_struct(png);
   png_color   palette[256];
-  int         i, j, k, base, step, tick_len = 3 - p->no_axes;
-  char        text[200], * prefix;
+  int         i, j, k;
+  int         base;
+  int         step;
+  int         tick_len = 3 - p->no_axes;
+  char        text[200];
+  char       *prefix;
   double      limit;
   float       autogain = 0.0;	/* Is changed if the -n flag was supplied */
 
   free(p->shared);
+
   if (p->using_stdout) {
     SET_BINARY_MODE(stdout);
     file = stdout;
@@ -641,18 +807,23 @@ static int stop(sox_effect_t * effp) /* only called, by end(), on flow 0 */
       goto error;
     }
   }
+
   lsx_debug("signal-max=%g", p->max);
+
   font = lsx_malloc(font_len);
   assert(uncompress(font, &font_len, fixed, sizeof(fixed)) == Z_OK);
+
   make_palette(p, palette);
   memset(pixels, Background, cols * rows * sizeof(*pixels));
+
   png_init_io(png, file);
   png_set_PLTE(png, png_info, palette, fixed_palette + p->spectrum_points);
-  png_set_IHDR(png, png_info, (png_uint_32)cols, (png_uint_32)rows, 8,
+  png_set_IHDR(png, png_info, cols, rows, 8,
       PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
       PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-  for (j = 0; j < rows; ++j)               /* Put (0,0) at bottom-left of PNG */
-    png_rows[rows - 1 - j] = (png_bytep)(pixels + j * cols);
+
+  for (j = 0; j < rows; ++j)    /* Put (0,0) at bottom-left of PNG */
+    png_rows[rows - 1 - j] = pixels + j * cols;
 
   /* Spectrogram */
 
@@ -663,7 +834,7 @@ static int stop(sox_effect_t * effp) /* only called, by end(), on flow 0 */
     autogain = -p->max;
 
   for (k = 0; k < chans; ++k) {
-    priv_t * q = (priv_t *)(effp - effp->flow + k)->priv;
+    priv_t *q = (effp - effp->flow + k)->priv;
 
     if (p->normalize) {
       float *fp = q->dBfs;
@@ -672,33 +843,42 @@ static int stop(sox_effect_t * effp) /* only called, by end(), on flow 0 */
     }
 
     base = !p->raw * below + (chans - 1 - k) * (p->rows + 1);
+
     for (j = 0; j < p->rows; ++j) {
       for (i = 0; i < p->cols; ++i)
         pixel(!p->raw * left + i, base + j) = colour(p, q->dBfs[i*p->rows + j]);
-      if (!p->raw && !p->no_axes)                                 /* Y-axis lines */
+
+      if (!p->raw && !p->no_axes) /* Y-axis lines */
         pixel(left - 1, base + j) = pixel(left + p->cols, base + j) = Grid;
     }
-    if (!p->raw && !p->no_axes) for (i = -1; i <= p->cols; ++i)   /* X-axis lines */
-      pixel(left + i, base - 1) = pixel(left + i, base + p->rows) = Grid;
+
+    if (!p->raw && !p->no_axes)   /* X-axis lines */
+      for (i = -1; i <= p->cols; ++i)
+        pixel(left + i, base - 1) = pixel(left + i, base + p->rows) = Grid;
   }
 
   if (!p->raw) {
-    if (p->title && (i = (int)strlen(p->title) * font_X) < cols + 1) /* Title */
+    if (p->title && (i = strlen(p->title) * font_X) < cols + 1) /* Title */
       print_at((cols - i) / 2, rows - font_y, Text, p->title);
 
-    if ((int)strlen(p->comment) * font_X < cols + 1)     /* Footer comment */
+    if (strlen(p->comment) * font_X < cols + 1)     /* Footer comment */
       print_at(1, font_y, Text, p->comment);
 
     /* X-axis */
-    step = axis(secs(p->cols), p->cols / (font_X * 9 / 2), &limit, &prefix);
     sprintf(text, "Time (%.1ss)", prefix);               /* Axis label */
-    print_at(left + (p->cols - font_X * (int)strlen(text)) / 2, 24, Text, text);
+    print_at(left + (p->cols - font_X * strlen(text)) / 2, 24, Text, text);
+    step = axis(secs(p->cols), p->cols / (font_X * 9 / 2), &limit, &prefix);
+
     for (i = 0; i <= limit; i += step) {
-      int y, x = limit? (double)i / limit * p->cols + .5 : 0;
+      int x = limit ? (double)i / limit * p->cols + .5 : 0;
+      int y;
+
       for (y = 0; y < tick_len; ++y)                     /* Ticks */
         pixel(left-1+x, below-1-y) = pixel(left-1+x, below+c_rows+y) = Grid;
+
       if (step == 5 && (i%10))
         continue;
+
       sprintf(text, "%g", .1 * i);                       /* Tick labels */
       x = left + x - 3 * strlen(text);
       print_at(x, below - 6, Labels, text);
@@ -706,18 +886,24 @@ static int stop(sox_effect_t * effp) /* only called, by end(), on flow 0 */
     }
 
     /* Y-axis */
+    sprintf(text, "Frequency (%.1sHz)", prefix);         /* Axis label */
+    print_up(10, below + (c_rows - font_X * strlen(text)) / 2, Text, text);
     step = axis(effp->in_signal.rate / 2,
         (p->rows - 1) / ((font_y * 3 + 1) >> 1), &limit, &prefix);
-    sprintf(text, "Frequency (%.1sHz)", prefix);         /* Axis label */
-    print_up(10, below + (c_rows - font_X * (int)strlen(text)) / 2, Text, text);
+
     for (k = 0; k < chans; ++k) {
       base = below + k * (p->rows + 1);
+
       for (i = 0; i <= limit; i += step) {
-        int x, y = limit? (double)i / limit * (p->rows - 1) + .5 : 0;
+        int y = limit ? (double)i / limit * (p->rows - 1) + .5 : 0;
+        int x;
+
         for (x = 0; x < tick_len; ++x)                   /* Ticks */
           pixel(left-1-x, base+y) = pixel(left+p->cols+x, base+y) = Grid;
+
         if ((step == 5 && (i%10)) || (!i && k && chans > 1))
           continue;
+
         sprintf(text, i?"%5g":"   DC", .1 * i);          /* Tick labels */
         print_at(left - 4 - font_X * 5, base + y + 5, Labels, text);
         sprintf(text, i?"%g":"DC", .1 * i);
@@ -734,19 +920,26 @@ static int stop(sox_effect_t * effp) /* only called, by end(), on flow 0 */
       for (i = 0; i < spectrum_width; ++i)
         pixel(cols - right - 1 - i, base + j) = b;
     }
+
     step = 10 * ceil(p->dB_range / 10. * (font_y + 2) / (k - 1));
+
     for (i = 0; i <= p->dB_range; i += step) {           /* (Tick) labels */
       int y = (double)i / p->dB_range * (k - 1) + .5;
       sprintf(text, "%+i", i - p->gain - p->dB_range - (int)(autogain+0.5));
       print_at(cols - right + 1, base + y + 5, Labels, text);
     }
   }
+
   free(font);
+
   png_set_rows(png, png_info, png_rows);
   png_write_png(png, png_info, PNG_TRANSFORM_IDENTITY, NULL);
+
   if (!p->using_stdout)
     fclose(file);
-error: png_destroy_write_struct(&png, &png_info);
+
+error:
+  png_destroy_write_struct(&png, &png_info);
   free(png_rows);
   free(pixels);
   free(p->dBfs);
@@ -754,23 +947,37 @@ error: png_destroy_write_struct(&png, &png_info);
   free(p->dft_buf);
   free(p->window);
   free(p->magnitudes);
+
   return SOX_SUCCESS;
 }
 
-static int end(sox_effect_t * effp)
+static int end(sox_effect_t *effp)
 {
-  priv_t *p = (priv_t *)effp->priv;
+  priv_t *p = effp->priv;
+
   if (effp->flow == 0)
     return stop(effp);
+
   free(p->dBfs);
+
   return SOX_SUCCESS;
 }
 
-sox_effect_handler_t const * lsx_spectrogram_effect_fn(void)
+const sox_effect_handler_t *lsx_spectrogram_effect_fn(void)
 {
-  static sox_effect_handler_t handler = {"spectrogram", 0, SOX_EFF_MODIFY,
-    getopts, start, flow, drain, end, 0, sizeof(priv_t)};
-  static char const * lines[] = {
+  static sox_effect_handler_t handler = {
+    "spectrogram",
+    0,
+    SOX_EFF_MODIFY,
+    getopts,
+    start,
+    flow,
+    drain,
+    end,
+    0,
+    sizeof(priv_t)
+  };
+  static const char *lines[] = {
     "[options]",
     "\t-x num\tX-axis size in pixels; default derived or 800",
     "\t-X num\tX-axis pixels/second; default derived or 100",
@@ -796,7 +1003,7 @@ sox_effect_handler_t const * lsx_spectrogram_effect_fn(void)
     "\t-d time\tAudio duration to fit to X-axis; e.g. 1:00, 48",
     "\t-S position\tStart the spectrogram at the given input position",
   };
-  static char * usage;
+  static char *usage;
   handler.usage = lsx_usage_lines(&usage, lines, array_length(lines));
   return &handler;
 }
