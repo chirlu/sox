@@ -302,7 +302,7 @@ static int stopwrite(sox_format_t * ft)
     lsx_debug("tx16w:output finished");
 
     memset(&WH, 0, sizeof(struct WaveHeader_));
-    strncpy(WH.filetype,"LM8953",(size_t)6);
+    memcpy(WH.filetype, "LM8953", 6);
     for (i=0;i<10;i++) WH.nulls[i]=0;
     for (i=0;i<6;i++)  WH.dummy_aeg[i]=0;
     for (i=0;i<2;i++)  WH.unused[i]=0;
