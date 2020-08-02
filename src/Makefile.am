@@ -141,7 +141,6 @@ example5_LDADD = ${sox_LDADD}
 example6_LDADD = ${sox_LDADD}
 
 EXTRA_DIST = monkey.wav optional-fmts.am \
-	     CMakeLists.txt soxconfig.h.cmake \
 	     tests.sh testall.sh tests.bat testall.bat test-comments
 
 all: sox$(EXEEXT) play$(EXEEXT) rec$(EXEEXT) soxi$(EXEEXT) sox_sample_test$(EXEEXT) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT) example5$(EXEEXT) example6$(EXEEXT)

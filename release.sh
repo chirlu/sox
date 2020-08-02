@@ -1,10 +1,9 @@
 #!/bin/sh
 #
 # Before a release:
-# * Update configure.ac, src/soxconfig.h.cmake, and possibly ChangeLog and
+# * Update configure.ac and possibly ChangeLog and
 #   src/sox.h (SOX_LIB_VERSION_CODE) to match release #. If this is a
-#   release candidate, add "rcN" to end of version in configure.ac and
-#   src/soxconfig.h.cmake.
+#   release candidate, add "rcN" to end of version in configure.ac.
 # * Update date strings and possibly copyright years in man pages.
 # * Tag files to release using following form: git tag sox-14.4.0rc1
 #

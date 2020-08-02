@@ -24,9 +24,5 @@ sox*.tar.gz
 sox.pc
 README
 Docs.Features
-
-CMakeCache.txt
-CMakeFiles
-cmake_install.cmake
 *.a
 tags
