@@ -1137,7 +1137,7 @@ static int startwrite(sox_format_t * ft)
   return(SOX_SUCCESS);
 }
 
-#define MP3_SAMPLE_TO_FLOAT(d,clips) ((float)(32768*SOX_SAMPLE_TO_FLOAT_32BIT(d,clips)))
+#define MP3_SAMPLE_TO_FLOAT(d) ((float)(32768*SOX_SAMPLE_TO_FLOAT_32BIT(d,)))
 
 static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t samp)
 {
@@ -1147,7 +1147,6 @@ static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t sa
     int nsamples = samp/ft->signal.channels;
     int i,j;
     int written = 0;
-    int clips = 0;
     SOX_SAMPLE_LOCALS;
 
     new_buffer_size = samp * sizeof(float);
@@ -1167,7 +1166,7 @@ static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t sa
     {
         size_t s;
         for(s = 0; s < samp; s++)
-            buffer_l[s] = SOX_SAMPLE_TO_FLOAT_32BIT(buf[s], clips);
+            buffer_l[s] = SOX_SAMPLE_TO_FLOAT_32BIT(buf[s],);
     }
     else
     {
@@ -1180,15 +1179,15 @@ static size_t sox_mp3write(sox_format_t * ft, const sox_sample_t *buf, size_t sa
             j=0;
             for (i = 0; i < nsamples; i++)
             {
-                buffer_l[i] = MP3_SAMPLE_TO_FLOAT(buf[j++], clips);
-                buffer_r[i] = MP3_SAMPLE_TO_FLOAT(buf[j++], clips);
+                buffer_l[i] = MP3_SAMPLE_TO_FLOAT(buf[j++]);
+                buffer_r[i] = MP3_SAMPLE_TO_FLOAT(buf[j++]);
             }
         }
         else
         {
             j=0;
             for (i = 0; i < nsamples; i++) {
-                buffer_l[i] = MP3_SAMPLE_TO_FLOAT(buf[j++], clips);
+                buffer_l[i] = MP3_SAMPLE_TO_FLOAT(buf[j++]);
             }
         }
     }
