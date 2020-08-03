@@ -865,9 +865,9 @@ static int stop(sox_effect_t *effp) /* only called, by end(), on flow 0 */
       print_at(1, font_y, Text, p->comment);
 
     /* X-axis */
+    step = axis(secs(p->cols), p->cols / (font_X * 9 / 2), &limit, &prefix);
     sprintf(text, "Time (%.1ss)", prefix);               /* Axis label */
     print_at(left + (p->cols - font_X * strlen(text)) / 2, 24, Text, text);
-    step = axis(secs(p->cols), p->cols / (font_X * 9 / 2), &limit, &prefix);
 
     for (i = 0; i <= limit; i += step) {
       int x = limit ? (double)i / limit * p->cols + .5 : 0;
@@ -886,10 +886,10 @@ static int stop(sox_effect_t *effp) /* only called, by end(), on flow 0 */
     }
 
     /* Y-axis */
-    sprintf(text, "Frequency (%.1sHz)", prefix);         /* Axis label */
-    print_up(10, below + (c_rows - font_X * strlen(text)) / 2, Text, text);
     step = axis(effp->in_signal.rate / 2,
         (p->rows - 1) / ((font_y * 3 + 1) >> 1), &limit, &prefix);
+    sprintf(text, "Frequency (%.1sHz)", prefix);         /* Axis label */
+    print_up(10, below + (c_rows - font_X * strlen(text)) / 2, Text, text);
 
     for (k = 0; k < chans; ++k) {
       base = below + k * (p->rows + 1);
