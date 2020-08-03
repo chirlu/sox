@@ -1009,14 +1009,9 @@ Converts SoX native sample to a signed 32-bit integer.
 Client API:
 Converts SoX native sample to a 32-bit float.
 @param d Input sample to be converted.
-@param clips Variable to increment if input sample is too large.
+@param clips The parameter is not used.
 */
-#define SOX_SAMPLE_TO_FLOAT_32BIT(d,clips) (                            \
-  LSX_USE_VAR(sox_macro_temp_double),                                   \
-  sox_macro_temp_sample = (d),                                          \
-  sox_macro_temp_sample > SOX_SAMPLE_MAX - 64 ?                         \
-    ++(clips), 1 :                                                      \
-    (((sox_macro_temp_sample + 64) & ~127) * (1.0 / (SOX_SAMPLE_MAX + 1.0))))
+#define SOX_SAMPLE_TO_FLOAT_32BIT(d,clips) ((d)*(1.0 / (SOX_SAMPLE_MAX + 1.0)))
 
 /**
 Client API:
