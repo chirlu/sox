@@ -268,7 +268,7 @@ static size_t mp3_duration(sox_format_t * ft)
     int read, padding = 0;
     size_t leftover = mad_stream.bufend - mad_stream.next_frame;
 
-    memcpy(p->mp3_buffer, mad_stream.this_frame, leftover);
+    memmove(p->mp3_buffer, mad_stream.this_frame, leftover);
     read = lsx_readbuf(ft, p->mp3_buffer + leftover, p->mp3_buffer_size - leftover);
     if (read <= 0) {
       lsx_debug("got exact duration by scan to EOF (frames=%" PRIuPTR " leftover=%" PRIuPTR ")", frames, leftover);

@@ -590,7 +590,7 @@ static int sox_mp3seek(sox_format_t * ft, uint64_t offset)
     size_t read;
     size_t leftover = p->Stream.bufend - p->Stream.next_frame;
 
-    memcpy(p->mp3_buffer, p->Stream.this_frame, leftover);
+    memmove(p->mp3_buffer, p->Stream.this_frame, leftover);
     read = lsx_readbuf(ft, p->mp3_buffer + leftover, p->mp3_buffer_size - leftover);
     if (read == 0) {
       lsx_debug("seek failure. unexpected EOF (frames=%" PRIuPTR " leftover=%" PRIuPTR ")", p->FrameCount, leftover);
