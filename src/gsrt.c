@@ -157,8 +157,10 @@ static int stop_write(sox_format_t * ft)
 {
   long num_samples = ft->tell_off - HEADER_SIZE;
 
-  if (num_samples & 1)
-    lsx_writeb(ft, 0);
+  if (num_samples & 1) {
+    sox_sample_t pad = 0;
+    lsx_rawwrite(ft, &pad, 1);
+  }
 
   if (ft->seekable) {
     unsigned i, file_size = ft->tell_off >> 1;
