@@ -9,10 +9,8 @@
  * GSM 06.10 courtesy Communications and Operating Systems Research Group,
  * Technische Universitaet Berlin
  *
- * More information on this format can be obtained from
- * http://www.cs.tu-berlin.de/~jutta/toasox.html
- *
- * Source is available from ftp://ftp.cs.tu-berlin.de/pub/local/kbs/tubmik/gsm
+ * Source code and more information on this format can be obtained from
+ * http://www.quut.com/gsm/
  *
  * Written 26 Jan 1995 by Andrew Pam
  * Portions Copyright (c) 1995 Serious Cybernetics

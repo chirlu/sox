@@ -16,7 +16,7 @@
  *
  *
  * 2-pole filters designed by Robert Bristow-Johnson <rbj@audioimagination.com>
- *   see http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
+ *   see https://webaudio.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html
  *
  * 1-pole filters based on code (c) 2000 Chris Bagwell <cbagwell@sprynet.com>
  *   Algorithms: Recursive single pole low/high pass filter
