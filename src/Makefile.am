@@ -50,7 +50,7 @@ example3_SOURCES = example3.c
 example4_SOURCES = example4.c
 example5_SOURCES = example5.c
 example6_SOURCES = example6.c
-sox_sample_test_SOURCES = sox_sample_test.c sox_sample_test.h
+sox_sample_test_SOURCES = sox_sample_test.c
 
 
 
