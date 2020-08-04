@@ -160,8 +160,8 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int argc, char **argv)
     if (l_st->desc == NULL) {
       lsx_fail("no plugin called `%s' found", argv[0]);
       return SOX_EOF;
-    } else
-      argc--; argv++;
+    }
+    argc--; argv++;
   }
 
   /* Scan the ports for inputs and outputs */
