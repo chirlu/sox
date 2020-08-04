@@ -333,13 +333,11 @@ static void set_endiannesses(sox_format_t * ft)
 
 static sox_bool is_seekable(sox_format_t const * ft)
 {
-  struct stat st;
-
   assert(ft);
   if (!ft->fp)
     return sox_false;
-  fstat(fileno((FILE*)ft->fp), &st);
-  return ((st.st_mode & S_IFMT) == S_IFREG);
+
+  return !fseek(ft->fp, 0, SEEK_CUR);
 }
 
 /* check that all settings have been given */
