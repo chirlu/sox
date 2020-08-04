@@ -88,7 +88,7 @@ int lsx_aiffstartread(sox_format_t * ft)
   /* The SSND chunk must be the last in the file */
   while (1) {
     if (lsx_reads(ft, buf, (size_t)4) == SOX_EOF) {
-      if (ssndsize > 0)
+      if (seekto > 0)
         break;
       else {
         lsx_fail_errno(ft,SOX_EHDR,"Missing SSND chunk in AIFF file");
