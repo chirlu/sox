@@ -363,6 +363,24 @@ static int sox_mp3_inputtag(sox_format_t * ft)
     return rc;
 }
 
+static sox_bool sox_mp3_vbrtag(sox_format_t *ft)
+{
+    priv_t *p = ft->priv;
+    struct mad_bitptr *anc = &p->Stream.anc_ptr;
+
+    if (p->Frame.header.layer != MAD_LAYER_III)
+        return sox_false;
+
+    if (p->Stream.anc_bitlen < 32)
+        return sox_false;
+
+    if (!memcmp(anc->byte, "Xing", 4) ||
+        !memcmp(anc->byte, "Info", 4))
+        return sox_true;
+
+    return sox_false;
+}
+
 static int startread(sox_format_t * ft)
 {
   priv_t *p = (priv_t *) ft->priv;
@@ -457,17 +475,19 @@ static int startread(sox_format_t * ft)
           return SOX_EOF;
   }
 
-  p->FrameCount=1;
-
-  p->mad_timer_add(&p->Timer,p->Frame.header.duration);
-  p->mad_synth_frame(&p->Synth,&p->Frame);
   ft->signal.precision = MP3_MAD_PRECISION;
-  ft->signal.rate=p->Synth.pcm.samplerate;
+  ft->signal.rate=p->Frame.header.samplerate;
   if (ignore_length)
     ft->signal.length = SOX_UNSPEC;
   else {
     ft->signal.length *= ft->signal.channels;  /* Keep separate from line above! */
   }
+
+  if (!sox_mp3_vbrtag(ft))
+      p->Stream.next_frame = p->Stream.this_frame;
+
+  p->mad_frame_init(&p->Frame);
+  sox_mp3_input(ft);
 
   p->cursamp = 0;
 
