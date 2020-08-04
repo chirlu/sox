@@ -24,6 +24,8 @@ AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
+AX_APPEND_LINK_FLAGS([-Wl,--as-needed])
+
 dnl Increase version when binary compatibility with previous version is broken
 SHLIB_VERSION=3:0:0
 AC_SUBST(SHLIB_VERSION)
