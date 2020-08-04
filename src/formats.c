@@ -1237,8 +1237,9 @@ sox_get_format_fns(void)
     return s_sox_format_fns;
 }
 
+static unsigned nformats = NSTATIC_FORMATS;
+
 #ifdef HAVE_LIBLTDL /* Plugin format handlers */
-  static unsigned nformats = NSTATIC_FORMATS;
 
   static int init_format(const char *file, lt_ptr data)
   {
@@ -1321,7 +1322,7 @@ sox_format_handler_t const * sox_find_format(char const * name0, sox_bool no_dev
     char * pos = strchr(name, ';');
     if (pos) /* Use only the 1st clause of a mime string */
       *pos = '\0';
-    for (f = 0; s_sox_format_fns[f].fn; ++f) {
+    for (f = 0; f < nformats; ++f) {
       sox_format_handler_t const * handler = s_sox_format_fns[f].fn();
 
       if (!(no_dev && (handler->flags & SOX_FILE_DEVICE)))
