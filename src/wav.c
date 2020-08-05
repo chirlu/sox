@@ -92,8 +92,6 @@ typedef struct {
     gsm_signal     *gsmsample;
     int            gsmindex;
     size_t      gsmbytecount;    /* counts bytes written to data block */
-    sox_bool       isRF64;          /* True if file being read is a RF64 */
-    uint64_t       ds64_dataSize;   /* Size of data chunk from ds64 header */
 } priv_t;
 
 static char *wav_format_str(unsigned wFormatTag);
@@ -371,47 +369,9 @@ static void wavgsmstopwrite(sox_format_t * ft)
 /* General Sox WAV file code                                                */
 /****************************************************************************/
 
-static int sndfile_workaround(uint64_t *len, sox_format_t *ft) {
-    char magic[5];
-    off_t here;
-
-    here = lsx_tell(ft);
-
-    lsx_debug("Attempting work around for bad ds64 length bug");
-
-    /* Seek to last four bytes of chunk, assuming size is correct. */
-    if (lsx_seeki(ft, (off_t)(*len)-4, SEEK_CUR) != SOX_SUCCESS)
-    {
-        lsx_fail_errno(ft, SOX_EHDR, "WAV chunk appears to have invalid size %ld.", *len);
-        return SOX_EOF;
-    }
-
-    /* Get the last four bytes to see if it is an "fmt " chunk */
-    if (lsx_reads(ft, magic, (size_t)4) == SOX_EOF)
-    {
-        lsx_fail_errno(ft,SOX_EHDR, "WAV chunk appears to have invalid size %ld.", *len);
-        return SOX_EOF;
-    }
-
-    /* Seek back to where we were, which won't work if you're piping */
-    if (lsx_seeki(ft, here, SEEK_SET)!=SOX_SUCCESS)
-    {
-        lsx_fail_errno(ft,SOX_EHDR, "Cannot seek backwards to work around possible broken header.");
-        return SOX_EOF;
-    }
-    if (memcmp(magic, "fmt ", (size_t)4)==0)
-    {
-        /* If the last four bytes were "fmt ", len is almost certainly four bytes too big. */
-        lsx_debug("File had libsndfile bug, working around tell=%ld", lsx_tell(ft));
-        *len -= 4;
-    }
-    return SOX_SUCCESS;
-}
-
 static int findChunk(sox_format_t * ft, const char *Label, uint64_t *len)
 {
     char magic[5];
-    priv_t *wav = (priv_t *) ft->priv;
     uint32_t len_tmp;
 
     lsx_debug("Searching for %2x %2x %2x %2x", Label[0], Label[1], Label[2], Label[3]);
@@ -431,34 +391,7 @@ static int findChunk(sox_format_t * ft, const char *Label, uint64_t *len)
             return SOX_EOF;
         }
 
-        if (len_tmp == 0xffffffff && wav->isRF64==sox_true)
-        {
-            /* Chunk length should come from ds64 header */
-            if (memcmp(magic, "data", (size_t)4)==0)
-            {
-                *len = wav->ds64_dataSize;
-            }
-            else
-            {
-                lsx_fail_errno(ft, SOX_EHDR, "Cannot yet read block sizes of arbitary RF64 chunks, cannot find chunk '%s'", Label);
-                return SOX_EOF;
-            }
-        }
-        else {
-            *len = len_tmp;
-        }
-
-        /* Work around for a bug in libsndfile
-         * https://github.com/erikd/libsndfile/commit/7fa1c57c37844a9d44642ea35e6638238b8af19e#src/rf64.c
-           The ds64 chunk should be 0x1c bytes, not 0x20.
-         */
-        if ((*len) == 0x20 && memcmp(Label, "ds64", (size_t)4)==0)
-        {
-            int fail;
-            if ((fail = sndfile_workaround(len, ft)) != SOX_SUCCESS) {
-                return fail;
-            }
-        }
+        *len = len_tmp;
 
         if (memcmp(Label, magic, (size_t)4) == 0)
             break; /* Found the given chunk */
@@ -818,10 +751,29 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
       return SOX_EOF;
     }
 
-    /* Skip anything left over from fmt chunk */
-    lsx_seeki(ft, (off_t)len, SEEK_CUR);
-
     return 0;
+}
+
+static sox_bool valid_chunk_id(const char p[4])
+{
+    int i;
+
+    for (i = 0; i < 4; i++)
+        if (p[i] < 0x20 || p[i] > 0x7f)
+            return sox_false;
+
+    return sox_true;
+}
+
+static int read_chunk_header(sox_format_t *ft, char tag[4], uint32_t *len)
+{
+    int r;
+
+    r = lsx_readbuf(ft, tag, 4);
+    if (r < 4)
+        return SOX_EOF;
+
+    return lsx_readdw(ft, len);
 }
 
 /*
@@ -834,100 +786,145 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
 static int startread(sox_format_t * ft)
 {
     priv_t *       wav = (priv_t *) ft->priv;
-    char        magic[5];
+    char        magic[5] = { 0 };
+    uint32_t    clen;
     uint64_t    len;
     int err;
 
+    sox_bool isRF64 = sox_false;
+    uint64_t ds64_riff_size;
+    uint64_t ds64_data_size;
+    uint64_t ds64_sample_count;
+
     /* wave file characteristics */
     uint64_t      qwRiffLength;
-    uint32_t      dwRiffLength_tmp;
-    uint64_t      qwDataLength;    /* length of sound data in bytes */
+    uint64_t      qwDataLength = 0;
     char text[256];
     uint32_t      dwLoopPos;
+    sox_bool have_fmt = sox_false;
 
     ft->sox_errno = SOX_SUCCESS;
     wav->ignoreSize = ft->signal.length == SOX_IGNORE_LENGTH;
+    ft->encoding.reverse_bytes = MACHINE_IS_BIGENDIAN;
 
-    if (lsx_reads(ft, magic, (size_t)4) == SOX_EOF || (strncmp("RIFF", magic, (size_t)4) != 0 &&
-                                             strncmp("RIFX", magic, (size_t)4) != 0 && strncmp("RF64", magic, (size_t)4)!=0 ))
-    {
+    if (read_chunk_header(ft, magic, &clen))
+        return SOX_EOF;
+
+    if (!memcmp(magic, "RIFX", 4)) {
+        lsx_debug("Found RIFX header");
+        ft->encoding.reverse_bytes = MACHINE_IS_LITTLEENDIAN;
+    } else if (!memcmp(magic, "RF64", 4)) {
+        lsx_debug("Found RF64 header");
+        isRF64 = sox_true;
+    } else if (memcmp(magic, "RIFF", 4)) {
         lsx_fail_errno(ft,SOX_EHDR,"WAVE: RIFF header not found");
         return SOX_EOF;
     }
 
-    /* RIFX is a Big-endian RIFF */
-    if (strncmp("RIFX", magic, (size_t)4) == 0)
-    {
-        lsx_debug("Found RIFX header");
-        ft->encoding.reverse_bytes = MACHINE_IS_LITTLEENDIAN;
-    }
-    else ft->encoding.reverse_bytes = MACHINE_IS_BIGENDIAN;
+    qwRiffLength = clen;
 
-    if (strncmp("RF64", magic, (size_t)4) == 0)
-    {
-        wav->isRF64 = sox_true;
-    }
-    else
-    {
-        wav->isRF64 = sox_false;
-    }
-
-    lsx_readdw(ft, &dwRiffLength_tmp);
-    qwRiffLength = dwRiffLength_tmp;
-
-    if (lsx_reads(ft, magic, (size_t)4) == SOX_EOF || strncmp("WAVE", magic, (size_t)4))
-    {
+    if (lsx_readbuf(ft, magic, 4) < 4 || memcmp(magic, "WAVE", 4)) {
         lsx_fail_errno(ft,SOX_EHDR,"WAVE header not found");
         return SOX_EOF;
     }
 
-    if (wav->isRF64 && findChunk(ft, "ds64", &len) != SOX_EOF) {
-        lsx_debug("Found ds64 header");
+    while (!read_chunk_header(ft, magic, &clen)) {
+        off_t cstart = lsx_tell(ft);
+        off_t pos;
 
-        if (dwRiffLength_tmp==0xffffffff)
-        {
-            lsx_readqw(ft, &qwRiffLength);
+        if (!valid_chunk_id(magic)) {
+            lsx_fail_errno(ft, SOX_EHDR, "invalid chunk ID found");
+            return SOX_EOF;
         }
-        else
-        {
-            lsx_skipbytes(ft, (size_t)8);
+
+        lsx_debug("Found chunk '%s', size %u", magic, clen);
+
+        if (!memcmp(magic, "ds64", 4)) {
+            if (!isRF64)
+                lsx_warn("ds64 chunk in non-RF64 file");
+
+            if (clen < 28) {
+                lsx_fail_errno(ft, SOX_EHDR, "ds64 chunk too small");
+                return SOX_EOF;
+            }
+
+            if (clen == 32) {
+                lsx_warn("ds64 chunk size invalid, attempting workaround");
+                clen = 28;
+            }
+
+            lsx_readqw(ft, &ds64_riff_size);
+            lsx_readqw(ft, &ds64_data_size);
+            lsx_readqw(ft, &ds64_sample_count);
+
+            goto next;
         }
-        lsx_readqw(ft, &wav->ds64_dataSize);
-        lsx_skipbytes(ft, (size_t)len-16);
+
+        if (!memcmp(magic, "fmt ", 4)) {
+            err = wav_read_fmt(ft, clen);
+            if (err)
+                return err;
+
+            have_fmt = sox_true;
+
+            goto next;
+        }
+
+        if (!memcmp(magic, "data", 4)) {
+            if (isRF64 && clen == UINT32_MAX)
+                clen = ds64_data_size;
+
+            qwDataLength = clen;
+            wav->dataStart = lsx_tell(ft);
+
+            if (qwDataLength == UINT32_MAX || qwDataLength == MS_UNSPEC)
+                break;
+
+            if (!ft->seekable)
+                break;
+
+            goto next;
+        }
+
+    next:
+        pos = lsx_tell(ft);
+        clen += clen & 1;
+
+        if (pos > cstart + clen) {
+            lsx_fail_errno(ft, SOX_EHDR, "malformed chunk %s", magic);
+            return SOX_EOF;
+        }
+
+        err = lsx_seeki(ft, cstart + clen - pos, SEEK_CUR);
+        if (err)
+            return SOX_EOF;
     }
 
-    /* Now look for the format chunk */
-    if (findChunk(ft, "fmt ", &len) == SOX_EOF)
-    {
-        lsx_fail_errno(ft,SOX_EHDR,"WAVE chunk fmt not found");
+    if (isRF64) {
+        if (wav->numSamples == UINT32_MAX)
+            wav->numSamples = ds64_sample_count;
+
+        if (qwRiffLength == UINT32_MAX)
+            qwRiffLength = ds64_riff_size;
+    }
+
+    if (!have_fmt) {
+        lsx_fail_errno(ft, SOX_EOF, "fmt chunk not found");
         return SOX_EOF;
     }
 
-    err = wav_read_fmt(ft, len);
-    if (err)
-        return err;
-
-    /* for non-PCM formats, there's a 'fact' chunk before
-     * the upcoming 'data' chunk */
-
-    /* Now look for the wave data chunk */
-    if (findChunk(ft, "data", &len) == SOX_EOF)
-    {
-        lsx_fail_errno(ft, SOX_EOF, "Could not find data chunk.");
+    if (!wav->dataStart) {
+        lsx_fail_errno(ft, SOX_EOF, "data chunk not found");
         return SOX_EOF;
     }
 
-    /* ds64 size will have been applied in findChunk */
-    qwDataLength = len;
+    if (ft->seekable)
+        lsx_seeki(ft, wav->dataStart, SEEK_SET);
 
-    if (qwDataLength == MS_UNSPEC || qwDataLength == UINT32_MAX) {
-      wav->ignoreSize = 1;
-      lsx_debug("WAV data length is magic value or UINT32_MAX, ignoring.");
+    if (qwDataLength == UINT32_MAX || qwDataLength == MS_UNSPEC) {
+        lsx_warn("WAV data length is magic value or UINT32_MAX, ignoring");
+        wav->ignoreSize = 1;
     }
-
-
-    /* Data starts here */
-    wav->dataStart = lsx_tell(ft);
 
     switch (wav->formatTag)
     {
@@ -976,7 +973,7 @@ static int startread(sox_format_t * ft)
         /*Got this from the quake source.  I think it 32bit aligns the chunks
          * doubt any machine writing Cool Edit Chunks writes them at an odd
          * offset */
-        len = (len + 1) & ~1u;
+        len = (qwDataLength + 1) & ~1u;
         if (lsx_seeki(ft, (off_t)len, SEEK_CUR) == SOX_SUCCESS &&
             findChunk(ft, "LIST", &len) != SOX_EOF)
         {
