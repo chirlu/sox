@@ -2905,6 +2905,7 @@ int main(int argc, char **argv)
 {
   size_t i;
   char mybase[6];
+  int err;
 
   gettimeofday(&load_timeofday, NULL);
   myname = argv[0];
@@ -3058,8 +3059,12 @@ int main(int argc, char **argv)
     read_user_effects(effects_filename);
   }
 
-  while (process() != SOX_EOF && !user_abort && current_input < input_count)
-  {
+  for (;;) {
+    err = process();
+
+    if (err == SOX_EOF || user_abort || current_input >= input_count)
+      break;
+
     if (advance_eff_chain() == SOX_EOF)
       break;
 
@@ -3102,5 +3107,5 @@ int main(int argc, char **argv)
 
   cleanup();
 
-  return 0;
+  return !!err;
 }
