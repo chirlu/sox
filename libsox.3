@@ -81,7 +81,7 @@ are performed.
 \fBsox_format_quit\fR function performs some required cleanup
 related to all file format handlers.
 .P
-\fBsox_open_input\fR function opens the file for reading whose name is
+\fBsox_open_read\fR function opens the file for reading whose name is
 the string pointed to by \fIpath\fR and associates an sox_format_t with it. If
 \fIinfo\fR is non-NULL then it will be used to specify the data format
 of the input file. This is normally only needed for headerless audio
@@ -91,7 +91,7 @@ type. If this is not specified then the file type is attempted to be
 derived by looking at the file header and/or the filename extension. A
 special name of "-" can be used to read data from stdin.
 .P
-\fBsox_open_output\fR function opens the file for writing whose name is
+\fBsox_open_write\fR function opens the file for writing whose name is
 the string pointed to by \fIpath\fR and associates an sox_format_t with it. If
 \fIinfo\fR is non-NULL then it will be used to specify the data format
 of the output file. Since most file formats can write data in
@@ -166,8 +166,8 @@ to write applications using libsox.  sox.c itself is also a good
 reference.
 
 .SH RETURN VALUE
-Upon successful completion \fBsox_open_input\fR and
-\fBsox_open_output\fR return an \fIsox_format_t\fR (which is a pointer).
+Upon successful completion \fBsox_open_read\fR and
+\fBsox_open_write\fR return an \fIsox_format_t\fR (which is a pointer).
 Otherwise, NULL is returned. TODO: Need a way to return reason for
 failures. Currently, relies on \fBsox_warn\fR to print information.
 .P
