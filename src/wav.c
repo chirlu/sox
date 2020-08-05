@@ -484,22 +484,9 @@ static int wavfail(sox_format_t * ft, const char *format)
     return SOX_EOF;
 }
 
-/*
- * Do anything required before you start reading samples.
- * Read file header.
- *      Find out sampling rate,
- *      size and encoding of samples,
- *      mono/stereo/quad.
- */
-static int startread(sox_format_t * ft)
+static int wav_read_fmt(sox_format_t *ft, uint32_t len)
 {
-    priv_t *       wav = (priv_t *) ft->priv;
-    char        magic[5];
-    uint64_t    len;
-
-    /* wave file characteristics */
-    uint64_t      qwRiffLength;
-    uint32_t      dwRiffLength_tmp;
+    priv_t *wav = ft->priv;
     unsigned short wChannels;       /* number of channels */
     uint32_t      dwSamplesPerSecond; /* samples per second per channel */
     uint32_t      dwAvgBytesPerSec;/* estimate of bytes per second needed */
@@ -507,69 +494,9 @@ static int startread(sox_format_t * ft)
     uint32_t wFmtSize;
     uint16_t wExtSize = 0;    /* extended field for non-PCM */
 
-    uint64_t      qwDataLength;    /* length of sound data in bytes */
     size_t    bytesPerBlock = 0;
     int    bytespersample;          /* bytes per sample (per channel */
-    char text[256];
-    uint32_t      dwLoopPos;
 
-    ft->sox_errno = SOX_SUCCESS;
-    wav->ignoreSize = ft->signal.length == SOX_IGNORE_LENGTH;
-
-    if (lsx_reads(ft, magic, (size_t)4) == SOX_EOF || (strncmp("RIFF", magic, (size_t)4) != 0 &&
-                                             strncmp("RIFX", magic, (size_t)4) != 0 && strncmp("RF64", magic, (size_t)4)!=0 ))
-    {
-        lsx_fail_errno(ft,SOX_EHDR,"WAVE: RIFF header not found");
-        return SOX_EOF;
-    }
-
-    /* RIFX is a Big-endian RIFF */
-    if (strncmp("RIFX", magic, (size_t)4) == 0)
-    {
-        lsx_debug("Found RIFX header");
-        ft->encoding.reverse_bytes = MACHINE_IS_LITTLEENDIAN;
-    }
-    else ft->encoding.reverse_bytes = MACHINE_IS_BIGENDIAN;
-
-    if (strncmp("RF64", magic, (size_t)4) == 0)
-    {
-        wav->isRF64 = sox_true;
-    }
-    else
-    {
-        wav->isRF64 = sox_false;
-    }
-
-    lsx_readdw(ft, &dwRiffLength_tmp);
-    qwRiffLength = dwRiffLength_tmp;
-
-    if (lsx_reads(ft, magic, (size_t)4) == SOX_EOF || strncmp("WAVE", magic, (size_t)4))
-    {
-        lsx_fail_errno(ft,SOX_EHDR,"WAVE header not found");
-        return SOX_EOF;
-    }
-
-    if (wav->isRF64 && findChunk(ft, "ds64", &len) != SOX_EOF) {
-        lsx_debug("Found ds64 header");
-
-        if (dwRiffLength_tmp==0xffffffff)
-        {
-            lsx_readqw(ft, &qwRiffLength);
-        }
-        else
-        {
-            lsx_skipbytes(ft, (size_t)8);
-        }
-        lsx_readqw(ft, &wav->ds64_dataSize);
-        lsx_skipbytes(ft, (size_t)len-16);
-    }
-
-    /* Now look for the format chunk */
-    if (findChunk(ft, "fmt ", &len) == SOX_EOF)
-    {
-        lsx_fail_errno(ft,SOX_EHDR,"WAVE chunk fmt not found");
-        return SOX_EOF;
-    }
     wFmtSize = len;
 
     if (wFmtSize < 16)
@@ -898,6 +825,92 @@ static int startread(sox_format_t * ft)
     /* Skip anything left over from fmt chunk */
     lsx_seeki(ft, (off_t)len, SEEK_CUR);
 
+    return 0;
+}
+
+/*
+ * Do anything required before you start reading samples.
+ * Read file header.
+ *      Find out sampling rate,
+ *      size and encoding of samples,
+ *      mono/stereo/quad.
+ */
+static int startread(sox_format_t * ft)
+{
+    priv_t *       wav = (priv_t *) ft->priv;
+    char        magic[5];
+    uint64_t    len;
+    int err;
+
+    /* wave file characteristics */
+    uint64_t      qwRiffLength;
+    uint32_t      dwRiffLength_tmp;
+    uint64_t      qwDataLength;    /* length of sound data in bytes */
+    char text[256];
+    uint32_t      dwLoopPos;
+
+    ft->sox_errno = SOX_SUCCESS;
+    wav->ignoreSize = ft->signal.length == SOX_IGNORE_LENGTH;
+
+    if (lsx_reads(ft, magic, (size_t)4) == SOX_EOF || (strncmp("RIFF", magic, (size_t)4) != 0 &&
+                                             strncmp("RIFX", magic, (size_t)4) != 0 && strncmp("RF64", magic, (size_t)4)!=0 ))
+    {
+        lsx_fail_errno(ft,SOX_EHDR,"WAVE: RIFF header not found");
+        return SOX_EOF;
+    }
+
+    /* RIFX is a Big-endian RIFF */
+    if (strncmp("RIFX", magic, (size_t)4) == 0)
+    {
+        lsx_debug("Found RIFX header");
+        ft->encoding.reverse_bytes = MACHINE_IS_LITTLEENDIAN;
+    }
+    else ft->encoding.reverse_bytes = MACHINE_IS_BIGENDIAN;
+
+    if (strncmp("RF64", magic, (size_t)4) == 0)
+    {
+        wav->isRF64 = sox_true;
+    }
+    else
+    {
+        wav->isRF64 = sox_false;
+    }
+
+    lsx_readdw(ft, &dwRiffLength_tmp);
+    qwRiffLength = dwRiffLength_tmp;
+
+    if (lsx_reads(ft, magic, (size_t)4) == SOX_EOF || strncmp("WAVE", magic, (size_t)4))
+    {
+        lsx_fail_errno(ft,SOX_EHDR,"WAVE header not found");
+        return SOX_EOF;
+    }
+
+    if (wav->isRF64 && findChunk(ft, "ds64", &len) != SOX_EOF) {
+        lsx_debug("Found ds64 header");
+
+        if (dwRiffLength_tmp==0xffffffff)
+        {
+            lsx_readqw(ft, &qwRiffLength);
+        }
+        else
+        {
+            lsx_skipbytes(ft, (size_t)8);
+        }
+        lsx_readqw(ft, &wav->ds64_dataSize);
+        lsx_skipbytes(ft, (size_t)len-16);
+    }
+
+    /* Now look for the format chunk */
+    if (findChunk(ft, "fmt ", &len) == SOX_EOF)
+    {
+        lsx_fail_errno(ft,SOX_EHDR,"WAVE chunk fmt not found");
+        return SOX_EOF;
+    }
+
+    err = wav_read_fmt(ft, len);
+    if (err)
+        return err;
+
     /* for non-PCM formats, there's a 'fact' chunk before
      * the upcoming 'data' chunk */
 
@@ -960,40 +973,6 @@ static int startread(sox_format_t * ft)
      */
     if (wav->ignoreSize)
       ft->signal.length = SOX_UNSPEC;
-
-    lsx_debug("Reading Wave file: %s format, %d channel%s, %d samp/sec",
-           wav_format_str(wav->formatTag), ft->signal.channels,
-           wChannels == 1 ? "" : "s", dwSamplesPerSecond);
-    lsx_debug("        %d byte/sec, %d block align, %d bits/samp, %lu data bytes",
-           dwAvgBytesPerSec, wav->blockAlign, wBitsPerSample, qwDataLength);
-
-    /* Can also report extended fmt information */
-    switch (wav->formatTag)
-    {
-        case WAVE_FORMAT_ADPCM:
-            lsx_debug("        %d Extsize, %d Samps/block, %lu bytes/block %d Num Coefs, %lu Samps/chan",
-                      wExtSize,wav->samplesPerBlock,
-                      (unsigned long)bytesPerBlock,wav->nCoefs,
-                      (unsigned long)wav->numSamples);
-            break;
-
-        case WAVE_FORMAT_IMA_ADPCM:
-            lsx_debug("        %d Extsize, %d Samps/block, %lu bytes/block %lu Samps/chan",
-                      wExtSize, wav->samplesPerBlock, 
-                      (unsigned long)bytesPerBlock,
-                      (unsigned long)wav->numSamples);
-            break;
-
-        case WAVE_FORMAT_GSM610:
-            lsx_debug("GSM .wav: %d Extsize, %d Samps/block, %lu Samples/chan",
-                      wExtSize, wav->samplesPerBlock, 
-                      (unsigned long)wav->numSamples);
-            break;
-
-        default:
-            lsx_debug("        %lu Samps/chans", 
-                      (unsigned long)wav->numSamples);
-    }
 
     /* Horrible way to find Cool Edit marker points. Taken from Quake source*/
     ft->oob.loops[0].start = SOX_IGNORE_LENGTH;
