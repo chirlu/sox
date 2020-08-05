@@ -84,6 +84,10 @@
   #include <unistd.h>
 #endif
 
+#ifdef HAVE_SYS_IOCTL_H
+  #include <sys/ioctl.h>
+#endif
+
 #ifdef HAVE_GETTIMEOFDAY
   #define TIME_FRAC 1e6
 #else
@@ -1208,6 +1212,18 @@ static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
   return ret;
 }
 
+static int termwidth = 80;
+
+#ifdef TIOCGWINSZ
+static void get_termwidth(int s)
+{
+  struct winsize w;
+
+  if (!ioctl(2, TIOCGWINSZ, &w))
+    termwidth = w.ws_col;
+}
+#endif
+
 #define MIN_HEADROOM 6.
 static double min_headroom = MIN_HEADROOM;
 
@@ -1259,16 +1275,19 @@ static void display_status(sox_bool all_done)
   if (all_done || since(&then, .1, sox_false)) {
     double read_time = (double)read_wide_samples / combiner_signal.rate;
     double left_time = 0, in_time = 0, percentage = 0;
+    char buf[128];
 
     if (input_wide_samples) {
       in_time = (double)input_wide_samples / combiner_signal.rate;
       left_time = max(in_time - read_time, 0);
       percentage = max(100. * read_wide_samples / input_wide_samples, 0);
     }
-    fprintf(stderr, "\rIn:%-5s %s [%s] Out:%-5s [%6s|%-6s] %s Clip:%-5s",
+    snprintf(buf, min(termwidth + 2, sizeof(buf)),
+      "\rIn:%-5s %s [%s] Out:%-5s [%6s|%-6s] %s Clip:%-5s",
       lsx_sigfigs3p(percentage), str_time(read_time), str_time(left_time),
       lsx_sigfigs3((double)output_samples),
       vu(0), vu(1), headroom(), lsx_sigfigs3((double)total_clips()));
+    fputs(buf, stderr);
   }
   if (all_done)
     fputc('\n', stderr);
@@ -1815,6 +1834,13 @@ static int process(void)
         lsx_warn("error setting non-blocking on stdin: %s", strerror(errno));
     }
   }
+#endif
+
+#ifdef TIOCGWINSZ
+  get_termwidth(0);
+#ifdef SIGWINCH
+  setsig(SIGWINCH, get_termwidth);
+#endif
 #endif
 
   setsig(SIGTERM, sigint); /* Stop gracefully, as soon as we possibly can. */
