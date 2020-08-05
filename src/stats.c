@@ -130,10 +130,9 @@ static unsigned bit_depth(uint32_t mask, double min, double max, unsigned * x)
   for (; result && !(mask & 1); --result, mask >>= 1);
   if (x)
     *x = result;
-  mask = SOX_FLOAT_64BIT_TO_SAMPLE(max, dummy);
-  if (min < 0)
-    mask |= ~(SOX_FLOAT_64BIT_TO_SAMPLE(min, dummy) << 1);
-  for (; result && !(mask & SOX_SAMPLE_MIN); --result, mask <<= 1);
+  min = -fmax(fabs(min), fabs(max));
+  mask = SOX_FLOAT_64BIT_TO_SAMPLE(min, dummy) << 1;
+  for (; result && (mask & SOX_SAMPLE_MIN); --result, mask <<= 1);
   return result;
 }
 
