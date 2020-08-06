@@ -740,12 +740,12 @@ static int read_chunk_header(sox_format_t *ft, char tag[4], uint32_t *len)
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int startread(sox_format_t * ft)
+static int startread(sox_format_t *ft)
 {
-    priv_t *       wav = (priv_t *) ft->priv;
-    char        magic[5] = { 0 };
-    uint32_t    clen;
-    int err;
+    priv_t  *wav = ft->priv;
+    char     magic[5] = { 0 };
+    uint32_t clen;
+    int      err;
 
     sox_bool isRF64 = sox_false;
     uint64_t ds64_riff_size;
@@ -753,8 +753,8 @@ static int startread(sox_format_t * ft)
     uint64_t ds64_sample_count;
 
     /* wave file characteristics */
-    uint64_t      qwRiffLength;
-    uint64_t      qwDataLength = 0;
+    uint64_t qwRiffLength;
+    uint64_t qwDataLength = 0;
     sox_bool have_fmt = sox_false;
 
     ft->sox_errno = SOX_SUCCESS;
@@ -771,14 +771,14 @@ static int startread(sox_format_t * ft)
         lsx_debug("Found RF64 header");
         isRF64 = sox_true;
     } else if (memcmp(magic, "RIFF", 4)) {
-        lsx_fail_errno(ft,SOX_EHDR,"WAVE: RIFF header not found");
+        lsx_fail_errno(ft, SOX_EHDR, "WAVE: RIFF header not found");
         return SOX_EOF;
     }
 
     qwRiffLength = clen;
 
     if (lsx_readbuf(ft, magic, 4) < 4 || memcmp(magic, "WAVE", 4)) {
-        lsx_fail_errno(ft,SOX_EHDR,"WAVE header not found");
+        lsx_fail_errno(ft, SOX_EHDR, "WAVE header not found");
         return SOX_EOF;
     }
 
@@ -899,14 +899,13 @@ static int startread(sox_format_t * ft)
         wav->ignoreSize = 1;
     }
 
-    switch (wav->formatTag)
-    {
-
+    switch (wav->formatTag) {
     case WAVE_FORMAT_ADPCM:
         wav->numSamples =
-            lsx_ms_adpcm_samples_in((size_t)qwDataLength, (size_t)ft->signal.channels,
-                           (size_t)wav->blockAlign, (size_t)wav->samplesPerBlock);
-        lsx_debug_more("datalen %ld, numSamples %lu",qwDataLength, (unsigned long)wav->numSamples);
+            lsx_ms_adpcm_samples_in(qwDataLength, ft->signal.channels,
+                                    wav->blockAlign, wav->samplesPerBlock);
+        lsx_debug_more("datalen %ld, numSamples %lu",
+                       qwDataLength, (unsigned long)wav->numSamples);
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
         break;
 
@@ -914,15 +913,16 @@ static int startread(sox_format_t * ft)
         /* Compute easiest part of number of samples.  For every block, there
            are samplesPerBlock samples to read. */
         wav->numSamples =
-            lsx_ima_samples_in((size_t)qwDataLength, (size_t)ft->signal.channels,
-                         (size_t)wav->blockAlign, (size_t)wav->samplesPerBlock);
-        lsx_debug_more("datalen %ld, numSamples %lu",qwDataLength, (unsigned long)wav->numSamples);
+            lsx_ima_samples_in(qwDataLength, ft->signal.channels,
+                               wav->blockAlign, wav->samplesPerBlock);
+        lsx_debug_more("datalen %ld, numSamples %lu",
+                       qwDataLength, (unsigned long)wav->numSamples);
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
         lsx_ima_init_table();
         break;
 
     case WAVE_FORMAT_GSM610:
-        wav->numSamples = ((qwDataLength / wav->blockAlign) * wav->samplesPerBlock);
+        wav->numSamples = qwDataLength / wav->blockAlign * wav->samplesPerBlock;
         wavgsminit(ft);
         break;
     }
