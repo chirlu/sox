@@ -384,6 +384,7 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
     uint16_t wExtSize = 0;       /* extended field for non-PCM */
     size_t   bytesPerBlock = 0;
     int      bytespersample;     /* bytes per sample (per channel */
+    sox_encoding_t enc = SOX_ENCODING_UNKNOWN;;
 
     if (len < 16) {
         lsx_fail_errno(ft, SOX_EHDR, "WAVE file fmt chunk is too short");
@@ -438,51 +439,28 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
         return SOX_EOF;
 
     case WAVE_FORMAT_PCM:
-        /* Default (-1) depends on sample size.  Set that later on. */
-        if (ft->encoding.encoding != SOX_ENCODING_UNKNOWN &&
-            ft->encoding.encoding != SOX_ENCODING_UNSIGNED &&
-            ft->encoding.encoding != SOX_ENCODING_SIGN2)
-            lsx_report("User options overriding encoding read in .wav header");
+        /* Default depends on sample size.  Set that later on. */
+        enc = SOX_ENCODING_UNKNOWN;
         break;
 
     case WAVE_FORMAT_IMA_ADPCM:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN ||
-            ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM)
-            ft->encoding.encoding = SOX_ENCODING_IMA_ADPCM;
-        else
-            lsx_report("User options overriding encoding read in .wav header");
+        enc = SOX_ENCODING_IMA_ADPCM;
         break;
 
     case WAVE_FORMAT_ADPCM:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN ||
-            ft->encoding.encoding == SOX_ENCODING_MS_ADPCM)
-            ft->encoding.encoding = SOX_ENCODING_MS_ADPCM;
-        else
-            lsx_report("User options overriding encoding read in .wav header");
+        enc = SOX_ENCODING_MS_ADPCM;
         break;
 
     case WAVE_FORMAT_IEEE_FLOAT:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN ||
-            ft->encoding.encoding == SOX_ENCODING_FLOAT)
-            ft->encoding.encoding = SOX_ENCODING_FLOAT;
-        else
-            lsx_report("User options overriding encoding read in .wav header");
+        enc = SOX_ENCODING_FLOAT;
         break;
 
     case WAVE_FORMAT_ALAW:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN ||
-            ft->encoding.encoding == SOX_ENCODING_ALAW)
-            ft->encoding.encoding = SOX_ENCODING_ALAW;
-        else
-            lsx_report("User options overriding encoding read in .wav header");
+        enc = SOX_ENCODING_ALAW;
         break;
 
     case WAVE_FORMAT_MULAW:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN ||
-            ft->encoding.encoding == SOX_ENCODING_ULAW)
-            ft->encoding.encoding = SOX_ENCODING_ULAW;
-        else
-            lsx_report("User options overriding encoding read in .wav header");
+        enc = SOX_ENCODING_ULAW;
         break;
 
     case WAVE_FORMAT_OKI_ADPCM:
@@ -495,11 +473,7 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
         return wavfail(ft, "Dolby AC2");
 
     case WAVE_FORMAT_GSM610:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN ||
-            ft->encoding.encoding == SOX_ENCODING_GSM )
-            ft->encoding.encoding = SOX_ENCODING_GSM;
-        else
-            lsx_report("User options overriding encoding read in .wav header");
+        enc = SOX_ENCODING_GSM;
         break;
 
     case WAVE_FORMAT_ROCKWELL_ADPCM:
@@ -707,28 +681,33 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
         lsx_warn("User options overriding size read in .wav header");
 
     /* Now we have enough information to set default encodings. */
-    switch (bytespersample) {
-    case 1:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
-            ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
-        break;
+    if (enc == SOX_ENCODING_UNKNOWN) {
+        switch (bytespersample) {
+        case 1:
+            enc = SOX_ENCODING_UNSIGNED;
+            break;
 
-    case 2:
-    case 3:
-    case 4:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
-            ft->encoding.encoding = SOX_ENCODING_SIGN2;
-        break;
+        case 2:
+        case 3:
+        case 4:
+            enc = SOX_ENCODING_SIGN2;
+            break;
 
-    case 8:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
-            ft->encoding.encoding = SOX_ENCODING_FLOAT;
-        break;
+        case 8:
+            enc = SOX_ENCODING_FLOAT;
+            break;
 
-    default:
-        lsx_fail_errno(ft, SOX_EFMT, "Sorry, don't understand .wav size");
-        return SOX_EOF;
+        default:
+            lsx_fail_errno(ft, SOX_EFMT, "Sorry, don't understand .wav size");
+            return SOX_EOF;
+        }
     }
+
+    if (ft->encoding.encoding != SOX_ENCODING_UNKNOWN &&
+        ft->encoding.encoding != enc)
+        lsx_report("User options overriding encoding read in .wav header");
+    else
+        ft->encoding.encoding = enc;
 
     return 0;
 }
