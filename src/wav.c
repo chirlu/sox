@@ -376,111 +376,110 @@ static int wavfail(sox_format_t * ft, const char *format)
 
 static int wav_read_fmt(sox_format_t *ft, uint32_t len)
 {
-    priv_t *wav = ft->priv;
-    unsigned short wChannels;       /* number of channels */
-    uint32_t      dwSamplesPerSecond; /* samples per second per channel */
-    uint32_t      dwAvgBytesPerSec;/* estimate of bytes per second needed */
-    uint16_t wBitsPerSample;  /* bits per sample */
-    uint32_t wFmtSize;
-    uint16_t wExtSize = 0;    /* extended field for non-PCM */
+    priv_t  *wav = ft->priv;
+    uint16_t wChannels;          /* number of channels */
+    uint32_t dwSamplesPerSecond; /* samples per second per channel */
+    uint32_t dwAvgBytesPerSec;   /* estimate of bytes per second needed */
+    uint16_t wBitsPerSample;     /* bits per sample */
+    uint16_t wExtSize = 0;       /* extended field for non-PCM */
+    size_t   bytesPerBlock = 0;
+    int      bytespersample;     /* bytes per sample (per channel */
 
-    size_t    bytesPerBlock = 0;
-    int    bytespersample;          /* bytes per sample (per channel */
-
-    wFmtSize = len;
-
-    if (wFmtSize < 16)
-    {
-        lsx_fail_errno(ft,SOX_EHDR,"WAVE file fmt chunk is too short");
+    if (len < 16) {
+        lsx_fail_errno(ft, SOX_EHDR, "WAVE file fmt chunk is too short");
         return SOX_EOF;
     }
 
-    lsx_readw(ft, &(wav->formatTag));
+    lsx_readw(ft, &wav->formatTag);
     lsx_readw(ft, &wChannels);
     lsx_readdw(ft, &dwSamplesPerSecond);
     lsx_readdw(ft, &dwAvgBytesPerSec);   /* Average bytes/second */
-    lsx_readw(ft, &(wav->blockAlign));   /* Block align */
+    lsx_readw(ft, &wav->blockAlign);     /* Block align */
     lsx_readw(ft, &wBitsPerSample);      /* bits per sample per channel */
     len -= 16;
 
-    if (wav->formatTag == WAVE_FORMAT_EXTENSIBLE)
-    {
-      uint16_t extensionSize;
-      uint16_t numberOfValidBits;
-      uint32_t speakerPositionMask;
-      uint16_t subFormatTag;
-      uint8_t dummyByte;
-      int i;
+    if (wav->formatTag == WAVE_FORMAT_EXTENSIBLE) {
+        uint16_t extensionSize;
+        uint16_t numberOfValidBits;
+        uint32_t speakerPositionMask;
+        uint16_t subFormatTag;
 
-      if (wFmtSize < 18)
-      {
-        lsx_fail_errno(ft,SOX_EHDR,"WAVE file fmt chunk is too short");
-        return SOX_EOF;
-      }
-      lsx_readw(ft, &extensionSize);
-      len -= 2;
-      if (extensionSize < 22)
-      {
-        lsx_fail_errno(ft,SOX_EHDR,"WAVE file fmt chunk is too short");
-        return SOX_EOF;
-      }
-      lsx_readw(ft, &numberOfValidBits);
-      lsx_readdw(ft, &speakerPositionMask);
-      lsx_readw(ft, &subFormatTag);
-      for (i = 0; i < 14; ++i) lsx_readb(ft, &dummyByte);
-      len -= 22;
-      if (numberOfValidBits != wBitsPerSample)
-      {
-        lsx_fail_errno(ft,SOX_EHDR,"WAVE file fmt with padded samples is not supported yet");
-        return SOX_EOF;
-      }
-      wav->formatTag = subFormatTag;
-      lsx_report("EXTENSIBLE");
+        if (len < 2) {
+            lsx_fail_errno(ft, SOX_EHDR, "WAVE file fmt chunk is too short");
+            return SOX_EOF;
+        }
+
+        lsx_readw(ft, &extensionSize);
+        len -= 2;
+
+        if (extensionSize < 22) {
+            lsx_fail_errno(ft, SOX_EHDR, "WAVE file fmt chunk is too short");
+            return SOX_EOF;
+        }
+
+        lsx_readw(ft, &numberOfValidBits);
+        lsx_readdw(ft, &speakerPositionMask);
+        lsx_readw(ft, &subFormatTag);
+        lsx_skipbytes(ft, 14);
+        len -= 22;
+
+        if (numberOfValidBits != wBitsPerSample) {
+            lsx_fail_errno(ft, SOX_EHDR, "WAVE file fmt with padded samples is not supported yet");
+            return SOX_EOF;
+        }
+
+        wav->formatTag = subFormatTag;
+        lsx_report("EXTENSIBLE");
     }
 
-    switch (wav->formatTag)
-    {
+    switch (wav->formatTag) {
     case WAVE_FORMAT_UNKNOWN:
-        lsx_fail_errno(ft,SOX_EHDR,"WAVE file is in unsupported Microsoft Official Unknown format.");
+        lsx_fail_errno(ft, SOX_EHDR, "WAVE file is in unsupported Microsoft Official Unknown format.");
         return SOX_EOF;
 
     case WAVE_FORMAT_PCM:
         /* Default (-1) depends on sample size.  Set that later on. */
-        if (ft->encoding.encoding != SOX_ENCODING_UNKNOWN && ft->encoding.encoding != SOX_ENCODING_UNSIGNED &&
+        if (ft->encoding.encoding != SOX_ENCODING_UNKNOWN &&
+            ft->encoding.encoding != SOX_ENCODING_UNSIGNED &&
             ft->encoding.encoding != SOX_ENCODING_SIGN2)
             lsx_report("User options overriding encoding read in .wav header");
         break;
 
     case WAVE_FORMAT_IMA_ADPCM:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN || ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM)
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN ||
+            ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM)
             ft->encoding.encoding = SOX_ENCODING_IMA_ADPCM;
         else
             lsx_report("User options overriding encoding read in .wav header");
         break;
 
     case WAVE_FORMAT_ADPCM:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN || ft->encoding.encoding == SOX_ENCODING_MS_ADPCM)
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN ||
+            ft->encoding.encoding == SOX_ENCODING_MS_ADPCM)
             ft->encoding.encoding = SOX_ENCODING_MS_ADPCM;
         else
             lsx_report("User options overriding encoding read in .wav header");
         break;
 
     case WAVE_FORMAT_IEEE_FLOAT:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN || ft->encoding.encoding == SOX_ENCODING_FLOAT)
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN ||
+            ft->encoding.encoding == SOX_ENCODING_FLOAT)
             ft->encoding.encoding = SOX_ENCODING_FLOAT;
         else
             lsx_report("User options overriding encoding read in .wav header");
         break;
 
     case WAVE_FORMAT_ALAW:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN || ft->encoding.encoding == SOX_ENCODING_ALAW)
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN ||
+            ft->encoding.encoding == SOX_ENCODING_ALAW)
             ft->encoding.encoding = SOX_ENCODING_ALAW;
         else
             lsx_report("User options overriding encoding read in .wav header");
         break;
 
     case WAVE_FORMAT_MULAW:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN || ft->encoding.encoding == SOX_ENCODING_ULAW)
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN ||
+            ft->encoding.encoding == SOX_ENCODING_ULAW)
             ft->encoding.encoding = SOX_ENCODING_ULAW;
         else
             lsx_report("User options overriding encoding read in .wav header");
@@ -494,12 +493,15 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
         return wavfail(ft, "Digifix");
     case WAVE_FORMAT_DOLBY_AC2:
         return wavfail(ft, "Dolby AC2");
+
     case WAVE_FORMAT_GSM610:
-        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN || ft->encoding.encoding == SOX_ENCODING_GSM )
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN ||
+            ft->encoding.encoding == SOX_ENCODING_GSM )
             ft->encoding.encoding = SOX_ENCODING_GSM;
         else
             lsx_report("User options overriding encoding read in .wav header");
         break;
+
     case WAVE_FORMAT_ROCKWELL_ADPCM:
         return wavfail(ft, "Rockwell ADPCM");
     case WAVE_FORMAT_ROCKWELL_DIGITALK:
@@ -517,7 +519,8 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
     case WAVE_FORMAT_G722_ADPCM:
         return wavfail(ft, "G.722 ADPCM");
     default:
-        lsx_fail_errno(ft, SOX_EHDR, "Unknown WAV file encoding (type %x)", wav->formatTag);
+        lsx_fail_errno(ft, SOX_EHDR, "Unknown WAV file encoding (type %x)",
+                       wav->formatTag);
         return SOX_EOF;
     }
 
@@ -537,7 +540,6 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
     else
         lsx_report("User options overriding rate read in .wav header");
 
-
     /* non-PCM formats except alaw and mulaw formats have extended fmt chunk.
      * Check for those cases.
      */
@@ -552,160 +554,180 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
         }
     }
 
-    if (wExtSize > len)
-    {
-        lsx_fail_errno(ft,SOX_EOF,"wave header error: wExtSize inconsistent with wFmtLen");
+    if (wExtSize > len) {
+        lsx_fail_errno(ft, SOX_EOF,
+                       "wave header error: wExtSize inconsistent with wFmtLen");
         return SOX_EOF;
     }
 
-    switch (wav->formatTag)
-    {
+    switch (wav->formatTag) {
     case WAVE_FORMAT_ADPCM:
-        if (wExtSize < 4)
-        {
-            lsx_fail_errno(ft,SOX_EOF,"format[%s]: expects wExtSize >= %d",
-                        wav_format_str(wav->formatTag), 4);
+        if (wExtSize < 4) {
+            lsx_fail_errno(ft, SOX_EOF, "format[%s]: expects wExtSize >= %d",
+                           wav_format_str(wav->formatTag), 4);
             return SOX_EOF;
         }
 
-        if (wBitsPerSample != 4)
-        {
-            lsx_fail_errno(ft,SOX_EOF,"Can only handle 4-bit MS ADPCM in wav files");
+        if (wBitsPerSample != 4) {
+            lsx_fail_errno(ft, SOX_EOF,
+                           "Can only handle 4-bit MS ADPCM in wav files");
             return SOX_EOF;
         }
 
-        lsx_readw(ft, &(wav->samplesPerBlock));
-        bytesPerBlock = lsx_ms_adpcm_bytes_per_block((size_t) ft->signal.channels, (size_t) wav->samplesPerBlock);
-        if (bytesPerBlock != wav->blockAlign)
-        {
-            lsx_fail_errno(ft,SOX_EOF,"format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
-                wav_format_str(wav->formatTag), wav->samplesPerBlock, wav->blockAlign);
-            return SOX_EOF;
-        }
-
-        lsx_readw(ft, &(wav->nCoefs));
-        if (wav->nCoefs < 7 || wav->nCoefs > 0x100) {
-            lsx_fail_errno(ft,SOX_EOF,"ADPCM file nCoefs (%.4hx) makes no sense", wav->nCoefs);
-            return SOX_EOF;
-        }
-        wav->packet = lsx_malloc((size_t)wav->blockAlign);
-
+        lsx_readw(ft, &wav->samplesPerBlock);
+        lsx_readw(ft, &wav->nCoefs);
         len -= 4;
 
-        if (wExtSize < 4 + 4*wav->nCoefs)
-        {
-            lsx_fail_errno(ft,SOX_EOF,"wave header error: wExtSize(%d) too small for nCoefs(%d)", wExtSize, wav->nCoefs);
+        bytesPerBlock = lsx_ms_adpcm_bytes_per_block(ft->signal.channels,
+                                                     wav->samplesPerBlock);
+
+        if (bytesPerBlock != wav->blockAlign) {
+            lsx_fail_errno(ft, SOX_EOF,
+                           "format[%s]: samplesPerBlock(%d) != blockAlign(%d)",
+                           wav_format_str(wav->formatTag),
+                           wav->samplesPerBlock, wav->blockAlign);
             return SOX_EOF;
         }
 
-        wav->samples = lsx_malloc(wChannels*wav->samplesPerBlock*sizeof(short));
+        if (wav->nCoefs < 7 || wav->nCoefs > 0x100) {
+            lsx_fail_errno(ft, SOX_EOF,
+                           "ADPCM file nCoefs (%.4hx) makes no sense",
+                           wav->nCoefs);
+            return SOX_EOF;
+        }
+
+        if (wExtSize < 4 + 4 * wav->nCoefs) {
+            lsx_fail_errno(ft, SOX_EOF, "wave header error: wExtSize(%d) too small for nCoefs(%d)", wExtSize, wav->nCoefs);
+            return SOX_EOF;
+        }
+
+        wav->packet = lsx_malloc(wav->blockAlign);
+        wav->samples =
+            lsx_malloc(wChannels * wav->samplesPerBlock * sizeof(short));
 
         /* nCoefs, lsx_ms_adpcm_i_coefs used by adpcm.c */
         wav->lsx_ms_adpcm_i_coefs = lsx_malloc(wav->nCoefs * 2 * sizeof(short));
         wav->ms_adpcm_data = lsx_ms_adpcm_alloc(wChannels);
+
         {
-            int i, errct=0;
-            for (i=0; len>=2 && i < 2*wav->nCoefs; i++) {
-                lsx_readsw(ft, &(wav->lsx_ms_adpcm_i_coefs[i]));
+            int i, errct = 0;
+
+            for (i = 0; len >= 2 && i < 2 * wav->nCoefs; i++) {
+                lsx_readsw(ft, &wav->lsx_ms_adpcm_i_coefs[i]);
                 len -= 2;
-                if (i<14) errct += (wav->lsx_ms_adpcm_i_coefs[i] != lsx_ms_adpcm_i_coef[i/2][i%2]);
-                /* lsx_debug("lsx_ms_adpcm_i_coefs[%2d] %4d",i,wav->lsx_ms_adpcm_i_coefs[i]); */
+
+                if (i < 14)
+                    errct += wav->lsx_ms_adpcm_i_coefs[i] !=
+                        lsx_ms_adpcm_i_coef[i / 2][i % 2];
             }
-            if (errct) lsx_warn("base lsx_ms_adpcm_i_coefs differ in %d/14 positions",errct);
+
+            if (errct)
+                lsx_warn("base lsx_ms_adpcm_i_coefs differ in %d/14 positions",
+                         errct);
         }
 
         bytespersample = 2;  /* AFTER de-compression */
         break;
 
     case WAVE_FORMAT_IMA_ADPCM:
-        if (wExtSize < 2)
-        {
-            lsx_fail_errno(ft,SOX_EOF,"format[%s]: expects wExtSize >= %d",
-                    wav_format_str(wav->formatTag), 2);
+        if (wExtSize < 2) {
+            lsx_fail_errno(ft, SOX_EOF, "format[%s]: expects wExtSize >= %d",
+                           wav_format_str(wav->formatTag), 2);
             return SOX_EOF;
         }
 
-        if (wBitsPerSample != 4)
-        {
-            lsx_fail_errno(ft,SOX_EOF,"Can only handle 4-bit IMA ADPCM in wav files");
+        if (wBitsPerSample != 4) {
+            lsx_fail_errno(ft, SOX_EOF,
+                           "Can only handle 4-bit IMA ADPCM in wav files");
             return SOX_EOF;
         }
 
-        lsx_readw(ft, &(wav->samplesPerBlock));
-        bytesPerBlock = lsx_ima_bytes_per_block((size_t) ft->signal.channels, (size_t) wav->samplesPerBlock);
-        if (bytesPerBlock != wav->blockAlign || wav->samplesPerBlock%8 != 1)
-        {
-            lsx_fail_errno(ft,SOX_EOF,"format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
-                wav_format_str(wav->formatTag), wav->samplesPerBlock, wav->blockAlign);
-            return SOX_EOF;
-        }
-
-        wav->packet = lsx_malloc((size_t)wav->blockAlign);
+        lsx_readw(ft, &wav->samplesPerBlock);
         len -= 2;
 
-        wav->samples = lsx_malloc(wChannels*wav->samplesPerBlock*sizeof(short));
+        bytesPerBlock = lsx_ima_bytes_per_block(ft->signal.channels,
+                                                wav->samplesPerBlock);
+
+        if (bytesPerBlock != wav->blockAlign || wav->samplesPerBlock % 8 != 1) {
+            lsx_fail_errno(ft, SOX_EOF,
+                           "format[%s]: samplesPerBlock(%d) != blockAlign(%d)",
+                           wav_format_str(wav->formatTag),
+                           wav->samplesPerBlock, wav->blockAlign);
+            return SOX_EOF;
+        }
+
+        wav->packet = lsx_malloc(wav->blockAlign);
+        wav->samples =
+            lsx_malloc(wChannels * wav->samplesPerBlock * sizeof(short));
 
         bytespersample = 2;  /* AFTER de-compression */
         break;
 
     /* GSM formats have extended fmt chunk.  Check for those cases. */
     case WAVE_FORMAT_GSM610:
-        if (wExtSize < 2)
-        {
-            lsx_fail_errno(ft,SOX_EOF,"format[%s]: expects wExtSize >= %d",
-                    wav_format_str(wav->formatTag), 2);
+        if (wExtSize < 2) {
+            lsx_fail_errno(ft, SOX_EOF, "format[%s]: expects wExtSize >= %d",
+                           wav_format_str(wav->formatTag), 2);
             return SOX_EOF;
         }
+
         lsx_readw(ft, &wav->samplesPerBlock);
-        bytesPerBlock = 65;
-        if (wav->blockAlign != 65)
-        {
-            lsx_fail_errno(ft,SOX_EOF,"format[%s]: expects blockAlign(%d) = %d",
-                    wav_format_str(wav->formatTag), wav->blockAlign, 65);
-            return SOX_EOF;
-        }
-        if (wav->samplesPerBlock != 320)
-        {
-            lsx_fail_errno(ft,SOX_EOF,"format[%s]: expects samplesPerBlock(%d) = %d",
-                    wav_format_str(wav->formatTag), wav->samplesPerBlock, 320);
-            return SOX_EOF;
-        }
-        bytespersample = 2;  /* AFTER de-compression */
         len -= 2;
+
+        bytesPerBlock = 65;
+
+        if (wav->blockAlign != 65) {
+            lsx_fail_errno(ft, SOX_EOF,
+                           "format[%s]: expects blockAlign(%d) = %d",
+                           wav_format_str(wav->formatTag), wav->blockAlign, 65);
+            return SOX_EOF;
+        }
+
+        if (wav->samplesPerBlock != 320) {
+            lsx_fail_errno(ft, SOX_EOF,
+                           "format[%s]: expects samplesPerBlock(%d) = %d",
+                           wav_format_str(wav->formatTag),
+                           wav->samplesPerBlock, 320);
+            return SOX_EOF;
+        }
+
+        bytespersample = 2;  /* AFTER de-compression */
         break;
 
     default:
-      bytespersample = (wBitsPerSample + 7)/8;
-
+        bytespersample = (wBitsPerSample + 7) / 8;
+        break;
     }
 
     /* User options take precedence */
-    if (!ft->encoding.bits_per_sample || ft->encoding.bits_per_sample == wBitsPerSample)
-      ft->encoding.bits_per_sample = wBitsPerSample;
+    if (!ft->encoding.bits_per_sample ||
+        ft->encoding.bits_per_sample == wBitsPerSample)
+        ft->encoding.bits_per_sample = wBitsPerSample;
     else
-      lsx_warn("User options overriding size read in .wav header");
+        lsx_warn("User options overriding size read in .wav header");
 
     /* Now we have enough information to set default encodings. */
-    switch (bytespersample)
-    {
+    switch (bytespersample) {
     case 1:
-      if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
-        ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
-      break;
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
+            ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
+        break;
 
-    case 2: case 3: case 4:
-      if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
-        ft->encoding.encoding = SOX_ENCODING_SIGN2;
-      break;
+    case 2:
+    case 3:
+    case 4:
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
+            ft->encoding.encoding = SOX_ENCODING_SIGN2;
+        break;
 
     case 8:
-      if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
-        ft->encoding.encoding = SOX_ENCODING_FLOAT;
-      break;
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
+            ft->encoding.encoding = SOX_ENCODING_FLOAT;
+        break;
 
     default:
-      lsx_fail_errno(ft,SOX_EFMT,"Sorry, don't understand .wav size");
-      return SOX_EOF;
+        lsx_fail_errno(ft, SOX_EFMT, "Sorry, don't understand .wav size");
+        return SOX_EOF;
     }
 
     return 0;
