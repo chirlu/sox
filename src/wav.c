@@ -969,96 +969,100 @@ static int startread(sox_format_t *ft)
  * Return number of samples read.
  */
 
-static size_t read_samples(sox_format_t * ft, sox_sample_t *buf, size_t len)
+static size_t read_samples(sox_format_t *ft, sox_sample_t *buf, size_t len)
 {
-        priv_t *   wav = (priv_t *) ft->priv;
-        size_t done;
+    priv_t *wav = ft->priv;
+    size_t done;
 
-        ft->sox_errno = SOX_SUCCESS;
+    ft->sox_errno = SOX_SUCCESS;
 
-        /* If file is in ADPCM encoding then read in multiple blocks else */
-        /* read as much as possible and return quickly. */
-        switch (ft->encoding.encoding)
-        {
-        case SOX_ENCODING_IMA_ADPCM:
-        case SOX_ENCODING_MS_ADPCM:
+    /* If file is in ADPCM encoding then read in multiple blocks else */
+    /* read as much as possible and return quickly. */
+    switch (ft->encoding.encoding) {
+    case SOX_ENCODING_IMA_ADPCM:
+    case SOX_ENCODING_MS_ADPCM:
+        if (!wav->ignoreSize && len > wav->numSamples * ft->signal.channels)
+            len = wav->numSamples * ft->signal.channels;
 
-            if (!wav->ignoreSize && len > (wav->numSamples*ft->signal.channels))
-                len = (wav->numSamples*ft->signal.channels);
+        done = 0;
+        while (done < len) { /* Still want data? */
+            short *p, *top;
+            size_t ct;
 
-            done = 0;
-            while (done < len) { /* Still want data? */
-                /* See if need to read more from disk */
+            /* See if need to read more from disk */
+            if (wav->blockSamplesRemaining == 0) {
+                if (wav->formatTag == WAVE_FORMAT_IMA_ADPCM)
+                    wav->blockSamplesRemaining = ImaAdpcmReadBlock(ft);
+                else
+                    wav->blockSamplesRemaining = AdpcmReadBlock(ft);
+
                 if (wav->blockSamplesRemaining == 0) {
-                    if (wav->formatTag == WAVE_FORMAT_IMA_ADPCM)
-                        wav->blockSamplesRemaining = ImaAdpcmReadBlock(ft);
-                    else
-                        wav->blockSamplesRemaining = AdpcmReadBlock(ft);
-                    if (wav->blockSamplesRemaining == 0)
-                    {
-                        /* Don't try to read any more samples */
-                        wav->numSamples = 0;
-                        return done;
-                    }
-                    wav->samplePtr = wav->samples;
+                    /* Don't try to read any more samples */
+                    wav->numSamples = 0;
+                    return done;
                 }
-
-                /* Copy interleaved data into buf, converting to sox_sample_t */
-                {
-                    short *p, *top;
-                    size_t ct;
-                    ct = len-done;
-                    if (ct > (wav->blockSamplesRemaining*ft->signal.channels))
-                        ct = (wav->blockSamplesRemaining*ft->signal.channels);
-
-                    done += ct;
-                    wav->blockSamplesRemaining -= (ct/ft->signal.channels);
-                    p = wav->samplePtr;
-                    top = p+ct;
-                    /* Output is already signed */
-                    while (p<top)
-                        *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE((*p++),);
-
-                    wav->samplePtr = p;
-                }
+                wav->samplePtr = wav->samples;
             }
-            /* "done" for ADPCM equals total data processed and not
-             * total samples procesed.  The only way to take care of that
-             * is to return here and not fall thru.
-             */
-            wav->numSamples -= (done / ft->signal.channels);
-            return done;
-            break;
 
-        case SOX_ENCODING_GSM:
-            if (!wav->ignoreSize && len > wav->numSamples*ft->signal.channels)
-                len = (wav->numSamples*ft->signal.channels);
+            /* Copy interleaved data into buf, converting to sox_sample_t */
+            ct = len - done;
+            if (ct > wav->blockSamplesRemaining * ft->signal.channels)
+                ct = wav->blockSamplesRemaining * ft->signal.channels;
 
-            done = wavgsmread(ft, buf, len);
-            if (done == 0 && wav->numSamples != 0 && !wav->ignoreSize)
-                lsx_warn("Premature EOF on .wav input file");
-        break;
+            done += ct;
+            wav->blockSamplesRemaining -= ct / ft->signal.channels;
+            p = wav->samplePtr;
+            top = p + ct;
 
-        default: /* assume PCM or float encoding */
-            if (!wav->ignoreSize && len > wav->numSamples*ft->signal.channels)
-                len = (wav->numSamples*ft->signal.channels);
+            /* Output is already signed */
+            while (p < top)
+                *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE(*p++,);
 
-            done = lsx_rawread(ft, buf, len);
-            /* If software thinks there are more samples but I/O */
-            /* says otherwise, let the user know about this.     */
-            if (done == 0 && wav->numSamples != 0 && !wav->ignoreSize)
-                lsx_warn("Premature EOF on .wav input file");
+            wav->samplePtr = p;
         }
 
-        /* Only return buffers that contain a totally playable
-         * amount of audio.
+        /* "done" for ADPCM equals total data processed and not
+         * total samples procesed.  The only way to take care of that
+         * is to return here and not fall thru.
          */
-        done -= done % ft->signal.channels;
-        if (done/ft->signal.channels > wav->numSamples)
-            wav->numSamples = 0;
-        else
-            wav->numSamples -= (done/ft->signal.channels);
+        wav->numSamples -= done / ft->signal.channels;
+
         return done;
+
+    case SOX_ENCODING_GSM:
+        if (!wav->ignoreSize && len > wav->numSamples * ft->signal.channels)
+            len = wav->numSamples * ft->signal.channels;
+
+        done = wavgsmread(ft, buf, len);
+
+        if (done == 0 && wav->numSamples != 0 && !wav->ignoreSize)
+            lsx_warn("Premature EOF on .wav input file");
+
+        break;
+
+    default: /* assume PCM or float encoding */
+        if (!wav->ignoreSize && len > wav->numSamples*ft->signal.channels)
+            len = (wav->numSamples*ft->signal.channels);
+
+        done = lsx_rawread(ft, buf, len);
+
+        /* If software thinks there are more samples but I/O */
+        /* says otherwise, let the user know about this.     */
+        if (done == 0 && wav->numSamples != 0 && !wav->ignoreSize)
+            lsx_warn("Premature EOF on .wav input file");
+    }
+
+    /* Only return buffers that contain a totally playable
+     * amount of audio.
+     */
+    done -= done % ft->signal.channels;
+
+    if (done / ft->signal.channels > wav->numSamples)
+        wav->numSamples = 0;
+    else
+        wav->numSamples -= done / ft->signal.channels;
+
+    return done;
 }
 
 /*
