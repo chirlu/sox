@@ -976,14 +976,14 @@ static size_t read_samples(sox_format_t *ft, sox_sample_t *buf, size_t len)
 
     ft->sox_errno = SOX_SUCCESS;
 
+    if (!wav->ignoreSize)
+        len = min(len, wav->numSamples * ft->signal.channels);
+
     /* If file is in ADPCM encoding then read in multiple blocks else */
     /* read as much as possible and return quickly. */
     switch (ft->encoding.encoding) {
     case SOX_ENCODING_IMA_ADPCM:
     case SOX_ENCODING_MS_ADPCM:
-        if (!wav->ignoreSize && len > wav->numSamples * ft->signal.channels)
-            len = wav->numSamples * ft->signal.channels;
-
         done = 0;
         while (done < len) { /* Still want data? */
             short *p, *top;
@@ -1030,27 +1030,16 @@ static size_t read_samples(sox_format_t *ft, sox_sample_t *buf, size_t len)
         return done;
 
     case SOX_ENCODING_GSM:
-        if (!wav->ignoreSize && len > wav->numSamples * ft->signal.channels)
-            len = wav->numSamples * ft->signal.channels;
-
         done = wavgsmread(ft, buf, len);
-
-        if (done == 0 && wav->numSamples != 0 && !wav->ignoreSize)
-            lsx_warn("Premature EOF on .wav input file");
-
         break;
 
     default: /* assume PCM or float encoding */
-        if (!wav->ignoreSize && len > wav->numSamples*ft->signal.channels)
-            len = (wav->numSamples*ft->signal.channels);
-
         done = lsx_rawread(ft, buf, len);
-
-        /* If software thinks there are more samples but I/O */
-        /* says otherwise, let the user know about this.     */
-        if (done == 0 && wav->numSamples != 0 && !wav->ignoreSize)
-            lsx_warn("Premature EOF on .wav input file");
+        break;
     }
+
+    if (done == 0 && wav->numSamples && !wav->ignoreSize)
+        lsx_warn("Premature EOF on .wav input file");
 
     /* Only return buffers that contain a totally playable
      * amount of audio.
