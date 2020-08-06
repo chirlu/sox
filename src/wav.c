@@ -368,9 +368,11 @@ static void wavgsmstopwrite(sox_format_t * ft)
 /* General Sox WAV file code                                                */
 /****************************************************************************/
 
-static int wavfail(sox_format_t * ft, const char *format)
+static int wavfail(sox_format_t *ft, int tag)
 {
-    lsx_fail_errno(ft, SOX_EHDR, "WAV file encoding `%s' is not supported", format);
+    lsx_fail_errno(ft, SOX_EHDR,
+                   "WAV file encoding '%s' (%04x) is not supported",
+                   wav_format_str(tag), tag);
     return SOX_EOF;
 }
 
@@ -434,10 +436,6 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
     }
 
     switch (wav->formatTag) {
-    case WAVE_FORMAT_UNKNOWN:
-        lsx_fail_errno(ft, SOX_EHDR, "WAVE file is in unsupported Microsoft Official Unknown format.");
-        return SOX_EOF;
-
     case WAVE_FORMAT_PCM:
         /* Default depends on sample size.  Set that later on. */
         enc = SOX_ENCODING_UNKNOWN;
@@ -463,39 +461,12 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
         enc = SOX_ENCODING_ULAW;
         break;
 
-    case WAVE_FORMAT_OKI_ADPCM:
-        return wavfail(ft, "OKI ADPCM");
-    case WAVE_FORMAT_DIGISTD:
-        return wavfail(ft, "Digistd");
-    case WAVE_FORMAT_DIGIFIX:
-        return wavfail(ft, "Digifix");
-    case WAVE_FORMAT_DOLBY_AC2:
-        return wavfail(ft, "Dolby AC2");
-
     case WAVE_FORMAT_GSM610:
         enc = SOX_ENCODING_GSM;
         break;
 
-    case WAVE_FORMAT_ROCKWELL_ADPCM:
-        return wavfail(ft, "Rockwell ADPCM");
-    case WAVE_FORMAT_ROCKWELL_DIGITALK:
-        return wavfail(ft, "Rockwell DIGITALK");
-    case WAVE_FORMAT_G721_ADPCM:
-        return wavfail(ft, "G.721 ADPCM");
-    case WAVE_FORMAT_G728_CELP:
-        return wavfail(ft, "G.728 CELP");
-    case WAVE_FORMAT_MPEG:
-        return wavfail(ft, "MPEG");
-    case WAVE_FORMAT_MPEGLAYER3:
-        return wavfail(ft, "MP3");
-    case WAVE_FORMAT_G726_ADPCM:
-        return wavfail(ft, "G.726 ADPCM");
-    case WAVE_FORMAT_G722_ADPCM:
-        return wavfail(ft, "G.722 ADPCM");
     default:
-        lsx_fail_errno(ft, SOX_EHDR, "Unknown WAV file encoding (type %x)",
-                       wav->formatTag);
-        return SOX_EOF;
+        return wavfail(ft, wav->formatTag);
     }
 
     /* User options take precedence */
