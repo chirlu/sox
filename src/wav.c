@@ -824,6 +824,20 @@ static int startread(sox_format_t * ft)
             goto next;
         }
 
+        if (!memcmp(magic, "fact", 4)) {
+            uint32_t val;
+
+            if (clen < 4) {
+                lsx_fail_errno(ft, SOX_EHDR, "fact chunk too small");
+                return SOX_EOF;
+            }
+
+            lsx_readdw(ft, &val);
+            wav->numSamples = val;
+
+            goto next;
+        }
+
         if (!memcmp(magic, "data", 4)) {
             if (isRF64 && clen == UINT32_MAX)
                 clen = ds64_data_size;
@@ -875,7 +889,12 @@ static int startread(sox_format_t * ft)
     if (ft->seekable)
         lsx_seeki(ft, wav->dataStart, SEEK_SET);
 
-    if (qwDataLength == UINT32_MAX || qwDataLength == MS_UNSPEC) {
+    /* some files wrongly report total samples across all channels */
+    if (wav->numSamples * wav->blockAlign == qwDataLength * ft->signal.channels)
+        wav->numSamples /= ft->signal.channels;
+
+    if ((qwDataLength == UINT32_MAX && !wav->numSamples) ||
+        qwDataLength == MS_UNSPEC) {
         lsx_warn("WAV data length is magic value or UINT32_MAX, ignoring");
         wav->ignoreSize = 1;
     }
@@ -911,7 +930,8 @@ static int startread(sox_format_t * ft)
         break;
 
     default:
-        wav->numSamples = div_bits(qwDataLength, ft->encoding.bits_per_sample) / ft->signal.channels;
+        if (!wav->numSamples)
+            wav->numSamples = div_bits(qwDataLength, ft->encoding.bits_per_sample) / ft->signal.channels;
         ft->signal.length = wav->numSamples * ft->signal.channels;
     }
      
