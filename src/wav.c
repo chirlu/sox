@@ -908,7 +908,6 @@ static int startread(sox_format_t * ft)
                            (size_t)wav->blockAlign, (size_t)wav->samplesPerBlock);
         lsx_debug_more("datalen %ld, numSamples %lu",qwDataLength, (unsigned long)wav->numSamples);
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
-        ft->signal.length = wav->numSamples*ft->signal.channels;
         break;
 
     case WAVE_FORMAT_IMA_ADPCM:
@@ -920,26 +919,22 @@ static int startread(sox_format_t * ft)
         lsx_debug_more("datalen %ld, numSamples %lu",qwDataLength, (unsigned long)wav->numSamples);
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
         lsx_ima_init_table();
-        ft->signal.length = wav->numSamples*ft->signal.channels;
         break;
 
     case WAVE_FORMAT_GSM610:
         wav->numSamples = ((qwDataLength / wav->blockAlign) * wav->samplesPerBlock);
         wavgsminit(ft);
-        ft->signal.length = wav->numSamples*ft->signal.channels;
         break;
-
-    default:
-        if (!wav->numSamples)
-            wav->numSamples = div_bits(qwDataLength, ft->encoding.bits_per_sample) / ft->signal.channels;
-        ft->signal.length = wav->numSamples * ft->signal.channels;
     }
-     
-    /* When ignoring size, reset length so that output files do
-     * not mistakenly depend on it.
-     */
+
+    if (!wav->numSamples)
+        wav->numSamples = div_bits(qwDataLength, ft->encoding.bits_per_sample)
+            / ft->signal.channels;
+
     if (wav->ignoreSize)
-      ft->signal.length = SOX_UNSPEC;
+        ft->signal.length = SOX_UNSPEC;
+    else
+        ft->signal.length = wav->numSamples * ft->signal.channels;
 
     return lsx_rawstartread(ft);
 }
