@@ -94,7 +94,12 @@ typedef struct {
     size_t      gsmbytecount;    /* counts bytes written to data block */
 } priv_t;
 
-static char *wav_format_str(unsigned wFormatTag);
+struct wave_format {
+    uint16_t tag;
+    const char *name;
+};
+
+static const char *wav_format_str(unsigned tag);
 
 static int wavwritehdr(sox_format_t *, int);
 
@@ -503,6 +508,41 @@ static void wavgsmstopwrite(sox_format_t * ft)
 /****************************************************************************/
 /* General Sox WAV file code                                                */
 /****************************************************************************/
+
+static const struct wave_format wave_formats[] = {
+    { WAVE_FORMAT_UNKNOWN,              "Unknown Wave Type" },
+    { WAVE_FORMAT_PCM,                  "PCM" },
+    { WAVE_FORMAT_ADPCM,                "Microsoft ADPCM" },
+    { WAVE_FORMAT_IEEE_FLOAT,           "IEEE Float" },
+    { WAVE_FORMAT_ALAW,                 "CCITT A-law" },
+    { WAVE_FORMAT_MULAW,                "CCITT u-law" },
+    { WAVE_FORMAT_OKI_ADPCM,            "OKI ADPCM" },
+    { WAVE_FORMAT_IMA_ADPCM,            "IMA ADPCM" },
+    { WAVE_FORMAT_DIGISTD,              "DIGISTD" },
+    { WAVE_FORMAT_DIGIFIX,              "DigiFix" },
+    { WAVE_FORMAT_DOLBY_AC2,            "Dolby AC-2" },
+    { WAVE_FORMAT_GSM610,               "GSM 6.10" },
+    { WAVE_FORMAT_ROCKWELL_ADPCM,       "Rockwell ADPCM" },
+    { WAVE_FORMAT_ROCKWELL_DIGITALK,    "Rockwell DIGITALK" },
+    { WAVE_FORMAT_G721_ADPCM,           "G.721 ADPCM" },
+    { WAVE_FORMAT_G728_CELP,            "G.728 CELP" },
+    { WAVE_FORMAT_MPEG,                 "MPEG-1 Audio" },
+    { WAVE_FORMAT_MPEGLAYER3,           "MPEG-1 Layer 3" },
+    { WAVE_FORMAT_G726_ADPCM,           "G.726 ADPCM" },
+    { WAVE_FORMAT_G722_ADPCM,           "G.722 ADPCM" },
+    { }
+};
+
+static const struct wave_format *wav_find_format(unsigned tag)
+{
+    const struct wave_format *f;
+
+    for (f = wave_formats; f->name; f++)
+        if (f->tag == tag)
+            return f;
+
+    return NULL;
+}
 
 static int wavfail(sox_format_t *ft, int tag)
 {
@@ -1484,53 +1524,10 @@ static int stopwrite(sox_format_t * ft)
 /*
  * Return a string corresponding to the wave format type.
  */
-static char *wav_format_str(unsigned wFormatTag)
+static const char *wav_format_str(unsigned tag)
 {
-        switch (wFormatTag)
-        {
-                case WAVE_FORMAT_UNKNOWN:
-                        return "Microsoft Official Unknown";
-                case WAVE_FORMAT_PCM:
-                        return "Microsoft PCM";
-                case WAVE_FORMAT_ADPCM:
-                        return "Microsoft ADPCM";
-                case WAVE_FORMAT_IEEE_FLOAT:
-                       return "IEEE Float";
-                case WAVE_FORMAT_ALAW:
-                        return "Microsoft A-law";
-                case WAVE_FORMAT_MULAW:
-                        return "Microsoft U-law";
-                case WAVE_FORMAT_OKI_ADPCM:
-                        return "OKI ADPCM format.";
-                case WAVE_FORMAT_IMA_ADPCM:
-                        return "IMA ADPCM";
-                case WAVE_FORMAT_DIGISTD:
-                        return "Digistd format.";
-                case WAVE_FORMAT_DIGIFIX:
-                        return "Digifix format.";
-                case WAVE_FORMAT_DOLBY_AC2:
-                        return "Dolby AC2";
-                case WAVE_FORMAT_GSM610:
-                        return "GSM 6.10";
-                case WAVE_FORMAT_ROCKWELL_ADPCM:
-                        return "Rockwell ADPCM";
-                case WAVE_FORMAT_ROCKWELL_DIGITALK:
-                        return "Rockwell DIGITALK";
-                case WAVE_FORMAT_G721_ADPCM:
-                        return "G.721 ADPCM";
-                case WAVE_FORMAT_G728_CELP:
-                        return "G.728 CELP";
-                case WAVE_FORMAT_MPEG:
-                        return "MPEG";
-                case WAVE_FORMAT_MPEGLAYER3:
-                        return "MPEG Layer 3";
-                case WAVE_FORMAT_G726_ADPCM:
-                        return "G.726 ADPCM";
-                case WAVE_FORMAT_G722_ADPCM:
-                        return "G.722 ADPCM";
-                default:
-                        return "Unknown";
-        }
+    const struct wave_format *f = wav_find_format(tag);
+    return f ? f->name : "unknown";
 }
 
 static int seek(sox_format_t * ft, uint64_t offset)
