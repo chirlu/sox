@@ -580,40 +580,6 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
         lsx_report("EXTENSIBLE");
     }
 
-    switch (wav->formatTag) {
-    case WAVE_FORMAT_PCM:
-        /* Default depends on sample size.  Set that later on. */
-        enc = SOX_ENCODING_UNKNOWN;
-        break;
-
-    case WAVE_FORMAT_IMA_ADPCM:
-        enc = SOX_ENCODING_IMA_ADPCM;
-        break;
-
-    case WAVE_FORMAT_ADPCM:
-        enc = SOX_ENCODING_MS_ADPCM;
-        break;
-
-    case WAVE_FORMAT_IEEE_FLOAT:
-        enc = SOX_ENCODING_FLOAT;
-        break;
-
-    case WAVE_FORMAT_ALAW:
-        enc = SOX_ENCODING_ALAW;
-        break;
-
-    case WAVE_FORMAT_MULAW:
-        enc = SOX_ENCODING_ULAW;
-        break;
-
-    case WAVE_FORMAT_GSM610:
-        enc = SOX_ENCODING_GSM;
-        break;
-
-    default:
-        return wavfail(ft, wav->formatTag);
-    }
-
     /* User options take precedence */
     if (ft->signal.channels == 0 || ft->signal.channels == wChannels)
         ft->signal.channels = wChannels;
@@ -631,29 +597,56 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
         lsx_report("User options overriding rate read in .wav header");
 
     switch (wav->formatTag) {
+    case WAVE_FORMAT_PCM:
+        bytespersample = (wav->bitsPerSample + 7) / 8;
+
+        if (bytespersample == 1) {
+            enc = SOX_ENCODING_UNSIGNED;
+        } else if (bytespersample <= 4) {
+            enc = SOX_ENCODING_SIGN2;
+        } else {
+            lsx_fail_errno(ft, SOX_EFMT, "%d bytes per sample not suppored",
+                           bytespersample);
+            return SOX_EOF;
+        }
+
+        break;
+
+    case WAVE_FORMAT_IEEE_FLOAT:
+        enc = SOX_ENCODING_FLOAT;
+        break;
+
+    case WAVE_FORMAT_ALAW:
+        enc = SOX_ENCODING_ALAW;
+        break;
+
+    case WAVE_FORMAT_MULAW:
+        enc = SOX_ENCODING_ULAW;
+        break;
+
     case WAVE_FORMAT_ADPCM:
         if (wav_ms_adpcm_fmt(ft, len))
             return SOX_EOF;
 
-        bytespersample = 2;  /* AFTER de-compression */
+        enc = SOX_ENCODING_MS_ADPCM;
         break;
 
     case WAVE_FORMAT_IMA_ADPCM:
         if (wav_ima_adpcm_fmt(ft, len))
             return SOX_EOF;
 
-        bytespersample = 2;  /* AFTER de-compression */
+        enc = SOX_ENCODING_IMA_ADPCM;
         break;
 
     case WAVE_FORMAT_GSM610:
         if (wav_gsm_fmt(ft, len))
             return SOX_EOF;
 
-        bytespersample = 2;  /* AFTER de-compression */
+        enc = SOX_ENCODING_GSM;
         break;
 
     default:
-        bytespersample = (wav->bitsPerSample + 7) / 8;
+        return wavfail(ft, wav->formatTag);
         break;
     }
 
@@ -663,29 +656,6 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
         ft->encoding.bits_per_sample = wav->bitsPerSample;
     else
         lsx_warn("User options overriding size read in .wav header");
-
-    /* Now we have enough information to set default encodings. */
-    if (enc == SOX_ENCODING_UNKNOWN) {
-        switch (bytespersample) {
-        case 1:
-            enc = SOX_ENCODING_UNSIGNED;
-            break;
-
-        case 2:
-        case 3:
-        case 4:
-            enc = SOX_ENCODING_SIGN2;
-            break;
-
-        case 8:
-            enc = SOX_ENCODING_FLOAT;
-            break;
-
-        default:
-            lsx_fail_errno(ft, SOX_EFMT, "Sorry, don't understand .wav size");
-            return SOX_EOF;
-        }
-    }
 
     if (ft->encoding.encoding != SOX_ENCODING_UNKNOWN &&
         ft->encoding.encoding != enc)
