@@ -571,8 +571,9 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
         lsx_skipbytes(ft, 14);
         len -= 22;
 
-        if (numberOfValidBits != wav->bitsPerSample) {
-            lsx_fail_errno(ft, SOX_EHDR, "WAVE file fmt with padded samples is not supported yet");
+        if (numberOfValidBits > wav->bitsPerSample) {
+            lsx_fail_errno(ft, SOX_EHDR,
+                           "wValidBitsPerSample > wBitsPerSample");
             return SOX_EOF;
         }
 
