@@ -70,7 +70,6 @@ typedef struct {
     unsigned short samplesPerBlock;
     unsigned short blockAlign;
     size_t dataStart;           /* need to for seeking */
-    char           * comment;
     int ignoreSize;                 /* ignoreSize allows us to process 32-bit WAV files that are
                                      * greater then 2 Gb and can't be represented by the
                                      * 32-bit size field. */
@@ -368,48 +367,6 @@ static void wavgsmstopwrite(sox_format_t * ft)
 /****************************************************************************/
 /* General Sox WAV file code                                                */
 /****************************************************************************/
-
-static int findChunk(sox_format_t * ft, const char *Label, uint64_t *len)
-{
-    char magic[5];
-    uint32_t len_tmp;
-
-    lsx_debug("Searching for %2x %2x %2x %2x", Label[0], Label[1], Label[2], Label[3]);
-    for (;;)
-    {
-        if (lsx_reads(ft, magic, (size_t)4) == SOX_EOF)
-        {
-            lsx_fail_errno(ft, SOX_EHDR, "WAVE file has missing %s chunk",
-                          Label);
-            return SOX_EOF;
-        }
-        lsx_debug("WAV Chunk %s", magic);
-        if (lsx_readdw(ft, &len_tmp) == SOX_EOF)
-        {
-            lsx_fail_errno(ft, SOX_EHDR, "WAVE file %s chunk is too short",
-                          magic);
-            return SOX_EOF;
-        }
-
-        *len = len_tmp;
-
-        if (memcmp(Label, magic, (size_t)4) == 0)
-            break; /* Found the given chunk */
-
-        /* Chunks are required to be word aligned. */
-        if ((*len) % 2) (*len)++;
-
-        /* skip to next chunk */
-        if (!*len || lsx_seeki(ft, (off_t)(*len), SEEK_CUR) != SOX_SUCCESS)
-        {
-            lsx_fail_errno(ft,SOX_EHDR,
-                          "WAV chunk appears to have invalid size %ld.", *len);
-            return SOX_EOF;
-        }
-    }
-    return SOX_SUCCESS;
-}
-
 
 static int wavfail(sox_format_t * ft, const char *format)
 {
@@ -788,7 +745,6 @@ static int startread(sox_format_t * ft)
     priv_t *       wav = (priv_t *) ft->priv;
     char        magic[5] = { 0 };
     uint32_t    clen;
-    uint64_t    len;
     int err;
 
     sox_bool isRF64 = sox_false;
@@ -799,8 +755,6 @@ static int startread(sox_format_t * ft)
     /* wave file characteristics */
     uint64_t      qwRiffLength;
     uint64_t      qwDataLength = 0;
-    char text[256];
-    uint32_t      dwLoopPos;
     sox_bool have_fmt = sox_false;
 
     ft->sox_errno = SOX_SUCCESS;
@@ -967,110 +921,6 @@ static int startread(sox_format_t * ft)
     if (wav->ignoreSize)
       ft->signal.length = SOX_UNSPEC;
 
-    /* Horrible way to find Cool Edit marker points. Taken from Quake source*/
-    ft->oob.loops[0].start = SOX_IGNORE_LENGTH;
-    if(ft->seekable){
-        /*Got this from the quake source.  I think it 32bit aligns the chunks
-         * doubt any machine writing Cool Edit Chunks writes them at an odd
-         * offset */
-        len = (qwDataLength + 1) & ~1u;
-        if (lsx_seeki(ft, (off_t)len, SEEK_CUR) == SOX_SUCCESS &&
-            findChunk(ft, "LIST", &len) != SOX_EOF)
-        {
-            wav->comment = lsx_malloc((size_t)256);
-            /* Initialize comment to a NULL string */
-            wav->comment[0] = 0;
-            while(!lsx_eof(ft))
-            {
-                if (lsx_reads(ft,magic,(size_t)4) == SOX_EOF)
-                    break;
-
-                /* First look for type fields for LIST Chunk and
-                 * skip those if found.  Since a LIST is a list
-                 * of Chunks, treat the remaining data as Chunks
-                 * again.
-                 */
-                if (strncmp(magic, "INFO", (size_t)4) == 0)
-                {
-                    /*Skip*/
-                    lsx_debug("Type INFO");
-                }
-                else if (strncmp(magic, "adtl", (size_t)4) == 0)
-                {
-                    /* Skip */
-                    lsx_debug("Type adtl");
-                }
-                else
-                {
-                    uint32_t len_tmp;
-                    if (lsx_readdw(ft,&len_tmp) == SOX_EOF)
-                        break;
-                    len = len_tmp;
-                    if (strncmp(magic,"ICRD",(size_t)4) == 0)
-                    {
-                        lsx_debug("Chunk ICRD");
-                        if (len > 254)
-                        {
-                            lsx_warn("Possible buffer overflow hack attack (ICRD)!");
-                            break;
-                        }
-                        lsx_reads(ft,text, (size_t)len);
-                        if (strlen(wav->comment) + strlen(text) < 254)
-                        {
-                            if (wav->comment[0] != 0)
-                                strcat(wav->comment,"\n");
-
-                            strcat(wav->comment,text);
-                        }
-                        if (strlen(text) < len)
-                           lsx_seeki(ft, (off_t)(len - strlen(text)), SEEK_CUR);
-                    }
-                    else if (strncmp(magic,"ISFT",(size_t)4) == 0)
-                    {
-                        lsx_debug("Chunk ISFT");
-                        if (len > 254)
-                        {
-                            lsx_warn("Possible buffer overflow hack attack (ISFT)!");
-                            break;
-                        }
-                        lsx_reads(ft,text, (size_t)len);
-                        if (strlen(wav->comment) + strlen(text) < 254)
-                        {
-                            if (wav->comment[0] != 0)
-                                strcat(wav->comment,"\n");
-
-                            strcat(wav->comment,text);
-                        }
-                        if (strlen(text) < len)
-                           lsx_seeki(ft, (off_t)(len - strlen(text)), SEEK_CUR);
-                    }
-                    else if (strncmp(magic,"cue ",(size_t)4) == 0)
-                    {
-                        lsx_debug("Chunk cue ");
-                        lsx_seeki(ft,(off_t)(len-4),SEEK_CUR);
-                        lsx_readdw(ft,&dwLoopPos);
-                        ft->oob.loops[0].start = dwLoopPos;
-                    }
-                    else if (strncmp(magic,"ltxt",(size_t)4) == 0)
-                    {
-                        lsx_debug("Chunk ltxt");
-                        lsx_readdw(ft,&dwLoopPos);
-                        ft->oob.loops[0].length = dwLoopPos - ft->oob.loops[0].start;
-                        if (len > 4)
-                           lsx_seeki(ft, (off_t)(len - 4), SEEK_CUR);
-                    }
-                    else
-                    {
-                        lsx_debug("Attempting to seek beyond unsupported chunk `%c%c%c%c' of length %ld bytes", magic[0], magic[1], magic[2], magic[3], len);
-                        len = (len + 1) & ~1u;
-                        lsx_seeki(ft, (off_t)len, SEEK_CUR);
-                    }
-                }
-            }
-        }
-        lsx_clearerr(ft);
-        lsx_seeki(ft,(off_t)wav->dataStart,SEEK_SET);
-    }
     return lsx_rawstartread(ft);
 }
 
@@ -1188,8 +1038,6 @@ static int stopread(sox_format_t * ft)
     free(wav->samples);
     free(wav->lsx_ms_adpcm_i_coefs);
     free(wav->ms_adpcm_data);
-    free(wav->comment);
-    wav->comment = NULL;
 
     switch (ft->encoding.encoding)
     {
