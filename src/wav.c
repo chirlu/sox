@@ -121,6 +121,8 @@ typedef struct {
 struct wave_format {
     uint16_t tag;
     const char *name;
+    sox_encoding_t encoding;
+    int (*read_fmt)(sox_format_t *ft, uint32_t len);
 };
 
 static const char *wav_format_str(unsigned tag);
@@ -533,16 +535,45 @@ static void wavgsmstopwrite(sox_format_t * ft)
 /* General Sox WAV file code                                                */
 /****************************************************************************/
 
+static int wav_pcm_fmt(sox_format_t *ft, uint32_t len)
+{
+    priv_t *wav = ft->priv;
+    int bps = (wav->bitsPerSample + 7) / 8;
+
+    if (bps == 1) {
+        ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
+    } else if (bps <= 4) {
+        ft->encoding.encoding = SOX_ENCODING_SIGN2;
+    } else {
+        lsx_fail_errno(ft, SOX_EFMT, "%d bytes per sample not suppored", bps);
+        return SOX_EOF;
+    }
+
+    return SOX_SUCCESS;
+}
+
 static const struct wave_format wave_formats[] = {
     { WAVE_FORMAT_UNKNOWN,              "Unknown Wave Type" },
-    { WAVE_FORMAT_PCM,                  "PCM" },
-    { WAVE_FORMAT_ADPCM,                "Microsoft ADPCM" },
-    { WAVE_FORMAT_IEEE_FLOAT,           "IEEE Float" },
+    { WAVE_FORMAT_PCM,                  "PCM",
+      SOX_ENCODING_UNKNOWN,
+      wav_pcm_fmt,
+    },
+    { WAVE_FORMAT_ADPCM,                "Microsoft ADPCM",
+      SOX_ENCODING_MS_ADPCM,
+      wav_ms_adpcm_fmt,
+    },
+    { WAVE_FORMAT_IEEE_FLOAT,           "IEEE Float",
+      SOX_ENCODING_FLOAT },
     { WAVE_FORMAT_IBM_CVSD,             "Digispeech CVSD" },
-    { WAVE_FORMAT_ALAW,                 "CCITT A-law" },
-    { WAVE_FORMAT_MULAW,                "CCITT u-law" },
+    { WAVE_FORMAT_ALAW,                 "CCITT A-law",
+      SOX_ENCODING_ALAW },
+    { WAVE_FORMAT_MULAW,                "CCITT u-law",
+      SOX_ENCODING_ULAW },
     { WAVE_FORMAT_OKI_ADPCM,            "OKI ADPCM" },
-    { WAVE_FORMAT_IMA_ADPCM,            "IMA ADPCM" },
+    { WAVE_FORMAT_IMA_ADPCM,            "IMA ADPCM",
+      SOX_ENCODING_IMA_ADPCM,
+      wav_ima_adpcm_fmt,
+    },
     { WAVE_FORMAT_MEDIASPACE_ADPCM,     "MediaSpace ADPCM" },
     { WAVE_FORMAT_SIERRA_ADPCM,         "Sierra ADPCM" },
     { WAVE_FORMAT_G723_ADPCM,           "G.723 ADPCM" },
@@ -556,7 +587,10 @@ static const struct wave_format wave_formats[] = {
     { WAVE_FORMAT_APTX,                 "aptX" },
     { WAVE_FORMAT_AUDIOFILE_AF10,       "Audio File AF10" },
     { WAVE_FORMAT_DOLBY_AC2,            "Dolby AC-2" },
-    { WAVE_FORMAT_GSM610,               "GSM 6.10" },
+    { WAVE_FORMAT_GSM610,               "GSM 6.10",
+      SOX_ENCODING_GSM,
+      wav_gsm_fmt,
+    },
     { WAVE_FORMAT_ADPCME,               "Antex ADPCME" },
     { WAVE_FORMAT_CONTROL_RES_VQLPC,    "Control Resources VQLPC" },
     { WAVE_FORMAT_DIGIREAL,             "DSP Solutions REAL" },
@@ -607,8 +641,8 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
     uint32_t dwSamplesPerSecond; /* samples per second per channel */
     uint32_t dwAvgBytesPerSec;   /* estimate of bytes per second needed */
     uint16_t wExtSize = 0;       /* extended field for non-PCM */
-    int      bytespersample;     /* bytes per sample (per channel */
-    sox_encoding_t enc = SOX_ENCODING_UNKNOWN;;
+    const struct wave_format *fmt;
+    sox_encoding_t user_enc = ft->encoding.encoding;
 
     if (len < 16) {
         lsx_fail_errno(ft, SOX_EHDR, "WAVE file fmt chunk is too short");
@@ -685,58 +719,18 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
     else
         lsx_report("User options overriding rate read in .wav header");
 
-    switch (wav->formatTag) {
-    case WAVE_FORMAT_PCM:
-        bytespersample = (wav->bitsPerSample + 7) / 8;
-
-        if (bytespersample == 1) {
-            enc = SOX_ENCODING_UNSIGNED;
-        } else if (bytespersample <= 4) {
-            enc = SOX_ENCODING_SIGN2;
-        } else {
-            lsx_fail_errno(ft, SOX_EFMT, "%d bytes per sample not suppored",
-                           bytespersample);
-            return SOX_EOF;
-        }
-
-        break;
-
-    case WAVE_FORMAT_IEEE_FLOAT:
-        enc = SOX_ENCODING_FLOAT;
-        break;
-
-    case WAVE_FORMAT_ALAW:
-        enc = SOX_ENCODING_ALAW;
-        break;
-
-    case WAVE_FORMAT_MULAW:
-        enc = SOX_ENCODING_ULAW;
-        break;
-
-    case WAVE_FORMAT_ADPCM:
-        if (wav_ms_adpcm_fmt(ft, len))
-            return SOX_EOF;
-
-        enc = SOX_ENCODING_MS_ADPCM;
-        break;
-
-    case WAVE_FORMAT_IMA_ADPCM:
-        if (wav_ima_adpcm_fmt(ft, len))
-            return SOX_EOF;
-
-        enc = SOX_ENCODING_IMA_ADPCM;
-        break;
-
-    case WAVE_FORMAT_GSM610:
-        if (wav_gsm_fmt(ft, len))
-            return SOX_EOF;
-
-        enc = SOX_ENCODING_GSM;
-        break;
-
-    default:
+    fmt = wav_find_format(wav->formatTag);
+    if (!fmt)
         return wavfail(ft, wav->formatTag);
-        break;
+
+    /* format handler might override */
+    ft->encoding.encoding = fmt->encoding;
+
+    if (fmt->read_fmt) {
+        if (fmt->read_fmt(ft, len))
+            return SOX_EOF;
+    } else if (!fmt->encoding) {
+        return wavfail(ft, wav->formatTag);
     }
 
     /* User options take precedence */
@@ -746,11 +740,10 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
     else
         lsx_warn("User options overriding size read in .wav header");
 
-    if (ft->encoding.encoding != SOX_ENCODING_UNKNOWN &&
-        ft->encoding.encoding != enc)
+    if (user_enc && user_enc != ft->encoding.encoding) {
         lsx_report("User options overriding encoding read in .wav header");
-    else
-        ft->encoding.encoding = enc;
+        ft->encoding.encoding = user_enc;
+    }
 
     return 0;
 }
