@@ -39,14 +39,30 @@
 #define WAVE_FORMAT_PCM                 0x0001
 #define WAVE_FORMAT_ADPCM               0x0002
 #define WAVE_FORMAT_IEEE_FLOAT          0x0003
+#define WAVE_FORMAT_IBM_CVSD            0x0005
 #define WAVE_FORMAT_ALAW                0x0006
 #define WAVE_FORMAT_MULAW               0x0007
 #define WAVE_FORMAT_OKI_ADPCM           0x0010
 #define WAVE_FORMAT_IMA_ADPCM           0x0011
+#define WAVE_FORMAT_MEDIASPACE_ADPCM    0x0012
+#define WAVE_FORMAT_SIERRA_ADPCM        0x0013
+#define WAVE_FORMAT_G723_ADPCM          0x0014
 #define WAVE_FORMAT_DIGISTD             0x0015
 #define WAVE_FORMAT_DIGIFIX             0x0016
+#define WAVE_FORMAT_YAMAHA_ADPCM        0x0020
+#define WAVE_FORMAT_SONARC              0x0021
+#define WAVE_FORMAT_TRUESPEECH          0x0022
+#define WAVE_FORMAT_ECHOSC1             0x0023
+#define WAVE_FORMAT_AUDIOFILE_AF36      0x0024
+#define WAVE_FORMAT_APTX                0x0025
+#define WAVE_FORMAT_AUDIOFILE_AF10      0x0026
 #define WAVE_FORMAT_DOLBY_AC2           0x0030
 #define WAVE_FORMAT_GSM610              0x0031
+#define WAVE_FORMAT_ADPCME              0x0033
+#define WAVE_FORMAT_CONTROL_RES_VQLPC   0x0034
+#define WAVE_FORMAT_DIGIREAL            0x0035
+#define WAVE_FORMAT_DIGIADPCM           0x0036
+#define WAVE_FORMAT_CONTROL_RES_CR10    0x0037
 #define WAVE_FORMAT_ROCKWELL_ADPCM      0x003b
 #define WAVE_FORMAT_ROCKWELL_DIGITALK   0x003c
 #define WAVE_FORMAT_G721_ADPCM          0x0040
@@ -55,6 +71,14 @@
 #define WAVE_FORMAT_MPEGLAYER3          0x0055
 #define WAVE_FORMAT_G726_ADPCM          0x0064
 #define WAVE_FORMAT_G722_ADPCM          0x0065
+#define WAVE_FORMAT_CREATIVE_ADPCM      0x0200
+#define WAVE_FORMAT_CREATIVE_FSP8       0x0202
+#define WAVE_FORMAT_CREATIVE_FSP10      0x0203
+#define WAVE_FORMAT_FM_TOWNS_SND        0x0300
+#define WAVE_FORMAT_OLIGSM              0x1000
+#define WAVE_FORMAT_OLIADPCM            0x1001
+#define WAVE_FORMAT_OLISBC              0x1003
+#define WAVE_FORMAT_OLIOPR              0x1004
 #define WAVE_FORMAT_EXTENSIBLE          0xfffe
 
 /* To allow padding to samplesPerBlock. Works, but currently never true. */
@@ -514,14 +538,30 @@ static const struct wave_format wave_formats[] = {
     { WAVE_FORMAT_PCM,                  "PCM" },
     { WAVE_FORMAT_ADPCM,                "Microsoft ADPCM" },
     { WAVE_FORMAT_IEEE_FLOAT,           "IEEE Float" },
+    { WAVE_FORMAT_IBM_CVSD,             "Digispeech CVSD" },
     { WAVE_FORMAT_ALAW,                 "CCITT A-law" },
     { WAVE_FORMAT_MULAW,                "CCITT u-law" },
     { WAVE_FORMAT_OKI_ADPCM,            "OKI ADPCM" },
     { WAVE_FORMAT_IMA_ADPCM,            "IMA ADPCM" },
+    { WAVE_FORMAT_MEDIASPACE_ADPCM,     "MediaSpace ADPCM" },
+    { WAVE_FORMAT_SIERRA_ADPCM,         "Sierra ADPCM" },
+    { WAVE_FORMAT_G723_ADPCM,           "G.723 ADPCM" },
     { WAVE_FORMAT_DIGISTD,              "DIGISTD" },
     { WAVE_FORMAT_DIGIFIX,              "DigiFix" },
+    { WAVE_FORMAT_YAMAHA_ADPCM,         "Yamaha ADPCM" },
+    { WAVE_FORMAT_SONARC,               "Sonarc" },
+    { WAVE_FORMAT_TRUESPEECH,           "Truespeech" },
+    { WAVE_FORMAT_ECHOSC1,              "ECHO SC-1", },
+    { WAVE_FORMAT_AUDIOFILE_AF36,       "Audio File AF36" },
+    { WAVE_FORMAT_APTX,                 "aptX" },
+    { WAVE_FORMAT_AUDIOFILE_AF10,       "Audio File AF10" },
     { WAVE_FORMAT_DOLBY_AC2,            "Dolby AC-2" },
     { WAVE_FORMAT_GSM610,               "GSM 6.10" },
+    { WAVE_FORMAT_ADPCME,               "Antex ADPCME" },
+    { WAVE_FORMAT_CONTROL_RES_VQLPC,    "Control Resources VQLPC" },
+    { WAVE_FORMAT_DIGIREAL,             "DSP Solutions REAL" },
+    { WAVE_FORMAT_DIGIADPCM,            "DSP Solutions ADPCM" },
+    { WAVE_FORMAT_CONTROL_RES_CR10,     "Control Resources CR10" },
     { WAVE_FORMAT_ROCKWELL_ADPCM,       "Rockwell ADPCM" },
     { WAVE_FORMAT_ROCKWELL_DIGITALK,    "Rockwell DIGITALK" },
     { WAVE_FORMAT_G721_ADPCM,           "G.721 ADPCM" },
@@ -530,6 +570,14 @@ static const struct wave_format wave_formats[] = {
     { WAVE_FORMAT_MPEGLAYER3,           "MPEG-1 Layer 3" },
     { WAVE_FORMAT_G726_ADPCM,           "G.726 ADPCM" },
     { WAVE_FORMAT_G722_ADPCM,           "G.722 ADPCM" },
+    { WAVE_FORMAT_CREATIVE_ADPCM,       "Creative Labs ADPCM" },
+    { WAVE_FORMAT_CREATIVE_FSP8,        "Creative Labs FastSpeech 8" },
+    { WAVE_FORMAT_CREATIVE_FSP10,       "Creative Labs FastSpeech 10" },
+    { WAVE_FORMAT_FM_TOWNS_SND,         "Fujitsu FM Towns SND" },
+    { WAVE_FORMAT_OLIGSM,               "Olivetti GSM" },
+    { WAVE_FORMAT_OLIADPCM,             "Olivetti ADPCM" },
+    { WAVE_FORMAT_OLISBC,               "Olivetti CELP" },
+    { WAVE_FORMAT_OLIOPR,               "Olivetti OPR" },
     { }
 };
 
