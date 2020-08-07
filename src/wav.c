@@ -401,21 +401,32 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
     lsx_readw(ft, &wBitsPerSample);      /* bits per sample per channel */
     len -= 16;
 
+    /* non-PCM formats except alaw and mulaw formats have extended fmt chunk.
+     * Check for those cases.
+     */
+    if (wav->formatTag != WAVE_FORMAT_PCM &&
+        wav->formatTag != WAVE_FORMAT_ALAW &&
+        wav->formatTag != WAVE_FORMAT_MULAW &&
+        len < 2)
+        lsx_warn("WAVE file missing extended part of fmt chunk");
+
+    if (len >= 2) {
+        lsx_readw(ft, &wExtSize);
+        len -= 2;
+    }
+
+    if (wExtSize != len) {
+        lsx_fail_errno(ft, SOX_EOF,
+                       "WAVE header error: cbSize inconsistent with fmt size");
+        return SOX_EOF;
+    }
+
     if (wav->formatTag == WAVE_FORMAT_EXTENSIBLE) {
-        uint16_t extensionSize;
         uint16_t numberOfValidBits;
         uint32_t speakerPositionMask;
         uint16_t subFormatTag;
 
-        if (len < 2) {
-            lsx_fail_errno(ft, SOX_EHDR, "WAVE file fmt chunk is too short");
-            return SOX_EOF;
-        }
-
-        lsx_readw(ft, &extensionSize);
-        len -= 2;
-
-        if (extensionSize < 22) {
+        if (len < 22) {
             lsx_fail_errno(ft, SOX_EHDR, "WAVE file fmt chunk is too short");
             return SOX_EOF;
         }
@@ -484,26 +495,6 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
         ft->signal.rate = dwSamplesPerSecond;
     else
         lsx_report("User options overriding rate read in .wav header");
-
-    /* non-PCM formats except alaw and mulaw formats have extended fmt chunk.
-     * Check for those cases.
-     */
-    if (wav->formatTag != WAVE_FORMAT_PCM &&
-        wav->formatTag != WAVE_FORMAT_ALAW &&
-        wav->formatTag != WAVE_FORMAT_MULAW) {
-        if (len >= 2) {
-            lsx_readw(ft, &wExtSize);
-            len -= 2;
-        } else {
-            lsx_warn("wave header missing extended part of fmt chunk");
-        }
-    }
-
-    if (wExtSize > len) {
-        lsx_fail_errno(ft, SOX_EOF,
-                       "wave header error: wExtSize inconsistent with wFmtLen");
-        return SOX_EOF;
-    }
 
     switch (wav->formatTag) {
     case WAVE_FORMAT_ADPCM:
