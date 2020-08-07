@@ -648,10 +648,6 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
         lsx_report("User options overriding rate read in .wav header");
 
 
-    wav->lsx_ms_adpcm_i_coefs = NULL;
-    wav->packet = NULL;
-    wav->samples = NULL;
-
     /* non-PCM formats except alaw and mulaw formats have extended fmt chunk.
      * Check for those cases.
      */
