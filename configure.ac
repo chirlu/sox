@@ -1,6 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.62)
+LT_PREREQ(2.4)
 
 AC_INIT(SoX, 14.4.3git, sox-devel@lists.sourceforge.net)
 
@@ -264,22 +265,6 @@ AC_SUBST(LIBLTDL)
 
 dnl Check for OpenMP
 AC_OPENMP
-if test "x$OPENMP_CFLAGS" != "x"; then  dnl Old libtool workaround start
-  AC_MSG_CHECKING([for libtool version])
-  lt_version="`grep '^VERSION' $srcdir/ltmain.sh | sed -e 's/VERSION\=//g;s/ .*//g;s/"//g'`"
-  AS_VERSION_COMPARE([$lt_version], [2.4],
-    [AS_IF([test "$GCC" = "yes"],
-       [AC_MSG_RESULT([$lt_version, needs OpenMP linker workaround])
-        GOMP_LIBS="-lgomp"],
-       [AC_MSG_RESULT([$lt_version and not GCC, deactivating OpenMP])
-        OPENMP_CFLAGS=""])],
-    [AC_MSG_RESULT([$lt_version, OK])],
-    [AC_MSG_RESULT([$lt_version, OK])])
-fi
-AC_SUBST(GOMP_LIBS)  dnl Old libtool workaround end.
-                     dnl Only necessary if libtool version < 2.4, as older
-                     dnl versions don't pass on "-fopenmp" to the linker.
-                     dnl One day, replace with LT_PREREQ([2.4]) above.
 CFLAGS="$CFLAGS $OPENMP_CFLAGS"
 
 
