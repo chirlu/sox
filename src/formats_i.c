@@ -409,6 +409,66 @@ int lsx_readchars(sox_format_t * ft, char * chars, size_t len)
   return SOX_EOF;
 }
 
+int lsx_read_fields(sox_format_t *ft, uint32_t *len,  const char *spec, ...)
+{
+    int err = SOX_SUCCESS;
+    va_list ap;
+
+#define do_read(type, f, n) do {                                \
+        size_t nr;                                              \
+        if (*len < n * sizeof(type)) {                          \
+            err = SOX_EOF;                                      \
+            goto end;                                           \
+        }                                                       \
+        nr = lsx_read_##f##_buf(ft, va_arg(ap, type *), r);     \
+        if (nr != n)                                            \
+            err = SOX_EOF;                                      \
+        *len -= nr * sizeof(type);                              \
+    } while (0)
+
+    va_start(ap, spec);
+
+    while (*spec) {
+        unsigned long r = 1;
+        char c = *spec;
+
+        if (c >= '0' && c <= '9') {
+            char *next;
+            r = strtoul(spec, &next, 10);
+            spec = next;
+            c = *spec;
+        } else if (c == '*') {
+            r = va_arg(ap, int);
+            c = *++spec;
+        }
+
+        switch (c) {
+        case 'b': do_read(uint8_t, b, r);       break;
+        case 'h': do_read(uint16_t, w, r);      break;
+        case 'i': do_read(uint32_t, dw, r);     break;
+        case 'q': do_read(uint64_t, qw, r);     break;
+        case 'x': err = lsx_skipbytes(ft, r);   break;
+
+        default:
+            lsx_fail("lsx_read_fields: invalid format character '%c'", c);
+            err = SOX_EOF;
+            break;
+        }
+
+        if (err)
+            break;
+
+        spec++;
+    }
+
+end:
+    va_end(ap);
+
+#undef do_read
+
+    return err;
+}
+
 /* N.B. This macro doesn't work for unaligned types (e.g. 3-byte
    types). */
 #define WRITE_FUNC(type, size, ctype, twiddle) \
