@@ -129,7 +129,6 @@ static const char *wav_format_str(unsigned tag);
 
 static int wavwritehdr(sox_format_t *, int);
 
-
 /****************************************************************************/
 /* IMA ADPCM Support Functions Section                                      */
 /****************************************************************************/
@@ -138,12 +137,7 @@ static int wav_ima_adpcm_fmt(sox_format_t *ft, uint32_t len)
 {
     priv_t *wav = ft->priv;
     size_t  bytesPerBlock;
-
-    if (len < 2) {
-        lsx_fail_errno(ft, SOX_EOF, "format[%s]: expects cbSize >= %d",
-                       wav_format_str(wav->formatTag), 2);
-        return SOX_EOF;
-    }
+    int err;
 
     if (wav->bitsPerSample != 4) {
         lsx_fail_errno(ft, SOX_EOF,
@@ -151,7 +145,9 @@ static int wav_ima_adpcm_fmt(sox_format_t *ft, uint32_t len)
         return SOX_EOF;
     }
 
-    lsx_readw(ft, &wav->samplesPerBlock);
+    err = lsx_read_fields(ft, &len, "h", &wav->samplesPerBlock);
+    if (err)
+        return SOX_EOF;
 
     bytesPerBlock = lsx_ima_bytes_per_block(ft->signal.channels,
                                             wav->samplesPerBlock);
@@ -216,12 +212,7 @@ static int wav_ms_adpcm_fmt(sox_format_t *ft, uint32_t len)
     priv_t *wav = ft->priv;
     size_t  bytesPerBlock;
     int i, errct = 0;
-
-    if (len < 4) {
-        lsx_fail_errno(ft, SOX_EOF, "format[%s]: expects cbSize >= %d",
-                       wav_format_str(wav->formatTag), 4);
-        return SOX_EOF;
-    }
+    int err;
 
     if (wav->bitsPerSample != 4) {
         lsx_fail_errno(ft, SOX_EOF,
@@ -229,9 +220,9 @@ static int wav_ms_adpcm_fmt(sox_format_t *ft, uint32_t len)
         return SOX_EOF;
     }
 
-    lsx_readw(ft, &wav->samplesPerBlock);
-    lsx_readw(ft, &wav->nCoefs);
-    len -= 4;
+    err = lsx_read_fields(ft, &len, "hh", &wav->samplesPerBlock, &wav->nCoefs);
+    if (err)
+        return SOX_EOF;
 
     bytesPerBlock = lsx_ms_adpcm_bytes_per_block(ft->signal.channels,
                                                  wav->samplesPerBlock);
@@ -264,14 +255,13 @@ static int wav_ms_adpcm_fmt(sox_format_t *ft, uint32_t len)
     wav->lsx_ms_adpcm_i_coefs = lsx_malloc(wav->nCoefs * 2 * sizeof(short));
     wav->ms_adpcm_data = lsx_ms_adpcm_alloc(ft->signal.channels);
 
-    for (i = 0; len >= 2 && i < 2 * wav->nCoefs; i++) {
-        lsx_readsw(ft, &wav->lsx_ms_adpcm_i_coefs[i]);
-        len -= 2;
+    err = lsx_read_fields(ft, &len, "*h",
+                          2 * wav->nCoefs, wav->lsx_ms_adpcm_i_coefs);
+    if (err)
+        return SOX_EOF;
 
-        if (i < 14)
-            errct +=
-                wav->lsx_ms_adpcm_i_coefs[i] != lsx_ms_adpcm_i_coef[i/2][i%2];
-    }
+    for (i = 0; i < 14; i++)
+        errct += wav->lsx_ms_adpcm_i_coefs[i] != lsx_ms_adpcm_i_coef[i/2][i%2];
 
     if (errct)
         lsx_warn("base lsx_ms_adpcm_i_coefs differ in %d/14 positions", errct);
@@ -361,14 +351,11 @@ static int xxxAdpcmWriteBlock(sox_format_t * ft)
 static int wav_gsm_fmt(sox_format_t *ft, uint32_t len)
 {
     priv_t *wav = ft->priv;
+    int err;
 
-    if (len < 2) {
-        lsx_fail_errno(ft, SOX_EOF, "format[%s]: expects wExtSize >= %d",
-                       wav_format_str(wav->formatTag), 2);
+    err = lsx_read_fields(ft, &len, "h", &wav->samplesPerBlock);
+    if (err)
         return SOX_EOF;
-    }
-
-    lsx_readw(ft, &wav->samplesPerBlock);
 
     if (wav->blockAlign != 65) {
         lsx_fail_errno(ft, SOX_EOF, "format[%s]: expects blockAlign(%d) = %d",
@@ -646,19 +633,22 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
     uint16_t wExtSize = 0;       /* extended field for non-PCM */
     const struct wave_format *fmt;
     sox_encoding_t user_enc = ft->encoding.encoding;
+    int err;
 
     if (len < 16) {
         lsx_fail_errno(ft, SOX_EHDR, "WAVE file fmt chunk is too short");
         return SOX_EOF;
     }
 
-    lsx_readw(ft, &wav->formatTag);
-    lsx_readw(ft, &wChannels);
-    lsx_readdw(ft, &dwSamplesPerSecond);
-    lsx_readdw(ft, &dwAvgBytesPerSec);   /* Average bytes/second */
-    lsx_readw(ft, &wav->blockAlign);     /* Block align */
-    lsx_readw(ft, &wav->bitsPerSample);  /* bits per sample per channel */
-    len -= 16;
+    err = lsx_read_fields(ft, &len, "hhiihh",
+                          &wav->formatTag,
+                          &wChannels,
+                          &dwSamplesPerSecond,
+                          &dwAvgBytesPerSec,
+                          &wav->blockAlign,
+                          &wav->bitsPerSample);
+    if (err)
+        return SOX_EOF;
 
     /* non-PCM formats except alaw and mulaw formats have extended fmt chunk.
      * Check for those cases.
@@ -670,8 +660,9 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
         lsx_warn("WAVE file missing extended part of fmt chunk");
 
     if (len >= 2) {
-        lsx_readw(ft, &wExtSize);
-        len -= 2;
+        err = lsx_read_fields(ft, &len, "h", &wExtSize);
+        if (err)
+            return SOX_EOF;
     }
 
     if (wExtSize != len) {
@@ -690,11 +681,12 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
             return SOX_EOF;
         }
 
-        lsx_readw(ft, &numberOfValidBits);
-        lsx_readdw(ft, &speakerPositionMask);
-        lsx_readw(ft, &subFormatTag);
-        lsx_skipbytes(ft, 14);
-        len -= 22;
+        err = lsx_read_fields(ft, &len, "hih14x",
+                              &numberOfValidBits,
+                              &speakerPositionMask,
+                              &subFormatTag);
+        if (err)
+            return SOX_EOF;
 
         if (numberOfValidBits > wav->bitsPerSample) {
             lsx_fail_errno(ft, SOX_EHDR,
@@ -823,6 +815,7 @@ static int startread(sox_format_t *ft)
     }
 
     while (!read_chunk_header(ft, magic, &clen)) {
+        uint32_t len = clen;
         off_t cstart = lsx_tell(ft);
         off_t pos;
 
@@ -847,9 +840,12 @@ static int startread(sox_format_t *ft)
                 clen = 28;
             }
 
-            lsx_readqw(ft, &ds64_riff_size);
-            lsx_readqw(ft, &ds64_data_size);
-            lsx_readqw(ft, &ds64_sample_count);
+            err = lsx_read_fields(ft, &len, "qqq",
+                                  &ds64_riff_size,
+                                  &ds64_data_size,
+                                  &ds64_sample_count);
+            if (err)
+                return SOX_EOF;
 
             goto next;
         }
@@ -867,12 +863,10 @@ static int startread(sox_format_t *ft)
         if (!memcmp(magic, "fact", 4)) {
             uint32_t val;
 
-            if (clen < 4) {
-                lsx_fail_errno(ft, SOX_EHDR, "fact chunk too small");
+            err = lsx_read_fields(ft, &len, "i", &val);
+            if (err)
                 return SOX_EOF;
-            }
 
-            lsx_readdw(ft, &val);
             wav->numSamples = val;
 
             goto next;
