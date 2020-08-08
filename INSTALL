@@ -45,8 +45,8 @@ libraries may require pkg-config to be installed to be properly
 detected by SoX.
 
 [Only if you're compiling the git sources, first make sure you have
-the GNU autotools installed (automake >= 1.9, autoconf >= 2.62) and
-run
+the GNU autotools (automake >= 1.9, autoconf >= 2.62, autoconf-archive)
+installed, then run
 
 	autoreconf -i
 ]
