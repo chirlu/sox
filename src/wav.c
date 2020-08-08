@@ -626,11 +626,14 @@ static const struct wave_format *wav_find_format(unsigned tag)
     return NULL;
 }
 
-static int wavfail(sox_format_t *ft, int tag)
+static int wavfail(sox_format_t *ft, int tag, const char *name)
 {
-    lsx_fail_errno(ft, SOX_EHDR,
-                   "WAV file encoding '%s' (%04x) is not supported",
-                   wav_format_str(tag), tag);
+    if (name)
+        lsx_fail_errno(ft, SOX_EHDR, "WAVE format '%s' (%04x) not supported",
+                       name, tag);
+    else
+        lsx_fail_errno(ft, SOX_EHDR, "Unknown WAVE format %04x", tag);
+
     return SOX_EOF;
 }
 
@@ -721,7 +724,7 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
 
     fmt = wav_find_format(wav->formatTag);
     if (!fmt)
-        return wavfail(ft, wav->formatTag);
+        return wavfail(ft, wav->formatTag, NULL);
 
     /* format handler might override */
     ft->encoding.encoding = fmt->encoding;
@@ -730,7 +733,7 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
         if (fmt->read_fmt(ft, len))
             return SOX_EOF;
     } else if (!fmt->encoding) {
-        return wavfail(ft, wav->formatTag);
+        return wavfail(ft, wav->formatTag, fmt->name);
     }
 
     /* User options take precedence */
