@@ -345,8 +345,8 @@ static int sox_checkformat(sox_format_t * ft)
 {
   ft->sox_errno = SOX_SUCCESS;
 
-  if (!ft->signal.rate) {
-    lsx_fail_errno(ft,SOX_EFMT,"sampling rate was not specified");
+  if (ft->signal.rate <= 0) {
+    lsx_fail_errno(ft, SOX_EFMT, "sample rate zero or negative");
     return SOX_EOF;
   }
   if (!ft->signal.precision) {
