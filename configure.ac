@@ -479,12 +479,9 @@ if test "$GCC" = "yes"; then
 fi
 
 
-# Check for FLAC libraries
-#  Note passing in OGG_VORBIS_LIBS.  That is because FLAC has optional
-#  support for OGG and if OGG libraries are found on this
-#  system then its highly likely to be compiled into FLAC
-#  and will require these at link time.
-AC_OPTIONAL_FORMAT(flac, FLAC, [AC_CHECK_HEADER(FLAC/all.h, [AC_CHECK_DECL(FLAC_API_VERSION_CURRENT, [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new, FLAC_LIBS="-lFLAC $FLAC_LIBS $OGG_VORBIS_LIBS",using_flac=no, $FLAC_LIBS $OGG_VORBIS_LIBS)], using_flac=no, [#include <FLAC/all.h>])], using_flac=no)], using_flac=no)
+dnl Check for FLAC library
+AC_OPTIONAL_FORMAT(flac, FLAC,
+    [PKG_CHECK_MODULES([FLAC], [flac], [], [using_flac=no])])
 
 
 dnl When enable_dl_amrbw, do not let add libraries to be linked in
