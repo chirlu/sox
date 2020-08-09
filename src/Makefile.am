@@ -73,9 +73,13 @@ if HAVE_PNG
     libsox_la_SOURCES += spectrogram.c
 endif
 
+libsox_la_LIBADD =
+
 # Libraries required by libsox for file handlers, effects, or utils;
 # regardless if libltdl is used or not.
-libsox_la_LIBADD = @PNG_LIBS@
+if HAVE_PNG
+libsox_la_LIBADD += @PNG_LIBS@
+endif
 if HAVE_MAGIC
 libsox_la_LIBADD += @MAGIC_LIBS@
 endif
