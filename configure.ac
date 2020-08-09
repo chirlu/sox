@@ -166,11 +166,6 @@ fi
 
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = "yes"; then
-
-    AC_MSG_CHECKING([gcc version])
-    gccver=`$CC -dumpversion`
-    AC_MSG_RESULT($gccver)
-
     CFLAGS="$CFLAGS -Wall -Wmissing-prototypes -Wstrict-prototypes"
 
     dnl Define stricter policy on GNU/Linux, all symbols must be resolved
