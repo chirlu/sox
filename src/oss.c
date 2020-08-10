@@ -32,9 +32,6 @@
 #ifdef HAVE_SYS_SOUNDCARD_H
   #include <sys/soundcard.h>
 #endif
-#ifdef HAVE_MACHINE_SOUNDCARD_H
-  #include <machine/soundcard.h>
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
