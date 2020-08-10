@@ -647,13 +647,13 @@ AC_MSG_RESULT($enable_symlinks)
 enable_playrec_symlinks=no
 if test "$enable_symlinks" = "yes"; then
   SYMLINKS=yes
-  if test false \
-      -o "$enable_alsa" = yes \
-      -o "$enable_ao" = yes \
-      -o "$enable_coreaudio" = yes \
-      -o "$enable_oss" = yes \
-      -o "$enable_pulseaudio" = yes \
-      -o "$enable_sndio" = yes \
+  if test "" \
+      -o "$using_alsa" = yes \
+      -o "$using_ao" = yes \
+      -o "$using_coreaudio" = yes \
+      -o "$using_oss" = yes \
+      -o "$using_pulseaudio" = yes \
+      -o "$using_sndio" = yes \
     ; then
     PLAYRECLINKS=yes
     enable_playrec_symlinks=yes

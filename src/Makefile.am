@@ -145,8 +145,13 @@ EXTRA_DIST = monkey.wav optional-fmts.am \
 
 all: sox$(EXEEXT) play$(EXEEXT) rec$(EXEEXT) soxi$(EXEEXT) sox_sample_test$(EXEEXT) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT) example5$(EXEEXT) example6$(EXEEXT)
 
-play$(EXEEXT) rec$(EXEEXT) soxi$(EXEEXT): sox$(EXEEXT)
+play$(EXEEXT) rec$(EXEEXT): sox$(EXEEXT)
 	if test "$(PLAYRECLINKS)" = "yes"; then	\
+		test -f sox$(EXEEXT) && ( $(RM) $@ && $(LN_S) sox$(EXEEXT) $@ ) || $(LN_S) sox $@; \
+	fi
+
+soxi$(EXEEXT): sox$(EXEEXT)
+	if test "$(SYMLINKS)" = "yes"; then	\
 		test -f sox$(EXEEXT) && ( $(RM) $@ && $(LN_S) sox$(EXEEXT) $@ ) || $(LN_S) sox $@; \
 	fi
 
