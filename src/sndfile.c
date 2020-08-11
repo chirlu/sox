@@ -186,10 +186,8 @@ static struct {
   { "snd",      SF_FORMAT_AU },
   { "caf",      SF_FORMAT_CAF },
   { "flac",     SF_FORMAT_FLAC },
-#ifdef HAVE_SNDFILE_1_0_18
   { "wve",      SF_FORMAT_WVE },
   { "ogg",      SF_FORMAT_OGG },
-#endif
   { "svx",      SF_FORMAT_SVX },
   { "8svx",     SF_FORMAT_SVX },
   { "paf",      SF_ENDIAN_BIG | SF_FORMAT_PAF },
@@ -457,10 +455,8 @@ static int startwrite(sox_format_t * ft)
     return SOX_EOF;
   }
 
-#ifdef HAVE_SFC_SET_SCALE_INT_FLOAT_WRITE
   if ((sf->sf_info->format & SF_FORMAT_SUBMASK) == SF_FORMAT_FLOAT)
     sf->sf_command(sf->sf_file, SFC_SET_SCALE_INT_FLOAT_WRITE, NULL, SF_TRUE);
-#endif
 
   return SOX_SUCCESS;
 }
