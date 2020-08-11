@@ -545,7 +545,7 @@ AC_ARG_ENABLE(dl_sndfile,
 	      AS_HELP_STRING([--enable-dl-sndfile], 
 			     [Dlopen sndfile instead of linking in.]),
 			     enable_dl_sndfile=$enableval, enable_dl_sndfile=no)
-if test "x$using_sndfile" = "xyes"; then
+if test "x$tmp_using_sndfile" = "xyes"; then
   if test "x$using_libltdl" = "xyes" -a "x$enable_dl_sndfile" = "xyes"; then
     AC_DEFINE(DL_SNDFILE, 1, [Define to dlopen() sndfile.]) 
     dnl When enable_dl_sndfile, do not let SOX_PATH_SNDFILE add libraries
