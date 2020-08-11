@@ -1,7 +1,0 @@
-*.user
-Debug
-Makefile
-Makefile.in
-Release
-Sox.ncb
-Sox.suo
