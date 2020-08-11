@@ -420,13 +420,6 @@ found_libgsm=yes
 AC_CHECK_HEADERS(gsm/gsm.h, ,
     [AC_CHECK_HEADERS(gsm.h, ,found_libgsm=no)])
     AC_CHECK_LIB(gsm, gsm_create, GSM_LIBS="$GSM_LIBS -lgsm", found_libgsm=no)
-if test "$found_libgsm" = yes; then
-    AC_DEFINE(EXTERNAL_GSM, 1, [Define if you are using an external GSM library])
-else
-    LIBGSM_LIBADD=../libgsm/libgsm.la
-fi
-AM_CONDITIONAL(EXTERNAL_GSM, test x$found_libgsm = xyes)
-AC_SUBST(LIBGSM_LIBADD)
 
 
 
@@ -584,8 +577,7 @@ AC_OPTIONAL_FORMAT(mp3, MP3, [
 
 
 # GSM format depends on libgsm
-# No need to check; GSM is always found
-AC_OPTIONAL_FORMAT(gsm, GSM)
+AC_OPTIONAL_FORMAT(gsm, GSM, [using_gsm=$found_libgsm])
 
 
 
@@ -622,16 +614,8 @@ AC_SUBST(PLAYRECLINKS)
 AM_CONDITIONAL(STATIC_LIBSOX_ONLY, test "$enable_shared" = "no" -a "$enable_static" = "yes")
 
 dnl Generate output files.
-AC_CONFIG_FILES(Makefile src/Makefile libgsm/Makefile lpc10/Makefile sox.pc)
+AC_CONFIG_FILES(Makefile src/Makefile lpc10/Makefile sox.pc)
 AC_OUTPUT
-
-if test "$using_gsm" != "no"; then
-  if test "$found_libgsm" = "yes"; then
-    gsm_option="(external)"
-  else
-    gsm_option="(in-tree)"
-  fi
-fi
 
 if test "$using_lpc10" != "no"; then
   if test "$found_liblpc10" = "yes"; then
@@ -677,7 +661,7 @@ if test "x$using_amrwb" = "xyes"; then
 echo " dlopen amrwb..............$enable_dl_amrwb"
 fi
 echo "flac.......................$using_flac"
-echo "gsm........................$using_gsm $gsm_option"
+echo "gsm........................$using_gsm"
 echo "lpc10......................$using_lpc10 $lpc10_option"
 echo "mp2/mp3....................$using_mp3"
 echo " id3tag....................$using_id3tag"

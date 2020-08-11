@@ -25,16 +25,10 @@
 
 #include "sox_i.h"
 
-#ifdef EXTERNAL_GSM
-
 #ifdef HAVE_GSM_GSM_H
 #include <gsm/gsm.h>
 #else
 #include <gsm.h>
-#endif
-
-#else
-#include "../libgsm/gsm.h"
 #endif
 
 #include <errno.h>

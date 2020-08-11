@@ -2,8 +2,8 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = lpc10 libgsm src
-DIST_SUBDIRS = lpc10 libgsm src
+SUBDIRS = lpc10 src
+DIST_SUBDIRS = lpc10 src
 
 RM = rm -f
 
