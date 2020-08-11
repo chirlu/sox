@@ -337,6 +337,10 @@ static void rate_init(
   }
 
   p->num_stages = shift + have_pre_stage + have_arb_stage + have_post_stage;
+
+  if (!p->num_stages)
+    return;
+
   p->stages = calloc(p->num_stages + 1, sizeof(*p->stages));
   for (i = 0; i < p->num_stages; ++i)
     p->stages[i].shared = shared;
@@ -496,8 +500,13 @@ static void rate_flush(rate_t * p)
 
 static void rate_close(rate_t * p)
 {
-  rate_shared_t * shared = p->stages[0].shared;
+  rate_shared_t *shared;
   int i;
+
+  if (!p->num_stages)
+    return;
+
+  shared = p->stages[0].shared;
 
   for (i = 0; i <= p->num_stages; ++i)
     fifo_delete(&p->stages[i].fifo);
@@ -632,6 +641,12 @@ static int start(sox_effect_t * effp)
   rate_init(&p->rate, p->shared_ptr, effp->in_signal.rate/out_rate,p->bit_depth,
       p->phase, p->bw_0dB_pc, p->anti_aliasing_pc, p->rolloff, !p->given_0dB_pt,
       p->use_hi_prec_clock, p->coef_interp, p->max_coefs_size, p->noIOpt);
+
+  if (!p->rate.num_stages) {
+    lsx_warn("input and output rates too close, skipping resampling");
+    return SOX_EFF_NULL;
+  }
+
   return SOX_SUCCESS;
 }
 
