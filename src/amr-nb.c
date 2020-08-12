@@ -48,10 +48,6 @@ static char const amrnb_magic[] = "#!AMR\n";
 #define AMR_RATE            8000
 #define AMR_DESC            "3GPP Adaptive Multi Rate Narrow-Band (AMR-NB) lossy speech compressor"
 
-#if !defined(HAVE_LIBLTDL)
-  #undef DL_AMRNB
-#endif
-
 #ifdef DL_AMRNB
   #define AMR_FUNC  LSX_DLENTRY_DYNAMIC
 #else

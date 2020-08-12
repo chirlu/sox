@@ -58,11 +58,6 @@ typedef enum {
   #include <twolame.h>
 #endif
 
-#ifndef HAVE_LIBLTDL
-  #undef DL_LAME
-  #undef DL_MAD
-#endif
-
 /* Under Windows, importing data from DLLs is a dicey proposition. This is true
  * when using dlopen, but also true if linking directly against the DLL if the
  * header does not mark the data as __declspec(dllexport), which mad.h does not.

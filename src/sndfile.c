@@ -28,10 +28,6 @@
 
 #define LOG_MAX 2048 /* As per the SFC_GET_LOG_INFO example */
 
-#if !defined(HAVE_LIBLTDL)
-#undef DL_SNDFILE
-#endif
-
 static const char* const sndfile_library_names[] =
 {
 #ifdef DL_SNDFILE

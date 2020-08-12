@@ -46,10 +46,6 @@ static char const amrwb_magic[] = "#!AMR-WB\n";
 #define AMR_RATE            16000
 #define AMR_DESC            "3GPP Adaptive Multi Rate Wide-Band (AMR-WB) lossy speech compressor"
 
-#if !defined(HAVE_LIBLTDL)
-  #undef DL_AMRWB
-#endif
-
 #ifdef DL_AMRWB
   #define AMR_FUNC  LSX_DLENTRY_DYNAMIC
 #else
