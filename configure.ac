@@ -179,7 +179,6 @@ if test "$GCC" = "yes"; then
     esac
 fi
 AC_SUBST(APP_LDFLAGS)
-AC_SUBST(WARN_CFLAGS)
 
 AC_ARG_WITH(distro, AS_HELP_STRING([--with-distro=distro], [Provide distribution name]))
 if test "x$with_distro" != "x"; then
