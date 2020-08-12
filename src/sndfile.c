@@ -20,8 +20,6 @@
 
 #include "sox_i.h"
 
-#ifdef HAVE_SNDFILE
-
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -536,5 +534,3 @@ LSX_FORMAT_HANDLER(sndfile)
 
   return &format;
 }
-
-#endif

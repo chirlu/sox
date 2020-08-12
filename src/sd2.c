@@ -17,8 +17,6 @@
 
 #include "sox_i.h"
 
-#if defined HAVE_SNDFILE
-
 LSX_FORMAT_HANDLER(sd2)
 {
   static char const * const names[] = {"sd2", NULL};
@@ -30,5 +28,3 @@ LSX_FORMAT_HANDLER(sd2)
   handler.write_formats = write_encodings;
   return &handler;
 }
-
-#endif

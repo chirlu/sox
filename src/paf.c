@@ -17,8 +17,6 @@
 
 #include "sox_i.h"
 
-#if defined HAVE_SNDFILE
-
 LSX_FORMAT_HANDLER(paf)
 {
   static char const * const names[] = {"paf", NULL};
@@ -31,5 +29,3 @@ LSX_FORMAT_HANDLER(paf)
   handler.write_formats = write_encodings;
   return &handler;
 }
-
-#endif

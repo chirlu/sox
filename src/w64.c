@@ -17,8 +17,6 @@
 
 #include "sox_i.h"
 
-#if defined HAVE_SNDFILE
-
 LSX_FORMAT_HANDLER(w64)
 {
   static char const * const names[] = {"w64", NULL};
@@ -39,5 +37,3 @@ LSX_FORMAT_HANDLER(w64)
   handler.write_formats = write_encodings;
   return &handler;
 }
-
-#endif
