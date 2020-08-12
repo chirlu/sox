@@ -252,43 +252,43 @@ endif
 if HAVE_SNDFILE
 if STATIC_SNDFILE
   libsox_la_SOURCES += sndfile.c caf.c mat4.c mat5.c paf.c fap.c w64.c xi.c pvf.c sd2.c
-  libsox_la_CFLAGS += @SNDFILE_CFLAGS@
+  libsox_la_CFLAGS += @LIBSNDFILE_CFLAGS@
 if STATIC_LIBSOX_ONLY
-  sox_LDADD += @SNDFILE_LIBS@
+  sox_LDADD += @LIBSNDFILE_LIBS@
 else
-  libsox_la_LIBADD += @SNDFILE_LIBS@
+  libsox_la_LIBADD += @LIBSNDFILE_LIBS@
 endif
 else
 libsox_fmt_sndfile_la_SOURCES = sndfile.c
-libsox_fmt_sndfile_la_CFLAGS = @SNDFILE_CFLAGS@
-libsox_fmt_sndfile_la_LIBADD = libsox.la @SNDFILE_LIBS@
+libsox_fmt_sndfile_la_CFLAGS = @LIBSNDFILE_CFLAGS@
+libsox_fmt_sndfile_la_LIBADD = libsox.la @LIBSNDFILE_LIBS@
 libsox_fmt_caf_la_SOURCES = caf.c sndfile.c
-libsox_fmt_caf_la_CFLAGS = @SNDFILE_CFLAGS@
-libsox_fmt_caf_la_LIBADD = libsox.la @SNDFILE_LIBS@
+libsox_fmt_caf_la_CFLAGS = @LIBSNDFILE_CFLAGS@
+libsox_fmt_caf_la_LIBADD = libsox.la @LIBSNDFILE_LIBS@
 libsox_fmt_mat4_la_SOURCES = mat4.c sndfile.c
-libsox_fmt_mat4_la_CFLAGS = @SNDFILE_CFLAGS@
-libsox_fmt_mat4_la_LIBADD = libsox.la @SNDFILE_LIBS@
+libsox_fmt_mat4_la_CFLAGS = @LIBSNDFILE_CFLAGS@
+libsox_fmt_mat4_la_LIBADD = libsox.la @LIBSNDFILE_LIBS@
 libsox_fmt_mat5_la_SOURCES = mat5.c sndfile.c
-libsox_fmt_mat5_la_CFLAGS = @SNDFILE_CFLAGS@
-libsox_fmt_mat5_la_LIBADD = libsox.la @SNDFILE_LIBS@
+libsox_fmt_mat5_la_CFLAGS = @LIBSNDFILE_CFLAGS@
+libsox_fmt_mat5_la_LIBADD = libsox.la @LIBSNDFILE_LIBS@
 libsox_fmt_paf_la_SOURCES = paf.c sndfile.c
-libsox_fmt_paf_la_CFLAGS = @SNDFILE_CFLAGS@
-libsox_fmt_paf_la_LIBADD = libsox.la  @SNDFILE_LIBS@
+libsox_fmt_paf_la_CFLAGS = @LIBSNDFILE_CFLAGS@
+libsox_fmt_paf_la_LIBADD = libsox.la  @LIBSNDFILE_LIBS@
 libsox_fmt_fap_la_SOURCES = fap.c sndfile.c
-libsox_fmt_fap_la_CFLAGS = @SNDFILE_CFLAGS@
-libsox_fmt_fap_la_LIBADD = libsox.la @SNDFILE_LIBS@
+libsox_fmt_fap_la_CFLAGS = @LIBSNDFILE_CFLAGS@
+libsox_fmt_fap_la_LIBADD = libsox.la @LIBSNDFILE_LIBS@
 libsox_fmt_w64_la_SOURCES = w64.c sndfile.c
-libsox_fmt_w64_la_CFLAGS = @SNDFILE_CFLAGS@
-libsox_fmt_w64_la_LIBADD = libsox.la @SNDFILE_LIBS@
+libsox_fmt_w64_la_CFLAGS = @LIBSNDFILE_CFLAGS@
+libsox_fmt_w64_la_LIBADD = libsox.la @LIBSNDFILE_LIBS@
 libsox_fmt_xi_la_SOURCES = xi.c sndfile.c
-libsox_fmt_wi_la_CFLAGS = @SNDFILE_CFLAGS@
-libsox_fmt_xi_la_LIBADD = libsox.la @SNDFILE_LIBS@
+libsox_fmt_wi_la_CFLAGS = @LIBSNDFILE_CFLAGS@
+libsox_fmt_xi_la_LIBADD = libsox.la @LIBSNDFILE_LIBS@
 libsox_fmt_pvf_la_SOURCES = pvf.c sndfile.c
-libsox_fmt_pvf_CFLAGS = @SNDFILE_CFLAGS@
-libsox_fmt_pvf_la_LIBADD = libsox.la @SNDFILE_LIBS@
+libsox_fmt_pvf_CFLAGS = @LIBSNDFILE_CFLAGS@
+libsox_fmt_pvf_la_LIBADD = libsox.la @LIBSNDFILE_LIBS@
 libsox_fmt_sd2_la_SOURCES = sd2.c sndfile.c
-libsox_fmt_sd2_CFLAGS = @SNDFILE_CFLAGS@
-libsox_fmt_sd2_la_LIBADD = libsox.la @SNDFILE_LIBS@
+libsox_fmt_sd2_CFLAGS = @LIBSNDFILE_CFLAGS@
+libsox_fmt_sd2_la_LIBADD = libsox.la @LIBSNDFILE_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_sndfile.la libsox_fmt_caf.la libsox_fmt_mat4.la libsox_fmt_mat5.la libsox_fmt_paf.la libsox_fmt_fap.la libsox_fmt_w64.la libsox_fmt_xi.la libsox_fmt_pvf.la libsox_fmt_sd2.la
 endif
 endif

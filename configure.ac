@@ -521,7 +521,7 @@ AC_OPTIONAL_FORMAT(waveaudio, WAVEAUDIO, [AC_CHECK_HEADER(mmsystem.h, [WAVEAUDIO
 
 dnl When enable_dl_sndfile, do not let SOX_PATH_SNDFILE add libraries
 dnl to be linked in (since they will be dlopen()'ed instead).
-ac_sox_save_SNDFILE_LIBS="$SNDFILE_LIBS"
+ac_sox_save_SNDFILE_LIBS="$LIBSNDFILE_LIBS"
 SOX_PATH_SNDFILE(tmp_using_sndfile=$opt_default, tmp_using_sndfile=no)
 AC_ARG_ENABLE(dl_sndfile,
 	      AS_HELP_STRING([--enable-dl-sndfile], 
@@ -529,10 +529,10 @@ AC_ARG_ENABLE(dl_sndfile,
 			     enable_dl_sndfile=$enableval, enable_dl_sndfile=no)
 if test "x$tmp_using_sndfile" = "xyes"; then
   if test "x$using_libltdl" = "xyes" -a "x$enable_dl_sndfile" = "xyes"; then
-    AC_DEFINE(DL_SNDFILE, 1, [Define to dlopen() sndfile.]) 
+    AC_DEFINE(DL_LIBSNDFILE, 1, [Define to dlopen() sndfile.])
     dnl When enable_dl_sndfile, do not let SOX_PATH_SNDFILE add libraries
     dnl to be linked in (since they will be dlopen()'ed instead).
-    SNDFILE_LIBS="$ac_sox_save_SNDFILE_LIBS"
+    LIBSNDFILE_LIBS="$ac_sox_save_SNDFILE_LIBS"
   else
     enable_dl_sndfile="no"
   fi

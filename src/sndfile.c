@@ -30,7 +30,7 @@
 
 static const char* const sndfile_library_names[] =
 {
-#ifdef DL_SNDFILE
+#ifdef DL_LIBSNDFILE
   "libsndfile",
   "libsndfile-1",
   "cygsndfile-1",
@@ -38,7 +38,7 @@ static const char* const sndfile_library_names[] =
   NULL
 };
 
-#ifdef DL_SNDFILE
+#ifdef DL_LIBSNDFILE
   #define SNDFILE_FUNC      LSX_DLENTRY_DYNAMIC
   #define SNDFILE_FUNC_STOP LSX_DLENTRY_STUB
 #else
@@ -48,7 +48,7 @@ static const char* const sndfile_library_names[] =
 #else
   #define SNDFILE_FUNC_STOP LSX_DLENTRY_STUB
 #endif
-#endif /* DL_SNDFILE */
+#endif /* DL_LIBSNDFILE */
 
 #define SNDFILE_FUNC_OPEN(f,x) \
   SNDFILE_FUNC(f,x, SNDFILE*, sf_open_virtual, (SF_VIRTUAL_IO *sfvirtual, int mode, SF_INFO *sfinfo, void *user_data))
