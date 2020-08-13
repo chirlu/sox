@@ -942,8 +942,6 @@ static int startread(sox_format_t *ft)
         wav->numSamples =
             lsx_ms_adpcm_samples_in(qwDataLength, ft->signal.channels,
                                     wav->blockAlign, wav->samplesPerBlock);
-        lsx_debug_more("datalen %ld, numSamples %lu",
-                       qwDataLength, (unsigned long)wav->numSamples);
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
         break;
 
@@ -953,8 +951,6 @@ static int startread(sox_format_t *ft)
         wav->numSamples =
             lsx_ima_samples_in(qwDataLength, ft->signal.channels,
                                wav->blockAlign, wav->samplesPerBlock);
-        lsx_debug_more("datalen %ld, numSamples %lu",
-                       qwDataLength, (unsigned long)wav->numSamples);
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
         lsx_ima_init_table();
         break;
