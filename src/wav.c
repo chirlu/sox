@@ -1475,7 +1475,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
             lsx_debug("GSM6.10 format: %"PRIu64" blocks %"PRIu64" padded samples %"PRIu64" padded data bytes",
                     blocksWritten, dwSamplesWritten, dwDataLength);
             if (wav->gsmbytecount != dwDataLength)
-                lsx_warn("help ! internal inconsistency - data_written %"PRIu64" gsmbytecount %"PRIu64,
+                lsx_warn("help ! internal inconsistency - data_written %"PRIu64" gsmbytecount %zu",
                          dwDataLength, wav->gsmbytecount);
 
         }
