@@ -211,14 +211,9 @@ endif
 if HAVE_SUN_AUDIO
 if STATIC_SUN_AUDIO
   libsox_la_SOURCES += sunaudio.c
-if STATIC_LIBSOX_ONLY
-  sox_LDADD += @SUN_AUDIO_LIBS@
-else
-  libsox_la_LIBADD += @SUN_AUDIO_LIBS@
-endif
 else
   libsox_fmt_sunau_la_SOURCES = sunaudio.c
-  libsox_fmt_sunau_la_LIBADD = libsox.la @SUN_AUDIO_LIBS@
+  libsox_fmt_sunau_la_LIBADD = libsox.la
   pkglib_LTLIBRARIES += libsox_fmt_sunau.la
 endif
 endif
