@@ -19,7 +19,7 @@
 #include "ima_rw.h"
 #include "adpcm.h"
 
-#ifdef HAVE_GSM
+#ifdef HAVE_LIBGSM
 #ifdef HAVE_GSM_GSM_H
 #include <gsm/gsm.h>
 #else
@@ -108,7 +108,7 @@ typedef struct {
     unsigned short blockSamplesRemaining;/* Samples remaining per channel */
     int            state[16];       /* step-size info for *ADPCM writes */
 
-#ifdef HAVE_GSM
+#ifdef HAVE_LIBGSM
     /* following used by GSM 6.10 wav */
     gsm            gsmhandle;
     gsm_signal     *gsmsample;
@@ -343,7 +343,7 @@ static int xxxAdpcmWriteBlock(sox_format_t * ft)
     return (SOX_SUCCESS);
 }
 
-#ifdef HAVE_GSM
+#ifdef HAVE_LIBGSM
 /****************************************************************************/
 /* WAV GSM6.10 support functions                                            */
 /****************************************************************************/
@@ -518,7 +518,7 @@ static void wavgsmstopwrite(sox_format_t * ft)
     wavgsmdestroy(ft);
 }
 
-#endif  /* HAVE_GSM */
+#endif  /* HAVE_LIBGSM */
 
 /****************************************************************************/
 /* General Sox WAV file code                                                */
@@ -577,7 +577,7 @@ static const struct wave_format wave_formats[] = {
     { WAVE_FORMAT_AUDIOFILE_AF10,       "Audio File AF10" },
     { WAVE_FORMAT_DOLBY_AC2,            "Dolby AC-2" },
     { WAVE_FORMAT_GSM610,               "GSM 6.10",
-#ifdef HAVE_GSM
+#ifdef HAVE_LIBGSM
       SOX_ENCODING_GSM,
       wav_gsm_fmt,
 #endif
@@ -955,7 +955,7 @@ static int startread(sox_format_t *ft)
         lsx_ima_init_table();
         break;
 
-#ifdef HAVE_GSM
+#ifdef HAVE_LIBGSM
     case WAVE_FORMAT_GSM610:
         wav->numSamples = qwDataLength / wav->blockAlign * wav->samplesPerBlock;
         wavgsminit(ft);
@@ -1043,7 +1043,7 @@ static size_t read_samples(sox_format_t *ft, sox_sample_t *buf, size_t len)
 
         return done;
 
-#ifdef HAVE_GSM
+#ifdef HAVE_LIBGSM
     case SOX_ENCODING_GSM:
         done = wavgsmread(ft, buf, len);
         break;
@@ -1087,7 +1087,7 @@ static int stopread(sox_format_t * ft)
 
     switch (ft->encoding.encoding)
     {
-#ifdef HAVE_GSM
+#ifdef HAVE_LIBGSM
     case SOX_ENCODING_GSM:
         wavgsmdestroy(ft);
         break;
@@ -1147,7 +1147,7 @@ static int startwrite(sox_format_t * ft)
             wav->samplePtr = wav->samples;
             break;
 
-#ifdef HAVE_GSM
+#ifdef HAVE_LIBGSM
         case WAVE_FORMAT_GSM610:
             return wavgsminit(ft);
 #endif
@@ -1306,7 +1306,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
             wExtSize = 4+4*7;      /* Ext fmt data length */
             wSamplesPerBlock = lsx_ms_adpcm_samples_in((size_t) 0, (size_t) wChannels, (size_t) wBlockAlign, (size_t) 0);
             break;
-#ifdef HAVE_GSM
+#ifdef HAVE_LIBGSM
         case SOX_ENCODING_GSM:
             if (wChannels!=1)
             {
@@ -1474,7 +1474,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
 
         lsx_debug("Finished writing Wave file, %"PRIu64" data bytes %"PRIu64" samples",
                   dwDataLength, wav->numSamples);
-#ifdef HAVE_GSM
+#ifdef HAVE_LIBGSM
         if (wFormatTag == WAVE_FORMAT_GSM610){
             lsx_debug("GSM6.10 format: %"PRIu64" blocks %"PRIu64" padded samples %"PRIu64" padded data bytes",
                     blocksWritten, dwSamplesWritten, dwDataLength);
@@ -1516,7 +1516,7 @@ static size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, size_t l
             return total_len - len;
             break;
 
-#ifdef HAVE_GSM
+#ifdef HAVE_LIBGSM
         case WAVE_FORMAT_GSM610:
             len = wavgsmwrite(ft, buf, len);
             wav->numSamples += (len/ft->signal.channels);
@@ -1545,7 +1545,7 @@ static int stopwrite(sox_format_t * ft)
         case WAVE_FORMAT_ADPCM:
             xxxAdpcmWriteBlock(ft);
             break;
-#ifdef HAVE_GSM
+#ifdef HAVE_LIBGSM
         case WAVE_FORMAT_GSM610:
             wavgsmstopwrite(ft);
             break;
@@ -1633,7 +1633,7 @@ LSX_FORMAT_HANDLER(wav)
     SOX_ENCODING_UNSIGNED, 8, 0,
     SOX_ENCODING_ULAW, 8, 0,
     SOX_ENCODING_ALAW, 8, 0,
-#ifdef HAVE_GSM
+#ifdef HAVE_LIBGSM
     SOX_ENCODING_GSM, 0,
 #endif
     SOX_ENCODING_MS_ADPCM, 4, 0,

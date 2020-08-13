@@ -94,13 +94,13 @@ if HAVE_GSM
 if STATIC_GSM
   libsox_la_SOURCES += gsm.c
 if STATIC_LIBSOX_ONLY
-  sox_LDADD += @GSM_LIBS@
+  sox_LDADD += @LIBGSM_LIBS@
 else
-  libsox_la_LIBADD += @GSM_LIBS@
+  libsox_la_LIBADD += @LIBGSM_LIBS@
 endif
 else
   libsox_fmt_gsm_la_SOURCES = gsm.c
-  libsox_fmt_gsm_la_LIBADD = libsox.la @GSM_LIBS@
+  libsox_fmt_gsm_la_LIBADD = libsox.la @LIBGSM_LIBS@
   pkglib_LTLIBRARIES += libsox_fmt_gsm.la
 endif
 endif

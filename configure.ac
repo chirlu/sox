@@ -400,10 +400,13 @@ if test "$with_twolame" != "no"; then
 fi
 
 # Check for libgsm
-found_libgsm=yes
+HAVE_LIBGSM=yes
 AC_CHECK_HEADERS(gsm/gsm.h, ,
-    [AC_CHECK_HEADERS(gsm.h, ,found_libgsm=no)])
-    AC_CHECK_LIB(gsm, gsm_create, GSM_LIBS="$GSM_LIBS -lgsm", found_libgsm=no)
+    [AC_CHECK_HEADERS(gsm.h, , HAVE_LIBGSM=no)])
+    AC_CHECK_LIB(gsm, gsm_create, [
+        AC_DEFINE(HAVE_LIBGSM, 1, [Define if libgsm is available])
+        LIBGSM_LIBS="$LIBGSM_LIBS -lgsm"], HAVE_LIBGSM=no)
+AC_SUBST(LIBGSM_LIBS)
 
 
 
@@ -559,7 +562,7 @@ AC_OPTIONAL_FORMAT(mp3, MP3, [
 
 
 # GSM format depends on libgsm
-AC_OPTIONAL_FORMAT(gsm, GSM, [using_gsm=$found_libgsm])
+AC_OPTIONAL_FORMAT(gsm, GSM, [using_gsm=$HAVE_LIBGSM])
 
 
 

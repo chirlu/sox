@@ -83,6 +83,9 @@ libsox_la_LIBADD = @PNG_LIBS@
 if HAVE_MAGIC
 libsox_la_LIBADD += @MAGIC_LIBS@
 endif
+if HAVE_LIBGSM
+libsox_la_LIBADD += @LIBGSM_LIBS@
+endif
 
 libsox_la_CFLAGS =
 libsox_la_LDFLAGS = @APP_LDFLAGS@ -version-info @SHLIB_VERSION@ \
