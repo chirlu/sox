@@ -25,8 +25,6 @@
 
 #include "sox_i.h"
 
-#ifdef HAVE_AMRWB
-
 /* Common definitions: */
 
 static const uint8_t amrwb_block_size[] = {18, 24, 33, 37, 41, 47, 51, 59, 61, 6, 6, 0, 0, 0, 1, 1};
@@ -121,5 +119,3 @@ static const char* const amr_gp3_library_names[] =
 };
 
 #include "amr.h"
-
-#endif /* HAVE_AMRWB */

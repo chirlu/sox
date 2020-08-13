@@ -25,8 +25,6 @@
 
 #include "sox_i.h"
 
-#ifdef HAVE_AMRNB
-
 /* Common definitions: */
 
 enum amrnb_mode { amrnb_mode_dummy };
@@ -132,6 +130,3 @@ static const char* const amr_gp3_library_names[] =
 };
 
 #include "amr.h"
-
-#endif /* HAVE_AMRNB */
-    
