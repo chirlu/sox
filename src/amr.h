@@ -28,49 +28,38 @@ typedef struct amr_opencore_funcs {
 
 #endif /* AMR_OPENCORE */
 
-#ifdef AMR_GP3
+#ifdef AMR_VO
 
-LSX_DLENTRIES_TO_FUNCTIONS(AMR_GP3_FUNC_ENTRIES)
+LSX_DLENTRIES_TO_FUNCTIONS(AMR_VO_FUNC_ENTRIES)
 
-typedef struct amr_gp3_funcs {
-  LSX_DLENTRIES_TO_PTRS(AMR_GP3_FUNC_ENTRIES, amr_dl);
-} amr_gp3_funcs;
+typedef struct amr_vo_funcs {
+  LSX_DLENTRIES_TO_PTRS(AMR_VO_FUNC_ENTRIES, amr_dl);
+} amr_vo_funcs;
 
-#endif /* AMR_GP3 */
+#endif /* AMR_VO */
 
-#if defined(AMR_OPENCORE) && defined (AMR_GP3)
-  #define AMR_CALL(p, opencoreFunc, gp3Func, args) \
-    ((p)->loaded_opencore ? ((p)->opencore.opencoreFunc args) : ((p)->gp3.gp3Func args))
-  #if AMR_OPENCORE_ENABLE_ENCODE
-    #define AMR_CALL_ENCODER AMR_CALL
-  #else
-    #define AMR_CALL_ENCODER(p, opencoreFunc, gp3Func, args) \
-      ((p)->gp3.gp3Func args)
-  #endif
-#elif defined(AMR_OPENCORE)
-  #define AMR_CALL(p, opencoreFunc, gp3Func, args) \
-    ((p)->opencore.opencoreFunc args)
-  #define AMR_CALL_ENCODER AMR_CALL
-#elif defined(AMR_GP3)
-  #define AMR_CALL(p, opencoreFunc, gp3Func, args) \
-    ((p)->gp3.gp3Func args)
-  #define AMR_CALL_ENCODER AMR_CALL
+#define AMR_CALL(p, func, args) ((p)->opencore.func args)
+
+#ifdef AMR_VO
+  #define AMR_CALL_ENCODER(p, func, args) ((p)->vo.func args)
+#else
+  #define AMR_CALL_ENCODER(p, func, args) ((p)->opencore.func args)
 #endif
 
 typedef struct amr_priv_t {
   void* state;
   unsigned mode;
   size_t pcm_index;
-  int loaded_opencore;
 #ifdef AMR_OPENCORE
   amr_opencore_funcs opencore;
 #endif /* AMR_OPENCORE */
-#ifdef AMR_GP3
-  amr_gp3_funcs gp3;
-#endif /* AMR_GP3 */
+#ifdef AMR_VO
+  amr_vo_funcs vo;
+#endif /* AMR_VO */
   short pcm[AMR_FRAME];
 } priv_t;
 
+#ifdef AMR_OPENCORE
 static size_t decode_1_frame(sox_format_t * ft)
 {
   priv_t * p = (priv_t *)ft->priv;
@@ -87,9 +76,10 @@ static size_t decode_1_frame(sox_format_t * ft)
   n--;
   if (lsx_readbuf(ft, &coded[1], n) != n)
     return AMR_FRAME;
-  AMR_CALL(p, AmrOpencoreDecoderDecode, AmrGp3DecoderDecode, (p->state, coded, p->pcm, 0));
+  AMR_CALL(p, AmrDecoderDecode, (p->state, coded, p->pcm, 0));
   return 0;
 }
+#endif
 
 static int openlibrary(priv_t* p, int encoding)
 {
@@ -108,42 +98,28 @@ static int openlibrary(priv_t* p, int encoding)
       amr_opencore_library_names,
       open_library_result);
     if (!open_library_result)
-    {
-      p->loaded_opencore = 1;
       return SOX_SUCCESS;
-    }
-  }
-  else
-  {
-      lsx_report("Not attempting to load " AMR_OPENCORE_DESC " because it does not support encoding.");
+    lsx_fail("Unable to open " AMR_OPENCORE_DESC);
+    return SOX_EOF;
   }
 #endif /* AMR_OPENCORE */
 
-#ifdef AMR_GP3
-  LSX_DLLIBRARY_TRYOPEN(
-      0,
-      &p->gp3,
-      amr_dl,
-      AMR_GP3_FUNC_ENTRIES,
-      AMR_GP3_DESC,
-      amr_gp3_library_names,
-      open_library_result);
-  if (!open_library_result)
-    return SOX_SUCCESS;
-#endif /* AMR_GP3 */
+#ifdef AMR_VO
+  if (encoding) {
+    LSX_DLLIBRARY_TRYOPEN(
+        0,
+        &p->vo,
+        amr_dl,
+        AMR_VO_FUNC_ENTRIES,
+        AMR_VO_DESC,
+        amr_vo_library_names,
+        open_library_result);
+    if (!open_library_result)
+      return SOX_SUCCESS;
+    lsx_fail("Unable to open " AMR_VO_DESC);
+  }
+#endif /* AMR_VO */
 
-  lsx_fail(
-      "Unable to open "
-#ifdef AMR_OPENCORE
-      AMR_OPENCORE_DESC
-#endif
-#if defined(AMR_OPENCORE) && defined(AMR_GP3)
-      " or "
-#endif
-#ifdef AMR_GP3
-      AMR_GP3_DESC
-#endif
-      ".");
   return SOX_EOF;
 }
 
@@ -152,11 +128,12 @@ static void closelibrary(priv_t* p)
 #ifdef AMR_OPENCORE
   LSX_DLLIBRARY_CLOSE(&p->opencore, amr_dl);
 #endif
-#ifdef AMR_GP3
-  LSX_DLLIBRARY_CLOSE(&p->gp3, amr_dl);
+#ifdef AMR_VO
+  LSX_DLLIBRARY_CLOSE(&p->vo, amr_dl);
 #endif
 }
 
+#ifdef AMR_OPENCORE
 static size_t amr_duration_frames(sox_format_t * ft)
 {
   off_t      frame_size, data_start_offset = lsx_tell(ft);
@@ -178,9 +155,14 @@ static size_t amr_duration_frames(sox_format_t * ft)
   lsx_seeki(ft, data_start_offset, SEEK_SET);
   return frames;
 }
+#endif
 
 static int startread(sox_format_t * ft)
 {
+#if !defined(AMR_OPENCORE)
+  lsx_fail_errno(ft, SOX_EOF, "SoX was compiled without AMR-WB decoding support.");
+  return SOX_EOF;
+#else
   priv_t * p = (priv_t *)ft->priv;
   char buffer[sizeof(amr_magic) - 1];
   int open_library_result;
@@ -197,7 +179,7 @@ static int startread(sox_format_t * ft)
     return open_library_result;
 
   p->pcm_index = AMR_FRAME;
-  p->state = AMR_CALL(p, AmrOpencoreDecoderInit, AmrGp3DecoderInit, ());
+  p->state = AMR_CALL(p, AmrDecoderInit, ());
   if (!p->state)
   {
       closelibrary(p);
@@ -211,7 +193,10 @@ static int startread(sox_format_t * ft)
   ft->signal.length = ft->signal.length != SOX_IGNORE_LENGTH && ft->seekable?
     (size_t)(amr_duration_frames(ft) * .02 * ft->signal.rate +.5) : SOX_UNSPEC;
   return SOX_SUCCESS;
+#endif
 }
+
+#ifdef AMR_OPENCORE
 
 static size_t read_samples(sox_format_t * ft, sox_sample_t * buf, size_t len)
 {
@@ -231,14 +216,21 @@ static size_t read_samples(sox_format_t * ft, sox_sample_t * buf, size_t len)
 static int stopread(sox_format_t * ft)
 {
   priv_t * p = (priv_t *)ft->priv;
-  AMR_CALL(p, AmrOpencoreDecoderExit, AmrGp3DecoderExit, (p->state));
+  AMR_CALL(p, AmrDecoderExit, (p->state));
   closelibrary(p);
   return SOX_SUCCESS;
 }
 
+#else
+
+#define read_samples NULL
+#define stopread NULL
+
+#endif
+
 static int startwrite(sox_format_t * ft)
 {
-#if !defined(AMR_GP3) && !AMR_OPENCORE_ENABLE_ENCODE
+#if !defined(AMR_VO) && !AMR_OPENCORE_ENABLE_ENCODE
   lsx_fail_errno(ft, SOX_EOF, "SoX was compiled without AMR-WB encoding support.");
   return SOX_EOF;
 #else
@@ -258,7 +250,7 @@ static int startwrite(sox_format_t * ft)
   if (open_library_result != SOX_SUCCESS)
     return open_library_result;
 
-  p->state = AMR_CALL_ENCODER(p, AmrOpencoreEncoderInit, AmrGp3EncoderInit, ());
+  p->state = AMR_CALL_ENCODER(p, AmrEncoderInit, ());
   if (!p->state)
   {
       closelibrary(p);
@@ -272,13 +264,13 @@ static int startwrite(sox_format_t * ft)
 #endif
 }
 
-#if defined(AMR_GP3) || AMR_OPENCORE_ENABLE_ENCODE
+#if defined(AMR_VO) || AMR_OPENCORE_ENABLE_ENCODE
 
 static sox_bool encode_1_frame(sox_format_t * ft)
 {
   priv_t * p = (priv_t *)ft->priv;
   uint8_t coded[AMR_CODED_MAX];
-  int n = AMR_CALL_ENCODER(p, AmrOpencoreEncoderEncode, AmrGp3EncoderEncode, (p->state, p->mode, p->pcm, coded, 1));
+  int n = AMR_CALL_ENCODER(p, AmrEncoderEncode, (p->state, p->mode, p->pcm, coded, 1));
   sox_bool result = lsx_writebuf(ft, coded, (size_t) (size_t) (unsigned)n) == (unsigned)n;
   if (!result)
     lsx_fail_errno(ft, errno, "write error");
@@ -314,7 +306,7 @@ static int stopwrite(sox_format_t * ft)
     if (!encode_1_frame(ft))
       result = SOX_EOF;
   }
-  AMR_CALL_ENCODER(p, AmrOpencoreEncoderExit, AmrGp3EncoderExit, (p->state));
+  AMR_CALL_ENCODER(p, AmrEncoderExit, (p->state));
   return result;
 }
 
@@ -323,7 +315,7 @@ static int stopwrite(sox_format_t * ft)
 #define write_samples NULL
 #define stopwrite NULL
 
-#endif /* defined(AMR_GP3) || AMR_OPENCORE_ENABLE_ENCODE */
+#endif /* defined(AMR_VO) || AMR_OPENCORE_ENABLE_ENCODE */
 
 sox_format_handler_t const * AMR_FORMAT_FN(void);
 sox_format_handler_t const * AMR_FORMAT_FN(void)

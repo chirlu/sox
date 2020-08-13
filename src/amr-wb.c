@@ -16,11 +16,10 @@
  */
  
 /*
- * In order to use the AMR format with SoX, you need to have an AMR
- * library installed at SoX build time. Currently, the SoX build system
- * recognizes two AMR implementations, in the following order:
- *   http://opencore-amr.sourceforge.net/
- *   http://ftp.penguin.cz/pub/users/utx/amr/
+ * In order to use the AMR format with SoX, you need to have an
+ * AMR library installed at SoX build time. The SoX build system
+ * recognizes the AMR implementations available from
+ * http://opencore-amr.sourceforge.net/
  */
 
 #include "sox_i.h"
@@ -33,7 +32,7 @@ static char const amrwb_magic[] = "#!AMR-WB\n";
 #define amr_magic amrwb_magic
 #define amr_priv_t amrwb_priv_t
 #define amr_opencore_funcs amrwb_opencore_funcs
-#define amr_gp3_funcs amrwb_gp3_funcs
+#define amr_vo_funcs amrwb_vo_funcs
 
 #define AMR_CODED_MAX       61 /* NB_SERIAL_MAX */
 #define AMR_ENCODING        SOX_ENCODING_AMR_WB
@@ -62,11 +61,11 @@ static char const amrwb_magic[] = "#!AMR-WB\n";
   AMR_FUNC(f,x, void,  D_IF_decode, (void* state, const unsigned char* in, short* out, int bfi)) \
   AMR_FUNC(f,x, void,  D_IF_exit,   (void* state)) \
 
-#define AmrOpencoreDecoderInit() \
+#define AmrDecoderInit() \
   D_IF_init()
-#define AmrOpencoreDecoderDecode(state, in, out, bfi) \
+#define AmrDecoderDecode(state, in, out, bfi) \
   D_IF_decode(state, in, out, bfi)
-#define AmrOpencoreDecoderExit(state) \
+#define AmrDecoderExit(state) \
   D_IF_exit(state)
 
 #define AMR_OPENCORE_DESC "amr-wb OpenCore library"
@@ -79,41 +78,30 @@ static const char* const amr_opencore_library_names[] =
   NULL
 };
 
-/* 3GPP (reference implementation) definitions: */
+/* VO definitions: */
 
-#if !defined(HAVE_OPENCORE_AMRWB_DEC_IF_H) || defined(DL_AMRWB)
-  #define AMR_GP3 1
+#if defined(HAVE_VO_AMRWBENC_ENC_IF_H) || defined(DL_AMRWB)
+  #define AMR_VO 1
 #endif
 
-#define AMR_GP3_FUNC_ENTRIES(f,x) \
+#define AMR_VO_FUNC_ENTRIES(f,x) \
   AMR_FUNC(f,x, void*, E_IF_init,     (void)) \
-  AMR_FUNC(f,x, int,   GP3E_IF_encode,(void* state, int16_t mode, int16_t* in, uint8_t* out, int16_t dtx)) \
+  AMR_FUNC(f,x, int,   E_IF_encode,(void* state, int16_t mode, int16_t* in, uint8_t* out, int16_t dtx)) \
   AMR_FUNC(f,x, void,  E_IF_exit,     (void* state)) \
-  AMR_FUNC(f,x, void*, D_IF_init,     (void)) \
-  AMR_FUNC(f,x, void,  GP3D_IF_decode,(void* state, uint8_t* in, int16_t* out, int32_t bfi)) \
-  AMR_FUNC(f,x, void,  D_IF_exit,     (void* state)) \
 
-#define AmrGp3EncoderInit() \
+#define AmrEncoderInit() \
   E_IF_init()
-#define AmrGp3EncoderEncode(state, mode, in, out, forceSpeech) \
-  GP3E_IF_encode(state, mode, in, out, forceSpeech)
-#define AmrGp3EncoderExit(state) \
+#define AmrEncoderEncode(state, mode, in, out, forceSpeech) \
+  E_IF_encode(state, mode, in, out, forceSpeech)
+#define AmrEncoderExit(state) \
   E_IF_exit(state)
-#define AmrGp3DecoderInit() \
-  D_IF_init()
-#define AmrGp3DecoderDecode(state, in, out, bfi) \
-  GP3D_IF_decode(state, in, out, bfi)
-#define AmrGp3DecoderExit(state) \
-  D_IF_exit(state)
 
-#define AMR_GP3_DESC "amr-wb 3GPP reference library"
-static const char* const amr_gp3_library_names[] =
+#define AMR_VO_DESC "amr-wb VisualOn library"
+static const char* const amr_vo_library_names[] =
 {
 #ifdef DL_AMRWB
-  "libamrwb-3",
-  "libamrwb",
-  "amrwb",
-  "cygamrwb-3",
+  "libvo-amrwbenc",
+  "libvo-amrwbenc-0",
 #endif
   NULL
 };

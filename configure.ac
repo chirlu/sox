@@ -448,14 +448,13 @@ AC_OPTIONAL_FORMAT(flac, FLAC,
 dnl When enable_dl_amrbw, do not let add libraries to be linked in
 dnl since they will be dlopen()'ed instead.
 ac_sox_save_AMRWB_LIBS="$AMRWB_LIBS"
-tmp_using_amrwb=$opt_default
+tmp_using_amrwb=no
 AC_CHECK_HEADERS(opencore-amrwb/dec_if.h,
-		 [AC_CHECK_LIB(opencore-amrwb, D_IF_init, 
-		  AMRWB_LIBS="$AMRWB_LIBS -lopencore-amrwb", tmp_using_amrwb=no)],
-		  [AC_CHECK_HEADERS(amrwb/dec.h, 
-		   [AC_CHECK_LIB(amrwb, D_IF_init, 
-		    AMRWB_LIBS="$AMRWB_LIBS -lamrwb",tmp_using_amrwb=no)], 
-		    tmp_using_amrwb=no)])
+    [AC_CHECK_LIB(opencore-amrwb, D_IF_init,
+        [AMRWB_LIBS="$AMRWB_LIBS -lopencore-amrwb"; tmp_using_amrwb=$opt_default])])
+AC_CHECK_HEADERS(vo-amrwbenc/enc_if.h,
+    [AC_CHECK_LIB(vo-amrwbenc, E_IF_init,
+		    AMRWB_LIBS="$AMRWB_LIBS -lvo-amrwbenc"; tmp_using_amrwb=$opt_default)])
 AC_ARG_ENABLE(dl_amrwb,
 	      AS_HELP_STRING([--enable-dl-amrwb], 
 			     [Dlopen amrbw instead of linking in.]),
@@ -479,10 +478,7 @@ tmp_using_amrnb=$opt_default
 AC_CHECK_HEADERS(opencore-amrnb/interf_dec.h, 
 		 [AC_CHECK_LIB(opencore-amrnb, Decoder_Interface_init, 
 		  AMRNB_LIBS="$AMRNB_LIBS -lopencore-amrnb", tmp_using_amrnb=no)],
-		  [AC_CHECK_HEADER(amrnb/sp_dec.h, 
-		   [AC_CHECK_LIB(amrnb, Decoder_Interface_init, 
-		    AMRNB_LIBS="$AMRNB_LIBS -lamrnb", tmp_using_amrnb=no)], 
-		    tmp_using_amrnb=no)])
+		  [tmp_using_amrnb=no])
 AC_ARG_ENABLE(dl_amrnb,
 	      AS_HELP_STRING([--enable-dl-amrnb], 
 			     [Dlopen amrnb instead of linking in.]),

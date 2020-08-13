@@ -17,7 +17,7 @@ libraries, where to get them (if not from your OS distribution), and
 their licence types, is as follows:
 
 OpencoreAMR-NB/WB http://sourceforge.net/projects/opencore-amr  Apache
-AMR-NB/WB         http://www.penguin.cz/~utx/amr        See library web page
+VisualOn AMR-WB   http://sourceforge.net/projects/opencore-amr  Apache
 AO                http://xiph.org/ao                    GPL
 FLAC              http://flac.sourceforge.net           BSD
 LADSPA            http://www.ladspa.org                 LGPL + plugins' licence
