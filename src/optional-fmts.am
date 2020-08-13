@@ -155,14 +155,9 @@ endif
 if HAVE_OSS
 if STATIC_OSS
   libsox_la_SOURCES += oss.c
-if STATIC_LIBSOX_ONLY
-  sox_LDADD += @OSS_LIBS@
-else
-  libsox_la_LIBADD += @OSS_LIBS@
-endif
 else
   libsox_fmt_oss_la_SOURCES = oss.c
-  libsox_fmt_oss_la_LIBADD = libsox.la @OSS_LIBS@
+  libsox_fmt_oss_la_LIBADD = libsox.la
   pkglib_LTLIBRARIES += libsox_fmt_oss.la
 endif
 endif
