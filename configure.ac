@@ -426,11 +426,11 @@ AC_SUBST(LIBLPC10_LIBADD)
 
 
 # Check for Ogg Vorbis
-AC_OPTIONAL_FORMAT(oggvorbis, OGG_VORBIS, [AC_CHECK_HEADER(vorbis/codec.h,
-  [AC_CHECK_LIB(ogg, ogg_packet_clear, OGG_VORBIS_LIBS="$OGG_VORBIS_LIBS -logg", using_oggvorbis=no)
-  AC_CHECK_LIB(vorbis, vorbis_analysis_headerout, OGG_VORBIS_LIBS="-lvorbis $OGG_VORBIS_LIBS", using_oggvorbis=no, $OGG_VORBIS_LIBS)
-  AC_CHECK_LIB(vorbisfile, ov_clear, OGG_VORBIS_LIBS="-lvorbisfile $OGG_VORBIS_LIBS", using_oggvorbis=no, $OGG_VORBIS_LIBS)
-  AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr, OGG_VORBIS_LIBS="-lvorbisenc $OGG_VORBIS_LIBS", using_oggvorbis=no, $OGG_VORBIS_LIBS)],
+AC_OPTIONAL_FORMAT(oggvorbis, OGGVORBIS, [AC_CHECK_HEADER(vorbis/codec.h,
+  [AC_CHECK_LIB(ogg, ogg_packet_clear, OGGVORBIS_LIBS="$OGGVORBIS_LIBS -logg", using_oggvorbis=no)
+  AC_CHECK_LIB(vorbis, vorbis_analysis_headerout, OGGVORBIS_LIBS="-lvorbis $OGGVORBIS_LIBS", using_oggvorbis=no, $OGGVORBIS_LIBS)
+  AC_CHECK_LIB(vorbisfile, ov_clear, OGGVORBIS_LIBS="-lvorbisfile $OGGVORBIS_LIBS", using_oggvorbis=no, $OGGVORBIS_LIBS)
+  AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr, OGGVORBIS_LIBS="-lvorbisenc $OGGVORBIS_LIBS", using_oggvorbis=no, $OGGVORBIS_LIBS)],
   using_oggvorbis=no)])
 
 # Check for Opus

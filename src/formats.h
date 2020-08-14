@@ -122,7 +122,7 @@
 #if defined HAVE_SUNAUDIO && (defined STATIC_SUNAUDIO || !defined HAVE_LIBLTDL)
   FORMAT(sunau)
 #endif
-#if defined HAVE_OGG_VORBIS && (defined STATIC_OGG_VORBIS || !defined HAVE_LIBLTDL)
+#if defined HAVE_OGGVORBIS && (defined STATIC_OGGVORBIS || !defined HAVE_LIBLTDL)
   FORMAT(vorbis)
 #endif
 #if defined HAVE_WAVPACK && (defined STATIC_WAVPACK || !defined HAVE_LIBLTDL)

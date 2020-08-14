@@ -218,17 +218,17 @@ else
 endif
 endif
 
-if HAVE_OGG_VORBIS
-if STATIC_OGG_VORBIS
+if HAVE_OGGVORBIS
+if STATIC_OGGVORBIS
   libsox_la_SOURCES += vorbis.c
 if STATIC_LIBSOX_ONLY
-  sox_LDADD += @OGG_VORBIS_LIBS@
+  sox_LDADD += @OGGVORBIS_LIBS@
 else
-  libsox_la_LIBADD += @OGG_VORBIS_LIBS@
+  libsox_la_LIBADD += @OGGVORBIS_LIBS@
 endif
 else
   libsox_fmt_vorbis_la_SOURCES = vorbis.c
-  libsox_fmt_vorbis_la_LIBADD = libsox.la @OGG_VORBIS_LIBS@
+  libsox_fmt_vorbis_la_LIBADD = libsox.la @OGGVORBIS_LIBS@
   pkglib_LTLIBRARIES += libsox_fmt_vorbis.la
 endif
 endif
