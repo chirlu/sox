@@ -416,12 +416,12 @@ AC_CHECK_HEADERS(lpc10.h, ,
     [AC_CHECK_HEADERS(lpc10.h, ,found_liblpc10=no)])
     AC_CHECK_LIB(lpc10, create_lpc10_encoder_state, LPC10_LIBS="$LPC10_LIBS -llpc10", found_liblpc10=no)
 if test "$found_liblpc10" = yes; then
-    AC_DEFINE(EXTERNAL_LPC10, 1, [Define if you are using an external LPC10 library])
+    AC_DEFINE(HAVE_LIBLPC10, 1, [Define if you are using an external liblpc10])
 else
-    LIBLPC10_LIBADD=../lpc10/liblpc10.la
+    LPC10_CFLAGS='-I${top_srcdir}/lpc10'
+    LPC10_LIBS=../lpc10/liblpc10.la
 fi
-AM_CONDITIONAL(EXTERNAL_LPC10, test x$found_liblpc10 = xyes)
-AC_SUBST(LIBLPC10_LIBADD)
+AM_CONDITIONAL(HAVE_LIBLPC10, test x$found_liblpc10 = xyes)
 
 
 

@@ -19,11 +19,7 @@
 
 #include "sox_i.h"
 
-#ifdef EXTERNAL_LPC10
 #include <lpc10.h>
-#else
-#include "../lpc10/lpc10.h"
-#endif
 
 /* Private data */
 typedef struct {

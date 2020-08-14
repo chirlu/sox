@@ -108,6 +108,7 @@ endif
 if HAVE_LPC10
 if STATIC_LPC10
   libsox_la_SOURCES += lpc10.c
+  libsox_la_CFLAGS += @LPC10_CFLAGS@
 if STATIC_LIBSOX_ONLY
   sox_LDADD += @LPC10_LIBS@
 else
@@ -115,6 +116,7 @@ else
 endif
 else
   libsox_fmt_lpc10_la_SOURCES = lpc10.c
+  libsox_fmt_lpc10_la_CFLAGS = @LPC10_CFLAGS@
   libsox_fmt_lpc10_la_LIBADD = libsox.la @LPC10_LIBS@
   pkglib_LTLIBRARIES += libsox_fmt_lpc10.la
 endif

@@ -1,4 +1,4 @@
-if EXTERNAL_LPC10
+if HAVE_LIBLPC10
 EXTRA_DIST = analys.c bsynz.c chanwr.c dcbias.c \
   decode.c deemp.c difmag.c dyptrk.c encode.c energy.c f2c.h f2clib.c \
   ham84.c hp100.c invert.c irc2pc.c ivfilt.c lpcdec.c lpcenc.c lpcini.c \
