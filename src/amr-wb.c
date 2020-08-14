@@ -43,23 +43,23 @@ static char const amrwb_magic[] = "#!AMR-WB\n";
 #define AMR_RATE            16000
 #define AMR_DESC            "3GPP Adaptive Multi Rate Wide-Band (AMR-WB) lossy speech compressor"
 
-#ifdef DL_AMRWB
-  #define AMR_FUNC  LSX_DLENTRY_DYNAMIC
-#else
-  #define AMR_FUNC  LSX_DLENTRY_STATIC
-#endif /* DL_AMRWB */
-
 /* OpenCore definitions: */
 
-#if defined(HAVE_OPENCORE_AMRWB_DEC_IF_H) || defined(DL_AMRWB)
+#ifdef DL_OPENCORE_AMRWB
+  #define AMR_OC_FUNC  LSX_DLENTRY_DYNAMIC
+#else
+  #define AMR_OC_FUNC  LSX_DLENTRY_STATIC
+#endif
+
+#if defined(HAVE_OPENCORE_AMRWB_DEC_IF_H) || defined(DL_OPENCORE_AMRWB)
   #define AMR_OPENCORE 1
   #define AMR_OPENCORE_ENABLE_ENCODE 0
 #endif
 
 #define AMR_OPENCORE_FUNC_ENTRIES(f,x) \
-  AMR_FUNC(f,x, void*, D_IF_init,   (void)) \
-  AMR_FUNC(f,x, void,  D_IF_decode, (void* state, const unsigned char* in, short* out, int bfi)) \
-  AMR_FUNC(f,x, void,  D_IF_exit,   (void* state)) \
+  AMR_OC_FUNC(f,x, void*, D_IF_init,   (void)) \
+  AMR_OC_FUNC(f,x, void,  D_IF_decode, (void* state, const unsigned char* in, short* out, int bfi)) \
+  AMR_OC_FUNC(f,x, void,  D_IF_exit,   (void* state)) \
 
 #define AmrDecoderInit() \
   D_IF_init()
@@ -71,7 +71,7 @@ static char const amrwb_magic[] = "#!AMR-WB\n";
 #define AMR_OPENCORE_DESC "amr-wb OpenCore library"
 static const char* const amr_opencore_library_names[] =
 {
-#ifdef DL_AMRWB
+#ifdef DL_OPENCORE_AMRWB
   "libopencore-amrwb",
   "libopencore-amrwb-0",
 #endif
@@ -80,14 +80,20 @@ static const char* const amr_opencore_library_names[] =
 
 /* VO definitions: */
 
-#if defined(HAVE_VO_AMRWBENC_ENC_IF_H) || defined(DL_AMRWB)
+#ifdef DL_VO_AMRWBENC
+  #define AMR_VO_FUNC  LSX_DLENTRY_DYNAMIC
+#else
+  #define AMR_VO_FUNC  LSX_DLENTRY_STATIC
+#endif
+
+#if defined(HAVE_VO_AMRWBENC_ENC_IF_H) || defined(DL_VO_AMRWBENC)
   #define AMR_VO 1
 #endif
 
 #define AMR_VO_FUNC_ENTRIES(f,x) \
-  AMR_FUNC(f,x, void*, E_IF_init,     (void)) \
-  AMR_FUNC(f,x, int,   E_IF_encode,(void* state, int16_t mode, int16_t* in, uint8_t* out, int16_t dtx)) \
-  AMR_FUNC(f,x, void,  E_IF_exit,     (void* state)) \
+  AMR_VO_FUNC(f,x, void*, E_IF_init,     (void)) \
+  AMR_VO_FUNC(f,x, int,   E_IF_encode,(void* state, int16_t mode, int16_t* in, uint8_t* out, int16_t dtx)) \
+  AMR_VO_FUNC(f,x, void,  E_IF_exit,     (void* state)) \
 
 #define AmrEncoderInit() \
   E_IF_init()
@@ -99,7 +105,7 @@ static const char* const amr_opencore_library_names[] =
 #define AMR_VO_DESC "amr-wb VisualOn library"
 static const char* const amr_vo_library_names[] =
 {
-#ifdef DL_AMRWB
+#ifdef DL_VO_AMRWBENC
   "libvo-amrwbenc",
   "libvo-amrwbenc-0",
 #endif

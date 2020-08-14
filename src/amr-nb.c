@@ -45,7 +45,7 @@ static char const amrnb_magic[] = "#!AMR\n";
 #define AMR_RATE            8000
 #define AMR_DESC            "3GPP Adaptive Multi Rate Narrow-Band (AMR-NB) lossy speech compressor"
 
-#ifdef DL_AMRNB
+#ifdef DL_OPENCORE_AMRNB
   #define AMR_FUNC  LSX_DLENTRY_DYNAMIC
 #else
   #define AMR_FUNC  LSX_DLENTRY_STATIC
@@ -80,7 +80,7 @@ static char const amrnb_magic[] = "#!AMR\n";
 #define AMR_OPENCORE_DESC "amr-nb OpenCore library"
 static const char* const amr_opencore_library_names[] =
 {
-#ifdef DL_AMRWB
+#ifdef DL_OPENCORE_AMRNB
   "libopencore-amrnb",
   "libopencore-amrnb-0",
 #endif
