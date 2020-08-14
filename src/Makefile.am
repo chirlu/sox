@@ -131,33 +131,18 @@ example6_LDADD = ${sox_LDADD}
 EXTRA_DIST = monkey.wav optional-fmts.am \
 	     tests.sh testall.sh tests.bat testall.bat test-comments
 
-all: sox$(EXEEXT) play$(EXEEXT) rec$(EXEEXT) soxi$(EXEEXT) sox_sample_test$(EXEEXT) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT) example5$(EXEEXT) example6$(EXEEXT)
+all: sox$(EXEEXT) sox_sample_test$(EXEEXT) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT) example5$(EXEEXT) example6$(EXEEXT)
 
-play$(EXEEXT) rec$(EXEEXT): sox$(EXEEXT)
-	if test "$(PLAYRECLINKS)" = "yes"; then	\
-		test -f sox$(EXEEXT) && ( $(RM) $@ && $(LN_S) sox$(EXEEXT) $@ ) || $(LN_S) sox $@; \
-	fi
+MAKELINKS = for n in $(SYMLINKS); do $(RM) $$n$(EXEEXT) && $(LN_S) sox$(EXEEXT) $$n$(EXEEXT); done
 
-soxi$(EXEEXT): sox$(EXEEXT)
-	if test "$(SYMLINKS)" = "yes"; then	\
-		test -f sox$(EXEEXT) && ( $(RM) $@ && $(LN_S) sox$(EXEEXT) $@ ) || $(LN_S) sox $@; \
-	fi
+all-local: sox$(EXEEXT)
+	$(MAKELINKS)
 
 install-exec-hook:
-	if test "$(PLAYRECLINKS)" = "yes"; then	\
-		cd $(DESTDIR)$(bindir); $(RM) play$(EXEEXT) rec$(EXEEXT); $(LN_S) sox$(EXEEXT) play$(EXEEXT); $(LN_S) sox$(EXEEXT) rec$(EXEEXT); \
-	fi
-	if test "$(SYMLINKS)" = "yes"; then	\
-		cd $(DESTDIR)$(bindir); $(RM) soxi$(EXEEXT); $(LN_S) sox$(EXEEXT) soxi$(EXEEXT); \
-	fi
+	cd $(DESTDIR)$(bindir) && $(MAKELINKS)
 
 uninstall-hook:
-	if test "$(PLAYRECLINKS)" = "yes"; then	\
-		cd $(DESTDIR)$(bindir); $(RM) play$(EXTEXT) rec$(EXEEXT); \
-	fi
-	if test "$(SYMLINKS)" = "yes"; then	\
-		cd $(DESTDIR)$(bindir); $(RM) soxi$(EXEEXT); \
-	fi
+	cd $(DESTDIR)$(bindir) && $(RM) play$(EXEEXT) rec$(EXEEXT) soxi$(EXEEXT)
 
 clean-local:
 	$(RM) play$(EXEEXT) rec$(EXEEXT) soxi$(EXEEXT)

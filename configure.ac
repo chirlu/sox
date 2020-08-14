@@ -578,9 +578,8 @@ AC_ARG_ENABLE(symlinks,
     AS_HELP_STRING([--disable-symlinks], [Don't make any symlinks to sox.]),,enable_symlinks=yes)
 AC_MSG_RESULT($enable_symlinks)
 
-enable_playrec_symlinks=no
 if test "$enable_symlinks" = "yes"; then
-  SYMLINKS=yes
+  SYMLINKS=soxi
   if test "" \
       -o "$using_alsa" = yes \
       -o "$using_ao" = yes \
@@ -588,13 +587,13 @@ if test "$enable_symlinks" = "yes"; then
       -o "$using_oss" = yes \
       -o "$using_pulseaudio" = yes \
       -o "$using_sndio" = yes \
+      -o "$using_sunaudio" = yes \
+      -o "$using_waveaudio" = yes \
     ; then
-    PLAYRECLINKS=yes
-    enable_playrec_symlinks=yes
+    SYMLINKS="$SYMLINKS play rec"
   fi
 fi
 AC_SUBST(SYMLINKS)
-AC_SUBST(PLAYRECLINKS)
 
 AM_CONDITIONAL(STATIC_LIBSOX_ONLY, test "$enable_shared" = "no" -a "$enable_static" = "yes")
 
@@ -623,8 +622,7 @@ echo "Debugging build............$enable_debug"
 echo "Distro name ...............$DISTRO"
 echo "Dynamic loading support....$using_libltdl"
 echo "Pkg-config location........$pkgconfig_option"
-echo "Play and rec symlinks......$enable_playrec_symlinks"
-echo "Symlinks enabled...........$enable_symlinks"
+echo "Symlinks enabled...........${SYMLINKS:-no}"
 echo
 echo "OPTIONAL DEVICE DRIVERS"
 echo "ao (Xiph)..................$using_ao"
