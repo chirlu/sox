@@ -127,25 +127,9 @@ static const char* const lame_library_names[] =
 };
 
 #ifdef DL_LAME
-
-  /* Expected to be present in all builds of LAME. */
   #define LAME_FUNC           LSX_DLENTRY_DYNAMIC
-
-  /* id3tag support is an optional component of LAME. Use if available. */
-  #define LAME_FUNC_ID3       LSX_DLENTRY_STUB
-
 #else /* DL_LAME */
-
-  /* Expected to be present in all builds of LAME. */
   #define LAME_FUNC           LSX_DLENTRY_STATIC
-
-  /* id3tag support is an optional component of LAME. Use if available. */
-  #ifdef HAVE_LAME_ID3TAG
-    #define LAME_FUNC_ID3     LSX_DLENTRY_STATIC
-  #else
-    #define LAME_FUNC_ID3     LSX_DLENTRY_STUB
-  #endif
-
 #endif /* DL_LAME */
 
 #define LAME_FUNC_ENTRIES(f,x) \
@@ -169,17 +153,17 @@ static const char* const lame_library_names[] =
   LAME_FUNC(f,x, int, lame_encode_flush, (lame_global_flags *, unsigned char *, int)) \
   LAME_FUNC(f,x, int, lame_close, (lame_global_flags *)) \
   LAME_FUNC(f,x, size_t, lame_get_lametag_frame, (const lame_global_flags *, unsigned char*, size_t)) \
-  LAME_FUNC_ID3(f,x, void, id3tag_init, (lame_global_flags *)) \
-  LAME_FUNC_ID3(f,x, void, id3tag_set_title, (lame_global_flags *, const char* title)) \
-  LAME_FUNC_ID3(f,x, void, id3tag_set_artist, (lame_global_flags *, const char* artist)) \
-  LAME_FUNC_ID3(f,x, void, id3tag_set_album, (lame_global_flags *, const char* album)) \
-  LAME_FUNC_ID3(f,x, void, id3tag_set_year, (lame_global_flags *, const char* year)) \
-  LAME_FUNC_ID3(f,x, void, id3tag_set_comment, (lame_global_flags *, const char* comment)) \
-  LAME_FUNC_ID3(f,x, int, id3tag_set_track, (lame_global_flags *, const char* track)) \
-  LAME_FUNC_ID3(f,x, int, id3tag_set_genre, (lame_global_flags *, const char* genre)) \
-  LAME_FUNC_ID3(f,x, size_t, id3tag_set_pad, (lame_global_flags *, size_t)) \
-  LAME_FUNC_ID3(f,x, size_t, lame_get_id3v2_tag, (lame_global_flags *, unsigned char*, size_t)) \
-  LAME_FUNC_ID3(f,x, int, id3tag_set_fieldvalue, (lame_global_flags *, const char *))
+  LAME_FUNC(f,x, void, id3tag_init, (lame_global_flags *)) \
+  LAME_FUNC(f,x, void, id3tag_set_title, (lame_global_flags *, const char* title)) \
+  LAME_FUNC(f,x, void, id3tag_set_artist, (lame_global_flags *, const char* artist)) \
+  LAME_FUNC(f,x, void, id3tag_set_album, (lame_global_flags *, const char* album)) \
+  LAME_FUNC(f,x, void, id3tag_set_year, (lame_global_flags *, const char* year)) \
+  LAME_FUNC(f,x, void, id3tag_set_comment, (lame_global_flags *, const char* comment)) \
+  LAME_FUNC(f,x, int, id3tag_set_track, (lame_global_flags *, const char* track)) \
+  LAME_FUNC(f,x, int, id3tag_set_genre, (lame_global_flags *, const char* genre)) \
+  LAME_FUNC(f,x, size_t, id3tag_set_pad, (lame_global_flags *, size_t)) \
+  LAME_FUNC(f,x, size_t, lame_get_id3v2_tag, (lame_global_flags *, unsigned char*, size_t)) \
+  LAME_FUNC(f,x, int, id3tag_set_fieldvalue, (lame_global_flags *, const char *))
 
 #ifdef HAVE_TWOLAME
 static const char* const twolame_library_names[] =

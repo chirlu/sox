@@ -367,10 +367,6 @@ if test "$with_lame" != "no"; then
       AC_CHECK_HEADERS(lame/lame.h,,
         [AC_CHECK_HEADERS(lame.h, [], using_lame=no)])
       AC_CHECK_LIB(mp3lame, lame_get_lametag_frame, MP3_LIBS="$MP3_LIBS -lmp3lame", using_lame=no)
-      AC_CHECK_LIB(mp3lame, id3tag_set_fieldvalue, using_lame=$using_lame)
-      if test "$ac_cv_lib_mp3lame_id3tag_set_fieldvalue" = yes; then
-        AC_DEFINE(HAVE_LAME_ID3TAG, 1, [Define to 1 if lame supports optional ID3 tags.])
-      fi
       if test "$with_lame" = "yes" -a "$using_lame" = "no"; then
         AC_MSG_FAILURE([cannot find LAME])
       fi
@@ -654,9 +650,6 @@ echo "mp2/mp3....................$using_mp3"
 echo " id3tag....................$using_id3tag"
 echo " lame......................$using_lame"
 if test "x$using_lame" = "xyes"; then
-if test "x$enable_dl_lame" != "xyes"; then
-echo " lame id3tag...............$ac_cv_lib_mp3lame_id3tag_set_fieldvalue"
-fi
 echo " dlopen lame...............$enable_dl_lame"
 fi
 echo " mad.......................$using_mad"
