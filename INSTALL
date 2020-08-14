@@ -53,17 +53,14 @@ To compile and install SoX (executables, libraries, manual pages) with
 a default configuration for your platform, run the following commands:
 
 	./configure
-	make -s
+	make
 	make install
 
-There should be no errors and few, if any, warnings during the `make
--s' stage.  Any warnings about pointer mismatch or conversion should
+There should be no errors and few, if any, warnings during the `make'
+stage.  Any warnings about pointer mismatch or conversion should
 be treated with deep suspicion.
 
-The `make install' command may require `root' priviliges; for example,
-on some systems, the following modification to the command is needed:
-
-	sudo make install
+The `make install' command may require `root' priviliges.
 
 To run a selection of tests on the installed sox executable:
 
@@ -81,8 +78,8 @@ Again, `root' priviliges may be needed at the install stages.
 
 
 
-Custom build options on a POSIX system
---------------------------------------
+Custom build options
+--------------------
 
 Selection of optional libraries and of other build options can be made
 by adding parameters to the `./configure' command line (above).  Run
@@ -104,61 +101,33 @@ For example,
 	./configure --with-distro='Super Linux OS 6.1'
 
 If any libraries are installed in a non-standard locations in your
-system then you can use the CPPFLAGS and LDFLAGS variables to allow
-configure to find them. For example:
+system, the compiler and linker must be informed of this.  Often,
+environment variables can be used for this purpose.  For example, if
+using the GNU or Clang/LLVM toolchains, the following might be used in
+a Bourne-compatible shell:
 
-./configure CPPFLAGS="-I/home/sox/include -I/usr/local/multimedia/include" LDFLAGS="-L/home/sox/lib -L/usr/local/multimedia/lib"
+export CPATH=/usr/local/include
+export LIBRARY_PATH=/usr/local/lib
 
-If you are compiling under cygwin and would like to create a static
-sox.exe using mingw libraries then you can use the following:
+For other compilers and shells, consult their respective manuals.
 
-./configure CC="gcc -mno-cygwin" --disable-shared
+Optional features
+-----------------
 
-The next cygwin example is used to build the cygwin version of SoX that is
-distributed by the project.  It tells gcc to prefer static libraries
-over dynamic ones and to use some static libraries compiled manually
-and installed under /usr/local.
+Support for some file formats is optional and controlled by --enable-*
+flags to configure.  If the value "dyn" is passed to these flags,
+e.g. --enable-flac=dyn, the corresponding code is built as a module
+and loaded at runtime.
 
-./configure LDFLAGS="-static -L/usr/local/lib" CPPFLAGS=-I/usr/local/include
+Use of external libraries is controlled by --with-* flags.  Some of
+these accept the value "dyn" to enable runtime loading of the library.
 
-You can run "cygcheck.exe src/sox.exe" after compiling to see which
-dynamic DLL's will be required to be distributed with the cygwin
-executable.
+The runtime loading feature is mainly useful for distributing the
+"sox" executable to systems that may not have all the external
+libraries installed.
 
-Alternatively, you can make use of the "cygbuild" script distributed
-with SoX source that is used to automate all steps of building
-a win32 package.  "osxbuild" script is used to automate all steps
-of building a MacOS X package.
-
-Newer versions of SoX include support for loading libraries for
-file formats at runtime.  The main usage of this feature is to
-allow shipping SoX without dependencies on external libraries
-that are not globally used or have redistribution restrictions.
-If you experience problems with this then you may wish to disable
-this feature:
-
-./configure --without-libltdl
-
-Also, the default behavior even when libltdl is used is to link
-all file format handlers into libsox as there is a performance
-hit when dynamically loading external libraries.  To force a format
-handler to be built as a dynamically loaded module, pass "dyn" to
-its --with-* option.  For example, to build pulseaudio handler as
-an external dynamic library:
-
-./configure --with-pulseaudio=dyn
-
-A subset of external libraries can be configured to be dlopen()'ed
-at run time instead of being linked in.  This will allow one to
-distribute a binary with optional features that only require
-a user to install the missing libraries into their system.  This
-can be enabled using:
-
---enable-dl-lame
---enable-dl-mad
---enable-dl-sndfile
---enable-dl-amrnb
---enable-dl-amrwb
+For a complete list of optional formats and libraries, including which
+support runtime loading, refer to the "configure --help" output.
 
 Testing
 -------
