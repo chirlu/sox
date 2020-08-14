@@ -548,7 +548,7 @@ AC_OPTIONAL_FORMAT(oss, OSS, [AC_CHECK_HEADERS(sys/soundcard.h,, using_oss=no)])
 
 
 
-AC_OPTIONAL_FORMAT(sunaudio, SUN_AUDIO, [AC_CHECK_HEADERS(sys/audioio.h,,
+AC_OPTIONAL_FORMAT(sunaudio, SUNAUDIO, [AC_CHECK_HEADERS(sys/audioio.h,,
       [AC_CHECK_HEADERS(sun/audioio.h,, using_sunaudio=no)])])
 
 

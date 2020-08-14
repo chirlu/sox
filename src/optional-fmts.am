@@ -208,8 +208,8 @@ else
 endif
 endif
 
-if HAVE_SUN_AUDIO
-if STATIC_SUN_AUDIO
+if HAVE_SUNAUDIO
+if STATIC_SUNAUDIO
   libsox_la_SOURCES += sunaudio.c
 else
   libsox_fmt_sunau_la_SOURCES = sunaudio.c
