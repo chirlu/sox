@@ -15,10 +15,7 @@ EXTRA_DIST = sox.txt soxi.txt soxformat.txt libsox.txt \
 	     cygbuild README.win32 README.osx scripts/batch-example.bat \
 	     README.sh FEATURES.in
 
-if HAVE_PKGCONFIG
-pkgconfigdir = @PKGCONFIGDIR@
 pkgconfig_DATA = sox.pc
-endif
 
 play.1 rec.1: sox.1
 	$(RM) $@ && $(LN_S) $< $@

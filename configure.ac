@@ -53,22 +53,8 @@ AC_SUBST(LIBTOOL_DEPS)
 
 AC_ARG_WITH(dyn-default,AS_HELP_STRING([--with-dyn-default],[Default to loading optional formats dynamically]),opt_default=dyn,opt_default=yes)
 
-AC_ARG_WITH(pkgconfigdir,
-    AS_HELP_STRING([--with-pkgconfigdir],
-                   [location to install .pc files or "no" to disable (default=$(libdir)/pkgconfig)]))
-
-m4_ifndef([PKG_PROG_PKG_CONFIG], with_pkgconfigdir="no")
-
-using_pkgconfig=no
-if test "$with_pkgconfigdir" != "no"; then
-    if test "$with_pkgconfigdir" = ""; then
-        with_pkgconfigdir="\$(libdir)/pkgconfig"
-    fi
-    using_pkgconfig="yes"
-    PKG_PROG_PKG_CONFIG
-fi
-AM_CONDITIONAL(HAVE_PKGCONFIG, test x$using_pkgconfig = xyes)
-AC_SUBST(PKGCONFIGDIR, $with_pkgconfigdir)
+PKG_PROG_PKG_CONFIG
+PKG_INSTALLDIR
 
 using_win32_glob="no"
 case $target in
@@ -609,19 +595,13 @@ if test "$using_lpc10" != "no"; then
   fi
 fi
 
-if test "$using_pkgconfig" = "no"; then
-  pkgconfig_option="disabled"
-else
-  pkgconfig_option="$with_pkgconfigdir"
-fi
-
 # Report configuration.
 echo
 echo "BUILD OPTIONS"
 echo "Debugging build............$enable_debug"
 echo "Distro name ...............$DISTRO"
 echo "Dynamic loading support....$using_libltdl"
-echo "Pkg-config location........$pkgconfig_option"
+echo "Pkg-config location........$pkgconfigdir"
 echo "Symlinks enabled...........${SYMLINKS:-no}"
 echo
 echo "OPTIONAL DEVICE DRIVERS"
