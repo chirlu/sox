@@ -222,26 +222,15 @@ fi
 AC_SUBST(LIBTOOLFLAGS)
 
 dnl Check if ltdl should be enabled.
-using_win32_ltdl="no"
 if test "$using_libltdl" != "no"; then
-  case $target in
-    *mingw*)
-    AC_DEFINE([HAVE_WIN32_LTDL_H], 1, [Define to 1 to use internal win32 ltdl])
-    LIBLTDL=""
-    using_win32_ltdl="yes"
-    ;;
-    *)
-     AC_CHECK_HEADERS(ltdl.h,
+    AC_CHECK_HEADERS(ltdl.h,
 		     AC_CHECK_LIB(ltdl, lt_dlinit, LIBLTDL="$LIBLTDL -lltdl",
 				  using_libltdl=no), using_libltdl=no)
-    ;;
-  esac
 fi
 if test "$using_libltdl" = yes; then
   AC_DEFINE([HAVE_LIBLTDL], 1, [Define to 1 if you have libltdl])
 fi
-AM_CONDITIONAL(HAVE_LIBLTDL, test x$using_libltdl = xyes -a x$using_win32_ltdl = xno)
-AM_CONDITIONAL(HAVE_WIN32_LTDL, test x$using_win32_ltdl = xyes)
+AM_CONDITIONAL(HAVE_LIBLTDL, test x$using_libltdl = xyes)
 AC_SUBST(LIBLTDL)
 
 

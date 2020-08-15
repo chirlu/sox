@@ -302,11 +302,7 @@ int lsx_effects_quit(void);
 
 /*--------------------------------- Dynamic Library ----------------------------------*/
 
-#if defined(HAVE_WIN32_LTDL_H)
-    #include "win32-ltdl.h"
-    #define HAVE_LIBLTDL 1
-    typedef lt_dlhandle lsx_dlhandle;
-#elif defined(HAVE_LIBLTDL)
+#if defined(HAVE_LIBLTDL)
     #include <ltdl.h>
     typedef lt_dlhandle lsx_dlhandle;
 #else
