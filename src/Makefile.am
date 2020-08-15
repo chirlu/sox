@@ -131,7 +131,11 @@ example6_LDADD = ${sox_LDADD}
 EXTRA_DIST = monkey.wav optional-fmts.am \
 	     tests.sh testall.sh tests.bat testall.bat test-comments
 
-all: sox$(EXEEXT) sox_sample_test$(EXEEXT) example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT) example5$(EXEEXT) example6$(EXEEXT)
+all: sox$(EXEEXT)
+
+examples: example0$(EXEEXT) example1$(EXEEXT) example2$(EXEEXT) example3$(EXEEXT) example4$(EXEEXT) example5$(EXEEXT) example6$(EXEEXT)
+
+extras: examples sox_sample_test$(EXEEXT)
 
 MAKELINKS = for n in $(SYMLINKS); do $(RM) $$n$(EXEEXT) && $(LN_S) sox$(EXEEXT) $$n$(EXEEXT); done
 
