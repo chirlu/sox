@@ -18,10 +18,6 @@ endif
 # Pass flags from --enable-silent-libtool
 LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
 
-if HAVE_DISTRO
-AM_CPPFLAGS += -DDISTRO="\"@DISTRO@\""
-endif
-
 
 
 #########################

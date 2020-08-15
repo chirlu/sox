@@ -166,16 +166,9 @@ if test "$GCC" = "yes"; then
 fi
 AC_SUBST(APP_LDFLAGS)
 
-AC_ARG_WITH(distro, AS_HELP_STRING([--with-distro=distro], [Provide distribution name]))
-if test "x$with_distro" != "x"; then
-  DISTRO="$with_distro"
-  AC_SUBST(DISTRO)
-  AC_DEFINE(HAVE_DISTRO, 1, [1 if DISTRO is defined])
-  have_distro=yes
-else
-  DISTRO="not specified!"
-fi
-AM_CONDITIONAL(HAVE_DISTRO, test x$have_distro = xyes)
+AC_ARG_WITH(distro,
+    AS_HELP_STRING([--with-distro=name], [Provide distribution name]),
+    AC_DEFINE_UNQUOTED(DISTRO, ["$with_distro"], [Distribution name]))
 
 dnl Check for system dependent features.
 AC_C_BIGENDIAN
@@ -599,7 +592,7 @@ fi
 echo
 echo "BUILD OPTIONS"
 echo "Debugging build............$enable_debug"
-echo "Distro name ...............$DISTRO"
+echo "Distro name ...............${with_distro:-unspecified}"
 echo "Dynamic loading support....$using_libltdl"
 echo "Pkg-config location........$pkgconfigdir"
 echo "Symlinks enabled...........${SYMLINKS:-no}"
