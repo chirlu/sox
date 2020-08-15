@@ -88,7 +88,7 @@ libsox_la_LIBADD += @LIBGSM_LIBS@
 endif
 
 libsox_la_CFLAGS =
-libsox_la_LDFLAGS = @APP_LDFLAGS@ -version-info @SHLIB_VERSION@ \
+libsox_la_LDFLAGS = -no-undefined -version-info @SHLIB_VERSION@ \
   -export-symbols-regex '^(sox_.*|lsx_(([cm]|re)alloc.*|check_read_params|(close|open)_dllibrary|(debug(_more|_most)?|fail|report|warn)_impl|eof|error|fail_errno|filelength|find_(enum_(text|value)|file_extension)|flush|getopt(_init)?|lpc10_(create_(de|en)coder_state|(de|en)code)|raw(read|write)|read(_b_buf|buf|chars)|rewind|seeki|sigfigs3p?|strcasecmp|strdup|tell|unreadb|write(b|_b_buf|buf|s)))$$'
 
 if HAVE_LIBLTDL

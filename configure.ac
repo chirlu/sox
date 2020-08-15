@@ -91,12 +91,8 @@ if test "$GCC" = "yes"; then
       *linux* | *solaris*)
         LDFLAGS="$LDFLAGS -Wl,-z,defs"
         ;;
-      *os2* | *cygwin* | *mingw*)
-        APP_LDFLAGS="-no-undefined"
-        ;;
     esac
 fi
-AC_SUBST(APP_LDFLAGS)
 
 AC_ARG_WITH(distro,
     AS_HELP_STRING([--with-distro=name], [Provide distribution name]),
