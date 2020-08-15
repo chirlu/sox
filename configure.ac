@@ -81,11 +81,7 @@ else
 fi
 
 AX_APPEND_COMPILE_FLAGS([-fstack-protector-strong])
-
-dnl Extra CFLAGS if we have gcc
-if test "$GCC" = "yes"; then
-    CFLAGS="$CFLAGS -Wall -Wmissing-prototypes -Wstrict-prototypes"
-fi
+AX_APPEND_COMPILE_FLAGS([-Wall -Wmissing-prototypes -Wstrict-prototypes])
 
 AC_ARG_WITH(distro,
     AS_HELP_STRING([--with-distro=name], [Provide distribution name]),
