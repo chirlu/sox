@@ -5,7 +5,13 @@ LT_PREREQ(2.4)
 
 AC_INIT(SoX, 14.4.3git, sox-devel@lists.sourceforge.net)
 
+dnl Increase version when binary compatibility with previous version is broken
+SHLIB_VERSION=3:0:0
+AC_SUBST(SHLIB_VERSION)
+
 AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_SRCDIR(sox.1)
+AC_CONFIG_HEADERS([src/soxconfig.h])
 
 dnl Find target architecture
 AC_CANONICAL_TARGET
@@ -13,11 +19,11 @@ AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE
 AM_SILENT_RULES([yes])
 
-dnl create a config.h file (Automake will add -DHAVE_CONFIG_H)
-AC_CONFIG_HEADERS([src/soxconfig.h])
+LT_INIT([win32-dll])
 
-dnl Check we have the right srcdir
-AC_CONFIG_SRCDIR(sox.1)
+AC_ARG_WITH(distro,
+    AS_HELP_STRING([--with-distro=name], [Provide distribution name]),
+    AC_DEFINE_UNQUOTED(DISTRO, ["$with_distro"], [Distribution name]))
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -25,53 +31,12 @@ AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
-AX_APPEND_LINK_FLAGS([-Wl,--as-needed])
-
-dnl Increase version when binary compatibility with previous version is broken
-SHLIB_VERSION=3:0:0
-AC_SUBST(SHLIB_VERSION)
-
-AC_ARG_WITH(libltdl,
-    AS_HELP_STRING([--without-libltdl],
-        [Don't try to use libltdl for external dynamic library support]),
-    with_libltdl=$withval, with_libltdl=default)
-
-if test "$with_libltdl" = "default"; then
-    dnl Default to no libltdl support when building only static libraries
-    if test "$enable_shared" != "no"; then
-        using_libltdl=yes
-    else
-        using_libltdl=no
-    fi
-    with_libltdl="yes"
-else
-    using_libltdl=$with_libltdl
-fi
-
-LT_INIT([win32-dll])
-
-AC_ARG_WITH(dyn-default,AS_HELP_STRING([--with-dyn-default],[Default to loading optional formats dynamically]),opt_default=dyn,opt_default=yes)
-
 PKG_PROG_PKG_CONFIG
 PKG_INSTALLDIR
 
-using_win32_glob="no"
-case $target in
-  *mingw*)
-  using_win32_glob="yes"
-   ;;
-esac
-if test "$using_win32_glob" = yes; then
-   AC_DEFINE([HAVE_WIN32_GLOB_H], 1, [Define to 1 to use win32 glob])
-fi
-AM_CONDITIONAL(HAVE_WIN32_GLOB, test x$using_win32_glob = xyes)
-
 AX_APPEND_COMPILE_FLAGS([-fstack-protector-strong])
 AX_APPEND_COMPILE_FLAGS([-Wall -Wmissing-prototypes -Wstrict-prototypes])
-
-AC_ARG_WITH(distro,
-    AS_HELP_STRING([--with-distro=name], [Provide distribution name]),
-    AC_DEFINE_UNQUOTED(DISTRO, ["$with_distro"], [Distribution name]))
+AX_APPEND_LINK_FLAGS([-Wl,--as-needed])
 
 dnl Check for system dependent features.
 AC_C_BIGENDIAN
@@ -93,6 +58,40 @@ dnl Large File Support
 AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
 
+dnl Check for OpenMP
+AC_OPENMP
+CFLAGS="$CFLAGS $OPENMP_CFLAGS"
+
+using_win32_glob="no"
+case $target in
+  *mingw*)
+  using_win32_glob="yes"
+   ;;
+esac
+if test "$using_win32_glob" = yes; then
+   AC_DEFINE([HAVE_WIN32_GLOB_H], 1, [Define to 1 to use win32 glob])
+fi
+AM_CONDITIONAL(HAVE_WIN32_GLOB, test x$using_win32_glob = xyes)
+
+AC_ARG_WITH(dyn-default,AS_HELP_STRING([--with-dyn-default],[Default to loading optional formats dynamically]),opt_default=dyn,opt_default=yes)
+
+AC_ARG_WITH(libltdl,
+    AS_HELP_STRING([--without-libltdl],
+        [Don't try to use libltdl for external dynamic library support]),
+    with_libltdl=$withval, with_libltdl=default)
+
+if test "$with_libltdl" = "default"; then
+    dnl Default to no libltdl support when building only static libraries
+    if test "$enable_shared" != "no"; then
+        using_libltdl=yes
+    else
+        using_libltdl=no
+    fi
+    with_libltdl="yes"
+else
+    using_libltdl=$with_libltdl
+fi
+
 dnl Check if ltdl should be enabled.
 if test "$using_libltdl" != "no"; then
     AC_CHECK_HEADERS(ltdl.h,
@@ -104,11 +103,6 @@ if test "$using_libltdl" = yes; then
 fi
 AM_CONDITIONAL(HAVE_LIBLTDL, test x$using_libltdl = xyes)
 AC_SUBST(LIBLTDL)
-
-
-dnl Check for OpenMP
-AC_OPENMP
-CFLAGS="$CFLAGS $OPENMP_CFLAGS"
 
 
 dnl Check for magic library
