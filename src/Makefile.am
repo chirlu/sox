@@ -15,9 +15,6 @@ AM_LDFLAGS = -avoid-version -module
 AM_CPPFLAGS += -DPKGLIBDIR="\"$(pkglibdir)\""
 endif
 
-# Pass flags from --enable-silent-libtool
-LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
-
 
 
 #########################
