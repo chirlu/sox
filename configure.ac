@@ -67,19 +67,6 @@ if test "$using_win32_glob" = yes; then
 fi
 AM_CONDITIONAL(HAVE_WIN32_GLOB, test x$using_win32_glob = xyes)
 
-dnl Debugging
-AC_MSG_CHECKING([whether to make a debug build])
-AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [make a debug build]))
-AC_MSG_RESULT($enable_debug)
-if test "$enable_debug" = "yes"; then
-    CFLAGS="-g"
-    if test "$GCC" = "yes"; then
-        CFLAGS="$CFLAGS -ggdb"
-    fi
-else
-    enable_debug=no
-fi
-
 AX_APPEND_COMPILE_FLAGS([-fstack-protector-strong])
 AX_APPEND_COMPILE_FLAGS([-Wall -Wmissing-prototypes -Wstrict-prototypes])
 
@@ -498,7 +485,6 @@ fi
 # Report configuration.
 echo
 echo "BUILD OPTIONS"
-echo "Debugging build............$enable_debug"
 echo "Distro name ...............${with_distro:-unspecified}"
 echo "Dynamic loading support....$using_libltdl"
 echo "Pkg-config location........$pkgconfigdir"
