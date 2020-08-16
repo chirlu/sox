@@ -121,7 +121,3 @@ uninstall-hook:
 	$(RM) $(DESTDIR)$(mandir)/man1/play.1
 	$(RM) $(DESTDIR)$(mandir)/man1/rec.1
 	$(RM) $(DESTDIR)$(mandir)/man7/soxeffect.7
-
-# Automatically update libtool script if it gets out-of-date
-libtool: $(LIBTOOL_DEPS)
-	$(SHELL) ./config.status --recheck
