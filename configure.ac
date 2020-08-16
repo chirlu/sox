@@ -48,7 +48,7 @@ else
     using_libltdl=$with_libltdl
 fi
 
-LT_INIT([dlopen win32-dll])
+LT_INIT([win32-dll])
 AC_SUBST(LIBTOOL_DEPS)
 
 AC_ARG_WITH(dyn-default,AS_HELP_STRING([--with-dyn-default],[Default to loading optional formats dynamically]),opt_default=dyn,opt_default=yes)
