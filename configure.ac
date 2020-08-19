@@ -13,10 +13,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR(sox.1)
 AC_CONFIG_HEADERS([src/soxconfig.h])
 
-dnl Find target architecture
-AC_CANONICAL_TARGET
-
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 AM_SILENT_RULES([yes])
 
 LT_INIT([win32-dll])
@@ -62,16 +59,12 @@ dnl Check for OpenMP
 AC_OPENMP
 CFLAGS="$CFLAGS $OPENMP_CFLAGS"
 
-using_win32_glob="no"
-case $target in
-  *mingw*)
-  using_win32_glob="yes"
-   ;;
-esac
-if test "$using_win32_glob" = yes; then
-   AC_DEFINE([HAVE_WIN32_GLOB_H], 1, [Define to 1 to use win32 glob])
+if test "$ac_cv_header_glob_h" != yes; then
+    AC_CHECK_FUNC([FindFirstFileA], [
+        AC_DEFINE([HAVE_GLOB_H], [1], [Define if glob.h exists])
+        HAVE_WIN32_GLOB=yes])
 fi
-AM_CONDITIONAL(HAVE_WIN32_GLOB, test x$using_win32_glob = xyes)
+AM_CONDITIONAL(HAVE_WIN32_GLOB, test "$HAVE_WIN32_GLOB" = yes)
 
 AC_ARG_WITH(dyn-default,AS_HELP_STRING([--with-dyn-default],[Default to loading optional formats dynamically]),opt_default=dyn,opt_default=yes)
 

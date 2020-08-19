@@ -27,7 +27,8 @@ lib_LTLIBRARIES = libsox.la
 include_HEADERS = sox.h
 sox_SOURCES = sox.c
 if HAVE_WIN32_GLOB
-sox_SOURCES += win32-glob.c win32-glob.h
+sox_SOURCES += win32/glob.c win32/glob.h
+AM_CPPFLAGS += -I$(srcdir)/win32
 endif
 sox_LDADD = libsox.la
 example0_SOURCES = example0.c
