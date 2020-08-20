@@ -390,7 +390,7 @@ static FLAC__StreamEncoderTellStatus flac_stream_encoder_tell_callback(FLAC__Str
 static int start_write(sox_format_t * const ft)
 {
   priv_t * p = (priv_t *)ft->priv;
-  FLAC__StreamEncoderState status;
+  FLAC__StreamEncoderInitStatus status;
   unsigned compression_level = MAX_COMPRESSION; /* Default to "best" */
 
   if (ft->encoding.compression != HUGE_VAL) {
@@ -515,8 +515,8 @@ static int start_write(sox_format_t * const ft)
   status = FLAC__stream_encoder_init_stream(p->encoder, flac_stream_encoder_write_callback,
       flac_stream_encoder_seek_callback, flac_stream_encoder_tell_callback, flac_stream_encoder_metadata_callback, ft);
 
-  if (status != FLAC__STREAM_ENCODER_OK) {
-    lsx_fail_errno(ft, SOX_EINVAL, "%s", FLAC__StreamEncoderStateString[status]);
+  if (status != FLAC__STREAM_ENCODER_INIT_STATUS_OK) {
+    lsx_fail_errno(ft, SOX_EINVAL, "%s", FLAC__StreamEncoderInitStatusString[status]);
     return SOX_EOF;
   }
   return SOX_SUCCESS;
