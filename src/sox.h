@@ -22,6 +22,7 @@ LSX_ and lsx_ symbols should not be used by libSoX-based applications.
 #include <limits.h>
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -387,108 +388,49 @@ Basic typedefs:
 Client API:
 Signed twos-complement 8-bit type. Typically defined as signed char.
 */
-#if SCHAR_MAX==127 && SCHAR_MIN==(-128)
-typedef signed char sox_int8_t;
-#elif CHAR_MAX==127 && CHAR_MIN==(-128)
-typedef char sox_int8_t;
-#else
-#error Unable to determine an appropriate definition for sox_int8_t.
-#endif
+typedef int8_t sox_int8_t;
 
 /**
 Client API:
 Unsigned 8-bit type. Typically defined as unsigned char.
 */
-#if UCHAR_MAX==0xff
-typedef unsigned char sox_uint8_t;
-#elif CHAR_MAX==0xff && CHAR_MIN==0
-typedef char sox_uint8_t;
-#else
-#error Unable to determine an appropriate definition for sox_uint8_t.
-#endif
+typedef uint8_t sox_uint8_t;
 
 /**
 Client API:
 Signed twos-complement 16-bit type. Typically defined as short.
 */
-#if SHRT_MAX==32767 && SHRT_MIN==(-32768)
-typedef short sox_int16_t;
-#elif INT_MAX==32767 && INT_MIN==(-32768)
-typedef int sox_int16_t;
-#else
-#error Unable to determine an appropriate definition for sox_int16_t.
-#endif
+typedef int16_t sox_int16_t;
 
 /**
 Client API:
 Unsigned 16-bit type. Typically defined as unsigned short.
 */
-#if USHRT_MAX==0xffff
-typedef unsigned short sox_uint16_t;
-#elif UINT_MAX==0xffff
-typedef unsigned int sox_uint16_t;
-#else
-#error Unable to determine an appropriate definition for sox_uint16_t.
-#endif
+typedef uint16_t sox_uint16_t;
 
 /**
 Client API:
 Signed twos-complement 32-bit type. Typically defined as int.
 */
-#if INT_MAX==2147483647 && INT_MIN==(-2147483647-1)
-typedef int sox_int32_t;
-#elif LONG_MAX==2147483647 && LONG_MIN==(-2147483647-1)
-typedef long sox_int32_t;
-#else
-#error Unable to determine an appropriate definition for sox_int32_t.
-#endif
+typedef int32_t sox_int32_t;
 
 /**
 Client API:
 Unsigned 32-bit type. Typically defined as unsigned int.
 */
-#if UINT_MAX==0xffffffff
-typedef unsigned int sox_uint32_t;
-#elif ULONG_MAX==0xffffffff
-typedef unsigned long sox_uint32_t;
-#else
-#error Unable to determine an appropriate definition for sox_uint32_t.
-#endif
+typedef uint32_t sox_uint32_t;
 
 /**
 Client API:
 Signed twos-complement 64-bit type. Typically defined as long or long long.
 */
-#if LONG_MAX==9223372036854775807 && LONG_MIN==(-9223372036854775807-1)
-typedef long sox_int64_t;
-#elif defined(_MSC_VER)
-typedef __int64 sox_int64_t;
-#else
-typedef long long sox_int64_t;
-#endif
+typedef int64_t sox_int64_t;
 
 /**
 Client API:
 Unsigned 64-bit type. Typically defined as unsigned long or unsigned long long.
 */
-#if ULONG_MAX==0xffffffffffffffff
-typedef unsigned long sox_uint64_t;
-#elif defined(_MSC_VER)
-typedef unsigned __int64 sox_uint64_t;
-#else
-typedef unsigned long long sox_uint64_t;
-#endif
-
-#ifndef _DOXYGEN_
-lsx_static_assert(sizeof(sox_int8_t)==1,   sox_int8_size);
-lsx_static_assert(sizeof(sox_uint8_t)==1,  sox_uint8_size);
-lsx_static_assert(sizeof(sox_int16_t)==2,  sox_int16_size);
-lsx_static_assert(sizeof(sox_uint16_t)==2, sox_uint16_size);
-lsx_static_assert(sizeof(sox_int32_t)==4,  sox_int32_size);
-lsx_static_assert(sizeof(sox_uint32_t)==4, sox_uint32_size);
-lsx_static_assert(sizeof(sox_int64_t)==8,  sox_int64_size);
-lsx_static_assert(sizeof(sox_uint64_t)==8, sox_uint64_size);
-#endif
+typedef uint64_t sox_uint64_t;
 
 /**
 Client API:
