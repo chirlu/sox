@@ -57,7 +57,7 @@ Plugins API:
 Attribute required on all functions exported by libSoX and on all function
 pointer types used by the libSoX API.
 */
-#ifdef __GNUC__
+#if defined __GNUC__ && defined __i386__
 #define LSX_API  __attribute__ ((cdecl)) /* libSoX function */
 #elif _MSC_VER
 #define LSX_API  __cdecl /* libSoX function */
