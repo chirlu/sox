@@ -1468,6 +1468,10 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
         lsx_debug("        %d byte/sec, %d block align, %d bits/samp",
                 dwAvgBytesPerSec, wBlockAlign, wBitsPerSample);
     } else {
+        if (wRiffLength == UINT32_MAX || dwDataLength == UINT32_MAX ||
+            dwSamplesWritten == UINT32_MAX)
+            lsx_warn("File too large, writing truncated values in header");
+
         lsx_debug("Finished writing Wave file, %"PRIu64" data bytes %"PRIu64" samples",
                   dwDataLength, wav->numSamples);
 #ifdef HAVE_GSM
