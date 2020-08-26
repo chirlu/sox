@@ -48,26 +48,6 @@
   #include <io.h>
 #endif
 
-#ifdef HAVE_SUN_AUDIOIO_H
-  #include <sun/audioio.h>
-  #define HAVE_AUDIOIO_H 1
-#else
-#ifdef HAVE_SYS_AUDIOIO_H
-  #include <sys/audioio.h>
-  #define HAVE_AUDIOIO_H 1
-#endif
-#endif
-
-#ifdef HAVE_SYS_SOUNDCARD_H
-  #include <sys/soundcard.h>
-  #define HAVE_SOUNDCARD_H 1
-#else
-#ifdef HAVE_MACHINE_SOUNDCARD_H
-  #include <machine/soundcard.h>
-  #define HAVE_SOUNDCARD_H 1
-#endif
-#endif
-
 #ifdef HAVE_SYS_TIME_H
   #include <sys/time.h>
 #endif
@@ -1308,63 +1288,15 @@ static int kbhit(void)
 #define kbhit() 0
 #endif
 
-#ifdef HAVE_SOUNDCARD_H
-#include <sys/ioctl.h>
-static void adjust_volume(int delta)
-{
-  char * from_env = getenv("MIXERDEV");
-  int vol1 = 0, vol2 = 0, fd = open(from_env? from_env : "/dev/mixer", O_RDWR);
-  if (fd >= 0) {
-    if (ioctl(fd, MIXER_READ(SOUND_MIXER_PCM), &vol1) != -1) {
-      int side1 = vol1 & 0xff, side2 = (vol1 >> 8) & 0xff;
-      delta = delta < 0?  max(delta, -min(side1, side2)) :
-          min(delta, 100 - max(side1, side2));
-      vol2 = ((side2 + delta) << 8) + side1 + delta;
-      lsx_debug("%04x %04x", vol1, vol2);
-      if (vol1 != vol2 && ioctl(fd, MIXER_WRITE(SOUND_MIXER_PCM), &vol2) < 0)
-        vol2 = vol1;
-    }
-    close(fd);
-  }
-  if (vol1 == vol2)
-    putc('\a', stderr);
-}
-#elif defined(HAVE_AUDIOIO_H)
-static void adjust_volume(int delta)
-{
-  int vol1 = 0, vol2 = 0, fd = fileno((FILE*)ofile->ft->fp);
-  if (fd >= 0) {
-    audio_info_t audio_info;
-    if (ioctl(fd, AUDIO_GETINFO, &audio_info) >= 0) {
-      vol1 = (audio_info.play.gain * 100 + (AUDIO_MAX_GAIN >> 1)) / AUDIO_MAX_GAIN;
-      vol2 = range_limit(vol1 + delta, 0, 100);
-      AUDIO_INITINFO(&audio_info);
-      audio_info.play.gain = (vol2 * AUDIO_MAX_GAIN + 50) / 100;
-      audio_info.output_muted = 0;
-      lsx_debug("%04x %04x", vol1, vol2);
-      if (vol1 != vol2 && ioctl(fd, AUDIO_SETINFO, &audio_info) < 0)
-        vol2 = vol1;
-    }
-  }
-  if (vol1 == vol2)
-    putc('\a', stderr);
-}
-#else
-static void adjust_volume(int delta)
-{
-  (void)delta;
-  putc('\a', stderr);
-}
-#endif
-
 static int update_status(sox_bool all_done, void * client_data)
 {
   (void)client_data;
   if (interactive) while (kbhit()) {
+    int LSX_UNUSED ch;
 #ifdef HAVE_CONIO_H
-    int ch = _getch();
+    ch = _getch();
 #else
-    int ch = getchar();
+    ch = getchar();
 #endif
 
 #ifdef MORE_INTERACTIVE
@@ -1404,10 +1336,6 @@ static int update_status(sox_bool all_done, void * client_data)
       user_restart_eff = sox_true;
     }
 #endif
-    switch (ch) {
-      case 'V': adjust_volume(+7); break;
-      case 'v': adjust_volume(-7); break;
-    }
   }
 
   display_status(all_done || user_abort);
