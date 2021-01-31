@@ -78,6 +78,7 @@ endif
 if HAVE_FLAC
 if STATIC_FLAC
   libsox_la_SOURCES += flac.c
+  libsox_la_CFLAGS += @FLAC_CFLAGS@
 if STATIC_LIBSOX_ONLY
   sox_LDADD += @FLAC_LIBS@
 else
@@ -85,6 +86,7 @@ else
 endif
 else
   libsox_fmt_flac_la_SOURCES = flac.c
+  libsox_fmt_opus_la_CFLAGS = @FLAC_CFLAGS@
   libsox_fmt_flac_la_LIBADD = @FLAC_LIBS@
   pkglib_LTLIBRARIES += libsox_fmt_flac.la
 endif
