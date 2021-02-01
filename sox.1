@@ -2448,7 +2448,7 @@ For example, the following (one long) command shows how multi-band
 companding is typically used in FM radio:
 .EX
 .ne 8
-   play track1.wav gain \-3 sinc 8000\- 29 100 mcompand \\
+   play track1.wav gain \-3 sinc \-n 29 \-b 100 8000 mcompand \\
 	\(dq0.005,0.1 \-47,\-40,\-34,\-34,\-17,\-33\(dq 100 \\
 	\(dq0.003,0.05 \-47,\-40,\-34,\-34,\-17,\-33\(dq 400 \\
 	\(dq0.000625,0.0125 \-47,\-40,\-34,\-34,\-15,\-33\(dq 1600 \\
