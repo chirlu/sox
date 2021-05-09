@@ -825,7 +825,7 @@ static void rewrite_tags(sox_format_t * ft, uint64_t num_samples)
   priv_t *p = (priv_t *)ft->priv;
 
   off_t file_size;
-  size_t id3v2_size;
+  int id3v2_size;
 
   if (lsx_seeki(ft, (off_t)0, SEEK_END)) {
     lsx_warn("cannot update tags - seek to end failed");
