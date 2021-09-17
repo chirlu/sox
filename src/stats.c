@@ -23,9 +23,9 @@ typedef struct {
   int       scale_bits, hex_bits;
   double    time_constant, scale;
 
-  double    last, sigma_x, sigma_x2, avg_sigma_x2, min_sigma_x2, max_sigma_x2;
+  double    last, sigma_x, sigma_x2, avg_sigma_x2, min_sigma_x2, max_sigma_x2, max_sigma_x2_time;
   double    min, max, mult, min_run, min_runs, max_run, max_runs;
-  off_t     num_samples, tc_samples, min_count, max_count;
+  off_t     num_samples, tc_samples, min_count, max_count, peak_rms_time;
   uint32_t  mask;
 } priv_t;
 
@@ -98,8 +98,10 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
     p->avg_sigma_x2 = p->avg_sigma_x2 * p->mult + (1 - p->mult) * sqr(d);
 
     if (p->num_samples >= p->tc_samples) {
-      if (p->avg_sigma_x2 > p->max_sigma_x2)
-        p->max_sigma_x2 = p->avg_sigma_x2;
+      if (p->avg_sigma_x2 > p->max_sigma_x2) {
+          p->peak_rms_time = p->num_samples;
+          p->max_sigma_x2 = p->avg_sigma_x2;
+      }
       if (p->avg_sigma_x2 < p->min_sigma_x2)
         p->min_sigma_x2 = p->avg_sigma_x2;
     }
@@ -161,7 +163,7 @@ static int stop(sox_effect_t * effp)
 
   if (!effp->flow) {
     double min_runs = 0, max_count = 0, min = 2, max = -2, max_sigma_x = 0, sigma_x = 0, sigma_x2 = 0, min_sigma_x2 = 2, max_sigma_x2 = 0, avg_peak = 0;
-    off_t num_samples = 0, min_count = 0, max_runs = 0;
+    off_t num_samples = 0, min_count = 0, max_runs = 0, max_sigma_x2_time = 0;
     uint32_t mask = 0;
     unsigned b1, b2, i, n = effp->flows > 1 ? effp->flows : 0;
 
@@ -173,6 +175,7 @@ static int stop(sox_effect_t * effp)
         q->min_sigma_x2 = q->max_sigma_x2 = q->sigma_x2 / q->num_samples;
       min_sigma_x2 = min(min_sigma_x2, q->min_sigma_x2);
       max_sigma_x2 = max(max_sigma_x2, q->max_sigma_x2);
+      max_sigma_x2_time = max(max_sigma_x2_time, q->peak_rms_time);
       sigma_x += q->sigma_x;
       sigma_x2 += q->sigma_x2;
       num_samples += q->num_samples;
@@ -239,6 +242,7 @@ static int stop(sox_effect_t * effp)
       priv_t * q = (priv_t *)(effp - effp->flow + i)->priv;
       fprintf(stderr, "%10.2f", linear_to_dB(sqrt(q->max_sigma_x2)));
     }
+    fprintf(stderr, "\nRMS Pk s     %9.3f", max_sigma_x2_time / effp->in_signal.rate);
 
     fprintf(stderr, "\nRMS Tr dB ");
     if (min_sigma_x2 != 1)
