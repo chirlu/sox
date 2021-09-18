@@ -7,6 +7,10 @@
 
 #include <pulse/simple.h>
 #include <pulse/error.h>
+#include <pulse/timeval.h>
+
+#define pa_memzero(x,l) (memset((x), 0, (l)))
+#define pa_zero(x) (pa_memzero(&(x), sizeof(x)))
 
 typedef struct {
   pa_simple *pasp;
@@ -20,6 +24,13 @@ static int setup(sox_format_t *ft, int is_input)
   char *app_str;
   char *dev;
   pa_sample_spec spec;
+
+  /* Pulseaudio will introduce a 250ms buffer if no buffer_attr is set
+     (https://github.com/pulseaudio/pulseaudio/blob/master/src/pulse/stream.c#L1028)
+     unless PULSE_LATENCY_MSEC environment variable is set.
+     Here we override this based on --input-buffer / --buffer command-line arguments
+  */
+  pa_buffer_attr buffer_attr;
   int error;
 
   /* TODO: If user specified device of type "server:dev" then
@@ -62,8 +73,24 @@ static int setup(sox_format_t *ft, int is_input)
   spec.rate = ft->signal.rate;
   spec.channels = ft->signal.channels;
 
+  pa_zero(buffer_attr);
+  buffer_attr.maxlength = (uint32_t) -1;
+  buffer_attr.prebuf = (uint32_t) -1;
+  if (is_input) {
+    /* If the tlength/fragsize is not set, pulseaudio src/pulse/stream.c will
+       attempt to use getenv("PULSE_LATENCY_MSEC") and fallback on 250ms what
+       is likely to happen for the default pulseaudio input (--input-buffer defaults to 0)
+       ToDo: Add a pacat/parec-like --latency-msec option?
+    */
+    buffer_attr.fragsize = sox_globals.input_bufsiz ? sox_globals.input_bufsiz : -1;
+    lsx_debug("INPUT cmd buffer size=%zu, pulseaudio buffer size=%u", sox_globals.input_bufsiz, buffer_attr.fragsize);
+  } else {
+    buffer_attr.tlength = sox_globals.bufsiz ? sox_globals.bufsiz : -1;
+    lsx_debug("OUTPUT cmd buffer size=%zu, pulseaudio buffer size=%u", sox_globals.bufsiz, buffer_attr.tlength);
+  }
+
   pa->pasp = pa_simple_new(server, "SoX", dir, dev, app_str, &spec,
-                          NULL, NULL, &error);
+                          NULL, &buffer_attr, &error);
 
   if (pa->pasp == NULL)
   {
