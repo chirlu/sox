@@ -80,6 +80,8 @@ static int start_read(sox_format_t * ft)
         encoding = SOX_ENCODING_ULAW;
       else if (!strcasecmp(fldsval, "pcm"))
         encoding = SOX_ENCODING_SIGN2;
+      else if (!strcasecmp(fldsval, "alaw"))
+        encoding = SOX_ENCODING_ALAW;
       else {
         lsx_fail_errno(ft, SOX_EFMT, "sph: unsupported coding `%s'", fldsval);
         free(buf);
