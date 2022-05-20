@@ -152,6 +152,7 @@ static int setup(sox_format_t *ft, int is_input)
               for (i = 0; i < device_count; i++)
               {
                   char name[256];
+                  property_size = sizeof(name);
                   status = AudioDeviceGetProperty(devices[i],0,false,kAudioDevicePropertyDeviceName,&property_size,&name);
 
                   lsx_report("Found Audio Device \"%s\"\n",name);
