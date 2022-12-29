@@ -250,6 +250,8 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, size_t *osamp)
 
   if (l->delay_buf_full == 0)
     l->delay_buf_index = 0;
+
+  l->delay_buf_full = 1;
   while (done+effp->out_signal.channels <= *osamp && l->delay_buf_cnt > 0)
     for (chan = 0; chan < effp->out_signal.channels; ++chan) {
       int c = l->expectedChannels > 1 ? chan : 0;
