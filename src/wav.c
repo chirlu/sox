@@ -659,47 +659,49 @@ static int wav_read_fmt(sox_format_t *ft, uint32_t len)
      */
     if (wav->formatTag != WAVE_FORMAT_PCM &&
         wav->formatTag != WAVE_FORMAT_ALAW &&
-        wav->formatTag != WAVE_FORMAT_MULAW &&
-        len < 2)
-        lsx_warn("WAVE file missing extended part of fmt chunk");
+        wav->formatTag != WAVE_FORMAT_MULAW)
+    {
+        if (len < 2)
+            lsx_warn("WAVE file missing extended part of fmt chunk");
 
-    if (len >= 2) {
-        err = lsx_read_fields(ft, &len, "h", &wExtSize);
-        if (err)
-            return SOX_EOF;
-    }
+        if (len >= 2) {
+            err = lsx_read_fields(ft, &len, "h", &wExtSize);
+            if (err)
+                return SOX_EOF;
+        }
 
-    if (wExtSize != len) {
-        lsx_fail_errno(ft, SOX_EOF,
-                       "WAVE header error: cbSize inconsistent with fmt size");
-        return SOX_EOF;
-    }
-
-    if (wav->formatTag == WAVE_FORMAT_EXTENSIBLE) {
-        uint16_t numberOfValidBits;
-        uint32_t speakerPositionMask;
-        uint16_t subFormatTag;
-
-        if (len < 22) {
-            lsx_fail_errno(ft, SOX_EHDR, "WAVE file fmt chunk is too short");
+        if (wExtSize != len) {
+            lsx_fail_errno(ft, SOX_EOF,
+                           "WAVE header error: cbSize inconsistent with fmt size");
             return SOX_EOF;
         }
 
-        err = lsx_read_fields(ft, &len, "hih14x",
-                              &numberOfValidBits,
-                              &speakerPositionMask,
-                              &subFormatTag);
-        if (err)
-            return SOX_EOF;
+        if (wav->formatTag == WAVE_FORMAT_EXTENSIBLE) {
+            uint16_t numberOfValidBits;
+            uint32_t speakerPositionMask;
+            uint16_t subFormatTag;
 
-        if (numberOfValidBits > wav->bitsPerSample) {
-            lsx_fail_errno(ft, SOX_EHDR,
-                           "wValidBitsPerSample > wBitsPerSample");
-            return SOX_EOF;
+            if (len < 22) {
+                lsx_fail_errno(ft, SOX_EHDR, "WAVE file fmt chunk is too short");
+                return SOX_EOF;
+            }
+
+            err = lsx_read_fields(ft, &len, "hih14x",
+                                  &numberOfValidBits,
+                                  &speakerPositionMask,
+                                  &subFormatTag);
+            if (err)
+                return SOX_EOF;
+
+            if (numberOfValidBits > wav->bitsPerSample) {
+                lsx_fail_errno(ft, SOX_EHDR,
+                               "wValidBitsPerSample > wBitsPerSample");
+                return SOX_EOF;
+            }
+
+            wav->formatTag = subFormatTag;
+            lsx_report("EXTENSIBLE");
         }
-
-        wav->formatTag = subFormatTag;
-        lsx_report("EXTENSIBLE");
     }
 
     /* User options take precedence */
