@@ -32,9 +32,10 @@ AC_PROG_LN_S
 PKG_PROG_PKG_CONFIG
 PKG_INSTALLDIR
 
-AX_APPEND_COMPILE_FLAGS([-fstack-protector-strong])
-AX_APPEND_COMPILE_FLAGS([-Wall -Wmissing-prototypes -Wstrict-prototypes])
-AX_APPEND_LINK_FLAGS([-Wl,--as-needed])
+# removed to avoid script excution errors
+# AX_APPEND_COMPILE_FLAGS([-fstack-protector-strong])
+# AX_APPEND_COMPILE_FLAGS([-Wall -Wmissing-prototypes -Wstrict-prototypes])
+# AX_APPEND_LINK_FLAGS([-Wl,--as-needed])
 
 dnl Check for system dependent features.
 AC_C_BIGENDIAN
