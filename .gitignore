@@ -26,3 +26,5 @@ README
 Docs.Features
 *.a
 tags
+bin
+build
